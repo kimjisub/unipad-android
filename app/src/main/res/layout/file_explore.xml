@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+	<TextView
+		android:id="@+id/경로"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:paddingBottom="15dp"
+		android:paddingLeft="20dp"
+		android:paddingRight="20dp"
+		android:paddingTop="20dp"
+		android:text="경로"
+		android:textColor="#DD000000"
+		android:textSize="15dp"/>
+
+	<ListView
+		android:id="@+id/리스트"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:choiceMode="singleChoice"
+		android:divider="#55000000"
+		android:dividerHeight="1dp"/>
+
+</LinearLayout>
