@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.kimjisub.launchpad">
+
+	<uses-feature
+	    android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+	    android:required="false"/>
+
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.STORAGE"/>
+	<uses-permission android:name="android.permission.PERMISSIONS_STORAGE"/>
+	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission."/>
+	<uses-permission android:name="android.permission.WAKE_LOCK"/>
+	<uses-permission android:name="com.android.vending.BILLING" />
+	<uses-permission android:name = "android.permission.VIBRATE"/>
+
+
+	<application
+	    android:name="android.support.multidex.MultiDexApplication"
+	    android:allowBackup="true"
+	    android:icon="@drawable/appicon"
+	    android:label="@string/app_name"
+	    android:supportsRtl="true"
+	    android:theme="@style/AppTheme">
+		<activity
+		    android:name=".Intro"
+		    android:screenOrientation="sensorLandscape">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+
+				<category android:name="android.intent.category.LAUNCHER"/>
+			</intent-filter>
+		</activity>
+		<activity
+		    android:name=".Main"
+		    android:screenOrientation="sensorLandscape"/>
+		<activity
+		    android:name=".Store"
+		    android:screenOrientation="sensorLandscape"/>
+		<activity
+		    android:name=".Play"
+		    android:screenOrientation="sensorLandscape"/>
+		<activity
+		    android:name=".Theme"
+		    android:screenOrientation="sensorLandscape"/>
+		<activity android:name=".Setting"
+		          android:screenOrientation="portrait">
+		</activity>
+		<activity
+		    android:name=".Launchpad"
+		    android:screenOrientation="sensorLandscape">
+			<intent-filter>
+				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+			</intent-filter>
+
+			<meta-data
+			    android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+			    android:resource="@xml/device_filter"/>
+		</activity>
+		<activity
+		    android:name=".ImportPack"
+		    android:screenOrientation="sensorLandscape">
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+				<category android:name="android.intent.category.BROWSABLE"/>
+				<data android:mimeType="*/*" android:scheme="file" android:host="*"/>
+				<data android:pathPattern=".*\.zip"/>
+				<data android:pathPattern=".*\.zip.uni"/>
+				<data android:pathPattern=".*\.uni"/>
+			</intent-filter>
+		</activity>
+		<activity
+		    android:name="com.google.android.gms.ads.AdActivity"
+		    android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
+
+		<meta-data
+		    android:name="com.google.android.gms.version"
+		    android:value="@integer/google_play_services_version"/>
+	</application>
+
+</manifest>

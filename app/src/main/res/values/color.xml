@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="dark1">#161e2b</color>
+	<color name="dark2">#414F66</color>
+	<color name="dark3">#565f6c</color>
+	<color name="dark4">#808A99</color>
+	<color name="dark5">#a6b4c9</color>
+	<color name="dark6">#FFFFFF</color>
+
+	<color name="text1">#a6b4c9</color>
+	<color name="text2">#565f6c</color>
+	<color name="text3">#767d89</color>
+	<color name="text4">#a1a6ae</color>
+	<color name="text5">#ffffff</color>
+
+	<color name="skyblue">#00bcda</color>
+	<color name="green">#66bb6a</color>
+	<color name="orange">#ffa726</color>
+	<color name="red">#ff6b4e</color>
+	<color name="pink">#ffa5a5</color>
+
+	<color name="app_orange">#ff8f00</color>
+	<color name="app_blue">#00b8d4</color>
+	<!--<color name="app_blue_dark">#009db5</color>-->
+</resources>
