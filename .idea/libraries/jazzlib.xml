@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jazzlib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/libs/jazzlib.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

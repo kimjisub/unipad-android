@@ -92,7 +92,7 @@ public class Intro extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					(handler = new Handler()).postDelayed(runnable, 1500);
-					화면.광고초기화(Intro.this);
+					화면.initAd(Intro.this);
 				}
 				
 				@Override

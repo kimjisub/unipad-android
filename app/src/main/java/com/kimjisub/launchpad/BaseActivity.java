@@ -21,7 +21,6 @@ import java.util.ArrayList;
 public class BaseActivity extends AppCompatActivity {
 	
 	public static ArrayList<Activity> aList = new ArrayList<Activity>();
-	public static com.kimjisub.launchpad.Setting setting = null;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

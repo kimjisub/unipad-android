@@ -156,7 +156,7 @@ public class Setting extends PreferenceActivity {
 			public boolean onPreferenceClick(Preference preference) {
 				
 				try {
-					Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), "premium", "inapp", 화면.developerPayload);
+					Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), "premium", "inapp", 화면.DEVELOPERPAYLOAD);
 					PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
 					
 					startIntentSenderForResult(pendingIntent.getIntentSender(), 1001, new Intent(), 0, 0, 0);

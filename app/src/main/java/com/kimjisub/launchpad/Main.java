@@ -83,7 +83,7 @@ public class Main extends BaseActivity {
 							.setPositiveButton(언어(R.string.update), new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialog, int which) {
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/DStore/apps/details?id=" + getPackageName())));
 									dialog.dismiss();
 								}
 							})

@@ -581,13 +581,13 @@ public class 정보 {
 			static void 저장하기(Context context, String value) {
 				SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
 				SharedPreferences.Editor editor = pref.edit();
-				editor.putString("notice", value);
+				editor.putString("DNotice", value);
 				editor.commit();
 			}
 			
 			static String 불러오기(Context context) {
 				SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
-				return pref.getString("notice", "");
+				return pref.getString("DNotice", "");
 			}
 		}
 		
