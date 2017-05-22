@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -13,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -38,8 +36,6 @@ import java.util.ArrayList;
 
 public class Play extends BaseActivity {
 	정보.Theme.Resources theme;
-	
-	Vibrator vibrator;
 	
 	정보.uni 프로젝트;
 	boolean 로딩성공 = false;
@@ -77,7 +73,6 @@ public class Play extends BaseActivity {
 			//ee.printStackTrace();
 		} catch (IndexOutOfBoundsException ee) {
 			ee.printStackTrace();
-			//Toast.makeText(Play.this, "발견은 되었지만 알 수 없는 오류입니다\n개발자에게 어떤 팩인지 문의주시면 해결해보겠습니다!", Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -304,9 +299,6 @@ public class Play extends BaseActivity {
 		
 		
 		try {
-			
-			vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-			
 			if (프로젝트.에러내용 != null) {
 				new AlertDialog.Builder(Play.this)
 					.setTitle(언어(프로젝트.치명적인에러 ? R.string.error : R.string.warning))
@@ -1268,8 +1260,6 @@ public class Play extends BaseActivity {
 		//화면.log("패드터치 (" + x + ", " + y + ", " + 누르기때기 + ")");
 		try {
 			if (누르기때기) {
-				//vibrator.vibrate(10);
-				
 				소리.stop(정지아이디[체인][x][y]);
 				정보.uni.소리요소 e = 소리요소가져오기(체인, x, y);
 				정지아이디[체인][x][y] = 소리.play(e.아이디, 1.0F, 1.0F, 0, e.반복, 1.0F);//ID, leftVolum, rightVolum, 우선순위, 루프, 재생속도

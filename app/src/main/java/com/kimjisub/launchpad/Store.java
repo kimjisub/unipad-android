@@ -52,14 +52,14 @@ public class Store extends BaseActivity {
 	ArrayList<RelativeLayout> RL_list;
 	ArrayList<Boolean> statusPlay;
 	ArrayList<Boolean> statusInfo;
-	ArrayList<Data_store> storeDatas;
+	ArrayList<DStore> DStoreDatas;
 	
 	void initUI() {
 		LL_list.removeAllViews();
 		RL_list = new ArrayList<>();
 		statusPlay = new ArrayList<>();
 		statusInfo = new ArrayList<>();
-		storeDatas = new ArrayList<>();
+		DStoreDatas = new ArrayList<>();
 		
 		View v = View.inflate(Store.this, R.layout.store_list_error, null);
 		v.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
@@ -82,14 +82,14 @@ public class Store extends BaseActivity {
 		
 		new 통신.목록쓰레드().setOnAddListener(new 통신.목록쓰레드.onAddListener() {
 			@Override
-			public void onAdd(Data_store data) {
+			public void onAdd(DStore data) {
 				try {
-					if (storeDatas.size() == 0)
+					if (DStoreDatas.size() == 0)
 						LL_list.removeAllViews();
 					statusPlay.add(false);
 					statusInfo.add(false);
-					storeDatas.add(data);
-					data.i = storeDatas.size() - 1;
+					DStoreDatas.add(data);
+					data.i = DStoreDatas.size() - 1;
 					
 					final int i = data.i;
 					String code = data.code;
@@ -151,11 +151,11 @@ public class Store extends BaseActivity {
 			}
 		}).setOnChangeListener(new 통신.목록쓰레드.onChangeListener() {
 			@Override
-			public void onChange(Data_store data) {
+			public void onChange(DStore data) {
 				try {
 					int i_;
-					for (i_ = 0; i_ < storeDatas.size(); i_++) {
-						Data_store tmp = storeDatas.get(i_);
+					for (i_ = 0; i_ < DStoreDatas.size(); i_++) {
+						DStore tmp = DStoreDatas.get(i_);
 						if (tmp.code.equals(data.code))
 							break;
 					}
@@ -220,13 +220,13 @@ public class Store extends BaseActivity {
 					Store.this.downloadCount++;
 					프로그레스.setText(0 + "%");
 					
-					code = storeDatas.get(i).code;
-					title = storeDatas.get(i).title;
-					producerName = storeDatas.get(i).producerName;
-					isAutoPlay = storeDatas.get(i).isAutoPlay;
-					isLED = storeDatas.get(i).isLED;
-					downloadCount = storeDatas.get(i).downloadCount;
-					URL = storeDatas.get(i).URL;
+					code = DStoreDatas.get(i).code;
+					title = DStoreDatas.get(i).title;
+					producerName = DStoreDatas.get(i).producerName;
+					isAutoPlay = DStoreDatas.get(i).isAutoPlay;
+					isLED = DStoreDatas.get(i).isLED;
+					downloadCount = DStoreDatas.get(i).downloadCount;
+					URL = DStoreDatas.get(i).URL;
 					
 					super.onPreExecute();
 				}

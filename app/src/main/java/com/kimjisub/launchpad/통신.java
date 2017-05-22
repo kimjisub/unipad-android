@@ -51,7 +51,7 @@ public class 통신 {
 			String mData = "";
 			
 			try {
-				URL mUrl = new URL("https://play.google.com/store/apps/details?id=" + 정보[0]);
+				URL mUrl = new URL("https://play.google.com/DStore/apps/details?id=" + 정보[0]);
 				HttpURLConnection mConnection = (HttpURLConnection) mUrl
 					.openConnection();
 				
@@ -126,7 +126,10 @@ public class 통신 {
 				@Override
 				public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 					try {
-						Data_notice data = dataSnapshot.getValue(Data_notice.class);
+						
+						화면.log(dataSnapshot.toString());
+						DNotice data = dataSnapshot.getValue(DNotice.class);
+						
 						if (dataSnapshot.getKey().equals(languageParam))
 							onEnd(data.title, data.content);
 					} catch (Exception e) {
@@ -190,7 +193,7 @@ public class 통신 {
 				@Override
 				public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 					try {
-						Data_store data = dataSnapshot.getValue(Data_store.class);
+						DStore data = dataSnapshot.getValue(DStore.class);
 						onAdd(data);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -200,7 +203,7 @@ public class 통신 {
 				@Override
 				public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 					try {
-						Data_store data = dataSnapshot.getValue(Data_store.class);
+						DStore data = dataSnapshot.getValue(DStore.class);
 						onChange(data);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -225,7 +228,7 @@ public class 통신 {
 		}
 		
 		interface onAddListener {
-			void onAdd(Data_store data);
+			void onAdd(DStore data);
 		}
 		
 		private onAddListener addListener = null;
@@ -235,14 +238,14 @@ public class 통신 {
 			return this;
 		}
 		
-		public void onAdd(Data_store data) {
+		public void onAdd(DStore data) {
 			if (addListener != null)
 				addListener.onAdd(data);
 		}
 		
 		
 		interface onChangeListener {
-			void onChange(Data_store data);
+			void onChange(DStore data);
 		}
 		
 		private onChangeListener changeListener = null;
@@ -252,7 +255,7 @@ public class 통신 {
 			return this;
 		}
 		
-		public void onChange(Data_store data) {
+		public void onChange(DStore data) {
 			if (changeListener != null)
 				changeListener.onChange(data);
 		}

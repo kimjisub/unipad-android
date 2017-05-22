@@ -3,345 +3,336 @@
 
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/ddffba9f9d01ae0e26659fc687248c804a682677/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/2b970abb3d1dcd6bc2e09ffd8fbe78c47e702ecc/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="ab8343c3aadefce37313ceadd8bc4db1993f2ff0">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_bdb78170189f410e45e89cbe8d1ec816c58a8e72/classes.dex" />
+        revision="25.0.3"
+        sha1="29d9916bd9ad8406a53edbafbbce5e18943aa882">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_6264a8ea2537b2f8b3134a3917a4ceac5ce9284d/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/44eebb0d7902cab258ce2cf8a06c333209f1a558/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/ec77f9c32397d01a9997caf92d96ae4c79faa6ea/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="93c10d68ab5ea070f15782ae6d3a28d1f1d8f45e">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_19fd1f6f397c4a4ba636e0cd5929b00c1e217b1a/classes.dex" />
+        revision="25.0.3"
+        sha1="da27a32db6af8954ee8061537c7d476fcb1df46f">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_806a18ef4331a1b7e868a1446708bb969368135e/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/4b7406f40b75ade364cba59426ed2cc881502ef1/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/2ade460c608426112d816953efb40beb9785ad39/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="da5c606c36276a12a356e351882044c6b4b9e8d4">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_14a90bc23ed68a2a6e2d6a0667904f4e19bb749b/classes.dex" />
+        revision="25.0.3"
+        sha1="d4cf6227dd6a2ceff0f7dcf0c324380b7abf2c28">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_b04d0d8cf159a4c734bf1f70afe84283586d6b02/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/b5e32b888f6601ef824bb81c41f616747a3ad3a5/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/05956039de1d177ea426ae91f69e7e6fd5d039b3/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="0a5d5553c308643a9022f15513ebdd59e9c78d82">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_535c87c2bf52487c82b29f698047f53af2e33bb3/classes.dex" />
+        revision="25.0.3"
+        sha1="88ae4c6ceaeab7beca5e396e0698c6958e26a2d2">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_81468621f458e1671128634fe8a4a2919455cfb4/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/3af88102cae808480fc7243920ae686a3bca8be0/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/9c968fcc52d81b52e68f1755caaac7ba53af6a16/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="5cc5ef8347a6bafa14556cbd35230aa9b3431bb0">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_f7251d130017b1f7b20b1bc79b746ad93430297a/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/f30137df9c7261a34701af05345c79702666df85/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="2a7ffe939ffd830b5d4052f3c1c4c235923790ce">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_2c0d362c7d41f67c9ff35f96fba7434c5958ec1e/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="05f57bbc90ff48c13d25026b5920c579f5ed9ab2">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10000/instant-run-bootstrap_a6e184f3729ba7add6084bbd405d28290e211785/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/395ba1f1f1ac085bd41999d2eee7405f2ab28607/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="a3e61044038fb54cddf6b8dc79f41d2b57f42caf">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_518781fdcfdf3b4fdefc522a9a1d3fe8cd742960/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/4271810290276cf5af118e3cf9d21031be252801/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="70f23cb87278f89aa51e6f57e8f0fd5266572d95">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_4eea8c0cbc89a37ff1449756d3ab73f3e1a3fadc/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/0c763813522d7016cbc70ff4afb971940a60decf/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="bdcc2a9572f18b8c90a3a157cab6cdfc97c6c736">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_40c6993fcdf2c759c7a2a0df3c79e5c6eba8e706/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/incremental-runtime-classes/debug/instant-run.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="caff8e51a24901cfc9cd7e1cf83d84f4cb0c103b">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10000/instant-run_c14d99894192a932beb033efb1af5ff3a4baf7a5/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/865b423b27576cb5e0975b2a582e69fb23bf1152/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="3683531139103cc263b71d8b5ac6062832a8fd30">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_21177db4a2fa3d8b7a09951e434ecfe5df3e634b/classes.dex" />
+        revision="25.0.3"
+        sha1="47635644d0d5c103c1dd8360549eb9ba3225c7d3">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_143cbdd3f6e585777a924740a68d248624f31243/classes.dex" />
     </item>
     <item
         is-multidex="true"
         jar="/Users/kimjisub/.android/build-cache/e09aa3f7e2bd9179a55f972d6e285ab6d5c54cff/output/jars/classes.jar"
-        jumboMode="true"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
+        revision="25.0.3"
         sha1="bbf90181fea46399a9e3d0f4326883a505f71952">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e768d518851b60d32eb4fa79304398091f6ee41f/classes.dex" />
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e768d518851b60d32eb4fa79304398091f6ee41f/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/ee82376043b7e2e15e49a0234d2e1bb05539a5af/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/f23b9001eea06e9f5a6bee70f5a195624f48a0c3/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="cfa47e1b140562d47bc670629d07e209cd8b02c4">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e8350fd16de406bf27c92195d7e1186add1442bf/classes.dex" />
+        revision="25.0.3"
+        sha1="29e4e634375ab2ed25f8db5387b564c78980422a">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e397f15b370243315b6a0ffc572b4921a9126a9a/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/f18677a64b3d11f524a11d83dc937058fe2a0294/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/1fb078df7a0b828ff40ad7727621638638f317e3/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="a1aa1dd9917e887bfe732cc5e561ae6ae8f9a84a">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_ee34264684805ef8886bd8df91b30f8cd5e3c297/classes.dex" />
+        revision="25.0.3"
+        sha1="dd1d0d84da2cff18f741c63a9c3af7d9aa89fdd6">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_a075ae51b93053e838f9050945e223d31659313d/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/0fbc0e254e8631393918c0560884ad69274f76d0/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/f36f978df0189f8dd781424c40e77f9d9bcc4770/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="518768f3200963fbfec652f498da2c9d39245234">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_8a09ac06c59bf4768edc0a20c1b2365b3183e58e/classes.dex" />
+        revision="25.0.3"
+        sha1="4a26a1154d053ab11aaf4c3967c42a4d66390991">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_11be8a6f06affb9532e55c1e4242bfc5da61922e/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/bdf8367dba86b4b136741c86447da9dec81deaec/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/10fbd3814d0aff29e104ccd25898744c62b2febe/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="ec7d3099b4e3cf23230c78acaae438f3371e1c19">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_0ee1d4a2ed7f1b782abc17569361462df202a503/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/7a8597276f0993da90d6875af151a1b4809b2a35/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="163a9f0fdaa1ca9dd988554c2e1774da812847dd">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_99a7710251d06203d643bb86f6f2104183fd6280/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/a72abff2509ec1e9ea28cabecb372a6b930d7127/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="399f75732ff1ac159f9e73611536f1508bf18d3b">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e10f9e5dadd13261493fa605f3120b489304e0fc/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/ecde2e63910fc0de289febe37e76bf51c7eb421e/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
+        revision="25.0.3"
         sha1="d7c42c80f6509b9ea4db28ca7859ffae08ec5741">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_0b265b8349143bae2a82b23650509ccf552fe2b1/classes.dex" />
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_26c914243f7fba100bcfcf106729a7d68fc57b42/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/84dc01d7799c9ef67b4db4dab28cfe88aef4987c/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/github/Unipad-Android/app/libs/jazzlib.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="6003d64df88a6ce5e961fa2bad7f1b9b97689ac1">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_6e20098f080e26c8372e16e2ff5643ccaa2cd550/classes.dex" />
+        revision="25.0.3"
+        sha1="bb3ffeb8b3c5c18b70901ea94699024841128a29">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/2/jazzlib_afa6acd46bc8afc892c2fd2e71535ee9ac9214d2/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.gradle/caches/modules-2/files-2.1/com.squareup/otto/1.3.7/69d90fd7fb70e54746e26c10454c220e40a775ce/otto-1.3.7.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/4e1131f13948714321fa0144d119311b84afff7b/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="69d90fd7fb70e54746e26c10454c220e40a775ce">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/otto-1.3.7_3dfb5c7a0e304299798b8871b5b81b19577d11ab/classes.dex" />
+        revision="25.0.3"
+        sha1="38789e20ace9ab7dbd00554bd2673ab424478d3b">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_b87c0d435cb2fbec764d16315b9b026595f46a54/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/39a062642e83b55081ab2000fc9acb1b805edef0/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/b1f2d5c58dbcb534ace51a98dcdbfbdd2ef943b0/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="93c1199fcb0a34b980e6fff8350daff62e696ec2">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_fde1747e93894dcb0974eb3395cc06d0781ee879/classes.dex" />
+        revision="25.0.3"
+        sha1="95519720620b553f63afc789beba9ad582807f7c">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_2a75ffafb9c1b12ed9ef4b5b5be1129d1789ef0b/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/3649ff2df6a1c300df53f777eebe526266e78015/output/jars/classes.jar"
+        jar="/Users/kimjisub/github/Unipad-Android/app/libs/jazzlib.jar"
         jumboMode="true"
         optimize="true"
-        revision="25.0.2"
-        sha1="425c7b17887e5c3f8cbdf67ba171bc246f29b42c">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_043306219a758d3eeb38b63bad7b75529c9e5a67/classes.dex" />
+        revision="25.0.3"
+        sha1="bb3ffeb8b3c5c18b70901ea94699024841128a29">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/2/jazzlib_afa6acd46bc8afc892c2fd2e71535ee9ac9214d2/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/874218f466b73661eef17c1b063c41e8d7b048cd/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/582da7c04a775f4ca643b42ffd1e411731e5a611/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="7e6a161b3796c15fe00755ce47e03067e568ecc4">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e6ac93a3f70b23ce3914730ece6a6af511a07c33/classes.dex" />
+        revision="25.0.3"
+        sha1="efb8cb62d47d157c29d1521daac7eefd4cb881ee">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_c39016157c9883af4507f24ff412754a90c128f1/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/b0416147b9d8c1abc79a6765b054fdc0ab35274a/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/7f2cc560ac2a8794d7358539212bfefc81652af6/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="9ab787a20aae245b5b3651ae0b9c38459eb37715">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_b07346334ca6c38fa1a869cee50890eda8b178cb/classes.dex" />
+        revision="25.0.3"
+        sha1="6ef31f1555bb4cc513ec8d52711365a8b89f3600">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_7cf97fc626b9e107f6ceb7ee8d7709306a319d02/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/a5836baf241aad80d2e2d083a31e10688b0d6449/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/f55d7970512f2ef7f36571e96ace296d00528f65/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="888983f51cf34f57a93ff16832552f2f15937212">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_a6b159ee81511d0a9b6516bb132c2221b3bfb22b/classes.dex" />
+        revision="25.0.3"
+        sha1="597d0d34e15e713c486e8f4ccf739f0c7d05bde4">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_252072a71a902cb2b83a8323981ed1bd75514eeb/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/32310c53a2dc9d5829f0927ecf24a04c2d5942f7/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/e7daa90105568e258db830524b579286efcd1686/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="d6a04527c17597019dad82777c5094a3d60d1c33">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_c00a33a3ed4232459c75042d575b3147dd230190/classes.dex" />
+        revision="25.0.3"
+        sha1="45f697922e6f072daa12f8a2995dc77ab03c11da">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_1a8274a9aee62feef99587d90c81b66f742d7a21/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/968a0a279b75fafbf91fd724f16fbd823fe71ead/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/08861c69fe0513f4880597f2050a67ad17f80632/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="abf7c64e0bbaaa931738856734f76646ae62d9a5">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_c097586ce2a924e969d7bf0f246005dbd05bd6a9/classes.dex" />
+        revision="25.0.3"
+        sha1="fe159787dd4c4bc9ed6a9d4f7430e9af1f3516c8">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e8f9237e614c6b3441c1a684b0ee43b15909d94c/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/fcac2ed890869cc46e9ddb4daeb729aa5638cb69/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/f7d91da5d7e9ef59bffd0e85479910c16798a091/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="fbb206f7a119f66ce171d95aae1225a5b209a8b7">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_64d5cac4c597fe1f344c6ab560bea248251614dd/classes.dex" />
+        revision="25.0.3"
+        sha1="143e5647b772c08c9f0d807b24bbc0b05ff6c7d2">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_23422e0a5bc88599e7176978f5d54b1caac4995c/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/400b2e6bc606ddc90a69ae5531153897960d0329/output/jars/classes.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/7a38ad177fc9d7b1f9ed598883e994a0f9b72398/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="4b746ef0fd46acb5aaf3d9ab9a4cec22c28d3211">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e260b00b9cd34af80241b0fe977b31cc5e28dc81/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/4d728c0885558f908c6ee43cfd4c2d22d98fe87a/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="bfd85a88cf976eb2c54507cc914d8e8914c2f71e">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_1ce4e338fffd56ba05ff9e6774214015cf968049/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/25.3.0/support-annotations-25.3.0.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="dd84903d2e1af25a6081ef9038ad863cb14ca3a0">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/support-annotations-25.3.0_dea2815ff8e704c4a8ad4ff3f4530574bacfbe96/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/510ebb39088ee3032a77aa053b4d2e28f47801e6/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="d0a843615f3b5fa3a080497709f5436696149a09">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_f0e8d0091ceeaa783be8863b03e73faec3f57973/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/bb8a028b8c0c4505395603e2fce98a0d1e5aa76d/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="139c98ccc56f2e79729e8e83c96a583788b3f88e">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_d05f822218791e0214cd90e4147811d1d47996f0/classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="/Users/kimjisub/.android/build-cache/10559ecca600e37533b16aff2dd27ed8e87b61a5/output/jars/classes.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="25.0.2"
-        sha1="19696dc358ac668e341f28c41e3387d61ccdb81d">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_0b505f14abd6d5fdcefa7883426894bc11d47c41/classes.dex" />
+        revision="25.0.3"
+        sha1="9ed08fab37c3a572da1d9ed2bf2e36c8d3e2bc48">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_3b11b9e88b6181d4e7517c185a2f18aa15b36b75/classes.dex" />
     </item>
     <item
         is-multidex="true"
         jar="/Users/kimjisub/.android/build-cache/b772bf47767315c044ee88061dbf4de288d806ad/output/jars/classes.jar"
-        jumboMode="true"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
+        revision="25.0.3"
         sha1="78ea232052df889856dcb7b7b542707c89bb3bfb">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_a8a542ff3b592bf850ee0cb597e03fe138476edc/classes.dex" />
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_a8a542ff3b592bf850ee0cb597e03fe138476edc/classes.dex" />
     </item>
     <item
         is-multidex="true"
-        jar="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/libs/jazzlib.jar"
-        jumboMode="true"
+        jar="/Users/kimjisub/.android/build-cache/bb8a028b8c0c4505395603e2fce98a0d1e5aa76d/output/jars/classes.jar"
+        jumboMode="false"
         optimize="true"
-        revision="25.0.2"
-        sha1="bb3ffeb8b3c5c18b70901ea94699024841128a29">
-        <dex dex="/Users/kimjisub/Google 드라이브/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/2/jazzlib_16e6ab1a98e54cd6b53a080344d423a2ec777ea2/classes.dex" />
+        revision="25.0.3"
+        sha1="139c98ccc56f2e79729e8e83c96a583788b3f88e">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_d05f822218791e0214cd90e4147811d1d47996f0/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/d0d16d6058c4f6cf208c0a429457559453a8d774/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="43df709c95f6b0501b3adbc7da992b6a69a03214">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_0ebe6fb4d91fe72895c8630c0a12c321d409077f/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/874218f466b73661eef17c1b063c41e8d7b048cd/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="7e6a161b3796c15fe00755ce47e03067e568ecc4">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e6ac93a3f70b23ce3914730ece6a6af511a07c33/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/Library/Android/sdk/extras/android/m2repository/com/android/support/support-annotations/25.3.1/support-annotations-25.3.1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="bf8841d29fa39e077730e7a91222c2ce269fa7c9">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/support-annotations-25.3.1_ea1962791565e88841e6b7a52a6b20e224a63e95/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/f41cee28b8c222e00e7c561e8bae6147fe0a1411/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="54933c89f90a872aa342004e82b23e776fe12736">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_98d9df4de0f3ae25ccc620b4f23223b95646c1e4/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/510ebb39088ee3032a77aa053b4d2e28f47801e6/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="d0a843615f3b5fa3a080497709f5436696149a09">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_f0e8d0091ceeaa783be8863b03e73faec3f57973/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/24cfc2ea61422c76fd23e123ef432bfbc8451bb4/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="657abe17c5ba58f5d24803ba303c6005b180897a">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_c0f80008011c5c4ffdcfbfb6659be3810f96a016/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/8ac09892bc5bd61eb0052b76d134302dfd8f45ab/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="0e23941db151e67886844de6586e180bb2b860ad">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_d398ee1082fbb791ff1b14a6afc03101cb3f74c6/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/e8f7d94840e12c42457c19907473d00bf3766ba6/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="150252b33b00274cc868578ade018fda0d43a3eb">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_08234c8f2eed3787a0f41f7973eda49fa2539f8a/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/cc6c714f7e3a676ed2ceaf3b4d3a969def0ce461/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="052f5f840f21174a3ecf6544130194e2652cbb73">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_b50048c4831a597283bf2e04de57d355daac0a70/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.gradle/caches/modules-2/files-2.1/com.squareup/otto/1.3.7/69d90fd7fb70e54746e26c10454c220e40a775ce/otto-1.3.7.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="69d90fd7fb70e54746e26c10454c220e40a775ce">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/otto-1.3.7_3dfb5c7a0e304299798b8871b5b81b19577d11ab/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/da017a27ee4a83c4d70fc8098bf2b8e75ad20b4e/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="5cba8868595f6aaff54cf7d1798591108cf5611c">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_b2e8a0fbd423916cb9956118058f76abf82f7b8d/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/f30137df9c7261a34701af05345c79702666df85/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="2a7ffe939ffd830b5d4052f3c1c4c235923790ce">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_2c0d362c7d41f67c9ff35f96fba7434c5958ec1e/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/0457600be590c3449ac57bcc42b76221e7850bf7/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="5803db663655ef5cb38c6bcb17ba326fdb9edfbd">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_32a09ad6eebbd0ecd82871ca19d277daec6fc729/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/kimjisub/.android/build-cache/7a8597276f0993da90d6875af151a1b4809b2a35/output/jars/classes.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="25.0.3"
+        sha1="163a9f0fdaa1ca9dd988554c2e1774da812847dd">
+        <dex dex="/Users/kimjisub/github/Unipad-Android/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_99a7710251d06203d643bb86f6f2104183fd6280/classes.dex" />
     </item>
 
 </items>

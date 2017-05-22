@@ -96,7 +96,7 @@
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 
-	<!--Store-->
+	<!--DStore-->
 	<string name="canNotQuitWhileDownloading">Can\'t quit while downloading the pack</string>
 	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Unable to access server.</string>

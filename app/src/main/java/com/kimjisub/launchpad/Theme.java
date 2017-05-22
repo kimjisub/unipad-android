@@ -56,7 +56,7 @@ public class Theme extends BaseActivity {
 	
 	public void mSetTheme(int i) {
 		if (themeList.size() == i) {
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")));
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/DStore/search?q=com.kimjisub.launchpad.theme.")));
 		} else {
 			정보.Theme theme = themeList.get(i);
 			정보.설정.selectedTheme.저장하기(Theme.this, theme.package_name);
