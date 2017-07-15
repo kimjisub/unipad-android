@@ -23,11 +23,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.UIManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import static com.kimjisub.launchpad.manage.Tools.lang;
 
 /**
  * Created by rlawl on 2017-01-16.
@@ -109,8 +113,8 @@ public class Setting extends PreferenceActivity {
 				final String[] listT = new String[RlistT.length];
 				final String[] listS = new String[RlistS.length];
 				for (int i = 0; i < listT.length; i++) {
-					listT[i] = 언어(RlistT[i]);
-					listS[i] = 언어(RlistS[i]);
+					listT[i] = lang(Setting.this, RlistT[i]);
+					listS[i] = lang(Setting.this, RlistS[i]);
 				}
 				
 				
@@ -144,7 +148,7 @@ public class Setting extends PreferenceActivity {
 				});
 				
 				AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
-				builder.setTitle(언어(R.string.community));
+				builder.setTitle(lang(Setting.this, R.string.community));
 				builder.setView(listView);
 				builder.show();
 				return false;
@@ -156,7 +160,7 @@ public class Setting extends PreferenceActivity {
 			public boolean onPreferenceClick(Preference preference) {
 				
 				try {
-					Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), "premium", "inapp", 화면.DEVELOPERPAYLOAD);
+					Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), "premium", "inapp", UIManager.DEVELOPERPAYLOAD);
 					PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
 					
 					startIntentSenderForResult(pendingIntent.getIntentSender(), 1001, new Intent(), 0, 0, 0);
@@ -256,7 +260,7 @@ public class Setting extends PreferenceActivity {
 			if (resultCode == RESULT_OK) {
 				try {
 					JSONObject jo = new JSONObject(purchaseData);
-					화면.isPremium = jo.getBoolean("autoRenewing");
+					UIManager.isPremium = jo.getBoolean("autoRenewing");
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -266,9 +270,9 @@ public class Setting extends PreferenceActivity {
 	
 	@Override
 	protected void onResume() {
-		findPreference("select_theme").setSummary(정보.설정.selectedTheme.불러오기(this));
-		if (화면.isPremium)
-			findPreference("removeAds").setSummary(언어(R.string.using));
+		findPreference("select_theme").setSummary(SaveSetting.SelectedTheme.load(Setting.this));
+		if (UIManager.isPremium)
+			findPreference("removeAds").setSummary(lang(Setting.this, R.string.using));
 		super.onResume();
 	}
 	
@@ -278,10 +282,5 @@ public class Setting extends PreferenceActivity {
 		BaseActivity.finishActivity(this);
 		if (mService != null)
 			unbindService(mServiceConn);
-	}
-	
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }

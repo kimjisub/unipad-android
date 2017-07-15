@@ -96,12 +96,12 @@
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 
-	<!--DStore-->
+	<!--fbStore-->
 	<string name="canNotQuitWhileDownloading">Can\'t quit while downloading the pack</string>
 	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Unable to access server.</string>
 
-	<!--Theme-->
+	<!--ThemePack-->
 	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
 	<string name="doYouWantToRestartApp">Do you want to restart the app?</string>

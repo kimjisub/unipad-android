@@ -20,15 +20,20 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.kimjisub.launchpad.manage.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Tools.*;
+
+
 public class Main extends BaseActivity {
-	LinearLayout LL_목록;
-	String 프로젝트폴더URL;
+	LinearLayout LL_List;
+	String ProjectFolderURL;
 	
 	
 	@Override
@@ -38,8 +43,8 @@ public class Main extends BaseActivity {
 		setContentView(R.layout.activity_main);
 		
 		
-		LL_목록 = (LinearLayout) findViewById(R.id.목록);
-		프로젝트폴더URL = 정보.설정.유니팩저장경로.URL;
+		LL_List = (LinearLayout) findViewById(R.id.목록);
+		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
 		
 		updateCheck();
 		noticeCheck();
@@ -65,107 +70,29 @@ public class Main extends BaseActivity {
 			}
 		});
 		
-		업데이트();
-		
-	}
-	
-	void updateCheck() {
-		new 통신.업로드된버전(getPackageName()).setOnEndListener(new 통신.업로드된버전.onEndListener() {
-			@Override
-			public void onEnd(String 결과) {
-				try {
-					String 버전이름 = BuildConfig.VERSION_NAME;
-					if (결과 != null && !버전이름.equals(결과)) {
-						new AlertDialog.Builder(Main.this)
-							.setTitle(언어(R.string.newVersionFound))
-							.setMessage(언어(R.string.currentVersion) + " : " + 버전이름 + "\n" +
-								언어(R.string.newVersion) + " : " + 결과)
-							.setPositiveButton(언어(R.string.update), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/DStore/apps/details?id=" + getPackageName())));
-									dialog.dismiss();
-								}
-							})
-							.setNegativeButton(언어(R.string.ignore), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									dialog.dismiss();
-								}
-							})
-							.show();
-					}
-				} catch (Exception ignore) {
-				}
-			}
-		}).실행();
-	}
-	
-	void noticeCheck() {
-		new 통신.공지사항(언어(R.string.language)).setOnEndListener(new 통신.공지사항.onEndListener() {
-			@Override
-			public void onEnd(final String 제목, final String 글) {
-				if (제목 != null && 글 != null) {
-					String 이전공지사항 = 정보.설정.이전공지사항.불러오기(Main.this);
-					
-					if (!이전공지사항.equals(글)) {
-						
-						TextView 내용 = new TextView(Main.this);
-						화면.log(글);
-						내용.setText(Html.fromHtml(글));
-						int px1 = 화면.dpToPx(Main.this, 25);
-						int px2 = 화면.dpToPx(Main.this, 15);
-						내용.setPadding(px1, px2, px1, 0);
-						내용.setTextColor(0xFF000000);
-						내용.setLinkTextColor(0xffffaf00);
-						내용.setHighlightColor(0xffffaf00);
-						내용.setTextSize(16);
-						내용.setClickable(true);
-						내용.setMovementMethod(LinkMovementMethod.getInstance());
-						
-						LinearLayout 리니어 = new LinearLayout(Main.this);
-						리니어.addView(내용);
-						
-						new AlertDialog.Builder(Main.this)
-							.setTitle(제목)
-							.setPositiveButton(언어(R.string.accept), null)
-							.setNegativeButton(언어(R.string.doNotSee), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialogInterface, int i) {
-									정보.설정.이전공지사항.저장하기(Main.this, 글);
-								}
-							})
-							.setCancelable(false)
-							.setView(리니어)
-							.show();
-						
-					}
-				}
-			}
-		}).execute();
 	}
 	
 	RelativeLayout[] RL_list;
 	boolean[] statusPlay;
 	boolean[] statusInfo;
 	String[] URL;
-	정보.uni uni[];
+	Unipack unipacks[];
 	
-	void 업데이트() {
-		LL_목록.removeAllViews();
+	void update() {
+		LL_List.removeAllViews();
 		
-		File 프로젝트폴더 = new File(프로젝트폴더URL);
+		File 프로젝트폴더 = new File(ProjectFolderURL);
 		
 		if (프로젝트폴더.isDirectory()) {
 			
-			File[] 프로젝트폴더리스트 = 파일.시간별정렬(프로젝트폴더.listFiles());
+			File[] 프로젝트폴더리스트 = FileManager.sortByTime(프로젝트폴더.listFiles());
 			int num = 프로젝트폴더리스트.length;
 			
 			RL_list = new RelativeLayout[num];
 			statusPlay = new boolean[num];
 			statusInfo = new boolean[num];
 			URL = new String[num];
-			uni = new 정보.uni[num];
+			unipacks = new Unipack[num];
 			
 			int 파일개수 = 0;
 			for (int i = 0; i < num; i++) {
@@ -174,24 +101,24 @@ public class Main extends BaseActivity {
 					continue;
 				파일개수++;
 				
-				URL[i] = 프로젝트폴더URL + "/" + 프로젝트폴더_.getName();
-				uni[i] = new 정보.uni(URL[i], false);
+				URL[i] = ProjectFolderURL + "/" + 프로젝트폴더_.getName();
+				unipacks[i] = new Unipack(URL[i], false);
 				
 				RelativeLayout 항목 = (RelativeLayout) View.inflate(Main.this, R.layout.list_item, null);
 				
-				((TextView) 항목.findViewById(R.id.제목)).setText(uni[i].제목);
-				((TextView) 항목.findViewById(R.id.제작자)).setText(uni[i].제작자);
+				((TextView) 항목.findViewById(R.id.제목)).setText(unipacks[i].제목);
+				((TextView) 항목.findViewById(R.id.제작자)).setText(unipacks[i].제작자);
 				
-				((TextView) 항목.findViewById(R.id.size)).setText(uni[i].가로축 + " x " + uni[i].세로축);
-				((TextView) 항목.findViewById(R.id.chain)).setText(uni[i].체인 + "");
-				((TextView) 항목.findViewById(R.id.capacity)).setText(String.format("%.2f", (float) 파일.폴더크기(URL[i]) / 1024L / 1024L) + " MB");
+				((TextView) 항목.findViewById(R.id.size)).setText(unipacks[i].가로축 + " x " + unipacks[i].세로축);
+				((TextView) 항목.findViewById(R.id.chain)).setText(unipacks[i].체인 + "");
+				((TextView) 항목.findViewById(R.id.capacity)).setText(String.format("%.2f", (float) FileManager.getFolderSize(URL[i]) / 1024L / 1024L) + " MB");
 				
-				if (uni[i].keyLED여부)
+				if (unipacks[i].keyLED여부)
 					((TextView) 항목.findViewById(R.id.LED)).setTextColor(getResources().getColor(R.color.green));
-				if (uni[i].autoPlay여부)
+				if (unipacks[i].autoPlay여부)
 					((TextView) 항목.findViewById(R.id.자동재생)).setTextColor(getResources().getColor(R.color.green));
 				
-				항목.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
+				항목.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
 				
 				final int finalI = i;
 				항목.setOnClickListener(new View.OnClickListener() {
@@ -214,7 +141,7 @@ public class Main extends BaseActivity {
 				
 				
 				RL_list[i] = 항목;
-				LL_목록.addView(항목);
+				LL_List.addView(항목);
 			}
 			
 			if (파일개수 == 0) {
@@ -225,8 +152,8 @@ public class Main extends BaseActivity {
 						startActivity(new Intent(Main.this, Store.class));
 					}
 				});
-				v.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
-				LL_목록.addView(v);
+				v.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
+				LL_List.addView(v);
 			}
 			
 		} else {
@@ -238,11 +165,11 @@ public class Main extends BaseActivity {
 					startActivity(new Intent(Main.this, Store.class));
 				}
 			});
-			v.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
-			LL_목록.addView(v);
+			v.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
+			LL_List.addView(v);
 		}
 		
-		File nomedia = new File(프로젝트폴더URL + "/.nomedia");
+		File nomedia = new File(ProjectFolderURL + "/.nomedia");
 		if (!nomedia.isFile()) {
 			try {
 				(new FileWriter(nomedia)).close();
@@ -250,14 +177,14 @@ public class Main extends BaseActivity {
 				e.printStackTrace();
 			}
 		}
-		화면.log(프로젝트폴더URL);
+		log(ProjectFolderURL);
 	}
 	
 	void toglePlay(final int i) {
 		RelativeLayout 항목 = RL_list[i];
 		if (!statusPlay[i]) {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(화면.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
+			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
 			항목.findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
 			
 			//clickEvent
@@ -271,7 +198,7 @@ public class Main extends BaseActivity {
 			});
 		} else {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(화면.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
+			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
 			항목.findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
 			
 			//clickEvent
@@ -284,8 +211,8 @@ public class Main extends BaseActivity {
 	
 	void togleinfo(final int i) {
 		final RelativeLayout 항목 = RL_list[i];
-		final int px = 화면.dpToPx(getApplicationContext(), 30);
-		final int px2 = 화면.dpToPx(getApplicationContext(), 35);
+		final int px = UIManager.dpToPx(getApplicationContext(), 30);
+		final int px2 = UIManager.dpToPx(getApplicationContext(), 35);
 		if (!statusInfo[i]) {
 			//animation
 			Animation a = new Animation() {
@@ -304,14 +231,14 @@ public class Main extends BaseActivity {
 				@Override
 				public void onClick(View v) {
 					new AlertDialog.Builder(Main.this)
-						.setTitle(uni[i].제목)
-						.setMessage(언어(R.string.doYouWantToDeleteProject))
-						.setPositiveButton(언어(R.string.cancel), null)
-						.setNegativeButton(언어(R.string.delete), new DialogInterface.OnClickListener() {
+						.setTitle(unipacks[i].제목)
+						.setMessage(lang(Main.this, R.string.doYouWantToDeleteProject))
+						.setPositiveButton(lang(Main.this, R.string.cancel), null)
+						.setNegativeButton(lang(Main.this, R.string.delete), new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								파일.폴더삭제(URL[i]);
-								업데이트();
+								FileManager.deleteFolder(URL[i]);
+								update();
 							}
 						})
 						.show();
@@ -375,7 +302,7 @@ public class Main extends BaseActivity {
 		TV_경로 = (TextView) LL_파일탐색기.findViewById(R.id.경로);
 		LV_리스트 = (ListView) LL_파일탐색기.findViewById(R.id.리스트);
 		
-		String 경로 = 정보.설정.유니팩불러오기경로.불러오기(Main.this);
+		String 경로 =SaveSetting.FileExplorerPath.load(Main.this);
 		
 		
 		LV_리스트.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -386,7 +313,7 @@ public class Main extends BaseActivity {
 					if (file.canRead())
 						getDir(mPath.get(position));
 					else
-						다이얼로그(file.getName(), 언어(R.string.cantReadFolder));
+						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFolder));
 				} else {
 					if (file.canRead()) {
 						(new AsyncTask<String, String, String>() {
@@ -397,8 +324,8 @@ public class Main extends BaseActivity {
 							protected void onPreExecute() {
 								
 								파일탐색기.dismiss();
-								로딩.setTitle(언어(R.string.analyzing));
-								로딩.setMessage(언어(R.string.wait));
+								로딩.setTitle(lang(Main.this, R.string.analyzing));
+								로딩.setMessage(lang(Main.this, R.string.wait));
 								로딩.setCancelable(false);
 								로딩.show();
 								super.onPreExecute();
@@ -407,29 +334,29 @@ public class Main extends BaseActivity {
 							@Override
 							protected String doInBackground(String... params) {
 								
-								String 경로 = 프로젝트폴더URL + "/" + 파일.랜덤문자(10) + "/";
+								String 경로 = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
 								
 								try {
-									파일.unZipFile(file.getPath(), 경로);
-									정보.uni 프로젝트 = new 정보.uni(경로, true);
+									FileManager.unZipFile(file.getPath(), 경로);
+									Unipack project = new Unipack(경로, true);
 									
-									if (프로젝트.에러내용 == null) {
-										publishProgress(언어(R.string.analyzeComplete),
-											언어(R.string.title) + " : " + 프로젝트.제목 + "\n" +
-												언어(R.string.producerName) + " : " + 프로젝트.제작자 + "\n" +
-												언어(R.string.scale) + " : " + 프로젝트.가로축 + " x " + 프로젝트.세로축 + "\n" +
-												언어(R.string.chainCount) + " : " + 프로젝트.체인 + "\n" +
-												언어(R.string.capacity) + " : " + String.format("%.2f", (float) 파일.폴더크기(경로) / 1024L / 1024L) + " MB");
-									} else if (프로젝트.치명적인에러) {
-										publishProgress(언어(R.string.analyzeFailed), 프로젝트.에러내용);
-										파일.폴더삭제(경로);
+									if (project.에러내용 == null) {
+										publishProgress(lang(Main.this, R.string.analyzeComplete),
+											lang(Main.this, R.string.title) + " : " + project.제목 + "\n" +
+												lang(Main.this, R.string.producerName) + " : " + project.제작자 + "\n" +
+												lang(Main.this, R.string.scale) + " : " + project.가로축 + " x " + project.세로축 + "\n" +
+												lang(Main.this, R.string.chainCount) + " : " + project.체인 + "\n" +
+												lang(Main.this, R.string.capacity) + " : " + String.format("%.2f", (float) FileManager.getFolderSize(경로) / 1024L / 1024L) + " MB");
+									} else if (project.치명적인에러) {
+										publishProgress(lang(Main.this, R.string.analyzeFailed), project.에러내용);
+										FileManager.deleteFolder(경로);
 									} else {
-										publishProgress(언어(R.string.warning), 프로젝트.에러내용);
+										publishProgress(lang(Main.this, R.string.warning), project.에러내용);
 									}
 									
 								} catch (IOException e) {
-									publishProgress(언어(R.string.analyzeFailed), e.toString());
-									파일.폴더삭제(경로);
+									publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
+									FileManager.deleteFolder(경로);
 								}
 								
 								return null;
@@ -437,22 +364,22 @@ public class Main extends BaseActivity {
 							
 							@Override
 							protected void onProgressUpdate(String... progress) {
-								다이얼로그(progress[0], progress[1]);
+								UIManager.showDialog(Main.this, progress[0], progress[1]);
 							}
 							
 							@Override
 							protected void onPostExecute(String result) {
 								로딩.dismiss();
-								업데이트();
+								update();
 								super.onPostExecute(result);
 							}
 						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 						
 						
 					} else if (file.canRead()) {
-						다이얼로그(file.getName(), 언어(R.string.isNotAnUniPack));
+						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.isNotAnUniPack));
 					} else {
-						다이얼로그(file.getName(), 언어(R.string.cantReadFile));
+						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFile));
 					}
 					
 				}
@@ -466,13 +393,13 @@ public class Main extends BaseActivity {
 	}
 	
 	void getDir(String dirPath) {
-		정보.설정.유니팩불러오기경로.저장하기(Main.this, dirPath);
+		SaveSetting.FileExplorerPath.save(Main.this, dirPath);
 		TV_경로.setText(dirPath);
 		
 		mItem = new ArrayList<>();
 		mPath = new ArrayList<>();
 		File f = new File(dirPath);
-		File[] files = 파일.이름별정렬(f.listFiles());
+		File[] files = FileManager.sortByName(f.listFiles());
 		if (!dirPath.equals("/")) {
 			mItem.add("../");
 			mPath.add(f.getParent());
@@ -493,12 +420,88 @@ public class Main extends BaseActivity {
 		LV_리스트.setAdapter(fileList);
 	}
 	
-	void 다이얼로그(String 제목, String 내용) {
-		new AlertDialog.Builder(Main.this)
-			.setTitle(제목)
-			.setMessage(내용)
-			.setPositiveButton(언어(R.string.accept), null)
-			.show();
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	void updateCheck() {
+		new Networks.CheckVersion(getPackageName()).setOnEndListener(new Networks.CheckVersion.onEndListener() {
+			@Override
+			public void onEnd(String verson) {
+				try {
+					String currVerson = BuildConfig.VERSION_NAME;
+					if (verson != null && !currVerson.equals(verson)) {
+						new AlertDialog.Builder(Main.this)
+							.setTitle(lang(Main.this, R.string.newVersionFound))
+							.setMessage(lang(Main.this, R.string.currentVersion) + " : " + currVerson + "\n" +
+								lang(Main.this, R.string.newVersion) + " : " + verson)
+							.setPositiveButton(lang(Main.this, R.string.update), new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/fbStore/apps/details?id=" + getPackageName())));
+									dialog.dismiss();
+								}
+							})
+							.setNegativeButton(lang(Main.this, R.string.ignore), new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									dialog.dismiss();
+								}
+							})
+							.show();
+					}
+				} catch (Exception ignore) {
+				}
+			}
+		}).run();
+	}
+	
+	void noticeCheck() {
+		new Networks.CheckNotice(lang(Main.this, R.string.language)).setOnEndListener(new Networks.CheckNotice.onEndListener() {
+			@Override
+			public void onEnd(final String title, final String content) {
+				if (title != null && content != null) {
+					String 이전공지사항 = SaveSetting.PrevNotice.load(Main.this);
+					
+					if (!이전공지사항.equals(content)) {
+						
+						TextView 내용 = new TextView(Main.this);
+						내용.setText(Html.fromHtml(content));
+						int px1 = UIManager.dpToPx(Main.this, 25);
+						int px2 = UIManager.dpToPx(Main.this, 15);
+						내용.setPadding(px1, px2, px1, 0);
+						내용.setTextColor(0xFF000000);
+						내용.setLinkTextColor(0xffffaf00);
+						내용.setHighlightColor(0xffffaf00);
+						내용.setTextSize(16);
+						내용.setClickable(true);
+						내용.setMovementMethod(LinkMovementMethod.getInstance());
+						
+						LinearLayout 리니어 = new LinearLayout(Main.this);
+						리니어.addView(내용);
+						
+						new AlertDialog.Builder(Main.this)
+							.setTitle(title)
+							.setPositiveButton(lang(Main.this, R.string.accept), null)
+							.setNegativeButton(lang(Main.this, R.string.doNotSee), new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialogInterface, int i) {
+									SaveSetting.PrevNotice.save(Main.this, content);
+								}
+							})
+							.setCancelable(false)
+							.setView(리니어)
+							.show();
+						
+					}
+				}
+			}
+		}).run();
 	}
 	
 	@Override
@@ -526,21 +529,17 @@ public class Main extends BaseActivity {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
-		if (화면.너비 == 0 || 화면.높이 == 0 || 화면.패딩너비 == 0 || 화면.패딩높이 == 0) {
-			화면.log("padding 크기값들이 잘못되었습니다.");
+		if (UIManager.Scale[0] == 0) {
+			Tools.log("padding 크기값들이 잘못되었습니다.");
 			restartApp(Main.this);
 		}
 		
-		업데이트();
+		update();
 	}
 	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		finishActivity(this);
-	}
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }

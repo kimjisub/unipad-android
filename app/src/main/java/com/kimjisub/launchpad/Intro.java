@@ -17,11 +17,15 @@ import android.widget.Toast;
 import com.android.vending.billing.IInAppBillingService;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.kimjisub.launchpad.manage.SaveSetting.IsUsingSDCard;
+import com.kimjisub.launchpad.manage.UIManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import static com.kimjisub.launchpad.manage.Tools.lang;
 
 /**
  * Created by rlawl on 2016-02-02.
@@ -55,15 +59,15 @@ public class Intro extends BaseActivity {
 						
 						try {
 							JSONObject jo = new JSONObject(purchaseData);
-							화면.isPremium = jo.getBoolean("autoRenewing");
-							if (화면.isPremium)
+							UIManager.isPremium = jo.getBoolean("autoRenewing");
+							if (UIManager.isPremium)
 								TV_version.setTextColor(0xFFffa726);
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
 					}
 				}
-			} catch (RemoteException e) {
+			} catch (RemoteException | NullPointerException e) {
 				e.printStackTrace();
 			}
 		}
@@ -79,6 +83,7 @@ public class Intro extends BaseActivity {
 		try {
 			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
 		} catch (PackageManager.NameNotFoundException e) {
+			e.printStackTrace();
 		}
 		
 		//구글플레이 결제
@@ -92,12 +97,12 @@ public class Intro extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					(handler = new Handler()).postDelayed(runnable, 1500);
-					화면.initAd(Intro.this);
+					UIManager.initAds(Intro.this);
 				}
 				
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-					Toast.makeText(Intro.this, 언어(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
+					Toast.makeText(Intro.this, lang(Intro.this, R.string.permissionDenied), Toast.LENGTH_SHORT).show();
 					finish();
 				}
 				
@@ -110,18 +115,18 @@ public class Intro extends BaseActivity {
 	Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
-			화면.패딩너비 = findViewById(R.id.패딩화면크기).getWidth();
-			화면.패딩높이 = findViewById(R.id.패딩화면크기).getHeight();
-			화면.너비 = findViewById(R.id.화면크기).getWidth();
-			화면.높이 = findViewById(R.id.화면크기).getHeight();
+			UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.패딩화면크기).getWidth();
+			UIManager.Scale[UIManager.PaddingHight] = findViewById(R.id.패딩화면크기).getHeight();
+			UIManager.Scale[UIManager.Width] = findViewById(R.id.화면크기).getWidth();
+			UIManager.Scale[UIManager.Hight] = findViewById(R.id.화면크기).getHeight();
 			
 			startActivity(new Intent(Intro.this, Main.class));
 			overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 			
 			finish();
 			
-			정보.설정.유니팩저장경로.불러오기(Intro.this);
-			화면.광고(Intro.this);
+			IsUsingSDCard.load(Intro.this);
+			UIManager.showAds(Intro.this);
 		}
 	};
 	
@@ -145,9 +150,5 @@ public class Intro extends BaseActivity {
 		finishActivity(this);
 		if (mService != null)
 			unbindService(mServiceConn);
-	}
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }

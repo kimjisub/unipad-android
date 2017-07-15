@@ -11,19 +11,15 @@ import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
+import com.kimjisub.launchpad.manage.LaunchpadColor;
+import com.kimjisub.launchpad.manage.SaveSetting;
+
+import static com.kimjisub.launchpad.manage.Tools.log;
+import static com.kimjisub.launchpad.manage.Tools.logRecv;
+import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 /**
  * Created by rlawl on 2016-02-19.
@@ -41,17 +37,21 @@ public class Launchpad extends BaseActivity {
 	static UsbDeviceConnection 연결;
 	static boolean 실행중 = false;
 	
-	static int 런치패드기종 = 1;
+	static midiDevice 런치패드기종 = midiDevice.S;
 	static int 런치패드통신방법 = 0;
 	
 	static boolean 런치패드상태표시 = true;
 	static int 체인기록 = -1;
 	
-	
-	static final int S = 0;
-	static final int MK2 = 1;
-	static final int Pro = 2;
-	static final int Piano = 3;
+	public enum midiDevice {
+		S(0), MK2(1), Pro(2), Piano(3);
+		
+		private final int value;
+		
+		midiDevice(int value) {
+			this.value = value;
+		}
+	}
 	
 	View[] V_목록;
 	TextView[][] TV_목록;
@@ -89,10 +89,9 @@ public class Launchpad extends BaseActivity {
 			{(TextView) findViewById(R.id.piano)}
 		};
 		
-		런치패드기종 = 정보.설정.기본런치패드.불러오기(Launchpad.this);
-		런치패드통신방법 = 정보.설정.런치패드통신방법.불러오기(Launchpad.this);
+		런치패드통신방법 = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
 		
-		런치패드기종선택(V_목록[런치패드기종]);
+		런치패드기종선택(V_목록[런치패드기종.value]);
 		
 		통신방법선택(new View[]{
 			findViewById(R.id.speedFirst),
@@ -124,21 +123,21 @@ public class Launchpad extends BaseActivity {
 		
 		switch (v.getId()) {
 			case R.id.s:
-				런치패드기종 = 0;
+				런치패드기종 = midiDevice.S;
 				break;
 			case R.id.mk2:
-				런치패드기종 = 1;
+				런치패드기종 = midiDevice.MK2;
 				break;
 			case R.id.pro:
-				런치패드기종 = 2;
+				런치패드기종 = midiDevice.Pro;
 				break;
 			case R.id.piano:
-				런치패드기종 = 3;
+				런치패드기종 = midiDevice.Piano;
 				break;
 		}
 		
 		for (int i = 0; i < V_목록.length; i++) {
-			if (런치패드기종 == i) {
+			if (런치패드기종.value == i) {
 				V_목록[i].setBackgroundColor(getResources().getColor(R.color.text1));
 				for (TextView 텍스트뷰 : TV_목록[i])
 					텍스트뷰.setTextColor(getResources().getColor(R.color.dark1));
@@ -148,9 +147,6 @@ public class Launchpad extends BaseActivity {
 					텍스트뷰.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
-		
-		
-		정보.설정.기본런치패드.저장하기(Launchpad.this, 런치패드기종);
 	}
 	
 	public void 통신방법선택(View v) {
@@ -186,7 +182,7 @@ public class Launchpad extends BaseActivity {
 		}
 		
 		
-		정보.설정.런치패드통신방법.저장하기(Launchpad.this, 런치패드통신방법);
+		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, 런치패드통신방법);
 	}
 	
 	
@@ -195,21 +191,22 @@ public class Launchpad extends BaseActivity {
 		int interface_ = 0;
 		
 		if (device == null) {
-			Log.d("com.kimjisub.sig", "USB 에러 : device == null");
+			logSig("USB 에러 : device == null");
 			return false;
 		} else {
 			try {
-				Log.d("com.kimjisub.sig", "DeviceName : " + device.getDeviceName());
-				Log.d("com.kimjisub.sig", "DeviceClass : " + device.getDeviceClass());
-				Log.d("com.kimjisub.sig", "DeviceId : " + device.getDeviceId());
-				Log.d("com.kimjisub.sig", "DeviceProtocol : " + device.getDeviceProtocol());
-				Log.d("com.kimjisub.sig", "DeviceSubclass : " + device.getDeviceSubclass());
-				Log.d("com.kimjisub.sig", "InterfaceCount : " + device.getInterfaceCount());
-				Log.d("com.kimjisub.sig", "VendorId : " + device.getVendorId());
+				logSig("DeviceName : " + device.getDeviceName());
+				logSig("DeviceClass : " + device.getDeviceClass());
+				logSig("DeviceId : " + device.getDeviceId());
+				logSig("DeviceProtocol : " + device.getDeviceProtocol());
+				logSig("DeviceSubclass : " + device.getDeviceSubclass());
+				logSig("InterfaceCount : " + device.getInterfaceCount());
+				logSig("VendorId : " + device.getVendorId());
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			try {
-				Log.d("com.kimjisub.sig", "ProductId : " + device.getProductId());
+				logSig("ProductId : " + device.getProductId());
 				info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 105://mk2
@@ -238,6 +235,7 @@ public class Launchpad extends BaseActivity {
 						break;
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		
@@ -263,20 +261,20 @@ public class Launchpad extends BaseActivity {
 		}
 		연결 = 메니저.openDevice(device);
 		if (연결 == null) {
-			Log.d("com.kimjisub.sig", "USB 에러 : 연결 == null");
+			logSig("USB 에러 : 연결 == null");
 			return false;
 		}
 		if (연결.claimInterface(인터페이스, true)) {
 			(new 데이터수신()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			return true;
 		} else {
-			Log.d("com.kimjisub.sig", "USB 에러 : 연결.claimInterface(인터페이스, true)");
+			logSig("USB 에러 : 연결.claimInterface(인터페이스, true)");
 			return false;
 		}
 	}
 	
 	
-	static class 데이터수신 extends AsyncTask<String, Integer, String> {
+	public static class 데이터수신 extends AsyncTask<String, Integer, String> {
 		private static getSignalListener listener = null;
 		
 		interface getSignalListener {
@@ -301,7 +299,7 @@ public class Launchpad extends BaseActivity {
 		protected String doInBackground(String... params) {
 			if (!실행중) {
 				실행중 = true;
-				Log.d("com.kimjisub.sig", "USB 시작");
+				logSig("USB 시작");
 				
 				long 이전시간 = System.currentTimeMillis();
 				int count = 0;
@@ -320,7 +318,7 @@ public class Launchpad extends BaseActivity {
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
 								
-								if (런치패드기종 == S || 런치패드기종 == MK2) {
+								if (런치패드기종 == midiDevice.S || 런치패드기종 == midiDevice.MK2) {
 									if (command == 11 && sig == -80) {
 										if (108 <= note && note <= 111) {
 											if (velocity != 0) {
@@ -343,7 +341,7 @@ public class Launchpad extends BaseActivity {
 											}
 										}
 									}
-								} else if (런치패드기종 == Pro) {
+								} else if (런치패드기종 == midiDevice.Pro) {
 									if (command == 11 && sig == -80) {
 										if (95 <= note && note <= 98) {
 											if (velocity != 0) {
@@ -388,7 +386,7 @@ public class Launchpad extends BaseActivity {
 								
 								publishProgress(command, note, velocity);
 								String 로그 = String.format("%-7d%-7d%-7d          %-7d%-7d%-7d%-7d", command, note, velocity, byteArray[i], byteArray[i + 1], byteArray[i + 2], byteArray[i + 3]);
-								Log.d("com.kimjisub.sigRecv", 로그);
+								logRecv(로그);
 							}
 						} else if (length == -1) {
 							long 현재시간 = System.currentTimeMillis();
@@ -407,7 +405,7 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 				
-				Log.d("com.kimjisub.sig", "USB 끝");
+				logSig("USB 끝");
 			}
 			실행중 = false;
 			return null;
@@ -444,7 +442,7 @@ public class Launchpad extends BaseActivity {
 						}
 					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} catch (Exception ignore) {
-					Log.d("com.kimjisub.sig", "런치패드 LED 에러");
+					logSig("런치패드 LED 에러");
 				}
 			} else if (런치패드통신방법 == 1) {
 				송신((byte) command, (byte) -112, (byte) note, (byte) velocity);
@@ -472,26 +470,26 @@ public class Launchpad extends BaseActivity {
 	
 	static void 런치패드패드LED(int i, int j, int velo) {
 		if (i >= 0 && i <= 7 && j >= 0 && j <= 7) {
-			if (런치패드기종 == S)
-				데이터송신(9, i * 16 + j, S코드[velo]);
-			if (런치패드기종 == MK2)
+			if (런치패드기종 == midiDevice.S)
+				데이터송신(9, i * 16 + j, LaunchpadColor.SCode[velo]);
+			if (런치패드기종 == midiDevice.MK2)
 				데이터송신(9, 10 * (8 - i) + j + 1, velo);
-			if (런치패드기종 == Pro)
+			if (런치패드기종 == midiDevice.Pro)
 				데이터송신(9, 10 * (8 - i) + j + 1, velo);
 		}
 	}
 	
 	static void 런치패드체인LED(int c, int velo) {
-		if (런치패드기종 == S)
-			데이터송신(9, c * 16 + 8, S코드[velo]);
-		if (런치패드기종 == MK2)
+		if (런치패드기종 == midiDevice.S)
+			데이터송신(9, c * 16 + 8, LaunchpadColor.SCode[velo]);
+		if (런치패드기종 == midiDevice.MK2)
 			데이터송신(9, 10 * (8 - c) + 9, velo);
-		if (런치패드기종 == Pro)
+		if (런치패드기종 == midiDevice.Pro)
 			기능키데이터송신(11, 10 * (8 - c) + 9, velo);
 	}
 	
 	static void 런치패드체인초기화(int 체인) {
-		화면.log("런치패드체인초기화 (" + 체인 + ")");
+		log("런치패드체인초기화 (" + 체인 + ")");
 		
 		for (int i = 0; i < 8; i++) {
 			if (i == 체인) {
@@ -507,7 +505,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	static void 런치패드체인초기화() {
-		화면.log("런치패드체인초기화 ()");
+		log("런치패드체인초기화 ()");
 		
 		for (int i = 0; i < 8; i++) {
 			런치패드체인LED(i, 0);
@@ -522,7 +520,7 @@ public class Launchpad extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 				
-				if (런치패드기종 == S || 런치패드기종 == MK2) {
+				if (런치패드기종 == midiDevice.S || 런치패드기종 == midiDevice.MK2) {
 					if (런치패드상태표시) {
 						기능키데이터송신(11, 108, 61);
 						기능키데이터송신(11, 109, 40);
@@ -530,7 +528,7 @@ public class Launchpad extends BaseActivity {
 						기능키데이터송신(11, 111, 40);
 						런치패드체인초기화(체인기록);
 					}
-				} else if (런치패드기종 == Pro) {
+				} else if (런치패드기종 == midiDevice.Pro) {
 					런치패드상태표시 = !런치패드상태표시;
 					런치패드체인초기화(체인기록);
 				}
@@ -541,299 +539,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	
-	static final int[] 색코드 = new int[]{
-		0x000000 - 0xFF000000,
-		0xfafafa - 0x88000000,//1
-		0xfafafa - 0x55000000,//2
-		0xfafafa,//3
-		0xf8bbd0,
-		0xef5350,//5
-		0xe57373,
-		0xef9a9a,
-		
-		0xfff3e0,
-		0xffa726,
-		0xffb960,//10
-		0xffcc80,
-		0xffe0b2,
-		0xffee58,
-		0xfff59d,
-		0xfff9c4,
-		
-		0xdcedc8,
-		0x8bc34a,//17
-		0xaed581,
-		0xbfdf9f,
-		0x5ee2b0,
-		0x00ce3c,
-		0x00ba43,
-		0x119c3f,
-		
-		0x57ecc1,
-		0x00e864,
-		0x00e05c,
-		0x00d545,
-		0x7afddd,
-		0x00e4c5,
-		0x00e0b2,
-		0x01eec6,
-		
-		0x49efef,
-		0x00e7d8,
-		0x00e5d1,
-		0x01efde,
-		0x6addff,
-		0x00dafe,
-		0x01d6ff,
-		0x08acdc,
-		
-		0x73cefe,
-		0x0d9bf7,
-		0x148de4,
-		0x2a77c9,
-		0x8693ff,
-		0x2196f3,//45
-		0x4668f6,
-		0x4153dc,
-		
-		0xb095ff,
-		0x8453fd,
-		0x634acd,
-		0x5749c5,
-		0xffb7ff,
-		0xe863fb,
-		0xd655ed,
-		0xd14fe9,
-		
-		0xfc99e3,
-		0xe736c2,
-		0xe52fbe,
-		0xe334b6,
-		0xed353e,
-		0xffa726,//61
-		0xf4df0b,
-		0x8bc34a,//63
-		
-		0x5cd100,//64
-		0x00d29e,
-		0x2388ff,
-		0x3669fd,
-		0x00b4d0,
-		0x475cdc,
-		0xfafafa - 0x22000000,//70
-		0xfafafa - 0x33000000,//71
-		
-		0xf72737,
-		0xd2ea7b,
-		0xc8df10,
-		0x7fe422,
-		0x00c931,
-		0x00d7a6,
-		0x00d8fc,
-		0x0b9bfc,
-		
-		0x585cf5,
-		0xac59f0,
-		0xd980dc,
-		0xb8814a,
-		0xff9800,
-		0xabdf22,
-		0x9ee154,
-		0x66bb6a,//87
-		
-		0x3bda47,
-		0x6fdeb9,
-		0x27dbda,
-		0x9cc8fd,
-		0x79b8f7,
-		0xafafef,
-		0xd580eb,
-		0xf74fca,
-		
-		0xea8a1f,
-		0xdbdb08,
-		0x9cd60d,
-		0xf3d335,
-		0xc8af41,
-		0x00ca69,
-		0x24d2b0,
-		0x757ebe,
-		
-		0x5388db,
-		0xe5c5a6,
-		0xe93b3b,
-		0xf9a2a1,
-		0xed9c65,
-		0xe1ca72,
-		0xb8da78,
-		0x98d52c,
-		
-		0x626cbd,
-		0xcac8a0,
-		0x90d4c2,
-		0xceddfe,
-		0xbeccf7,
-		0xfafafa - 0xAA000000,//117
-		0xfafafa - 0x88000000,//118
-		0xfafafa - 0x55000000,//119
-		
-		0xfe1624,
-		0xcd2724,
-		0x9ccc65,//122
-		0x009c1b,
-		0xffff00,//124
-		0xbeb212,
-		0xf5d01d,//126
-		0xe37829,
-		
-	};
 	
-	static final int[] S코드 = new int[]{
-		0,//0
-		61,
-		62,
-		63,
-		1,
-		2,
-		3,
-		3,
-		
-		21,//8
-		63,
-		62,
-		61,
-		53,
-		53,
-		53,
-		53,
-		
-		53,//16
-		56,
-		56,
-		56,
-		56,
-		56,
-		56,
-		56,
-		
-		56,//24
-		56,
-		56,
-		56,
-		53,
-		53,
-		53,
-		53,
-		
-		53,//32
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		
-		53,//40
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		
-		53,//48
-		53,
-		53,
-		53,
-		37,
-		39,
-		39,
-		39,
-		
-		37,//56
-		39,
-		39,
-		39,
-		3,
-		55,
-		57,
-		56,
-		
-		56,//64
-		40,
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		
-		3,//72
-		57,
-		57,
-		56,
-		56,
-		56,
-		53,
-		53,
-		
-		53,//80
-		53,
-		53,
-		53,
-		58,
-		56,
-		56,
-		56,
-		
-		56,//88
-		56,
-		56,
-		53,
-		53,
-		53,
-		47,
-		63,
-		
-		59,//96
-		57,
-		57,
-		57,
-		57,
-		56,
-		56,
-		53,
-		
-		53,//104
-		53,
-		3,
-		19,
-		53,
-		53,
-		53,
-		53,
-		
-		53,//112
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		53,
-		
-		3,//120
-		3,
-		56,
-		56,
-		57,
-		57,
-		57,
-		57,
-		
-	};
 
 	/*void 종료() {
 		try {
