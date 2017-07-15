@@ -13,8 +13,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.kimjisub.launchpad.fb.fbStore;
+import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.UIManager;
+import com.kimjisub.launchpad.manage.Networks;
+import com.kimjisub.launchpad.manage.Unipack;
+
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +28,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import static com.kimjisub.launchpad.manage.Tools.lang;
+import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
  * Created by rlawl on 2016-03-04.
@@ -41,7 +50,7 @@ public class Store extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
 		
-		projectFolderURL = 정보.설정.유니팩저장경로.URL;
+		projectFolderURL = SaveSetting.IsUsingSDCard.URL;
 		
 		LL_list = (LinearLayout) findViewById(R.id.목록);
 		
@@ -52,7 +61,7 @@ public class Store extends BaseActivity {
 	ArrayList<RelativeLayout> RL_list;
 	ArrayList<Boolean> statusPlay;
 	ArrayList<Boolean> statusInfo;
-	ArrayList<DStore> DStoreDatas;
+	ArrayList<fbStore> DStoreDatas;
 	
 	void initUI() {
 		LL_list.removeAllViews();
@@ -62,16 +71,16 @@ public class Store extends BaseActivity {
 		DStoreDatas = new ArrayList<>();
 		
 		View v = View.inflate(Store.this, R.layout.store_list_error, null);
-		v.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
+		v.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
 		LL_list.addView(v);
 		
 		final String[] 프로젝트목록;
 		
-		File 프로젝트폴더 = new File(projectFolderURL);
+		java.io.File 프로젝트폴더 = new java.io.File(projectFolderURL);
 		
 		if (프로젝트폴더.isDirectory()) {
 			프로젝트목록 = new String[프로젝트폴더.listFiles().length];
-			File[] 프로젝트폴더리스트 = 프로젝트폴더.listFiles();
+			java.io.File[] 프로젝트폴더리스트 = 프로젝트폴더.listFiles();
 			for (int i = 0; i < 프로젝트폴더리스트.length; i++)
 				프로젝트목록[i] = 프로젝트폴더리스트[i].getName();
 			
@@ -80,9 +89,9 @@ public class Store extends BaseActivity {
 			프로젝트폴더.mkdir();
 		}
 		
-		new 통신.목록쓰레드().setOnAddListener(new 통신.목록쓰레드.onAddListener() {
+		new Networks.GetStoreList().setOnAddListener(new Networks.GetStoreList.onDataListener() {
 			@Override
-			public void onAdd(DStore data) {
+			public void onAdd(fbStore data) {
 				try {
 					if (DStoreDatas.size() == 0)
 						LL_list.removeAllViews();
@@ -113,7 +122,7 @@ public class Store extends BaseActivity {
 						((TextView) 항목.findViewById(R.id.자동재생)).setTextColor(getResources().getColor(R.color.pink));
 					((TextView) 항목.findViewById(R.id.downloadCount)).setText((new DecimalFormat("#,##0")).format(downloadCount));
 					
-					항목.findViewById(R.id.제목제작자).setX(화면.dpToPx(getApplicationContext(), 10));
+					항목.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
 					
 					boolean 이미다운됨 = false;
 					for (int j = 0; j < 프로젝트목록.length; j++) {
@@ -149,13 +158,13 @@ public class Store extends BaseActivity {
 					e.printStackTrace();
 				}
 			}
-		}).setOnChangeListener(new 통신.목록쓰레드.onChangeListener() {
+			
 			@Override
-			public void onChange(DStore data) {
+			public void onChange(fbStore data) {
 				try {
 					int i_;
 					for (i_ = 0; i_ < DStoreDatas.size(); i_++) {
-						DStore tmp = DStoreDatas.get(i_);
+						fbStore tmp = DStoreDatas.get(i_);
 						if (tmp.code.equals(data.code))
 							break;
 					}
@@ -187,7 +196,7 @@ public class Store extends BaseActivity {
 					e.printStackTrace();
 				}
 			}
-		}).execute();
+		}).run();
 	}
 	
 	void onPlay(final int i) {
@@ -195,7 +204,7 @@ public class Store extends BaseActivity {
 		final RelativeLayout 항목 = RL_list.get(i);
 		if (!statusPlay.get(i)) {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(화면.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
+			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
 			항목.findViewById(R.id.play1).animate().alpha(0).setDuration(500).start();
 			
 			//clickEvent
@@ -234,9 +243,8 @@ public class Store extends BaseActivity {
 				@Override
 				protected String doInBackground(String[] params) {
 					
-					통신.sendGet("http://unipad.kr:8081/?code=" + code);
+					Networks.sendGet("http://unipad.kr:8081/?code=" + code);
 					try {
-						int count = 0;
 						
 						URL url = new URL(URL);
 						HttpURLConnection conexion = (HttpURLConnection) url.openConnection();
@@ -248,7 +256,7 @@ public class Store extends BaseActivity {
 						Log.d("com.kimjisub.log", "파일크기 : " + 파일크기);
 						파일크기 = 파일크기 == -1 ? 104857600 : 파일크기;
 						
-						다운로드경로 = 정보.설정.유니팩저장경로.URL + "/" + 파일.랜덤문자(10) + ".uni.zip";
+						다운로드경로 = SaveSetting.IsUsingSDCard.URL + "/" + FileManager.randomString(10) + ".uni.zip";
 						
 						InputStream input = new BufferedInputStream(url.openStream());
 						OutputStream output = new FileOutputStream(다운로드경로);
@@ -257,6 +265,7 @@ public class Store extends BaseActivity {
 						
 						long total = 0;
 						
+						int count;
 						while ((count = input.read(data)) != -1) {
 							total += count;
 							publishProgress(0L, total);
@@ -270,20 +279,20 @@ public class Store extends BaseActivity {
 						String 경로 = projectFolderURL + "/" + code + "/";
 						
 						try {
-							파일.unZipFile(다운로드경로, 경로);
-							정보.uni 프로젝트 = new 정보.uni(경로, true);
+							FileManager.unZipFile(다운로드경로, 경로);
+							Unipack 프로젝트 = new Unipack(경로, true);
 							if (프로젝트.치명적인에러) {
 								publishProgress(-1L);
-								파일.폴더삭제(경로);
+								FileManager.deleteFolder(경로);
 							} else
 								publishProgress(2L);
 							
 						} catch (Exception e) {
 							publishProgress(-1L);
-							파일.폴더삭제(경로);
+							FileManager.deleteFolder(경로);
 							e.printStackTrace();
 						}
-						파일.파일삭제(다운로드경로);
+						FileManager.deleteFolder(다운로드경로);
 						
 						
 					} catch (Exception e) {
@@ -300,13 +309,13 @@ public class Store extends BaseActivity {
 					if (progress[0] == 0) {//다운중
 						프로그레스.setText((int) ((float) progress[1] / 파일크기 * 100) + "%");
 					} else if (progress[0] == 1) {//분석중
-						프로그레스.setText(언어(R.string.analyzing));
+						프로그레스.setText(lang(Store.this, R.string.analyzing));
 						항목.findViewById(R.id.play1).setBackground(항목.findViewById(R.id.play2).getBackground());
 						항목.findViewById(R.id.play1).setAlpha(1);
 						항목.findViewById(R.id.play2).setBackground(getResources().getDrawable(R.drawable.border_play_orange));
 						항목.findViewById(R.id.play1).animate().alpha(0).setDuration(500).start();
 					} else if (progress[0] == -1) {//실패
-						프로그레스.setText(언어(R.string.failed));
+						프로그레스.setText(lang(Store.this, R.string.failed));
 						항목.findViewById(R.id.play1).setBackground(항목.findViewById(R.id.play2).getBackground());
 						항목.findViewById(R.id.play1).setAlpha(1);
 						항목.findViewById(R.id.play2).setBackground(getResources().getDrawable(R.drawable.border_play_red));
@@ -316,7 +325,7 @@ public class Store extends BaseActivity {
 						항목.findViewById(R.id.play1).setBackground(항목.findViewById(R.id.play2).getBackground());
 						항목.findViewById(R.id.play1).setAlpha(1);
 						항목.findViewById(R.id.play2).setBackground(getResources().getDrawable(R.drawable.border_play_green));
-						항목.findViewById(R.id.제목제작자).animate().x(화면.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
+						항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
 						항목.findViewById(R.id.play1).animate().alpha(0).setDuration(500).start();
 					}
 				}
@@ -328,7 +337,7 @@ public class Store extends BaseActivity {
 			}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		} else {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(화면.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
+			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
 			항목.findViewById(R.id.play1).animate().alpha(1).setDuration(500).start();
 			
 			//clickEvent
@@ -341,8 +350,8 @@ public class Store extends BaseActivity {
 	
 	void togleinfo(final int i) {
 		final RelativeLayout 항목 = RL_list.get(i);
-		final int px = 화면.dpToPx(getApplicationContext(), 30);
-		final int px2 = 화면.dpToPx(getApplicationContext(), 35);
+		final int px = UIManager.dpToPx(getApplicationContext(), 30);
+		final int px2 = UIManager.dpToPx(getApplicationContext(), 35);
 		if (!statusInfo.get(i)) {
 			//animation
 			Animation a = new Animation() {
@@ -372,7 +381,7 @@ public class Store extends BaseActivity {
 		statusInfo.set(i, !statusInfo.get(i));
 	}
 	
-	void clearInfo() {
+	/*void clearInfo() {
 		for (int i = 0; i < statusInfo.size(); i++)
 			if (statusInfo.get(i))
 				togleinfo(i);
@@ -382,15 +391,15 @@ public class Store extends BaseActivity {
 		for (int i = 0; i < statusInfo.size(); i++)
 			if (statusInfo.get(i) && i != e)
 				togleinfo(i);
-	}
+	}*/
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		
-		if (화면.너비 == 0 || 화면.높이 == 0 || 화면.패딩너비 == 0 || 화면.패딩높이 == 0) {
-			화면.log("padding 크기값들이 잘못되었습니다.");
+		if (UIManager.Scale[0] == 0) {
+			log("padding 크기값들이 잘못되었습니다.");
 			restartApp(Store.this);
 		}
 	}
@@ -401,7 +410,7 @@ public class Store extends BaseActivity {
 		switch (keyCode) {
 			case KeyEvent.KEYCODE_BACK:
 				if (downloadCount > 0) {
-					Toast.makeText(Store.this, 언어(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+					Toast.makeText(Store.this, lang(Store.this, R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
 					return true;
 				} else
 					finish();
@@ -414,9 +423,5 @@ public class Store extends BaseActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		finishActivity(this);
-	}
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }

@@ -14,13 +14,18 @@ import android.widget.TextView;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.ThemePack;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Tools.lang;
+import static com.kimjisub.launchpad.manage.Tools.log;
+
 public class Theme extends BaseActivity {
 	
-	static ArrayList<정보.Theme> themeList;
+	static ArrayList<ThemePack> themeList;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,19 +61,19 @@ public class Theme extends BaseActivity {
 	
 	public void mSetTheme(int i) {
 		if (themeList.size() == i) {
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/DStore/search?q=com.kimjisub.launchpad.theme.")));
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/fbStore/search?q=com.kimjisub.launchpad.ThemePack.")));
 		} else {
-			정보.Theme theme = themeList.get(i);
-			정보.설정.selectedTheme.저장하기(Theme.this, theme.package_name);
+			ThemePack theme = themeList.get(i);
+			SaveSetting.SelectedTheme.save(Theme.this, theme.package_name);
 		}
 	}
 	
 	public int mGetTheme() {
 		int ret = 0;
-		String packageName = 정보.설정.selectedTheme.불러오기(Theme.this);
+		String packageName = SaveSetting.SelectedTheme.load(Theme.this);
 		for (int i = 0; i < themeList.size(); i++) {
-			정보.Theme theme = themeList.get(i);
-			화면.log(packageName + ", " + theme.package_name);
+			ThemePack theme = themeList.get(i);
+			log(packageName + ", " + theme.package_name);
 			if (theme.package_name.equals(packageName)) {
 				ret = i;
 				break;
@@ -81,7 +86,7 @@ public class Theme extends BaseActivity {
 		
 		private int itemsCount = 0;
 		
-		public Adapter() {
+		Adapter() {
 			itemsCount = themeList.size() + 1;
 		}
 		
@@ -93,13 +98,13 @@ public class Theme extends BaseActivity {
 		@Override
 		public void onBindViewHolder(ViewHolder holder, int position) {
 			try {
-				정보.Theme theme = themeList.get(position);
+				ThemePack theme = themeList.get(position);
 				holder.theme_icon.setBackground(theme.icon);
 				holder.theme_version.setText(theme.version);
 				holder.theme_author.setText(theme.author);
 			} catch (Exception ignore) {
 				holder.theme_icon.setBackground(getResources().getDrawable(R.drawable.theme_add));
-				holder.theme_version.setText(언어(R.string.themeDownload));
+				holder.theme_version.setText(lang(Theme.this,R.string.themeDownload));
 			}
 		}
 		
@@ -109,12 +114,12 @@ public class Theme extends BaseActivity {
 		}
 	}
 	
-	public final static class ViewHolder extends RecyclerView.ViewHolder {
+	final static class ViewHolder extends RecyclerView.ViewHolder {
 		ImageView theme_icon;
 		TextView theme_version;
 		TextView theme_author;
 		
-		public ViewHolder(View itemView) {
+		ViewHolder(View itemView) {
 			super(itemView);
 			theme_icon = (ImageView) itemView.findViewById(R.id.theme_icon);
 			theme_version = (TextView) itemView.findViewById(R.id.theme_version);
@@ -131,13 +136,13 @@ public class Theme extends BaseActivity {
 		
 		for (ApplicationInfo applicationInfo : packages) {
 			String packageName = applicationInfo.packageName;
-			if (packageName.startsWith("com.kimjisub.launchpad.theme."))
+			if (packageName.startsWith("com.kimjisub.launchpad.ThemePack."))
 				addTheme(packageName);
 		}
 	}
 	
 	void addTheme(String packageName) {
-		정보.Theme theme = new 정보.Theme(Theme.this, packageName);
+		ThemePack theme = new ThemePack(Theme.this, packageName);
 		try {
 			theme.init();
 			themeList.add(theme);
@@ -155,9 +160,5 @@ public class Theme extends BaseActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		finishActivity(this);
-	}
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }

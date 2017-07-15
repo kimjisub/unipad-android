@@ -1,8 +1,8 @@
 <resources>
 
-	<!-- Base application theme. -->
+	<!-- Base application ThemePack. -->
 	<style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-		<!-- Customize your theme here. -->
+		<!-- Customize your ThemePack here. -->
 		<item name="colorPrimary">@color/dark5</item>
 		<item name="colorPrimaryDark">@color/dark5</item>
 		<item name="colorAccent">@color/dark5</item>

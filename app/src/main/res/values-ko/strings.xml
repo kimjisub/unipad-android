@@ -96,12 +96,12 @@
 	<string name="signal_SpeedFirst">속도 우선</string>
 	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
 
-	<!--DStore-->
+	<!--fbStore-->
 	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
 	<string name="downloadCount">다운로드 수</string>
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
 
-	<!--Theme-->
+	<!--ThemePack-->
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>

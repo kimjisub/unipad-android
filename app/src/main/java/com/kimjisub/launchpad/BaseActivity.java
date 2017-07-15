@@ -9,24 +9,29 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
+import com.kimjisub.launchpad.manage.SaveSetting;
 import com.tsengvn.typekit.Typekit;
 import com.tsengvn.typekit.TypekitContextWrapper;
 
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Tools.lang;
+import static com.kimjisub.launchpad.manage.Tools.log;
+
 /**
- * Created by rlawl on 2017-02-11.
+ * Created by kimjisub on 2017-02-11.
+ * Refactoring...
  */
 
 public class BaseActivity extends AppCompatActivity {
 	
-	public static ArrayList<Activity> aList = new ArrayList<Activity>();
+	public static ArrayList<Activity> aList = new ArrayList();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		if (정보.설정.폰트설정.불러오기(BaseActivity.this)) {
+		if (SaveSetting.DefaultFont.load(BaseActivity.this)) {
 			Typekit.getInstance()
 				.addNormal(Typekit.createFromAsset(this, "Montserrat-Regular.ttf"))
 				.addCustom1(Typekit.createFromAsset(this, "Quicksand-Bold.ttf"));
@@ -76,21 +81,21 @@ public class BaseActivity extends AppCompatActivity {
 			Activity activity = aList.get(i);
 			str += "\n" + activity.getLocalClassName();
 		}
-		화면.log(str);
+		log(str);
 	}
 	
 	static void 재시작(final Context context) {
 		new AlertDialog.Builder(context)
-			.setTitle(언어(context, R.string.requireRestart))
-			.setMessage(언어(context, R.string.doYouWantToRestartApp))
-			.setPositiveButton(언어(context, R.string.restart), new DialogInterface.OnClickListener() {
+			.setTitle(lang(context, R.string.requireRestart))
+			.setMessage(lang(context, R.string.doYouWantToRestartApp))
+			.setPositiveButton(lang(context, R.string.restart), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					BaseActivity.restartApp((Activity) context);
 					dialog.dismiss();
 				}
 			})
-			.setNegativeButton(언어(context, R.string.cancel), new AlertDialog.OnClickListener() {
+			.setNegativeButton(lang(context, R.string.cancel), new AlertDialog.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.dismiss();
@@ -98,11 +103,6 @@ public class BaseActivity extends AppCompatActivity {
 				}
 			})
 			.show();
-	}
-	
-	
-	static String 언어(Context context, int id) {
-		return context.getResources().getString(id);
 	}
 	
 	

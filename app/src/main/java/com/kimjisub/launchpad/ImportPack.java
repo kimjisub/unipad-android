@@ -5,7 +5,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
 
+import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Unipack;
+
 import java.io.IOException;
+
+import static com.kimjisub.launchpad.manage.Tools.*;
 
 /**
  * Created by rlawl on 2016-04-25.
@@ -20,15 +26,15 @@ public class ImportPack extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		
-		final String 프로젝트폴더URL = 정보.설정.유니팩저장경로.URL;
-		final String 프로젝트경로 = getIntent().getData().getPath();
+		final String folderURL = SaveSetting.IsUsingSDCard.URL;
+		final String projectURL = getIntent().getData().getPath();
 		
 		
 		final TextView TV_제목 = (TextView) findViewById(R.id.제목);
 		final TextView TV_메시지 = (TextView) findViewById(R.id.메시지);
 		
 		
-		TV_메시지.setText(프로젝트경로);
+		TV_메시지.setText(projectURL);
 		
 		(new AsyncTask<String, String, String>() {
 			
@@ -45,36 +51,36 @@ public class ImportPack extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 				
-				String 경로 = 프로젝트폴더URL + "/" + 파일.랜덤문자(10) + "/";
+				String 경로 = folderURL + "/" + FileManager.randomString(10) + "/";
 				
 				try {
-					파일.unZipFile(프로젝트경로, 경로);
-					정보.uni 프로젝트 = new 정보.uni(경로, true);
+					FileManager.unZipFile(projectURL, 경로);
+					Unipack 프로젝트 = new Unipack(경로, true);
 					
 					if (프로젝트.에러내용 == null) {
 						성공 = true;
 						경고 = false;
-						제목 = 언어(R.string.analyzeComplete);
-						메시지 = 언어(R.string.title) + " : " + 프로젝트.제목 + "\n" +
-							언어(R.string.producerName) + " : " + 프로젝트.제작자 + "\n" +
-							언어(R.string.scale) + " : " + 프로젝트.가로축 + " x " + 프로젝트.세로축 + "\n" +
-							언어(R.string.chainCount) + " : " + 프로젝트.체인 + "\n" +
-							언어(R.string.capacity) + " : " + String.format("%.2f", (float) 파일.폴더크기(경로) / 1024L / 1024L) + " MB";
+						제목 = lang(ImportPack.this, R.string.analyzeComplete);
+						메시지 = lang(ImportPack.this, R.string.title) + " : " + 프로젝트.제목 + "\n" +
+							lang(ImportPack.this, R.string.producerName) + " : " + 프로젝트.제작자 + "\n" +
+							lang(ImportPack.this, R.string.scale) + " : " + 프로젝트.가로축 + " x " + 프로젝트.세로축 + "\n" +
+							lang(ImportPack.this, R.string.chainCount) + " : " + 프로젝트.체인 + "\n" +
+							lang(ImportPack.this, R.string.capacity) + " : " + String.format("%.2f", (float) FileManager.getFolderSize(경로) / 1024L / 1024L) + " MB";
 					} else if (프로젝트.치명적인에러) {
-						제목 = 언어(R.string.analyzeFailed);
+						제목 = lang(ImportPack.this, R.string.analyzeFailed);
 						메시지 = 프로젝트.에러내용;
-						파일.폴더삭제(경로);
+						FileManager.deleteFolder(경로);
 					} else {
 						성공 = true;
 						경고 = true;
-						제목 = 언어(R.string.warning);
+						제목 = lang(ImportPack.this, R.string.warning);
 						메시지 = 프로젝트.에러내용;
 					}
 					
 				} catch (IOException e) {
-					제목 = 언어(R.string.analyzeFailed);
+					제목 = lang(ImportPack.this, R.string.analyzeFailed);
 					메시지 = e.getMessage();
-					파일.폴더삭제(경로);
+					FileManager.deleteFolder(경로);
 				}
 				
 				return null;
@@ -106,9 +112,5 @@ public class ImportPack extends BaseActivity {
 		super.onDestroy();
 		finishActivity(this);
 		restartApp(this);
-	}
-	
-	String 언어(int id) {
-		return getResources().getString(id);
 	}
 }
