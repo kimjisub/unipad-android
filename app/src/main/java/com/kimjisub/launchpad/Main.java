@@ -20,7 +20,12 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.manage.*;
+import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Networks;
+import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.Tools;
+import com.kimjisub.launchpad.manage.UIManager;
+import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,7 +33,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.kimjisub.launchpad.manage.Tools.*;
+import static com.kimjisub.launchpad.manage.Tools.lang;
+import static com.kimjisub.launchpad.manage.Tools.log;
 
 
 public class Main extends BaseActivity {
@@ -43,27 +49,27 @@ public class Main extends BaseActivity {
 		setContentView(R.layout.activity_main);
 		
 		
-		LL_List = (LinearLayout) findViewById(R.id.목록);
+		LL_List = (LinearLayout) findViewById(R.id.list);
 		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
 		
 		updateCheck();
 		noticeCheck();
 		
-		findViewById(R.id.uni불러오기).setOnClickListener(new View.OnClickListener() {
+		findViewById(R.id.fab_loadUniPack).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				uni불러오기();
+				loadUniPack();
 			}
 		});
 		
-		findViewById(R.id.스토어).setOnClickListener(new View.OnClickListener() {
+		findViewById(R.id.fab_store).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Store.class));
 			}
 		});
 		
-		findViewById(R.id.설정).setOnClickListener(new View.OnClickListener() {
+		findViewById(R.id.fab_setting).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Setting.class));
@@ -72,7 +78,7 @@ public class Main extends BaseActivity {
 		
 	}
 	
-	RelativeLayout[] RL_list;
+	RelativeLayout[] RL_items;
 	boolean[] statusPlay;
 	boolean[] statusInfo;
 	String[] URL;
@@ -81,70 +87,69 @@ public class Main extends BaseActivity {
 	void update() {
 		LL_List.removeAllViews();
 		
-		File 프로젝트폴더 = new File(ProjectFolderURL);
+		File projectFolder = new File(ProjectFolderURL);
 		
-		if (프로젝트폴더.isDirectory()) {
+		if (projectFolder.isDirectory()) {
 			
-			File[] 프로젝트폴더리스트 = FileManager.sortByTime(프로젝트폴더.listFiles());
-			int num = 프로젝트폴더리스트.length;
+			File[] projects = FileManager.sortByTime(projectFolder.listFiles());
+			int num = projects.length;
 			
-			RL_list = new RelativeLayout[num];
+			RL_items = new RelativeLayout[num];
 			statusPlay = new boolean[num];
 			statusInfo = new boolean[num];
 			URL = new String[num];
 			unipacks = new Unipack[num];
 			
-			int 파일개수 = 0;
+			int count = 0;
 			for (int i = 0; i < num; i++) {
-				File 프로젝트폴더_ = 프로젝트폴더리스트[i];
-				if (프로젝트폴더_.isFile())
-					continue;
-				파일개수++;
+				File project = projects[i];
+				if (project.isFile()) continue;
+				count++;
 				
-				URL[i] = ProjectFolderURL + "/" + 프로젝트폴더_.getName();
+				URL[i] = ProjectFolderURL + "/" + project.getName();
 				unipacks[i] = new Unipack(URL[i], false);
 				
-				RelativeLayout 항목 = (RelativeLayout) View.inflate(Main.this, R.layout.list_item, null);
+				RelativeLayout RL_item = (RelativeLayout) View.inflate(Main.this, R.layout.list_item, null);
 				
-				((TextView) 항목.findViewById(R.id.제목)).setText(unipacks[i].제목);
-				((TextView) 항목.findViewById(R.id.제작자)).setText(unipacks[i].제작자);
+				((TextView) RL_item.findViewById(R.id.title)).setText(unipacks[i].title);
+				((TextView) RL_item.findViewById(R.id.producerName)).setText(unipacks[i].producerName);
 				
-				((TextView) 항목.findViewById(R.id.size)).setText(unipacks[i].가로축 + " x " + unipacks[i].세로축);
-				((TextView) 항목.findViewById(R.id.chain)).setText(unipacks[i].체인 + "");
-				((TextView) 항목.findViewById(R.id.capacity)).setText(String.format("%.2f", (float) FileManager.getFolderSize(URL[i]) / 1024L / 1024L) + " MB");
+				((TextView) RL_item.findViewById(R.id.size)).setText(unipacks[i].buttonX + " x " + unipacks[i].buttonY);
+				((TextView) RL_item.findViewById(R.id.chain)).setText(unipacks[i].chain + "");
+				((TextView) RL_item.findViewById(R.id.capacity)).setText(FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB");
 				
-				if (unipacks[i].keyLED여부)
-					((TextView) 항목.findViewById(R.id.LED)).setTextColor(getResources().getColor(R.color.green));
-				if (unipacks[i].autoPlay여부)
-					((TextView) 항목.findViewById(R.id.자동재생)).setTextColor(getResources().getColor(R.color.green));
+				if (unipacks[i].isKeyLED)
+					((TextView) RL_item.findViewById(R.id.LED)).setTextColor(getResources().getColor(R.color.green));
+				if (unipacks[i].isAutoPlay)
+					((TextView) RL_item.findViewById(R.id.자동재생)).setTextColor(getResources().getColor(R.color.green));
 				
-				항목.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
+				RL_item.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
 				
 				final int finalI = i;
-				항목.setOnClickListener(new View.OnClickListener() {
+				RL_item.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						clearPlay(finalI);
 						clearInfo();
-						toglePlay(finalI);
+						togglePlay(finalI);
 					}
 				});
-				항목.setOnLongClickListener(new View.OnLongClickListener() {
+				RL_item.setOnLongClickListener(new View.OnLongClickListener() {
 					@Override
 					public boolean onLongClick(View v) {
 						clearPlay();
 						clearInfo(finalI);
-						togleinfo(finalI);
+						toggleInfo(finalI);
 						return true;
 					}
 				});
 				
 				
-				RL_list[i] = 항목;
-				LL_List.addView(항목);
+				this.RL_items[i] = RL_item;
+				LL_List.addView(RL_item);
 			}
 			
-			if (파일개수 == 0) {
+			if (count == 0) {
 				View v = View.inflate(Main.this, R.layout.list_item_not_exist, null);
 				v.setOnClickListener(new View.OnClickListener() {
 					@Override
@@ -152,12 +157,12 @@ public class Main extends BaseActivity {
 						startActivity(new Intent(Main.this, Store.class));
 					}
 				});
-				v.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
+				v.findViewById(R.id.leftView).setX(UIManager.dpToPx(getApplicationContext(), 10));
 				LL_List.addView(v);
 			}
 			
 		} else {
-			프로젝트폴더.mkdir();
+			projectFolder.mkdir();
 			View v = View.inflate(Main.this, R.layout.list_item_not_exist, null);
 			v.setOnClickListener(new View.OnClickListener() {
 				@Override
@@ -165,7 +170,7 @@ public class Main extends BaseActivity {
 					startActivity(new Intent(Main.this, Store.class));
 				}
 			});
-			v.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
+			v.findViewById(R.id.leftView).setX(UIManager.dpToPx(getApplicationContext(), 10));
 			LL_List.addView(v);
 		}
 		
@@ -180,37 +185,37 @@ public class Main extends BaseActivity {
 		log(ProjectFolderURL);
 	}
 	
-	void toglePlay(final int i) {
-		RelativeLayout 항목 = RL_list[i];
+	void togglePlay(final int i) {
+		RelativeLayout item = RL_items[i];
 		if (!statusPlay[i]) {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
-			항목.findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
+			item.findViewById(R.id.leftView).animate().x(UIManager.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
+			item.findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
 			
 			//clickEvent
-			항목.findViewById(R.id.playbtn).setOnClickListener(new View.OnClickListener() {
+			item.findViewById(R.id.playbtn).setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					Intent 인텐트 = new Intent(Main.this, Play.class);
-					인텐트.putExtra("URL", URL[i]);
-					startActivity(인텐트);
+					Intent intent = new Intent(Main.this, Play.class);
+					intent.putExtra("URL", URL[i]);
+					startActivity(intent);
 				}
 			});
 		} else {
 			//animation
-			항목.findViewById(R.id.제목제작자).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
-			항목.findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
+			item.findViewById(R.id.leftView).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
+			item.findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
 			
 			//clickEvent
-			항목.findViewById(R.id.playbtn).setOnClickListener(null);
-			항목.findViewById(R.id.playbtn).setClickable(false);
+			item.findViewById(R.id.playbtn).setOnClickListener(null);
+			item.findViewById(R.id.playbtn).setClickable(false);
 		}
 		
 		statusPlay[i] = !statusPlay[i];
 	}
 	
-	void togleinfo(final int i) {
-		final RelativeLayout 항목 = RL_list[i];
+	void toggleInfo(final int i) {
+		final RelativeLayout item = RL_items[i];
 		final int px = UIManager.dpToPx(getApplicationContext(), 30);
 		final int px2 = UIManager.dpToPx(getApplicationContext(), 35);
 		if (!statusInfo[i]) {
@@ -218,20 +223,20 @@ public class Main extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) 항목.findViewById(R.id.info).getLayoutParams();
+					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) item.findViewById(R.id.info).getLayoutParams();
 					params.topMargin = px + (int) (px2 * interpolatedTime);
-					항목.findViewById(R.id.info).setLayoutParams(params);
+					item.findViewById(R.id.info).setLayoutParams(params);
 				}
 			};
 			a.setDuration(500);
-			항목.findViewById(R.id.info).startAnimation(a);
+			item.findViewById(R.id.info).startAnimation(a);
 			
 			//clickEvent
-			항목.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
+			item.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					new AlertDialog.Builder(Main.this)
-						.setTitle(unipacks[i].제목)
+						.setTitle(unipacks[i].title)
 						.setMessage(lang(Main.this, R.string.doYouWantToDeleteProject))
 						.setPositiveButton(lang(Main.this, R.string.cancel), null)
 						.setNegativeButton(lang(Main.this, R.string.delete), new DialogInterface.OnClickListener() {
@@ -249,17 +254,17 @@ public class Main extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) 항목.findViewById(R.id.info).getLayoutParams();
+					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) item.findViewById(R.id.info).getLayoutParams();
 					params.topMargin = px + px2 + (int) (-px2 * interpolatedTime);
-					항목.findViewById(R.id.info).setLayoutParams(params);
+					item.findViewById(R.id.info).setLayoutParams(params);
 				}
 			};
 			a.setDuration(500);
-			항목.findViewById(R.id.info).startAnimation(a);
+			item.findViewById(R.id.info).startAnimation(a);
 			
 			//clickEvent
-			항목.findViewById(R.id.delete).setOnClickListener(null);
-			항목.findViewById(R.id.delete).setClickable(false);
+			item.findViewById(R.id.delete).setOnClickListener(null);
+			item.findViewById(R.id.delete).setClickable(false);
 		}
 		
 		statusInfo[i] = !statusInfo[i];
@@ -268,25 +273,25 @@ public class Main extends BaseActivity {
 	void clearPlay() {
 		for (int i = 0; i < statusPlay.length; i++)
 			if (statusPlay[i])
-				toglePlay(i);
+				togglePlay(i);
 	}
 	
 	void clearPlay(int e) {
 		for (int i = 0; i < statusPlay.length; i++)
 			if (statusPlay[i] && i != e)
-				toglePlay(i);
+				togglePlay(i);
 	}
 	
 	void clearInfo() {
 		for (int i = 0; i < statusInfo.length; i++)
 			if (statusInfo[i])
-				togleinfo(i);
+				toggleInfo(i);
 	}
 	
 	void clearInfo(int e) {
 		for (int i = 0; i < statusInfo.length; i++)
 			if (statusInfo[i] && i != e)
-				togleinfo(i);
+				toggleInfo(i);
 	}
 	
 	
@@ -296,13 +301,13 @@ public class Main extends BaseActivity {
 	ListView LV_리스트;
 	
 	
-	void uni불러오기() {
-		final AlertDialog 파일탐색기 = (new AlertDialog.Builder(Main.this)).create();
-		LinearLayout LL_파일탐색기 = (LinearLayout) View.inflate(Main.this, R.layout.file_explore, null);
-		TV_경로 = (TextView) LL_파일탐색기.findViewById(R.id.경로);
-		LV_리스트 = (ListView) LL_파일탐색기.findViewById(R.id.리스트);
+	void loadUniPack() {
+		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
+		LinearLayout LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
+		TV_경로 = (TextView) LL_explorer.findViewById(R.id.경로);
+		LV_리스트 = (ListView) LL_explorer.findViewById(R.id.리스트);
 		
-		String 경로 =SaveSetting.FileExplorerPath.load(Main.this);
+		String 경로 = SaveSetting.FileExplorerPath.load(Main.this);
 		
 		
 		LV_리스트.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -318,16 +323,16 @@ public class Main extends BaseActivity {
 					if (file.canRead()) {
 						(new AsyncTask<String, String, String>() {
 							
-							ProgressDialog 로딩 = new ProgressDialog(Main.this);
+							ProgressDialog progressDialog = new ProgressDialog(Main.this);
 							
 							@Override
 							protected void onPreExecute() {
 								
-								파일탐색기.dismiss();
-								로딩.setTitle(lang(Main.this, R.string.analyzing));
-								로딩.setMessage(lang(Main.this, R.string.wait));
-								로딩.setCancelable(false);
-								로딩.show();
+								dialog.dismiss();
+								progressDialog.setTitle(lang(Main.this, R.string.analyzing));
+								progressDialog.setMessage(lang(Main.this, R.string.wait));
+								progressDialog.setCancelable(false);
+								progressDialog.show();
 								super.onPreExecute();
 							}
 							
@@ -340,18 +345,18 @@ public class Main extends BaseActivity {
 									FileManager.unZipFile(file.getPath(), 경로);
 									Unipack project = new Unipack(경로, true);
 									
-									if (project.에러내용 == null) {
+									if (project.ErrorDetail == null) {
 										publishProgress(lang(Main.this, R.string.analyzeComplete),
-											lang(Main.this, R.string.title) + " : " + project.제목 + "\n" +
-												lang(Main.this, R.string.producerName) + " : " + project.제작자 + "\n" +
-												lang(Main.this, R.string.scale) + " : " + project.가로축 + " x " + project.세로축 + "\n" +
-												lang(Main.this, R.string.chainCount) + " : " + project.체인 + "\n" +
-												lang(Main.this, R.string.capacity) + " : " + String.format("%.2f", (float) FileManager.getFolderSize(경로) / 1024L / 1024L) + " MB");
-									} else if (project.치명적인에러) {
-										publishProgress(lang(Main.this, R.string.analyzeFailed), project.에러내용);
+											lang(Main.this, R.string.title) + " : " + project.title + "\n" +
+												lang(Main.this, R.string.producerName) + " : " + project.producerName + "\n" +
+												lang(Main.this, R.string.scale) + " : " + project.buttonX + " x " + project.buttonY + "\n" +
+												lang(Main.this, R.string.chainCount) + " : " + project.chain + "\n" +
+												lang(Main.this, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(경로)) + " MB" + " MB");
+									} else if (project.CriticalError) {
+										publishProgress(lang(Main.this, R.string.analyzeFailed), project.ErrorDetail);
 										FileManager.deleteFolder(경로);
 									} else {
-										publishProgress(lang(Main.this, R.string.warning), project.에러내용);
+										publishProgress(lang(Main.this, R.string.warning), project.ErrorDetail);
 									}
 									
 								} catch (IOException e) {
@@ -369,7 +374,7 @@ public class Main extends BaseActivity {
 							
 							@Override
 							protected void onPostExecute(String result) {
-								로딩.dismiss();
+								progressDialog.dismiss();
 								update();
 								super.onPostExecute(result);
 							}
@@ -388,8 +393,8 @@ public class Main extends BaseActivity {
 		getDir(경로);
 		
 		
-		파일탐색기.setView(LL_파일탐색기);
-		파일탐색기.show();
+		dialog.setView(LL_explorer);
+		dialog.show();
 	}
 	
 	void getDir(String dirPath) {
@@ -419,14 +424,6 @@ public class Main extends BaseActivity {
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(Main.this, android.R.layout.simple_list_item_1, mItem);
 		LV_리스트.setAdapter(fileList);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	void updateCheck() {
@@ -509,13 +506,13 @@ public class Main extends BaseActivity {
 		boolean clear = true;
 		for (int i = 0; i < statusPlay.length; i++)
 			if (statusPlay[i]) {
-				toglePlay(i);
+				togglePlay(i);
 				clear = false;
 			}
 		
 		for (int i = 0; i < statusInfo.length; i++)
 			if (statusInfo[i]) {
-				togleinfo(i);
+				toggleInfo(i);
 				clear = false;
 			}
 		

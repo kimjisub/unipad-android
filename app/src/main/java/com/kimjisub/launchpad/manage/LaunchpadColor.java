@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.manage;
 
 /**
- * Created by kimjisub on 2017. 7. 14..
+ * Created by kimjisub ON 2017. 7. 14..
  */
 
 public class LaunchpadColor {

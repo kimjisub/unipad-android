@@ -7,17 +7,17 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.kimjisub.launchpad.fb.fbNotice;
+import com.kimjisub.launchpad.fb.fbStore;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.kimjisub.launchpad.fb.*;
-
 /**
- * Created by rlawl on 2016-02-17.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-02-17.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 public class Networks {
 	public static class CheckVersion extends AsyncTask<String, String, Boolean> {
@@ -180,26 +180,28 @@ public class Networks {
 		FirebaseDatabase database;
 		DatabaseReference myRef;
 		
-		private onDataListener addListener = null;
+		private onDataListener dataListener = null;
 		
 		public interface onDataListener {
 			void onAdd(fbStore data);
+			
 			void onChange(fbStore data);
 		}
 		
 		
 		public GetStoreList setOnAddListener(onDataListener listener) {
-			this.addListener = listener;
+			this.dataListener = listener;
 			return this;
 		}
 		
 		void onAdd(fbStore data) {
-			if (addListener != null)
-				addListener.onAdd(data);
+			if (dataListener != null)
+				dataListener.onAdd(data);
 		}
+		
 		void onChange(fbStore data) {
-			if (addListener != null)
-				addListener.onChange(data);
+			if (dataListener != null)
+				dataListener.onChange(data);
 		}
 		
 		
@@ -247,11 +249,11 @@ public class Networks {
 		
 	}
 	
-	public static String sendGet(String addr) {
+	public static String sendGet(String str) {
 		
 		StringBuilder html = new StringBuilder();
 		try {
-			URL url = new URL(addr);
+			URL url = new URL(str);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			if (conn != null) {
 				conn.setConnectTimeout(10000);

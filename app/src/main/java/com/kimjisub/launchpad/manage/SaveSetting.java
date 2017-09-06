@@ -8,7 +8,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 /**
- * Created by kimjisub on 2017. 7. 14..
+ * Created by kimjisub ON 2017. 7. 14..
  */
 
 public class SaveSetting {
@@ -96,7 +96,7 @@ public class SaveSetting {
 			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
 			SharedPreferences.Editor editor = pref.edit();
 			editor.putLong("PrevAdsShowTime", value);
-			editor.commit();
+			editor.apply();
 		}
 		
 		public static long load(Context context) {
@@ -111,7 +111,7 @@ public class SaveSetting {
 			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
 			SharedPreferences.Editor editor = pref.edit();
 			editor.putString("SelectedTheme", value);
-			editor.commit();
+			editor.apply();
 		}
 		
 		public static String load(Context context) {
@@ -125,7 +125,7 @@ public class SaveSetting {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
 			SharedPreferences.Editor editor = pref.edit();
 			editor.putBoolean("DefaultFont", value);
-			editor.commit();
+			editor.apply();
 		}
 		
 		public static boolean load(Context context) {

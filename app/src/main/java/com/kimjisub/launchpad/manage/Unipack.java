@@ -1,220 +1,219 @@
 package com.kimjisub.launchpad.manage;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-/**
- * Created by rlawl on 2016-02-02.
- * ReCreated by rlawl on 2016-04-23.
- */
-
 public class Unipack {
-	public String 에러내용 = null;
-	public boolean 치명적인에러 = false;
+	public String ErrorDetail = null;
+	public boolean CriticalError = false;
 	
-	public String 제목 = null;
-	public String 제작자 = null;
-	public int 가로축 = 0;
-	public int 세로축 = 0;
-	public int 체인 = 0;
-	public boolean 정사각형버튼 = true;
+	public boolean isInfo = false;
+	public boolean isSounds = false;
+	public boolean isKeySound = false;
+	public boolean isKeyLED = false;
+	public boolean isAutoPlay = false;
 	
-	public boolean info여부 = false;
-	public boolean sounds여부 = false;
-	public boolean keySound여부 = false;
-	public boolean keyLED여부 = false;
-	public boolean autoPlay여부 = false;
+	public String title = null;
+	public String producerName = null;
+	public int buttonX = 0;
+	public int buttonY = 0;
+	public int chain = 0;
+	public boolean squareButton = true;
 	
-	//===========================================================================================================================================================================
+	//==========================================================================================
 	
-	public ArrayList<소리요소>[][][] 소리 = null;
+	public ArrayList<Sound>[][][] sound = null;
 	
-	public static class 소리요소 {
-		public String 노래경로 = null;
-		public int 아이디 = -1;
-		public int 반복 = -1;
-		public int 번호;
+	public static class Sound {
+		public String URL = null;
+		public int loop = -1;
 		
-		public 소리요소(String 노래경로, int 반복) {
-			this.노래경로 = 노래경로;
-			this.반복 = 반복;
+		public int id = -1;
+		public int num;
+		
+		Sound(String URL, int loop) {
+			this.URL = URL;
+			this.loop = loop;
 		}
 		
-		public 소리요소() {
+		public Sound() {
 		}
 	}
 	
-	//===========================================================================================================================================================================
+	//==========================================================================================
 	
-	public ArrayList<LED이벤트>[][][] LED = null;
+	public ArrayList<LED>[][][] led = null;
 	
-	public static class LED이벤트 {
-		public ArrayList<요소> LED;
-		public int 반복;
-		public int 번호;
+	public static class LED {
+		public ArrayList<Syntax> syntax;
+		public int loop;
+		public int num;
 		
-		public LED이벤트(ArrayList<요소> LED, int 반복, int 번호) {
-			this.LED = LED;
-			this.반복 = 반복;
-			this.번호 = 번호;
+		LED(ArrayList<Syntax> LED, int loop, int num) {
+			this.syntax = LED;
+			this.loop = loop;
+			this.num = num;
 		}
 		
-		public static class 요소 {
-			public static final int 켜기 = 1;
-			public static final int 끄기 = 2;
-			public static final int 딜레이 = 3;
+		public static class Syntax {
+			public static final int ON = 1;
+			public static final int OFF = 2;
+			public static final int DELAY = 3;
 			
-			public int 기능 = 0;
+			public int func = 0;
 			public int x;
 			public int y;
 			public int color = -1;
 			public int velo = 119;
 			public int delay = -1;
 			
-			public 요소(int x, int y, int 색코드, int 벨로시티) {
-				this.기능 = 켜기;
+			Syntax(int x, int y, int color, int velo) {
+				this.func = ON;
 				this.x = x;
 				this.y = y;
-				this.color = 색코드;
-				this.velo = 벨로시티;
+				this.color = color;
+				this.velo = velo;
 			}
 			
-			public 요소(int x, int y) {
-				this.기능 = 끄기;
+			Syntax(int x, int y) {
+				this.func = OFF;
 				this.x = x;
 				this.y = y;
 			}
 			
-			public 요소(int d) {
-				this.기능 = 딜레이;
+			Syntax(int d) {
+				this.func = DELAY;
 				this.delay = d;
 			}
 		}
 	}
 	
-	//===========================================================================================================================================================================
+	//==========================================================================================
 	
-	public ArrayList<자동재생요소> 자동재생 = null;
+	public ArrayList<AutoPlay> autoPlay = null;
 	
-	public class 자동재생요소 {
-		public static final int 켜기 = 1;
-		public static final int 끄기 = 2;
-		public static final int 체인 = 3;
-		public static final int 딜레이 = 4;
+	public class AutoPlay {
+		public static final int ON = 1;
+		public static final int OFF = 2;
+		public static final int CHAIN = 3;
+		public static final int DELAY = 4;
 		
-		public int 기능 = 0;
-		public int 체인기록 = 0;
-		public int 번호 = 0;
+		public int func = 0;
+		public int currChain = 0;
+		public int num = 0;
 		public int x;
 		public int y;
 		public int c;
 		public int d;
 		
-		public 자동재생요소(int x, int y, int 체인기록, int 번호) {
-			this.기능 = 켜기;
+		AutoPlay(int x, int y, int currChain, int num) {
+			this.func = ON;
 			
 			this.x = x;
 			this.y = y;
-			this.체인기록 = 체인기록;
-			this.번호 = 번호;
+			this.currChain = currChain;
+			this.num = num;
 		}
 		
-		public 자동재생요소(int x, int y, int 체인기록) {
-			this.기능 = 끄기;
+		AutoPlay(int x, int y, int currChain) {
+			this.func = OFF;
 			
 			this.x = x;
 			this.y = y;
-			this.체인기록 = 체인기록;
+			this.currChain = currChain;
 		}
 		
-		public 자동재생요소(int 값) {
-			this.기능 = 체인;
+		AutoPlay(int c) {
+			this.func = CHAIN;
 			
-			this.c = 값;
+			this.c = c;
 		}
 		
-		public 자동재생요소(int 값, int 체인기록) {
-			this.기능 = 딜레이;
-			this.d = 값;
+		AutoPlay(int d, int currChain) {
+			this.func = DELAY;
+			this.d = d;
 			
-			this.체인기록 = 체인기록;
+			this.currChain = currChain;
 		}
 	}
 	
-	//===========================================================================================================================================================================
+	//==========================================================================================
 	
-	public Unipack(String url, boolean 세부로딩) {
+	public Unipack(String url, boolean loadDetail) {
 		
 		
-		info여부 = (new java.io.File(url + "/info")).isFile();
-		sounds여부 = (new java.io.File(url + "/sounds")).isDirectory();
-		keySound여부 = (new java.io.File(url + "/keySound")).isFile();
-		keyLED여부 = (new java.io.File(url + "/keyLED")).isDirectory();
-		autoPlay여부 = (new java.io.File(url + "/autoPlay")).isFile();
+		isInfo = (new File(url + "/info")).isFile();
+		isSounds = (new File(url + "/sounds")).isDirectory();
+		isKeySound = (new File(url + "/keySound")).isFile();
+		isKeyLED = (new File(url + "/keyLED")).isDirectory();
+		isAutoPlay = (new File(url + "/autoPlay")).isFile();
 		
-		
-		String 한줄;
 		
 		try {
-			if (!info여부) 에러누적("info doesn't exist");
-			if (!keySound여부) 에러누적("keySound doesn't exist");
-			if (!info여부 && !keySound여부)
-				에러누적("It does not seem to be UniPack.");
+			if (!isInfo) addErr("info doesn't exist");
+			if (!isKeySound) addErr("keySound doesn't exist");
+			if (!isInfo && !isKeySound) addErr("It does not seem to be UniPack.");
 			
-			if (!info여부 || !keySound여부)
-				치명적인에러 = true;
+			if (!isInfo || !isKeySound) CriticalError = true;
 			else {
 				
-				if (info여부) {
-					BufferedReader info = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/info")));
-					while ((한줄 = info.readLine()) != null) {
-						String[] 정보 = 한줄.split("=", 2);
+				if (isInfo) {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/info")));
+					String s;
+					while ((s = reader.readLine()) != null) {
+						String[] split = s.split("=", 2);
 						
-						switch (정보[0]) {
-							case 구조.제목:
-								제목 = 정보[1];
+						String key = split[0];
+						String value = split[1];
+						
+						
+						switch (key) {
+							case "title":
+								title = value;
 								break;
-							case 구조.제작자:
-								제작자 = 정보[1];
+							case "producerName":
+								producerName = value;
 								break;
-							case 구조.가로축:
-								가로축 = Integer.parseInt(정보[1]);
+							case "buttonX":
+								buttonX = Integer.parseInt(value);
 								break;
-							case 구조.세로축:
-								세로축 = Integer.parseInt(정보[1]);
+							case "buttonY":
+								buttonY = Integer.parseInt(value);
 								break;
-							case 구조.체인:
-								체인 = Integer.parseInt(정보[1]);
+							case "chain":
+								chain = Integer.parseInt(value);
 								break;
-							case 구조.정사각형버튼:
-								정사각형버튼 = 정보[1].equals("true");
+							case "squareButton":
+								squareButton = value.equals("true");
 								break;
 						}
 						
 					}
 					
-					if (제목 == null)
-						에러누적("info : title was missing");
-					if (제작자 == null)
-						에러누적("info : producerName was missing");
-					if (가로축 == 0)
-						에러누적("info : buttonX was missing");
-					if (세로축 == 0)
-						에러누적("info : buttonY was missing");
-					if (체인 == 0)
-						에러누적("info : chain was missing");
+					if (title == null)
+						addErr("info : title was missing");
+					if (producerName == null)
+						addErr("info : producerName was missing");
+					if (buttonX == 0)
+						addErr("info : buttonX was missing");
+					if (buttonY == 0)
+						addErr("info : buttonY was missing");
+					if (chain == 0)
+						addErr("info : chain was missing");
 					
 				}
 				
 				
-				if (세부로딩) {
-					if (keySound여부) {
-						소리 = new ArrayList[체인][가로축][세로축];
-						BufferedReader keySound = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/keySound")));
-						while ((한줄 = keySound.readLine()) != null) {
-							String[] 정보 = 한줄.split(" ");
+				if (loadDetail) {
+					if (isKeySound) {
+						sound = new ArrayList[chain][buttonX][buttonY];
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/keySound")));
+						String s;
+						while ((s = reader.readLine()) != null) {
+							String[] split = s.split(" ");
 							
 							int c;
 							int x;
@@ -223,55 +222,55 @@ public class Unipack {
 							int loop = 0;
 							
 							try {
-								if (정보.length <= 2)
+								if (split.length <= 2)
 									continue;
 								
-								c = Integer.parseInt(정보[0]) - 1;
-								x = Integer.parseInt(정보[1]) - 1;
-								y = Integer.parseInt(정보[2]) - 1;
-								URL = 정보[3];
+								c = Integer.parseInt(split[0]) - 1;
+								x = Integer.parseInt(split[1]) - 1;
+								y = Integer.parseInt(split[2]) - 1;
+								URL = split[3];
 								
-								if (정보.length >= 5)
-									loop = Integer.parseInt(정보[4]) - 1;
+								if (split.length >= 5)
+									loop = Integer.parseInt(split[4]) - 1;
 								
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
-								에러누적("keySound : [" + 한줄 + "]" + " format is incorrect");
+								addErr("keySound : [" + s + "]" + " format is incorrect");
 								continue;
 							}
 							
 							
-							if (c < 0 || c >= 체인)
-								에러누적("keySound : [" + 한줄 + "]" + " chain is incorrect");
-							else if (x < 0 || x >= 가로축)
-								에러누적("keySound : [" + 한줄 + "]" + " x is incorrect");
-							else if (y < 0 || y >= 세로축)
-								에러누적("keySound : [" + 한줄 + "]" + " y is incorrect");
+							if (c < 0 || c >= chain)
+								addErr("keySound : [" + s + "]" + " chain is incorrect");
+							else if (x < 0 || x >= buttonX)
+								addErr("keySound : [" + s + "]" + " x is incorrect");
+							else if (y < 0 || y >= buttonY)
+								addErr("keySound : [" + s + "]" + " y is incorrect");
 							else {
 								
-								소리요소 요소 = new 소리요소(url + "/sounds/" + URL, loop);
+								Sound tmp = new Sound(url + "/sounds/" + URL, loop);
 								
-								if (!new java.io.File(요소.노래경로).isFile()) {
-									에러누적("keySound : [" + 한줄 + "]" + " sound was not found");
+								if (!new File(tmp.URL).isFile()) {
+									addErr("keySound : [" + s + "]" + " sound was not found");
 									continue;
 								}
 								
-								if (소리[c][x][y] == null)
-									소리[c][x][y] = new ArrayList<>();
-								요소.번호 = 소리[c][x][y].size();
-								소리[c][x][y].add(요소);
+								if (sound[c][x][y] == null)
+									sound[c][x][y] = new ArrayList();
+								tmp.num = sound[c][x][y].size();
+								sound[c][x][y].add(tmp);
 								
 							}
 						}
 					}
 					
 					
-					if (keyLED여부) {
-						LED = new ArrayList[체인][가로축][세로축];
-						java.io.File[] 파일리스트 = FileManager.sortByName(new java.io.File(url + "/keyLED").listFiles());
-						for (java.io.File 파일 : 파일리스트) {
-							if (파일.isFile()) {
-								String 이름 = 파일.getName();
-								String[] 정보 = 이름.split(" ");
+					if (isKeyLED) {
+						led = new ArrayList[chain][buttonX][buttonY];
+						File[] fileList = FileManager.sortByName(new File(url + "/keyLED").listFiles());
+						for (File file : fileList) {
+							if (file.isFile()) {
+								String fileName = file.getName();
+								String[] split1 = fileName.split(" ");
 								
 								int c;
 								int x;
@@ -279,113 +278,129 @@ public class Unipack {
 								int loop;
 								
 								try {
-									if (정보.length <= 2)
+									if (split1.length <= 2)
 										continue;
 									
-									c = Integer.parseInt(정보[0]) - 1;
-									x = Integer.parseInt(정보[1]) - 1;
-									y = Integer.parseInt(정보[2]) - 1;
-									loop = Integer.parseInt(정보[3]);
+									c = Integer.parseInt(split1[0]) - 1;
+									x = Integer.parseInt(split1[1]) - 1;
+									y = Integer.parseInt(split1[2]) - 1;
+									loop = Integer.parseInt(split1[3]);
 									
-									if (c < 0 || c >= 체인) {
-										에러누적("keyLED : [" + 이름 + "]" + " chain is incorrect");
+									if (c < 0 || c >= chain) {
+										addErr("keyLED : [" + fileName + "]" + " chain is incorrect");
 										continue;
-									} else if (x < 0 || x >= 가로축) {
-										에러누적("keyLED : [" + 이름 + "]" + " x is incorrect");
+									} else if (x < 0 || x >= buttonX) {
+										addErr("keyLED : [" + fileName + "]" + " x is incorrect");
 										continue;
-									} else if (y < 0 || y >= 세로축) {
-										에러누적("keyLED : [" + 이름 + "]" + " y is incorrect");
+									} else if (y < 0 || y >= buttonY) {
+										addErr("keyLED : [" + fileName + "]" + " y is incorrect");
 										continue;
 									} else if (loop < 0) {
-										에러누적("keyLED : [" + 이름 + "]" + " loop is incorrect");
+										addErr("keyLED : [" + fileName + "]" + " loop is incorrect");
 										continue;
 									}
 									
 									
 								} catch (NumberFormatException | IndexOutOfBoundsException e) {
-									에러누적("keyLED : [" + 이름 + "]" + " format is incorrect");
+									addErr("keyLED : [" + fileName + "]" + " format is incorrect");
 									continue;
 								}
 								
-								ArrayList<LED이벤트.요소> LED목록 = new ArrayList<>();
+								ArrayList<LED.Syntax> LED목록 = new ArrayList<>();
 								
-								BufferedReader 리더 = new BufferedReader(new InputStreamReader(new FileInputStream(파일)));
-								while ((한줄 = 리더.readLine()) != null) {
-									String[] 요소 = 한줄.split(" ");
+								BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+								String s;
+								while ((s = reader.readLine()) != null) {
+									String[] split2 = s.split(" ");
 									
 									String option;
-									int x_ = -1;
-									int y_ = -1;
-									int color = -1;
-									int velo = 119;
-									int delay = -1;
+									int _x = -1;
+									int _y = -1;
+									int _color = -1;
+									int _velo = 119;
+									int _delay = -1;
 									
 									
 									try {
-										if (요소[0].equals(""))
+										if (split2[0].equals(""))
 											continue;
 										
-										option = 요소[0];
+										option = split2[0];
 										
-										if (option.equals("on") || option.equals("o")) {
-											x_ = Integer.parseInt(요소[1]) - 1;
-											y_ = Integer.parseInt(요소[2]) - 1;
-											
-											if (요소.length == 4)
-												color = Integer.parseInt(요소[3], 16) + 0xFF000000;
-											else if (요소.length == 5) {
-												if (요소[3].equals("auto") || 요소[3].equals("a")) {
-													velo = Integer.parseInt(요소[4]);
-													color = LaunchpadColor.ARGB[velo] + 0xFF000000;
+										switch (option) {
+											case "on":
+											case "o":
+												_x = Integer.parseInt(split2[1]) - 1;
+												_y = Integer.parseInt(split2[2]) - 1;
+												
+												if (split2.length == 4)
+													_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
+												else if (split2.length == 5) {
+													if (split2[3].equals("auto") || split2[3].equals("a")) {
+														_velo = Integer.parseInt(split2[4]);
+														_color = LaunchpadColor.ARGB[_velo] + 0xFF000000;
+													} else {
+														_velo = Integer.parseInt(split2[4]);
+														_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
+													}
 												} else {
-													velo = Integer.parseInt(요소[4]);
-													color = Integer.parseInt(요소[3], 16) + 0xFF000000;
+													addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
+													continue;
 												}
-											} else {
-												에러누적("keyLED : [" + 이름 + "].[" + 한줄 + "]" + " format is incorrect");
+												break;
+											case "off":
+											case "f":
+												_x = Integer.parseInt(split2[1]) - 1;
+												_y = Integer.parseInt(split2[2]) - 1;
+												break;
+											case "delay":
+											case "d":
+												_delay = Integer.parseInt(split2[1]);
+												break;
+											default:
+												addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
 												continue;
-											}
-										} else if (option.equals("off") || option.equals("f")) {
-											x_ = Integer.parseInt(요소[1]) - 1;
-											y_ = Integer.parseInt(요소[2]) - 1;
-										} else if (option.equals("delay") || option.equals("d")) {
-											delay = Integer.parseInt(요소[1]);
-										} else {
-											에러누적("keyLED : [" + 이름 + "].[" + 한줄 + "]" + " format is incorrect");
-											continue;
 										}
 										
 									} catch (NumberFormatException | IndexOutOfBoundsException e) {
-										에러누적("keyLED : [" + 이름 + "].[" + 한줄 + "]" + " format is incorrect");
+										addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
 										continue;
 									}
 									
 									
-									if (option.equals("on") || option.equals("o")) {
-										LED목록.add(new LED이벤트.요소(x_, y_, color, velo));
-									} else if (option.equals("off") || option.equals("f")) {
-										LED목록.add(new LED이벤트.요소(x_, y_));
-									} else if (option.equals("delay") || option.equals("d")) {
-										LED목록.add(new LED이벤트.요소(delay));
+									switch (option) {
+										case "on":
+										case "o":
+											LED목록.add(new LED.Syntax(_x, _y, _color, _velo));
+											break;
+										case "off":
+										case "f":
+											LED목록.add(new LED.Syntax(_x, _y));
+											break;
+										case "delay":
+										case "d":
+											LED목록.add(new LED.Syntax(_delay));
+											break;
 									}
 								}
-								if (LED[c][x][y] == null)
-									LED[c][x][y] = new ArrayList<>();
-								LED[c][x][y].add(new LED이벤트(LED목록, loop, LED[c][x][y].size()));
+								if (led[c][x][y] == null)
+									led[c][x][y] = new ArrayList<>();
+								led[c][x][y].add(new LED(LED목록, loop, led[c][x][y].size()));
 							} else
-								에러누적("keyLED : " + 파일.getName() + " is not file");
+								addErr("keyLED : " + file.getName() + " is not file");
 						}
 					}
 					
-					if (autoPlay여부) {
-						자동재생 = new ArrayList<>();
-						int[][] 맵 = new int[가로축][세로축];
+					if (isAutoPlay) {
+						autoPlay = new ArrayList<>();
+						int[][] map = new int[buttonX][buttonY];
 						
-						int 체인기록 = 0;
+						int currChain = 0;
 						
-						BufferedReader 리더 = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/autoPlay")));
-						while ((한줄 = 리더.readLine()) != null) {
-							String[] 요소 = 한줄.split(" ");
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/autoPlay")));
+						String s;
+						while ((s = reader.readLine()) != null) {
+							String[] split = s.split(" ");
 							
 							String option;
 							int x = -1;
@@ -394,62 +409,80 @@ public class Unipack {
 							int delay = -1;
 							
 							try {
-								if (요소[0].equals(""))
+								if (split[0].equals(""))
 									continue;
 								
-								option = 요소[0];
+								option = split[0];
 								
-								if (option.equals("on") || option.equals("o")) {
-									x = Integer.parseInt(요소[1]) - 1;
-									y = Integer.parseInt(요소[2]) - 1;
-									if (x < 0 || x >= 가로축) {
-										에러누적("autoPlay : [" + 한줄 + "]" + " x is incorrect");
+								switch (option) {
+									case "on":
+									case "o":
+										x = Integer.parseInt(split[1]) - 1;
+										y = Integer.parseInt(split[2]) - 1;
+										if (x < 0 || x >= buttonX) {
+											addErr("autoPlay : [" + s + "]" + " x is incorrect");
+											continue;
+										}
+										if (y < 0 || y >= buttonY) {
+											addErr("autoPlay : [" + s + "]" + " y is incorrect");
+											continue;
+										}
+										break;
+									case "off":
+									case "f":
+										x = Integer.parseInt(split[1]) - 1;
+										y = Integer.parseInt(split[2]) - 1;
+										if (x < 0 || x >= buttonX) {
+											addErr("autoPlay : [" + s + "]" + " x is incorrect");
+											continue;
+										} else if (y < 0 || y >= buttonY) {
+											addErr("autoPlay : [" + s + "]" + " y is incorrect");
+											continue;
+										}
+										break;
+									case "chain":
+									case "c":
+										chain = Integer.parseInt(split[1]) - 1;
+										if (chain < 0 || chain >= this.chain) {
+											addErr("autoPlay : [" + s + "]" + " chain is incorrect");
+											continue;
+										}
+										break;
+									case "delay":
+									case "d":
+										delay = Integer.parseInt(split[1]);
+										break;
+									default:
+										addErr("autoPlay : [" + s + "]" + " format is incorrect");
 										continue;
-									}
-									if (y < 0 || y >= 세로축) {
-										에러누적("autoPlay : [" + 한줄 + "]" + " y is incorrect");
-										continue;
-									}
-								} else if (option.equals("off") || option.equals("f")) {
-									x = Integer.parseInt(요소[1]) - 1;
-									y = Integer.parseInt(요소[2]) - 1;
-									if (x < 0 || x >= 가로축) {
-										에러누적("autoPlay : [" + 한줄 + "]" + " x is incorrect");
-										continue;
-									} else if (y < 0 || y >= 세로축) {
-										에러누적("autoPlay : [" + 한줄 + "]" + " y is incorrect");
-										continue;
-									}
-								} else if (option.equals("chain") || option.equals("c")) {
-									chain = Integer.parseInt(요소[1]) - 1;
-									if (chain < 0 || chain >= 체인) {
-										에러누적("autoPlay : [" + 한줄 + "]" + " chain is incorrect");
-										continue;
-									}
-								} else if (option.equals("delay") || option.equals("d")) {
-									delay = Integer.parseInt(요소[1]);
-								} else {
-									에러누적("autoPlay : [" + 한줄 + "]" + " format is incorrect");
-									continue;
 								}
 								
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
-								에러누적("autoPlay : [" + 한줄 + "]" + " format is incorrect");
+								addErr("autoPlay : [" + s + "]" + " format is incorrect");
 								continue;
 							}
 							
-							if (option.equals("on") || option.equals("o")) {
-								자동재생.add(new 자동재생요소(x, y, 체인기록, 맵[x][y]));
-								맵[x][y]++;
-							} else if (option.equals("off") || option.equals("f")) {
-								자동재생.add(new 자동재생요소(x, y, 체인기록));
-							} else if (option.equals("chain") || option.equals("c")) {
-								자동재생.add(new 자동재생요소(체인기록 = chain));
-								for (int i = 0; i < 가로축; i++)
-									for (int j = 0; j < 세로축; j++)
-										맵[i][j] = 0;
-							} else if (option.equals("delay") || option.equals("d")) {
-								자동재생.add(new 자동재생요소(delay, 체인기록));
+							switch (option) {
+								case "on":
+								case "o":
+									autoPlay.add(new AutoPlay(x, y, currChain, map[x][y]));
+									map[x][y]++;
+									break;
+								case "off":
+								case "f":
+									autoPlay.add(new AutoPlay(x, y, currChain));
+									break;
+								case "chain":
+								case "c":
+									autoPlay.add(new AutoPlay(currChain = chain));
+									for (int i = 0; i < buttonX; i++)
+										for (int j = 0; j < buttonY; j++)
+											map[i][j] = 0;
+									break;
+								case "delay":
+								case "d":
+									autoPlay.add(new AutoPlay(delay, currChain));
+									break;
 							}
 						}
 					}
@@ -462,20 +495,10 @@ public class Unipack {
 		}
 	}
 	
-	class 구조 {
-		static final String 제목 = "title";
-		static final String 제작자 = "producerName";
-		static final String 가로축 = "buttonX";
-		static final String 세로축 = "buttonY";
-		static final String 체인 = "chain";
-		static final String 정사각형버튼 = "squareButton";
-		static final String 화면가로세로 = "landscape";
-	}
-	
-	void 에러누적(String 내용) {
-		if (에러내용 == null)
-			에러내용 = 내용;
+	private void addErr(String content) {
+		if (ErrorDetail == null)
+			ErrorDetail = content;
 		else
-			에러내용 += "\n" + 내용;
+			ErrorDetail += "\n" + content;
 	}
 }

@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Tools.lang;
 
 /**
- * Created by rlawl on 2016-02-02.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-02-02.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 
 public class Intro extends BaseActivity {
@@ -116,9 +116,9 @@ public class Intro extends BaseActivity {
 		@Override
 		public void run() {
 			UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.패딩화면크기).getWidth();
-			UIManager.Scale[UIManager.PaddingHight] = findViewById(R.id.패딩화면크기).getHeight();
+			UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.패딩화면크기).getHeight();
 			UIManager.Scale[UIManager.Width] = findViewById(R.id.화면크기).getWidth();
-			UIManager.Scale[UIManager.Hight] = findViewById(R.id.화면크기).getHeight();
+			UIManager.Scale[UIManager.Height] = findViewById(R.id.화면크기).getHeight();
 			
 			startActivity(new Intent(Intro.this, Main.class));
 			overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);

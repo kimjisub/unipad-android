@@ -33,8 +33,8 @@ import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
- * Created by rlawl on 2016-03-04.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-03-04.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 
 public class Store extends BaseActivity {
@@ -147,7 +147,7 @@ public class Store extends BaseActivity {
 						@Override
 						public boolean onLongClick(View v) {
 							//clearInfo(i);
-							togleinfo(i);
+							toggleinfo(i);
 							return true;
 						}
 					});
@@ -281,7 +281,7 @@ public class Store extends BaseActivity {
 						try {
 							FileManager.unZipFile(다운로드경로, 경로);
 							Unipack 프로젝트 = new Unipack(경로, true);
-							if (프로젝트.치명적인에러) {
+							if (프로젝트.CriticalError) {
 								publishProgress(-1L);
 								FileManager.deleteFolder(경로);
 							} else
@@ -348,7 +348,7 @@ public class Store extends BaseActivity {
 		statusPlay.set(i, !statusPlay.get(i));
 	}
 	
-	void togleinfo(final int i) {
+	void toggleinfo(final int i) {
 		final RelativeLayout 항목 = RL_list.get(i);
 		final int px = UIManager.dpToPx(getApplicationContext(), 30);
 		final int px2 = UIManager.dpToPx(getApplicationContext(), 35);
@@ -384,13 +384,13 @@ public class Store extends BaseActivity {
 	/*void clearInfo() {
 		for (int i = 0; i < statusInfo.size(); i++)
 			if (statusInfo.get(i))
-				togleinfo(i);
+				toggleInfo(i);
 	}
 	
 	void clearInfo(int e) {
 		for (int i = 0; i < statusInfo.size(); i++)
 			if (statusInfo.get(i) && i != e)
-				togleinfo(i);
+				toggleInfo(i);
 	}*/
 	
 	@Override

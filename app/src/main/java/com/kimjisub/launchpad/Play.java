@@ -39,8 +39,8 @@ import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
- * Created by rlawl on 2016-02-03.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-02-03.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 
 public class Play extends BaseActivity {
@@ -75,9 +75,9 @@ public class Play extends BaseActivity {
 	
 	void 소리요소밀기(int c, int x, int y) {
 		try {
-			Unipack.소리요소 tmp = 프로젝트.소리[c][x][y].get(0);
-			프로젝트.소리[c][x][y].remove(0);
-			프로젝트.소리[c][x][y].add(tmp);
+			Unipack.Sound tmp = 프로젝트.sound[c][x][y].get(0);
+			프로젝트.sound[c][x][y].remove(0);
+			프로젝트.sound[c][x][y].add(tmp);
 		} catch (NullPointerException ee) {
 			//ee.printStackTrace();
 		} catch (IndexOutOfBoundsException ee) {
@@ -87,38 +87,34 @@ public class Play extends BaseActivity {
 	
 	void 소리요소밀기(int c, int x, int y, int 번호) {
 		try {
-			ArrayList<Unipack.소리요소> e = 프로젝트.소리[c][x][y];
-			if (프로젝트.소리[c][x][y].get(0).번호 != 번호)
+			ArrayList<Unipack.Sound> e = 프로젝트.sound[c][x][y];
+			if (프로젝트.sound[c][x][y].get(0).num != 번호)
 				while (true) {
-					Unipack.소리요소 tmp = e.get(0);
+					Unipack.Sound tmp = e.get(0);
 					e.remove(0);
 					e.add(tmp);
-					if (e.get(0).번호 == 번호 % e.size())
+					if (e.get(0).num == 번호 % e.size())
 						break;
 				}
-		} catch (NullPointerException ee) {
+		} catch (NullPointerException|IndexOutOfBoundsException ee) {
 			//ee.printStackTrace();
-		} catch (IndexOutOfBoundsException ee) {
-			ee.printStackTrace();
 		}
 	}
 	
-	Unipack.소리요소 소리요소가져오기(int c, int x, int y) {
+	Unipack.Sound 소리요소가져오기(int c, int x, int y) {
 		try {
-			return 프로젝트.소리[c][x][y].get(0);
-		} catch (NullPointerException e) {
-			return new Unipack.소리요소();
-		} catch (IndexOutOfBoundsException ee) {
-			ee.printStackTrace();
-			return new Unipack.소리요소();
+			return 프로젝트.sound[c][x][y].get(0);
+		} catch (NullPointerException|IndexOutOfBoundsException e) {
+			e.printStackTrace();
+			return new Unipack.Sound();
 		}
 	}
 	
 	void LED이벤트밀기(int c, int x, int y) {
 		try {
-			Unipack.LED이벤트 e = 프로젝트.LED[c][x][y].get(0);
-			프로젝트.LED[c][x][y].remove(0);
-			프로젝트.LED[c][x][y].add(e);
+			Unipack.LED e = 프로젝트.led[c][x][y].get(0);
+			프로젝트.led[c][x][y].remove(0);
+			프로젝트.led[c][x][y].add(e);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
 			ee.printStackTrace();
@@ -127,27 +123,25 @@ public class Play extends BaseActivity {
 	
 	void LED이벤트밀기(int c, int x, int y, int 번호) {
 		try {
-			ArrayList<Unipack.LED이벤트> e = 프로젝트.LED[c][x][y];
-			if (e.get(0).번호 != 번호)
+			ArrayList<Unipack.LED> e = 프로젝트.led[c][x][y];
+			if (e.get(0).num != 번호)
 				while (true) {
-					Unipack.LED이벤트 tmp = e.get(0);
+					Unipack.LED tmp = e.get(0);
 					e.remove(0);
 					e.add(tmp);
-					if (e.get(0).번호 == 번호 % e.size())
+					if (e.get(0).num == 번호 % e.size())
 						break;
 				}
-		} catch (NullPointerException ignored) {
-		} catch (IndexOutOfBoundsException ee) {
-			ee.printStackTrace();
+		} catch (NullPointerException|IndexOutOfBoundsException e) {
+			e.printStackTrace();
 		}
 	}
 	
-	Unipack.LED이벤트 LED이벤트가져오기(int c, int x, int y) {
+	Unipack.LED LED이벤트가져오기(int c, int x, int y) {
 		try {
-			return 프로젝트.LED[c][x][y].get(0);
-		} catch (NullPointerException ee) {
-			return null;
-		} catch (IndexOutOfBoundsException ee) {
+			return 프로젝트.led[c][x][y].get(0);
+		} catch (NullPointerException|IndexOutOfBoundsException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -247,18 +241,18 @@ public class Play extends BaseActivity {
 	
 	void 스킨설정() {
 		((ImageView) findViewById(R.id.background)).setImageDrawable(theme.playbg);
-		for (int i = 0; i < 프로젝트.가로축; i++)
-			for (int j = 0; j < 프로젝트.세로축; j++)
+		for (int i = 0; i < 프로젝트.buttonX; i++)
+			for (int j = 0; j < 프로젝트.buttonY; j++)
 				RL_버튼들[i][j].findViewById(R.id.background).setBackground(theme.btn);
 		
-		if (프로젝트.가로축 < 16 && 프로젝트.세로축 < 16) {
-			for (int i = 0; i < 프로젝트.가로축; i++)
-				for (int j = 0; j < 프로젝트.세로축; j++)
+		if (프로젝트.buttonX < 16 && 프로젝트.buttonY < 16) {
+			for (int i = 0; i < 프로젝트.buttonX; i++)
+				for (int j = 0; j < 프로젝트.buttonY; j++)
 					RL_버튼들[i][j].findViewById(R.id.phantom).setBackground(theme.phantom);
 			
-			if (프로젝트.가로축 % 2 == 0 && 프로젝트.세로축 % 2 == 0 && 프로젝트.정사각형버튼 && theme.phantom_ != null) {
-				int x = 프로젝트.가로축 / 2 - 1;
-				int y = 프로젝트.세로축 / 2 - 1;
+			if (프로젝트.buttonX % 2 == 0 && 프로젝트.buttonY % 2 == 0 && 프로젝트.squareButton && theme.phantom_ != null) {
+				int x = 프로젝트.buttonX / 2 - 1;
+				int y = 프로젝트.buttonY / 2 - 1;
 				
 				RL_버튼들[x][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
 				
@@ -308,28 +302,28 @@ public class Play extends BaseActivity {
 		
 		
 		try {
-			if (프로젝트.에러내용 != null) {
+			if (프로젝트.ErrorDetail != null) {
 				new AlertDialog.Builder(Play.this)
-					.setTitle(lang(Play.this, 프로젝트.치명적인에러 ? R.string.error : R.string.warning))
-					.setMessage(프로젝트.에러내용)
+					.setTitle(lang(Play.this, 프로젝트.CriticalError ? R.string.error : R.string.warning))
+					.setMessage(프로젝트.ErrorDetail)
 					.setPositiveButton(lang(Play.this, R.string.accept), null)
 					.setCancelable(false)
 					.show();
 			}
-			RL_버튼들 = new RelativeLayout[프로젝트.가로축][프로젝트.세로축];
-			IV_체인들 = new ImageView[프로젝트.체인];
-			색관리.요소 = new 색관리.요소[프로젝트.가로축][프로젝트.세로축][3];
+			RL_버튼들 = new RelativeLayout[프로젝트.buttonX][프로젝트.buttonY];
+			IV_체인들 = new ImageView[프로젝트.chain];
+			색관리.요소 = new 색관리.요소[프로젝트.buttonX][프로젝트.buttonY][3];
 			
-			if (프로젝트.keyLED여부) {
+			if (프로젝트.isKeyLED) {
 				LED쓰레드 = new LED쓰레드();
 				LED쓰레드.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			}
 			
-			if (프로젝트.정사각형버튼) {
-				if (!프로젝트.keyLED여부)
+			if (프로젝트.squareButton) {
+				if (!프로젝트.isKeyLED)
 					findViewById(R.id.LED효과).setVisibility(View.GONE);
 				
-				if (!프로젝트.autoPlay여부)
+				if (!프로젝트.isAutoPlay)
 					findViewById(R.id.자동재생).setVisibility(View.GONE);
 			} else {
 				findViewById(R.id.루트뷰).setPadding(0, 0, 0, 0);
@@ -342,7 +336,7 @@ public class Play extends BaseActivity {
 				findViewById(R.id.녹음).setVisibility(View.GONE);
 			}
 			
-			if (프로젝트.keyLED여부) {
+			if (프로젝트.isKeyLED) {
 				((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
 				((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
 			}
@@ -352,9 +346,9 @@ public class Play extends BaseActivity {
 			LED효과 = ((CheckBox) findViewById(R.id.LED효과)).isChecked();
 			녹음 = ((CheckBox) findViewById(R.id.녹음)).isChecked();
 			
-			정지아이디 = new int[프로젝트.체인][프로젝트.가로축][프로젝트.세로축];
-			순서기록표 = new ArrayList[프로젝트.체인][프로젝트.가로축][프로젝트.세로축];
-			다음순서 = new int[프로젝트.체인];
+			정지아이디 = new int[프로젝트.chain][프로젝트.buttonX][프로젝트.buttonY];
+			순서기록표 = new ArrayList[프로젝트.chain][프로젝트.buttonX][프로젝트.buttonY];
+			다음순서 = new int[프로젝트.chain];
 			순서기록초기설정();
 			
 			if (스킨초기화(0)) {
@@ -372,14 +366,14 @@ public class Play extends BaseActivity {
 						로딩.setCancelable(false);
 						
 						int 노래개수 = 0;
-						for (int i = 0; i < 프로젝트.체인; i++)
-							for (int j = 0; j < 프로젝트.가로축; j++)
-								for (int k = 0; k < 프로젝트.세로축; k++)
-									if (프로젝트.소리[i][j][k] != null)
-										노래개수 += 프로젝트.소리[i][j][k].size();
+						for (int i = 0; i < 프로젝트.chain; i++)
+							for (int j = 0; j < 프로젝트.buttonX; j++)
+								for (int k = 0; k < 프로젝트.buttonY; k++)
+									if (프로젝트.sound[i][j][k] != null)
+										노래개수 += 프로젝트.sound[i][j][k].size();
 						
-						소리 = new SoundPool(프로젝트.체인 * 프로젝트.가로축 * 프로젝트.세로축, AudioManager.STREAM_MUSIC, 0);
-						//소리 = AudioPool.Create();
+						소리 = new SoundPool(프로젝트.chain * 프로젝트.buttonX * 프로젝트.buttonY, AudioManager.STREAM_MUSIC, 0);
+						//sound = AudioPool.Create();
 						
 						
 						로딩.setMax(노래개수);
@@ -392,15 +386,15 @@ public class Play extends BaseActivity {
 						
 						try {
 							
-							for (int i = 0; i < 프로젝트.체인; i++) {
-								for (int j = 0; j < 프로젝트.가로축; j++) {
-									for (int k = 0; k < 프로젝트.세로축; k++) {
-										ArrayList 요소 = 프로젝트.소리[i][j][k];
+							for (int i = 0; i < 프로젝트.chain; i++) {
+								for (int j = 0; j < 프로젝트.buttonX; j++) {
+									for (int k = 0; k < 프로젝트.buttonY; k++) {
+										ArrayList 요소 = 프로젝트.sound[i][j][k];
 										if (요소 != null) {
 											for (int l = 0; l < 요소.size(); l++) {
-												Unipack.소리요소 e = 프로젝트.소리[i][j][k].get(l);
-												e.아이디 = 소리.load(e.노래경로, 1);
-												//e.아이디 = 소리.load(e.노래경로);
+												Unipack.Sound e = 프로젝트.sound[i][j][k].get(l);
+												e.id = 소리.load(e.URL, 1);
+												//e.id = sound.load(e.URL);
 												publishProgress();
 											}
 										}
@@ -457,12 +451,12 @@ public class Play extends BaseActivity {
 		int 가로;
 		int 세로;
 		
-		if (프로젝트.정사각형버튼) {
-			가로 = 세로 = Math.min(UIManager.Scale[UIManager.PaddingHight] / 프로젝트.가로축, UIManager.Scale[UIManager.PaddingWidth] / 프로젝트.세로축);
+		if (프로젝트.squareButton) {
+			가로 = 세로 = Math.min(UIManager.Scale[UIManager.PaddingHeight] / 프로젝트.buttonX, UIManager.Scale[UIManager.PaddingWidth] / 프로젝트.buttonY);
 			
 		} else {
-			가로 = UIManager.Scale[UIManager.Width] / 프로젝트.세로축;
-			세로 = UIManager.Scale[UIManager.Hight] / 프로젝트.가로축;
+			가로 = UIManager.Scale[UIManager.Width] / 프로젝트.buttonY;
+			세로 = UIManager.Scale[UIManager.Height] / 프로젝트.buttonX;
 		}
 		
 		
@@ -476,7 +470,7 @@ public class Play extends BaseActivity {
 		((CheckBox) findViewById(R.id.LED효과)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (프로젝트.keyLED여부) {
+				if (프로젝트.isKeyLED) {
 					LED효과 = isChecked;
 					if (!LED효과)
 						LED초기화();
@@ -559,11 +553,11 @@ public class Play extends BaseActivity {
 		LL_체인.removeAllViews();
 		
 		
-		for (int i = 0; i < 프로젝트.가로축; i++) {
+		for (int i = 0; i < 프로젝트.buttonX; i++) {
 			LinearLayout row = new LinearLayout(this);
 			row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 			
-			for (int j = 0; j < 프로젝트.세로축; j++) {
+			for (int j = 0; j < 프로젝트.buttonY; j++) {
 				final RelativeLayout 버튼 = (RelativeLayout) View.inflate(this, R.layout.button, null);
 				버튼.setLayoutParams(new LinearLayout.LayoutParams(가로, 세로));
 				
@@ -608,8 +602,8 @@ public class Play extends BaseActivity {
 			LL_패드.addView(row);
 		}
 		
-		if (프로젝트.체인 > 1) {
-			for (int i = 0; i < 프로젝트.체인; i++) {
+		if (프로젝트.chain > 1) {
+			for (int i = 0; i < 프로젝트.chain; i++) {
 				final RelativeLayout 버튼 = (RelativeLayout) View.inflate(this, R.layout.chain, null);
 				버튼.setLayoutParams(new RelativeLayout.LayoutParams(가로, 세로));
 				
@@ -639,7 +633,7 @@ public class Play extends BaseActivity {
 						if (y >= 1 && y <= 8) {
 							패드터치(x - 1, y - 1, true);
 						} else if (y == 9) {
-							if (프로젝트.체인 > x - 1)
+							if (프로젝트.chain > x - 1)
 								체인변경(x - 1);
 						}
 					} else if (command == 9 && velocity == 0) {
@@ -657,7 +651,7 @@ public class Play extends BaseActivity {
 						if (y >= 1 && y <= 8) {
 							패드터치(x - 1, y - 1, true);
 						} else if (y == 9) {
-							if (프로젝트.체인 > x - 1)
+							if (프로젝트.chain > x - 1)
 								체인변경(x - 1);
 						}
 					} else if (command == 9 && velocity == 0) {
@@ -685,7 +679,7 @@ public class Play extends BaseActivity {
 						int x = 9 - (note / 10);
 						int y = note % 10;
 						if (y == 9) {
-							if (프로젝트.체인 > x - 1)
+							if (프로젝트.chain > x - 1)
 								체인변경(x - 1);
 						}
 					}
@@ -741,7 +735,7 @@ public class Play extends BaseActivity {
 		
 		ArrayList<LED이벤트> 이벤트목록;
 		boolean 작동중 = true;
-		LED[][] LED = new LED[프로젝트.가로축][프로젝트.세로축];
+		Play.LED쓰레드.LED[][] LED = new LED[프로젝트.buttonX][프로젝트.buttonY];
 		
 		public LED쓰레드() {
 			이벤트목록 = new ArrayList<>();
@@ -750,7 +744,7 @@ public class Play extends BaseActivity {
 		class LED이벤트 {
 			boolean 정상적인이벤트 = false;
 			
-			ArrayList<Unipack.LED이벤트.요소> LED이벤트목록;
+			ArrayList<Unipack.LED.Syntax> LED이벤트목록;
 			int 실행할이벤트 = 0;
 			long 딜레이 = -1;
 			
@@ -765,11 +759,11 @@ public class Play extends BaseActivity {
 				this.x = x;
 				this.y = y;
 				
-				Unipack.LED이벤트 LED이벤트 = LED이벤트가져오기(체인, x, y);
+				Unipack.LED LED이벤트 = LED이벤트가져오기(체인, x, y);
 				LED이벤트밀기(체인, x, y);
 				if (LED이벤트 != null) {
-					LED이벤트목록 = LED이벤트.LED;
-					반복횟수 = LED이벤트.반복;
+					LED이벤트목록 = LED이벤트.syntax;
+					반복횟수 = LED이벤트.loop;
 					정상적인이벤트 = true;
 				}
 			}
@@ -808,7 +802,7 @@ public class Play extends BaseActivity {
 			if (e.정상적인이벤트)
 				이벤트목록.add(e);
 			
-			//log("LED 추가 (" + x + ", " + y + ")");
+			//log("led 추가 (" + x + ", " + y + ")");
 		}
 		
 		void 이벤트강제종료(int x, int y) {
@@ -881,9 +875,9 @@ public class Play extends BaseActivity {
 							if (e.딜레이 <= 현재시간) {
 								
 								
-								Unipack.LED이벤트.요소 LED이벤트 = e.LED이벤트목록.get(e.실행할이벤트);
+								Unipack.LED.Syntax LED이벤트 = e.LED이벤트목록.get(e.실행할이벤트);
 								
-								int 기능 = LED이벤트.기능;
+								int 기능 = LED이벤트.func;
 								int x = LED이벤트.x;
 								int y = LED이벤트.y;
 								int color = LED이벤트.color;
@@ -893,13 +887,13 @@ public class Play extends BaseActivity {
 								
 								try {
 									switch (기능) {
-										case Unipack.LED이벤트.요소.켜기:
+										case Unipack.LED.Syntax.ON:
 											색설정Launchpad(x, y, 색관리.add(x, y, 색관리.LED, color, velo));
 											publishProgress(1, x, y, color, velo);
 											LED[x][y] = new LED(e.x, e.y, x, y, color, velo);
 											
 											break;
-										case Unipack.LED이벤트.요소.끄기:
+										case Unipack.LED.Syntax.OFF:
 											if (LED[x][y] != null && LED[x][y].equal(e.x, e.y)) {
 												색설정Launchpad(x, y, 색관리.remove(x, y, 색관리.LED));
 												publishProgress(2, x, y);
@@ -907,7 +901,7 @@ public class Play extends BaseActivity {
 											}
 											
 											break;
-										case Unipack.LED이벤트.요소.딜레이:
+										case Unipack.LED.Syntax.DELAY:
 											e.딜레이 += delay;
 											break;
 									}
@@ -922,10 +916,10 @@ public class Play extends BaseActivity {
 						
 					} else if (e == null) {
 						이벤트목록.remove(i);
-						log("LED 오류 e == null");
+						log("led 오류 e == null");
 					} else if (e.강제종료) {
-						for (int i_ = 0; i_ < 프로젝트.가로축; i_++) {
-							for (int j_ = 0; j_ < 프로젝트.세로축; j_++) {
+						for (int i_ = 0; i_ < 프로젝트.buttonX; i_++) {
+							for (int j_ = 0; j_ < 프로젝트.buttonY; j_++) {
 								if (LED[i_][j_] != null && LED[i_][j_].equal(e.x, e.y)) {
 									색설정Launchpad(i_, j_, 색관리.remove(i_, j_, 색관리.LED));
 									publishProgress(2, i_, j_);
@@ -956,10 +950,10 @@ public class Play extends BaseActivity {
 				색설정(p[1], p[2], 색관리.get(p[1], p[2]));
 				/*switch (p[0]) {
 					case 1:
-						RL_버튼들[p[1]][p[2]].findViewById(R.id.LED).setBackgroundColor(p[3]);
+						RL_버튼들[p[1]][p[2]].findViewById(R.id.led).setBackgroundColor(p[3]);
 						break;
 					case 2:
-						RL_버튼들[p[1]][p[2]].findViewById(R.id.LED).setBackgroundColor(0);
+						RL_버튼들[p[1]][p[2]].findViewById(R.id.led).setBackgroundColor(0);
 						break;
 				}*/
 			} catch (Exception e) {
@@ -979,7 +973,7 @@ public class Play extends BaseActivity {
 		int 진행도 = 0;
 		
 		
-		ArrayList<Unipack.자동재생요소> 연습할요소 = new ArrayList<>();
+		ArrayList<Unipack.AutoPlay> 연습할요소 = new ArrayList<>();
 		int 달성 = 0;
 		
 		public 자동재생쓰레드() {
@@ -988,9 +982,9 @@ public class Play extends BaseActivity {
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			if (프로젝트.정사각형버튼)
+			if (프로젝트.squareButton)
 				findViewById(R.id.자동재생제어뷰).setVisibility(View.VISIBLE);
-			((ProgressBar) findViewById(R.id.진행도)).setMax(프로젝트.자동재생.size());
+			((ProgressBar) findViewById(R.id.진행도)).setMax(프로젝트.autoPlay.size());
 			((ProgressBar) findViewById(R.id.진행도)).setProgress(0);
 			자동재생_재생();
 		}
@@ -1001,39 +995,39 @@ public class Play extends BaseActivity {
 			long 딜레이 = 0;
 			long 처음시간 = System.currentTimeMillis();
 			
-			while (진행도 < 프로젝트.자동재생.size() && loop) {
+			while (진행도 < 프로젝트.autoPlay.size() && loop) {
 				long 지금시간 = System.currentTimeMillis();
 				
 				if (재생중) {
 					if (딜레이 <= 지금시간 - 처음시간) {
-						Unipack.자동재생요소 요소 = 프로젝트.자동재생.get(진행도);
+						Unipack.AutoPlay 요소 = 프로젝트.autoPlay.get(진행도);
 						
 						
-						int 기능 = 요소.기능;
-						int 체인기록 = 요소.체인기록;
-						int 번호 = 요소.번호;
+						int 기능 = 요소.func;
+						int 체인기록 = 요소.currChain;
+						int 번호 = 요소.num;
 						int x = 요소.x;
 						int y = 요소.y;
 						int c = 요소.c;
 						int d = 요소.d;
 						
 						switch (기능) {
-							case Unipack.자동재생요소.켜기:
+							case Unipack.AutoPlay.ON:
 								if (체인 != 체인기록)
 									publishProgress(3, 체인기록);
 								소리요소밀기(체인기록, x, y, 번호);
 								LED이벤트밀기(체인기록, x, y, 번호);
 								publishProgress(1, x, y);
 								break;
-							case Unipack.자동재생요소.끄기:
+							case Unipack.AutoPlay.OFF:
 								if (체인 != 체인기록)
 									publishProgress(3, 체인기록);
 								publishProgress(2, x, y);
 								break;
-							case Unipack.자동재생요소.체인:
+							case Unipack.AutoPlay.CHAIN:
 								publishProgress(3, c);
 								break;
-							case Unipack.자동재생요소.딜레이:
+							case Unipack.AutoPlay.DELAY:
 								딜레이 += d;
 								break;
 						}
@@ -1049,20 +1043,20 @@ public class Play extends BaseActivity {
 						
 						
 						for (int i = 0; i < 연습할요소.size(); i++) {
-							Unipack.자동재생요소 요소 = 연습할요소.get(i);
-							int 기능 = 요소.기능;
-							int 체인기록 = 요소.체인기록;
-							int 번호 = 요소.번호;
+							Unipack.AutoPlay 요소 = 연습할요소.get(i);
+							int 기능 = 요소.func;
+							int 체인기록 = 요소.currChain;
+							int 번호 = 요소.num;
 							int x = 요소.x;
 							int y = 요소.y;
 							int c = 요소.c;
 							int d = 요소.d;
 							
 							switch (기능) {
-								case Unipack.자동재생요소.켜기:
+								case Unipack.AutoPlay.ON:
 									publishProgress(6, x, y);
 									break;
-								case Unipack.자동재생요소.체인:
+								case Unipack.AutoPlay.CHAIN:
 									publishProgress(7, c);
 									break;
 							}
@@ -1073,37 +1067,37 @@ public class Play extends BaseActivity {
 						int 누적딜레이 = 0;
 						boolean 등록됨 = false;
 						
-						for (; 진행도 < 프로젝트.자동재생.size() && (누적딜레이 <= 20 || !등록됨); 진행도++) {
-							Unipack.자동재생요소 요소 = 프로젝트.자동재생.get(진행도);
+						for (; 진행도 < 프로젝트.autoPlay.size() && (누적딜레이 <= 20 || !등록됨); 진행도++) {
+							Unipack.AutoPlay 요소 = 프로젝트.autoPlay.get(진행도);
 							
-							int 기능 = 요소.기능;
-							int 체인기록 = 요소.체인기록;
-							int 번호 = 요소.번호;
+							int 기능 = 요소.func;
+							int 체인기록 = 요소.currChain;
+							int 번호 = 요소.num;
 							int x = 요소.x;
 							int y = 요소.y;
 							int c = 요소.c;
 							int d = 요소.d;
 							
 							
-							if (기능 == Unipack.자동재생요소.켜기 || 기능 == Unipack.자동재생요소.체인 || 기능 == Unipack.자동재생요소.딜레이) {
+							if (기능 == Unipack.AutoPlay.ON || 기능 == Unipack.AutoPlay.CHAIN || 기능 == Unipack.AutoPlay.DELAY) {
 								
 								switch (기능) {
-									case Unipack.자동재생요소.켜기:
+									case Unipack.AutoPlay.ON:
 										소리요소밀기(체인기록, x, y, 번호);
 										LED이벤트밀기(체인기록, x, y, 번호);
 										publishProgress(4, x, y);
 										등록됨 = true;
 										break;
-									case Unipack.자동재생요소.체인:
+									case Unipack.AutoPlay.CHAIN:
 										publishProgress(5, c);
 										등록됨 = true;
 										break;
-									case Unipack.자동재생요소.딜레이:
+									case Unipack.AutoPlay.DELAY:
 										if (등록됨)
 											누적딜레이 += d;
 										break;
 								}
-								if (기능 == Unipack.자동재생요소.켜기 || 기능 == Unipack.자동재생요소.체인)
+								if (기능 == Unipack.AutoPlay.ON || 기능 == Unipack.AutoPlay.CHAIN)
 									연습할요소.add(요소);
 							}
 						}
@@ -1144,7 +1138,7 @@ public class Play extends BaseActivity {
 		@Override
 		protected void onPostExecute(String result) {
 			((CheckBox) findViewById(R.id.자동재생)).setChecked(false);
-			if (프로젝트.keyLED여부) {
+			if (프로젝트.isKeyLED) {
 				((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
 				((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
 			} else {
@@ -1163,7 +1157,7 @@ public class Play extends BaseActivity {
 		자동재생쓰레드.재생중 = true;
 		findViewById(R.id.play).setBackground(theme.xml_pause);
 		
-		if (프로젝트.keyLED여부) {
+		if (프로젝트.isKeyLED) {
 			((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
 			((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
 		} else {
@@ -1209,8 +1203,8 @@ public class Play extends BaseActivity {
 	void 연습모드표시제거() {
 		//log("연습모드표시제거");
 		try {
-			for (int i = 0; i < 프로젝트.가로축; i++) {
-				for (int j = 0; j < 프로젝트.세로축; j++) {
+			for (int i = 0; i < 프로젝트.buttonX; i++) {
+				for (int j = 0; j < 프로젝트.buttonY; j++) {
 					
 					색설정(i, j, 색관리.remove(i, j, 색관리.연습모드));
 				}
@@ -1225,17 +1219,17 @@ public class Play extends BaseActivity {
 		
 		if (자동재생쓰레드 != null && 자동재생쓰레드.loop && !자동재생쓰레드.재생중) {
 			
-			ArrayList<Unipack.자동재생요소> 연습할요소 = 자동재생쓰레드.연습할요소;
+			ArrayList<Unipack.AutoPlay> 연습할요소 = 자동재생쓰레드.연습할요소;
 			if (연습할요소 != null) {
-				for (Unipack.자동재생요소 요소 : 연습할요소) {
-					int 기능_ = 요소.기능;
-					int 체인기록_ = 요소.체인기록;
+				for (Unipack.AutoPlay 요소 : 연습할요소) {
+					int 기능_ = 요소.func;
+					int 체인기록_ = 요소.currChain;
 					int x_ = 요소.x;
 					int y_ = 요소.y;
 					int c_ = 요소.c;
 					int d_ = 요소.d;
 					
-					if (기능_ == Unipack.자동재생요소.켜기 && x == x_ && y == y_ && 체인기록_ == 체인) {
+					if (기능_ == Unipack.AutoPlay.ON && x == x_ && y == y_ && 체인기록_ == 체인) {
 						자동재생쓰레드.달성++;
 						break;
 					}
@@ -1246,17 +1240,17 @@ public class Play extends BaseActivity {
 	
 	void 연습모드달성체크(int c) {
 		if (자동재생쓰레드 != null && 자동재생쓰레드.loop && !자동재생쓰레드.재생중) {
-			ArrayList<Unipack.자동재생요소> 연습할요소 = 자동재생쓰레드.연습할요소;
+			ArrayList<Unipack.AutoPlay> 연습할요소 = 자동재생쓰레드.연습할요소;
 			if (연습할요소 != null) {
-				for (Unipack.자동재생요소 요소 : 자동재생쓰레드.연습할요소) {
-					int 기능_ = 요소.기능;
-					int 체인기록_ = 요소.체인기록;
+				for (Unipack.AutoPlay 요소 : 자동재생쓰레드.연습할요소) {
+					int 기능_ = 요소.func;
+					int 체인기록_ = 요소.currChain;
 					int x_ = 요소.x;
 					int y_ = 요소.y;
 					int c_ = 요소.c;
 					int d_ = 요소.d;
 					
-					if (기능_ == Unipack.자동재생요소.체인 && c == c_) {
+					if (기능_ == Unipack.AutoPlay.CHAIN && c == c_) {
 						자동재생쓰레드.달성++;
 						break;
 					}
@@ -1270,8 +1264,8 @@ public class Play extends BaseActivity {
 		try {
 			if (누르기때기) {
 				소리.stop(정지아이디[체인][x][y]);
-				Unipack.소리요소 e = 소리요소가져오기(체인, x, y);
-				정지아이디[체인][x][y] = 소리.play(e.아이디, 1.0F, 1.0F, 0, e.반복, 1.0F);//ID, leftVolum, rightVolum, 우선순위, 루프, 재생속도
+				Unipack.Sound e = 소리요소가져오기(체인, x, y);
+				정지아이디[체인][x][y] = 소리.play(e.id, 1.0F, 1.0F, 0, e.loop, 1.0F);//ID, leftVolum, rightVolum, 우선순위, 루프, 재생속도
 				
 				소리요소밀기(체인, x, y);
 				
@@ -1294,7 +1288,7 @@ public class Play extends BaseActivity {
 				
 				연습모드달성체크(x, y);
 			} else {
-				if (소리요소가져오기(체인, x, y).반복 == -1)
+				if (소리요소가져오기(체인, x, y).loop == -1)
 					소리.stop(정지아이디[체인][x][y]);
 				
 				if (녹음) {
@@ -1323,13 +1317,13 @@ public class Play extends BaseActivity {
 	void 체인변경(int 체인번호) {
 		log("체인변경 (" + 체인번호 + ")");
 		try {
-			if (프로젝트.체인 > 1 && 체인번호 >= 0 && 체인번호 < 프로젝트.체인) {
+			if (프로젝트.chain > 1 && 체인번호 >= 0 && 체인번호 < 프로젝트.chain) {
 				체인 = 체인번호;
 				체인초기화();
 			}
 			
-			for (int i = 0; i < 프로젝트.가로축; i++)
-				for (int j = 0; j < 프로젝트.세로축; j++) {
+			for (int i = 0; i < 프로젝트.buttonX; i++)
+				for (int j = 0; j < 프로젝트.buttonY; j++) {
 					소리요소밀기(체인, i, j, 0);
 					LED이벤트밀기(체인, i, j, 0);
 				}
@@ -1367,10 +1361,10 @@ public class Play extends BaseActivity {
 	
 	void LED초기화() {
 		log("LED초기화");
-		if (프로젝트.keyLED여부) {
+		if (프로젝트.isKeyLED) {
 			try {
-				for (int i = 0; i < 프로젝트.가로축; i++) {
-					for (int j = 0; j < 프로젝트.세로축; j++) {
+				for (int i = 0; i < 프로젝트.buttonX; i++) {
+					for (int j = 0; j < 프로젝트.buttonY; j++) {
 						
 						if (LED쓰레드.이벤트존재(i, j))
 							LED쓰레드.이벤트강제종료(i, j);
@@ -1386,15 +1380,15 @@ public class Play extends BaseActivity {
 	
 	void 터치초기화() {
 		log("터치초기화");
-		for (int i = 0; i < 프로젝트.가로축; i++)
-			for (int j = 0; j < 프로젝트.세로축; j++)
+		for (int i = 0; i < 프로젝트.buttonX; i++)
+			for (int j = 0; j < 프로젝트.buttonY; j++)
 				패드터치(i, j, false);
 	}
 	
 	void 체인초기화() {
 		log("체인초기화");
-		if (프로젝트.체인 > 1) {
-			for (int i = 0; i < 프로젝트.체인; i++) {
+		if (프로젝트.chain > 1) {
+			for (int i = 0; i < 프로젝트.chain; i++) {
 				if (i == 체인)
 					IV_체인들[i].setBackground(theme.chain_);
 				else
@@ -1406,8 +1400,8 @@ public class Play extends BaseActivity {
 	
 	void 순서기록표시() {
 		//log("순서기록표시");
-		for (int i = 0; i < 프로젝트.가로축; i++) {
-			for (int j = 0; j < 프로젝트.세로축; j++) {
+		for (int i = 0; i < 프로젝트.buttonX; i++) {
+			for (int j = 0; j < 프로젝트.buttonY; j++) {
 				((TextView) RL_버튼들[i][j].findViewById(R.id.순서)).setText("");
 				for (int k = 0; k < 순서기록표[체인][i][j].size(); k++)
 					((TextView) RL_버튼들[i][j].findViewById(R.id.순서)).append(순서기록표[체인][i][j].get(k) + " ");
@@ -1430,8 +1424,8 @@ public class Play extends BaseActivity {
 	
 	void 순서기록지우기() {
 		//log("순서기록지우기");
-		for (int i = 0; i < 프로젝트.가로축; i++) {
-			for (int j = 0; j < 프로젝트.세로축; j++) {
+		for (int i = 0; i < 프로젝트.buttonX; i++) {
+			for (int j = 0; j < 프로젝트.buttonY; j++) {
 				((TextView) RL_버튼들[i][j].findViewById(R.id.순서)).setText("");
 			}
 		}
@@ -1439,9 +1433,9 @@ public class Play extends BaseActivity {
 	
 	void 순서기록초기화() {
 		//log("순서기록초기화");
-		for (int i = 0; i < 프로젝트.체인; i++) {
-			for (int j = 0; j < 프로젝트.가로축; j++)
-				for (int k = 0; k < 프로젝트.세로축; k++)
+		for (int i = 0; i < 프로젝트.chain; i++) {
+			for (int j = 0; j < 프로젝트.buttonX; j++)
+				for (int k = 0; k < 프로젝트.buttonY; k++)
 					순서기록표[i][j][k].clear();
 			다음순서[i] = 1;
 		}
@@ -1450,9 +1444,9 @@ public class Play extends BaseActivity {
 	
 	void 순서기록초기설정() {
 		//log("순서기록초기설정");
-		for (int i = 0; i < 프로젝트.체인; i++) {
-			for (int j = 0; j < 프로젝트.가로축; j++)
-				for (int k = 0; k < 프로젝트.세로축; k++)
+		for (int i = 0; i < 프로젝트.chain; i++) {
+			for (int j = 0; j < 프로젝트.buttonX; j++)
+				for (int k = 0; k < 프로젝트.buttonY; k++)
 					순서기록표[i][j][k] = new ArrayList<>();
 			다음순서[i] = 1;
 		}
@@ -1507,12 +1501,12 @@ public class Play extends BaseActivity {
 		if (LED쓰레드 != null)
 			LED쓰레드.작동중 = false;
 		if (소리 != null) {
-			for (int i = 0; i < 프로젝트.체인; i++)
-				for (int j = 0; j < 프로젝트.가로축; j++)
-					for (int k = 0; k < 프로젝트.세로축; k++)
-						if (프로젝트.소리[i][j][k] != null) {
+			for (int i = 0; i < 프로젝트.chain; i++)
+				for (int j = 0; j < 프로젝트.buttonX; j++)
+					for (int k = 0; k < 프로젝트.buttonY; k++)
+						if (프로젝트.sound[i][j][k] != null) {
 							try {
-								소리.unload(소리요소가져오기(i, j, k).아이디);
+								소리.unload(소리요소가져오기(i, j, k).id);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}

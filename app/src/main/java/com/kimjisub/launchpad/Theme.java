@@ -132,16 +132,16 @@ public class Theme extends BaseActivity {
 		
 		List<ApplicationInfo> packages = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
 		
-		addTheme(getPackageName());
+		addThemeInList(getPackageName());
 		
 		for (ApplicationInfo applicationInfo : packages) {
 			String packageName = applicationInfo.packageName;
 			if (packageName.startsWith("com.kimjisub.launchpad.ThemePack."))
-				addTheme(packageName);
+				addThemeInList(packageName);
 		}
 	}
 	
-	void addTheme(String packageName) {
+	void addThemeInList(String packageName) {
 		ThemePack theme = new ThemePack(Theme.this, packageName);
 		try {
 			theme.init();

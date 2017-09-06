@@ -50,7 +50,7 @@ interface IInAppBillingService {
      * @param packageName the package name of the calling app
      * @param type type of the in-app item being purchased "inapp" for one-time purchases
      *        and "subs" for subscription.
-     * @return RESULT_OK(0) on success, corresponding result code on failures
+     * @return RESULT_OK(0) ON success, corresponding result code ON failures
      */
     int isBillingSupported(int apiVersion, String packageName, String type);
 
@@ -63,12 +63,12 @@ interface IInAppBillingService {
      * @param packageName the package name of the calling app
      * @param skusBundle bundle containing a StringArrayList of SKUs with key "ITEM_ID_LIST"
      * @return Bundle containing the following key-value pairs
-     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes on
+     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes ON
      *              failure as listed above.
      *         "DETAILS_LIST" with a StringArrayList containing purchase information
      *              in JSON format similar to:
      *              '{ "productId" : "exampleSku", "type" : "inapp", "price" : "$5.00",
-     *                 "title : "Example Title", "description" : "This is an example description" }'
+     *                 "title : "Example title", "description" : "This is an example description" }'
      */
     Bundle getSkuDetails(int apiVersion, String packageName, String type, in Bundle skusBundle);
 
@@ -82,14 +82,14 @@ interface IInAppBillingService {
      *        and "subs" for subscription).
      * @param developerPayload optional argument to be sent back with the purchase information
      * @return Bundle containing the following key-value pairs
-     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes on
+     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes ON
      *              failure as listed above.
      *         "BUY_INTENT" - PendingIntent to start the purchase flow
      *
      * The Pending intent should be launched with startIntentSenderForResult. When purchase flow
      * has completed, the onActivityResult() will give a resultCode of OK or CANCELED.
      * If the purchase is successful, the result data will contain the following key-value pairs
-     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes on
+     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes ON
      *              failure as listed above.
      *         "INAPP_PURCHASE_DATA" - String in JSON format similar to
      *              '{"orderId":"12999763169054705758.1371079406387615",
@@ -119,7 +119,7 @@ interface IInAppBillingService {
      *        This method can be called again with the continuation token to get the next set of
      *        owned skus.
      * @return Bundle containing the following key-value pairs
-     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes on
+     *         "RESPONSE_CODE" with int value, RESULT_OK(0) if success, other response codes ON
      *              failure as listed above.
      *         "INAPP_PURCHASE_ITEM_LIST" - StringArrayList containing the list of SKUs
      *         "INAPP_PURCHASE_DATA_LIST" - StringArrayList containing the purchase information
