@@ -11,7 +11,7 @@
 	    android:layout_height="match_parent">
 
 		<LinearLayout
-		    android:id="@+id/목록"
+		    android:id="@+id/list"
 		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content"
 		    android:orientation="vertical"
@@ -51,7 +51,7 @@
 	    fab:menu_openDirection="up">
 
 		<com.github.clans.fab.FloatingActionButton
-		    android:id="@+id/uni불러오기"
+		    android:id="@+id/fab_loadUniPack"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:src="@drawable/ic_folder"
@@ -61,7 +61,7 @@
 		    fab:fab_size="mini"/>
 
 		<com.github.clans.fab.FloatingActionButton
-		    android:id="@+id/스토어"
+		    android:id="@+id/fab_store"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:src="@drawable/ic_store"
@@ -71,7 +71,7 @@
 		    fab:fab_size="mini"/>
 
 		<com.github.clans.fab.FloatingActionButton
-		    android:id="@+id/설정"
+		    android:id="@+id/fab_setting"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:src="@drawable/ic_settings"

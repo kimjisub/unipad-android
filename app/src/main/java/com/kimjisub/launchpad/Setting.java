@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Tools.lang;
 
 /**
- * Created by rlawl on 2017-01-16.
+ * Created by rlawl ON 2017-01-16.
  */
 
 public class Setting extends PreferenceActivity {

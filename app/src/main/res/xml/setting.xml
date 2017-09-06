@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
+	
 	<PreferenceCategory
 	    android:title="@string/setting">
 		<Preference
-		    android:key="select_theme"
+		    android:key="SelectedTheme"
 		    android:title="@string/select_theme"/>
 		<SwitchPreference
 		    android:defaultValue="true"
-		    android:key="default_font"
+		    android:key="DefaultFont"
 		    android:title="@string/default_font"/>
 		<SwitchPreference
 		    android:defaultValue="false"
-		    android:key="unipack_SDCard"
+		    android:key="IsUsingSDCard"
 		    android:title="@string/use_sd_card"/>
 	</PreferenceCategory>
-
+	
 	<PreferenceCategory
 	    android:title="@string/credit">
 		<Preference
@@ -27,9 +27,4 @@
 		<Preference
 		    android:title="@string/credit_simple"/>
 	</PreferenceCategory>
-	<!--<PreferenceCategory
-	    android:title="@string/app_info">
-		<Preference
-		    android:layout="@layout/app_info"/>
-	</PreferenceCategory>-->
 </PreferenceScreen>

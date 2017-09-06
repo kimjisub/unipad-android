@@ -226,7 +226,7 @@
 					    android:paddingRight="15dp">
 
 						<TextView
-						    android:id="@+id/LED"
+						    android:id="@+id/led"
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:layout_gravity="end"
@@ -235,7 +235,7 @@
 						    android:textSize="10dp"/>
 
 						<TextView
-						    android:id="@+id/자동재생"
+						    android:id="@+id/autoPlay"
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:layout_gravity="end"

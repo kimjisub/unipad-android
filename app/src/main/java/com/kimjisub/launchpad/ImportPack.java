@@ -14,8 +14,8 @@ import java.io.IOException;
 import static com.kimjisub.launchpad.manage.Tools.*;
 
 /**
- * Created by rlawl on 2016-04-25.
- * Created by rlawl on 2016-04-25.
+ * Created by rlawl ON 2016-04-25.
+ * Created by rlawl ON 2016-04-25.
  */
 
 public class ImportPack extends BaseActivity {
@@ -57,24 +57,24 @@ public class ImportPack extends BaseActivity {
 					FileManager.unZipFile(projectURL, 경로);
 					Unipack 프로젝트 = new Unipack(경로, true);
 					
-					if (프로젝트.에러내용 == null) {
+					if (프로젝트.ErrorDetail == null) {
 						성공 = true;
 						경고 = false;
 						제목 = lang(ImportPack.this, R.string.analyzeComplete);
-						메시지 = lang(ImportPack.this, R.string.title) + " : " + 프로젝트.제목 + "\n" +
-							lang(ImportPack.this, R.string.producerName) + " : " + 프로젝트.제작자 + "\n" +
-							lang(ImportPack.this, R.string.scale) + " : " + 프로젝트.가로축 + " x " + 프로젝트.세로축 + "\n" +
-							lang(ImportPack.this, R.string.chainCount) + " : " + 프로젝트.체인 + "\n" +
+						메시지 = lang(ImportPack.this, R.string.title) + " : " + 프로젝트.title + "\n" +
+							lang(ImportPack.this, R.string.producerName) + " : " + 프로젝트.producerName + "\n" +
+							lang(ImportPack.this, R.string.scale) + " : " + 프로젝트.buttonX + " x " + 프로젝트.buttonY + "\n" +
+							lang(ImportPack.this, R.string.chainCount) + " : " + 프로젝트.chain + "\n" +
 							lang(ImportPack.this, R.string.capacity) + " : " + String.format("%.2f", (float) FileManager.getFolderSize(경로) / 1024L / 1024L) + " MB";
-					} else if (프로젝트.치명적인에러) {
+					} else if (프로젝트.CriticalError) {
 						제목 = lang(ImportPack.this, R.string.analyzeFailed);
-						메시지 = 프로젝트.에러내용;
+						메시지 = 프로젝트.ErrorDetail;
 						FileManager.deleteFolder(경로);
 					} else {
 						성공 = true;
 						경고 = true;
 						제목 = lang(ImportPack.this, R.string.warning);
-						메시지 = 프로젝트.에러내용;
+						메시지 = 프로젝트.ErrorDetail;
 					}
 					
 				} catch (IOException e) {

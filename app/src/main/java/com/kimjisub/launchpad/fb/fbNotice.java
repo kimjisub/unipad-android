@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.fb;
 
 /**
- * Created by kimjisub on 2017. 3. 24..
+ * Created by kimjisub ON 2017. 3. 24..
  */
 
 import com.google.firebase.database.Exclude;

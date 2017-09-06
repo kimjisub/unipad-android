@@ -19,17 +19,16 @@ import java.util.Random;
 
 
 /**
- * Created by rlawl on 2016-02-05.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-02-05.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 
 
 public class FileManager {
-	public static void unZipFile(String zipFile, String location) throws IOException {
-		unZipFile(new FileInputStream(zipFile), location);
-	}
 	
-	public static void unZipFile(InputStream zipFile, String location) throws IOException {
+	public static void unZipFile(String zipFileURL, String location) throws IOException {
+		InputStream zipFile = new FileInputStream(zipFileURL);
+		
 		int size;
 		byte[] buffer = new byte[1024];
 		
@@ -38,26 +37,23 @@ public class FileManager {
 				location += "/";
 			}
 			File f = new File(location);
-			if (!f.isDirectory()) {
+			if (!f.isDirectory())
 				f.mkdirs();
-			}
 			ZipInputStream zin = new ZipInputStream(new BufferedInputStream(zipFile, 1024));
 			try {
-				ZipEntry ze = null;
+				ZipEntry ze;
 				while ((ze = zin.getNextEntry()) != null) {
 					String path = location + ze.getName();
 					File unzipFile = new File(path);
 					
 					if (ze.isDirectory()) {
-						if (!unzipFile.isDirectory()) {
+						if (!unzipFile.isDirectory())
 							unzipFile.mkdirs();
-						}
 					} else {
 						File parentDir = unzipFile.getParentFile();
 						if (null != parentDir) {
-							if (!parentDir.isDirectory()) {
+							if (!parentDir.isDirectory())
 								parentDir.mkdirs();
-							}
 						}
 						
 						FileOutputStream out = new FileOutputStream(unzipFile, false);
@@ -68,29 +64,30 @@ public class FileManager {
 							}
 							
 							zin.closeEntry();
-						} finally {
-							fout.flush();
-							fout.close();
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
+						fout.flush();
+						fout.close();
 					}
 				}
-			} finally {
-				zin.close();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+			zin.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public static String randomString(int length) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		Random random = new Random();
 		
-		String chars[] = "a,b,c,d,e,f,g,h,i,j,k,lang,m,n,o,p,q,r,s,t,u,v,w,x,y,z".split(",");
+		String chars[] = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z".split(",");
 		
-		for (int i = 0; i < length; i++) {
+		for (int i = 0; i < length; i++)
 			buffer.append(chars[random.nextInt(chars.length)]);
-		}
 		return buffer.toString();
 	}
 	
@@ -139,6 +136,10 @@ public class FileManager {
 		return totalMemory;
 	}
 	
+	public static String byteToMB(float Byte){
+		return String.format("%.2f", Byte / 1024L / 1024L);
+	}
+	
 	public static File[] sortByTime(File[] files) {
 		
 		for (int i = 0; i < files.length - 1; i++) {
@@ -184,7 +185,6 @@ public class FileManager {
 	
 	public static HashSet<String> getExternalMounts() {
 		final HashSet<String> out = new HashSet<String>();
-		//String reg = "(?i).*vold.*(vfat|ntfs|exfat|fat32|ext3|ext4).*rw.*";
 		String reg = "(?i).*media_rw.*(storage).*(sdcardfs).*rw.*";
 		String s = "";
 		try {

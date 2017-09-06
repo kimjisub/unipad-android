@@ -22,8 +22,8 @@ import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 /**
- * Created by rlawl on 2016-02-19.
- * ReCreated by rlawl on 2016-04-23.
+ * Created by rlawl ON 2016-02-19.
+ * ReCreated by rlawl ON 2016-04-23.
  */
 
 
@@ -442,7 +442,7 @@ public class Launchpad extends BaseActivity {
 						}
 					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} catch (Exception ignore) {
-					logSig("런치패드 LED 에러");
+					logSig("런치패드 led 에러");
 				}
 			} else if (런치패드통신방법 == 1) {
 				송신((byte) command, (byte) -112, (byte) note, (byte) velocity);
