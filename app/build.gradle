@@ -31,24 +31,25 @@ allprojects {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile files('libs/jazzlib.jar')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:support-compat:25.3.1'
-    compile 'com.android.support:design:25.3.1'
-    compile 'com.github.clans:fab:1.6.2'
-    //compile 'com.google.android.gms:play-services:10.2.0'
-    compile 'com.github.ParkSangGwon:TedPermission:v1.0.6'
-    compile 'com.google.android.gms:play-services-ads:10.2.4'
-    compile 'com.google.android.gms:play-services-identity:10.2.4'
-    compile 'com.google.android.gms:play-services-gcm:10.2.4'
-    compile 'com.android.support:multidex:1.0.1'
-    compile 'com.azoft.carousellayoutmanager:carousel:1.2.1'
-    compile 'com.tsengvn:Typekit:1.0.0'
-    compile 'com.google.firebase:firebase-database:10.2.1'
+	compile fileTree(include: ['*.jar'], dir: 'libs')
+	compile files('libs/jazzlib.jar')
+	androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+		exclude group: 'com.android.support', module: 'support-annotations'
+	})
+	testCompile 'junit:junit:4.12'
+	compile 'com.android.support:support-compat:25.3.1'
+	compile 'com.android.support:design:25.3.1'
+	compile 'com.github.clans:fab:1.6.2'
+	//compile 'com.google.android.gms:play-services:10.2.0'
+	compile 'com.github.ParkSangGwon:TedPermission:v1.0.6'
+	compile 'com.google.android.gms:play-services-ads:10.2.4'
+	compile 'com.google.android.gms:play-services-identity:10.2.4'
+	compile 'com.google.android.gms:play-services-gcm:10.2.4'
+	compile 'com.android.support:multidex:1.0.1'
+	compile 'com.azoft.carousellayoutmanager:carousel:1.2.1'
+	compile 'com.tsengvn:Typekit:1.0.0'
+	compile 'com.google.firebase:firebase-database:10.2.1'
+	compile project(':design')
 }
 
 apply plugin: 'com.google.gms.google-services'

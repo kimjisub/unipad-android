@@ -32,6 +32,6 @@
 	    android:layout_height="wrap_content"
 	    android:layout_gravity="center"
 	    android:layout_marginTop="5dp"
-	    android:text=""
+	    android:text="UniPad"
 	    android:textColor="@color/text5"/>
 </LinearLayout>
