@@ -5,19 +5,19 @@
               android:orientation="vertical">
 
 	<TextView
-		android:id="@+id/경로"
+		android:id="@+id/path"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:paddingBottom="15dp"
 		android:paddingLeft="20dp"
 		android:paddingRight="20dp"
 		android:paddingTop="20dp"
-		android:text="경로"
+		android:text="path/path/path"
 		android:textColor="#DD000000"
 		android:textSize="15dp"/>
 
 	<ListView
-		android:id="@+id/리스트"
+		android:id="@+id/list"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:choiceMode="singleChoice"

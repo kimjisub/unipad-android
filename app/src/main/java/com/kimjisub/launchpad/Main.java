@@ -11,15 +11,13 @@ import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.Transformation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.kimjisub.design.Item;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
@@ -40,140 +38,157 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 public class Main extends BaseActivity {
 	LinearLayout LL_List;
 	String ProjectFolderURL;
-	
-	
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		
+
+
 		LL_List = (LinearLayout) findViewById(R.id.list);
 		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
-		
+
 		updateCheck();
 		noticeCheck();
-		
+
 		findViewById(R.id.fab_loadUniPack).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				loadUniPack();
+				unipackExplorer();
 			}
 		});
-		
+
 		findViewById(R.id.fab_store).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Store.class));
 			}
 		});
-		
+
 		findViewById(R.id.fab_setting).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Setting.class));
 			}
 		});
-		
+
 	}
-	
-	RelativeLayout[] RL_items;
-	boolean[] statusPlay;
-	boolean[] statusInfo;
+
+	Item[] IT_items;
 	String[] URL;
-	Unipack unipacks[];
-	
+	Unipack[] unipacks;
+
 	void update() {
 		LL_List.removeAllViews();
-		
+
 		File projectFolder = new File(ProjectFolderURL);
-		
+
 		if (projectFolder.isDirectory()) {
-			
+
 			File[] projects = FileManager.sortByTime(projectFolder.listFiles());
 			int num = projects.length;
-			
-			RL_items = new RelativeLayout[num];
-			statusPlay = new boolean[num];
-			statusInfo = new boolean[num];
+
+			IT_items = new Item[num];
 			URL = new String[num];
 			unipacks = new Unipack[num];
-			
+
 			int count = 0;
-			for (int i = 0; i < num; i++) {
+			for (int i_ = 0; i_ < num; i_++) {
+				final int i = i_;
 				File project = projects[i];
 				if (project.isFile()) continue;
 				count++;
-				
+
 				URL[i] = ProjectFolderURL + "/" + project.getName();
 				unipacks[i] = new Unipack(URL[i], false);
-				
-				RelativeLayout RL_item = (RelativeLayout) View.inflate(Main.this, R.layout.list_item, null);
-				
-				((TextView) RL_item.findViewById(R.id.title)).setText(unipacks[i].title);
-				((TextView) RL_item.findViewById(R.id.producerName)).setText(unipacks[i].producerName);
-				
-				((TextView) RL_item.findViewById(R.id.size)).setText(unipacks[i].buttonX + " x " + unipacks[i].buttonY);
-				((TextView) RL_item.findViewById(R.id.chain)).setText(unipacks[i].chain + "");
-				((TextView) RL_item.findViewById(R.id.capacity)).setText(FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB");
-				
-				if (unipacks[i].isKeyLED)
-					((TextView) RL_item.findViewById(R.id.LED)).setTextColor(getResources().getColor(R.color.green));
-				if (unipacks[i].isAutoPlay)
-					((TextView) RL_item.findViewById(R.id.자동재생)).setTextColor(getResources().getColor(R.color.green));
-				
-				RL_item.findViewById(R.id.제목제작자).setX(UIManager.dpToPx(getApplicationContext(), 10));
-				
-				final int finalI = i;
-				RL_item.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						clearPlay(finalI);
-						clearInfo();
-						togglePlay(finalI);
-					}
-				});
-				RL_item.setOnLongClickListener(new View.OnLongClickListener() {
-					@Override
-					public boolean onLongClick(View v) {
-						clearPlay();
-						clearInfo(finalI);
-						toggleInfo(finalI);
-						return true;
-					}
-				});
-				
-				
-				this.RL_items[i] = RL_item;
-				LL_List.addView(RL_item);
+
+				Item IT_item = new Item(Main.this)
+					.setTitle(unipacks[i].title)
+					.setSubTitle(unipacks[i].producerName)
+					.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
+					.setChain(unipacks[i].chain + "")
+					.setCapacity(FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB")
+					.setLED(unipacks[i].isKeyLED)
+					.setAutoPlay(unipacks[i].isAutoPlay)
+					.setOnPlayClickListener(new Item.OnPlayClickListener() {
+						@Override
+						public void onPlayClick() {
+							Intent intent = new Intent(Main.this, Play.class);
+							intent.putExtra("URL", URL[i]);
+							startActivity(intent);
+						}
+					})
+					.setOnDeleteClickListener(new Item.OnDeleteClickListener() {
+						@Override
+						public void onDeleteClick() {
+							new AlertDialog.Builder(Main.this)
+								.setTitle(unipacks[i].title)
+								.setMessage(lang(Main.this, com.kimjisub.design.R.string.doYouWantToDeleteProject))
+								.setPositiveButton(lang(Main.this, com.kimjisub.design.R.string.cancel), null)
+								.setNegativeButton(lang(Main.this, com.kimjisub.design.R.string.delete), new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog, int which) {
+										FileManager.deleteFolder(URL[i]);
+										update();
+									}
+								})
+								.show();
+						}
+					})
+					.setOnViewClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							togglePlay(i);
+							toggleInfo(-1);
+						}
+					})
+					.setOnViewLongClickListener(new View.OnLongClickListener() {
+						@Override
+						public boolean onLongClick(View v) {
+							togglePlay(-1);
+							toggleInfo(i);
+							return true;
+						}
+					});
+
+				IT_items[i] = IT_item;
+				LL_List.addView(IT_item);
 			}
-			
+
 			if (count == 0) {
-				View v = View.inflate(Main.this, R.layout.list_item_not_exist, null);
-				v.setOnClickListener(new View.OnClickListener() {
+				Item IT_item = new Item(Main.this)
+					.setFlagColor(R.drawable.border_play_red)
+					.setTitle(lang(Main.this, R.string.unipackNotFound))
+					.setSubTitle(lang(Main.this, R.string.clickToAddUnipack))
+					.setOptionVisibility(false)
+					.setOnViewClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							startActivity(new Intent(Main.this, Store.class));
+						}
+					});
+				LL_List.addView(IT_item);
+			}
+
+		} else {
+			projectFolder.mkdir();
+
+			Item IT_item = new Item(Main.this)
+				.setFlagColor(R.drawable.border_play_red)
+				.setTitle(lang(Main.this, R.string.unipackNotFound))
+				.setSubTitle(lang(Main.this, R.string.clickToAddUnipack))
+				.setOptionVisibility(false)
+				.setOnViewClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(Main.this, Store.class));
 					}
 				});
-				v.findViewById(R.id.leftView).setX(UIManager.dpToPx(getApplicationContext(), 10));
-				LL_List.addView(v);
-			}
-			
-		} else {
-			projectFolder.mkdir();
-			View v = View.inflate(Main.this, R.layout.list_item_not_exist, null);
-			v.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					startActivity(new Intent(Main.this, Store.class));
-				}
-			});
-			v.findViewById(R.id.leftView).setX(UIManager.dpToPx(getApplicationContext(), 10));
-			LL_List.addView(v);
+			LL_List.addView(IT_item);
 		}
-		
+
 		File nomedia = new File(ProjectFolderURL + "/.nomedia");
 		if (!nomedia.isFile()) {
 			try {
@@ -184,133 +199,47 @@ public class Main extends BaseActivity {
 		}
 		log(ProjectFolderURL);
 	}
-	
-	void togglePlay(final int i) {
-		RelativeLayout item = RL_items[i];
-		if (!statusPlay[i]) {
-			//animation
-			item.findViewById(R.id.leftView).animate().x(UIManager.dpToPx(getApplicationContext(), 100)).setDuration(500).start();
-			item.findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
-			
-			//clickEvent
-			item.findViewById(R.id.playbtn).setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Intent intent = new Intent(Main.this, Play.class);
-					intent.putExtra("URL", URL[i]);
-					startActivity(intent);
-				}
-			});
-		} else {
-			//animation
-			item.findViewById(R.id.leftView).animate().x(UIManager.dpToPx(getApplicationContext(), 10)).setDuration(500).start();
-			item.findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
-			
-			//clickEvent
-			item.findViewById(R.id.playbtn).setOnClickListener(null);
-			item.findViewById(R.id.playbtn).setClickable(false);
+
+	void togglePlay(int n) {
+		for (int i = 0; i < IT_items.length; i++) {
+			Item item = IT_items[i];
+			if (item != null) {
+				if (n != i)
+					item.togglePlay(false);
+				else
+					item.togglePlay();
+			}
 		}
-		
-		statusPlay[i] = !statusPlay[i];
 	}
-	
-	void toggleInfo(final int i) {
-		final RelativeLayout item = RL_items[i];
-		final int px = UIManager.dpToPx(getApplicationContext(), 30);
-		final int px2 = UIManager.dpToPx(getApplicationContext(), 35);
-		if (!statusInfo[i]) {
-			//animation
-			Animation a = new Animation() {
-				@Override
-				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) item.findViewById(R.id.info).getLayoutParams();
-					params.topMargin = px + (int) (px2 * interpolatedTime);
-					item.findViewById(R.id.info).setLayoutParams(params);
-				}
-			};
-			a.setDuration(500);
-			item.findViewById(R.id.info).startAnimation(a);
-			
-			//clickEvent
-			item.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					new AlertDialog.Builder(Main.this)
-						.setTitle(unipacks[i].title)
-						.setMessage(lang(Main.this, R.string.doYouWantToDeleteProject))
-						.setPositiveButton(lang(Main.this, R.string.cancel), null)
-						.setNegativeButton(lang(Main.this, R.string.delete), new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								FileManager.deleteFolder(URL[i]);
-								update();
-							}
-						})
-						.show();
-				}
-			});
-		} else {
-			//animation
-			Animation a = new Animation() {
-				@Override
-				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) item.findViewById(R.id.info).getLayoutParams();
-					params.topMargin = px + px2 + (int) (-px2 * interpolatedTime);
-					item.findViewById(R.id.info).setLayoutParams(params);
-				}
-			};
-			a.setDuration(500);
-			item.findViewById(R.id.info).startAnimation(a);
-			
-			//clickEvent
-			item.findViewById(R.id.delete).setOnClickListener(null);
-			item.findViewById(R.id.delete).setClickable(false);
+
+	void toggleInfo(int n) {
+		for (int i = 0; i < IT_items.length; i++) {
+			Item item = IT_items[i];
+			if (item != null) {
+				if (n != i)
+					item.toggleInfo(false);
+				else
+					item.toggleInfo();
+			}
 		}
-		
-		statusInfo[i] = !statusInfo[i];
 	}
-	
-	void clearPlay() {
-		for (int i = 0; i < statusPlay.length; i++)
-			if (statusPlay[i])
-				togglePlay(i);
-	}
-	
-	void clearPlay(int e) {
-		for (int i = 0; i < statusPlay.length; i++)
-			if (statusPlay[i] && i != e)
-				togglePlay(i);
-	}
-	
-	void clearInfo() {
-		for (int i = 0; i < statusInfo.length; i++)
-			if (statusInfo[i])
-				toggleInfo(i);
-	}
-	
-	void clearInfo(int e) {
-		for (int i = 0; i < statusInfo.length; i++)
-			if (statusInfo[i] && i != e)
-				toggleInfo(i);
-	}
-	
-	
+
+
 	List<String> mItem;
 	List<String> mPath;
-	TextView TV_경로;
-	ListView LV_리스트;
-	
-	
-	void loadUniPack() {
+	TextView TV_path;
+	ListView LV_list;
+
+	void unipackExplorer() {
 		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
 		LinearLayout LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
-		TV_경로 = (TextView) LL_explorer.findViewById(R.id.경로);
-		LV_리스트 = (ListView) LL_explorer.findViewById(R.id.리스트);
-		
-		String 경로 = SaveSetting.FileExplorerPath.load(Main.this);
-		
-		
-		LV_리스트.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		TV_path = (TextView) LL_explorer.findViewById(R.id.path);
+		LV_list = (ListView) LL_explorer.findViewById(R.id.list);
+
+		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
+
+
+		LV_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				final File file = new File(mPath.get(position));
@@ -321,86 +250,90 @@ public class Main extends BaseActivity {
 						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFolder));
 				} else {
 					if (file.canRead()) {
-						(new AsyncTask<String, String, String>() {
-							
-							ProgressDialog progressDialog = new ProgressDialog(Main.this);
-							
-							@Override
-							protected void onPreExecute() {
-								
-								dialog.dismiss();
-								progressDialog.setTitle(lang(Main.this, R.string.analyzing));
-								progressDialog.setMessage(lang(Main.this, R.string.wait));
-								progressDialog.setCancelable(false);
-								progressDialog.show();
-								super.onPreExecute();
-							}
-							
-							@Override
-							protected String doInBackground(String... params) {
-								
-								String 경로 = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
-								
-								try {
-									FileManager.unZipFile(file.getPath(), 경로);
-									Unipack project = new Unipack(경로, true);
-									
-									if (project.ErrorDetail == null) {
-										publishProgress(lang(Main.this, R.string.analyzeComplete),
-											lang(Main.this, R.string.title) + " : " + project.title + "\n" +
-												lang(Main.this, R.string.producerName) + " : " + project.producerName + "\n" +
-												lang(Main.this, R.string.scale) + " : " + project.buttonX + " x " + project.buttonY + "\n" +
-												lang(Main.this, R.string.chainCount) + " : " + project.chain + "\n" +
-												lang(Main.this, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(경로)) + " MB" + " MB");
-									} else if (project.CriticalError) {
-										publishProgress(lang(Main.this, R.string.analyzeFailed), project.ErrorDetail);
-										FileManager.deleteFolder(경로);
-									} else {
-										publishProgress(lang(Main.this, R.string.warning), project.ErrorDetail);
-									}
-									
-								} catch (IOException e) {
-									publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
-									FileManager.deleteFolder(경로);
-								}
-								
-								return null;
-							}
-							
-							@Override
-							protected void onProgressUpdate(String... progress) {
-								UIManager.showDialog(Main.this, progress[0], progress[1]);
-							}
-							
-							@Override
-							protected void onPostExecute(String result) {
-								progressDialog.dismiss();
-								update();
-								super.onPostExecute(result);
-							}
-						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-						
-						
+
+						loadUnipack(file.getPath());
+
 					} else if (file.canRead()) {
 						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.isNotAnUniPack));
 					} else {
 						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFile));
 					}
-					
+
 				}
 			}
 		});
-		getDir(경로);
-		
-		
+		getDir(fileExplorerPath);
+
+
 		dialog.setView(LL_explorer);
 		dialog.show();
 	}
-	
+
+	void loadUnipack(final String zipPath){
+
+		(new AsyncTask<String, String, String>() {
+
+			ProgressDialog progressDialog = new ProgressDialog(Main.this);
+
+			@Override
+			protected void onPreExecute() {
+
+				progressDialog.setTitle(lang(Main.this, R.string.analyzing));
+				progressDialog.setMessage(lang(Main.this, R.string.wait));
+				progressDialog.setCancelable(false);
+				progressDialog.show();
+				super.onPreExecute();
+			}
+
+			@Override
+			protected String doInBackground(String... params) {
+
+				String projectPath = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
+
+				try {
+					FileManager.unZipFile(zipPath, projectPath);
+					Unipack project = new Unipack(projectPath, true);
+
+					if (project.ErrorDetail == null) {
+						publishProgress(lang(Main.this, R.string.analyzeComplete),
+							lang(Main.this, R.string.title) + " : " + project.title + "\n" +
+								lang(Main.this, R.string.producerName) + " : " + project.producerName + "\n" +
+								lang(Main.this, R.string.scale) + " : " + project.buttonX + " x " + project.buttonY + "\n" +
+								lang(Main.this, R.string.chainCount) + " : " + project.chain + "\n" +
+								lang(Main.this, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(projectPath)) + " MB" + " MB");
+					} else if (project.CriticalError) {
+						publishProgress(lang(Main.this, R.string.analyzeFailed), project.ErrorDetail);
+						FileManager.deleteFolder(projectPath);
+					} else {
+						publishProgress(lang(Main.this, R.string.warning), project.ErrorDetail);
+					}
+
+				} catch (IOException e) {
+					publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
+					FileManager.deleteFolder(projectPath);
+				}
+
+				return null;
+			}
+
+			@Override
+			protected void onProgressUpdate(String... progress) {
+				UIManager.showDialog(Main.this, progress[0], progress[1]);
+			}
+
+			@Override
+			protected void onPostExecute(String result) {
+				progressDialog.dismiss();
+				update();
+				super.onPostExecute(result);
+			}
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+	}
+
 	void getDir(String dirPath) {
 		SaveSetting.FileExplorerPath.save(Main.this, dirPath);
-		TV_경로.setText(dirPath);
-		
+		TV_path.setText(dirPath);
+
 		mItem = new ArrayList<>();
 		mPath = new ArrayList<>();
 		File f = new File(dirPath);
@@ -422,10 +355,10 @@ public class Main extends BaseActivity {
 			}
 		}
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(Main.this, android.R.layout.simple_list_item_1, mItem);
-		LV_리스트.setAdapter(fileList);
+		LV_list.setAdapter(fileList);
 	}
-	
-	
+
+
 	void updateCheck() {
 		new Networks.CheckVersion(getPackageName()).setOnEndListener(new Networks.CheckVersion.onEndListener() {
 			@Override
@@ -457,31 +390,33 @@ public class Main extends BaseActivity {
 			}
 		}).run();
 	}
-	
+
 	void noticeCheck() {
 		new Networks.CheckNotice(lang(Main.this, R.string.language)).setOnEndListener(new Networks.CheckNotice.onEndListener() {
 			@Override
 			public void onEnd(final String title, final String content) {
+				int px1 = UIManager.dpToPx(Main.this, 25);
+				int px2 = UIManager.dpToPx(Main.this, 15);
+
+
 				if (title != null && content != null) {
-					String 이전공지사항 = SaveSetting.PrevNotice.load(Main.this);
-					
-					if (!이전공지사항.equals(content)) {
-						
-						TextView 내용 = new TextView(Main.this);
-						내용.setText(Html.fromHtml(content));
-						int px1 = UIManager.dpToPx(Main.this, 25);
-						int px2 = UIManager.dpToPx(Main.this, 15);
-						내용.setPadding(px1, px2, px1, 0);
-						내용.setTextColor(0xFF000000);
-						내용.setLinkTextColor(0xffffaf00);
-						내용.setHighlightColor(0xffffaf00);
-						내용.setTextSize(16);
-						내용.setClickable(true);
-						내용.setMovementMethod(LinkMovementMethod.getInstance());
-						
-						LinearLayout 리니어 = new LinearLayout(Main.this);
-						리니어.addView(내용);
-						
+					String prevNotice = SaveSetting.PrevNotice.load(Main.this);
+
+					if (!prevNotice.equals(content)) {
+
+						TextView textView = new TextView(Main.this);
+						textView.setText(Html.fromHtml(content));
+						textView.setPadding(px1, px2, px1, 0);
+						textView.setTextColor(0xFF000000);
+						textView.setLinkTextColor(0xffffaf00);
+						textView.setHighlightColor(0xffffaf00);
+						textView.setTextSize(16);
+						textView.setClickable(true);
+						textView.setMovementMethod(LinkMovementMethod.getInstance());
+
+						LinearLayout linearLayout = new LinearLayout(Main.this);
+						linearLayout.addView(textView);
+
 						new AlertDialog.Builder(Main.this)
 							.setTitle(title)
 							.setPositiveButton(lang(Main.this, R.string.accept), null)
@@ -492,48 +427,47 @@ public class Main extends BaseActivity {
 								}
 							})
 							.setCancelable(false)
-							.setView(리니어)
+							.setView(linearLayout)
 							.show();
-						
+
 					}
 				}
 			}
 		}).run();
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		boolean clear = true;
-		for (int i = 0; i < statusPlay.length; i++)
-			if (statusPlay[i]) {
-				togglePlay(i);
-				clear = false;
+		for (Item item : IT_items) {
+
+			if (item != null) {
+
+				if (item.isPlay() || item.isInfo())
+					clear = false;
+
+				item.togglePlay(false);
+				item.toggleInfo(false);
 			}
-		
-		for (int i = 0; i < statusInfo.length; i++)
-			if (statusInfo[i]) {
-				toggleInfo(i);
-				clear = false;
-			}
-		
-		
+		}
+
 		if (clear)
 			super.onBackPressed();
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		
+
 		if (UIManager.Scale[0] == 0) {
 			Tools.log("padding 크기값들이 잘못되었습니다.");
 			restartApp(Main.this);
 		}
-		
+
 		update();
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
