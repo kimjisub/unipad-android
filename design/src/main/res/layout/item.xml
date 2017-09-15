@@ -87,7 +87,7 @@
 					    android:gravity="center"
 					    android:paddingLeft="5dp"
 					    android:paddingRight="5dp"
-					    android:text="@string/scale"
+					    android:text="@string/chainCount"
 					    android:textColor="@color/text5"
 					    android:textSize="10dp"/>
 
@@ -111,7 +111,7 @@
 					    android:gravity="center"
 					    android:paddingLeft="5dp"
 					    android:paddingRight="5dp"
-					    android:text="@string/scale"
+					    android:text="@string/capacity"
 					    android:textColor="@color/text5"
 					    android:textSize="10dp"/>
 
@@ -153,7 +153,7 @@
 			</RelativeLayout>
 
 			<RelativeLayout
-			    android:id="@+id/play"
+			    android:id="@+id/flag"
 			    android:layout_width="match_parent"
 			    android:layout_height="match_parent"
 			    android:layout_alignParentLeft="true"
@@ -174,8 +174,7 @@
 				    android:layout_height="match_parent"
 				    android:layout_alignParentLeft="true"
 				    android:layout_alignParentStart="true"
-				    android:layout_toLeftOf="@+id/linearLayout4"
-				    android:layout_toStartOf="@+id/linearLayout4"
+				    android:layout_toLeftOf="@+id/rightView"
 				    android:background="@drawable/border_no_round">
 
 					<LinearLayout
@@ -206,7 +205,7 @@
 				</LinearLayout>
 
 				<RelativeLayout
-				    android:id="@+id/linearLayout4"
+				    android:id="@+id/rightView"
 				    android:layout_width="150dp"
 				    android:layout_height="match_parent"
 				    android:layout_alignParentEnd="true"
@@ -215,7 +214,6 @@
 				    android:background="@drawable/border_right_round">
 
 					<LinearLayout
-					    android:id="@+id/linearLayout"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
 					    android:layout_alignParentEnd="true"
@@ -249,7 +247,7 @@
 
 
 				<RelativeLayout
-				    android:id="@+id/playbtn"
+				    android:id="@+id/playBtn"
 				    android:layout_width="100dp"
 				    android:layout_height="match_parent"
 				    android:layout_alignParentLeft="true"

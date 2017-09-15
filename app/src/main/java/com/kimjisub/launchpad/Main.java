@@ -109,7 +109,7 @@ public class Main extends BaseActivity {
 					.setSubTitle(unipacks[i].producerName)
 					.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
 					.setChain(unipacks[i].chain + "")
-					.setCapacity(FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB")
+					.setCapacity(FileManager.getFolderSize(URL[i]))
 					.setLED(unipacks[i].isKeyLED)
 					.setAutoPlay(unipacks[i].isAutoPlay)
 					.setOnPlayClickListener(new Item.OnPlayClickListener() {
@@ -137,19 +137,18 @@ public class Main extends BaseActivity {
 								.show();
 						}
 					})
-					.setOnViewClickListener(new View.OnClickListener() {
+					.setOnViewClickListener(new Item.OnViewClickListener() {
 						@Override
-						public void onClick(View v) {
+						public void onViewClick(Item v) {
 							togglePlay(i);
 							toggleInfo(-1);
 						}
 					})
-					.setOnViewLongClickListener(new View.OnLongClickListener() {
+					.setOnViewLongClickListener(new Item.OnViewLongClickListener() {
 						@Override
-						public boolean onLongClick(View v) {
+						public void onViewLongClick(Item v) {
 							togglePlay(-1);
 							toggleInfo(i);
-							return true;
 						}
 					});
 
@@ -158,35 +157,23 @@ public class Main extends BaseActivity {
 			}
 
 			if (count == 0) {
-				Item IT_item = new Item(Main.this)
-					.setFlagColor(R.drawable.border_play_red)
-					.setTitle(lang(Main.this, R.string.unipackNotFound))
-					.setSubTitle(lang(Main.this, R.string.clickToAddUnipack))
-					.setOptionVisibility(false)
-					.setOnViewClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							startActivity(new Intent(Main.this, Store.class));
-						}
-					});
-				LL_List.addView(IT_item);
+				LL_List.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+					@Override
+					public void onViewClick(Item v) {
+						startActivity(new Intent(Main.this, Store.class));
+					}
+				}));
 			}
 
 		} else {
 			projectFolder.mkdir();
 
-			Item IT_item = new Item(Main.this)
-				.setFlagColor(R.drawable.border_play_red)
-				.setTitle(lang(Main.this, R.string.unipackNotFound))
-				.setSubTitle(lang(Main.this, R.string.clickToAddUnipack))
-				.setOptionVisibility(false)
-				.setOnViewClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(Main.this, Store.class));
-					}
-				});
-			LL_List.addView(IT_item);
+			LL_List.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+				@Override
+				public void onViewClick(Item v) {
+					startActivity(new Intent(Main.this, Store.class));
+				}
+			}));
 		}
 
 		File nomedia = new File(ProjectFolderURL + "/.nomedia");
@@ -269,7 +256,7 @@ public class Main extends BaseActivity {
 		dialog.show();
 	}
 
-	void loadUnipack(final String zipPath){
+	void loadUnipack(final String zipPath) {
 
 		(new AsyncTask<String, String, String>() {
 

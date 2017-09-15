@@ -51,11 +51,11 @@ public class Play extends BaseActivity {
 	
 	LED쓰레드 LED쓰레드;
 	자동재생쓰레드 자동재생쓰레드;
-	
+
 	SoundPool 소리;
 	int[][][] 정지아이디;
-	
-	
+
+
 	int 체인 = 0;
 	long 이전이밴트ms;
 	String 로그내용 = "";
@@ -270,7 +270,7 @@ public class Play extends BaseActivity {
 		체인초기화();
 		
 		findViewById(R.id.prev).setBackground(theme.xml_prev);
-		findViewById(R.id.play).setBackground(theme.xml_play);
+		findViewById(R.id.flag).setBackground(theme.xml_play);
 		findViewById(R.id.next).setBackground(theme.xml_next);
 		
 		((CheckBox) findViewById(R.id.누른키표시)).setTextColor(theme.text1);
@@ -531,7 +531,7 @@ public class Play extends BaseActivity {
 				자동재생_앞으로();
 			}
 		});
-		findViewById(R.id.play).setOnClickListener(new View.OnClickListener() {
+		findViewById(R.id.flag).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if (자동재생쓰레드.재생중)
@@ -1155,7 +1155,7 @@ public class Play extends BaseActivity {
 		연습모드표시제거();
 		
 		자동재생쓰레드.재생중 = true;
-		findViewById(R.id.play).setBackground(theme.xml_pause);
+		findViewById(R.id.flag).setBackground(theme.xml_pause);
 		
 		if (프로젝트.isKeyLED) {
 			((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
@@ -1171,7 +1171,7 @@ public class Play extends BaseActivity {
 		터치초기화();
 		LED초기화();
 		
-		findViewById(R.id.play).setBackground(theme.xml_play);
+		findViewById(R.id.flag).setBackground(theme.xml_play);
 		
 		
 		자동재생쓰레드.달성 = -1;

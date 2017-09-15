@@ -81,7 +81,7 @@
 			    android:layout_height="match_parent"
 			    android:layout_alignParentLeft="true"
 			    android:layout_alignParentStart="true"
-			    android:background="@drawable/border_play_gray"/>
+			    android:background="@drawable/border_play_red"/>
 
 			<RelativeLayout
 			    android:id="@+id/play1"
@@ -89,6 +89,7 @@
 			    android:layout_height="match_parent"
 			    android:layout_alignParentLeft="true"
 			    android:layout_alignParentStart="true"
+			    android:alpha="0"
 			    android:background="@drawable/border_play_red"/>
 
 			<RelativeLayout
@@ -102,10 +103,10 @@
 				    android:id="@+id/progress"
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:textSize="10dp"
 				    android:layout_centerVertical="true"
 				    android:layout_gravity="center"
-				    android:scaleType="centerInside"/>
+				    android:scaleType="centerInside"
+				    android:textSize="10dp"/>
 
 			</RelativeLayout>
 
@@ -123,8 +124,8 @@
 				    android:layout_height="match_parent"
 				    android:layout_alignParentLeft="true"
 				    android:layout_alignParentStart="true"
-				    android:layout_toLeftOf="@+id/linearLayout4"
-				    android:layout_toStartOf="@+id/linearLayout4"
+				    android:layout_toLeftOf="@+id/rightView"
+				    android:layout_toStartOf="@+id/rightView"
 				    android:background="@drawable/border_no_round">
 
 					<LinearLayout
@@ -155,7 +156,7 @@
 				</LinearLayout>
 
 				<RelativeLayout
-				    android:id="@+id/linearLayout4"
+				    android:id="@+id/rightView"
 				    android:layout_width="150dp"
 				    android:layout_height="match_parent"
 				    android:layout_alignParentEnd="true"
@@ -198,7 +199,7 @@
 
 
 				<RelativeLayout
-				    android:id="@+id/playbtn"
+				    android:id="@+id/playBtn"
 				    android:layout_width="100dp"
 				    android:layout_height="match_parent"
 				    android:layout_alignParentLeft="true"
