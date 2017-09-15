@@ -8,21 +8,11 @@
 	<com.kimjisub.design.Item
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    app:title="asdf"
-	    app:subTitle="asdf"
-	    app:capacity="asdf"
-	    app:LED="true"
-	    app:AutoPlay="false"/>
-
-	<com.kimjisub.design.Item
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    app:title="asdf"
-	    app:subTitle="asdf"
-	    app:capacity="asdf"
-	    app:LED="true"
-	    app:AutoPlay="false"
-	    app:flagColor="@drawable/border_play_red"
-	    app:optionVisibility="false"/>
+	    app:title="asdfasdfsaf"
+	    app:subTitle="subtitle"
+	    app:capacity="12345678"
+	    app:LED="false"
+	    app:AutoPlay="true"
+	    app:optionVisibility="true"/>
 
 </LinearLayout>

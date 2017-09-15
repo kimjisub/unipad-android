@@ -7,8 +7,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.kimjisub.design.manage.UIManager;
+
+import java.text.DecimalFormat;
+
+import static com.kimjisub.design.manage.Tools.lang;
 
 /**
  * Created by rlawl on 2017-09-12.
@@ -19,13 +26,17 @@ public class ItemStore extends RelativeLayout {
 	Context context;
 
 	RelativeLayout RL_root;
+	RelativeLayout RL_info;
+	LinearLayout LL_leftView;
 
+	RelativeLayout RL_flag1;
+	RelativeLayout RL_flag2;
+	TextView TV_progress;
 	TextView TV_title;
 	TextView TV_subTitle;
 	TextView TV_LED;
 	TextView TV_autoPlay;
 	TextView TV_downloadCount;
-	RelativeLayout RL_flag;
 
 	public ItemStore(Context context) {
 		super(context);
@@ -46,6 +57,25 @@ public class ItemStore extends RelativeLayout {
 
 	}
 
+	private void getAttrs(AttributeSet attrs) {
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ItemStore);
+		setTypeArray(typedArray);
+	}
+
+	private void getAttrs(AttributeSet attrs, int defStyle) {
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ItemStore, defStyle, 0);
+		setTypeArray(typedArray);
+	}
+
+	public static ItemStore errItem(Context context, OnViewClickListener listener){
+		return new ItemStore(context)
+			.setFlagColor(R.drawable.border_play_red)
+			.setTitle(lang(context, R.string.errOccur))
+			.setSubTitle(lang(context, R.string.UnableToAccessServer))
+			.setOptionVisibility(false)
+			.setOnViewClickListener(listener);
+	}
+
 	private void initView(Context context) {
 		this.context = context;
 
@@ -55,8 +85,12 @@ public class ItemStore extends RelativeLayout {
 		addView(v);
 
 		RL_root = (RelativeLayout) findViewById(R.id.root);
+		RL_info = (RelativeLayout) findViewById(R.id.info);
+		LL_leftView = (LinearLayout) findViewById(R.id.leftView);
 
-		RL_flag = (RelativeLayout) findViewById(R.id.play);
+		RL_flag1 = (RelativeLayout) findViewById(R.id.play1);
+		RL_flag2 = (RelativeLayout) findViewById(R.id.play2);
+		TV_progress = (TextView) findViewById(R.id.progress);
 		TV_title = (TextView) findViewById(R.id.title);
 		TV_subTitle = (TextView) findViewById(R.id.subTitle);
 		TV_LED = (TextView) findViewById(R.id.LED);
@@ -65,16 +99,6 @@ public class ItemStore extends RelativeLayout {
 
 
 		findViewById(R.id.leftView).setX(UIManager.dpToPx(context, 10));
-	}
-
-	private void getAttrs(AttributeSet attrs) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ItemStore);
-		setTypeArray(typedArray);
-	}
-
-	private void getAttrs(AttributeSet attrs, int defStyle) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ItemStore, defStyle, 0);
-		setTypeArray(typedArray);
 	}
 
 	private void setTypeArray(TypedArray typedArray) {
@@ -94,8 +118,8 @@ public class ItemStore extends RelativeLayout {
 		Boolean autoPlay = typedArray.getBoolean(R.styleable.ItemStore_AutoPlay, false);
 		setAutoPlay(autoPlay);
 
-		String downloadCount = typedArray.getString(R.styleable.ItemStore_downloadCount);
-		setDownloadCount(downloadCount);
+		int downloadCount = typedArray.getInteger(R.styleable.ItemStore_downloadCount, 0);
+		updateDownloadCount(downloadCount);
 
 		Boolean optionVisibility = typedArray.getBoolean(R.styleable.ItemStore_optionVisibility, true);
 		setOptionVisibility(optionVisibility);
@@ -103,8 +127,32 @@ public class ItemStore extends RelativeLayout {
 		typedArray.recycle();
 	}
 
+
+	//========================================================================================= Set Function
+
 	public ItemStore setFlagColor(int res) {
-		RL_flag.setBackgroundResource(res);
+		RL_flag2.setBackgroundResource(res);
+		return this;
+	}
+
+	public ItemStore changeFlagColor(int res){
+		RL_flag1.setBackground(RL_flag2.getBackground());
+		RL_flag1.setAlpha(1);
+		RL_flag2.setBackground(getResources().getDrawable(res));
+		RL_flag1.animate().alpha(0).setDuration(500).start();
+		return this;
+	}
+
+	public ItemStore changeFlagOpen(boolean bool){
+		if(bool)
+			LL_leftView.animate().x(UIManager.dpToPx(context, 100)).setDuration(500).start();
+		else
+			LL_leftView.animate().x(UIManager.dpToPx(context, 10)).setDuration(500).start();
+		return this;
+	}
+
+	public ItemStore setProgress(String str){
+		TV_progress.setText(str);
 		return this;
 	}
 
@@ -134,8 +182,10 @@ public class ItemStore extends RelativeLayout {
 		return this;
 	}
 
-	public ItemStore setDownloadCount(String str) {
-		TV_downloadCount.setText(str);
+	public ItemStore updateDownloadCount(int num) {
+		TV_downloadCount.setText((new DecimalFormat("#,##0")).format(num));
+		TV_downloadCount.setAlpha(0);
+		TV_downloadCount.animate().alpha(1).setDuration(500).start();
 		return this;
 	}
 
@@ -148,46 +198,6 @@ public class ItemStore extends RelativeLayout {
 			TV_autoPlay.setVisibility(INVISIBLE);
 		}
 		return this;
-	}
-
-
-	//========================================================================================= Play
-
-	private boolean isPlay = false;
-
-	public void togglePlay(boolean bool) {
-		if (isPlay != bool) {
-			if (bool) {
-				//animation
-				findViewById(R.id.leftView).animate().x(UIManager.dpToPx(context, 100)).setDuration(500).start();
-				findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
-
-				//clickEvent
-				findViewById(R.id.playbtn).setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						onPlayClick();
-					}
-				});
-			} else {
-				//animation
-				findViewById(R.id.leftView).animate().x(UIManager.dpToPx(context, 10)).setDuration(500).start();
-				findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
-
-				//clickEvent
-				findViewById(R.id.playbtn).setOnClickListener(null);
-				findViewById(R.id.playbtn).setClickable(false);
-			}
-			isPlay = bool;
-		}
-	}
-
-	public void togglePlay() {
-		togglePlay(!isPlay);
-	}
-
-	public boolean isPlay() {
-		return isPlay;
 	}
 
 	//========================================================================================= Info
@@ -210,14 +220,6 @@ public class ItemStore extends RelativeLayout {
 				};
 				a.setDuration(500);
 				findViewById(R.id.info).startAnimation(a);
-
-				//clickEvent
-				findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						onDeleteClick();
-					}
-				});
 			} else {
 				//animation
 				Animation a = new Animation() {
@@ -230,10 +232,6 @@ public class ItemStore extends RelativeLayout {
 				};
 				a.setDuration(500);
 				findViewById(R.id.info).startAnimation(a);
-
-				//clickEvent
-				findViewById(R.id.delete).setOnClickListener(null);
-				findViewById(R.id.delete).setClickable(false);
 			}
 
 			isInfo = bool;
@@ -268,30 +266,51 @@ public class ItemStore extends RelativeLayout {
 	}
 
 
-	private OnDeleteClickListener onDeleteClickListener = null;
+	//=========================================================================================
 
-	public interface OnDeleteClickListener {
-		void onDeleteClick();
+	private OnViewClickListener onViewClickListener = null;
+
+	public interface OnViewClickListener {
+		void onViewClick(ItemStore v);
 	}
 
-	public ItemStore setOnDeleteClickListener(OnDeleteClickListener listener) {
-		this.onDeleteClickListener = listener;
+	public ItemStore setOnViewClickListener(OnViewClickListener listener) {
+		RL_root.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onViewClick();
+			}
+		});
+		onViewClickListener = listener;
 		return this;
 	}
 
-	void onDeleteClick() {
-		if (onDeleteClickListener != null) onDeleteClickListener.onDeleteClick();
+	void onViewClick() {
+		if (onViewClickListener != null) onViewClickListener.onViewClick(this);
 	}
 
 
-	public ItemStore setOnViewClickListener(View.OnClickListener listener) {
-		RL_root.setOnClickListener(listener);
+	//=========================================================================================
+
+	private OnViewLongClickListener onViewLongClickListener = null;
+
+	public interface OnViewLongClickListener  {
+		void onViewLongClick(ItemStore v);
+	}
+
+	public ItemStore setOnViewLongClickListener(OnViewLongClickListener listener) {
+		RL_root.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				onViewLongClick();
+				return true;
+			}
+		});
+		onViewLongClickListener = listener;
 		return this;
 	}
 
-	public ItemStore setOnViewLongClickListener(View.OnLongClickListener listener) {
-		RL_root.setOnLongClickListener(listener);
-		return this;
+	void onViewLongClick() {
+		if (onViewLongClickListener != null) onViewLongClickListener.onViewLongClick(this);
 	}
-
 }

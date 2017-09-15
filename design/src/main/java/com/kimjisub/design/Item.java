@@ -7,11 +7,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.kimjisub.design.manage.FileManager;
+import com.kimjisub.design.manage.UIManager;
+
+import static com.kimjisub.design.manage.Tools.lang;
+
 /**
- * Created by rlawl on 2017-09-07.
+ * Created by rlawl on 2017-09-07
  */
 
 public class Item extends RelativeLayout {
@@ -19,7 +25,12 @@ public class Item extends RelativeLayout {
 	Context context;
 
 	RelativeLayout RL_root;
+	RelativeLayout RL_info;
+	TextView TV_delete;
+	LinearLayout LL_leftView;
+	RelativeLayout RL_playBtn;
 
+	RelativeLayout RL_flag;
 	TextView TV_title;
 	TextView TV_subTitle;
 	TextView TV_LED;
@@ -27,7 +38,6 @@ public class Item extends RelativeLayout {
 	TextView TV_size;
 	TextView TV_chain;
 	TextView TV_capacity;
-	RelativeLayout RL_flag;
 
 	public Item(Context context) {
 		super(context);
@@ -38,14 +48,31 @@ public class Item extends RelativeLayout {
 		super(context, attrs);
 		initView(context);
 		getAttrs(attrs);
-
 	}
 
 	public Item(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs);
 		initView(context);
 		getAttrs(attrs, defStyle);
+	}
 
+	private void getAttrs(AttributeSet attrs) {
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item);
+		setTypeArray(typedArray);
+	}
+
+	private void getAttrs(AttributeSet attrs, int defStyle) {
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item, defStyle, 0);
+		setTypeArray(typedArray);
+	}
+
+	public static Item errItem(Context context, OnViewClickListener listener) {
+		return new Item(context)
+			.setFlagColor(R.drawable.border_play_red)
+			.setTitle(lang(context, R.string.unipackNotFound))
+			.setSubTitle(lang(context, R.string.clickToAddUnipack))
+			.setOptionVisibility(false)
+			.setOnViewClickListener(listener);
 	}
 
 	private void initView(Context context) {
@@ -57,8 +84,12 @@ public class Item extends RelativeLayout {
 		addView(v);
 
 		RL_root = (RelativeLayout) findViewById(R.id.root);
+		RL_info = (RelativeLayout) findViewById(R.id.info);
+		TV_delete = (TextView) findViewById(R.id.delete);
+		LL_leftView = (LinearLayout) findViewById(R.id.leftView);
+		RL_playBtn = (RelativeLayout) findViewById(R.id.playBtn);
 
-		RL_flag = (RelativeLayout) findViewById(R.id.play);
+		RL_flag = (RelativeLayout) findViewById(R.id.flag);
 		TV_title = (TextView) findViewById(R.id.title);
 		TV_subTitle = (TextView) findViewById(R.id.subTitle);
 		TV_LED = (TextView) findViewById(R.id.LED);
@@ -68,17 +99,7 @@ public class Item extends RelativeLayout {
 		TV_capacity = (TextView) findViewById(R.id.capacity);
 
 
-		findViewById(R.id.leftView).setX(UIManager.dpToPx(context, 10));
-	}
-
-	private void getAttrs(AttributeSet attrs) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item);
-		setTypeArray(typedArray);
-	}
-
-	private void getAttrs(AttributeSet attrs, int defStyle) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item, defStyle, 0);
-		setTypeArray(typedArray);
+		LL_leftView.setX(UIManager.dpToPx(context, 10));
 	}
 
 	private void setTypeArray(TypedArray typedArray) {
@@ -104,7 +125,7 @@ public class Item extends RelativeLayout {
 		String chain = typedArray.getString(R.styleable.Item_chain);
 		setChain(chain);
 
-		String capacity = typedArray.getString(R.styleable.Item_capacity);
+		int capacity = typedArray.getInteger(R.styleable.Item_capacity, 0);
 		setCapacity(capacity);
 
 		Boolean optionVisibility = typedArray.getBoolean(R.styleable.Item_optionVisibility, true);
@@ -112,6 +133,9 @@ public class Item extends RelativeLayout {
 
 		typedArray.recycle();
 	}
+
+
+	//========================================================================================= Set Function
 
 	public Item setFlagColor(int res) {
 		RL_flag.setBackgroundResource(res);
@@ -154,8 +178,8 @@ public class Item extends RelativeLayout {
 		return this;
 	}
 
-	public Item setCapacity(String str) {
-		TV_capacity.setText(str);
+	public Item setCapacity(long num) {
+		TV_capacity.setText(FileManager.byteToMB(num) + " MB");
 		return this;
 	}
 
@@ -163,7 +187,7 @@ public class Item extends RelativeLayout {
 		if (bool) {
 			TV_LED.setVisibility(VISIBLE);
 			TV_autoPlay.setVisibility(VISIBLE);
-		}else {
+		} else {
 			TV_LED.setVisibility(INVISIBLE);
 			TV_autoPlay.setVisibility(INVISIBLE);
 		}
@@ -179,11 +203,11 @@ public class Item extends RelativeLayout {
 		if (isPlay != bool) {
 			if (bool) {
 				//animation
-				findViewById(R.id.leftView).animate().x(UIManager.dpToPx(context, 100)).setDuration(500).start();
-				findViewById(R.id.play).animate().alpha(0).setDuration(500).start();
+				LL_leftView.animate().x(UIManager.dpToPx(context, 100)).setDuration(500).start();
+				RL_flag.animate().alpha(0).setDuration(500).start();
 
 				//clickEvent
-				findViewById(R.id.playbtn).setOnClickListener(new View.OnClickListener() {
+				RL_playBtn.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						onPlayClick();
@@ -191,12 +215,12 @@ public class Item extends RelativeLayout {
 				});
 			} else {
 				//animation
-				findViewById(R.id.leftView).animate().x(UIManager.dpToPx(context, 10)).setDuration(500).start();
-				findViewById(R.id.play).animate().alpha(1).setDuration(500).start();
+				LL_leftView.animate().x(UIManager.dpToPx(context, 10)).setDuration(500).start();
+				RL_flag.animate().alpha(1).setDuration(500).start();
 
 				//clickEvent
-				findViewById(R.id.playbtn).setOnClickListener(null);
-				findViewById(R.id.playbtn).setClickable(false);
+				RL_playBtn.setOnClickListener(null);
+				RL_playBtn.setClickable(false);
 			}
 			isPlay = bool;
 		}
@@ -223,16 +247,16 @@ public class Item extends RelativeLayout {
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.info).getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
 						params.topMargin = px + (int) (px2 * interpolatedTime);
-						findViewById(R.id.info).setLayoutParams(params);
+						RL_info.setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				findViewById(R.id.info).startAnimation(a);
+				RL_info.startAnimation(a);
 
 				//clickEvent
-				findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
+				TV_delete.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						onDeleteClick();
@@ -243,17 +267,17 @@ public class Item extends RelativeLayout {
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.info).getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
 						params.topMargin = px + px2 + (int) (-px2 * interpolatedTime);
-						findViewById(R.id.info).setLayoutParams(params);
+						RL_info.setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				findViewById(R.id.info).startAnimation(a);
+				RL_info.startAnimation(a);
 
 				//clickEvent
-				findViewById(R.id.delete).setOnClickListener(null);
-				findViewById(R.id.delete).setClickable(false);
+				TV_delete.setOnClickListener(null);
+				TV_delete.setClickable(false);
 			}
 
 			isInfo = bool;
@@ -287,6 +311,7 @@ public class Item extends RelativeLayout {
 		if (onPlayClickListener != null) onPlayClickListener.onPlayClick();
 	}
 
+	//=========================================================================================
 
 	private OnDeleteClickListener onDeleteClickListener = null;
 
@@ -304,14 +329,52 @@ public class Item extends RelativeLayout {
 	}
 
 
-	public Item setOnViewClickListener(View.OnClickListener listener) {
-		RL_root.setOnClickListener(listener);
+	//=========================================================================================
+
+	private OnViewClickListener onViewClickListener = null;
+
+	public interface OnViewClickListener {
+		void onViewClick(Item v);
+	}
+
+	public Item setOnViewClickListener(OnViewClickListener listener) {
+		RL_root.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onViewClick();
+			}
+		});
+		onViewClickListener = listener;
 		return this;
 	}
 
-	public Item setOnViewLongClickListener(View.OnLongClickListener listener) {
-		RL_root.setOnLongClickListener(listener);
+	void onViewClick() {
+		if (onViewClickListener != null) onViewClickListener.onViewClick(this);
+	}
+
+
+	//=========================================================================================
+
+	private OnViewLongClickListener onViewLongClickListener = null;
+
+	public interface OnViewLongClickListener {
+		void onViewLongClick(Item v);
+	}
+
+	public Item setOnViewLongClickListener(OnViewLongClickListener listener) {
+		RL_root.setOnLongClickListener(new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				onViewLongClick();
+				return true;
+			}
+		});
+		onViewLongClickListener = listener;
 		return this;
+	}
+
+	void onViewLongClick() {
+		if (onViewLongClickListener != null) onViewLongClickListener.onViewLongClick(this);
 	}
 
 }
