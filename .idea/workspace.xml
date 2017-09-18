@@ -11,103 +11,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="41884d63-0bd1-4c89-a13a-c1255c5069cf" name="Default" comment="커스텀뷰 완성">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
-    <list id="f153950c-05ea-4d4a-9cbc-b4db8b66ed8d" name="Rejected commit: Default" comment="커스텀뷰 완성">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/manage/FileManager.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/manage/Tools.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/src/main/res/layout/store_list_error.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/src/main/res/layout/store_list_item.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-09-56-52-677.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-10-00-41-268.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-07-18-168.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-07-26-266.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-16-09-951.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-16-26-446.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-18-45-093.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-12-19-48-850.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-13-40-02-207.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-14-47-29-684.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-14-47-36-525.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-14-51-01-856.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-47-28-277.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-47-35-472.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-56-07-868.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-56-48-114.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-58-02-915.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-58-54-194.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-15-59-51-180.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-02-51-832.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-05-59-813.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-06-01-731.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-06-14-432.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-06-25-292.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-07-49-581.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-07-56-873.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-08-50-098.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-09-42-788.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-10-09-829.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-10-11-318.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-10-43-451.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-11-11-732.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-11-13-068.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-11-23-548.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-12-03-531.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-12-23-146.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-15-28-851.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-17-25-387.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-21-47-540.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-25-09-709.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-29-38-108.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-16-33-50-164.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-19-48-21-330.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-07-19-48-28-243.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-08-14-58-30-839.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-08-14-58-51-607.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-08-38-18-425.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-08-38-38-981.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-08-57-15-118.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-13-58-30-751.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-13-59-23-202.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-14-05-15-302.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-14-06-06-250.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-14-28-40-909.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-14-48-14-715.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-21-22-33-099.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-11-21-22-39-434.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-12-08-24-58-863.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-12-08-25-06-676.rawproto" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/build/android-profile/profile-2017-09-12-08-28-16-727.rawproto" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/UIManager.java" afterPath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/manage/UIManager.java" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/design/src/main/res/drawable/border_apply.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/design/src/main/res/drawable/border_apply_off.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/design/src/main/res/drawable/border_apply_on.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/design/src/main/res/drawable/border_play_gray_.xml" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/fileHashes.bin" afterPath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/fileHashes.bin" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/fileSnapshots.bin" afterPath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/fileSnapshots.bin" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/taskArtifacts.bin" afterPath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/taskArtifacts.bin" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/taskArtifacts.lock" afterPath="$PROJECT_DIR$/.gradle/3.3/taskArtifacts/taskArtifacts.lock" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localClassSetAnalysis/localClassSetAnalysis.bin" afterPath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localClassSetAnalysis/localClassSetAnalysis.bin" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localClassSetAnalysis/localClassSetAnalysis.lock" afterPath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localClassSetAnalysis/localClassSetAnalysis.lock" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localJarClasspathSnapshot/localJarClasspathSnapshot.bin" afterPath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localJarClasspathSnapshot/localJarClasspathSnapshot.bin" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localJarClasspathSnapshot/localJarClasspathSnapshot.lock" afterPath="$PROJECT_DIR$/.gradle/3.3/tasks/_app_compileDebugJavaWithJavac/localJarClasspathSnapshot/localJarClasspathSnapshot.lock" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/generated/mockable-android-25.jar" afterPath="$PROJECT_DIR$/build/generated/mockable-android-25.jar" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Main.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Main.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Play.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Play.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Store.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Store.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/fb/fbStore.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/fb/fbStore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_store.xml" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_store.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/res/layout/test.xml" afterPath="$PROJECT_DIR$/app/src/main/res/layout/test.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/intermediates/dex-cache/cache.xml" afterPath="$PROJECT_DIR$/build/intermediates/dex-cache/cache.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/build.gradle" afterPath="$PROJECT_DIR$/design/build.gradle" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/AndroidManifest.xml" afterPath="$PROJECT_DIR$/design/src/main/AndroidManifest.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/Item.java" afterPath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/Item.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/ItemStore.java" afterPath="$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/ItemStore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/res/layout/item.xml" afterPath="$PROJECT_DIR$/design/src/main/res/layout/item.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/res/layout/item_store.xml" afterPath="$PROJECT_DIR$/design/src/main/res/layout/item_store.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/design/src/main/res/values/attrs.xml" afterPath="$PROJECT_DIR$/design/src/main/res/values/attrs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/res/layout/theme_list.xml" afterPath="$PROJECT_DIR$/app/src/main/res/layout/theme_list.xml" />
     </list>
+    <list id="f153950c-05ea-4d4a-9cbc-b4db8b66ed8d" name="Rejected commit: Default" comment="커스텀뷰 완성" />
     <ignored path="Unipad-Android.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
-    <file path="$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Main.java" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,88 +58,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Item.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/Item.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1976">
-              <caret line="243" column="44" selection-start-line="243" selection-start-column="44" selection-end-line="243" selection-end-column="44" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="method#Item#0;class#Item#0" expanded="false" />
-                <element signature="method#Item#1;class#Item#0" expanded="false" />
-                <element signature="method#Item#2;class#Item#0" expanded="false" />
-                <element signature="method#getAttrs#0;class#Item#0" expanded="false" />
-                <element signature="method#getAttrs#1;class#Item#0" expanded="false" />
-                <element signature="method#errItem#0;class#Item#0" expanded="false" />
-                <element signature="method#initView#0;class#Item#0" expanded="false" />
-                <element signature="method#setTypeArray#0;class#Item#0" expanded="false" />
-                <element signature="method#setFlagColor#0;class#Item#0" expanded="false" />
-                <element signature="method#setTitle#0;class#Item#0" expanded="false" />
-                <element signature="method#setSubTitle#0;class#Item#0" expanded="false" />
-                <element signature="method#setLED#0;class#Item#0" expanded="false" />
-                <element signature="method#setAutoPlay#0;class#Item#0" expanded="false" />
-                <element signature="method#setSize#0;class#Item#0" expanded="false" />
-                <element signature="method#setChain#0;class#Item#0" expanded="false" />
-                <element signature="method#setCapacity#0;class#Item#0" expanded="false" />
-                <element signature="method#setOptionVisibility#0;class#Item#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ItemStore.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/ItemStore.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="206">
-              <caret line="147" column="0" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="method#ItemStore#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#ItemStore#1;class#ItemStore#0" expanded="false" />
-                <element signature="method#ItemStore#2;class#ItemStore#0" expanded="false" />
-                <element signature="method#getAttrs#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#getAttrs#1;class#ItemStore#0" expanded="false" />
-                <element signature="method#errItem#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#initView#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setFlagColor#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#changeFlagColor#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setProgress#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setTitle#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setSubTitle#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setLED#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setAutoPlay#0;class#ItemStore#0" expanded="false" />
-                <element signature="method#setOptionVisibility#0;class#ItemStore#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="item_store.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/design/src/main/res/layout/item_store.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="201">
-              <caret line="106" column="67" selection-start-line="106" selection-start-column="67" selection-end-line="106" selection-end-column="67" />
-              <folding>
-                <element signature="e#1418#1441#0" expanded="true" />
-                <element signature="e#1835#1858#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-          <provider editor-type-id="android-designer2">
-            <state />
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Main.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="304">
-              <caret line="159" column="66" selection-start-line="159" selection-start-column="66" selection-end-line="159" selection-end-column="66" />
+            <state relative-caret-position="4560">
+              <caret line="296" column="0" selection-start-line="296" selection-start-column="0" selection-end-line="296" selection-end-column="0" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#4540#4696#0" expanded="true" />
                 <element signature="e#4695#4696#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="border_gray.xml" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app/src/main/res/drawable/border_gray.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="114">
+              <caret line="6" column="8" selection-start-line="6" selection-start-column="8" selection-end-line="6" selection-end-column="8" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -271,16 +130,6 @@
                 <element signature="e#6574#6592#0" expanded="true" />
                 <element signature="e#6727#6742#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="border_play_gray.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_play_gray.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -4285,7 +4134,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32589287" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -4294,15 +4143,15 @@
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.34863523" sideWeight="0.50142753" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4375" sideWeight="0.49857244" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32942432" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32942432" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3287841" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32924107" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32924107" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3287841" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24982156" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23933902" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32589287" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32589287" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24946696" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Android Model" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -4385,39 +4234,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/design/src/main/res/layout/test.xml" />
-    <entry file="file://$PROJECT_DIR$/design/src/main/res/values/strings.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="38" selection-start-line="3" selection-start-column="32" selection-end-line="3" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/design/build/intermediates/res/merged/release/values/values.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="145" column="66" selection-start-line="145" selection-start-column="57" selection-end-line="145" selection-end-column="66" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="2" column="41" selection-start-line="2" selection-start-column="41" selection-end-line="2" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-      <provider editor-type-id="android-manifest">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_play_blue.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/drawable/border_play_orange.xml" />
     <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_play_red.xml">
       <provider selected="true" editor-type-id="text-editor">
@@ -4721,20 +4537,6 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/design/src/main/res/layout/item_store.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
-          <caret line="106" column="67" selection-start-line="106" selection-start-column="67" selection-end-line="106" selection-end-column="67" />
-          <folding>
-            <element signature="e#1418#1441#0" expanded="true" />
-            <element signature="e#1835#1858#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-      <provider editor-type-id="android-designer2">
-        <state />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Store.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3784">
@@ -4745,58 +4547,6 @@
             <element signature="e#3245#3246#0" expanded="true" />
             <element signature="e#6574#6592#0" expanded="true" />
             <element signature="e#6727#6742#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/ItemStore.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="147" column="0" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#ItemStore#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#ItemStore#1;class#ItemStore#0" expanded="false" />
-            <element signature="method#ItemStore#2;class#ItemStore#0" expanded="false" />
-            <element signature="method#getAttrs#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#getAttrs#1;class#ItemStore#0" expanded="false" />
-            <element signature="method#errItem#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#initView#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setFlagColor#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#changeFlagColor#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setProgress#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setTitle#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setSubTitle#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setLED#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setAutoPlay#0;class#ItemStore#0" expanded="false" />
-            <element signature="method#setOptionVisibility#0;class#ItemStore#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/Item.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1976">
-          <caret line="243" column="44" selection-start-line="243" selection-start-column="44" selection-end-line="243" selection-end-column="44" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#Item#0;class#Item#0" expanded="false" />
-            <element signature="method#Item#1;class#Item#0" expanded="false" />
-            <element signature="method#Item#2;class#Item#0" expanded="false" />
-            <element signature="method#getAttrs#0;class#Item#0" expanded="false" />
-            <element signature="method#getAttrs#1;class#Item#0" expanded="false" />
-            <element signature="method#errItem#0;class#Item#0" expanded="false" />
-            <element signature="method#initView#0;class#Item#0" expanded="false" />
-            <element signature="method#setTypeArray#0;class#Item#0" expanded="false" />
-            <element signature="method#setFlagColor#0;class#Item#0" expanded="false" />
-            <element signature="method#setTitle#0;class#Item#0" expanded="false" />
-            <element signature="method#setSubTitle#0;class#Item#0" expanded="false" />
-            <element signature="method#setLED#0;class#Item#0" expanded="false" />
-            <element signature="method#setAutoPlay#0;class#Item#0" expanded="false" />
-            <element signature="method#setSize#0;class#Item#0" expanded="false" />
-            <element signature="method#setChain#0;class#Item#0" expanded="false" />
-            <element signature="method#setCapacity#0;class#Item#0" expanded="false" />
-            <element signature="method#setOptionVisibility#0;class#Item#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -4831,15 +4581,121 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/Item.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1976">
+          <caret line="243" column="44" selection-start-line="243" selection-start-column="44" selection-end-line="243" selection-end-column="44" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#Item#0;class#Item#0" expanded="false" />
+            <element signature="method#Item#1;class#Item#0" expanded="false" />
+            <element signature="method#Item#2;class#Item#0" expanded="false" />
+            <element signature="method#getAttrs#0;class#Item#0" expanded="false" />
+            <element signature="method#getAttrs#1;class#Item#0" expanded="false" />
+            <element signature="method#errItem#0;class#Item#0" expanded="false" />
+            <element signature="method#initView#0;class#Item#0" expanded="false" />
+            <element signature="method#setTypeArray#0;class#Item#0" expanded="false" />
+            <element signature="method#setFlagColor#0;class#Item#0" expanded="false" />
+            <element signature="method#setTitle#0;class#Item#0" expanded="false" />
+            <element signature="method#setSubTitle#0;class#Item#0" expanded="false" />
+            <element signature="method#setLED#0;class#Item#0" expanded="false" />
+            <element signature="method#setAutoPlay#0;class#Item#0" expanded="false" />
+            <element signature="method#setSize#0;class#Item#0" expanded="false" />
+            <element signature="method#setChain#0;class#Item#0" expanded="false" />
+            <element signature="method#setCapacity#0;class#Item#0" expanded="false" />
+            <element signature="method#setOptionVisibility#0;class#Item#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/java/com/kimjisub/design/ItemStore.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="206">
+          <caret line="147" column="0" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#ItemStore#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#ItemStore#1;class#ItemStore#0" expanded="false" />
+            <element signature="method#ItemStore#2;class#ItemStore#0" expanded="false" />
+            <element signature="method#getAttrs#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#getAttrs#1;class#ItemStore#0" expanded="false" />
+            <element signature="method#errItem#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#initView#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setFlagColor#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#changeFlagColor#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setProgress#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setTitle#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setSubTitle#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setLED#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setAutoPlay#0;class#ItemStore#0" expanded="false" />
+            <element signature="method#setOptionVisibility#0;class#ItemStore#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/res/layout/item_store.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="201">
+          <caret line="106" column="67" selection-start-line="106" selection-start-column="67" selection-end-line="106" selection-end-column="67" />
+          <folding>
+            <element signature="e#1418#1441#0" expanded="true" />
+            <element signature="e#1835#1858#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+      <provider editor-type-id="android-designer2">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_apply_on.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_apply_off.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_apply.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="76">
+          <caret line="4" column="11" selection-start-line="4" selection-start-column="11" selection-end-line="4" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/design/src/main/res/drawable/border_right_round.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/kimjisub/launchpad/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="159" column="66" selection-start-line="159" selection-start-column="66" selection-end-line="159" selection-end-column="66" />
+        <state relative-caret-position="4560">
+          <caret line="296" column="0" selection-start-line="296" selection-start-column="0" selection-end-line="296" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#4540#4696#0" expanded="true" />
             <element signature="e#4695#4696#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/drawable/border_gray.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="114">
+          <caret line="6" column="8" selection-start-line="6" selection-start-column="8" selection-end-line="6" selection-end-column="8" />
+          <folding />
         </state>
       </provider>
     </entry>

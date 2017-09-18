@@ -17,7 +17,7 @@
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:layout_gravity="center"
-	    android:background="@drawable/border_play_gray_"
+	    android:background="@drawable/border_gray"
 	    android:paddingBottom="3dp"
 	    android:paddingLeft="30dp"
 	    android:paddingRight="30dp"
