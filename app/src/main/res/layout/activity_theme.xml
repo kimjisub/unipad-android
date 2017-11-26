@@ -12,7 +12,7 @@
 	    android:layout_alignParentTop="true"
 	    android:layout_centerHorizontal="true"
 	    android:layout_marginTop="12dp"
-	    app:font="custom1"
+	    android:fontFamily="@font/quicksand_bold"
 	    android:gravity="center"
 	    android:text="UNISKIN"
 	    android:textColor="@color/text5"

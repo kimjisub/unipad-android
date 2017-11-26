@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/루트뷰"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark1">
@@ -117,7 +117,7 @@
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
 			    android:checked="false"
-			    android:text="@string/recOrder"
+			    android:text="@string/traceLog"
 			    android:textColor="@color/text1"/>
 
 			<CheckBox
@@ -130,9 +130,8 @@
 			    android:textColor="@color/text1"/>
 		</LinearLayout>
 
-
 		<LinearLayout
-		    android:id="@+id/패드"
+		    android:id="@+id/pads"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:layout_centerHorizontal="true"
@@ -142,12 +141,12 @@
 		</LinearLayout>
 
 		<LinearLayout
-		    android:id="@+id/체인"
+		    android:id="@+id/chains"
 		    android:layout_width="wrap_content"
 		    android:layout_height="match_parent"
 		    android:layout_alignParentTop="true"
-		    android:layout_toEndOf="@+id/패드"
-		    android:layout_toRightOf="@+id/패드"
+		    android:layout_toEndOf="@+id/pads"
+		    android:layout_toRightOf="@+id/pads"
 		    android:orientation="vertical">
 
 		</LinearLayout>

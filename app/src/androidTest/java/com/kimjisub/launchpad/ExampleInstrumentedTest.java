@@ -1,4 +1,4 @@
-package com.kimjisub.design;
+package com.kimjisub.launchpad;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
 		// Context of the app under test.
 		Context appContext = InstrumentationRegistry.getTargetContext();
 
-		assertEquals("com.kimjisub.design.test", appContext.getPackageName());
+		assertEquals("com.kimjisub.launchpad", appContext.getPackageName());
 	}
 }

@@ -33,18 +33,18 @@ import static com.kimjisub.launchpad.manage.Tools.lang;
  */
 
 public class Intro extends BaseActivity {
-	
+
 	Handler handler;
-	
+
 	static TextView TV_version;
-	
+
 	static IInAppBillingService mService;
 	static ServiceConnection mServiceConn = new ServiceConnection() {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			mService = null;
 		}
-		
+
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			mService = IInAppBillingService.Stub.asInterface(service);
@@ -53,10 +53,10 @@ public class Intro extends BaseActivity {
 				int response = ownedItems.getInt("RESPONSE_CODE");
 				if (response == 0) {
 					ArrayList<String> purchaseDataList = ownedItems.getStringArrayList("INAPP_PURCHASE_DATA_LIST");
-					
+
 					for (int i = 0; i < purchaseDataList.size(); ++i) {
 						String purchaseData = purchaseDataList.get(i);
-						
+
 						try {
 							JSONObject jo = new JSONObject(purchaseData);
 							UIManager.isPremium = jo.getBoolean("autoRenewing");
@@ -72,26 +72,26 @@ public class Intro extends BaseActivity {
 			}
 		}
 	};
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_intro);
-		
-		TV_version = (TextView) findViewById(R.id.빌드버전);
+
+		TV_version = findViewById(R.id.version);
 		try {
 			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+
 		//구글플레이 결제
 		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
 		serviceIntent.setPackage("com.android.vending");
 		bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
-		
-		
+
+
 		new TedPermission(Intro.this)
 			.setPermissionListener(new PermissionListener() {
 				@Override
@@ -99,51 +99,54 @@ public class Intro extends BaseActivity {
 					(handler = new Handler()).postDelayed(runnable, 1500);
 					UIManager.initAds(Intro.this);
 				}
-				
+
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
 					Toast.makeText(Intro.this, lang(Intro.this, R.string.permissionDenied), Toast.LENGTH_SHORT).show();
 					finish();
 				}
-				
-				
+
+
 			})
 			.setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
 	}
-	
+
 	Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
-			UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.패딩화면크기).getWidth();
-			UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.패딩화면크기).getHeight();
-			UIManager.Scale[UIManager.Width] = findViewById(R.id.화면크기).getWidth();
-			UIManager.Scale[UIManager.Height] = findViewById(R.id.화면크기).getHeight();
-			
+			UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.paddingScale).getWidth();
+			UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.paddingScale).getHeight();
+			UIManager.Scale[UIManager.Width] = findViewById(R.id.scale).getWidth();
+			UIManager.Scale[UIManager.Height] = findViewById(R.id.scale).getHeight();
+
 			startActivity(new Intent(Intro.this, Main.class));
 			overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-			
+
 			finish();
-			
+
 			IsUsingSDCard.load(Intro.this);
 			UIManager.showAds(Intro.this);
 		}
 	};
-	
-	
+
+
 	@Override
 	public void onStop() {
-		handler.removeCallbacks(runnable);
+		try {
+			handler.removeCallbacks(runnable);
+		} catch (RuntimeException ignore) {
+		}
 		finish();
 		super.onStop();
 	}
-	
+
 	@Override
 	protected void onResume() {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();

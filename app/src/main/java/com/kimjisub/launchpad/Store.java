@@ -49,7 +49,7 @@ public class Store extends BaseActivity {
 
 		projectFolderURL = SaveSetting.IsUsingSDCard.URL;
 
-		LL_list = (LinearLayout) findViewById(R.id.list);
+		LL_list = findViewById(R.id.list);
 
 		initUI();
 
@@ -93,7 +93,7 @@ public class Store extends BaseActivity {
 						.setSubTitle(d.producerName)
 						.setLED(d.isLED)
 						.setAutoPlay(d.isAutoPlay)
-						.updateDownloadCount(downloadCount)
+						.updateDownloadCount(d.downloadCount)
 						.setOnViewLongClickListener(new ItemStore.OnViewLongClickListener() {
 							@Override
 							public void onViewLongClick(ItemStore v) {
@@ -121,7 +121,7 @@ public class Store extends BaseActivity {
 
 
 					IS_items.add(itemStore);
-					LL_list.addView(itemStore);
+					LL_list.addView(itemStore,0);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -84,18 +84,18 @@ public class ItemStore extends RelativeLayout {
 		View v = li.inflate(R.layout.item_store, this, false);
 		addView(v);
 
-		RL_root = (RelativeLayout) findViewById(R.id.root);
-		RL_info = (RelativeLayout) findViewById(R.id.info);
-		LL_leftView = (LinearLayout) findViewById(R.id.leftView);
+		RL_root =  findViewById(R.id.root);
+		RL_info =  findViewById(R.id.info);
+		LL_leftView = findViewById(R.id.leftView);
 
-		RL_flag1 = (RelativeLayout) findViewById(R.id.play1);
-		RL_flag2 = (RelativeLayout) findViewById(R.id.play2);
-		TV_progress = (TextView) findViewById(R.id.progress);
-		TV_title = (TextView) findViewById(R.id.title);
-		TV_subTitle = (TextView) findViewById(R.id.subTitle);
-		TV_LED = (TextView) findViewById(R.id.LED);
-		TV_autoPlay = (TextView) findViewById(R.id.autoPlay);
-		TV_downloadCount = (TextView) findViewById(R.id.downloadCount);
+		RL_flag1 =  findViewById(R.id.play1);
+		RL_flag2 =  findViewById(R.id.play2);
+		TV_progress = findViewById(R.id.progress);
+		TV_title = findViewById(R.id.title);
+		TV_subTitle = findViewById(R.id.subTitle);
+		TV_LED = findViewById(R.id.LED);
+		TV_autoPlay = findViewById(R.id.autoPlay);
+		TV_downloadCount = findViewById(R.id.downloadCount);
 
 
 		findViewById(R.id.leftView).setX(UIManager.dpToPx(context, 10));

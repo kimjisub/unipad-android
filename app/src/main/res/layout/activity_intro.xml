@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/화면크기"
+    android:id="@+id/scale"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark1">
@@ -12,7 +12,7 @@
 	    android:padding="8dp">
 
 		<LinearLayout
-		    android:id="@+id/패딩화면크기"
+		    android:id="@+id/paddingScale"
 		    android:layout_width="match_parent"
 		    android:layout_height="match_parent"
 		    android:orientation="vertical">
@@ -37,7 +37,7 @@
 	    android:orientation="vertical">
 
 		<TextView
-		    android:id="@+id/빌드버전"
+		    android:id="@+id/version"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:layout_gravity="center_horizontal"

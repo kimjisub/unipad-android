@@ -43,15 +43,15 @@ public class UIManager {
 				if (interstitialAd.isLoaded()) {
 					interstitialAd.show();
 					interstitialAd = new InterstitialAd(context);
-					interstitialAd.setAdUnitId(ADUNITID);//유닛ID 설정
-					interstitialAd.loadAd(new AdRequest.Builder().build());//showAds 로딩
+					interstitialAd.setAdUnitId(ADUNITID);
+					interstitialAd.loadAd(new AdRequest.Builder().build());
 				} else {
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
 							interstitialAd = new InterstitialAd(context);
-							interstitialAd.setAdUnitId(ADUNITID);//유닛ID 설정
-							interstitialAd.loadAd(new AdRequest.Builder().build());//showAds 로딩
+							interstitialAd.setAdUnitId(ADUNITID);
+							interstitialAd.loadAd(new AdRequest.Builder().build());
 						}
 					});
 				}

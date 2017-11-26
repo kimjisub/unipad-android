@@ -4,15 +4,11 @@
 	<PreferenceCategory
 	    android:title="@string/setting">
 		<Preference
-		    android:key="SelectedTheme"
+		    android:key="select_theme"
 		    android:title="@string/select_theme"/>
 		<SwitchPreference
-		    android:defaultValue="true"
-		    android:key="DefaultFont"
-		    android:title="@string/default_font"/>
-		<SwitchPreference
 		    android:defaultValue="false"
-		    android:key="IsUsingSDCard"
+		    android:key="use_sd_card"
 		    android:title="@string/use_sd_card"/>
 	</PreferenceCategory>
 	

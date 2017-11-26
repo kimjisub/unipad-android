@@ -1,7 +1,7 @@
 <resources>
 	<string name="language">ko</string>
 
-	<string name="app_name">Design</string>
+	<string name="app_name">UniPad</string>
 
 	<!--Word-->
 	<string name="accept">확인</string>
@@ -12,8 +12,10 @@
 	<string name="wait">잠시만 기다려주세요…</string>
 	<string name="analyzing">분석중</string>
 	<string name="loading">로딩중</string>
+	<string name="success">성공</string>
 	<string name="failed">실패</string>
 	<string name="delete">삭제</string>
+	<string name="edit">수정</string>
 	<string name="update">업데이트</string>
 	<string name="ignore">무시</string>
 	<string name="apply">적용</string>
@@ -64,8 +66,8 @@
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="pressedPadShow">누른 키 표시</string>
-	<string name="recOrder">순서 기록</string>
-	<string name="recOrderClear">순서 기록이 초기화되었습니다.</string>
+	<string name="traceLog">순서 기록</string>
+	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
 	<string name="record">녹음</string>
 
 	<!--Version-->
@@ -76,6 +78,9 @@
 	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
 	<string name="clickToAddUnipack">유니팩을 추가하려면 클릭하세요.</string>
 	<string name="doYouWantToDeleteProject">프로젝트를 삭제하시겠습니까?</string>
+	<string name="doYouWantToRemapProject">자동재생을 자동매핑 하시겠습니까?</string>
+	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
+	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="cantReadFolder">폴더를 읽을 수 없습니다.</string>
 	<string name="cantReadFile">파일을 읽을 수 없습니다.</string>
 	<string name="analyzeComplete">분석 성공!</string>

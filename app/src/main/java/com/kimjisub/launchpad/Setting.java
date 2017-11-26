@@ -9,7 +9,6 @@ import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.Preference;
@@ -73,23 +72,10 @@ public class Setting extends PreferenceActivity {
 			}
 		});
 		
-		new Handler().postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				findPreference("default_font").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-					@Override
-					public boolean onPreferenceChange(Preference preference, Object newValue) {
-						BaseActivity.재시작(Setting.this);
-						return true;
-					}
-				});
-			}
-		}, 300);
-		
-		findPreference("unipack_SDCard").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+		findPreference("use_sd_card").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				BaseActivity.재시작(Setting.this);
+				BaseActivity.requestRestart(Setting.this);
 				return true;
 			}
 		});
@@ -241,8 +227,8 @@ public class Setting extends PreferenceActivity {
 			
 			communityItem item = data.get(position);
 			
-			TextView title = (TextView) convertView.findViewById(R.id.title);
-			TextView summary = (TextView) convertView.findViewById(R.id.summary);
+			TextView title = convertView.findViewById(R.id.title);
+			TextView summary = convertView.findViewById(R.id.summary);
 			
 			title.setText(item.getTitle());
 			summary.setText(item.getSummuary());
