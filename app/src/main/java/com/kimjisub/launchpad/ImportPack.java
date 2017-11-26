@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,11 +14,6 @@ import java.io.IOException;
 
 import static com.kimjisub.launchpad.manage.Tools.*;
 
-/**
- * Created by rlawl ON 2016-04-25.
- * Created by rlawl ON 2016-04-25.
- */
-
 public class ImportPack extends BaseActivity {
 	
 	@Override
@@ -26,86 +22,81 @@ public class ImportPack extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		
-		final String folderURL = SaveSetting.IsUsingSDCard.URL;
-		final String projectURL = getIntent().getData().getPath();
-		
-		
-		final TextView TV_제목 = (TextView) findViewById(R.id.제목);
-		final TextView TV_메시지 = (TextView) findViewById(R.id.메시지);
-		
-		
-		TV_메시지.setText(projectURL);
-		
-		(new AsyncTask<String, String, String>() {
-			
-			boolean 성공 = false;
-			boolean 경고 = true;
-			String 제목 = null;
-			String 메시지 = null;
-			
-			@Override
-			protected void onPreExecute() {
-				super.onPreExecute();
-			}
-			
-			@Override
-			protected String doInBackground(String... params) {
-				
-				String 경로 = folderURL + "/" + FileManager.randomString(10) + "/";
-				
-				try {
-					FileManager.unZipFile(projectURL, 경로);
-					Unipack 프로젝트 = new Unipack(경로, true);
-					
-					if (프로젝트.ErrorDetail == null) {
-						성공 = true;
-						경고 = false;
-						제목 = lang(ImportPack.this, R.string.analyzeComplete);
-						메시지 = lang(ImportPack.this, R.string.title) + " : " + 프로젝트.title + "\n" +
-							lang(ImportPack.this, R.string.producerName) + " : " + 프로젝트.producerName + "\n" +
-							lang(ImportPack.this, R.string.scale) + " : " + 프로젝트.buttonX + " x " + 프로젝트.buttonY + "\n" +
-							lang(ImportPack.this, R.string.chainCount) + " : " + 프로젝트.chain + "\n" +
-							lang(ImportPack.this, R.string.capacity) + " : " + String.format("%.2f", (float) FileManager.getFolderSize(경로) / 1024L / 1024L) + " MB";
-					} else if (프로젝트.CriticalError) {
-						제목 = lang(ImportPack.this, R.string.analyzeFailed);
-						메시지 = 프로젝트.ErrorDetail;
-						FileManager.deleteFolder(경로);
-					} else {
-						성공 = true;
-						경고 = true;
-						제목 = lang(ImportPack.this, R.string.warning);
-						메시지 = 프로젝트.ErrorDetail;
-					}
-					
-				} catch (IOException e) {
-					제목 = lang(ImportPack.this, R.string.analyzeFailed);
-					메시지 = e.getMessage();
-					FileManager.deleteFolder(경로);
-				}
-				
-				return null;
-			}
-			
-			@Override
-			protected void onProgressUpdate(String... progress) {
-			}
-			
-			@Override
-			protected void onPostExecute(String result) {
-				super.onPostExecute(result);
-				TV_제목.setText(제목);
-				TV_메시지.setText(메시지);
-				new Handler().postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						finish();
-					}
-				}, 3000);
-			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		
-		
+		processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
+
+	@SuppressLint("StaticFieldLeak")
+	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
+		String folderURL;
+		String projectURL;
+		TextView TV_title;
+		TextView TV_message;
+
+		String title = null;
+		String message = null;
+
+		@Override
+		protected void onPreExecute() {
+			folderURL = SaveSetting.IsUsingSDCard.URL;
+			projectURL = getIntent().getData().getPath();
+
+
+			TV_title = findViewById(R.id.title);
+			TV_message = findViewById(R.id.message);
+
+
+			TV_message.setText(projectURL);
+			super.onPreExecute();
+		}
+
+		@SuppressLint("DefaultLocale")
+		@Override
+		protected String doInBackground(String... params) {
+
+			String fileURL = folderURL + "/" + FileManager.randomString(10) + "/";
+
+			try {
+				FileManager.unZipFile(projectURL, fileURL);
+				Unipack unipack = new Unipack(fileURL, true);
+
+				if (unipack.ErrorDetail == null) {
+					title = lang(ImportPack.this, R.string.analyzeComplete);
+					message = Unipack.getInfoText(ImportPack.this, unipack, projectURL);
+				} else if (unipack.CriticalError) {
+					title = lang(ImportPack.this, R.string.analyzeFailed);
+					message = unipack.ErrorDetail;
+					FileManager.deleteFolder(fileURL);
+				} else {
+					title = lang(ImportPack.this, R.string.warning);
+					message = unipack.ErrorDetail;
+				}
+
+			} catch (IOException e) {
+				title = lang(ImportPack.this, R.string.analyzeFailed);
+				message = e.getMessage();
+				FileManager.deleteFolder(fileURL);
+			}
+
+			return null;
+		}
+
+		@Override
+		protected void onProgressUpdate(String... progress) {
+		}
+
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			TV_title.setText(title);
+			TV_message.setText(message);
+			new Handler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					finish();
+				}
+			}, 3000);
+		}
+	};
 	
 	@Override
 	protected void onDestroy() {

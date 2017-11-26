@@ -17,7 +17,7 @@
 		    android:orientation="vertical">
 
 			<TextView
-			    android:id="@+id/제목"
+			    android:id="@+id/title"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:layout_gravity="center"
@@ -26,7 +26,7 @@
 			    android:textSize="25dp"/>
 
 			<TextView
-			    android:id="@+id/메시지"
+			    android:id="@+id/message"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:layout_gravity="center"

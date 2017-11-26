@@ -1,12 +1,15 @@
 package com.kimjisub.launchpad;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
@@ -15,8 +18,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.github.clans.fab.FloatingActionMenu;
 import com.kimjisub.design.Item;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
@@ -25,10 +30,19 @@ import com.kimjisub.launchpad.manage.Tools;
 import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Tools.lang;
@@ -37,6 +51,7 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 
 public class Main extends BaseActivity {
 	LinearLayout LL_List;
+	FloatingActionMenu floatingActionMenu;
 	String ProjectFolderURL;
 
 
@@ -47,7 +62,8 @@ public class Main extends BaseActivity {
 		setContentView(R.layout.activity_main);
 
 
-		LL_List = (LinearLayout) findViewById(R.id.list);
+		LL_List = findViewById(R.id.list);
+		floatingActionMenu = findViewById(R.id.floatingMenu);
 		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
 
 		updateCheck();
@@ -73,6 +89,28 @@ public class Main extends BaseActivity {
 				startActivity(new Intent(Main.this, Setting.class));
 			}
 		});
+
+
+		floatingActionMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+			Handler handler = new Handler();
+
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					floatingActionMenu.close(true);
+				}
+			};
+
+			@Override
+			public void onMenuToggle(boolean opened) {
+				if (opened) {
+					handler.postDelayed(runnable, 3000);
+				} else {
+					handler.removeCallbacks(runnable);
+				}
+			}
+		});
+
 
 	}
 
@@ -125,13 +163,187 @@ public class Main extends BaseActivity {
 						public void onDeleteClick() {
 							new AlertDialog.Builder(Main.this)
 								.setTitle(unipacks[i].title)
-								.setMessage(lang(Main.this, com.kimjisub.design.R.string.doYouWantToDeleteProject))
-								.setPositiveButton(lang(Main.this, com.kimjisub.design.R.string.cancel), null)
-								.setNegativeButton(lang(Main.this, com.kimjisub.design.R.string.delete), new DialogInterface.OnClickListener() {
+								.setMessage(lang(Main.this, R.string.doYouWantToDeleteProject) + "\n" + URL[i])
+								.setPositiveButton(lang(Main.this, R.string.cancel), null)
+								.setNegativeButton(lang(Main.this, R.string.delete), new DialogInterface.OnClickListener() {
 									@Override
 									public void onClick(DialogInterface dialog, int which) {
 										FileManager.deleteFolder(URL[i]);
 										update();
+									}
+								})
+								.show();
+						}
+					})
+					.setOnEditClickListener(new Item.OnEditClickListener() {
+						@Override
+						public void onEditClick() {
+							new AlertDialog.Builder(Main.this)
+								.setTitle(unipacks[i].title)
+								.setMessage(lang(Main.this, R.string.doYouWantToRemapProject) + "\n" + URL[i])
+								.setPositiveButton(lang(Main.this, R.string.cancel), null)
+								.setNegativeButton(lang(Main.this, R.string.accept), new DialogInterface.OnClickListener() {
+									@SuppressLint("StaticFieldLeak")
+									@Override
+									public void onClick(DialogInterface dialog, int which) {
+
+
+										final Unipack unipack = new Unipack(URL[i], true);
+
+
+										if (unipack.isAutoPlay) {
+											(new AsyncTask<String, String, String>() {
+
+												ProgressDialog progressDialog;
+
+												ArrayList<Unipack.AutoPlay> autoplay1;
+												ArrayList<Unipack.AutoPlay> autoplay2;
+												ArrayList<Unipack.AutoPlay> autoplay3;
+
+												@Override
+												protected void onPreExecute() {
+													autoplay1 = new ArrayList<>();
+													for (Unipack.AutoPlay e : unipack.autoPlay) {
+														switch (e.func) {
+															case Unipack.AutoPlay.ON:
+																autoplay1.add(e);
+																break;
+															case Unipack.AutoPlay.OFF:
+																break;
+															case Unipack.AutoPlay.CHAIN:
+																autoplay1.add(e);
+																break;
+															case Unipack.AutoPlay.DELAY:
+																autoplay1.add(e);
+																break;
+														}
+													}
+
+													autoplay2 = new ArrayList<>();
+													Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
+													for (Unipack.AutoPlay e : autoplay1) {
+														switch (e.func) {
+															case Unipack.AutoPlay.ON:
+																if (prevDelay != null) {
+																	autoplay2.add(prevDelay);
+																	prevDelay = null;
+																}
+																autoplay2.add(e);
+																break;
+															case Unipack.AutoPlay.CHAIN:
+																autoplay2.add(e);
+																break;
+															case Unipack.AutoPlay.DELAY:
+																if (prevDelay != null)
+																	prevDelay.d += e.d;
+																else
+																	prevDelay = e;
+																break;
+														}
+													}
+
+													progressDialog = new ProgressDialog(Main.this);
+													progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+													progressDialog.setTitle(lang(Main.this, R.string.analyzing));
+													progressDialog.setMessage(lang(Main.this, R.string.wait));
+													progressDialog.setCancelable(false);
+													progressDialog.setMax(autoplay2.size());
+													progressDialog.show();
+													super.onPreExecute();
+												}
+
+												@Override
+												protected String doInBackground(String... params) {
+
+													autoplay3 = new ArrayList<>();
+													int nextDuration = 0;
+													MediaPlayer mplayer = new MediaPlayer();
+													for (Unipack.AutoPlay e : autoplay2) {
+														switch (e.func) {
+															case Unipack.AutoPlay.ON:
+																int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
+																int duration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
+																nextDuration = duration;
+																autoplay3.add(e);
+																break;
+															case Unipack.AutoPlay.CHAIN:
+																autoplay3.add(e);
+																break;
+															case Unipack.AutoPlay.DELAY:
+																e.d = nextDuration-1;
+																autoplay3.add(e);
+																break;
+														}
+														publishProgress();
+													}
+													mplayer.release();
+
+													StringBuilder stringBuilder = new StringBuilder();
+													for (Unipack.AutoPlay e : autoplay3) {
+														switch (e.func) {
+															case Unipack.AutoPlay.ON:
+																int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
+																Tools.log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
+																stringBuilder.append("t " + (e.x+1) + " " + (e.y+1)+"\n");
+																break;
+															case Unipack.AutoPlay.CHAIN:
+																Tools.log("c " + (e.c + 1));
+																stringBuilder.append("c " + (e.c + 1)+"\n");
+																break;
+															case Unipack.AutoPlay.DELAY:
+																Tools.log("d " + e.d);
+																stringBuilder.append("d " + e.d+"\n");
+																break;
+														}
+													}
+													try {
+														File filePre=new File(URL[i], "autoPlay");
+														File fileNow = new File(URL[i], "autoPlay_"+new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+														filePre.renameTo(fileNow);
+
+														BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(URL[i] + "/autoPlay")));
+														writer.write(stringBuilder.toString());
+														writer.close();
+													} catch (FileNotFoundException e) {
+														e.printStackTrace();
+													}catch (IOException ee){
+														ee.printStackTrace();
+													}
+
+													return null;
+												}
+
+												@Override
+												protected void onProgressUpdate(String... progress) {
+													progressDialog.incrementProgressBy(1);
+												}
+
+												@Override
+												protected void onPostExecute(String result) {
+													super.onPostExecute(result);
+
+													try {
+														if (progressDialog != null && progressDialog.isShowing())
+															progressDialog.dismiss();
+														new AlertDialog.Builder(Main.this)
+															.setTitle(lang(Main.this, R.string.success))
+															.setMessage(lang(Main.this, R.string.remapDone))
+															.setPositiveButton(lang(Main.this, R.string.accept), null)
+															.show();
+													} catch (Exception e) {
+														e.printStackTrace();
+													}
+												}
+											}).execute();
+
+
+										} else {
+											new AlertDialog.Builder(Main.this)
+												.setTitle(lang(Main.this, R.string.failed))
+												.setMessage(lang(Main.this, R.string.remapFail))
+												.setPositiveButton(lang(Main.this, R.string.accept), null)
+												.show();
+										}
 									}
 								})
 								.show();
@@ -220,8 +432,8 @@ public class Main extends BaseActivity {
 	void unipackExplorer() {
 		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
 		LinearLayout LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
-		TV_path = (TextView) LL_explorer.findViewById(R.id.path);
-		LV_list = (ListView) LL_explorer.findViewById(R.id.list);
+		TV_path = LL_explorer.findViewById(R.id.path);
+		LV_list = LL_explorer.findViewById(R.id.list);
 
 		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
 
@@ -236,15 +448,11 @@ public class Main extends BaseActivity {
 					else
 						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFolder));
 				} else {
-					if (file.canRead()) {
-
+					if (file.canRead())
 						loadUnipack(file.getPath());
-
-					} else if (file.canRead()) {
-						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.isNotAnUniPack));
-					} else {
+					else
 						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFile));
-					}
+
 
 				}
 			}
@@ -254,67 +462,6 @@ public class Main extends BaseActivity {
 
 		dialog.setView(LL_explorer);
 		dialog.show();
-	}
-
-	void loadUnipack(final String zipPath) {
-
-		(new AsyncTask<String, String, String>() {
-
-			ProgressDialog progressDialog = new ProgressDialog(Main.this);
-
-			@Override
-			protected void onPreExecute() {
-
-				progressDialog.setTitle(lang(Main.this, R.string.analyzing));
-				progressDialog.setMessage(lang(Main.this, R.string.wait));
-				progressDialog.setCancelable(false);
-				progressDialog.show();
-				super.onPreExecute();
-			}
-
-			@Override
-			protected String doInBackground(String... params) {
-
-				String projectPath = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
-
-				try {
-					FileManager.unZipFile(zipPath, projectPath);
-					Unipack project = new Unipack(projectPath, true);
-
-					if (project.ErrorDetail == null) {
-						publishProgress(lang(Main.this, R.string.analyzeComplete),
-							lang(Main.this, R.string.title) + " : " + project.title + "\n" +
-								lang(Main.this, R.string.producerName) + " : " + project.producerName + "\n" +
-								lang(Main.this, R.string.scale) + " : " + project.buttonX + " x " + project.buttonY + "\n" +
-								lang(Main.this, R.string.chainCount) + " : " + project.chain + "\n" +
-								lang(Main.this, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(projectPath)) + " MB" + " MB");
-					} else if (project.CriticalError) {
-						publishProgress(lang(Main.this, R.string.analyzeFailed), project.ErrorDetail);
-						FileManager.deleteFolder(projectPath);
-					} else {
-						publishProgress(lang(Main.this, R.string.warning), project.ErrorDetail);
-					}
-
-				} catch (IOException e) {
-					publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
-					FileManager.deleteFolder(projectPath);
-				}
-
-				return null;
-			}
-
-			@Override
-			protected void onProgressUpdate(String... progress) {
-				UIManager.showDialog(Main.this, progress[0], progress[1]);
-			}
-
-			@Override
-			protected void onPostExecute(String result) {
-				progressDialog.dismiss();
-				update();
-				super.onPostExecute(result);
-			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	void getDir(String dirPath) {
@@ -343,6 +490,63 @@ public class Main extends BaseActivity {
 		}
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(Main.this, android.R.layout.simple_list_item_1, mItem);
 		LV_list.setAdapter(fileList);
+	}
+
+	@SuppressLint("StaticFieldLeak")
+	void loadUnipack(final String zipPath) {
+
+		(new AsyncTask<String, String, String>() {
+
+			ProgressDialog progressDialog = new ProgressDialog(Main.this);
+
+			@Override
+			protected void onPreExecute() {
+
+				progressDialog.setTitle(lang(Main.this, R.string.analyzing));
+				progressDialog.setMessage(lang(Main.this, R.string.wait));
+				progressDialog.setCancelable(false);
+				progressDialog.show();
+				super.onPreExecute();
+			}
+
+			@Override
+			protected String doInBackground(String... params) {
+
+				String projectPath = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
+
+				try {
+					FileManager.unZipFile(zipPath, projectPath);
+					Unipack unipack = new Unipack(projectPath, true);
+
+					if (unipack.ErrorDetail == null) {
+						publishProgress(lang(Main.this, R.string.analyzeComplete), Unipack.getInfoText(Main.this, unipack, projectPath));
+					} else if (unipack.CriticalError) {
+						publishProgress(lang(Main.this, R.string.analyzeFailed), unipack.ErrorDetail);
+						FileManager.deleteFolder(projectPath);
+					} else {
+						publishProgress(lang(Main.this, R.string.warning), unipack.ErrorDetail);
+					}
+
+				} catch (IOException e) {
+					publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
+					FileManager.deleteFolder(projectPath);
+				}
+
+				return null;
+			}
+
+			@Override
+			protected void onProgressUpdate(String... progress) {
+				UIManager.showDialog(Main.this, progress[0], progress[1]);
+			}
+
+			@Override
+			protected void onPostExecute(String result) {
+				progressDialog.dismiss();
+				update();
+				super.onPostExecute(result);
+			}
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 

@@ -9,10 +9,6 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
-import com.kimjisub.launchpad.manage.SaveSetting;
-import com.tsengvn.typekit.Typekit;
-import com.tsengvn.typekit.TypekitContextWrapper;
-
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.lang;
@@ -24,29 +20,18 @@ import static com.kimjisub.launchpad.manage.Tools.log;
  */
 
 public class BaseActivity extends AppCompatActivity {
-	
+
 	public static ArrayList<Activity> aList = new ArrayList();
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		if (SaveSetting.DefaultFont.load(BaseActivity.this)) {
-			Typekit.getInstance()
-				.addNormal(Typekit.createFromAsset(this, "Montserrat-Regular.ttf"))
-				.addCustom1(Typekit.createFromAsset(this, "Quicksand-Bold.ttf"));
-		} else {
-			Typekit.getInstance()
-				.addNormal(null)
-				.addCustom1(Typekit.createFromAsset(this, "Quicksand-Bold.ttf"));
-		}
 	}
-	
 	static void startActivity(Activity activity) {
 		aList.add(activity);
-		activityLog(activity.getLocalClassName() + " start");
+		printActivityLog(activity.getLocalClassName() + " start");
 	}
-	
+
 	static void finishActivity(Activity activity) {
 		boolean exist = false;
 		int size = aList.size();
@@ -58,24 +43,24 @@ public class BaseActivity extends AppCompatActivity {
 				break;
 			}
 		}
-		activityLog(activity.getLocalClassName() + " finish" + (exist ? "" : " error"));
+		printActivityLog(activity.getLocalClassName() + " finish" + (exist ? "" : " error"));
 	}
-	
+
 	static void restartApp(Activity activity) {
-		
+
 		int size = aList.size();
 		for (int i = size - 1; i >= 0; i--) {
 			aList.get(i).finish();
 			aList.remove(i);
 		}
 		activity.startActivity(new Intent(activity, Intro.class));
-		activityLog(activity.getLocalClassName() + " restart");
-		
+		printActivityLog(activity.getLocalClassName() + " requestRestart");
+
 		Process.killProcess(Process.myPid());
 	}
-	
-	static void activityLog(String log) {
-		String str = "엑티비티 스텍 (" + log + ")";
+
+	static void printActivityLog(String log) {
+		String str = "ACTIVITY STACK - " + log;
 		int size = aList.size();
 		for (int i = 0; i < size; i++) {
 			Activity activity = aList.get(i);
@@ -83,15 +68,15 @@ public class BaseActivity extends AppCompatActivity {
 		}
 		log(str);
 	}
-	
-	static void 재시작(final Context context) {
+
+	static void requestRestart(final Context context) {
 		new AlertDialog.Builder(context)
 			.setTitle(lang(context, R.string.requireRestart))
 			.setMessage(lang(context, R.string.doYouWantToRestartApp))
 			.setPositiveButton(lang(context, R.string.restart), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					BaseActivity.restartApp((Activity) context);
+					restartApp((Activity) context);
 					dialog.dismiss();
 				}
 			})
@@ -103,13 +88,5 @@ public class BaseActivity extends AppCompatActivity {
 				}
 			})
 			.show();
-	}
-	
-	
-	@Override
-	protected void attachBaseContext(Context newBase) {
-		
-		super.attachBaseContext(TypekitContextWrapper.wrap(newBase));
-		
 	}
 }

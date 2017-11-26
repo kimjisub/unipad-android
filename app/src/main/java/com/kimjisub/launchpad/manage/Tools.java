@@ -15,11 +15,15 @@ public class Tools {
 	public static void logSig(String msg) {
 		Log.d("com.kimjisub.sig", msg);
 	}
-	
+
 	public static void logRecv(String msg) {
 		Log.d("com.kimjisub.recv", msg);
 	}
-	
+
+	public static void logErr(String msg) {
+		Log.e("com.kimjisub.err", msg);
+	}
+
 	public static String lang(Context context, int id) {
 		return context.getResources().getString(id);
 	}

@@ -42,7 +42,7 @@ public class Theme extends BaseActivity {
 		final CarouselLayoutManager layoutManager = new CarouselLayoutManager(CarouselLayoutManager.HORIZONTAL, false);
 		layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
 		
-		final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.list);
+		final RecyclerView recyclerView = findViewById(R.id.list);
 		recyclerView.setLayoutManager(layoutManager);
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setAdapter(new Adapter());
@@ -54,14 +54,14 @@ public class Theme extends BaseActivity {
 			@Override
 			public void onClick(View v) {
 				mSetTheme(layoutManager.getCenterItemPosition());
-				재시작(Theme.this);
+				requestRestart(Theme.this);
 			}
 		});
 	}
 	
 	public void mSetTheme(int i) {
 		if (themeList.size() == i) {
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/fbStore/search?q=com.kimjisub.launchpad.ThemePack.")));
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")));
 		} else {
 			ThemePack theme = themeList.get(i);
 			SaveSetting.SelectedTheme.save(Theme.this, theme.package_name);
@@ -136,7 +136,7 @@ public class Theme extends BaseActivity {
 		
 		for (ApplicationInfo applicationInfo : packages) {
 			String packageName = applicationInfo.packageName;
-			if (packageName.startsWith("com.kimjisub.launchpad.ThemePack."))
+			if (packageName.startsWith("com.kimjisub.launchpad.theme."))
 				addThemeInList(packageName);
 		}
 	}
@@ -153,7 +153,7 @@ public class Theme extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-		재시작(Theme.this);
+		requestRestart(Theme.this);
 	}
 	
 	@Override

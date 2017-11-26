@@ -27,6 +27,7 @@ public class Item extends RelativeLayout {
 	RelativeLayout RL_root;
 	RelativeLayout RL_info;
 	TextView TV_delete;
+	TextView TV_edit;
 	LinearLayout LL_leftView;
 	RelativeLayout RL_playBtn;
 
@@ -83,20 +84,21 @@ public class Item extends RelativeLayout {
 		View v = li.inflate(R.layout.item, this, false);
 		addView(v);
 
-		RL_root = (RelativeLayout) findViewById(R.id.root);
-		RL_info = (RelativeLayout) findViewById(R.id.info);
-		TV_delete = (TextView) findViewById(R.id.delete);
-		LL_leftView = (LinearLayout) findViewById(R.id.leftView);
-		RL_playBtn = (RelativeLayout) findViewById(R.id.playBtn);
+		RL_root = findViewById(R.id.root);
+		RL_info = findViewById(R.id.info);
+		TV_delete = findViewById(R.id.delete);
+		TV_edit = findViewById(R.id.edit);
+		LL_leftView = findViewById(R.id.leftView);
+		RL_playBtn = findViewById(R.id.playBtn);
 
-		RL_flag = (RelativeLayout) findViewById(R.id.flag);
-		TV_title = (TextView) findViewById(R.id.title);
-		TV_subTitle = (TextView) findViewById(R.id.subTitle);
-		TV_LED = (TextView) findViewById(R.id.LED);
-		TV_autoPlay = (TextView) findViewById(R.id.autoPlay);
-		TV_size = (TextView) findViewById(R.id.size);
-		TV_chain = (TextView) findViewById(R.id.chain);
-		TV_capacity = (TextView) findViewById(R.id.capacity);
+		RL_flag = findViewById(R.id.flag);
+		TV_title = findViewById(R.id.title);
+		TV_subTitle = findViewById(R.id.subTitle);
+		TV_LED = findViewById(R.id.LED);
+		TV_autoPlay = findViewById(R.id.autoPlay);
+		TV_size = findViewById(R.id.size);
+		TV_chain = findViewById(R.id.chain);
+		TV_capacity = findViewById(R.id.capacity);
 
 
 		LL_leftView.setX(UIManager.dpToPx(context, 10));
@@ -262,6 +264,12 @@ public class Item extends RelativeLayout {
 						onDeleteClick();
 					}
 				});
+				TV_edit.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						onEditClick();
+					}
+				});
 			} else {
 				//animation
 				Animation a = new Animation() {
@@ -278,6 +286,8 @@ public class Item extends RelativeLayout {
 				//clickEvent
 				TV_delete.setOnClickListener(null);
 				TV_delete.setClickable(false);
+				TV_edit.setOnClickListener(null);
+				TV_edit.setClickable(false);
 			}
 
 			isInfo = bool;
@@ -326,6 +336,23 @@ public class Item extends RelativeLayout {
 
 	void onDeleteClick() {
 		if (onDeleteClickListener != null) onDeleteClickListener.onDeleteClick();
+	}
+
+	//=========================================================================================
+
+	private OnEditClickListener onEditClickListener = null;
+
+	public interface OnEditClickListener {
+		void onEditClick();
+	}
+
+	public Item setOnEditClickListener(OnEditClickListener listener) {
+		this.onEditClickListener = listener;
+		return this;
+	}
+
+	void onEditClick() {
+		if (onEditClickListener != null) onEditClickListener.onEditClick();
 	}
 
 

@@ -120,18 +120,4 @@ public class SaveSetting {
 		}
 	}
 	
-	public static class DefaultFont {
-		public static void save(Context context, boolean value) {
-			SharedPreferences pref = getDefaultSharedPreferences(context);
-			SharedPreferences.Editor editor = pref.edit();
-			editor.putBoolean("DefaultFont", value);
-			editor.apply();
-		}
-		
-		public static boolean load(Context context) {
-			SharedPreferences pref = getDefaultSharedPreferences(context);
-			return pref.getBoolean("DefaultFont", true);
-		}
-	}
-	
 }
