@@ -53,7 +53,7 @@ public class Networks {
 			String mData = "";
 			
 			try {
-				URL mUrl = new URL("https://play.google.com/fbStore/apps/details?id=" + packageName);
+				URL mUrl = new URL("https://play.google.com/store/apps/details?id=" + packageName);
 				HttpURLConnection mConnection = (HttpURLConnection) mUrl
 					.openConnection();
 				
