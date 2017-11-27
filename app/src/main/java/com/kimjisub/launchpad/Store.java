@@ -5,8 +5,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kimjisub.design.ItemStore;
@@ -28,6 +26,7 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
+import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 /**
  * Created by rlawl ON 2016-03-04.
@@ -161,8 +160,8 @@ public class Store extends BaseActivity {
 
 		(new AsyncTask<String, Long, String>() {
 
-			int 파일크기;
-			String 다운로드경로;
+			int fileSize;
+			String downloadURL;
 
 			String code;
 			String title;
@@ -198,15 +197,15 @@ public class Store extends BaseActivity {
 					conexion.setConnectTimeout(5000);
 					conexion.setReadTimeout(5000);
 
-					파일크기 = conexion.getContentLength();
+					fileSize = conexion.getContentLength();
 					log(URL);
-					log("파일크기 : " + 파일크기);
-					파일크기 = 파일크기 == -1 ? 104857600 : 파일크기;
+					log("fileSize : " + fileSize);
+					fileSize = fileSize == -1 ? 104857600 : fileSize;
 
-					다운로드경로 = SaveSetting.IsUsingSDCard.URL + "/" + FileManager.randomString(10) + ".uni.zip";
+					downloadURL = SaveSetting.IsUsingSDCard.URL + "/" + FileManager.randomString(10) + ".uni.zip";
 
 					InputStream input = new BufferedInputStream(url.openStream());
-					OutputStream output = new FileOutputStream(다운로드경로);
+					OutputStream output = new FileOutputStream(downloadURL);
 
 					byte data[] = new byte[1024];
 
@@ -223,23 +222,24 @@ public class Store extends BaseActivity {
 					output.close();
 					input.close();
 					publishProgress(1L);
-					String 경로 = projectFolderURL + "/" + code + "/";
+					String projectURL = projectFolderURL + "/" + code + "/";
 
 					try {
-						FileManager.unZipFile(다운로드경로, 경로);
-						Unipack 프로젝트 = new Unipack(경로, true);
-						if (프로젝트.CriticalError) {
+						FileManager.unZipFile(downloadURL, projectURL);
+						Unipack unipack = new Unipack(projectURL, true);
+						if (unipack.CriticalError) {
+							logErr(unipack.ErrorDetail);
 							publishProgress(-1L);
-							FileManager.deleteFolder(경로);
+							FileManager.deleteFolder(projectURL);
 						} else
 							publishProgress(2L);
 
 					} catch (Exception e) {
 						publishProgress(-1L);
-						FileManager.deleteFolder(경로);
+						FileManager.deleteFolder(projectURL);
 						e.printStackTrace();
 					}
-					FileManager.deleteFolder(다운로드경로);
+					FileManager.deleteFolder(downloadURL);
 
 
 				} catch (Exception e) {
@@ -254,7 +254,7 @@ public class Store extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					v.setProgress((int) ((float) progress[1] / 파일크기 * 100) + "%");
+					v.setProgress((int) ((float) progress[1] / fileSize * 100) + "%");
 				} else if (progress[0] == 1) {//분석중
 					v.setProgress(lang(Store.this, R.string.analyzing));
 					v.changeFlagColor(R.drawable.border_play_orange);

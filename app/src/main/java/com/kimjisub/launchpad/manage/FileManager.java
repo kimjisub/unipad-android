@@ -35,8 +35,9 @@ public class FileManager {
 		byte[] buffer = new byte[1024];
 
 		try {
-			if (!location.endsWith("/"))
+			if (!location.endsWith("/")) {
 				location += "/";
+			}
 			File f = new File(location);
 			if (!f.isDirectory())
 				f.mkdirs();
@@ -47,20 +48,22 @@ public class FileManager {
 					String path = location + ze.getName();
 					File unzipFile = new File(path);
 
-					if (ze.isDirectory())
+					if (ze.isDirectory()) {
 						if (!unzipFile.isDirectory())
 							unzipFile.mkdirs();
-					else {
+					} else {
 						File parentDir = unzipFile.getParentFile();
-						if (null != parentDir)
+						if (null != parentDir) {
 							if (!parentDir.isDirectory())
 								parentDir.mkdirs();
+						}
 
 						FileOutputStream out = new FileOutputStream(unzipFile, false);
 						BufferedOutputStream fout = new BufferedOutputStream(out, 1024);
 						try {
-							while ((size = zin.read(buffer, 0, 1024)) != -1)
+							while ((size = zin.read(buffer, 0, 1024)) != -1) {
 								fout.write(buffer, 0, size);
+							}
 
 							zin.closeEntry();
 						} catch (Exception e) {

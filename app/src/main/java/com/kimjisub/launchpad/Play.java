@@ -77,7 +77,7 @@ public class Play extends BaseActivity {
 	final long DELAY = 1;
 
 	void soundItemPush(int c, int x, int y) {
-		log("soundItemPush (" + c + ", " + x + ", " + y + ")");
+		//log("soundItemPush (" + c + ", " + x + ", " + y + ")");
 		try {
 			Unipack.Sound tmp = unipack.sound[c][x][y].get(0);
 			unipack.sound[c][x][y].remove(0);
@@ -90,7 +90,7 @@ public class Play extends BaseActivity {
 	}
 
 	void soundItemPush(int c, int x, int y, int 번호) {
-		log("soundItemPush (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+		//log("soundItemPush (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
 		try {
 			ArrayList<Unipack.Sound> e = unipack.sound[c][x][y];
 			if (unipack.sound[c][x][y].get(0).num != 번호)
@@ -109,7 +109,7 @@ public class Play extends BaseActivity {
 	}
 
 	Unipack.Sound soundItem_get(int c, int x, int y) {
-		log("soundItem_get (" + c + ", " + x + ", " + y + ")");
+		//log("soundItem_get (" + c + ", " + x + ", " + y + ")");
 		try {
 			return unipack.sound[c][x][y].get(0);
 		} catch (NullPointerException ignored) {
@@ -122,7 +122,7 @@ public class Play extends BaseActivity {
 	}
 
 	void LEDItem_push(int c, int x, int y) {
-		log("LEDItem_push (" + c + ", " + x + ", " + y + ")");
+		//log("LEDItem_push (" + c + ", " + x + ", " + y + ")");
 		try {
 			Unipack.LED e = unipack.led[c][x][y].get(0);
 			unipack.led[c][x][y].remove(0);
@@ -135,7 +135,7 @@ public class Play extends BaseActivity {
 	}
 
 	void LEDItem_push(int c, int x, int y, int 번호) {
-		log("LEDItem_push (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+		//log("LEDItem_push (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
 		try {
 			ArrayList<Unipack.LED> e = unipack.led[c][x][y];
 			if (e.get(0).num != 번호)
@@ -154,7 +154,7 @@ public class Play extends BaseActivity {
 	}
 
 	Unipack.LED LEDItem_get(int c, int x, int y) {
-		log("LEDItem_get (" + c + ", " + x + ", " + y + ")");
+		//log("LEDItem_get (" + c + ", " + x + ", " + y + ")");
 		try {
 			return unipack.led[c][x][y].get(0);
 		} catch (NullPointerException ignored) {
@@ -965,6 +965,9 @@ public class Play extends BaseActivity {
 		boolean isPlaying = false;
 		int progress = 0;
 
+		boolean beforeStartPlaying = true;
+		boolean afterMatchChain = false;
+
 
 		ArrayList<Unipack.AutoPlay> guideItems = new ArrayList<>();
 		int achieve = 0;
@@ -988,14 +991,22 @@ public class Play extends BaseActivity {
 			long delay = 0;
 			long startTime = System.currentTimeMillis();
 
-			boolean afterMatchChain = false;
+
+
 
 			while (progress < unipack.autoPlay.size() && loop) {
 				long currTime = System.currentTimeMillis();
 
 				if (isPlaying) {
+					if(beforeStartPlaying){
+						log("beforeStartPlaying");
+						beforeStartPlaying = false;
+						publishProgress(8);
+					}
+
 					if (delay <= currTime - startTime) {
 						Unipack.AutoPlay e = unipack.autoPlay.get(progress);
+
 
 
 						int func = e.func;
@@ -1013,6 +1024,7 @@ public class Play extends BaseActivity {
 								soundItemPush(currChain, x, y, num);
 								LEDItem_push(currChain, x, y, num);
 								publishProgress(1, x, y);
+
 								break;
 							case Unipack.AutoPlay.OFF:
 								if (chain != currChain)
@@ -1030,6 +1042,7 @@ public class Play extends BaseActivity {
 					}
 
 				} else {
+					beforeStartPlaying = true;
 					if (delay <= currTime - startTime)
 						delay = currTime - startTime;
 
@@ -1155,9 +1168,8 @@ public class Play extends BaseActivity {
 		log("autoPlay_play");
 		padInit();
 		LEDInit();
-		removeGuide();
-
 		autoPlayTask.isPlaying = true;
+
 		findViewById(R.id.play).setBackground(theme.xml_pause);
 
 		if (unipack.isKeyLED) {
@@ -1166,6 +1178,7 @@ public class Play extends BaseActivity {
 		} else {
 			((CheckBox) findViewById(R.id.누른키표시)).setChecked(true);
 		}
+		autoPlayTask.beforeStartPlaying = true;
 	}
 
 	void autoPlay_stop() {
@@ -1191,10 +1204,11 @@ public class Play extends BaseActivity {
 		int progress = autoPlayTask.progress - 40;
 		if (progress < 0) progress = 0;
 		autoPlayTask.progress = progress;
-		autoPlayTask.achieve = -1;
-		autoPlayTask.check();
-		if (!autoPlayTask.isPlaying)
-			autoPlay_play();
+		if (!autoPlayTask.isPlaying){
+			log("!isPlaying");
+			autoPlayTask.achieve = -1;
+			autoPlayTask.check();
+		}
 		((ProgressBar) findViewById(R.id.진행도)).setProgress(autoPlayTask.progress);
 	}
 
@@ -1204,14 +1218,16 @@ public class Play extends BaseActivity {
 		LEDInit();
 		autoPlayTask.progress += 40;
 		autoPlayTask.achieve = -1;
-		autoPlayTask.check();
-		if (!autoPlayTask.isPlaying)
-			autoPlay_play();
+		if (!autoPlayTask.isPlaying){
+			log("!isPlaying");
+			autoPlayTask.achieve = -1;
+			autoPlayTask.check();
+		}
 		((ProgressBar) findViewById(R.id.진행도)).setProgress(autoPlayTask.progress);
 	}
 
 	void padTouch(int x, int y, boolean upDown) {
-		log("padTouch (" + x + ", " + y + ", " + upDown + ")");
+		//log("padTouch (" + x + ", " + y + ", " + upDown + ")");
 		try {
 			if (upDown) {
 				soundPool.stop(stopID[chain][x][y]);
@@ -1257,7 +1273,7 @@ public class Play extends BaseActivity {
 	}
 
 	void chainChange(int num) {
-		log("chainChange (" + num + ")");
+		//log("chainChange (" + num + ")");
 		try {
 			if (unipack.chain > 1 && num >= 0 && num < unipack.chain) {
 				chain = num;
@@ -1284,7 +1300,7 @@ public class Play extends BaseActivity {
 	}
 
 	void guidePad(int x, int y, boolean onOff) {
-		log("guidePad (" + x + ", " + y + ", " + onOff + ")");
+		//log("guidePad (" + x + ", " + y + ", " + onOff + ")");
 		if (onOff)
 			setColor(x, y, ColorManager.add(x, y, ColorManager.GUIDE, LaunchpadColor.ARGB[63] + 0xFF000000, 63));
 		else
@@ -1292,7 +1308,7 @@ public class Play extends BaseActivity {
 	}
 
 	void guideChain(int c, boolean onOff) {
-		log("guideChain (" + c + ", " + onOff + ")");
+		//log("guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
 			IV_chains[c].setBackground(theme.chain__);
 			Launchpad.chainLED(c, 63);
