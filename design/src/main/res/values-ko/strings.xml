@@ -66,6 +66,7 @@
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="pressedPadShow">누른 키 표시</string>
+	<string name="showLog">로그 보기</string>
 	<string name="traceLog">순서 기록</string>
 	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
 	<string name="record">녹음</string>

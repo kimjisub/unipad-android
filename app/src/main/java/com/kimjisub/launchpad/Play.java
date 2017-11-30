@@ -454,7 +454,7 @@ public class Play extends BaseActivity {
 								e.printStackTrace();
 							}
 							try {
-								화면표시();
+								showUI();
 							} catch (ArithmeticException | NullPointerException e) {
 								e.printStackTrace();
 							}
@@ -474,17 +474,17 @@ public class Play extends BaseActivity {
 	}
 
 	@SuppressLint("ClickableViewAccessibility")
-	void 화면표시() {
-		log("화면표시");
-		int 가로;
-		int 세로;
+	void showUI() {
+		log("showUI");
+		int buttonX;
+		int buttonY;
 
 		if (unipack.squareButton) {
-			가로 = 세로 = Math.min(UIManager.Scale[UIManager.PaddingHeight] / unipack.buttonX, UIManager.Scale[UIManager.PaddingWidth] / unipack.buttonY);
+			buttonX = buttonY = Math.min(UIManager.Scale[UIManager.PaddingHeight] / unipack.buttonX, UIManager.Scale[UIManager.PaddingWidth] / unipack.buttonY);
 
 		} else {
-			가로 = UIManager.Scale[UIManager.Width] / unipack.buttonY;
-			세로 = UIManager.Scale[UIManager.Height] / unipack.buttonX;
+			buttonX = UIManager.Scale[UIManager.Width] / unipack.buttonY;
+			buttonY = UIManager.Scale[UIManager.Height] / unipack.buttonX;
 		}
 
 
@@ -587,7 +587,7 @@ public class Play extends BaseActivity {
 
 			for (int j = 0; j < unipack.buttonY; j++) {
 				final RelativeLayout RL_btn = (RelativeLayout) View.inflate(this, R.layout.button, null);
-				RL_btn.setLayoutParams(new LinearLayout.LayoutParams(가로, 세로));
+				RL_btn.setLayoutParams(new LinearLayout.LayoutParams(buttonX, buttonY));
 
 
 				final int finalI = i;
@@ -615,7 +615,7 @@ public class Play extends BaseActivity {
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
 				final RelativeLayout RL_chain = (RelativeLayout) View.inflate(this, R.layout.chain, null);
-				RL_chain.setLayoutParams(new RelativeLayout.LayoutParams(가로, 세로));
+				RL_chain.setLayoutParams(new RelativeLayout.LayoutParams(buttonX, buttonY));
 
 				final int finalI = i;
 				RL_chain.findViewById(R.id.버튼).setOnClickListener(new View.OnClickListener() {
