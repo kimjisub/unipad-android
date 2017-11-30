@@ -170,32 +170,40 @@ public class Unipack {
 					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/info")));
 					String s;
 					while ((s = reader.readLine()) != null) {
-						String[] split = s.split("=", 2);
 
-						String key = split[0];
-						String value = split[1];
+						try {
+							String[] split = s.split("=", 2);
 
+							String key = split[0];
+							String value = split[1];
 
-						switch (key) {
-							case "title":
-								title = value;
-								break;
-							case "producerName":
-								producerName = value;
-								break;
-							case "buttonX":
-								buttonX = Integer.parseInt(value);
-								break;
-							case "buttonY":
-								buttonY = Integer.parseInt(value);
-								break;
-							case "chain":
-								chain = Integer.parseInt(value);
-								break;
-							case "squareButton":
-								squareButton = value.equals("true");
-								break;
+							switch (key) {
+								case "title":
+									title = value;
+									break;
+								case "producerName":
+									producerName = value;
+									break;
+								case "buttonX":
+									buttonX = Integer.parseInt(value);
+									break;
+								case "buttonY":
+									buttonY = Integer.parseInt(value);
+									break;
+								case "chain":
+									chain = Integer.parseInt(value);
+									break;
+								case "squareButton":
+									squareButton = value.equals("true");
+									break;
+							}
+						}catch (ArrayIndexOutOfBoundsException e){
+							e.printStackTrace();
+							addErr("info : [" + s + "] format is not found");
 						}
+
+
+
 
 					}
 
@@ -283,7 +291,7 @@ public class Unipack {
 								int c;
 								int x;
 								int y;
-								int loop;
+								int loop = 1;
 
 								try {
 									if (split1.length <= 2)
@@ -292,7 +300,8 @@ public class Unipack {
 									c = Integer.parseInt(split1[0]) - 1;
 									x = Integer.parseInt(split1[1]) - 1;
 									y = Integer.parseInt(split1[2]) - 1;
-									loop = Integer.parseInt(split1[3]);
+									if (split1.length >= 4)
+										loop = Integer.parseInt(split1[3]);
 
 									if (c < 0 || c >= chain) {
 										addErr("keyLED : [" + fileName + "]" + " chain is incorrect");
