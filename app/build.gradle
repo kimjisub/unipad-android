@@ -6,8 +6,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 16
 		targetSdkVersion 26
-		versionCode 43
-		versionName "3.2.0"
+		versionCode 47
+		versionName "3.2.4"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 	}
@@ -16,6 +16,10 @@ android {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
+	}
+
+	dexOptions {
+	      javaMaxHeapSize "4g"
 	}
 }
 
@@ -34,7 +38,7 @@ dependencies {
 
 	compile 'com.android.support:support-compat:26.1.0'
 	compile 'com.android.support:design:26.1.0'
-	compile 'com.github.clans:fab:1.6.2'
+	compile 'com.github.clans:fab:1.6.4'
 	compile 'com.github.ParkSangGwon:TedPermission:v1.0.6'
 	compile 'com.google.android.gms:play-services-ads:11.4.2'
 	compile 'com.google.android.gms:play-services-identity:11.4.2'
@@ -44,9 +48,6 @@ dependencies {
 	compile 'com.google.firebase:firebase-database:11.4.2'
 	compile 'com.google.firebase:firebase-messaging:11.4.2'
 	compile project(':design')
-
-	androidTestImplementation 'com.android.support.test:runner:1.0.1'
-	androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

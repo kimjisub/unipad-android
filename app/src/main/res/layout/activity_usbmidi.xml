@@ -46,7 +46,8 @@
 			    android:layout_height="100dp"
 			    android:layout_gravity="center_horizontal"
 			    android:gravity="center"
-			    android:onClick="selectDevice"
+			    android:onClick="selectDeviceXml"
+			    android:tag="0"
 			    android:text="S\nmini"
 			    android:textColor="@color/text1"
 			    android:textSize="30dp"/>
@@ -57,7 +58,8 @@
 			    android:layout_height="100dp"
 			    android:layout_gravity="center_horizontal"
 			    android:gravity="center"
-			    android:onClick="selectDevice"
+			    android:onClick="selectDeviceXml"
+			    android:tag="1"
 			    android:text="MK2"
 			    android:textColor="@color/text1"
 			    android:textSize="30dp"/>
@@ -67,8 +69,9 @@
 			    android:layout_width="120dp"
 			    android:layout_height="100dp"
 			    android:gravity="center"
-			    android:onClick="selectDevice"
-			    android:orientation="vertical">
+			    android:onClick="selectDeviceXml"
+			    android:orientation="vertical"
+			    android:tag="2">
 
 				<TextView
 				    android:id="@+id/pro1"
@@ -98,7 +101,8 @@
 			    android:layout_height="100dp"
 			    android:layout_gravity="center_horizontal"
 			    android:gravity="center"
-			    android:onClick="selectDevice"
+			    android:onClick="selectDeviceXml"
+			    android:tag="3"
 			    android:text="piano"
 			    android:textColor="@color/text1"
 			    android:textSize="30dp"/>
@@ -110,20 +114,21 @@
 	<LinearLayout
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
-	    android:orientation="vertical"
 	    android:layout_alignParentBottom="true"
-	    android:layout_alignParentRight="true"
 	    android:layout_alignParentEnd="true"
-	    android:layout_margin="10dp">
+	    android:layout_alignParentRight="true"
+	    android:layout_margin="10dp"
+	    android:orientation="vertical">
 
 		<TextView
 		    android:id="@+id/speedFirst"
 		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content"
-		    android:padding="10dp"
 		    android:layout_gravity="center_horizontal"
 		    android:gravity="center"
-		    android:onClick="selectComuFunction"
+		    android:onClick="selectComuFunctionXml"
+		    android:padding="10dp"
+		    android:tag="0"
 		    android:text="@string/signal_SpeedFirst"
 		    android:textColor="@color/text1"
 		    android:textSize="15dp"/>
@@ -132,10 +137,11 @@
 		    android:id="@+id/avoidAfterimage"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
-		    android:padding="10dp"
 		    android:layout_gravity="center_horizontal"
 		    android:gravity="center"
-		    android:onClick="selectComuFunction"
+		    android:onClick="selectComuFunctionXml"
+		    android:padding="10dp"
+		    android:tag="1"
 		    android:text="@string/signal_avoidAfterimage"
 		    android:textColor="@color/text1"
 		    android:textSize="15dp"/>

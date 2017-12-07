@@ -165,6 +165,7 @@ public class FileManager {
 		return files;
 	}
 
+
 	public static boolean isSDCardAvalable() {
 		String SDCard = getExternalSDCardPath();
 
@@ -173,10 +174,11 @@ public class FileManager {
 		return true;
 	}
 
-	private static String getExternalSDCardPath() {
+	public static String getExternalSDCardPath() {
 		HashSet<String> hs = getExternalMounts();
-		for (String extSDCardPath : hs)
+		for (String extSDCardPath : hs) {
 			return extSDCardPath;
+		}
 		return null;
 	}
 
@@ -189,14 +191,14 @@ public class FileManager {
 			process.waitFor();
 			final InputStream is = process.getInputStream();
 			final byte[] buffer = new byte[1024];
-			while (is.read(buffer) != -1)
+			while (is.read(buffer) != -1) {
 				s = s + new String(buffer);
+			}
 			is.close();
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 
-		// parse output
 		final String[] lines = s.split("\n");
 		for (String line : lines) {
 			if (!line.toLowerCase(Locale.US).contains("asec")) {
@@ -204,8 +206,7 @@ public class FileManager {
 					String[] parts = line.split(" ");
 					for (String part : parts) {
 						if (part.startsWith("/")) {
-							if (!part.toLowerCase(Locale.US).contains("vold") &&
-								!part.toLowerCase(Locale.US).contains("/mnt/")) {
+							if (!part.toLowerCase(Locale.US).contains("vold") && !part.toLowerCase(Locale.US).contains("/mnt/")) {
 								out.add(part);
 							}
 						}

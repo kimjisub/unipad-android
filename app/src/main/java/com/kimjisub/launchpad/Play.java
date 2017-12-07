@@ -967,6 +967,7 @@ public class Play extends BaseActivity {
 
 		boolean beforeStartPlaying = true;
 		boolean afterMatchChain = false;
+		int beforeChain = -1;
 
 
 		ArrayList<Unipack.AutoPlay> guideItems = new ArrayList<>();
@@ -992,13 +993,11 @@ public class Play extends BaseActivity {
 			long startTime = System.currentTimeMillis();
 
 
-
-
 			while (progress < unipack.autoPlay.size() && loop) {
 				long currTime = System.currentTimeMillis();
 
 				if (isPlaying) {
-					if(beforeStartPlaying){
+					if (beforeStartPlaying) {
 						log("beforeStartPlaying");
 						beforeStartPlaying = false;
 						publishProgress(8);
@@ -1006,7 +1005,6 @@ public class Play extends BaseActivity {
 
 					if (delay <= currTime - startTime) {
 						Unipack.AutoPlay e = unipack.autoPlay.get(progress);
-
 
 
 						int func = e.func;
@@ -1047,13 +1045,17 @@ public class Play extends BaseActivity {
 						delay = currTime - startTime;
 
 					if (guideItems.size() != 0 && guideItems.get(0).currChain != chain) {
-						publishProgress(8);
-						publishProgress(5, guideItems.get(0).currChain);
-						afterMatchChain = true;
+						if (beforeChain == -1 || beforeChain != chain) {
+							beforeChain = chain;
+							afterMatchChain = true;
+							publishProgress(8);
+							publishProgress(5, guideItems.get(0).currChain);
+						}
 					} else {
 						if (afterMatchChain) {
 							publishProgress(9);
 							afterMatchChain = false;
+							beforeChain = -1;
 
 							for (int i = 0; i < guideItems.size(); i++) {
 								Unipack.AutoPlay e = guideItems.get(i);
@@ -1204,7 +1206,7 @@ public class Play extends BaseActivity {
 		int progress = autoPlayTask.progress - 40;
 		if (progress < 0) progress = 0;
 		autoPlayTask.progress = progress;
-		if (!autoPlayTask.isPlaying){
+		if (!autoPlayTask.isPlaying) {
 			log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
@@ -1218,7 +1220,7 @@ public class Play extends BaseActivity {
 		LEDInit();
 		autoPlayTask.progress += 40;
 		autoPlayTask.achieve = -1;
-		if (!autoPlayTask.isPlaying){
+		if (!autoPlayTask.isPlaying) {
 			log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
@@ -1323,7 +1325,7 @@ public class Play extends BaseActivity {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
 					setColor(i, j, ColorManager.remove(i, j, ColorManager.GUIDE));
-			chainInit();
+			chainInit(false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1402,7 +1404,14 @@ public class Play extends BaseActivity {
 	}
 
 	void chainInit() {
+		chainInit(true);
+	}
+
+	void chainInit(boolean chainGuide) {
 		log("chainInit");
+		if (chainGuide)
+			if (autoPlayTask != null)
+				autoPlayTask.beforeChain = -1;
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
 				if (i == chain)

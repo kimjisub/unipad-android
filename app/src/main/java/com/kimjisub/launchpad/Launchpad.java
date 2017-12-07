@@ -100,6 +100,10 @@ public class Launchpad extends BaseActivity {
 		}, 2000);
 	}
 
+	public void selectDeviceXml(View v) {
+		selectDevice(Integer.parseInt((String) v.getTag()));
+	}
+
 	@SuppressLint("CutPasteId")
 	public void selectDevice(int num) {
 
@@ -143,6 +147,11 @@ public class Launchpad extends BaseActivity {
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
+	}
+
+
+	public void selectComuFunctionXml(View v) {
+		selectComuFunction(Integer.parseInt((String) v.getTag()));
 	}
 
 	@SuppressLint("CutPasteId")
