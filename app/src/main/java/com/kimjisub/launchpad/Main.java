@@ -65,6 +65,7 @@ public class Main extends BaseActivity {
 		LL_List = findViewById(R.id.list);
 		floatingActionMenu = findViewById(R.id.floatingMenu);
 		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
+		log("/Unipad path : "+ ProjectFolderURL);
 
 		updateCheck();
 		noticeCheck();
@@ -287,15 +288,15 @@ public class Main extends BaseActivity {
 														switch (e.func) {
 															case Unipack.AutoPlay.ON:
 																int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-																Tools.log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
+																log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
 																stringBuilder.append("t " + (e.x + 1) + " " + (e.y + 1) + "\n");
 																break;
 															case Unipack.AutoPlay.CHAIN:
-																Tools.log("c " + (e.c + 1));
+																log("c " + (e.c + 1));
 																stringBuilder.append("c " + (e.c + 1) + "\n");
 																break;
 															case Unipack.AutoPlay.DELAY:
-																Tools.log("d " + e.d);
+																log("d " + e.d);
 																stringBuilder.append("d " + e.d + "\n");
 																break;
 														}
@@ -401,7 +402,6 @@ public class Main extends BaseActivity {
 				e.printStackTrace();
 			}
 		}
-		log(ProjectFolderURL);
 	}
 
 	void togglePlay(int n) {

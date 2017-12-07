@@ -241,7 +241,7 @@ public class Setting extends PreferenceActivity {
 		if (requestCode == 1001) {
 			int responseCode = data.getIntExtra("RESPONSE_CODE", 0);
 			String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
-			String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");
+			String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");wA
 			
 			if (resultCode == RESULT_OK) {
 				try {
@@ -257,6 +257,7 @@ public class Setting extends PreferenceActivity {
 	@Override
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SaveSetting.SelectedTheme.load(Setting.this));
+		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL);
 		if (UIManager.isPremium)
 			findPreference("removeAds").setSummary(lang(Setting.this, R.string.using));
 		super.onResume();

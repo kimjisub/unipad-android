@@ -171,6 +171,9 @@ public class Unipack {
 					String s;
 					while ((s = reader.readLine()) != null) {
 
+						if(s.length()==0)
+							continue;
+
 						try {
 							String[] split = s.split("=", 2);
 
@@ -201,10 +204,6 @@ public class Unipack {
 							e.printStackTrace();
 							addErr("info : [" + s + "] format is not found");
 						}
-
-
-
-
 					}
 
 					if (title == null)

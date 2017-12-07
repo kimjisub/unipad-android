@@ -6,6 +6,7 @@ import android.os.Environment;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
  * Created by kimjisub ON 2017. 7. 14..
@@ -71,21 +72,26 @@ public class SaveSetting {
 		public static void save(Context context, boolean value) {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
 			SharedPreferences.Editor editor = pref.edit();
-			editor.putBoolean("IsUsingSDCard", value);
+			editor.putBoolean("use_sd_card", value);
 			editor.apply();
 		}
 
 		public static boolean load(Context context) {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
-			Boolean isSDCard = pref.getBoolean("IsUsingSDCard", false);
+			Boolean isSDCard = pref.getBoolean("use_sd_card", false);
+			log("isSDCard : "+isSDCard);
+			log("isSDCardAvalable : "+FileManager.isSDCardAvalable());
 
 			URL = Environment.getExternalStorageDirectory().getPath() + "/Unipad";
 			if (isSDCard) {
 				if (FileManager.isSDCardAvalable())
-					URL = FileManager.getExternalMounts() + "/Unipad";
-				else
+					URL = FileManager.getExternalSDCardPath() + "/Unipad";
+				else {
 					save(context, false);
+					return load(context);
+				}
 			}
+			log("URL : "+ URL);
 			return isSDCard;
 		}
 	}
