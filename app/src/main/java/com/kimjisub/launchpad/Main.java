@@ -139,7 +139,16 @@ public class Main extends BaseActivity {
 				URL[i] = UnipackRootURL + "/" + project.getName();
 				unipacks[i] = new Unipack(URL[i], false);
 
+				int color;
+				if (unipacks[i].ErrorDetail == null)
+					color = com.kimjisub.design.R.drawable.border_play_blue;
+				else if (unipacks[i].CriticalError)
+					color = com.kimjisub.design.R.drawable.border_play_red;
+				else
+					color = com.kimjisub.design.R.drawable.border_play_orange;
+
 				Item IT_item = new Item(Main.this)
+					.setFlagColor(color)
 					.setTitle(unipacks[i].title)
 					.setSubTitle(unipacks[i].producerName)
 					.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
