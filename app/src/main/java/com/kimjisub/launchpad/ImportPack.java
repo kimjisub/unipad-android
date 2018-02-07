@@ -10,62 +10,78 @@ import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
+import java.io.File;
 import java.io.IOException;
 
 import static com.kimjisub.launchpad.manage.Tools.*;
 
 public class ImportPack extends BaseActivity {
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
-		
+
 		processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
-		String folderURL;
-		String projectURL;
+		String UnipackRootURL;
+		String UnipackZipURL;
+		String UnipackURL;
+
 		TextView TV_title;
 		TextView TV_message;
+		TextView TV_info;
 
 		String title = null;
 		String message = null;
 
 		@Override
 		protected void onPreExecute() {
-			folderURL = SaveSetting.IsUsingSDCard.URL;
-			projectURL = getIntent().getData().getPath();
+			UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+			UnipackZipURL = getIntent().getData().getPath();
 
+			File file = new File(UnipackZipURL);
+			String name = file.getName();
+			String name_ = name.substring(0, name.lastIndexOf("."));
+
+			for (int i = 1; ; i++) {
+				if (i == 1)
+					UnipackURL = UnipackRootURL + "/" + name_ + "/";
+				else
+					UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
+
+				if (!new File(UnipackURL).exists())
+					break;
+			}
 
 			TV_title = findViewById(R.id.title);
 			TV_message = findViewById(R.id.message);
+			TV_info = findViewById(R.id.info);
 
-
-			TV_message.setText(projectURL);
+			TV_title.setText(R.string.analyzing);
+			TV_message.setText(UnipackZipURL);
+			TV_info.setText("URL : " + UnipackZipURL);
 			super.onPreExecute();
 		}
 
 		@SuppressLint("DefaultLocale")
 		@Override
 		protected String doInBackground(String... params) {
-
-			String fileURL = folderURL + "/" + FileManager.randomString(10) + "/";
-
 			try {
-				FileManager.unZipFile(projectURL, fileURL);
-				Unipack unipack = new Unipack(fileURL, true);
+				FileManager.unZipFile(UnipackZipURL, UnipackURL);
+				Unipack unipack = new Unipack(UnipackURL, true);
 
 				if (unipack.ErrorDetail == null) {
 					title = lang(ImportPack.this, R.string.analyzeComplete);
-					message = Unipack.getInfoText(ImportPack.this, unipack, projectURL);
+					message = Unipack.getInfoText(ImportPack.this, unipack, UnipackURL);
 				} else if (unipack.CriticalError) {
 					title = lang(ImportPack.this, R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
-					FileManager.deleteFolder(fileURL);
+					FileManager.deleteFolder(UnipackURL);
 				} else {
 					title = lang(ImportPack.this, R.string.warning);
 					message = unipack.ErrorDetail;
@@ -74,7 +90,7 @@ public class ImportPack extends BaseActivity {
 			} catch (IOException e) {
 				title = lang(ImportPack.this, R.string.analyzeFailed);
 				message = e.getMessage();
-				FileManager.deleteFolder(fileURL);
+				FileManager.deleteFolder(UnipackURL);
 			}
 
 			return null;
@@ -97,7 +113,7 @@ public class ImportPack extends BaseActivity {
 			}, 3000);
 		}
 	};
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
