@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad;
 
+import android.annotation.SuppressLint;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -36,7 +37,7 @@ import static com.kimjisub.launchpad.manage.Tools.logErr;
 public class Store extends BaseActivity {
 	LinearLayout LL_list;
 
-	String projectFolderURL;
+	String UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
 
 	int downloadCount = 0;
 
@@ -45,8 +46,6 @@ public class Store extends BaseActivity {
 		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
-
-		projectFolderURL = SaveSetting.IsUsingSDCard.URL;
 
 		LL_list = findViewById(R.id.list);
 
@@ -66,7 +65,7 @@ public class Store extends BaseActivity {
 
 		final String[] downloadedProjectList;
 
-		File folder = new File(projectFolderURL);
+		File folder = new File(UnipackRootURL);
 
 		if (folder.isDirectory()) {
 			downloadedProjectList = new String[folder.listFiles().length];
@@ -120,7 +119,7 @@ public class Store extends BaseActivity {
 
 
 					IS_items.add(itemStore);
-					LL_list.addView(itemStore,0);
+					LL_list.addView(itemStore, 0);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -150,6 +149,7 @@ public class Store extends BaseActivity {
 		}).run();
 	}
 
+	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final ItemStore v, final int i) {
 		log("itemClicked(" + i + ")");
 
@@ -161,7 +161,8 @@ public class Store extends BaseActivity {
 		(new AsyncTask<String, Long, String>() {
 
 			int fileSize;
-			String downloadURL;
+			String UnipackZipURL;
+			String UnipackURL;
 
 			String code;
 			String title;
@@ -183,6 +184,17 @@ public class Store extends BaseActivity {
 				downloadCount = DStoreDatas.get(i).downloadCount;
 				URL = DStoreDatas.get(i).URL;
 
+				for (int i = 1; ; i++) {
+					if (i == 1)
+						UnipackZipURL = UnipackRootURL + "/" + code + ".zip";
+					else
+						UnipackZipURL = UnipackRootURL + "/" + code + " (" + i + ").zip";
+
+					if (!new File(UnipackZipURL).exists())
+						break;
+				}
+				UnipackURL = UnipackRootURL + "/" + code + "/";
+
 				super.onPreExecute();
 			}
 
@@ -202,10 +214,8 @@ public class Store extends BaseActivity {
 					log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 
-					downloadURL = SaveSetting.IsUsingSDCard.URL + "/" + FileManager.randomString(10) + ".uni.zip";
-
 					InputStream input = new BufferedInputStream(url.openStream());
-					OutputStream output = new FileOutputStream(downloadURL);
+					OutputStream output = new FileOutputStream(UnipackZipURL);
 
 					byte data[] = new byte[1024];
 
@@ -222,24 +232,23 @@ public class Store extends BaseActivity {
 					output.close();
 					input.close();
 					publishProgress(1L);
-					String projectURL = projectFolderURL + "/" + code + "/";
 
 					try {
-						FileManager.unZipFile(downloadURL, projectURL);
-						Unipack unipack = new Unipack(projectURL, true);
+						FileManager.unZipFile(UnipackZipURL, UnipackURL);
+						Unipack unipack = new Unipack(UnipackURL, true);
 						if (unipack.CriticalError) {
 							logErr(unipack.ErrorDetail);
 							publishProgress(-1L);
-							FileManager.deleteFolder(projectURL);
+							FileManager.deleteFolder(UnipackURL);
 						} else
 							publishProgress(2L);
 
 					} catch (Exception e) {
 						publishProgress(-1L);
-						FileManager.deleteFolder(projectURL);
+						FileManager.deleteFolder(UnipackURL);
 						e.printStackTrace();
 					}
-					FileManager.deleteFolder(downloadURL);
+					FileManager.deleteFolder(UnipackZipURL);
 
 
 				} catch (Exception e) {
