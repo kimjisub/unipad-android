@@ -536,11 +536,11 @@ public class Unipack {
 			ErrorDetail += "\n" + content;
 	}
 
-	public static String getInfoText(Context context, Unipack unipack, String projectPath) {
+	public static String getInfoText(Context context, Unipack unipack, String UnipackURL) {
 		return lang(context, R.string.title) + " : " + unipack.title + "\n" +
 			lang(context, R.string.producerName) + " : " + unipack.producerName + "\n" +
 			lang(context, R.string.scale) + " : " + unipack.buttonX + " x " + unipack.buttonY + "\n" +
 			lang(context, R.string.chainCount) + " : " + unipack.chain + "\n" +
-			lang(context, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(projectPath)) + " MB";
+			lang(context, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(UnipackURL)) + " MB";
 	}
 }
