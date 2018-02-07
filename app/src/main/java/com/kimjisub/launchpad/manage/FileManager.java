@@ -81,17 +81,6 @@ public class FileManager {
 			e.printStackTrace();
 		}
 	}
-
-	public static String randomString(int length) {
-		StringBuilder buffer = new StringBuilder();
-		Random random = new Random();
-
-		String chars[] = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z".split(",");
-
-		for (int i = 0; i < length; i++)
-			buffer.append(chars[random.nextInt(chars.length)]);
-		return buffer.toString();
-	}
 	
 	/*public static void deleteFile(String path) {
 		File file = new File(path);

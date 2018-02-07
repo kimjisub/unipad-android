@@ -516,12 +516,12 @@ public class Main extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 
-				String UnipackURL;
 
 				File file = new File(UnipackZipURL);
 				String name = file.getName();
 				String name_ = name.substring(0, name.lastIndexOf("."));
 
+				String UnipackURL;
 				for (int i = 1; ; i++) {
 					if (i == 1)
 						UnipackURL = UnipackRootURL + "/" + name_ + "/";
