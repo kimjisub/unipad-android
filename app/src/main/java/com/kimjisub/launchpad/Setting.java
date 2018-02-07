@@ -241,7 +241,7 @@ public class Setting extends PreferenceActivity {
 		if (requestCode == 1001) {
 			int responseCode = data.getIntExtra("RESPONSE_CODE", 0);
 			String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
-			String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");wA
+			String dataSignature = data.getStringExtra("INAPP_DATA_SIGNATURE");
 			
 			if (resultCode == RESULT_OK) {
 				try {
