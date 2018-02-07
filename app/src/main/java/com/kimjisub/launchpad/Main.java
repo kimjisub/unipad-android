@@ -18,7 +18,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionMenu;
@@ -30,15 +29,12 @@ import com.kimjisub.launchpad.manage.Tools;
 import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,7 +48,7 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 public class Main extends BaseActivity {
 	LinearLayout LL_List;
 	FloatingActionMenu floatingActionMenu;
-	String ProjectFolderURL;
+	String UnipackRootURL;
 
 
 	@Override
@@ -64,8 +60,8 @@ public class Main extends BaseActivity {
 
 		LL_List = findViewById(R.id.list);
 		floatingActionMenu = findViewById(R.id.floatingMenu);
-		ProjectFolderURL = SaveSetting.IsUsingSDCard.URL;
-		log("/Unipad path : "+ ProjectFolderURL);
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+		log("/Unipad path : "+ UnipackRootURL);
 
 		updateCheck();
 		noticeCheck();
@@ -122,7 +118,7 @@ public class Main extends BaseActivity {
 	void update() {
 		LL_List.removeAllViews();
 
-		File projectFolder = new File(ProjectFolderURL);
+		File projectFolder = new File(UnipackRootURL);
 
 		if (projectFolder.isDirectory()) {
 
@@ -140,7 +136,7 @@ public class Main extends BaseActivity {
 				if (project.isFile()) continue;
 				count++;
 
-				URL[i] = ProjectFolderURL + "/" + project.getName();
+				URL[i] = UnipackRootURL + "/" + project.getName();
 				unipacks[i] = new Unipack(URL[i], false);
 
 				Item IT_item = new Item(Main.this)
@@ -394,7 +390,7 @@ public class Main extends BaseActivity {
 			}));
 		}
 
-		File nomedia = new File(ProjectFolderURL + "/.nomedia");
+		File nomedia = new File(UnipackRootURL + "/.nomedia");
 		if (!nomedia.isFile()) {
 			try {
 				(new FileWriter(nomedia)).close();
@@ -498,11 +494,14 @@ public class Main extends BaseActivity {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void loadUnipack(final String zipPath) {
+	void loadUnipack(final String UnipackZipURL) {
 
 		(new AsyncTask<String, String, String>() {
 
 			ProgressDialog progressDialog = new ProgressDialog(Main.this);
+
+			String msg1;
+			String msg2;
 
 			@Override
 			protected void onPreExecute() {
@@ -517,24 +516,42 @@ public class Main extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 
-				String projectPath = ProjectFolderURL + "/" + FileManager.randomString(10) + "/";
+				String UnipackURL;
+
+				File file = new File(UnipackZipURL);
+				String name = file.getName();
+				String name_ = name.substring(0, name.lastIndexOf("."));
+
+				for (int i = 1; ; i++) {
+					if (i == 1)
+						UnipackURL = UnipackRootURL + "/" + name_ + "/";
+					else
+						UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
+
+					if (!new File(UnipackURL).exists())
+						break;
+				}
 
 				try {
-					FileManager.unZipFile(zipPath, projectPath);
-					Unipack unipack = new Unipack(projectPath, true);
+					FileManager.unZipFile(UnipackZipURL, UnipackURL);
+					Unipack unipack = new Unipack(UnipackURL, true);
 
 					if (unipack.ErrorDetail == null) {
-						publishProgress(lang(Main.this, R.string.analyzeComplete), Unipack.getInfoText(Main.this, unipack, projectPath));
+						msg1 = lang(Main.this, R.string.analyzeComplete);
+						msg2 = Unipack.getInfoText(Main.this, unipack, UnipackURL);
 					} else if (unipack.CriticalError) {
-						publishProgress(lang(Main.this, R.string.analyzeFailed), unipack.ErrorDetail);
-						FileManager.deleteFolder(projectPath);
+						msg1 = lang(Main.this, R.string.analyzeFailed);
+						msg2 = unipack.ErrorDetail;
+						FileManager.deleteFolder(UnipackURL);
 					} else {
-						publishProgress(lang(Main.this, R.string.warning), unipack.ErrorDetail);
+						msg1 = lang(Main.this, R.string.warning);
+						msg2 = unipack.ErrorDetail;
 					}
 
 				} catch (IOException e) {
-					publishProgress(lang(Main.this, R.string.analyzeFailed), e.toString());
-					FileManager.deleteFolder(projectPath);
+					msg1 = lang(Main.this, R.string.analyzeFailed);
+					msg2 = e.toString();
+					FileManager.deleteFolder(UnipackURL);
 				}
 
 				return null;
@@ -542,13 +559,13 @@ public class Main extends BaseActivity {
 
 			@Override
 			protected void onProgressUpdate(String... progress) {
-				UIManager.showDialog(Main.this, progress[0], progress[1]);
 			}
 
 			@Override
 			protected void onPostExecute(String result) {
-				progressDialog.dismiss();
 				update();
+				UIManager.showDialog(Main.this, msg1, msg2);
+				progressDialog.dismiss();
 				super.onPostExecute(result);
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
