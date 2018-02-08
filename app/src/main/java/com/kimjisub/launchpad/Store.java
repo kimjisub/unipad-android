@@ -317,17 +317,11 @@ public class Store extends BaseActivity {
 	}
 
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		switch (keyCode) {
-			case KeyEvent.KEYCODE_BACK:
-				if (downloadCount > 0) {
-					Toast.makeText(Store.this, lang(Store.this, R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
-					return true;
-				} else
-					finish();
-				break;
-		}
-		return super.onKeyDown(keyCode, event);
+	public void onBackPressed() {
+		if (downloadCount > 0) {
+			Toast.makeText(Store.this, lang(Store.this, R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+		} else
+			super.onBackPressed();
 	}
 
 	@Override
