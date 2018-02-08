@@ -21,7 +21,7 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 
 public class BaseActivity extends AppCompatActivity {
 
-	public static ArrayList<Activity> aList = new ArrayList();
+	public static ArrayList<Activity> activityList = new ArrayList();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -29,17 +29,17 @@ public class BaseActivity extends AppCompatActivity {
 	}
 
 	static void startActivity(Activity activity) {
-		aList.add(activity);
+		activityList.add(activity);
 		printActivityLog(activity.getLocalClassName() + " start");
 	}
 
 	static void finishActivity(Activity activity) {
 		boolean exist = false;
-		int size = aList.size();
+		int size = activityList.size();
 		for (int i = 0; i < size; i++) {
-			if (aList.get(i) == activity) {
-				aList.get(i).finish();
-				aList.remove(i);
+			if (activityList.get(i) == activity) {
+				activityList.get(i).finish();
+				activityList.remove(i);
 				exist = true;
 				break;
 			}
@@ -49,10 +49,10 @@ public class BaseActivity extends AppCompatActivity {
 
 	static void restartApp(Activity activity) {
 
-		int size = aList.size();
+		int size = activityList.size();
 		for (int i = size - 1; i >= 0; i--) {
-			aList.get(i).finish();
-			aList.remove(i);
+			activityList.get(i).finish();
+			activityList.remove(i);
 		}
 		activity.startActivity(new Intent(activity, Intro.class));
 		printActivityLog(activity.getLocalClassName() + " requestRestart");
@@ -62,9 +62,9 @@ public class BaseActivity extends AppCompatActivity {
 
 	static void printActivityLog(String log) {
 		String str = "ACTIVITY STACK - " + log;
-		int size = aList.size();
+		int size = activityList.size();
 		for (int i = 0; i < size; i++) {
-			Activity activity = aList.get(i);
+			Activity activity = activityList.get(i);
 			str += "\n" + activity.getLocalClassName();
 		}
 		log(str);

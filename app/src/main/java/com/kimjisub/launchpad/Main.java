@@ -44,6 +44,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
+import static com.kimjisub.launchpad.manage.Tools.logErr;
+import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 
 public class Main extends BaseActivity {
@@ -760,6 +762,7 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onResume() {
+		logErr("onResume");
 		super.onResume();
 
 		update();
@@ -767,6 +770,7 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onPause() {
+		logErr("onPause");
 		super.onPause();
 
 		timer.cancel();
@@ -775,6 +779,7 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onDestroy() {
+		logErr("onDestroy");
 		super.onDestroy();
 
 		finishActivity(this);
