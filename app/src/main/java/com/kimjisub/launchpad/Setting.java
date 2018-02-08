@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -87,27 +88,41 @@ public class Setting extends PreferenceActivity {
 					R.string.officialFacebook,
 					R.string.facebookCommunity,
 					R.string.naverCafe,
+					R.string.discord,
 					R.string.kakaotalk,
 					R.string.email};
 				int[] RlistS = {R.string.officialHomepage_,
 					R.string.officialFacebook_,
 					R.string.facebookCommunity_,
 					R.string.naverCafe_,
+					R.string.discord_,
 					R.string.kakaotalk_,
 					R.string.email_};
-				
+
+				int[] RlistI = {
+					R.drawable.web,
+					R.drawable.facebook,
+					R.drawable.facebook,
+					R.drawable.cafe,
+					R.drawable.discord,
+					R.drawable.kakaotalk,
+					R.drawable.mail
+				};
+
 				final String[] listT = new String[RlistT.length];
 				final String[] listS = new String[RlistS.length];
+				final int[] listI = new int[RlistI.length];
 				for (int i = 0; i < listT.length; i++) {
 					listT[i] = lang(Setting.this, RlistT[i]);
 					listS[i] = lang(Setting.this, RlistS[i]);
+					listI[i] = RlistI[i];
 				}
 				
 				
 				ListView listView = new ListView(Setting.this);
 				ArrayList<communityItem> data = new ArrayList<>();
 				for (int i = 0; i < listT.length; i++)
-					data.add(new communityItem(listT[i], listS[i]));
+					data.add(new communityItem(listT[i], listS[i], listI[i]));
 				
 				listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_community_item, data));
 				listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -118,10 +133,13 @@ public class Setting extends PreferenceActivity {
 							"https://www.facebook.com/playunipad",
 							"https://www.facebook.com/groups/unipadcommunity",
 							"http://cafe.naver.com/unipad",
+							"https://discord.gg/ESDgyNs",
 							"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
 							"mailto:0226unipad@gmail.com"
 						};
 						String[] actions = {
+							Intent.ACTION_VIEW,
+							Intent.ACTION_VIEW,
 							Intent.ACTION_VIEW,
 							Intent.ACTION_VIEW,
 							Intent.ACTION_VIEW,
@@ -167,28 +185,38 @@ public class Setting extends PreferenceActivity {
 	public class communityItem {
 		private String title;
 		private String summuary;
+		private int icon;
 		
 		
-		public communityItem(String title, String summuary) {
+		public communityItem(String title, String summuary, int icon) {
 			setTitle(title);
 			setSummuary(summuary);
+			setIcon(icon);
 		}
 		
 		
 		public void setTitle(String title) {
 			this.title = title;
 		}
-		
+
 		public void setSummuary(String summuary) {
 			this.summuary = summuary;
+		}
+
+		public void setIcon(int icon) {
+			this.icon = icon;
 		}
 		
 		public String getTitle() {
 			return title;
 		}
-		
+
 		public String getSummuary() {
 			return summuary;
+		}
+
+		public int getIcon() {
+			return icon;
 		}
 		
 	}
@@ -229,9 +257,11 @@ public class Setting extends PreferenceActivity {
 			
 			TextView title = convertView.findViewById(R.id.title);
 			TextView summary = convertView.findViewById(R.id.summary);
+			ImageView icon = convertView.findViewById(R.id.icon);
 			
 			title.setText(item.getTitle());
 			summary.setText(item.getSummuary());
+			icon.setBackground(getApplicationContext().getResources().getDrawable(item.getIcon()));
 			return convertView;
 		}
 	}
