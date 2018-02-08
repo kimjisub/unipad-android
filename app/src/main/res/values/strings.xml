@@ -48,9 +48,11 @@
 	<string name="facebookCommunity_">english</string>
 	<string name="naverCafe">Naver Cafe</string>
 	<string name="naverCafe_">korean</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
 	<string name="kakaotalk">KakaoTalk to Dev. kimjisub</string>
 	<string name="kakaotalk_">Other than Technical Support</string>
-	<string name="email">Email - 0226unipad@gmail.com</string>
+	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
 
 	<!--Unipack Info-->
