@@ -47,11 +47,28 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 
 
 public class Main extends BaseActivity {
-	LinearLayout LL_List;
-	FloatingActionMenu floatingActionMenu;
+	LinearLayout LL_list;
+	FloatingActionMenu FAM_floatingMenu;
+	FloatingActionButton FAB_loadUniPack;
+	FloatingActionButton FAB_store;
+	FloatingActionButton FAB_setting;
+	LinearLayout LL_scale;
+	LinearLayout LL_paddingScale;
+
+
 	String UnipackRootURL;
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+
+	void initLayout(){
+		LL_list = findViewById(R.id.list);
+		FAM_floatingMenu = findViewById(R.id.floatingMenu);
+		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
+		FAB_store = findViewById(R.id.fab_store);
+		FAB_setting = findViewById(R.id.fab_setting);
+		LL_scale = findViewById(R.id.scale);
+		LL_paddingScale = findViewById(R.id.paddingScale);
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,30 +76,30 @@ public class Main extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		initLayout();
 
-		LL_List = findViewById(R.id.list);
-		floatingActionMenu = findViewById(R.id.floatingMenu);
+
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
 		log("/Unipad path : " + UnipackRootURL);
 
 		updateCheck();
 		noticeCheck();
 
-		findViewById(R.id.fab_loadUniPack).setOnClickListener(new View.OnClickListener() {
+		FAB_loadUniPack.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				unipackExplorer();
 			}
 		});
 
-		findViewById(R.id.fab_store).setOnClickListener(new View.OnClickListener() {
+		FAB_store.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Store.class));
 			}
 		});
 
-		findViewById(R.id.fab_setting).setOnClickListener(new View.OnClickListener() {
+		FAB_setting.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Setting.class));
@@ -90,13 +107,13 @@ public class Main extends BaseActivity {
 		});
 
 
-		floatingActionMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
 
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
-					floatingActionMenu.close(true);
+					FAM_floatingMenu.close(true);
 				}
 			};
 
@@ -124,15 +141,15 @@ public class Main extends BaseActivity {
 			@Override
 			public void run() {
 				if (bool) {
-					floatingActionMenu.setMenuButtonColorNormalResId(R.color.red);
-					floatingActionMenu.setMenuButtonColorPressedResId(R.color.red);
-					((FloatingActionButton) findViewById(R.id.fab_store)).setColorNormalResId(R.color.red);
-					((FloatingActionButton) findViewById(R.id.fab_store)).setColorPressedResId(R.color.red);
+					FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.red);
+					FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.red);
+					FAB_store.setColorNormalResId(R.color.red);
+					FAB_store.setColorPressedResId(R.color.red);
 				} else {
-					floatingActionMenu.setMenuButtonColorNormalResId(R.color.orange);
-					floatingActionMenu.setMenuButtonColorPressedResId(R.color.orange);
-					((FloatingActionButton) findViewById(R.id.fab_store)).setColorNormalResId(R.color.orange);
-					((FloatingActionButton) findViewById(R.id.fab_store)).setColorPressedResId(R.color.orange);
+					FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.orange);
+					FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.orange);
+					FAB_store.setColorNormalResId(R.color.orange);
+					FAB_store.setColorPressedResId(R.color.orange);
 				}
 			}
 		});
@@ -164,7 +181,7 @@ public class Main extends BaseActivity {
 		}).run();
 
 
-		LL_List.removeAllViews();
+		LL_list.removeAllViews();
 
 		File projectFolder = new File(UnipackRootURL);
 
@@ -207,10 +224,10 @@ public class Main extends BaseActivity {
 					.setOnPlayClickListener(new Item.OnPlayClickListener() {
 						@Override
 						public void onPlayClick() {
-							UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.paddingScale).getWidth();
-							UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.paddingScale).getHeight();
-							UIManager.Scale[UIManager.Width] = findViewById(R.id.scale).getWidth();
-							UIManager.Scale[UIManager.Height] = findViewById(R.id.scale).getHeight();
+							UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
+							UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
+							UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
+							UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
 
 							Intent intent = new Intent(Main.this, Play.class);
 							intent.putExtra("URL", URL[i]);
@@ -245,11 +262,11 @@ public class Main extends BaseActivity {
 					});
 
 				IT_items[i] = IT_item;
-				LL_List.addView(IT_item);
+				LL_list.addView(IT_item);
 			}
 
 			if (count == 0) {
-				LL_List.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+				LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
 					@Override
 					public void onViewClick(Item v) {
 						startActivity(new Intent(Main.this, Store.class));
@@ -260,7 +277,7 @@ public class Main extends BaseActivity {
 		} else {
 			projectFolder.mkdir();
 
-			LL_List.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+			LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
 				@Override
 				public void onViewClick(Item v) {
 					startActivity(new Intent(Main.this, Store.class));
@@ -498,14 +515,17 @@ public class Main extends BaseActivity {
 
 	List<String> mItem;
 	List<String> mPath;
+
+	LinearLayout LL_explorer;
 	TextView TV_path;
 	ListView LV_list;
 
 	void unipackExplorer() {
-		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
-		LinearLayout LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
+		LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
 		TV_path = LL_explorer.findViewById(R.id.path);
 		LV_list = LL_explorer.findViewById(R.id.list);
+
+		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
 
 		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
 
