@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.github.clans.fab.FloatingActionButton;
 import com.kimjisub.design.ItemStore;
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
@@ -24,6 +25,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
@@ -41,6 +44,8 @@ public class Store extends BaseActivity {
 
 	int downloadCount = 0;
 
+	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		startActivity(this);
@@ -50,7 +55,7 @@ public class Store extends BaseActivity {
 		LL_list = findViewById(R.id.list);
 
 		initUI();
-
+		getStoreCount.run();
 	}
 
 	ArrayList<ItemStore> IS_items;
@@ -77,7 +82,7 @@ public class Store extends BaseActivity {
 			folder.mkdir();
 		}
 
-		new Networks.GetStoreList().setOnAddListener(new Networks.GetStoreList.onDataListener() {
+		new Networks.GetStoreList().setDataListener(new Networks.GetStoreList.onDataListener() {
 			@Override
 			public void onAdd(final fbStore d) {
 				try {
@@ -293,8 +298,23 @@ public class Store extends BaseActivity {
 			log("padding 크기값들이 잘못되었습니다.");
 			restartApp(Store.this);
 		}
+
+		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
+			@Override
+			public void onChange(long data) {
+				SaveSetting.PrevStoreCount.save(Store.this, data);
+				log("Store : " + data + " saved.");
+
+			}
+		});
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+		getStoreCount.setOnChangeListener(null);
+	}
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {

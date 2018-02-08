@@ -126,4 +126,19 @@ public class SaveSetting {
 		}
 	}
 
+	public static class PrevStoreCount {
+
+		public static void save(Context context, long value) {
+			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
+			SharedPreferences.Editor editor = pref.edit();
+			editor.putLong("PrevStoreCount", value);
+			editor.apply();
+		}
+
+		public static long load(Context context) {
+			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
+			return pref.getLong("PrevStoreCount", 0);
+		}
+	}
+
 }
