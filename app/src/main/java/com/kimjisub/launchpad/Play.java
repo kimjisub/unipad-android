@@ -36,7 +36,6 @@ import com.kimjisub.launchpad.manage.Unipack;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
@@ -253,11 +252,11 @@ public class Play extends BaseActivity {
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 			requestRestart(this);
-			Toast.makeText(Play.this, lang(Play.this, R.string.skinMemoryErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
+			Toast.makeText(Play.this, lang(R.string.skinMemoryErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
 			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			Toast.makeText(Play.this, lang(Play.this, R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
+			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
 			SaveSetting.SelectedTheme.save(Play.this, getPackageName());
 			return skin_init(num + 1);
 		}
@@ -269,7 +268,7 @@ public class Play extends BaseActivity {
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
 				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
-				((TextView)RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
+				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
 			}
 
 		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
@@ -333,9 +332,9 @@ public class Play extends BaseActivity {
 		try {
 			if (unipack.ErrorDetail != null) {
 				new AlertDialog.Builder(Play.this)
-					.setTitle(lang(Play.this, unipack.CriticalError ? R.string.error : R.string.warning))
+					.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
 					.setMessage(unipack.ErrorDetail)
-					.setPositiveButton(lang(Play.this, R.string.accept), null)
+					.setPositiveButton(lang(R.string.accept), null)
 					.setCancelable(false)
 					.show();
 			}
@@ -391,8 +390,8 @@ public class Play extends BaseActivity {
 
 						progressDialog = new ProgressDialog(Play.this);
 						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-						progressDialog.setTitle(lang(Play.this, R.string.loading));
-						progressDialog.setMessage(lang(Play.this, R.string.wait));
+						progressDialog.setTitle(lang(R.string.loading));
+						progressDialog.setMessage(lang(R.string.wait));
 						progressDialog.setCancelable(false);
 
 						int soundNum = 0;
@@ -461,7 +460,7 @@ public class Play extends BaseActivity {
 								e.printStackTrace();
 							}
 						} else {
-							Toast.makeText(Play.this, lang(Play.this, R.string.outOfCPU), Toast.LENGTH_LONG).show();
+							Toast.makeText(Play.this, lang(R.string.outOfCPU), Toast.LENGTH_LONG).show();
 							finish();
 						}
 					}
@@ -470,7 +469,7 @@ public class Play extends BaseActivity {
 
 
 		} catch (OutOfMemoryError ignore) {
-			Toast.makeText(Play.this, lang(Play.this, R.string.outOfMemory), Toast.LENGTH_SHORT).show();
+			Toast.makeText(Play.this, lang(R.string.outOfMemory), Toast.LENGTH_SHORT).show();
 			finish();
 		}
 	}
@@ -537,7 +536,7 @@ public class Play extends BaseActivity {
 			public boolean onLongClick(View v) {
 
 				traceLog_init();
-				Toast.makeText(Play.this, lang(Play.this, R.string.traceLogClear), Toast.LENGTH_SHORT).show();
+				Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
 				return false;
 			}
 		});
@@ -550,7 +549,7 @@ public class Play extends BaseActivity {
 					rec_log = "c " + (chain + 1);
 				} else {
 					putClipboard(rec_log);
-					Toast.makeText(Play.this, lang(Play.this, R.string.copied), Toast.LENGTH_SHORT).show();
+					Toast.makeText(Play.this, lang(R.string.copied), Toast.LENGTH_SHORT).show();
 					rec_log = "";
 				}
 			}
@@ -1334,7 +1333,7 @@ public class Play extends BaseActivity {
 	}
 
 	void checkGuide(int x, int y) {
-		log("checkGuide (" + x + ", " + y + ")");
+		//log("checkGuide (" + x + ", " + y + ")");
 		if (autoPlayTask != null && autoPlayTask.loop && !autoPlayTask.isPlaying) {
 
 			ArrayList<Unipack.AutoPlay> guideItems = autoPlayTask.guideItems;
@@ -1478,7 +1477,7 @@ public class Play extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		if (lastBackMS == 0 || System.currentTimeMillis() - lastBackMS > 2000) {
-			Toast toast = Toast.makeText(Play.this, lang(Play.this, R.string.pressAgainToGoBack), Toast.LENGTH_SHORT);
+			Toast toast = Toast.makeText(Play.this, lang(R.string.pressAgainToGoBack), Toast.LENGTH_SHORT);
 			toast.setGravity(Gravity.RIGHT | Gravity.BOTTOM, 50, 50);
 			toast.show();
 			lastBackMS = System.currentTimeMillis();

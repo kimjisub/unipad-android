@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
 
@@ -54,7 +53,6 @@ public class Main extends BaseActivity {
 	String UnipackRootURL;
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -220,9 +218,9 @@ public class Main extends BaseActivity {
 						public void onDeleteClick() {
 							new AlertDialog.Builder(Main.this)
 								.setTitle(unipacks[i].title)
-								.setMessage(lang(Main.this, R.string.doYouWantToDeleteProject) + "\n" + URL[i])
-								.setPositiveButton(lang(Main.this, R.string.cancel), null)
-								.setNegativeButton(lang(Main.this, R.string.delete), new DialogInterface.OnClickListener() {
+								.setMessage(lang(R.string.doYouWantToDeleteProject) + "\n" + URL[i])
+								.setPositiveButton(lang(R.string.cancel), null)
+								.setNegativeButton(lang(R.string.delete), new DialogInterface.OnClickListener() {
 									@Override
 									public void onClick(DialogInterface dialog, int which) {
 										FileManager.deleteFolder(URL[i]);
@@ -237,9 +235,9 @@ public class Main extends BaseActivity {
 						public void onEditClick() {
 							new AlertDialog.Builder(Main.this)
 								.setTitle(unipacks[i].title)
-								.setMessage(lang(Main.this, R.string.doYouWantToRemapProject) + "\n" + URL[i])
-								.setPositiveButton(lang(Main.this, R.string.cancel), null)
-								.setNegativeButton(lang(Main.this, R.string.accept), new DialogInterface.OnClickListener() {
+								.setMessage(lang(R.string.doYouWantToRemapProject) + "\n" + URL[i])
+								.setPositiveButton(lang(R.string.cancel), null)
+								.setNegativeButton(lang(R.string.accept), new DialogInterface.OnClickListener() {
 									@SuppressLint("StaticFieldLeak")
 									@Override
 									public void onClick(DialogInterface dialog, int which) {
@@ -301,8 +299,8 @@ public class Main extends BaseActivity {
 
 													progressDialog = new ProgressDialog(Main.this);
 													progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-													progressDialog.setTitle(lang(Main.this, R.string.analyzing));
-													progressDialog.setMessage(lang(Main.this, R.string.wait));
+													progressDialog.setTitle(lang(R.string.analyzing));
+													progressDialog.setMessage(lang(R.string.wait));
 													progressDialog.setCancelable(false);
 													progressDialog.setMax(autoplay2.size());
 													progressDialog.show();
@@ -388,9 +386,9 @@ public class Main extends BaseActivity {
 														if (progressDialog != null && progressDialog.isShowing())
 															progressDialog.dismiss();
 														new AlertDialog.Builder(Main.this)
-															.setTitle(lang(Main.this, R.string.success))
-															.setMessage(lang(Main.this, R.string.remapDone))
-															.setPositiveButton(lang(Main.this, R.string.accept), null)
+															.setTitle(lang(R.string.success))
+															.setMessage(lang(R.string.remapDone))
+															.setPositiveButton(lang(R.string.accept), null)
 															.show();
 													} catch (Exception e) {
 														e.printStackTrace();
@@ -401,9 +399,9 @@ public class Main extends BaseActivity {
 
 										} else {
 											new AlertDialog.Builder(Main.this)
-												.setTitle(lang(Main.this, R.string.failed))
-												.setMessage(lang(Main.this, R.string.remapFail))
-												.setPositiveButton(lang(Main.this, R.string.accept), null)
+												.setTitle(lang(R.string.failed))
+												.setMessage(lang(R.string.remapFail))
+												.setPositiveButton(lang(R.string.accept), null)
 												.show();
 										}
 									}
@@ -507,12 +505,12 @@ public class Main extends BaseActivity {
 					if (file.canRead())
 						getDir(mPath.get(position));
 					else
-						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFolder));
+						UIManager.showDialog(Main.this, file.getName(), lang(R.string.cantReadFolder));
 				} else {
 					if (file.canRead())
 						loadUnipack(file.getPath());
 					else
-						UIManager.showDialog(Main.this, file.getName(), lang(Main.this, R.string.cantReadFile));
+						UIManager.showDialog(Main.this, file.getName(), lang(R.string.cantReadFile));
 
 
 				}
@@ -566,8 +564,8 @@ public class Main extends BaseActivity {
 			@Override
 			protected void onPreExecute() {
 
-				progressDialog.setTitle(lang(Main.this, R.string.analyzing));
-				progressDialog.setMessage(lang(Main.this, R.string.wait));
+				progressDialog.setTitle(lang(R.string.analyzing));
+				progressDialog.setMessage(lang(R.string.wait));
 				progressDialog.setCancelable(false);
 				progressDialog.show();
 				super.onPreExecute();
@@ -597,19 +595,19 @@ public class Main extends BaseActivity {
 					Unipack unipack = new Unipack(UnipackURL, true);
 
 					if (unipack.ErrorDetail == null) {
-						msg1 = lang(Main.this, R.string.analyzeComplete);
-						msg2 = Unipack.getInfoText(Main.this, unipack, UnipackURL);
+						msg1 = lang(R.string.analyzeComplete);
+						msg2 = unipack.getInfoText(Main.this);
 					} else if (unipack.CriticalError) {
-						msg1 = lang(Main.this, R.string.analyzeFailed);
+						msg1 = lang(R.string.analyzeFailed);
 						msg2 = unipack.ErrorDetail;
 						FileManager.deleteFolder(UnipackURL);
 					} else {
-						msg1 = lang(Main.this, R.string.warning);
+						msg1 = lang(R.string.warning);
 						msg2 = unipack.ErrorDetail;
 					}
 
 				} catch (IOException e) {
-					msg1 = lang(Main.this, R.string.analyzeFailed);
+					msg1 = lang(R.string.analyzeFailed);
 					msg2 = e.toString();
 					FileManager.deleteFolder(UnipackURL);
 				}
@@ -640,17 +638,17 @@ public class Main extends BaseActivity {
 					String currVerson = BuildConfig.VERSION_NAME;
 					if (verson != null && !currVerson.equals(verson)) {
 						new AlertDialog.Builder(Main.this)
-							.setTitle(lang(Main.this, R.string.newVersionFound))
-							.setMessage(lang(Main.this, R.string.currentVersion) + " : " + currVerson + "\n" +
-								lang(Main.this, R.string.newVersion) + " : " + verson)
-							.setPositiveButton(lang(Main.this, R.string.update), new DialogInterface.OnClickListener() {
+							.setTitle(lang(R.string.newVersionFound))
+							.setMessage(lang(R.string.currentVersion) + " : " + currVerson + "\n" +
+								lang(R.string.newVersion) + " : " + verson)
+							.setPositiveButton(lang(R.string.update), new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialog, int which) {
 									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
 									dialog.dismiss();
 								}
 							})
-							.setNegativeButton(lang(Main.this, R.string.ignore), new DialogInterface.OnClickListener() {
+							.setNegativeButton(lang(R.string.ignore), new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialog, int which) {
 									dialog.dismiss();
@@ -665,7 +663,7 @@ public class Main extends BaseActivity {
 	}
 
 	void noticeCheck() {
-		new Networks.CheckNotice(lang(Main.this, R.string.language)).setOnEndListener(new Networks.CheckNotice.onEndListener() {
+		new Networks.CheckNotice(lang(R.string.language)).setOnEndListener(new Networks.CheckNotice.onEndListener() {
 			@Override
 			public void onEnd(final String title, final String content) {
 				int px1 = UIManager.dpToPx(Main.this, 25);
@@ -692,8 +690,8 @@ public class Main extends BaseActivity {
 
 						new AlertDialog.Builder(Main.this)
 							.setTitle(title)
-							.setPositiveButton(lang(Main.this, R.string.accept), null)
-							.setNegativeButton(lang(Main.this, R.string.doNotSee), new DialogInterface.OnClickListener() {
+							.setPositiveButton(lang(R.string.accept), null)
+							.setNegativeButton(lang(R.string.doNotSee), new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialogInterface, int i) {
 									SaveSetting.PrevNotice.save(Main.this, content);
@@ -740,6 +738,7 @@ public class Main extends BaseActivity {
 
 		update();
 	}
+
 	@Override
 	protected void onPause() {
 		super.onPause();

@@ -4,11 +4,9 @@ import android.annotation.SuppressLint;
 import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.github.clans.fab.FloatingActionButton;
 import com.kimjisub.design.ItemStore;
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
@@ -25,10 +23,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
@@ -270,10 +265,10 @@ public class Store extends BaseActivity {
 				if (progress[0] == 0) {//다운중
 					v.setProgress((int) ((float) progress[1] / fileSize * 100) + "%");
 				} else if (progress[0] == 1) {//분석중
-					v.setProgress(lang(Store.this, R.string.analyzing));
+					v.setProgress(lang(R.string.analyzing));
 					v.changeFlagColor(R.drawable.border_play_orange);
 				} else if (progress[0] == -1) {//실패
-					v.setProgress(lang(Store.this, R.string.failed));
+					v.setProgress(lang(R.string.failed));
 					v.changeFlagColor(R.drawable.border_play_red);
 				} else if (progress[0] == 2) {//완료
 					v.setProgress("");
@@ -318,9 +313,9 @@ public class Store extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (downloadCount > 0) {
-			Toast.makeText(Store.this, lang(Store.this, R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
-		} else
+		if (downloadCount > 0)
+			Toast.makeText(Store.this, lang(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+		else
 			super.onBackPressed();
 	}
 

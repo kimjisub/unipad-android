@@ -17,7 +17,6 @@ import android.widget.Toast;
 import com.android.vending.billing.IInAppBillingService;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.SaveSetting.IsUsingSDCard;
 import com.kimjisub.launchpad.manage.UIManager;
 
@@ -25,9 +24,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
-import static com.kimjisub.launchpad.manage.Tools.lang;
-import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
  * Created by rlawl ON 2016-02-02.
@@ -104,7 +100,7 @@ public class Intro extends BaseActivity {
 
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-					Toast.makeText(Intro.this, lang(Intro.this, R.string.permissionDenied), Toast.LENGTH_SHORT).show();
+					Toast.makeText(Intro.this, lang(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
 					finish();
 				}
 
