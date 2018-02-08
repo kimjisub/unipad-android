@@ -25,8 +25,59 @@ public class BaseActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		log("onCreate");
 		super.onCreate(savedInstanceState);
 	}
+
+	@Override
+	protected void onStart() {
+		log("onStart");
+		super.onStart();
+	}
+
+	@Override
+	protected void onResume() {
+		log("onResume");
+		super.onResume();
+		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+	}
+
+	@Override
+	protected void onPause() {
+		log("onPause");
+		super.onPause();
+	}
+
+	@Override
+	protected void onStop() {
+		log("onStop");
+		super.onStop();
+	}
+
+	@Override
+	protected void onRestart() {
+		log("onRestart");
+		super.onRestart();
+	}
+
+	@Override
+	protected void onDestroy() {
+		log("onDestroy");
+		super.onDestroy();
+		finishActivity(this);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	static void startActivity(Activity activity) {
 		activityList.add(activity);
@@ -91,22 +142,7 @@ public class BaseActivity extends AppCompatActivity {
 			.show();
 	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-	}
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		finishActivity(this);
-	}
 
 	public String lang(int id) {
 		return (BaseActivity.this).getResources().getString(id);

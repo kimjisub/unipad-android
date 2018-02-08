@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -44,8 +43,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logErr;
-import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 
 public class Main extends BaseActivity {
@@ -62,7 +59,7 @@ public class Main extends BaseActivity {
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
-	void initLayout(){
+	void initLayout() {
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
@@ -762,7 +759,6 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onResume() {
-		logErr("onResume");
 		super.onResume();
 
 		update();
@@ -770,7 +766,6 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onPause() {
-		logErr("onPause");
 		super.onPause();
 
 		timer.cancel();
@@ -779,7 +774,6 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onDestroy() {
-		logErr("onDestroy");
 		super.onDestroy();
 
 		finishActivity(this);
