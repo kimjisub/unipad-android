@@ -402,8 +402,6 @@ public class Play extends BaseActivity {
 										soundNum += unipack.sound[i][j][k].size();
 
 						soundPool = new SoundPool(unipack.chain * unipack.buttonX * unipack.buttonY, AudioManager.STREAM_MUSIC, 0);
-						//sound = AudioPool.Create();
-
 
 						progressDialog.setMax(soundNum);
 						progressDialog.show();
@@ -418,12 +416,11 @@ public class Play extends BaseActivity {
 							for (int i = 0; i < unipack.chain; i++) {
 								for (int j = 0; j < unipack.buttonX; j++) {
 									for (int k = 0; k < unipack.buttonY; k++) {
-										ArrayList 요소 = unipack.sound[i][j][k];
-										if (요소 != null) {
-											for (int l = 0; l < 요소.size(); l++) {
+										ArrayList arrayList = unipack.sound[i][j][k];
+										if (arrayList != null) {
+											for (int l = 0; l < arrayList.size(); l++) {
 												Unipack.Sound e = unipack.sound[i][j][k].get(l);
 												e.id = soundPool.load(e.URL, 1);
-												//e.id = sound.load(e.URL);
 												publishProgress();
 											}
 										}
@@ -1498,7 +1495,7 @@ public class Play extends BaseActivity {
 
 		if (UIManager.Scale[0] == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
-			restartApp(Play.this);
+			requestRestart(Play.this);
 		}
 	}
 
@@ -1511,16 +1508,24 @@ public class Play extends BaseActivity {
 		if (ledTask != null)
 			ledTask.isPlaying = false;
 		if (soundPool != null) {
-			for (int i = 0; i < unipack.chain; i++)
-				for (int j = 0; j < unipack.buttonX; j++)
-					for (int k = 0; k < unipack.buttonY; k++)
-						if (unipack.sound[i][j][k] != null) {
-							try {
-								soundPool.unload(soundItem_get(i, j, k).id);
-							} catch (Exception e) {
-								e.printStackTrace();
+			for (int i = 0; i < unipack.chain; i++) {
+				for (int j = 0; j < unipack.buttonX; j++) {
+					for (int k = 0; k < unipack.buttonY; k++) {
+						ArrayList arrayList = unipack.sound[i][j][k];
+						if (arrayList != null) {
+							for (int l = 0; l < arrayList.size(); l++) {
+								if (unipack.sound[i][j][k].get(l) != null) {
+									try {
+										soundPool.unload(unipack.sound[i][j][k].get(l).id);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
 							}
 						}
+					}
+				}
+			}
 			soundPool.release();
 			soundPool = null;
 		}
