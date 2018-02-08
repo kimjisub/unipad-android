@@ -540,7 +540,7 @@ public class Unipack {
 		return null;
 	}
 
-	public String[] getAutoplays() {
+	/*public String[] getAutoplays() {
 		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
@@ -549,7 +549,7 @@ public class Unipack {
 		}
 
 		return (String[]) autoPlays.toArray(new String[]{""});
-	}
+	}*/
 
 	private void addErr(String content) {
 		if (ErrorDetail == null)
