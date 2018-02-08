@@ -1422,7 +1422,7 @@ public class Play extends BaseActivity {
 	}
 
 	void traceLog_show() {
-		log("traceLog_show");
+		//log("traceLog_show");
 		for (int i = 0; i < unipack.buttonX; i++) {
 			for (int j = 0; j < unipack.buttonY; j++) {
 				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setText("");
@@ -1433,7 +1433,7 @@ public class Play extends BaseActivity {
 	}
 
 	void traceLog_log(int x, int y) {
-		log("traceLog_log (" + x + ", " + y + ")");
+		//log("traceLog_log (" + x + ", " + y + ")");
 		trace_table[chain][x][y].add(trace_nextNum[chain]++);
 		((TextView) RL_btns[x][y].findViewById(R.id.traceLog)).setText("");
 		for (int i = 0; i < trace_table[chain][x][y].size(); i++)
