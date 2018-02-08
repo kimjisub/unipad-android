@@ -1486,6 +1486,8 @@ public class Play extends BaseActivity {
 	protected void onResume() {
 		super.onResume();
 
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 		if (UIManager.Scale[0] == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
 			requestRestart(Play.this);
