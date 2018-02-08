@@ -113,11 +113,6 @@ public class Intro extends BaseActivity {
 	Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
-			UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.paddingScale).getWidth();
-			UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.paddingScale).getHeight();
-			UIManager.Scale[UIManager.Width] = findViewById(R.id.scale).getWidth();
-			UIManager.Scale[UIManager.Height] = findViewById(R.id.scale).getHeight();
-
 			startActivity(new Intent(Intro.this, Main.class));
 			overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 
