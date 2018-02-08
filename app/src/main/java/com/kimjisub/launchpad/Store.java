@@ -287,7 +287,6 @@ public class Store extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override

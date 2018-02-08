@@ -160,7 +160,6 @@ public class Main extends BaseActivity {
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
-				log("Main : " + data + " " + (SaveSetting.PrevStoreCount.load(Main.this) == data));
 				if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
 					timer.cancel();
 					blink(true);
@@ -762,7 +761,6 @@ public class Main extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
 		update();
 	}
@@ -778,6 +776,7 @@ public class Main extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+
 		finishActivity(this);
 	}
 }

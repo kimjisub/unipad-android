@@ -500,7 +500,6 @@ public class Launchpad extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		log("onDestroy()");
 		(new AsyncTask<String, Integer, String>() {
 			@Override
 			protected String doInBackground(String... params) {
@@ -512,6 +511,5 @@ public class Launchpad extends BaseActivity {
 				return null;
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		finishActivity(this);
 	}
 }

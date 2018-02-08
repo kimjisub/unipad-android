@@ -137,13 +137,11 @@ public class Intro extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		finishActivity(this);
 		if (mService != null)
 			unbindService(mServiceConn);
 	}

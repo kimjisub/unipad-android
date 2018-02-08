@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.v7.app.AlertDialog;
@@ -88,6 +89,23 @@ public class BaseActivity extends AppCompatActivity {
 				}
 			})
 			.show();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		finishActivity(this);
 	}
 
 	public String lang(int id) {
