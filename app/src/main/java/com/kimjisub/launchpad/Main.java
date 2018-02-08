@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.kimjisub.design.Item;
 import com.kimjisub.launchpad.manage.FileManager;
@@ -40,6 +41,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
@@ -49,6 +52,8 @@ public class Main extends BaseActivity {
 	LinearLayout LL_List;
 	FloatingActionMenu floatingActionMenu;
 	String UnipackRootURL;
+
+	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
 
 	@Override
@@ -61,7 +66,7 @@ public class Main extends BaseActivity {
 		LL_List = findViewById(R.id.list);
 		floatingActionMenu = findViewById(R.id.floatingMenu);
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
-		log("/Unipad path : "+ UnipackRootURL);
+		log("/Unipad path : " + UnipackRootURL);
 
 		updateCheck();
 		noticeCheck();
@@ -115,7 +120,53 @@ public class Main extends BaseActivity {
 	String[] URL;
 	Unipack[] unipacks;
 
+	Timer timer = new Timer();
+
+	void blink(final boolean bool) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (bool) {
+					floatingActionMenu.setMenuButtonColorNormalResId(R.color.red);
+					floatingActionMenu.setMenuButtonColorPressedResId(R.color.red);
+					((FloatingActionButton) findViewById(R.id.fab_store)).setColorNormalResId(R.color.red);
+					((FloatingActionButton) findViewById(R.id.fab_store)).setColorPressedResId(R.color.red);
+				} else {
+					floatingActionMenu.setMenuButtonColorNormalResId(R.color.orange);
+					floatingActionMenu.setMenuButtonColorPressedResId(R.color.orange);
+					((FloatingActionButton) findViewById(R.id.fab_store)).setColorNormalResId(R.color.orange);
+					((FloatingActionButton) findViewById(R.id.fab_store)).setColorPressedResId(R.color.orange);
+				}
+			}
+		});
+
+	}
+
 	void update() {
+		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
+			@Override
+			public void onChange(long data) {
+				log("Main : " + data + " " + (SaveSetting.PrevStoreCount.load(Main.this) == data));
+				if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
+					timer.cancel();
+					blink(true);
+				} else {
+					timer.cancel();
+					timer = new Timer();
+					timer.schedule(new TimerTask() {
+						int i;
+
+						@Override
+						public void run() {
+							blink(i % 2 == 0);
+							i++;
+						}
+					}, 0, 500);
+				}
+			}
+		}).run();
+
+
 		LL_List.removeAllViews();
 
 		File projectFolder = new File(UnipackRootURL);
@@ -688,6 +739,13 @@ public class Main extends BaseActivity {
 		}
 
 		update();
+	}
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+		timer.cancel();
+		getStoreCount.setOnChangeListener(null);
 	}
 
 	@Override
