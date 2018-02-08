@@ -102,7 +102,7 @@ public class Setting extends PreferenceActivity {
 				int[] RlistI = {
 					R.drawable.web,
 					R.drawable.facebook,
-					R.drawable.facebook,
+					R.drawable.facebook_community,
 					R.drawable.cafe,
 					R.drawable.discord,
 					R.drawable.kakaotalk,
