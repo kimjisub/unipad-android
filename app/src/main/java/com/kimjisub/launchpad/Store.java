@@ -289,17 +289,10 @@ public class Store extends BaseActivity {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-		if (UIManager.Scale[0] == 0) {
-			log("padding 크기값들이 잘못되었습니다.");
-			restartApp(Store.this);
-		}
-
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
 				SaveSetting.PrevStoreCount.save(Store.this, data);
-				log("Store : " + data + " saved.");
-
 			}
 		});
 	}

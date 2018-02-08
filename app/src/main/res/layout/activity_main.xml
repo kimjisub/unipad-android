@@ -5,6 +5,23 @@
 	android:layout_height="match_parent"
 	android:background="@color/dark1">
 
+
+	<LinearLayout
+		android:id="@+id/scale"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:padding="8dp">
+
+		<LinearLayout
+			android:id="@+id/paddingScale"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="vertical">
+
+
+		</LinearLayout>
+	</LinearLayout>
+
 	<ScrollView
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">

@@ -26,7 +26,6 @@ import com.kimjisub.design.Item;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
-import com.kimjisub.launchpad.manage.Tools;
 import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
@@ -208,6 +207,11 @@ public class Main extends BaseActivity {
 					.setOnPlayClickListener(new Item.OnPlayClickListener() {
 						@Override
 						public void onPlayClick() {
+							UIManager.Scale[UIManager.PaddingWidth] = findViewById(R.id.paddingScale).getWidth();
+							UIManager.Scale[UIManager.PaddingHeight] = findViewById(R.id.paddingScale).getHeight();
+							UIManager.Scale[UIManager.Width] = findViewById(R.id.scale).getWidth();
+							UIManager.Scale[UIManager.Height] = findViewById(R.id.scale).getHeight();
+
 							Intent intent = new Intent(Main.this, Play.class);
 							intent.putExtra("URL", URL[i]);
 							startActivity(intent);
@@ -274,7 +278,7 @@ public class Main extends BaseActivity {
 		}
 	}
 
-	void deleteUnipack(final Unipack unipack){
+	void deleteUnipack(final Unipack unipack) {
 		new AlertDialog.Builder(Main.this)
 			.setTitle(unipack.title)
 			.setMessage(lang(R.string.doYouWantToDeleteProject) + "\n" + unipack.URL)
@@ -289,7 +293,7 @@ public class Main extends BaseActivity {
 			.show();
 	}
 
-	void editUnipack(final Unipack uni){
+	void editUnipack(final Unipack uni) {
 
 		new AlertDialog.Builder(Main.this)
 			.setTitle(uni.title)
@@ -739,11 +743,6 @@ public class Main extends BaseActivity {
 	protected void onResume() {
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-		if (UIManager.Scale[0] == 0) {
-			Tools.log("padding 크기값들이 잘못되었습니다.");
-			restartApp(Main.this);
-		}
 
 		update();
 	}
