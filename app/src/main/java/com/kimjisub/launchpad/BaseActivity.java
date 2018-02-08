@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Tools.lang;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
 /**
@@ -27,6 +26,7 @@ public class BaseActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 	}
+
 	static void startActivity(Activity activity) {
 		aList.add(activity);
 		printActivityLog(activity.getLocalClassName() + " start");
@@ -88,5 +88,13 @@ public class BaseActivity extends AppCompatActivity {
 				}
 			})
 			.show();
+	}
+
+	public String lang(int id) {
+		return (BaseActivity.this).getResources().getString(id);
+	}
+
+	public static String lang(Context context, int id) {
+		return context.getResources().getString(id);
 	}
 }

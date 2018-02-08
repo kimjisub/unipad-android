@@ -6,14 +6,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.File;
 import java.io.IOException;
-
-import static com.kimjisub.launchpad.manage.Tools.*;
 
 public class ImportPack extends BaseActivity {
 
@@ -62,7 +60,7 @@ public class ImportPack extends BaseActivity {
 			TV_message = findViewById(R.id.message);
 			TV_info = findViewById(R.id.info);
 
-			TV_title.setText(R.string.analyzing);
+			TV_title.setText(lang(R.string.analyzing));
 			TV_message.setText(UnipackZipURL);
 			TV_info.setText("URL : " + UnipackZipURL);
 			super.onPreExecute();
@@ -76,19 +74,19 @@ public class ImportPack extends BaseActivity {
 				Unipack unipack = new Unipack(UnipackURL, true);
 
 				if (unipack.ErrorDetail == null) {
-					title = lang(ImportPack.this, R.string.analyzeComplete);
-					message = Unipack.getInfoText(ImportPack.this, unipack, UnipackURL);
+					title = lang(R.string.analyzeComplete);
+					message = unipack.getInfoText(ImportPack.this);
 				} else if (unipack.CriticalError) {
-					title = lang(ImportPack.this, R.string.analyzeFailed);
+					title = lang(R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
 					FileManager.deleteFolder(UnipackURL);
 				} else {
-					title = lang(ImportPack.this, R.string.warning);
+					title = lang(R.string.warning);
 					message = unipack.ErrorDetail;
 				}
 
 			} catch (IOException e) {
-				title = lang(ImportPack.this, R.string.analyzeFailed);
+				title = lang(R.string.analyzeFailed);
 				message = e.getMessage();
 				FileManager.deleteFolder(UnipackURL);
 			}
