@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.manage;
 
 import android.content.Context;
 
+import com.kimjisub.launchpad.BaseActivity;
 import com.kimjisub.launchpad.R;
 
 import java.io.BufferedReader;
@@ -11,9 +12,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Tools.lang;
-
 public class Unipack {
+	public String URL = null;
+
 	public String ErrorDetail = null;
 	public boolean CriticalError = false;
 
@@ -151,13 +152,14 @@ public class Unipack {
 
 	public Unipack(String url, boolean loadDetail) {
 
-		try {
+		this.URL = url;
 
-			isInfo = (new File(url + "/info")).isFile();
-			isSounds = (new File(url + "/sounds")).isDirectory();
-			isKeySound = (new File(url + "/keySound")).isFile();
-			isKeyLED = (new File(url + "/keyLED")).isDirectory();
-			isAutoPlay = (new File(url + "/autoPlay")).isFile();
+		try {
+			isInfo = (new File(URL + "/info")).isFile();
+			isSounds = (new File(URL + "/sounds")).isDirectory();
+			isKeySound = (new File(URL + "/keySound")).isFile();
+			isKeyLED = (new File(URL + "/keyLED")).isDirectory();
+			isAutoPlay = (new File(URL + "/autoPlay")).isFile();
 
 			if (!isInfo) addErr("info doesn't exist");
 			if (!isKeySound) addErr("keySound doesn't exist");
@@ -167,11 +169,11 @@ public class Unipack {
 			else {
 
 				if (isInfo) {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/info")));
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(URL + "/info")));
 					String s;
 					while ((s = reader.readLine()) != null) {
 
-						if(s.length()==0)
+						if (s.length() == 0)
 							continue;
 
 						try {
@@ -200,7 +202,7 @@ public class Unipack {
 									squareButton = value.equals("true");
 									break;
 							}
-						}catch (ArrayIndexOutOfBoundsException e){
+						} catch (ArrayIndexOutOfBoundsException e) {
 							e.printStackTrace();
 							addErr("info : [" + s + "] format is not found");
 						}
@@ -224,7 +226,7 @@ public class Unipack {
 				if (loadDetail) {
 					if (isKeySound) {
 						sound = new ArrayList[chain][buttonX][buttonY];
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/keySound")));
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(URL + "/keySound")));
 						String s;
 						while ((s = reader.readLine()) != null) {
 							String[] split = s.split(" ");
@@ -232,7 +234,7 @@ public class Unipack {
 							int c;
 							int x;
 							int y;
-							String URL;
+							String soundURL;
 							int loop = 0;
 
 							try {
@@ -242,7 +244,7 @@ public class Unipack {
 								c = Integer.parseInt(split[0]) - 1;
 								x = Integer.parseInt(split[1]) - 1;
 								y = Integer.parseInt(split[2]) - 1;
-								URL = split[3];
+								soundURL = split[3];
 
 								if (split.length >= 5)
 									loop = Integer.parseInt(split[4]) - 1;
@@ -261,7 +263,7 @@ public class Unipack {
 								addErr("keySound : [" + s + "]" + " y is incorrect");
 							else {
 
-								Sound tmp = new Sound(url + "/sounds/" + URL, loop);
+								Sound tmp = new Sound(URL + "/sounds/" + soundURL, loop);
 
 								if (!new File(tmp.URL).isFile()) {
 									addErr("keySound : [" + s + "]" + " sound was not found");
@@ -281,7 +283,7 @@ public class Unipack {
 
 					if (isKeyLED) {
 						led = new ArrayList[chain][buttonX][buttonY];
-						File[] fileList = FileManager.sortByName(new File(url + "/keyLED").listFiles());
+						File[] fileList = FileManager.sortByName(new File(URL + "/keyLED").listFiles());
 						for (File file : fileList) {
 							if (file.isFile()) {
 								String fileName = file.getName();
@@ -414,7 +416,7 @@ public class Unipack {
 
 						int currChain = 0;
 
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(url + "/autoPlay")));
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(getMainAutoplay())));
 						String s;
 						while ((s = reader.readLine()) != null) {
 							String[] split = s.split(" ");
@@ -527,6 +529,26 @@ public class Unipack {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	String getMainAutoplay() {
+		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
+		for (File f : fileList) {
+			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
+				return f.getPath();
+		}
+		return null;
+	}
+
+	public String[] getAutoplays() {
+		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
+		ArrayList autoPlays = new ArrayList();
+		for (File f : fileList) {
+			if (f.isFile() && (f.getName().toLowerCase().startsWith("autoplay") || f.getName().toLowerCase().startsWith("_autoplay")))
+				autoPlays.add(f.getPath());
+		}
+
+		return (String[]) autoPlays.toArray(new String[]{""});
 	}
 
 	private void addErr(String content) {
