@@ -267,8 +267,10 @@ public class Play extends BaseActivity {
 		log("skin_set");
 		((ImageView) findViewById(R.id.background)).setImageDrawable(theme.playbg);
 		for (int i = 0; i < unipack.buttonX; i++)
-			for (int j = 0; j < unipack.buttonY; j++)
+			for (int j = 0; j < unipack.buttonY; j++) {
 				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
+				((TextView)RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
+			}
 
 		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
 			for (int i = 0; i < unipack.buttonX; i++)
@@ -298,18 +300,18 @@ public class Play extends BaseActivity {
 		findViewById(R.id.play).setBackground(theme.xml_play);
 		findViewById(R.id.next).setBackground(theme.xml_next);
 
-		((CheckBox) findViewById(R.id.누른키표시)).setTextColor(theme.text1);
-		((CheckBox) findViewById(R.id.LED효과)).setTextColor(theme.text1);
-		((CheckBox) findViewById(R.id.자동재생)).setTextColor(theme.text1);
-		((CheckBox) findViewById(R.id.순서기록)).setTextColor(theme.text1);
-		((CheckBox) findViewById(R.id.녹음)).setTextColor(theme.text1);
+		((CheckBox) findViewById(R.id.누른키표시)).setTextColor(theme.setting_btn);
+		((CheckBox) findViewById(R.id.LED효과)).setTextColor(theme.setting_btn);
+		((CheckBox) findViewById(R.id.자동재생)).setTextColor(theme.setting_btn);
+		((CheckBox) findViewById(R.id.순서기록)).setTextColor(theme.setting_btn);
+		((CheckBox) findViewById(R.id.녹음)).setTextColor(theme.setting_btn);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			((CheckBox) findViewById(R.id.누른키표시)).setButtonTintList(ColorStateList.valueOf(theme.text1));
-			((CheckBox) findViewById(R.id.자동재생)).setButtonTintList(ColorStateList.valueOf(theme.text1));
-			((CheckBox) findViewById(R.id.순서기록)).setButtonTintList(ColorStateList.valueOf(theme.text1));
-			((CheckBox) findViewById(R.id.녹음)).setButtonTintList(ColorStateList.valueOf(theme.text1));
-			((CheckBox) findViewById(R.id.LED효과)).setButtonTintList(ColorStateList.valueOf(theme.text1));
+			((CheckBox) findViewById(R.id.누른키표시)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			((CheckBox) findViewById(R.id.자동재생)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			((CheckBox) findViewById(R.id.순서기록)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			((CheckBox) findViewById(R.id.녹음)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			((CheckBox) findViewById(R.id.LED효과)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
 		}
 
 	}
@@ -1427,9 +1429,9 @@ public class Play extends BaseActivity {
 		log("traceLog_show");
 		for (int i = 0; i < unipack.buttonX; i++) {
 			for (int j = 0; j < unipack.buttonY; j++) {
-				((TextView) RL_btns[i][j].findViewById(R.id.순서)).setText("");
+				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setText("");
 				for (int k = 0; k < trace_table[chain][i][j].size(); k++)
-					((TextView) RL_btns[i][j].findViewById(R.id.순서)).append(trace_table[chain][i][j].get(k) + " ");
+					((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).append(trace_table[chain][i][j].get(k) + " ");
 			}
 		}
 	}
@@ -1437,9 +1439,9 @@ public class Play extends BaseActivity {
 	void traceLog_log(int x, int y) {
 		log("traceLog_log (" + x + ", " + y + ")");
 		trace_table[chain][x][y].add(trace_nextNum[chain]++);
-		((TextView) RL_btns[x][y].findViewById(R.id.순서)).setText("");
+		((TextView) RL_btns[x][y].findViewById(R.id.traceLog)).setText("");
 		for (int i = 0; i < trace_table[chain][x][y].size(); i++)
-			((TextView) RL_btns[x][y].findViewById(R.id.순서)).append(trace_table[chain][x][y].get(i) + " ");
+			((TextView) RL_btns[x][y].findViewById(R.id.traceLog)).append(trace_table[chain][x][y].get(i) + " ");
 	}
 
 	void traceLog_init() {
@@ -1456,7 +1458,7 @@ public class Play extends BaseActivity {
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					((TextView) RL_btns[i][j].findViewById(R.id.순서)).setText("");
+					((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setText("");
 		} catch (NullPointerException e) {
 		}
 	}

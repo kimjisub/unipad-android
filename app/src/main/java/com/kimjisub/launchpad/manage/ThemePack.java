@@ -38,7 +38,7 @@ public class ThemePack {
 	
 	public class Resources {
 		public Drawable playbg, btn, btn_, chain, chain_, chain__, phantom, phantom_, xml_prev, xml_play, xml_pause, xml_next;
-		public int text1;
+		public int setting_btn, trace_log;
 		
 		public Resources(android.content.res.Resources res) throws Exception {
 			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
@@ -56,7 +56,16 @@ public class ThemePack {
 			this.xml_play = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_play", null, null));
 			this.xml_pause = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_pause", null, null));
 			this.xml_next = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_next", null, null));
-			this.text1 = res.getColor(res.getIdentifier(package_name + ":color/text1", null, null));
+			try {
+				this.setting_btn = res.getColor(res.getIdentifier(package_name + ":color/setting_btn", null, null));
+			} catch (Exception ignore) {
+				this.setting_btn = res.getColor(res.getIdentifier(package_name + ":color/text1", null, null));
+			}
+			try {
+				this.trace_log = res.getColor(res.getIdentifier(package_name + ":color/trace_log", null, null));
+			} catch (Exception ignore) {
+				this.trace_log = res.getColor(res.getIdentifier(package_name + ":color/text1", null, null));
+			}
 		}
 	}
 }

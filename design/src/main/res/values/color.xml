@@ -13,6 +13,9 @@
 	<color name="text4">#a1a6ae</color>
 	<color name="text5">#ffffff</color>
 
+	<color name="setting_btn">#a6b4c9</color>
+	<color name="trace_log">#a6b4c9</color>
+
 	<color name="skyblue">#00bcda</color>
 	<color name="green">#66bb6a</color>
 	<color name="orange">#ffa726</color>
@@ -21,5 +24,5 @@
 
 	<color name="app_orange">#ff8f00</color>
 	<color name="app_blue">#00b8d4</color>
-	<!--<color name="app_blue_dark">#009db5</color>-->
+	<color name="app_blue_dark">#009db5</color>
 </resources>
