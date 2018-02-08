@@ -1484,14 +1484,7 @@ public class Play extends BaseActivity {
 
 	@Override
 	protected void onResume() {
-		log("onResume");
 		super.onResume();
-		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
-		wl.acquire();
 
 		if (UIManager.Scale[0] == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
@@ -1501,7 +1494,6 @@ public class Play extends BaseActivity {
 
 	@Override
 	protected void onDestroy() {
-		log("onDestroy");
 		super.onDestroy();
 		if (autoPlayTask != null)
 			autoPlayTask.loop = false;

@@ -115,7 +115,6 @@ public class ImportPack extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		finishActivity(this);
 		restartApp(this);
 	}
 }
