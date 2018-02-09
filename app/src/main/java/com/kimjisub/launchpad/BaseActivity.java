@@ -12,13 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
-
-/**
- * Created by kimjisub on 2017-02-11.
- * Refactoring...
- */
 
 public class BaseActivity extends AppCompatActivity {
 

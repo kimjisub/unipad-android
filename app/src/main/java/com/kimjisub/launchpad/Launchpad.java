@@ -29,6 +29,14 @@ import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 
 public class Launchpad extends BaseActivity {
+
+	TextView TV_info;
+	View[] VL_launchpad;
+	TextView[][] TVL_launchpad;
+	View[] VL_mode;
+	TextView[][] TVL_mode;
+
+
 	static UsbManager usbManager;
 
 	static UsbDevice usbDevice;
@@ -39,7 +47,7 @@ public class Launchpad extends BaseActivity {
 	static boolean isRun = false;
 
 	static midiDevice device = midiDevice.S;
-	static int comuFunction = 0;
+	static int mode = 0;
 
 	static boolean isShowWatermark = true;
 	static int chain = -1;
@@ -68,16 +76,44 @@ public class Launchpad extends BaseActivity {
 		if (listener != null) listener.connect();
 	}
 
+	@SuppressLint("CutPasteId")
+	void initVar(){
+		TV_info = findViewById(R.id.info);
+		VL_launchpad = new View[]{
+			findViewById(R.id.s),
+			findViewById(R.id.mk2),
+			findViewById(R.id.pro),
+			findViewById(R.id.piano)
+		};
+
+		TVL_launchpad = new TextView[][]{
+			{findViewById(R.id.s)},
+			{findViewById(R.id.mk2)},
+			{findViewById(R.id.pro1), findViewById(R.id.pro2)},
+			{findViewById(R.id.piano)}
+		};
+
+		VL_mode = new View[]{
+			findViewById(R.id.speedFirst),
+			findViewById(R.id.avoidAfterimage)
+		};
+		TVL_mode = new TextView[][]{
+			{findViewById(R.id.speedFirst)},
+			{findViewById(R.id.avoidAfterimage)}
+		};
+	}
+
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_usbmidi);
+		initVar();
 
 
-		comuFunction = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
+		mode = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
 
 		selectDevice(device.value);
 
-		selectComuFunction(comuFunction);
+		selectComuFunction(mode);
 
 		Intent intent = getIntent();
 		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
@@ -103,24 +139,9 @@ public class Launchpad extends BaseActivity {
 		selectDevice(Integer.parseInt((String) v.getTag()));
 	}
 
-	@SuppressLint("CutPasteId")
 	public void selectDevice(int num) {
 
-		View[] V_list = new View[]{
-			findViewById(R.id.s),
-			findViewById(R.id.mk2),
-			findViewById(R.id.pro),
-			findViewById(R.id.piano)
-		};
-
-		TextView[][] TV_list = new TextView[][]{
-			{findViewById(R.id.s)},
-			{findViewById(R.id.mk2)},
-			{findViewById(R.id.pro1), findViewById(R.id.pro2)},
-			{findViewById(R.id.piano)}
-		};
-
-		switch (V_list[num].getId()) {
+		switch (VL_launchpad[num].getId()) {
 			case R.id.s:
 				device = midiDevice.S;
 				break;
@@ -135,14 +156,14 @@ public class Launchpad extends BaseActivity {
 				break;
 		}
 
-		for (int i = 0; i < V_list.length; i++) {
+		for (int i = 0; i < VL_launchpad.length; i++) {
 			if (device.value == i) {
-				V_list[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TV_list[i])
+				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				for (TextView textView : TVL_launchpad[i])
 					textView.setTextColor(getResources().getColor(R.color.dark1));
 			} else {
-				V_list[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TV_list[i])
+				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				for (TextView textView : TVL_launchpad[i])
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
@@ -153,47 +174,37 @@ public class Launchpad extends BaseActivity {
 		selectComuFunction(Integer.parseInt((String) v.getTag()));
 	}
 
-	@SuppressLint("CutPasteId")
 	public void selectComuFunction(int num) {
 
-		View[] V_list = new View[]{
-			findViewById(R.id.speedFirst),
-			findViewById(R.id.avoidAfterimage)
-		};
-		TextView[][] TV_list = new TextView[][]{
-			{findViewById(R.id.speedFirst)},
-			{findViewById(R.id.avoidAfterimage)}
-		};
-
-		switch (V_list[num].getId()) {
+		switch (VL_mode[num].getId()) {
 			case R.id.speedFirst:
-				comuFunction = 0;
+				mode = 0;
 				break;
 			case R.id.avoidAfterimage:
-				comuFunction = 1;
+				mode = 1;
 				break;
 		}
 
-		for (int i = 0; i < V_list.length; i++) {
-			if (comuFunction == i) {
-				V_list[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TV_list[i])
+		for (int i = 0; i < VL_mode.length; i++) {
+			if (mode == i) {
+				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				for (TextView textView : TVL_mode[i])
 					textView.setTextColor(getResources().getColor(R.color.dark1));
 			} else {
-				V_list[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TV_list[i])
+				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				for (TextView textView : TVL_mode[i])
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
 
 
-		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, comuFunction);
+		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
 
 
 	private boolean selectDevice(UsbDevice device) {
-		TextView info = findViewById(R.id.info);
-		int interface_ = 0;
+
+		int interfaceNum = 0;
 
 		if (device == null) {
 			logSig("USB 에러 : device == null");
@@ -212,31 +223,31 @@ public class Launchpad extends BaseActivity {
 			}
 			try {
 				logSig("ProductId : " + device.getProductId());
-				info.append("ProductId : " + device.getProductId() + "\n");
+				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 105://mk2
 						selectDevice(midiDevice.MK2.value);
-						info.append("prediction : MK2\n");
+						TV_info.append("prediction : MK2\n");
 						break;
 					case 81://pro
 						selectDevice(midiDevice.Pro.value);
-						info.append("prediction : Pro\n");
+						TV_info.append("prediction : Pro\n");
 						break;
 					case 54://mk2 mini
 						selectDevice(midiDevice.S.value);
-						info.append("prediction : mk2 mini\n");
+						TV_info.append("prediction : mk2 mini\n");
 						break;
 					case 8211://LX 61 piano
 						selectDevice(midiDevice.Piano.value);
-						info.append("prediction : LX 61 piano\n");
+						TV_info.append("prediction : LX 61 piano\n");
 						break;
 					case 32822://Arduino Leonardo midi
 						selectDevice(midiDevice.MK2.value);
-						info.append("prediction : Arduino Leonardo midi\n");
-						interface_ = 3;
+						TV_info.append("prediction : Arduino Leonardo midi\n");
+						interfaceNum = 3;
 						break;
 					default:
-						info.append("prediction : unknown\n");
+						TV_info.append("prediction : unknown\n");
 						break;
 				}
 			} catch (Exception e) {
@@ -244,24 +255,24 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 
-		for (int i = interface_; i < device.getInterfaceCount(); i++) {
+		for (int i = interfaceNum; i < device.getInterfaceCount(); i++) {
 			UsbInterface ui = device.getInterface(i);
 			if (ui.getEndpointCount() > 0) {
 				usbInterface = ui;
-				info.append("Interface : (" + (i + 1) + "/" + device.getInterfaceCount() + ")\n");
+				TV_info.append("Interface : (" + (i + 1) + "/" + device.getInterfaceCount() + ")\n");
 				break;
 			}
 		}
 		for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
 			UsbEndpoint ep = usbInterface.getEndpoint(i);
 			if (ep.getDirection() == UsbConstants.USB_DIR_IN) {
-				info.append("Endpoint_In : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				TV_info.append("Endpoint_In : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 				usbEndpoint_in = ep;
 			} else if (ep.getDirection() == UsbConstants.USB_DIR_OUT) {
-				info.append("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				TV_info.append("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 				usbEndpoint_out = ep;
 			} else {
-				info.append("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				TV_info.append("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 			}
 		}
 		usbDeviceConnection = usbManager.openDevice(device);
@@ -422,7 +433,7 @@ public class Launchpad extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	static void send(final byte command, final byte sig, final byte note, final byte velocity) {
 		if (usbDeviceConnection != null) {
-			if (comuFunction == 0) {
+			if (mode == 0) {
 				try {
 					(new AsyncTask<String, Integer, String>() {
 						@Override
@@ -434,7 +445,7 @@ public class Launchpad extends BaseActivity {
 				} catch (Exception ignore) {
 					logSig("런치패드 led 에러");
 				}
-			} else if (comuFunction == 1) {
+			} else if (mode == 1) {
 				sendBuffer(command, sig, note, velocity);
 			}
 		}

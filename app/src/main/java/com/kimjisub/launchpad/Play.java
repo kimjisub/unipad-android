@@ -12,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -45,6 +44,22 @@ import static com.kimjisub.launchpad.manage.Tools.logErr;
  */
 
 public class Play extends BaseActivity {
+
+	RelativeLayout RL_rootView;
+	ImageView IV_background;
+	CheckBox CB_누른키표시;
+	CheckBox CB_LED효과;
+	CheckBox CB_자동재생;
+	CheckBox CB_순서기록;
+	CheckBox CB_녹음;
+	LinearLayout LL_pads;
+	LinearLayout LL_chains;
+	LinearLayout LL_자동재생제어뷰;
+	ProgressBar PB_진행도;
+	ImageView IV_prev;
+	ImageView IV_play;
+	ImageView IV_next;
+	
 	ThemePack.Resources theme;
 
 	Unipack unipack;
@@ -88,21 +103,21 @@ public class Play extends BaseActivity {
 		}
 	}
 
-	void soundItemPush(int c, int x, int y, int 번호) {
-		//log("soundItemPush (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+	void soundItemPush(int c, int x, int y, int num) {
+		//log("soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
 		try {
 			ArrayList<Unipack.Sound> e = unipack.sound[c][x][y];
-			if (unipack.sound[c][x][y].get(0).num != 번호)
+			if (unipack.sound[c][x][y].get(0).num != num)
 				while (true) {
 					Unipack.Sound tmp = e.get(0);
 					e.remove(0);
 					e.add(tmp);
-					if (e.get(0).num == 번호 % e.size())
+					if (e.get(0).num == num % e.size())
 						break;
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("soundItemPush (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+			logErr("soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -133,21 +148,21 @@ public class Play extends BaseActivity {
 		}
 	}
 
-	void LEDItem_push(int c, int x, int y, int 번호) {
-		//log("LEDItem_push (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+	void LEDItem_push(int c, int x, int y, int num) {
+		//log("LEDItem_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 		try {
 			ArrayList<Unipack.LED> e = unipack.led[c][x][y];
-			if (e.get(0).num != 번호)
+			if (e.get(0).num != num)
 				while (true) {
 					Unipack.LED tmp = e.get(0);
 					e.remove(0);
 					e.add(tmp);
-					if (e.get(0).num == 번호 % e.size())
+					if (e.get(0).num == num % e.size())
 						break;
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("LEDItem_push (" + c + ", " + x + ", " + y + ", " + 번호 + ")");
+			logErr("LEDItem_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -264,7 +279,7 @@ public class Play extends BaseActivity {
 
 	void skin_set() {
 		log("skin_set");
-		((ImageView) findViewById(R.id.background)).setImageDrawable(theme.playbg);
+		IV_background.setImageDrawable(theme.playbg);
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
 				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
@@ -295,24 +310,41 @@ public class Play extends BaseActivity {
 
 		chainInit();
 
-		findViewById(R.id.prev).setBackground(theme.xml_prev);
-		findViewById(R.id.play).setBackground(theme.xml_play);
-		findViewById(R.id.next).setBackground(theme.xml_next);
+		IV_prev.setBackground(theme.xml_prev);
+		IV_play.setBackground(theme.xml_play);
+		IV_next.setBackground(theme.xml_next);
 
-		((CheckBox) findViewById(R.id.누른키표시)).setTextColor(theme.setting_btn);
-		((CheckBox) findViewById(R.id.LED효과)).setTextColor(theme.setting_btn);
-		((CheckBox) findViewById(R.id.자동재생)).setTextColor(theme.setting_btn);
-		((CheckBox) findViewById(R.id.순서기록)).setTextColor(theme.setting_btn);
-		((CheckBox) findViewById(R.id.녹음)).setTextColor(theme.setting_btn);
+		CB_누른키표시.setTextColor(theme.setting_btn);
+		CB_LED효과.setTextColor(theme.setting_btn);
+		CB_자동재생.setTextColor(theme.setting_btn);
+		CB_순서기록.setTextColor(theme.setting_btn);
+		CB_녹음.setTextColor(theme.setting_btn);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			((CheckBox) findViewById(R.id.누른키표시)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			((CheckBox) findViewById(R.id.자동재생)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			((CheckBox) findViewById(R.id.순서기록)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			((CheckBox) findViewById(R.id.녹음)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			((CheckBox) findViewById(R.id.LED효과)).setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_누른키표시.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_LED효과.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_자동재생.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_순서기록.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_녹음.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
 		}
 
+	}
+
+	void initVar() {
+		RL_rootView = findViewById(R.id.rootView);
+		IV_background = findViewById(R.id.background);
+		CB_누른키표시 = findViewById(R.id.누른키표시);
+		CB_LED효과 = findViewById(R.id.LED효과);
+		CB_자동재생 = findViewById(R.id.자동재생);
+		CB_순서기록 = findViewById(R.id.순서기록);
+		CB_녹음 = findViewById(R.id.녹음);
+		LL_pads = findViewById(R.id.pads);
+		LL_chains = findViewById(R.id.chains);
+		LL_자동재생제어뷰 = findViewById(R.id.자동재생제어뷰);
+		PB_진행도 = findViewById(R.id.진행도);
+		IV_prev = findViewById(R.id.prev);
+		IV_play = findViewById(R.id.play);
+		IV_next = findViewById(R.id.next);
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -325,7 +357,7 @@ public class Play extends BaseActivity {
 		unipack = new Unipack(URL, true);
 
 		setContentView(R.layout.activity_play);
-
+		initVar();
 
 		try {
 			if (unipack.ErrorDetail != null) {
@@ -347,30 +379,30 @@ public class Play extends BaseActivity {
 
 			if (unipack.squareButton) {
 				if (!unipack.isKeyLED)
-					findViewById(R.id.LED효과).setVisibility(View.GONE);
+					CB_LED효과.setVisibility(View.GONE);
 
 				if (!unipack.isAutoPlay)
-					findViewById(R.id.자동재생).setVisibility(View.GONE);
+					CB_자동재생.setVisibility(View.GONE);
 			} else {
-				findViewById(R.id.rootView).setPadding(0, 0, 0, 0);
+				RL_rootView.setPadding(0, 0, 0, 0);
 
-				findViewById(R.id.누른키표시).setVisibility(View.GONE);
-				findViewById(R.id.LED효과).setVisibility(View.GONE);
-				findViewById(R.id.자동재생).setVisibility(View.GONE);
+				CB_누른키표시.setVisibility(View.GONE);
+				CB_LED효과.setVisibility(View.GONE);
+				CB_자동재생.setVisibility(View.GONE);
 
-				findViewById(R.id.순서기록).setVisibility(View.GONE);
-				findViewById(R.id.녹음).setVisibility(View.GONE);
+				CB_순서기록.setVisibility(View.GONE);
+				CB_녹음.setVisibility(View.GONE);
 			}
 
 			if (unipack.isKeyLED) {
-				((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
-				((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
+				CB_LED효과.setChecked(true);
+				CB_누른키표시.setChecked(false);
 			}
 
 
-			pressedPadShow = ((CheckBox) findViewById(R.id.누른키표시)).isChecked();
-			LEDEvent = ((CheckBox) findViewById(R.id.LED효과)).isChecked();
-			record = ((CheckBox) findViewById(R.id.녹음)).isChecked();
+			pressedPadShow = CB_누른키표시.isChecked();
+			LEDEvent = CB_LED효과.isChecked();
+			record = CB_녹음.isChecked();
 
 			stopID = new int[unipack.chain][unipack.buttonX][unipack.buttonY];
 			trace_table = new ArrayList[unipack.chain][unipack.buttonX][unipack.buttonY];
@@ -484,14 +516,14 @@ public class Play extends BaseActivity {
 		}
 
 
-		((CheckBox) findViewById(R.id.누른키표시)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		CB_누른키표시.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				padInit();
 				pressedPadShow = isChecked;
 			}
 		});
-		((CheckBox) findViewById(R.id.LED효과)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		CB_LED효과.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (unipack.isKeyLED) {
@@ -501,7 +533,7 @@ public class Play extends BaseActivity {
 				}
 			}
 		});
-		((CheckBox) findViewById(R.id.자동재생)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		CB_자동재생.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (isChecked) {
@@ -520,13 +552,13 @@ public class Play extends BaseActivity {
 				}
 			}
 		});
-		((CheckBox) findViewById(R.id.순서기록)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		CB_순서기록.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				traceLog = isChecked;
 			}
 		});
-		findViewById(R.id.순서기록).setOnLongClickListener(new View.OnLongClickListener() {
+		CB_순서기록.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
 
@@ -535,7 +567,7 @@ public class Play extends BaseActivity {
 				return false;
 			}
 		});
-		((CheckBox) findViewById(R.id.녹음)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+		CB_녹음.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				record = isChecked;
@@ -549,13 +581,13 @@ public class Play extends BaseActivity {
 				}
 			}
 		});
-		findViewById(R.id.prev).setOnClickListener(new View.OnClickListener() {
+		IV_prev.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				autoPlay_prev();
 			}
 		});
-		findViewById(R.id.play).setOnClickListener(new View.OnClickListener() {
+		IV_play.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if (autoPlayTask.isPlaying)
@@ -564,15 +596,14 @@ public class Play extends BaseActivity {
 					autoPlay_play();
 			}
 		});
-		findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
+		IV_next.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				autoPlay_after();
 			}
 		});
 
-		LinearLayout LL_pads = findViewById(R.id.pads);
-		LinearLayout LL_chains = findViewById(R.id.chains);
+
 		LL_pads.removeAllViews();
 		LL_chains.removeAllViews();
 
@@ -976,9 +1007,9 @@ public class Play extends BaseActivity {
 		protected void onPreExecute() {
 			super.onPreExecute();
 			if (unipack.squareButton)
-				findViewById(R.id.자동재생제어뷰).setVisibility(View.VISIBLE);
-			((ProgressBar) findViewById(R.id.진행도)).setMax(unipack.autoPlay.size());
-			((ProgressBar) findViewById(R.id.진행도)).setProgress(0);
+				LL_자동재생제어뷰.setVisibility(View.VISIBLE);
+			PB_진행도.setMax(unipack.autoPlay.size());
+			PB_진행도.setProgress(0);
 			autoPlay_play();
 		}
 
@@ -1145,19 +1176,19 @@ public class Play extends BaseActivity {
 			} else if (progress[0] == 9) {
 				chainInit();
 			}
-			((ProgressBar) findViewById(R.id.진행도)).setProgress(this.progress);
+			PB_진행도.setProgress(this.progress);
 		}
 
 		@Override
 		protected void onPostExecute(String result) {
-			((CheckBox) findViewById(R.id.자동재생)).setChecked(false);
+			CB_자동재생.setChecked(false);
 			if (unipack.isKeyLED) {
-				((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
-				((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
+				CB_LED효과.setChecked(true);
+				CB_누른키표시.setChecked(false);
 			} else {
-				((CheckBox) findViewById(R.id.누른키표시)).setChecked(true);
+				CB_누른키표시.setChecked(true);
 			}
-			findViewById(R.id.자동재생제어뷰).setVisibility(View.GONE);
+			LL_자동재생제어뷰.setVisibility(View.GONE);
 		}
 
 	}
@@ -1168,13 +1199,13 @@ public class Play extends BaseActivity {
 		LEDInit();
 		autoPlayTask.isPlaying = true;
 
-		findViewById(R.id.play).setBackground(theme.xml_pause);
+		IV_play.setBackground(theme.xml_pause);
 
 		if (unipack.isKeyLED) {
-			((CheckBox) findViewById(R.id.LED효과)).setChecked(true);
-			((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
+			CB_LED효과.setChecked(true);
+			CB_누른키표시.setChecked(false);
 		} else {
-			((CheckBox) findViewById(R.id.누른키표시)).setChecked(true);
+			CB_누른키표시.setChecked(true);
 		}
 		autoPlayTask.beforeStartPlaying = true;
 	}
@@ -1186,13 +1217,13 @@ public class Play extends BaseActivity {
 		padInit();
 		LEDInit();
 
-		findViewById(R.id.play).setBackground(theme.xml_play);
+		IV_play.setBackground(theme.xml_play);
 
 
 		autoPlayTask.achieve = -1;
 
-		((CheckBox) findViewById(R.id.누른키표시)).setChecked(false);
-		((CheckBox) findViewById(R.id.LED효과)).setChecked(false);
+		CB_누른키표시.setChecked(false);
+		CB_LED효과.setChecked(false);
 	}
 
 	void autoPlay_prev() {
@@ -1207,7 +1238,7 @@ public class Play extends BaseActivity {
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
-		((ProgressBar) findViewById(R.id.진행도)).setProgress(autoPlayTask.progress);
+		PB_진행도.setProgress(autoPlayTask.progress);
 	}
 
 	void autoPlay_after() {
@@ -1221,7 +1252,7 @@ public class Play extends BaseActivity {
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
-		((ProgressBar) findViewById(R.id.진행도)).setProgress(autoPlayTask.progress);
+		PB_진행도.setProgress(autoPlayTask.progress);
 	}
 
 	void padTouch(int x, int y, boolean upDown) {

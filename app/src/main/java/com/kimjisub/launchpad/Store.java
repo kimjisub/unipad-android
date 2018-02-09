@@ -41,12 +41,15 @@ public class Store extends BaseActivity {
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
+	void initVar(){
+		LL_list = findViewById(R.id.list);
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
-
-		LL_list = findViewById(R.id.list);
+		initVar();
 
 		initUI();
 		getStoreCount.run();

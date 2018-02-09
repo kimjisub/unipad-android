@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -25,16 +24,11 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-/**
- * Created by rlawl ON 2016-02-02.
- * ReCreated by rlawl ON 2016-04-23.
- */
-
 public class Intro extends BaseActivity {
 
-	Handler handler;
-
 	static TextView TV_version;
+
+	Handler handler;
 
 	static IInAppBillingService mService;
 	static ServiceConnection mServiceConn = new ServiceConnection() {
@@ -71,12 +65,18 @@ public class Intro extends BaseActivity {
 		}
 	};
 
+
+	void initVar() {
+		TV_version = findViewById(R.id.version);
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_intro);
+		initVar();
 
-		TV_version = findViewById(R.id.version);
+
 		try {
 			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
 		} catch (PackageManager.NameNotFoundException e) {
@@ -131,11 +131,6 @@ public class Intro extends BaseActivity {
 		}
 		finish();
 		super.onStop();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
 	}
 
 	@Override

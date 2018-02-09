@@ -46,6 +46,7 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 
 
 public class Main extends BaseActivity {
+
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_loadUniPack;
@@ -54,12 +55,11 @@ public class Main extends BaseActivity {
 	LinearLayout LL_scale;
 	LinearLayout LL_paddingScale;
 
-
 	String UnipackRootURL;
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
-	void initLayout() {
+	void initVar() {
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
@@ -67,18 +67,16 @@ public class Main extends BaseActivity {
 		FAB_setting = findViewById(R.id.fab_setting);
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
+
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+		log("UnipackRootURL : " + UnipackRootURL);
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		initLayout();
-
-
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
-		log("/Unipad path : " + UnipackRootURL);
+		initVar();
 
 		updateCheck();
 		noticeCheck();
@@ -741,9 +739,7 @@ public class Main extends BaseActivity {
 	public void onBackPressed() {
 		boolean clear = true;
 		for (Item item : IT_items) {
-
 			if (item != null) {
-
 				if (item.isPlay() || item.isInfo())
 					clear = false;
 
