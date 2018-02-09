@@ -25,44 +25,44 @@ public class BaseActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		log("onCreate");
+		log("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 	}
 
 	@Override
 	protected void onStart() {
-		log("onStart");
+		log("onStart " + this.getLocalClassName());
 		super.onStart();
 	}
 
 	@Override
 	protected void onResume() {
-		log("onResume");
+		log("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 
 	@Override
 	protected void onPause() {
-		log("onPause");
+		log("onPause " + this.getLocalClassName());
 		super.onPause();
 	}
 
 	@Override
 	protected void onStop() {
-		log("onStop");
+		log("onStop " + this.getLocalClassName());
 		super.onStop();
 	}
 
 	@Override
 	protected void onRestart() {
-		log("onRestart");
+		log("onRestart " + this.getLocalClassName());
 		super.onRestart();
 	}
 
 	@Override
 	protected void onDestroy() {
-		log("onDestroy");
+		log("onDestroy " + this.getLocalClassName());
 		super.onDestroy();
 		finishActivity(this);
 	}
