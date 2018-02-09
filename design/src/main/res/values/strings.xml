@@ -36,7 +36,7 @@
 
 	<!--Credit-->
 	<string name="credit">Credit</string>
-	<string name="credit_simple">ⓒ 2016-2018. (Unipad) All rights reserved.</string>
+	<string name="credit_simple">ⓒ 2016–2018. (Unipad) All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Community</string>
@@ -48,9 +48,11 @@
 	<string name="facebookCommunity_">english</string>
 	<string name="naverCafe">Naver Cafe</string>
 	<string name="naverCafe_">korean</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
 	<string name="kakaotalk">KakaoTalk to Dev. kimjisub</string>
 	<string name="kakaotalk_">Other than Technical Support</string>
-	<string name="email">Email - 0226unipad@gmail.com</string>
+	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
 
 	<!--Unipack Info-->
@@ -65,7 +67,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Show button pressed</string>
+	<string name="pressedPadShow">Show pressed</string>
 	<string name="showLog">Show Log</string>
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>

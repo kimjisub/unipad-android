@@ -1376,7 +1376,7 @@ public class Play extends BaseActivity {
 		}
 	}
 
-/*	void checkGuide(int c) {
+	/*void checkGuide(int c) {
 		log("checkGuide (" + c + ")");
 		if (autoPlayTask != null && autoPlayTask.loop && !autoPlayTask.isPlaying) {
 			ArrayList<Unipack.AutoPlay> guideItems = autoPlayTask.guideItems;
@@ -1405,7 +1405,6 @@ public class Play extends BaseActivity {
 			try {
 				for (int i = 0; i < unipack.buttonX; i++) {
 					for (int j = 0; j < unipack.buttonY; j++) {
-
 						if (ledTask.isEventExist(i, j))
 							ledTask.eventShutdown(i, j);
 
@@ -1550,7 +1549,7 @@ public class Play extends BaseActivity {
 
 		Launchpad.ReceiveTask.setGetSignalListener(null);
 		Launchpad.setConnectListener(null);
-		Launchpad.chainRefresh(-1);
+		Launchpad.chainRefresh();
 		LEDInit();
 		padInit();
 
