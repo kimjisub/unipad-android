@@ -24,12 +24,22 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 
 public class Theme extends BaseActivity {
 
+	RecyclerView RV_list;
+	TextView TV_apply;
+
 	static ArrayList<ThemePack> themeList;
+
+
+	void initVar(){
+		RV_list = findViewById(R.id.list);
+		TV_apply = findViewById(R.id.apply);
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_theme);
+		initVar();
 	}
 
 	@Override
@@ -40,15 +50,14 @@ public class Theme extends BaseActivity {
 		final CarouselLayoutManager layoutManager = new CarouselLayoutManager(CarouselLayoutManager.HORIZONTAL, false);
 		layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
 
-		final RecyclerView recyclerView = findViewById(R.id.list);
-		recyclerView.setLayoutManager(layoutManager);
-		recyclerView.setHasFixedSize(true);
-		recyclerView.setAdapter(new Adapter());
-		recyclerView.addOnScrollListener(new CenterScrollListener());
+		RV_list.setLayoutManager(layoutManager);
+		RV_list.setHasFixedSize(true);
+		RV_list.setAdapter(new Adapter());
+		RV_list.addOnScrollListener(new CenterScrollListener());
 
 		layoutManager.scrollToPosition(mGetTheme());
 
-		findViewById(R.id.apply).setOnClickListener(new View.OnClickListener() {
+		TV_apply.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				mSetTheme(layoutManager.getCenterItemPosition());
@@ -119,9 +128,9 @@ public class Theme extends BaseActivity {
 
 		ViewHolder(View itemView) {
 			super(itemView);
-			theme_icon = (ImageView) itemView.findViewById(R.id.theme_icon);
-			theme_version = (TextView) itemView.findViewById(R.id.theme_version);
-			theme_author = (TextView) itemView.findViewById(R.id.theme_author);
+			theme_icon = itemView.findViewById(R.id.theme_icon);
+			theme_version = itemView.findViewById(R.id.theme_version);
+			theme_author = itemView.findViewById(R.id.theme_author);
 		}
 	}
 

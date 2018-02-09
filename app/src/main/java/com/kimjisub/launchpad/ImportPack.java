@@ -15,50 +15,52 @@ import java.io.IOException;
 
 public class ImportPack extends BaseActivity {
 
+	TextView TV_title;
+	TextView TV_message;
+	TextView TV_info;
+
+	String UnipackRootURL;
+	String UnipackZipURL;
+	String UnipackURL;
+
+	void initVar() {
+		TV_title = findViewById(R.id.title);
+		TV_message = findViewById(R.id.message);
+		TV_info = findViewById(R.id.info);
+
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+		UnipackZipURL = getIntent().getData().getPath();
+		File file = new File(UnipackZipURL);
+		String name = file.getName();
+		String name_ = name.substring(0, name.lastIndexOf("."));
+		for (int i = 1; ; i++) {
+			if (i == 1)
+				UnipackURL = UnipackRootURL + "/" + name_ + "/";
+			else
+				UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
+			if (!new File(UnipackURL).exists())
+				break;
+		}
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
+		initVar();
 
 		processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
-		String UnipackRootURL;
-		String UnipackZipURL;
-		String UnipackURL;
 
-		TextView TV_title;
-		TextView TV_message;
-		TextView TV_info;
 
 		String title = null;
 		String message = null;
 
 		@Override
 		protected void onPreExecute() {
-			UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
-			UnipackZipURL = getIntent().getData().getPath();
-
-			File file = new File(UnipackZipURL);
-			String name = file.getName();
-			String name_ = name.substring(0, name.lastIndexOf("."));
-
-			for (int i = 1; ; i++) {
-				if (i == 1)
-					UnipackURL = UnipackRootURL + "/" + name_ + "/";
-				else
-					UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
-
-				if (!new File(UnipackURL).exists())
-					break;
-			}
-
-			TV_title = findViewById(R.id.title);
-			TV_message = findViewById(R.id.message);
-			TV_info = findViewById(R.id.info);
-
 			TV_title.setText(lang(R.string.analyzing));
 			TV_message.setText(UnipackZipURL);
 			TV_info.setText("URL : " + UnipackZipURL);
