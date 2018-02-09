@@ -16,10 +16,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * Created by rlawl ON 2016-02-17.
- * ReCreated by rlawl ON 2016-04-23.
- */
 public class Networks {
 	public static class CheckVersion extends AsyncTask<String, String, Boolean> {
 		String packageName;

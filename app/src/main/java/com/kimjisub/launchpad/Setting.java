@@ -31,10 +31,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-/**
- * Created by rlawl ON 2017-01-16.
- */
-
 public class Setting extends PreferenceActivity {
 
 

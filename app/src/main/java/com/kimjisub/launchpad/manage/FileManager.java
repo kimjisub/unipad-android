@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.manage;
 
-
 import android.media.MediaPlayer;
 
 import net.sf.jazzlib.ZipEntry;
@@ -17,14 +16,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Random;
-
-
-/**
- * Created by rlawl ON 2016-02-05.
- * ReCreated by rlawl ON 2016-04-23.
- */
-
 
 public class FileManager {
 

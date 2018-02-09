@@ -38,11 +38,6 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
-/**
- * Created by rlawl ON 2016-02-03.
- * ReCreated by rlawl ON 2016-04-23.
- */
-
 public class Play extends BaseActivity {
 
 	RelativeLayout RL_rootView;
@@ -59,7 +54,7 @@ public class Play extends BaseActivity {
 	ImageView IV_prev;
 	ImageView IV_play;
 	ImageView IV_next;
-	
+
 	ThemePack.Resources theme;
 
 	Unipack unipack;
