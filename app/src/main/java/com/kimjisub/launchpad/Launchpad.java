@@ -22,12 +22,6 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;
 
-/**
- * Created by rlawl ON 2016-02-19.
- * ReCreated by rlawl ON 2016-04-23.
- */
-
-
 public class Launchpad extends BaseActivity {
 
 	TextView TV_info;
@@ -77,7 +71,7 @@ public class Launchpad extends BaseActivity {
 	}
 
 	@SuppressLint("CutPasteId")
-	void initVar(){
+	void initVar() {
 		TV_info = findViewById(R.id.info);
 		VL_launchpad = new View[]{
 			findViewById(R.id.s),

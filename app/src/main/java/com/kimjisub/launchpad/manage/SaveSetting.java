@@ -8,10 +8,6 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
-/**
- * Created by kimjisub ON 2017. 7. 14..
- */
-
 public class SaveSetting {
 
 	public static class LaunchpadConnectMethod {

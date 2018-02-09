@@ -1,11 +1,6 @@
 package com.kimjisub.launchpad.manage;
 
-import android.content.Context;
 import android.util.Log;
-
-/**
- * Created by kimjisub ON 2017. 7. 14..
- */
 
 public class Tools {
 	public static void log(String msg) {

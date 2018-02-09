@@ -11,11 +11,6 @@ import com.kimjisub.launchpad.BaseActivity;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.manage.SaveSetting.PrevAdsShowTime;
 
-/**
- * Created by kimjisub ON 2016-04-23.
- * Refactoring...
- */
-
 public class UIManager {
 	public static int[] Scale = new int[4];
 

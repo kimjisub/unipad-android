@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad;
 
 import android.annotation.SuppressLint;
-import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.LinearLayout;
@@ -12,7 +11,6 @@ import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
-import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.BufferedInputStream;
@@ -27,11 +25,6 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
-/**
- * Created by rlawl ON 2016-03-04.
- * ReCreated by rlawl ON 2016-04-23.
- */
-
 public class Store extends BaseActivity {
 	LinearLayout LL_list;
 
@@ -41,7 +34,7 @@ public class Store extends BaseActivity {
 
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
-	void initVar(){
+	void initVar() {
 		LL_list = findViewById(R.id.list);
 	}
 

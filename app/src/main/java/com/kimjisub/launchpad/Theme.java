@@ -30,7 +30,7 @@ public class Theme extends BaseActivity {
 	static ArrayList<ThemePack> themeList;
 
 
-	void initVar(){
+	void initVar() {
 		RV_list = findViewById(R.id.list);
 		TV_apply = findViewById(R.id.apply);
 	}

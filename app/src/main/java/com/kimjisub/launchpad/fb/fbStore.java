@@ -6,11 +6,6 @@ import com.google.firebase.database.IgnoreExtraProperties;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by kimjisub ON 2017. 3. 24..
- */
-
-
 @IgnoreExtraProperties
 public class fbStore {
 	
