@@ -17,7 +17,6 @@ public class ImportPack extends BaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 

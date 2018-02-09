@@ -71,7 +71,6 @@ public class Main extends BaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -770,12 +769,5 @@ public class Main extends BaseActivity {
 
 		timer.cancel();
 		getStoreCount.setOnChangeListener(null);
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-
-		finishActivity(this);
 	}
 }

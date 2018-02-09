@@ -28,7 +28,6 @@ public class Theme extends BaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		startActivity(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_theme);
 	}
@@ -153,11 +152,5 @@ public class Theme extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		requestRestart(Theme.this);
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		finishActivity(this);
 	}
 }

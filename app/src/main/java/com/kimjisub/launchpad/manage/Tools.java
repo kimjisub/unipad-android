@@ -14,6 +14,12 @@ public class Tools {
 		Log.e("com.kimjisub.log", msg);
 	}
 
+	public static void logActivity(String msg) {
+		if (msg == null)
+			msg = "(null)";
+		Log.e("com.kimjisub.activity", msg);
+	}
+
 	public static void logSig(String msg) {
 		if (msg == null)
 			msg = "(null)";
