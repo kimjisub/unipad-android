@@ -79,8 +79,6 @@ public class SaveSetting {
 		public static boolean load(Context context) {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
 			Boolean isSDCard = pref.getBoolean("use_sd_card", false);
-			log("isSDCard : "+isSDCard);
-			log("isSDCardAvalable : "+FileManager.isSDCardAvalable());
 
 			URL = Environment.getExternalStorageDirectory().getPath() + "/Unipad";
 			if (isSDCard) {
@@ -91,7 +89,7 @@ public class SaveSetting {
 					return load(context);
 				}
 			}
-			log("URL : "+ URL);
+			log("URL : " + URL);
 			return isSDCard;
 		}
 	}

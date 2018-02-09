@@ -318,12 +318,10 @@ public class Play extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		log("onCreate ()");
-		startActivity(this);
 		super.onCreate(savedInstanceState);
 
 		String URL = getIntent().getStringExtra("URL");
-		log("PlayActivity onCreate()\nURL : " + URL);
+		log("unipack URL : " + URL);
 		unipack = new Unipack(URL, true);
 
 		setContentView(R.layout.activity_play);
@@ -1532,7 +1530,5 @@ public class Play extends BaseActivity {
 
 		if (loaded)
 			UIManager.showAds(Play.this);
-
-		finishActivity(this);
 	}
 }

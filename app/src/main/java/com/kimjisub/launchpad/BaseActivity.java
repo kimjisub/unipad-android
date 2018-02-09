@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
+import static com.kimjisub.launchpad.manage.Tools.logActivity;
 
 /**
  * Created by kimjisub on 2017-02-11.
@@ -25,58 +26,48 @@ public class BaseActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		log("onCreate " + this.getLocalClassName());
+		logActivity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
+		startActivity(this);
 	}
 
 	@Override
 	protected void onStart() {
-		log("onStart " + this.getLocalClassName());
+		logActivity("onStart " + this.getLocalClassName());
 		super.onStart();
 	}
 
 	@Override
 	protected void onResume() {
-		log("onResume " + this.getLocalClassName());
+		logActivity("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 
 	@Override
 	protected void onPause() {
-		log("onPause " + this.getLocalClassName());
+		logActivity("onPause " + this.getLocalClassName());
 		super.onPause();
 	}
 
 	@Override
 	protected void onStop() {
-		log("onStop " + this.getLocalClassName());
+		logActivity("onStop " + this.getLocalClassName());
 		super.onStop();
 	}
 
 	@Override
 	protected void onRestart() {
-		log("onRestart " + this.getLocalClassName());
+		logActivity("onRestart " + this.getLocalClassName());
 		super.onRestart();
 	}
 
 	@Override
 	protected void onDestroy() {
-		log("onDestroy " + this.getLocalClassName());
+		logActivity("onDestroy " + this.getLocalClassName());
 		super.onDestroy();
 		finishActivity(this);
 	}
-
-
-
-
-
-
-
-
-
-
-
 
 
 	static void startActivity(Activity activity) {
@@ -116,9 +107,9 @@ public class BaseActivity extends AppCompatActivity {
 		int size = activityList.size();
 		for (int i = 0; i < size; i++) {
 			Activity activity = activityList.get(i);
-			str += "\n" + activity.getLocalClassName();
+			str += ", " + activity.getLocalClassName();
 		}
-		log(str);
+		logActivity(str);
 	}
 
 	static void requestRestart(final Context context) {
@@ -141,7 +132,6 @@ public class BaseActivity extends AppCompatActivity {
 			})
 			.show();
 	}
-
 
 
 	public String lang(int id) {
