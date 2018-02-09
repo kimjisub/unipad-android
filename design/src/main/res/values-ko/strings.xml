@@ -36,7 +36,7 @@
 
 	<!--Credit-->
 	<string name="credit">크레딧</string>
-	<string name="credit_simple">ⓒ 2016-2018. (Unipad) All rights reserved.</string>
+	<string name="credit_simple">ⓒ 2016–2018. (Unipad) All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">커뮤니티</string>
@@ -48,9 +48,11 @@
 	<string name="facebookCommunity_">영어</string>
 	<string name="naverCafe">네이버 카페</string>
 	<string name="naverCafe_">한국어</string>
+	<string name="discord">디스코드</string>
+	<string name="discord_">Discord</string>
 	<string name="kakaotalk">카카오톡 (김지섭)</string>
 	<string name="kakaotalk_">기술 지원 외의 문의</string>
-	<string name="email">Email - 0226unipad@gmail.com</string>
+	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">기술 지원 외의 문의</string>
 
 	<!--Unipack Info-->
