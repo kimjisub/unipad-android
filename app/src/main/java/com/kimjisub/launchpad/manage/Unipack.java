@@ -348,7 +348,10 @@ public class Unipack {
 										switch (option) {
 											case "on":
 											case "o":
-												_x = Integer.parseInt(split2[1]) - 1;
+												try {
+													_x = Integer.parseInt(split2[1]) - 1;
+												}catch(NumberFormatException ignore){
+												}
 												_y = Integer.parseInt(split2[2]) - 1;
 
 												if (split2.length == 4)
@@ -368,7 +371,10 @@ public class Unipack {
 												break;
 											case "off":
 											case "f":
-												_x = Integer.parseInt(split2[1]) - 1;
+												try {
+													_x = Integer.parseInt(split2[1]) - 1;
+												}catch(NumberFormatException ignore){
+												}
 												_y = Integer.parseInt(split2[2]) - 1;
 												break;
 											case "delay":
