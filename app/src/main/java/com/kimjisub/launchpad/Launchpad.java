@@ -554,11 +554,20 @@ public class Launchpad extends BaseActivity {
 
 	static void chainLED(int c, int velo) {
 		if (0 <= c && c <= 7)
-			circleBtnLED(c + 8, velo);
+			circleBtnLED_(c + 8, velo);
 	}
 
 
 	static void circleBtnLED(int num, int velo) {
+		if(isShowWatermark)
+			if(num == 4 || num == 5 || num == 6 || num == 7 || num == chain+8)
+				return;
+
+		circleBtnLED_(num, velo);
+
+	}
+
+	static void circleBtnLED_(int num, int velo){
 		if (device == S && 0 <= num && num <= 15)
 			send((byte) S_circleCode[num][0], (byte) S_circleCode[num][1], (byte) S_circleCode[num][2], (byte) LaunchpadColor.SCode[velo]);
 		if (device == MK2 && 0 <= num && num <= 15)
