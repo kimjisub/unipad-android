@@ -211,7 +211,7 @@ public class Main extends BaseActivity {
 					.setFlagColor(color)
 					.setTitle(unipacks[i].title)
 					.setSubTitle(unipacks[i].producerName)
-					.setSize(unipacks[i].buttonX + " buttonX " + unipacks[i].buttonY)
+					.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
 					.setChain(unipacks[i].chain + "")
 					.setCapacity(FileManager.getFolderSize(URL[i]))
 					.setLED(unipacks[i].isKeyLED)
