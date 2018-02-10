@@ -33,16 +33,22 @@ public class ThemePack {
 	}
 
 	public class Resources {
-		public Drawable playbg, btn, btn_, chain, chain_, chain__, phantom, phantom_, xml_prev, xml_play, xml_pause, xml_next;
+		public Drawable playbg, btn, btn_, chainled, chain, chain_, chain__, phantom, phantom_, xml_prev, xml_play, xml_pause, xml_next;
 		public int setting_btn, trace_log;
+		public boolean isChainLED = true;
 
 		public Resources(android.content.res.Resources res) throws Exception {
 			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
 			this.btn = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn", null, null));
 			this.btn_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn_", null, null));
-			this.chain = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain", null, null));
-			this.chain_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain_", null, null));
-			this.chain__ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain__", null, null));
+			try {
+				this.chainled = res.getDrawable(res.getIdentifier(package_name + ":drawable/chainled", null, null));
+			}catch(Exception e){
+				isChainLED = false;
+				this.chain = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain", null, null));
+				this.chain_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain_", null, null));
+				this.chain__ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain__", null, null));
+			}
 			this.phantom = res.getDrawable(res.getIdentifier(package_name + ":drawable/phantom", null, null));
 			try {
 				this.phantom_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/phantom_", null, null));

@@ -82,7 +82,7 @@ public class Play extends BaseActivity {
 	boolean loaded = false;
 
 	RelativeLayout[][] RL_btns;
-	ImageView[] IV_chains;
+	RelativeLayout[] RL_chains;
 
 	LEDTask ledTask;
 	AutoPlayTask autoPlayTask;
@@ -323,6 +323,15 @@ public class Play extends BaseActivity {
 			}
 		}
 
+		for (int i = 0; i < unipack.chain; i++) {
+			if (theme.isChainLED)
+				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chainled);
+			else {
+				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
+				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
+			}
+		}
+
 		chainInit();
 
 		IV_prev.setBackground(theme.xml_prev);
@@ -367,7 +376,7 @@ public class Play extends BaseActivity {
 					.show();
 			}
 			RL_btns = new RelativeLayout[unipack.buttonX][unipack.buttonY];
-			IV_chains = new ImageView[unipack.chain];
+			RL_chains = new RelativeLayout[unipack.chain];
 			ColorManager.init(unipack.buttonX, unipack.buttonY);
 
 			if (unipack.isKeyLED) {
@@ -638,19 +647,18 @@ public class Play extends BaseActivity {
 
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
-				final RelativeLayout RL_chain = (RelativeLayout) View.inflate(this, R.layout.chain, null);
-				RL_chain.setLayoutParams(new RelativeLayout.LayoutParams(buttonX, buttonY));
+				RL_chains[i] = (RelativeLayout) View.inflate(this, R.layout.chain, null);
+				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonX, buttonY));
 
 				final int finalI = i;
-				RL_chain.findViewById(R.id.버튼).setOnClickListener(new View.OnClickListener() {
+				RL_chains[i].findViewById(R.id.버튼).setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						chainChange(finalI);
 					}
 				});
 
-				IV_chains[i] = RL_chain.findViewById(R.id.버튼);
-				LL_chains.addView(RL_chain);
+				LL_chains.addView(RL_chains[i]);
 			}
 		}
 		chainChange(chain);
@@ -833,25 +841,29 @@ public class Play extends BaseActivity {
 								try {
 									switch (func) {
 										case Unipack.LED.Syntax.ON:
-											if(x != -1) {
+											if (x != -1) {
 												ColorManager.add(x, y, ColorManager.LED, color, velo);
 												setLEDLaunchpad(x, y, ColorManager.get(x, y));
 												publishProgress(x, y);
 												LED[x][y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
-											}else
+											} else {
 												Launchpad.circleBtnLED(y, velo);
+												publishProgress(x, y,color);
+											}
 
 											break;
 										case Unipack.LED.Syntax.OFF:
-											if(x != -1) {
+											if (x != -1) {
 												if (LED[x][y] != null && LED[x][y].equal(e.buttonX, e.buttonY)) {
 													ColorManager.remove(x, y, ColorManager.LED);
 													setLEDLaunchpad(x, y, ColorManager.get(x, y));
 													publishProgress(x, y);
 													LED[x][y] = null;
 												}
-											}else
+											} else {
 												Launchpad.circleBtnLED(y, 0);
+												publishProgress(x, y, 0xffa1b2cc);
+											}
 
 											break;
 										case Unipack.LED.Syntax.DELAY:
@@ -901,7 +913,17 @@ public class Play extends BaseActivity {
 		@Override
 		protected void onProgressUpdate(Integer... p) {
 			try {
-				setLEDUI(p[0], p[1], ColorManager.get(p[0], p[1]));
+				if (p.length == 2)
+					setLEDUI(p[0], p[1], ColorManager.get(p[0], p[1]));
+				else if (p.length == 3) {
+					int x = p[0];
+					int y = p[1];
+					int color = p[2];
+
+					if (y != chain + 8 && 8 <= y && y <= 15)
+						if (theme.isChainLED)
+							RL_chains[y - 8].findViewById(R.id.LED).setBackgroundColor(color);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1217,7 +1239,10 @@ public class Play extends BaseActivity {
 	void autoPlay_guideChain(int c, boolean onOff) {
 		//log("autoPlay_guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
-			IV_chains[c].setBackground(theme.chain__);
+			if (theme.isChainLED)
+				RL_chains[c].findViewById(R.id.LED).setBackgroundColor(0xFF8bc34a);
+			else
+				RL_chains[c].findViewById(R.id.버튼).setBackground(theme.chain__);
 			Launchpad.chainLED(c, 63);
 		} else
 			chainInit();
@@ -1352,10 +1377,18 @@ public class Play extends BaseActivity {
 		log("chainInit");
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
-				if (i == chain)
-					IV_chains[i].setBackground(theme.chain_);
-				else
-					IV_chains[i].setBackground(theme.chain);
+
+				if (i == chain) {
+					if (theme.isChainLED)
+						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0xFFdfe5ee);
+					else
+						RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain_);
+				} else {
+					if (theme.isChainLED)
+						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0xFFa1b2cc);
+					else
+						RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
+				}
 			}
 			Launchpad.chainRefresh(chain);
 		}
