@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
+import static com.kimjisub.launchpad.Launchpad.midiDevice.*;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;
@@ -40,7 +41,7 @@ public class Launchpad extends BaseActivity {
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
 
-	static midiDevice device = midiDevice.S;
+	static midiDevice device = S;
 	static int mode = 0;
 
 	static boolean isShowWatermark = true;
@@ -54,20 +55,6 @@ public class Launchpad extends BaseActivity {
 		midiDevice(int value) {
 			this.value = value;
 		}
-	}
-
-	private static connectListener listener = null;
-
-	interface connectListener {
-		void connect();
-	}
-
-	public static void setConnectListener(connectListener listener_) {
-		listener = listener_;
-	}
-
-	public static void connect() {
-		if (listener != null) listener.connect();
 	}
 
 	@SuppressLint("CutPasteId")
@@ -107,7 +94,7 @@ public class Launchpad extends BaseActivity {
 
 		selectDevice(device.value);
 
-		selectComuFunction(mode);
+		selectMode(mode);
 
 		Intent intent = getIntent();
 		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
@@ -127,72 +114,6 @@ public class Launchpad extends BaseActivity {
 				finish();
 			}
 		}, 2000);
-	}
-
-	public void selectDeviceXml(View v) {
-		selectDevice(Integer.parseInt((String) v.getTag()));
-	}
-
-	public void selectDevice(int num) {
-
-		switch (VL_launchpad[num].getId()) {
-			case R.id.s:
-				device = midiDevice.S;
-				break;
-			case R.id.mk2:
-				device = midiDevice.MK2;
-				break;
-			case R.id.pro:
-				device = midiDevice.Pro;
-				break;
-			case R.id.piano:
-				device = midiDevice.Piano;
-				break;
-		}
-
-		for (int i = 0; i < VL_launchpad.length; i++) {
-			if (device.value == i) {
-				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TVL_launchpad[i])
-					textView.setTextColor(getResources().getColor(R.color.dark1));
-			} else {
-				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TVL_launchpad[i])
-					textView.setTextColor(getResources().getColor(R.color.text1));
-			}
-		}
-	}
-
-
-	public void selectComuFunctionXml(View v) {
-		selectComuFunction(Integer.parseInt((String) v.getTag()));
-	}
-
-	public void selectComuFunction(int num) {
-
-		switch (VL_mode[num].getId()) {
-			case R.id.speedFirst:
-				mode = 0;
-				break;
-			case R.id.avoidAfterimage:
-				mode = 1;
-				break;
-		}
-
-		for (int i = 0; i < VL_mode.length; i++) {
-			if (mode == i) {
-				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TVL_mode[i])
-					textView.setTextColor(getResources().getColor(R.color.dark1));
-			} else {
-				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TVL_mode[i])
-					textView.setTextColor(getResources().getColor(R.color.text1));
-			}
-		}
-
-
-		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
 
 
@@ -220,23 +141,23 @@ public class Launchpad extends BaseActivity {
 				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 105://mk2
-						selectDevice(midiDevice.MK2.value);
+						selectDevice(MK2.value);
 						TV_info.append("prediction : MK2\n");
 						break;
 					case 81://pro
-						selectDevice(midiDevice.Pro.value);
+						selectDevice(Pro.value);
 						TV_info.append("prediction : Pro\n");
 						break;
 					case 54://mk2 mini
-						selectDevice(midiDevice.S.value);
+						selectDevice(S.value);
 						TV_info.append("prediction : mk2 mini\n");
 						break;
 					case 8211://LX 61 piano
-						selectDevice(midiDevice.Piano.value);
+						selectDevice(Piano.value);
 						TV_info.append("prediction : LX 61 piano\n");
 						break;
 					case 32822://Arduino Leonardo midi
-						selectDevice(midiDevice.MK2.value);
+						selectDevice(MK2.value);
 						TV_info.append("prediction : Arduino Leonardo midi\n");
 						interfaceNum = 3;
 						break;
@@ -283,20 +204,188 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 
+	// ========================================================================================= 설정 선택
 
-	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
-		private static getSignalListener listener = null;
+	public void selectDeviceXml(View v) {
+		selectDevice(Integer.parseInt((String) v.getTag()));
+	}
 
-		interface getSignalListener {
-			void getSignal(int command, int note, int velocity);
+	public void selectDevice(int num) {
+
+		switch (VL_launchpad[num].getId()) {
+			case R.id.s:
+				device = S;
+				break;
+			case R.id.mk2:
+				device = MK2;
+				break;
+			case R.id.pro:
+				device = Pro;
+				break;
+			case R.id.piano:
+				device = Piano;
+				break;
 		}
 
-		static void setGetSignalListener(getSignalListener listener_) {
+		for (int i = 0; i < VL_launchpad.length; i++) {
+			if (device.value == i) {
+				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				for (TextView textView : TVL_launchpad[i])
+					textView.setTextColor(getResources().getColor(R.color.dark1));
+			} else {
+				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				for (TextView textView : TVL_launchpad[i])
+					textView.setTextColor(getResources().getColor(R.color.text1));
+			}
+		}
+	}
+
+
+	public void selectModeXml(View v) {
+		selectMode(Integer.parseInt((String) v.getTag()));
+	}
+
+	public void selectMode(int num) {
+
+		switch (VL_mode[num].getId()) {
+			case R.id.speedFirst:
+				mode = 0;
+				break;
+			case R.id.avoidAfterimage:
+				mode = 1;
+				break;
+		}
+
+		for (int i = 0; i < VL_mode.length; i++) {
+			if (mode == i) {
+				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				for (TextView textView : TVL_mode[i])
+					textView.setTextColor(getResources().getColor(R.color.dark1));
+			} else {
+				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				for (TextView textView : TVL_mode[i])
+					textView.setTextColor(getResources().getColor(R.color.text1));
+			}
+		}
+
+
+		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
+	}
+
+	// ========================================================================================= 리스너
+
+	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
+		private static eventListener listener = null;
+
+		interface eventListener {
+			void onConnect();
+
+			void onGetSignal(int command, int note, int velocity);
+
+			void onPadTouch(int x, int y, boolean upDown);
+
+			void onChainChange(int c);
+		}
+
+		static void setEventListener(eventListener listener_) {
 			listener = listener_;
 		}
 
+		public static void connect() {
+			if (listener != null) listener.onConnect();
+		}
+
 		static void getSignal(int command, int note, int velocity) {
-			if (listener != null) listener.getSignal(command, note, velocity);
+			if (listener != null) {
+				listener.onGetSignal(command, note, velocity);
+
+				switch (Launchpad.device) {
+					case S:
+						if (command == 9 && velocity != 0) {
+							int x = note / 16 + 1;
+							int y = note % 16 + 1;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, true);
+							} else if (y == 9) {
+								listener.onChainChange(x - 1);
+							}
+						} else if (command == 9 && velocity == 0) {
+							int x = note / 16 + 1;
+							int y = note % 16 + 1;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, false);
+							}
+						} else if (command == 11) {
+						}
+						break;
+					case MK2:
+						if (command == 9 && velocity != 0) {
+							int x = 9 - (note / 10);
+							int y = note % 10;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, true);
+							} else if (y == 9) {
+								listener.onChainChange(x - 1);
+							}
+						} else if (command == 9 && velocity == 0) {
+							int x = 9 - (note / 10);
+							int y = note % 10;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, false);
+							}
+						} else if (command == 11) {
+						}
+						break;
+					case Pro:
+						if (command == 9 && velocity != 0) {
+							int x = 9 - (note / 10);
+							int y = note % 10;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, true);
+							}
+						} else if (command == 9 && velocity == 0) {
+							int x = 9 - (note / 10);
+							int y = note % 10;
+							if (y >= 1 && y <= 8) {
+								listener.onPadTouch(x - 1, y - 1, false);
+							}
+						} else if (command == 11 && velocity != 0) {
+							int x = 9 - (note / 10);
+							int y = note % 10;
+							if (y == 9) {
+								listener.onChainChange(x - 1);
+							}
+						}
+						break;
+					case Piano:
+						int x;
+						int y;
+
+						if (command == 9 && velocity != 0) {
+							if (note >= 36 && note <= 67) {
+								x = (67 - note) / 4 + 1;
+								y = 4 - (67 - note) % 4;
+								listener.onPadTouch(x - 1, y - 1, true);
+							} else if (note >= 68 && note <= 99) {
+								x = (99 - note) / 4 + 1;
+								y = 8 - (99 - note) % 4;
+								listener.onPadTouch(x - 1, y - 1, true);
+							}
+
+						} else if (velocity == 0) {
+							if (note >= 36 && note <= 67) {
+								x = (67 - note) / 4 + 1;
+								y = 4 - (67 - note) % 4;
+								listener.onPadTouch(x - 1, y - 1, false);
+							} else if (note >= 68 && note <= 99) {
+								x = (99 - note) / 4 + 1;
+								y = 8 - (99 - note) % 4;
+								listener.onPadTouch(x - 1, y - 1, false);
+							}
+						}
+						break;
+				}
+			}
 		}
 
 		@Override
@@ -324,28 +413,22 @@ public class Launchpad extends BaseActivity {
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
 
-								if (device == midiDevice.S || device == midiDevice.MK2) {
+								if (device == S || device == MK2) {
 									if (command == 11 && sig == -80) {
 										if (108 <= note && note <= 111) {
-											if (velocity != 0) {
-												isShowWatermark = !isShowWatermark;
-												showWatermark();
-											}
+											if (velocity != 0)
+												toggleWatermark();
 										}
 									}
-								} else if (device == midiDevice.Pro) {
+								} else if (device == Pro) {
 
 									if (command == 11 && sig == -80) {
 										if (95 <= note && note <= 98) {
-											if (velocity != 0) {
-												isShowWatermark = !isShowWatermark;
-												showWatermark();
-											}
+											if (velocity != 0)
+												toggleWatermark();
 										}
-									} else if (command == 7 && sig == 46 && velocity == -9) {
-										isShowWatermark = !isShowWatermark;
-										showWatermark();
-									}
+									} else if (command == 7 && sig == 46 && velocity == -9)
+										toggleWatermark();
 								}
 
 
@@ -385,14 +468,19 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 
+	static void toggleWatermark(){
+		isShowWatermark = !isShowWatermark;
+		showWatermark();
+	}
+
 	static void showWatermark() {
 		if (isShowWatermark) {
-			if (device == midiDevice.S || device == midiDevice.MK2) {
+			if (device == S || device == MK2) {
 				sendFuncLED(11, 108, 61);
 				sendFuncLED(11, 109, 40);
 				sendFuncLED(11, 110, 61);
 				sendFuncLED(11, 111, 40);
-			} else if (device == midiDevice.Pro) {
+			} else if (device == Pro) {
 				sendFuncLED(11, 95, 61);
 				sendFuncLED(11, 96, 40);
 				sendFuncLED(11, 97, 61);
@@ -400,18 +488,18 @@ public class Launchpad extends BaseActivity {
 			}
 			chainRefresh(chain);
 		} else {
-			if (device == midiDevice.S || device == midiDevice.MK2) {
+			if (device == S || device == MK2) {
 				sendFuncLED(11, 108, 0);
 				sendFuncLED(11, 109, 0);
 				sendFuncLED(11, 110, 0);
 				sendFuncLED(11, 111, 0);
-			} else if (device == midiDevice.Pro) {
+			} else if (device == Pro) {
 				sendFuncLED(11, 95, 0);
 				sendFuncLED(11, 96, 0);
 				sendFuncLED(11, 97, 0);
 				sendFuncLED(11, 98, 0);
 			}
-			chainRefresh();
+			chainRefresh(chain);
 		}
 
 	}
@@ -457,21 +545,21 @@ public class Launchpad extends BaseActivity {
 
 	static void btnLED(int i, int j, int velo) {
 		if (i >= 0 && i <= 7 && j >= 0 && j <= 7) {
-			if (device == midiDevice.S)
+			if (device == S)
 				sendBtnLED(9, i * 16 + j, LaunchpadColor.SCode[velo]);
-			if (device == midiDevice.MK2)
+			if (device == MK2)
 				sendBtnLED(9, 10 * (8 - i) + j + 1, velo);
-			if (device == midiDevice.Pro)
+			if (device == Pro)
 				sendBtnLED(9, 10 * (8 - i) + j + 1, velo);
 		}
 	}
 
 	static void chainLED(int c, int velo) {
-		if (device == midiDevice.S)
+		if (device == S)
 			sendBtnLED(9, c * 16 + 8, LaunchpadColor.SCode[velo]);
-		if (device == midiDevice.MK2)
+		if (device == MK2)
 			sendBtnLED(9, 10 * (8 - c) + 9, velo);
-		if (device == midiDevice.Pro)
+		if (device == Pro)
 			sendFuncLED(11, 10 * (8 - c) + 9, velo);
 	}
 
@@ -491,14 +579,6 @@ public class Launchpad extends BaseActivity {
 		chain = c;
 	}
 
-	static void chainRefresh() {
-		log("chainRefresh()");
-
-		for (int i = 0; i < 8; i++) {
-			chainLED(i, 0);
-		}
-	}
-
 
 	@SuppressLint("StaticFieldLeak")
 	@Override
@@ -508,7 +588,7 @@ public class Launchpad extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 				isShowWatermark = true;
-				if (device == midiDevice.Pro)
+				if (device == Pro)
 					isShowWatermark = !isShowWatermark;
 
 				showWatermark();
