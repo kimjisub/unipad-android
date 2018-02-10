@@ -916,13 +916,12 @@ public class Play extends BaseActivity {
 				if (p.length == 2)
 					setLEDUI(p[0], p[1], ColorManager.get(p[0], p[1]));
 				else if (p.length == 3) {
-					int x = p[0];
-					int y = p[1];
+					int c = p[1] - 8;
 					int color = p[2];
 
-					if (y != chain + 8 && 8 <= y && y <= 15)
+					if (c != chain && 0 <= c && c < unipack.chain)
 						if (theme.isChainLED)
-							RL_chains[y - 8].findViewById(R.id.LED).setBackgroundColor(color);
+							RL_chains[c].findViewById(R.id.LED).setBackgroundColor(color);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1041,7 +1040,7 @@ public class Play extends BaseActivity {
 					if (delay <= currTime - startTime)
 						delay = currTime - startTime;
 
-					if (guideItems.size() != 0 && guideItems.get(0).currChain != chain) {
+					if (guideItems.size() != 0 && guideItems.get(0).currChain != chain) { // 현재 체인이 다음 연습 체인이 아닌 경우
 						if (beforeChain == -1 || beforeChain != chain) {
 							beforeChain = chain;
 							afterMatchChain = true;
@@ -1251,8 +1250,6 @@ public class Play extends BaseActivity {
 	void autoPlay_removeGuide() {
 		log("autoPlay_removeGuide");
 		try {
-			if (autoPlayTask != null)
-				autoPlayTask.beforeChain = -1;
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
 					autoPlay_guidePad(i, j, false);
