@@ -240,7 +240,6 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 
-
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
 	}
@@ -280,7 +279,7 @@ public class Launchpad extends BaseActivity {
 		interface eventListener {
 			void onConnect();
 
-			void onGetSignal(int command, int note, int velocity);
+			void onGetSignal(int cmd, int note, int velocity);
 
 			void onPadTouch(int x, int y, boolean upDown);
 
@@ -295,13 +294,13 @@ public class Launchpad extends BaseActivity {
 			if (listener != null) listener.onConnect();
 		}
 
-		static void getSignal(int command, int note, int velocity) {
+		static void getSignal(int cmd, int note, int velocity) {
 			if (listener != null) {
-				listener.onGetSignal(command, note, velocity);
+				listener.onGetSignal(cmd, note, velocity);
 
 				switch (Launchpad.device) {
 					case S:
-						if (command == 9 && velocity != 0) {
+						if (cmd == 9 && velocity != 0) {
 							int x = note / 16 + 1;
 							int y = note % 16 + 1;
 							if (y >= 1 && y <= 8) {
@@ -309,17 +308,17 @@ public class Launchpad extends BaseActivity {
 							} else if (y == 9) {
 								listener.onChainChange(x - 1);
 							}
-						} else if (command == 9 && velocity == 0) {
+						} else if (cmd == 9 && velocity == 0) {
 							int x = note / 16 + 1;
 							int y = note % 16 + 1;
 							if (y >= 1 && y <= 8) {
 								listener.onPadTouch(x - 1, y - 1, false);
 							}
-						} else if (command == 11) {
+						} else if (cmd == 11) {
 						}
 						break;
 					case MK2:
-						if (command == 9 && velocity != 0) {
+						if (cmd == 9 && velocity != 0) {
 							int x = 9 - (note / 10);
 							int y = note % 10;
 							if (y >= 1 && y <= 8) {
@@ -327,29 +326,29 @@ public class Launchpad extends BaseActivity {
 							} else if (y == 9) {
 								listener.onChainChange(x - 1);
 							}
-						} else if (command == 9 && velocity == 0) {
+						} else if (cmd == 9 && velocity == 0) {
 							int x = 9 - (note / 10);
 							int y = note % 10;
 							if (y >= 1 && y <= 8) {
 								listener.onPadTouch(x - 1, y - 1, false);
 							}
-						} else if (command == 11) {
+						} else if (cmd == 11) {
 						}
 						break;
 					case Pro:
-						if (command == 9 && velocity != 0) {
+						if (cmd == 9 && velocity != 0) {
 							int x = 9 - (note / 10);
 							int y = note % 10;
 							if (y >= 1 && y <= 8) {
 								listener.onPadTouch(x - 1, y - 1, true);
 							}
-						} else if (command == 9 && velocity == 0) {
+						} else if (cmd == 9 && velocity == 0) {
 							int x = 9 - (note / 10);
 							int y = note % 10;
 							if (y >= 1 && y <= 8) {
 								listener.onPadTouch(x - 1, y - 1, false);
 							}
-						} else if (command == 11 && velocity != 0) {
+						} else if (cmd == 11 && velocity != 0) {
 							int x = 9 - (note / 10);
 							int y = note % 10;
 							if (y == 9) {
@@ -361,7 +360,7 @@ public class Launchpad extends BaseActivity {
 						int x;
 						int y;
 
-						if (command == 9 && velocity != 0) {
+						if (cmd == 9 && velocity != 0) {
 							if (note >= 36 && note <= 67) {
 								x = (67 - note) / 4 + 1;
 								y = 4 - (67 - note) % 4;
@@ -408,32 +407,31 @@ public class Launchpad extends BaseActivity {
 						int length = usbDeviceConnection.bulkTransfer(usbEndpoint_in, byteArray, byteArray.length, 1000);
 						if (length >= 4) {
 							for (int i = 0; i < length; i += 4) {
-								int command = byteArray[i];
+								int cmd = byteArray[i];
 								int sig = byteArray[i + 1];
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
 
 								if (device == S || device == MK2) {
-									if (command == 11 && sig == -80) {
+									if (cmd == 11 && sig == -80) {
 										if (108 <= note && note <= 111) {
 											if (velocity != 0)
 												toggleWatermark();
 										}
 									}
 								} else if (device == Pro) {
-
-									if (command == 11 && sig == -80) {
+									if (cmd == 11 && sig == -80) {
 										if (95 <= note && note <= 98) {
 											if (velocity != 0)
 												toggleWatermark();
 										}
-									} else if (command == 7 && sig == 46 && velocity == -9)
+									} else if (cmd == 7 && sig == 46 && velocity == -9)
 										toggleWatermark();
 								}
 
 
-								publishProgress(command, note, velocity);
-								logRecv(String.format("%-7d%-7d%-7d          %-7d%-7d%-7d%-7d", command, note, velocity, byteArray[i], byteArray[i + 1], byteArray[i + 2], byteArray[i + 3]));
+								publishProgress(cmd, note, velocity);
+								logRecv(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
 						} else if (length == -1) {
 							long currTime = System.currentTimeMillis();
@@ -468,7 +466,7 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 
-	static void toggleWatermark(){
+	static void toggleWatermark() {
 		isShowWatermark = !isShowWatermark;
 		showWatermark();
 	}
@@ -476,51 +474,51 @@ public class Launchpad extends BaseActivity {
 	static void showWatermark() {
 		if (isShowWatermark) {
 			if (device == S || device == MK2) {
-				sendFuncLED(11, 108, 61);
-				sendFuncLED(11, 109, 40);
-				sendFuncLED(11, 110, 61);
-				sendFuncLED(11, 111, 40);
+				send11(108, 61);
+				send11(109, 40);
+				send11(110, 61);
+				send11(111, 40);
 			} else if (device == Pro) {
-				sendFuncLED(11, 95, 61);
-				sendFuncLED(11, 96, 40);
-				sendFuncLED(11, 97, 61);
-				sendFuncLED(11, 98, 40);
+				send11(95, 61);
+				send11(96, 40);
+				send11(97, 61);
+				send11(98, 40);
 			}
 			chainRefresh(chain);
 		} else {
 			if (device == S || device == MK2) {
-				sendFuncLED(11, 108, 0);
-				sendFuncLED(11, 109, 0);
-				sendFuncLED(11, 110, 0);
-				sendFuncLED(11, 111, 0);
+				send11(108, 0);
+				send11(109, 0);
+				send11( 110, 0);
+				send11(111, 0);
 			} else if (device == Pro) {
-				sendFuncLED(11, 95, 0);
-				sendFuncLED(11, 96, 0);
-				sendFuncLED(11, 97, 0);
-				sendFuncLED(11, 98, 0);
+				send11(95, 0);
+				send11(96, 0);
+				send11(97, 0);
+				send11( 98, 0);
 			}
 			chainRefresh(chain);
 		}
 
 	}
 
-	static void sendBuffer(byte command, byte sig, byte note, byte velocity) {
+	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
 		try {
-			byte[] buffer = {command, sig, note, velocity};
+			byte[] buffer = {cmd, sig, note, velocity};
 			usbDeviceConnection.bulkTransfer(usbEndpoint_out, buffer, buffer.length, 1000);
 		} catch (Exception ignored) {
 		}
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	static void send(final byte command, final byte sig, final byte note, final byte velocity) {
+	static void send(final byte cmd, final byte sig, final byte note, final byte velocity) {
 		if (usbDeviceConnection != null) {
 			if (mode == 0) {
 				try {
 					(new AsyncTask<String, Integer, String>() {
 						@Override
 						protected String doInBackground(String... params) {
-							sendBuffer(command, sig, note, velocity);
+							sendBuffer(cmd, sig, note, velocity);
 							return null;
 						}
 					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -528,39 +526,45 @@ public class Launchpad extends BaseActivity {
 					logSig("런치패드 led 에러");
 				}
 			} else if (mode == 1) {
-				sendBuffer(command, sig, note, velocity);
+				sendBuffer(cmd, sig, note, velocity);
 			}
 		}
 	}
 
 
-	static void sendBtnLED(final int command, final int note, final int velocity) {
-		send((byte) command, (byte) -112, (byte) note, (byte) velocity);
+	static void send09(final int note, final int velocity) {
+		send((byte) 9, (byte) -112, (byte) note, (byte) velocity);
 	}
 
-	static void sendFuncLED(final int command, final int note, final int velocity) {
-		send((byte) command, (byte) -80, (byte) note, (byte) velocity);
+	static void send11(final int note, final int velocity) {
+		send((byte) 11, (byte) -80, (byte) note, (byte) velocity);
 	}
 
 
 	static void btnLED(int i, int j, int velo) {
 		if (i >= 0 && i <= 7 && j >= 0 && j <= 7) {
 			if (device == S)
-				sendBtnLED(9, i * 16 + j, LaunchpadColor.SCode[velo]);
+				send09(i * 16 + j, LaunchpadColor.SCode[velo]);
 			if (device == MK2)
-				sendBtnLED(9, 10 * (8 - i) + j + 1, velo);
+				send09(10 * (8 - i) + j + 1, velo);
 			if (device == Pro)
-				sendBtnLED(9, 10 * (8 - i) + j + 1, velo);
+				send09(10 * (8 - i) + j + 1, velo);
 		}
 	}
 
 	static void chainLED(int c, int velo) {
-		if (device == S)
-			sendBtnLED(9, c * 16 + 8, LaunchpadColor.SCode[velo]);
-		if (device == MK2)
-			sendBtnLED(9, 10 * (8 - c) + 9, velo);
-		if (device == Pro)
-			sendFuncLED(11, 10 * (8 - c) + 9, velo);
+		if (0 <= c && c <= 7)
+			circleBtnLED(c + 8, velo);
+	}
+
+
+	static void circleBtnLED(int num, int velo) {
+		if (device == S && 0 <= num && num <= 15)
+			send((byte) S_circleCode[num][0], (byte) S_circleCode[num][1], (byte) S_circleCode[num][2], (byte) LaunchpadColor.SCode[velo]);
+		if (device == MK2 && 0 <= num && num <= 15)
+			send((byte) MK2_circleCode[num][0], (byte) MK2_circleCode[num][1], (byte) MK2_circleCode[num][2], (byte) velo);
+		if (device == Pro && 0 <= num && num <= 31)
+			send((byte) Pro_circleCode[num][0], (byte) Pro_circleCode[num][1], (byte) Pro_circleCode[num][2], (byte) velo);
 	}
 
 	static void chainRefresh(int c) {
@@ -596,4 +600,75 @@ public class Launchpad extends BaseActivity {
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
+
+	static final int[][] S_circleCode = {
+		{11, -80, 104},
+		{11, -80, 105},
+		{11, -80, 106},
+		{11, -80, 107},
+		{11, -80, 108},
+		{11, -80, 109},
+		{11, -80, 110},
+		{11, -80, 111},
+		{9, -112, 8},
+		{9, -112, 24},
+		{9, -112, 40},
+		{9, -112, 56},
+		{9, -112, 72},
+		{9, -112, 88},
+		{9, -112, 104},
+		{9, -112, 120},
+	};
+	static final int[][] MK2_circleCode = {
+		{11, -80, 104},
+		{11, -80, 105},
+		{11, -80, 106},
+		{11, -80, 107},
+		{11, -80, 108},
+		{11, -80, 109},
+		{11, -80, 110},
+		{11, -80, 111},
+		{9, -112, 89},
+		{9, -112, 79},
+		{9, -112, 69},
+		{9, -112, 59},
+		{9, -112, 49},
+		{9, -112, 39},
+		{9, -112, 29},
+		{9, -112, 19},
+	};
+	static final int[][] Pro_circleCode = {
+		{11, -80, 91},
+		{11, -80, 92},
+		{11, -80, 93},
+		{11, -80, 94},
+		{11, -80, 95},
+		{11, -80, 96},
+		{11, -80, 97},
+		{11, -80, 98},
+		{11, -80, 89},
+		{11, -80, 79},
+		{11, -80, 69},
+		{11, -80, 59},
+		{11, -80, 49},
+		{11, -80, 39},
+		{11, -80, 29},
+		{11, -80, 19},
+		{11, -80, 8},
+		{11, -80, 7},
+		{11, -80, 6},
+		{11, -80, 5},
+		{11, -80, 4},
+		{11, -80, 3},
+		{11, -80, 2},
+		{11, -80, 1},
+		{11, -80, 10},
+		{11, -80, 20},
+		{11, -80, 30},
+		{11, -80, 40},
+		{11, -80, 50},
+		{11, -80, 60},
+		{11, -80, 70},
+		{11, -80, 80}
+	};
 }
