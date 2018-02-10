@@ -138,7 +138,7 @@ public class FileManager {
 		Arrays.sort(files, new Comparator<Object>() {
 			@Override
 			public int compare(Object object1, Object object2) {
-				return ((File) object1).getName().compareTo(((File) object2).getName());
+				return ((File) object1).getName().toLowerCase().compareTo(((File) object2).getName().toLowerCase());
 			}
 		});
 
