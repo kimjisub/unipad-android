@@ -848,7 +848,7 @@ public class Play extends BaseActivity {
 												LED[x][y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
 											} else {
 												Launchpad.circleBtnLED(y, velo);
-												publishProgress(x, y,color);
+												publishProgress(x, y, color);
 											}
 
 											break;
@@ -1513,11 +1513,18 @@ public class Play extends BaseActivity {
 			soundPool.release();
 			soundPool = null;
 		}
-
-		Launchpad.ReceiveTask.setEventListener(null);
-		Launchpad.chainRefresh(-1);
 		LEDInit();
 		padInit();
+
+		(new Handler()).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				for (int i = 0; i < 36; i++)
+					Launchpad.circleBtnLED(i, 0);
+				Launchpad.ReceiveTask.setEventListener(null);
+				Launchpad.chainRefresh(-1);
+			}
+		}, 1000);
 
 		if (loaded)
 			UIManager.showAds(Play.this);
