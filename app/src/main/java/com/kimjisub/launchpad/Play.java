@@ -675,7 +675,61 @@ public class Play extends BaseActivity {
 			}
 
 			@Override
-			public void onGetSignal(int command, int note, int velocity) {
+			public void onGetSignal(int cmd, int note, int velocity) {
+				if (cmd == 11 && velocity == 127)
+					switch (Launchpad.device) {
+						case S:
+							if (note == 104)
+								CB_LED효과.toggle();
+							else if (note == 105)
+								CB_자동재생.toggle();
+							else if (note == 106) {
+								if (CB_자동재생.isChecked())
+									autoPlay_prev();
+							} else if (note == 107) {
+								if (CB_자동재생.isChecked()) {
+									if (autoPlayTask.isPlaying)
+										autoPlay_stop();
+									else
+										autoPlay_play();
+								}
+							}
+							break;
+						case MK2:
+							if (note == 104)
+								CB_LED효과.toggle();
+							else if (note == 105)
+								CB_자동재생.toggle();
+							else if (note == 106) {
+								if (CB_자동재생.isChecked())
+									autoPlay_prev();
+							} else if (note == 107) {
+								if (CB_자동재생.isChecked()) {
+									if (autoPlayTask.isPlaying)
+										autoPlay_stop();
+									else
+										autoPlay_play();
+								}
+							}
+							break;
+						case Pro:
+							if (note == 91)
+								CB_LED효과.toggle();
+							else if (note == 92)
+								CB_자동재생.toggle();
+							else if (note == 93) {
+								if (CB_자동재생.isChecked())
+									autoPlay_prev();
+							} else if (note == 94) {
+								if (CB_자동재생.isChecked()) {
+									if (autoPlayTask.isPlaying)
+										autoPlay_stop();
+									else
+										autoPlay_play();
+								}
+							}
+							break;
+					}
 			}
 
 			@Override
