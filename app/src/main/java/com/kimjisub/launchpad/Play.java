@@ -676,7 +676,7 @@ public class Play extends BaseActivity {
 
 			@Override
 			public void onGetSignal(int cmd, int note, int velocity) {
-				if (cmd == 11 && velocity == 127)
+				/*if (cmd == 11 && velocity == 127)
 					switch (Launchpad.device) {
 						case S:
 							if (note == 104)
@@ -729,7 +729,7 @@ public class Play extends BaseActivity {
 								}
 							}
 							break;
-					}
+					}*/
 			}
 
 			@Override
