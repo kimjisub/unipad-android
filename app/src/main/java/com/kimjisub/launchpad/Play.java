@@ -130,6 +130,9 @@ public class Play extends BaseActivity {
 		} catch (IndexOutOfBoundsException ee) {
 			logErr("soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
+		}catch (ArithmeticException ee){
+			logErr("ArithmeticException : soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
+			ee.printStackTrace();
 		}
 	}
 
@@ -324,9 +327,10 @@ public class Play extends BaseActivity {
 		}
 
 		for (int i = 0; i < unipack.chain; i++) {
-			if (theme.isChainLED)
+			if (theme.isChainLED) {
+				RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
 				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chainled);
-			else {
+			}else {
 				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
 				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
 			}
@@ -916,7 +920,7 @@ public class Play extends BaseActivity {
 												}
 											} else {
 												Launchpad.circleBtnLED(y, 0);
-												publishProgress(x, y, 0xffa1b2cc);
+												publishProgress(x, y, 0);
 											}
 
 											break;
