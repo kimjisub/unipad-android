@@ -1482,7 +1482,7 @@ public class Play extends BaseActivity {
 
 				if (i == chain) {
 					if (theme.isChainLED)
-						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0);
+						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0xFFdfe5ee);
 					else
 						RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain_);
 				} else {
