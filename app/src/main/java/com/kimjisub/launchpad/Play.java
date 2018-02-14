@@ -130,7 +130,7 @@ public class Play extends BaseActivity {
 		} catch (IndexOutOfBoundsException ee) {
 			logErr("soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
-		}catch (ArithmeticException ee){
+		} catch (ArithmeticException ee) {
 			logErr("ArithmeticException : soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
@@ -203,7 +203,8 @@ public class Play extends BaseActivity {
 		static final int PRESSED = 1;
 		static final int LED = 2;
 
-		static Item[][][] Items = null;
+		static Item[][][] btn = null;
+		static Item[][] cir = null;
 
 		static class Item {
 			int x;
@@ -222,26 +223,42 @@ public class Play extends BaseActivity {
 		}
 
 		static void init(int x, int y) {
-			Items = new Item[x][y][3];
+			btn = new Item[x][y][3];
+			cir = new Item[36][3];
 		}
 
 		static Item get(int x, int y) {
 			Item ret = null;
-			for (int i = 0; i < 3; i++) {
-				if (Items[x][y][i] != null) {
-					ret = Items[x][y][i];
-					break;
+			if (x != -1) {
+				for (int i = 0; i < 3; i++) {
+					if (btn[x][y][i] != null) {
+						ret = btn[x][y][i];
+						break;
+					}
+				}
+			} else {
+				for (int i = 0; i < 3; i++) {
+					if (cir[y][i] != null) {
+						ret = cir[y][i];
+						break;
+					}
 				}
 			}
 			return ret;
 		}
 
 		static void add(int x, int y, int chanel, int color_, int code_) {
-			Items[x][y][chanel] = new Item(x, y, chanel, color_, code_);
+			if (x != -1)
+				btn[x][y][chanel] = new Item(x, y, chanel, color_, code_);
+			else
+				cir[y][chanel] = new Item(x, y, chanel, color_, code_);
 		}
 
 		static void remove(int x, int y, int chanel) {
-			Items[x][y][chanel] = null;
+			if (x != -1)
+				btn[x][y][chanel] = null;
+			else
+				cir[y][chanel] = null;
 		}
 
 	}
@@ -252,21 +269,40 @@ public class Play extends BaseActivity {
 	}
 
 	void setLEDUI(int x, int y, ColorManager.Item Item) {
-		if (Item != null) {
-			if (Item.chanel == ColorManager.PRESSED)
-				RL_btns[x][y].findViewById(R.id.LED).setBackground(theme.btn_);
-			else
-				RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(Item.color);
+		if (x != -1) {
+			if (Item != null) {
+				if (Item.chanel == ColorManager.PRESSED)
+					RL_btns[x][y].findViewById(R.id.LED).setBackground(theme.btn_);
+				else
+					RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(Item.color);
+			} else {
+				RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(0);
+			}
 		} else {
-			RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(0);
+			int c = y - 8;
+			if (c != chain && 0 <= c && c < unipack.chain)
+				if (theme.isChainLED) {
+					if (Item != null)
+						RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
+					else
+						RL_chains[c].findViewById(R.id.LED).setBackgroundColor(0);
+				}
 		}
 	}
 
 	void setLEDLaunchpad(int x, int y, ColorManager.Item Item) {
-		if (Item != null)
-			Launchpad.btnLED(x, y, Item.code);
-		else
-			Launchpad.btnLED(x, y, 0);
+		if (x != -1) {
+			if (Item != null)
+				Launchpad.btnLED(x, y, Item.code);
+			else
+				Launchpad.btnLED(x, y, 0);
+		} else {
+			if (Item != null)
+				Launchpad.circleBtnLED(y, Item.code);
+			else
+				Launchpad.circleBtnLED(y, 0);
+
+		}
 
 	}
 
@@ -330,7 +366,7 @@ public class Play extends BaseActivity {
 			if (theme.isChainLED) {
 				RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
 				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chainled);
-			}else {
+			} else {
 				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
 				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
 			}
@@ -757,11 +793,13 @@ public class Play extends BaseActivity {
 	class LEDTask extends AsyncTask<String, Integer, String> {
 
 		boolean isPlaying = true;
-		LEDTask.LED[][] LED;
+		LEDTask.LED[][] btnLED;
+		LEDTask.LED[] cirLED;
 		ArrayList<LEDTask.LEDEvent> LEDEvents;
 
 		LEDTask() {
-			LED = new LED[unipack.buttonX][unipack.buttonY];
+			btnLED = new LED[unipack.buttonX][unipack.buttonY];
+			cirLED = new LED[36];
 			LEDEvents = new ArrayList<>();
 		}
 
@@ -903,25 +941,34 @@ public class Play extends BaseActivity {
 												ColorManager.add(x, y, ColorManager.LED, color, velo);
 												setLEDLaunchpad(x, y, ColorManager.get(x, y));
 												publishProgress(x, y);
-												LED[x][y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
+												btnLED[x][y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
 											} else {
-												Launchpad.circleBtnLED(y, velo);
-												publishProgress(x, y, color);
+												ColorManager.add(x, y, ColorManager.LED, color, velo);
+												setLEDLaunchpad(x, y, ColorManager.get(x, y));
+												publishProgress(x, y);
+												cirLED[y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
 											}
 
 											break;
 										case Unipack.LED.Syntax.OFF:
+
 											if (x != -1) {
-												if (LED[x][y] != null && LED[x][y].equal(e.buttonX, e.buttonY)) {
+												if (btnLED[x][y] != null && btnLED[x][y].equal(e.buttonX, e.buttonY)) {
 													ColorManager.remove(x, y, ColorManager.LED);
 													setLEDLaunchpad(x, y, ColorManager.get(x, y));
 													publishProgress(x, y);
-													LED[x][y] = null;
+													btnLED[x][y] = null;
 												}
 											} else {
-												Launchpad.circleBtnLED(y, 0);
-												publishProgress(x, y, 0);
+												if (cirLED[y] != null && cirLED[y].equal(e.buttonX, e.buttonY)) {
+													ColorManager.remove(x, y, ColorManager.LED);
+													setLEDLaunchpad(x, y, ColorManager.get(x, y));
+													publishProgress(x, y);
+													cirLED[y] = null;
+												}
 											}
+
+
 
 											break;
 										case Unipack.LED.Syntax.DELAY:
@@ -943,12 +990,21 @@ public class Play extends BaseActivity {
 					} else if (e.isShutdown) {
 						for (int x = 0; x < unipack.buttonX; x++) {
 							for (int y = 0; y < unipack.buttonY; y++) {
-								if (LED[x][y] != null && LED[x][y].equal(e.buttonX, e.buttonY)) {
+								if (btnLED[x][y] != null && btnLED[x][y].equal(e.buttonX, e.buttonY)) {
 									ColorManager.remove(x, y, ColorManager.LED);
 									setLEDLaunchpad(x, y, ColorManager.get(x, y));
 									publishProgress(x, y);
-									LED[x][y] = null;
+									btnLED[x][y] = null;
 								}
+							}
+						}
+
+						for(int y = 0; y<cirLED.length;y++){
+							if (cirLED[y] != null && cirLED[y].equal(e.buttonX, e.buttonY)) {
+								ColorManager.remove(-1, y, ColorManager.LED);
+								setLEDLaunchpad(-1, y, ColorManager.get(-1, y));
+								publishProgress(-1, y);
+								cirLED[y] = null;
 							}
 						}
 						LEDEvents.remove(i);
@@ -971,16 +1027,7 @@ public class Play extends BaseActivity {
 		@Override
 		protected void onProgressUpdate(Integer... p) {
 			try {
-				if (p.length == 2)
-					setLEDUI(p[0], p[1], ColorManager.get(p[0], p[1]));
-				else if (p.length == 3) {
-					int c = p[1] - 8;
-					int color = p[2];
-
-					if (c != chain && 0 <= c && c < unipack.chain)
-						if (theme.isChainLED)
-							RL_chains[c].findViewById(R.id.LED).setBackgroundColor(color);
-				}
+				setLEDUI(p[0], p[1], ColorManager.get(p[0], p[1]));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1435,12 +1482,12 @@ public class Play extends BaseActivity {
 
 				if (i == chain) {
 					if (theme.isChainLED)
-						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0xFFdfe5ee);
+						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0);
 					else
 						RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain_);
 				} else {
 					if (theme.isChainLED)
-						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0xFFa1b2cc);
+						RL_chains[i].findViewById(R.id.LED).setBackgroundColor(0);
 					else
 						RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
 				}
