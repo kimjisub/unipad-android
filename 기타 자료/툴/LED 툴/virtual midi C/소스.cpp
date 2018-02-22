@@ -56,6 +56,128 @@ void pad(int x, int y, int velo, boolean t) {
 	}
 }
 
+void chain(int y, int velo, boolean t) {
+
+	timeLog();
+
+	if (file != NULL) {
+		if (t)
+			fprintf(file, "o * %d a %d\n", y, velo);
+		else
+			fprintf(file, "f * %d\n", y);
+	}
+	else {
+		if (t)
+			sprintf(tmp, "%so * %d a %d\n", tmp, y, velo);
+		else
+			sprintf(tmp, "%sf * %d\n", tmp, y);
+	}
+}
+
+int getChainNum(int note) {
+	int y = 0;
+
+	switch (note) {
+	case 100:
+		y = 1;
+		break;
+	case 101:
+		y = 2;
+		break;
+	case 102:
+		y = 3;
+		break;
+	case 103:
+		y = 4;
+		break;
+	case 104:
+		y = 5;
+		break;
+	case 105:
+		y = 6;
+		break;
+	case 106:
+		y = 7;
+		break;
+	case 107:
+		y = 8;
+		break;
+	case 123:
+		y = 9;
+		break;
+	case 122:
+		y = 10;
+		break;
+	case 121:
+		y = 11;
+		break;
+	case 120:
+		y = 12;
+		break;
+	case 119:
+		y = 13;
+		break;
+	case 118:
+		y = 14;
+		break;
+	case 117:
+		y = 15;
+		break;
+	case 116:
+		y = 16;
+		break;
+	case 115:
+		y = 17;
+		break;
+	case 114:
+		y = 18;
+		break;
+	case 113:
+		y = 19;
+		break;
+	case 112:
+		y = 20;
+		break;
+	case 111:
+		y = 21;
+		break;
+	case 110:
+		y = 22;
+		break;
+	case 109:
+		y = 23;
+		break;
+	case 108:
+		y = 24;
+		break;
+	case 28:
+		y = 25;
+		break;
+	case 29:
+		y = 26;
+		break;
+	case 30:
+		y = 27;
+		break;
+	case 31:
+		y = 28;
+		break;
+	case 32:
+		y = 29;
+		break;
+	case 33:
+		y = 30;
+		break;
+	case 34:
+		y = 31;
+		break;
+	case 35:
+		y = 32;
+		break;
+	}
+	return y;
+}
+
 int c = 1;
 void CALLBACK teVMCallback(LPVM_MIDI_PORT midiPort, LPBYTE midiDataBytes, DWORD length, DWORD_PTR dwCallbackInstance) {
 
@@ -74,9 +196,10 @@ void CALLBACK teVMCallback(LPVM_MIDI_PORT midiPort, LPBYTE midiDataBytes, DWORD 
 	} else if (note >= 68 && note <= 99) {
 		x = (99 - note) / 4 + 1;
 		y = 8 - (99 - note) % 4;
-	} else if (note >= 100 && note <= 107) {
-		x = note - 99;
-		y = 9;
+	} else if ((note >= 100 && note <= 107)|| (note >= 116 && note <= 123)|| (note >= 108 && note <= 115)|| (note >= 28 && note <= 35)) {
+		
+		x = -1;
+		y = getChainNum(note);
 	} else return;
 
 	if (ch == 0) {
@@ -87,7 +210,7 @@ void CALLBACK teVMCallback(LPVM_MIDI_PORT midiPort, LPBYTE midiDataBytes, DWORD 
 				printf("chain = %d\n", c);*/
 			} else {
 				char filename[20];
-				sprintf(filename, "%d %d %d 1", c, x, y);
+				sprintf(filename, "%d %d %d", c, x, y);
 				printf("%s [", filename);
 				file = fopen(filename, "w");
 				fprintf(file, tmp);
@@ -97,9 +220,10 @@ void CALLBACK teVMCallback(LPVM_MIDI_PORT midiPort, LPBYTE midiDataBytes, DWORD 
 			fileEnd();
 		}
 	} else if (comm == 8 || comm == 9) {
-		if (y == 9)
-			;
-		else {
+		if (x == -1) {
+			chain(y, velo, comm == 9);
+			first = false;
+		} else {
 			pad(x, y, velo, comm == 9);
 			first = false;
 		}
