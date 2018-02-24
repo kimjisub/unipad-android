@@ -76,7 +76,7 @@ public class ImportPackByUrl extends BaseActivity {
 			protected String doInBackground(String[] params) {
 
 				try {
-					JSONObject jsonObject = new JSONObject(Networks.sendGet("http://unipad.kr:81/directUrl/api/get/" + code));
+					JSONObject jsonObject = new JSONObject(Networks.sendGet("http://unipad.kr/directUrl/api/get/" + code));
 
 					code = jsonObject.getString("code");
 					title = jsonObject.getString("title");
