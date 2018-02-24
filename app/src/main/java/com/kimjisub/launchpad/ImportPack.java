@@ -28,6 +28,8 @@ public class ImportPack extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
+
+		SaveSetting.IsUsingSDCard.load(ImportPack.this);
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);

@@ -12,6 +12,7 @@
 	<string name="wait">Just wait a sec…</string>
 	<string name="analyzing">Analyzing</string>
 	<string name="loading">Loading</string>
+	<string name="downloading">Downloading</string>
 	<string name="success">Success</string>
 	<string name="failed">Failed</string>
 	<string name="delete">Delete</string>
