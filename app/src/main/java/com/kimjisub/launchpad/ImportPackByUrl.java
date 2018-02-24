@@ -127,13 +127,13 @@ public class ImportPackByUrl extends BaseActivity {
 						long total = 0;
 
 						int count;
-						int skip = 1000;
+						int skip = 100;
 						while ((count = input.read(data)) != -1) {
 							total += count;
 							skip--;
 							if (skip == 0) {
 								publishProgress("down", (int) ((float) total / fileSize * 100) + "%");
-								skip = 1000;
+								skip = 100;
 							}
 							output.write(data, 0, count);
 						}
