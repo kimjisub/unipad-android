@@ -217,9 +217,14 @@ public class Store extends BaseActivity {
 					long total = 0;
 
 					int count;
+					int skip = 1000;
 					while ((count = input.read(data)) != -1) {
 						total += count;
-						publishProgress(0L, total);
+						skip--;
+						if (skip == 0) {
+							publishProgress(0L, total);
+							skip = 1000;
+						}
 						output.write(data, 0, count);
 					}
 
