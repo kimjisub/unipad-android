@@ -116,6 +116,12 @@ public class ImportPack extends BaseActivity {
 	};
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		initVar();
+	}
+
+	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		restartApp(this);
