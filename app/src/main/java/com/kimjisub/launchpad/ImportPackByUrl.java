@@ -209,6 +209,11 @@ public class ImportPackByUrl extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		initVar();
+	}
 
 	@Override
 	protected void onDestroy() {
