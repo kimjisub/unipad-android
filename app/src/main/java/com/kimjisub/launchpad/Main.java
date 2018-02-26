@@ -737,25 +737,28 @@ public class Main extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		boolean clear = true;
-		for (Item item : IT_items) {
-			if (item != null) {
-				if (item.isPlay() || item.isInfo())
-					clear = false;
+		if(IT_items != null) {
+			boolean clear = true;
+			for (Item item : IT_items) {
+				if (item != null) {
+					if (item.isPlay() || item.isInfo())
+						clear = false;
 
-				item.togglePlay(false);
-				item.toggleInfo(false);
+					item.togglePlay(false);
+					item.toggleInfo(false);
+				}
 			}
-		}
 
-		if (clear)
-			super.onBackPressed();
+			if (clear)
+				super.onBackPressed();
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
+		initVar();
 		update();
 	}
 
