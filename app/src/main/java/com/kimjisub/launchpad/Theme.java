@@ -45,6 +45,7 @@ public class Theme extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		initVar();
 		getThemeList();
 
 		final CarouselLayoutManager layoutManager = new CarouselLayoutManager(CarouselLayoutManager.HORIZONTAL, false);
