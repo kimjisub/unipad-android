@@ -76,7 +76,6 @@ public class Intro extends BaseActivity {
 		setContentView(R.layout.activity_intro);
 		initVar();
 
-
 		try {
 			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
 		} catch (PackageManager.NameNotFoundException e) {
@@ -131,6 +130,12 @@ public class Intro extends BaseActivity {
 		}
 		finish();
 		super.onStop();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		initVar();
 	}
 
 	@Override

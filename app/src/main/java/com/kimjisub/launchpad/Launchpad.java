@@ -89,7 +89,6 @@ public class Launchpad extends BaseActivity {
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
 
-
 		mode = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
 
 		selectDevice(device.value);
@@ -590,6 +589,14 @@ public class Launchpad extends BaseActivity {
 		}
 
 		chain = c;
+	}
+
+
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		initVar();
 	}
 
 
