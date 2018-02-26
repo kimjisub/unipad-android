@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.google.android.gms.ads.MobileAds;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.SaveSetting.IsUsingSDCard;
@@ -92,8 +93,8 @@ public class Intro extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					(handler = new Handler()).postDelayed(runnable, 1500);
 					UIManager.initAds(Intro.this);
+					(handler = new Handler()).postDelayed(runnable, 1500);
 				}
 
 				@Override
@@ -114,10 +115,10 @@ public class Intro extends BaseActivity {
 			startActivity(new Intent(Intro.this, Main.class));
 			overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 
-			finish();
-
 			IsUsingSDCard.load(Intro.this);
 			UIManager.showAds(Intro.this);
+
+			finish();
 		}
 	};
 
@@ -128,6 +129,7 @@ public class Intro extends BaseActivity {
 			handler.removeCallbacks(runnable);
 		} catch (RuntimeException ignore) {
 		}
+
 		finish();
 		super.onStop();
 	}
@@ -141,6 +143,7 @@ public class Intro extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+
 		if (mService != null)
 			unbindService(mServiceConn);
 	}

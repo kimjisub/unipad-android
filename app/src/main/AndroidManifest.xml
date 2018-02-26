@@ -96,14 +96,17 @@
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
 
-				<data android:scheme="unipad" android:host="unipack"/>
+				<data
+					android:host="unipack"
+					android:scheme="unipad" />
 			</intent-filter>
 		</activity>
 
 
 		<activity
 			android:name="com.google.android.gms.ads.AdActivity"
-			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
+			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
+			android:theme="@android:style/Theme.Translucent" />
 
 
 		<meta-data
