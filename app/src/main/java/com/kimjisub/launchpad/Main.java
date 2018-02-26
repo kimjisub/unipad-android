@@ -757,8 +757,8 @@ public class Main extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
 		initVar();
+
 		update();
 	}
 
