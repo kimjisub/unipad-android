@@ -68,8 +68,7 @@ public class Main extends BaseActivity {
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
 
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
-		log("UnipackRootURL : " + UnipackRootURL);
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
 
 	@Override

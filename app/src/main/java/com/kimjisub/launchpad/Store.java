@@ -28,7 +28,7 @@ import static com.kimjisub.launchpad.manage.Tools.logErr;
 public class Store extends BaseActivity {
 	LinearLayout LL_list;
 
-	String UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+	String UnipackRootURL;
 
 	int downloadCount = 0;
 
@@ -36,6 +36,8 @@ public class Store extends BaseActivity {
 
 	void initVar() {
 		LL_list = findViewById(R.id.list);
+
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Store.this);
 	}
 
 	@Override

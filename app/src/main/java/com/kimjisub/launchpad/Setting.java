@@ -281,7 +281,7 @@ public class Setting extends PreferenceActivity {
 	@Override
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SaveSetting.SelectedTheme.load(Setting.this));
-		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL);
+		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL(Setting.this));
 		if (UIManager.isPremium)
 			findPreference("removeAds").setSummary(lang(R.string.using));
 		super.onResume();
