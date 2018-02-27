@@ -308,31 +308,198 @@ public class Play extends BaseActivity {
 
 	// ========================================================================================= 앱 시작
 
+	@SuppressLint("StaticFieldLeak")
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_play);
+		initVar();
+
+		//================================================================================== URL 불러오기
+		String URL = getIntent().getStringExtra("URL");
+		log("unipack URL : " + URL);
+		log("[01] Start Load Unipack");
+		unipack = new Unipack(URL, true);
+
+		try {
+			log("[02] Check ErrorDetail");
+			if (unipack.ErrorDetail != null) {
+				new AlertDialog.Builder(Play.this)
+					.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
+					.setMessage(unipack.ErrorDetail)
+					.setPositiveButton(lang(R.string.accept), null)
+					.setCancelable(false)
+					.show();
+			}
+
+			log("[03] Init Vars");
+			RL_btns = new RelativeLayout[unipack.buttonX][unipack.buttonY];
+			RL_chains = new RelativeLayout[unipack.chain];
+			ColorManager.init(unipack.buttonX, unipack.buttonY);
+
+			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
+			if (unipack.isKeyLED) {
+				ledTask = new LEDTask();
+				ledTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			}
+
+			log("[05] Set Button Layout (squareButton = " + unipack.squareButton +")");
+			if (unipack.squareButton) {
+				if (!unipack.isKeyLED)
+					CB_LED효과.setVisibility(View.GONE);
+
+				if (!unipack.isAutoPlay)
+					CB_자동재생.setVisibility(View.GONE);
+			} else {
+				RL_rootView.setPadding(0, 0, 0, 0);
+
+				CB_누른키표시.setVisibility(View.GONE);
+				CB_LED효과.setVisibility(View.GONE);
+				CB_자동재생.setVisibility(View.GONE);
+
+				CB_순서기록.setVisibility(View.GONE);
+				CB_녹음.setVisibility(View.GONE);
+			}
+
+			log("[06] Set CheckBox Checked");
+			if (unipack.isKeyLED) {
+				CB_LED효과.setChecked(true);
+				CB_누른키표시.setChecked(false);
+			}
+			bool_pressedShow = CB_누른키표시.isChecked();
+			bool_LEDEvent = CB_LED효과.isChecked();
+			bool_traceLog = CB_순서기록.isChecked();
+			bool_record = CB_녹음.isChecked();
+
+
+			(new AsyncTask<String, String, String>() {
+
+				ProgressDialog progressDialog;
+
+				@Override
+				protected void onPreExecute() {
+					log("[07] onPreExecute");
+
+					progressDialog = new ProgressDialog(Play.this);
+					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+					progressDialog.setTitle(lang(R.string.loading));
+					progressDialog.setMessage(lang(R.string.wait));
+					progressDialog.setCancelable(false);
+
+					int soundNum = 0;
+					for (int i = 0; i < unipack.chain; i++)
+						for (int j = 0; j < unipack.buttonX; j++)
+							for (int k = 0; k < unipack.buttonY; k++)
+								if (unipack.sound[i][j][k] != null)
+									soundNum += unipack.sound[i][j][k].size();
+
+					soundPool = new SoundPool(soundNum, AudioManager.STREAM_MUSIC, 0);
+					stopID = new int[unipack.chain][unipack.buttonX][unipack.buttonY];
+
+					progressDialog.setMax(soundNum);
+					progressDialog.show();
+					super.onPreExecute();
+				}
+
+				@Override
+				protected String doInBackground(String... params) {
+					log("[08] doInBackground");
+
+					try {
+
+						for (int i = 0; i < unipack.chain; i++) {
+							for (int j = 0; j < unipack.buttonX; j++) {
+								for (int k = 0; k < unipack.buttonY; k++) {
+									ArrayList arrayList = unipack.sound[i][j][k];
+									if (arrayList != null) {
+										for (int l = 0; l < arrayList.size(); l++) {
+											Unipack.Sound e = unipack.sound[i][j][k].get(l);
+											e.id = soundPool.load(e.URL, 1);
+											publishProgress();
+										}
+									}
+								}
+							}
+						}
+						loaded = true;
+					} catch (Exception e) {
+						logErr("[08] doInBackground");
+						e.printStackTrace();
+					}
+
+					return null;
+				}
+
+				@Override
+				protected void onProgressUpdate(String... progress) {
+					progressDialog.incrementProgressBy(1);
+				}
+
+				@Override
+				protected void onPostExecute(String result) {
+					log("[09] onPostExecute");
+					if (loaded) {
+						try {
+							if (progressDialog != null && progressDialog.isShowing())
+								progressDialog.dismiss();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						try {
+							if (skin_init(0))
+								showUI();
+						} catch (ArithmeticException | NullPointerException e) {
+							e.printStackTrace();
+						}
+					} else {
+						Toast.makeText(Play.this, lang(R.string.outOfCPU), Toast.LENGTH_LONG).show();
+						finish();
+					}
+					super.onPostExecute(result);
+				}
+			}).execute();
+
+
+		} catch (OutOfMemoryError ignore) {
+			Toast.makeText(Play.this, lang(R.string.outOfMemory), Toast.LENGTH_SHORT).show();
+			finish();
+		}
+	}
+
+
 	boolean skin_init(int num) {
-		log("skin_init (" + num + ")");
+		log("[10] skin_init (" + num + ")");
 		String packageName = SaveSetting.SelectedTheme.load(Play.this);
 		if (num >= 2)
 			return false;
 		try {
+			log("[10-1] skin_init try " + packageName);
 			ThemePack mTheme = new ThemePack(Play.this, packageName);
+			log("[10-1] 1");
 			mTheme.loadThemeResources();
+			log("[10-1] 2");
 			theme = mTheme.resources;
+			log("[10-1] skin_init 정상");
 			return true;
 		} catch (OutOfMemoryError e) {
+			log("[10-1] skin_init OutOfMemoryError");
 			e.printStackTrace();
 			requestRestart(this);
 			Toast.makeText(Play.this, lang(R.string.skinMemoryErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
+			log("[10-1] skin_init 메모리 부족");
 			return false;
 		} catch (Exception e) {
+			log("[10-1] skin_init Exception");
 			e.printStackTrace();
 			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
 			SaveSetting.SelectedTheme.save(Play.this, getPackageName());
+			log("[10-1] skin_init 문제발생, 초기화후 재시작");
 			return skin_init(num + 1);
 		}
 	}
 
 	void skin_set() {
-		log("skin_set");
+		log("[12] skin_set");
 		IV_background.setImageDrawable(theme.playbg);
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
@@ -394,162 +561,9 @@ public class Play extends BaseActivity {
 
 	}
 
-	@SuppressLint("StaticFieldLeak")
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		String URL = getIntent().getStringExtra("URL");
-		log("unipack URL : " + URL);
-		unipack = new Unipack(URL, true);
-
-		setContentView(R.layout.activity_play);
-		initVar();
-
-		try {
-			if (unipack.ErrorDetail != null) {
-				new AlertDialog.Builder(Play.this)
-					.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
-					.setMessage(unipack.ErrorDetail)
-					.setPositiveButton(lang(R.string.accept), null)
-					.setCancelable(false)
-					.show();
-			}
-			RL_btns = new RelativeLayout[unipack.buttonX][unipack.buttonY];
-			RL_chains = new RelativeLayout[unipack.chain];
-			ColorManager.init(unipack.buttonX, unipack.buttonY);
-
-			if (unipack.isKeyLED) {
-				ledTask = new LEDTask();
-				ledTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-			}
-
-			if (unipack.squareButton) {
-				if (!unipack.isKeyLED)
-					CB_LED효과.setVisibility(View.GONE);
-
-				if (!unipack.isAutoPlay)
-					CB_자동재생.setVisibility(View.GONE);
-			} else {
-				RL_rootView.setPadding(0, 0, 0, 0);
-
-				CB_누른키표시.setVisibility(View.GONE);
-				CB_LED효과.setVisibility(View.GONE);
-				CB_자동재생.setVisibility(View.GONE);
-
-				CB_순서기록.setVisibility(View.GONE);
-				CB_녹음.setVisibility(View.GONE);
-			}
-
-			if (unipack.isKeyLED) {
-				CB_LED효과.setChecked(true);
-				CB_누른키표시.setChecked(false);
-			}
-
-
-			bool_pressedShow = CB_누른키표시.isChecked();
-			bool_LEDEvent = CB_LED효과.isChecked();
-			bool_traceLog = CB_순서기록.isChecked();
-			bool_record = CB_녹음.isChecked();
-
-			stopID = new int[unipack.chain][unipack.buttonX][unipack.buttonY];
-
-
-			traceLog_init();
-
-			if (skin_init(0)) {
-				(new AsyncTask<String, String, String>() {
-
-					ProgressDialog progressDialog;
-
-					@Override
-					protected void onPreExecute() {
-
-						progressDialog = new ProgressDialog(Play.this);
-						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-						progressDialog.setTitle(lang(R.string.loading));
-						progressDialog.setMessage(lang(R.string.wait));
-						progressDialog.setCancelable(false);
-
-						int soundNum = 0;
-						for (int i = 0; i < unipack.chain; i++)
-							for (int j = 0; j < unipack.buttonX; j++)
-								for (int k = 0; k < unipack.buttonY; k++)
-									if (unipack.sound[i][j][k] != null)
-										soundNum += unipack.sound[i][j][k].size();
-
-						soundPool = new SoundPool(unipack.chain * unipack.buttonX * unipack.buttonY, AudioManager.STREAM_MUSIC, 0);
-
-						progressDialog.setMax(soundNum);
-						progressDialog.show();
-						super.onPreExecute();
-					}
-
-					@Override
-					protected String doInBackground(String... params) {
-
-						try {
-
-							for (int i = 0; i < unipack.chain; i++) {
-								for (int j = 0; j < unipack.buttonX; j++) {
-									for (int k = 0; k < unipack.buttonY; k++) {
-										ArrayList arrayList = unipack.sound[i][j][k];
-										if (arrayList != null) {
-											for (int l = 0; l < arrayList.size(); l++) {
-												Unipack.Sound e = unipack.sound[i][j][k].get(l);
-												e.id = soundPool.load(e.URL, 1);
-												publishProgress();
-											}
-										}
-									}
-								}
-							}
-							loaded = true;
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-
-						return null;
-					}
-
-					@Override
-					protected void onProgressUpdate(String... progress) {
-						progressDialog.incrementProgressBy(1);
-					}
-
-					@Override
-					protected void onPostExecute(String result) {
-						super.onPostExecute(result);
-
-						if (loaded) {
-							try {
-								if (progressDialog != null && progressDialog.isShowing())
-									progressDialog.dismiss();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-							try {
-								showUI();
-							} catch (ArithmeticException | NullPointerException e) {
-								e.printStackTrace();
-							}
-						} else {
-							Toast.makeText(Play.this, lang(R.string.outOfCPU), Toast.LENGTH_LONG).show();
-							finish();
-						}
-					}
-				}).execute();
-			}
-
-		} catch (OutOfMemoryError ignore) {
-			Toast.makeText(Play.this, lang(R.string.outOfMemory), Toast.LENGTH_SHORT).show();
-			finish();
-		}
-	}
-
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
-		log("showUI");
+		log("[11] showUI");
 		int buttonX;
 		int buttonY;
 
@@ -701,6 +715,7 @@ public class Play extends BaseActivity {
 				LL_chains.addView(RL_chains[i]);
 			}
 		}
+		traceLog_init();
 		chainChange(chain);
 
 		Launchpad.ReceiveTask.setEventListener(new Launchpad.ReceiveTask.eventListener() {
@@ -716,60 +731,6 @@ public class Play extends BaseActivity {
 
 			@Override
 			public void onGetSignal(int cmd, int note, int velocity) {
-				/*if (cmd == 11 && velocity == 127)
-					switch (Launchpad.device) {
-						case S:
-							if (note == 104)
-								CB_LED효과.toggle();
-							else if (note == 105)
-								CB_자동재생.toggle();
-							else if (note == 106) {
-								if (CB_자동재생.isChecked())
-									autoPlay_prev();
-							} else if (note == 107) {
-								if (CB_자동재생.isChecked()) {
-									if (autoPlayTask.isPlaying)
-										autoPlay_stop();
-									else
-										autoPlay_play();
-								}
-							}
-							break;
-						case MK2:
-							if (note == 104)
-								CB_LED효과.toggle();
-							else if (note == 105)
-								CB_자동재생.toggle();
-							else if (note == 106) {
-								if (CB_자동재생.isChecked())
-									autoPlay_prev();
-							} else if (note == 107) {
-								if (CB_자동재생.isChecked()) {
-									if (autoPlayTask.isPlaying)
-										autoPlay_stop();
-									else
-										autoPlay_play();
-								}
-							}
-							break;
-						case Pro:
-							if (note == 91)
-								CB_LED효과.toggle();
-							else if (note == 92)
-								CB_자동재생.toggle();
-							else if (note == 93) {
-								if (CB_자동재생.isChecked())
-									autoPlay_prev();
-							} else if (note == 94) {
-								if (CB_자동재생.isChecked()) {
-									if (autoPlayTask.isPlaying)
-										autoPlay_stop();
-									else
-										autoPlay_play();
-								}
-							}
-							break;
-					}*/
 			}
 
 			@Override
@@ -969,7 +930,6 @@ public class Play extends BaseActivity {
 											}
 
 
-
 											break;
 										case Unipack.LED.Syntax.DELAY:
 											e.delay += delay;
@@ -999,7 +959,7 @@ public class Play extends BaseActivity {
 							}
 						}
 
-						for(int y = 0; y<cirLED.length;y++){
+						for (int y = 0; y < cirLED.length; y++) {
 							if (cirLED[y] != null && cirLED[y].equal(e.buttonX, e.buttonY)) {
 								ColorManager.remove(-1, y, ColorManager.LED);
 								setLEDLaunchpad(-1, y, ColorManager.get(-1, y));
@@ -1580,7 +1540,7 @@ public class Play extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		initVar();
+		//initVar();
 
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 

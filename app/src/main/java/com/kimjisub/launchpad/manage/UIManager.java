@@ -7,7 +7,6 @@ import android.util.DisplayMetrics;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.google.android.gms.ads.MobileAds;
 import com.kimjisub.launchpad.BaseActivity;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.manage.SaveSetting.PrevAdsShowTime;
@@ -56,8 +55,6 @@ public class UIManager {
 
 	public static void initAds(Context context) {
 		if (!isPremium) {
-			MobileAds.initialize(context, UIManager.ADUNITID);
-
 			interstitialAd = new InterstitialAd(context);
 			interstitialAd.setAdUnitId(ADUNITID);
 			interstitialAd.loadAd(new AdRequest.Builder().build());

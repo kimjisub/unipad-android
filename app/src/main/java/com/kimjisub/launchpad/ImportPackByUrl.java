@@ -42,8 +42,7 @@ public class ImportPackByUrl extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		SaveSetting.IsUsingSDCard.load(ImportPackByUrl.this);
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL;
+		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPackByUrl.this);
 }
 
 	@SuppressLint("StaticFieldLeak")

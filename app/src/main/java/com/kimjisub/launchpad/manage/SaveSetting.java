@@ -63,7 +63,7 @@ public class SaveSetting {
 
 	public static class IsUsingSDCard {
 
-		public static String URL;
+		private static String URL;
 
 		public static void save(Context context, boolean value) {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
@@ -85,8 +85,13 @@ public class SaveSetting {
 					return load(context);
 				}
 			}
-			log("URL : " + URL);
+			log("UnipackRootURL : " + URL);
 			return isSDCard;
+		}
+
+		public static String URL(Context context){
+			load(context);
+			return URL;
 		}
 	}
 
