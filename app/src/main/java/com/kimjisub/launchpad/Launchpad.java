@@ -24,39 +24,39 @@ import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 public class Launchpad extends BaseActivity {
-
+	
 	TextView TV_info;
 	View[] VL_launchpad;
 	TextView[][] TVL_launchpad;
 	View[] VL_mode;
 	TextView[][] TVL_mode;
-
-
+	
+	
 	static UsbManager usbManager;
-
+	
 	static UsbDevice usbDevice;
 	static UsbInterface usbInterface;
 	static UsbEndpoint usbEndpoint_in;
 	static UsbEndpoint usbEndpoint_out;
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
-
+	
 	static midiDevice device = S;
 	static int mode = 0;
-
+	
 	static boolean isShowWatermark = true;
 	static int chain = -1;
-
+	
 	public enum midiDevice {
 		S(0), MK2(1), Pro(2), Piano(3);
-
+		
 		private final int value;
-
+		
 		midiDevice(int value) {
 			this.value = value;
 		}
 	}
-
+	
 	@SuppressLint("CutPasteId")
 	void initVar() {
 		TV_info = findViewById(R.id.info);
@@ -66,14 +66,14 @@ public class Launchpad extends BaseActivity {
 			findViewById(R.id.pro),
 			findViewById(R.id.piano)
 		};
-
+		
 		TVL_launchpad = new TextView[][]{
 			{findViewById(R.id.s)},
 			{findViewById(R.id.mk2)},
 			{findViewById(R.id.pro1), findViewById(R.id.pro2)},
 			{findViewById(R.id.piano)}
 		};
-
+		
 		VL_mode = new View[]{
 			findViewById(R.id.speedFirst),
 			findViewById(R.id.avoidAfterimage)
@@ -83,18 +83,18 @@ public class Launchpad extends BaseActivity {
 			{findViewById(R.id.avoidAfterimage)}
 		};
 	}
-
+	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
-
+		
 		mode = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
-
+		
 		selectDevice(device.value);
-
+		
 		selectMode(mode);
-
+		
 		Intent intent = getIntent();
 		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
@@ -105,8 +105,8 @@ public class Launchpad extends BaseActivity {
 			if (deviceIterator.hasNext())
 				selectDevice(deviceIterator.next());
 		}*/
-
-
+		
+		
 		(new Handler()).postDelayed(new Runnable() {
 			@Override
 			public void run() {
@@ -114,12 +114,12 @@ public class Launchpad extends BaseActivity {
 			}
 		}, 2000);
 	}
-
-
+	
+	
 	private boolean selectDevice(UsbDevice device) {
-
+		
 		int interfaceNum = 0;
-
+		
 		if (device == null) {
 			logSig("USB 에러 : device == null");
 			return false;
@@ -168,7 +168,7 @@ public class Launchpad extends BaseActivity {
 				e.printStackTrace();
 			}
 		}
-
+		
 		for (int i = interfaceNum; i < device.getInterfaceCount(); i++) {
 			UsbInterface ui = device.getInterface(i);
 			if (ui.getEndpointCount() > 0) {
@@ -202,15 +202,15 @@ public class Launchpad extends BaseActivity {
 			return false;
 		}
 	}
-
+	
 	// ========================================================================================= 설정 선택
-
+	
 	public void selectDeviceXml(View v) {
 		selectDevice(Integer.parseInt((String) v.getTag()));
 	}
-
+	
 	public void selectDevice(int num) {
-
+		
 		switch (VL_launchpad[num].getId()) {
 			case R.id.s:
 				device = S;
@@ -225,7 +225,7 @@ public class Launchpad extends BaseActivity {
 				device = Piano;
 				break;
 		}
-
+		
 		for (int i = 0; i < VL_launchpad.length; i++) {
 			if (device.value == i) {
 				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
@@ -238,13 +238,13 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 	}
-
+	
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
 	}
-
+	
 	public void selectMode(int num) {
-
+		
 		switch (VL_mode[num].getId()) {
 			case R.id.speedFirst:
 				mode = 0;
@@ -253,7 +253,7 @@ public class Launchpad extends BaseActivity {
 				mode = 1;
 				break;
 		}
-
+		
 		for (int i = 0; i < VL_mode.length; i++) {
 			if (mode == i) {
 				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
@@ -265,38 +265,38 @@ public class Launchpad extends BaseActivity {
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
-
-
+		
+		
 		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
-
+	
 	// ========================================================================================= 리스너
-
+	
 	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
 		private static eventListener listener = null;
-
+		
 		interface eventListener {
 			void onConnect();
-
+			
 			void onGetSignal(int cmd, int note, int velocity);
-
+			
 			void onPadTouch(int x, int y, boolean upDown);
-
+			
 			void onChainChange(int c);
 		}
-
+		
 		static void setEventListener(eventListener listener_) {
 			listener = listener_;
 		}
-
+		
 		public static void connect() {
 			if (listener != null) listener.onConnect();
 		}
-
+		
 		static void getSignal(int cmd, int note, int velocity) {
 			if (listener != null) {
 				listener.onGetSignal(cmd, note, velocity);
-
+				
 				switch (Launchpad.device) {
 					case S:
 						if (cmd == 9 && velocity != 0) {
@@ -358,7 +358,7 @@ public class Launchpad extends BaseActivity {
 					case Piano:
 						int x;
 						int y;
-
+						
 						if (cmd == 9 && velocity != 0) {
 							if (note >= 36 && note <= 67) {
 								x = (67 - note) / 4 + 1;
@@ -369,7 +369,7 @@ public class Launchpad extends BaseActivity {
 								y = 8 - (99 - note) % 4;
 								listener.onPadTouch(x - 1, y - 1, true);
 							}
-
+							
 						} else if (velocity == 0) {
 							if (note >= 36 && note <= 67) {
 								x = (67 - note) / 4 + 1;
@@ -385,19 +385,19 @@ public class Launchpad extends BaseActivity {
 				}
 			}
 		}
-
+		
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
 			connect();
 		}
-
+		
 		@Override
 		protected String doInBackground(String... params) {
 			if (!isRun) {
 				isRun = true;
 				logSig("USB 시작");
-
+				
 				long prevTime = System.currentTimeMillis();
 				int count = 0;
 				byte[] byteArray = new byte[usbEndpoint_in.getMaxPacketSize()];
@@ -410,7 +410,7 @@ public class Launchpad extends BaseActivity {
 								int sig = byteArray[i + 1];
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
-
+								
 								if (device == S || device == MK2) {
 									if (cmd == 11 && sig == -80) {
 										if (108 <= note && note <= 111) {
@@ -427,8 +427,8 @@ public class Launchpad extends BaseActivity {
 									} else if (cmd == 7 && sig == 46 && velocity == -9)
 										toggleWatermark();
 								}
-
-
+								
+								
 								publishProgress(cmd, note, velocity);
 								logRecv(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
@@ -448,28 +448,28 @@ public class Launchpad extends BaseActivity {
 						break;
 					}
 				}
-
+				
 				logSig("USB 끝");
 			}
 			isRun = false;
 			return null;
 		}
-
+		
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
 			getSignal(progress[0], progress[1], progress[2]);
 		}
-
+		
 		@Override
 		protected void onPostExecute(String result) {
 		}
 	}
-
+	
 	static void toggleWatermark() {
 		isShowWatermark = !isShowWatermark;
 		showWatermark();
 	}
-
+	
 	static void showWatermark() {
 		if (isShowWatermark) {
 			if (device == S || device == MK2) {
@@ -483,24 +483,23 @@ public class Launchpad extends BaseActivity {
 				send11(97, 61);
 				send11(98, 40);
 			}
-			chainRefresh(chain);
 		} else {
 			if (device == S || device == MK2) {
 				send11(108, 0);
 				send11(109, 0);
-				send11( 110, 0);
+				send11(110, 0);
 				send11(111, 0);
 			} else if (device == Pro) {
 				send11(95, 0);
 				send11(96, 0);
 				send11(97, 0);
-				send11( 98, 0);
+				send11(98, 0);
 			}
-			chainRefresh(chain);
 		}
-
+		
+		chainRefresh();
 	}
-
+	
 	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
 		try {
 			byte[] buffer = {cmd, sig, note, velocity};
@@ -508,7 +507,7 @@ public class Launchpad extends BaseActivity {
 		} catch (Exception ignored) {
 		}
 	}
-
+	
 	@SuppressLint("StaticFieldLeak")
 	static void send(final byte cmd, final byte sig, final byte note, final byte velocity) {
 		if (usbDeviceConnection != null) {
@@ -529,17 +528,17 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 	}
-
-
+	
+	
 	static void send09(final int note, final int velocity) {
 		send((byte) 9, (byte) -112, (byte) note, (byte) velocity);
 	}
-
+	
 	static void send11(final int note, final int velocity) {
 		send((byte) 11, (byte) -80, (byte) note, (byte) velocity);
 	}
-
-
+	
+	
 	static void btnLED(int i, int j, int velo) {
 		if (i >= 0 && i <= 7 && j >= 0 && j <= 7) {
 			if (device == S)
@@ -550,23 +549,23 @@ public class Launchpad extends BaseActivity {
 				send09(10 * (8 - i) + j + 1, velo);
 		}
 	}
-
+	
 	static void chainLED(int c, int velo) {
 		if (0 <= c && c <= 7)
 			circleBtnLED_(c + 8, velo);
 	}
-
-
+	
+	
 	static void circleBtnLED(int num, int velo) {
-		if(isShowWatermark)
-			if(num == 4 || num == 5 || num == 6 || num == 7 || num == chain+8)
+		if (isShowWatermark)
+			if (num == 4 || num == 5 || num == 6 || num == 7 || num == chain + 8)
 				return;
-
+		
 		circleBtnLED_(num, velo);
-
+		
 	}
-
-	static void circleBtnLED_(int num, int velo){
+	
+	static void circleBtnLED_(int num, int velo) {
 		if (device == S && 0 <= num && num <= 15)
 			send((byte) S_circleCode[num][0], (byte) S_circleCode[num][1], (byte) S_circleCode[num][2], (byte) LaunchpadColor.SCode[velo]);
 		if (device == MK2 && 0 <= num && num <= 15)
@@ -574,32 +573,31 @@ public class Launchpad extends BaseActivity {
 		if (device == Pro && 0 <= num && num <= 31)
 			send((byte) Pro_circleCode[num][0], (byte) Pro_circleCode[num][1], (byte) Pro_circleCode[num][2], (byte) velo);
 	}
-
-	static void chainRefresh(int c) {
-		log("chainRefresh(" + c + ")");
-
-		for (int i = 0; i < 8; i++) {
-			if (i == c) {
-				if (isShowWatermark)
-					chainLED(i, 119);
-				else
-					chainLED(i, 0);
-			} else
-				chainLED(i, 0);
-		}
-
+	
+	static void chainUpdate(int c) {
+		log("chainUpdate");
+		
 		chain = c;
 	}
-
-
-
+	
+	static void chainRefresh() {
+		log("chainRefresh(" + chain + ")");
+		
+		if (isShowWatermark)
+			chainLED(chain, 119);
+		else
+			chainLED(chain, 0);
+		
+	}
+	
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		initVar();
 	}
-
-
+	
+	
 	@SuppressLint("StaticFieldLeak")
 	@Override
 	protected void onDestroy() {
@@ -610,13 +608,13 @@ public class Launchpad extends BaseActivity {
 				isShowWatermark = true;
 				if (device == Pro)
 					isShowWatermark = !isShowWatermark;
-
+				
 				showWatermark();
 				return null;
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-
+	
 	static final int[][] S_circleCode = {
 		{11, -80, 104},
 		{11, -80, 105},
