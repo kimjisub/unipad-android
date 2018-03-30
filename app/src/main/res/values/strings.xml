@@ -41,8 +41,8 @@
 
 	<!--Community-->
 	<string name="community">Community</string>
-	<string name="officialHomepage">Official Homepage</string>
-	<string name="officialHomepage_">In progress…</string>
+	<string name="officialHomepage">Official Website</string>
+	<string name="officialHomepage_">UniPad Official Website</string>
 	<string name="officialFacebook">Official Facebook</string>
 	<string name="officialFacebook_">Technical Support</string>
 	<string name="facebookCommunity">Facebook Community</string>
