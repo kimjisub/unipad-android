@@ -2,6 +2,8 @@ package com.kimjisub.launchpad;
 
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -21,8 +23,10 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.UIManager;
 
@@ -166,9 +170,23 @@ public class Setting extends PreferenceActivity {
 
 				} catch (RemoteException e) {
 					e.printStackTrace();
+					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 				} catch (IntentSender.SendIntentException e) {
 					e.printStackTrace();
+					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+				}catch(NullPointerException e){
+					e.printStackTrace();
+					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
 				}
+				return false;
+			}
+		});
+		
+		findPreference("FCMToken").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				putClipboard(FirebaseInstanceId.getInstance().getToken());
+				Toast.makeText(Setting.this, R.string.copied, Toast.LENGTH_SHORT).show();
 				return false;
 			}
 		});
@@ -259,7 +277,14 @@ public class Setting extends PreferenceActivity {
 			return convertView;
 		}
 	}
-
+	
+	void putClipboard(String msg) {
+		ClipboardManager clipboardManager = (ClipboardManager) Setting.this.getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipData clipData = ClipData.newPlainText("LABEL", msg);
+		assert clipboardManager != null;
+		clipboardManager.setPrimaryClip(clipData);
+	}
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == 1001) {
@@ -284,6 +309,9 @@ public class Setting extends PreferenceActivity {
 		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL(Setting.this));
 		if (UIManager.isPremium)
 			findPreference("removeAds").setSummary(lang(R.string.using));
+		
+		
+		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 		super.onResume();
 	}
 
