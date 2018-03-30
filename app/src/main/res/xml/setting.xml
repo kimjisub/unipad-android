@@ -23,4 +23,11 @@
 		<Preference
 		    android:title="@string/credit_simple"/>
 	</PreferenceCategory>
+	
+	<PreferenceCategory
+	    android:title="@string/information">
+		<Preference
+		    android:key="FCMToken"
+		    android:title="@string/FCMToken"/>
+	</PreferenceCategory>
 </PreferenceScreen>

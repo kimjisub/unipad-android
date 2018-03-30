@@ -22,6 +22,7 @@
 	<string name="apply">Apply</string>
 	<string name="restart">Restart</string>
 	<string name="using">Using</string>
+	<string name="information">Information</string>
 
 	<!--Menu-->
 	<string name="import_unipack">Load Unipack</string>
@@ -34,6 +35,7 @@
 	<string name="use_sd_card">Using SD Card</string>
 	<string name="removeAds">Remove Ads</string>
 	<string name="purchaseComplete">Purchase Complete</string>
+	<string name="FCMToken">FCM Token</string>
 
 	<!--Credit-->
 	<string name="credit">Credit</string>
@@ -91,7 +93,7 @@
 	<string name="isNotAnUniPack">is not an Unipack</string>
 	<string name="pressAgainToGoBack">Press again\nto exit.</string>
 	<string name="permissionDenied">Access denied.</string>
-	<string name="copied">Recording has been copied to Clip tray.</string>
+	<string name="copied">Copied to clipboard.</string>
 	<string name="skinMemoryErr">Failed to apply skin.\nRestart app.</string>
 	<string name="skinErr">Failed to apply skin.\nReset skin.</string>
 
