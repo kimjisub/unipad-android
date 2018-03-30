@@ -100,8 +100,7 @@ public class Main extends BaseActivity {
 				startActivity(new Intent(Main.this, Setting.class));
 			}
 		});
-
-
+		
 		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
 
@@ -176,128 +175,149 @@ public class Main extends BaseActivity {
 
 
 		LL_list.removeAllViews();
-
-		File projectFolder = new File(UnipackRootURL);
-
-		if (projectFolder.isDirectory()) {
-
-			File[] projects = FileManager.sortByTime(projectFolder.listFiles());
-			int num = projects.length;
-
-			IT_items = new Item[num];
-			URL = new String[num];
-			unipacks = new Unipack[num];
-
-			int count = 0;
-			for (int i_ = 0; i_ < num; i_++) {
-				final int i = i_;
-				File project = projects[i];
-				if (project.isFile()) continue;
-				count++;
-
-				URL[i] = UnipackRootURL + "/" + project.getName();
-				unipacks[i] = new Unipack(URL[i], false);
-
-				int color;
-				if (unipacks[i].ErrorDetail == null)
-					color = com.kimjisub.design.R.drawable.border_play_blue;
-				else if (unipacks[i].CriticalError)
-					color = com.kimjisub.design.R.drawable.border_play_red;
-				else
-					color = com.kimjisub.design.R.drawable.border_play_orange;
-
-				Item IT_item = new Item(Main.this)
-					.setFlagColor(color)
-					.setTitle(unipacks[i].title)
-					.setSubTitle(unipacks[i].producerName)
-					.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
-					.setChain(unipacks[i].chain + "")
-					.setCapacity(FileManager.getFolderSize(URL[i]))
-					.setLED(unipacks[i].isKeyLED)
-					.setAutoPlay(unipacks[i].isAutoPlay)
-					.setOnPlayClickListener(new Item.OnPlayClickListener() {
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				File projectFolder = new File(UnipackRootURL);
+				
+				if (projectFolder.isDirectory()) {
+					
+					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
+					int num = projects.length;
+					
+					IT_items = new Item[num];
+					URL = new String[num];
+					unipacks = new Unipack[num];
+					
+					int count = 0;
+					for (int i_ = 0; i_ < num; i_++) {
+						final int i = i_;
+						File project = projects[i];
+						if (project.isFile()) continue;
+						count++;
+						
+						URL[i] = UnipackRootURL + "/" + project.getName();
+						unipacks[i] = new Unipack(URL[i], false);
+						
+						int color;
+						if (unipacks[i].ErrorDetail == null)
+							color = com.kimjisub.design.R.drawable.border_play_blue;
+						else if (unipacks[i].CriticalError)
+							color = com.kimjisub.design.R.drawable.border_play_red;
+						else
+							color = com.kimjisub.design.R.drawable.border_play_orange;
+						
+						final Item IT_item = new Item(Main.this)
+							.setFlagColor(color)
+							.setTitle(unipacks[i].title)
+							.setSubTitle(unipacks[i].producerName)
+							.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
+							.setChain(unipacks[i].chain + "")
+							.setCapacity(FileManager.getFolderSize(URL[i]))
+							.setLED(unipacks[i].isKeyLED)
+							.setAutoPlay(unipacks[i].isAutoPlay)
+							.setOnPlayClickListener(new Item.OnPlayClickListener() {
+								@Override
+								public void onPlayClick() {
+									UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
+									UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
+									UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
+									UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
+									
+									Intent intent = new Intent(Main.this, Play.class);
+									intent.putExtra("URL", URL[i]);
+									startActivity(intent);
+								}
+							})
+							.setOnDeleteClickListener(new Item.OnDeleteClickListener() {
+								@Override
+								public void onDeleteClick() {
+									deleteUnipack(unipacks[i]);
+								}
+							})
+							.setOnEditClickListener(new Item.OnEditClickListener() {
+								@Override
+								public void onEditClick() {
+									editUnipack(unipacks[i]);
+								}
+							})
+							.setOnViewClickListener(new Item.OnViewClickListener() {
+								@Override
+								public void onViewClick(Item v) {
+									togglePlay(i);
+									toggleInfo(-1);
+								}
+							})
+							.setOnViewLongClickListener(new Item.OnViewLongClickListener() {
+								@Override
+								public void onViewLongClick(Item v) {
+									togglePlay(-1);
+									toggleInfo(i);
+								}
+							});
+						
+						IT_items[i] = IT_item;
+						runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
+							@Override
+							public void run() {
+								LL_list.addView(IT_item);
+							}
+						});
+						
+					}
+					
+					if (count == 0) {
+						runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
+							@Override
+							public void run() {
+								LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+									@Override
+									public void onViewClick(Item v) {
+										startActivity(new Intent(Main.this, Store.class));
+									}
+								}));
+							}
+						});
+					}
+					
+				} else {
+					projectFolder.mkdir();
+					
+					runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
 						@Override
-						public void onPlayClick() {
-							UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
-							UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
-							UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
-							UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
-
-							Intent intent = new Intent(Main.this, Play.class);
-							intent.putExtra("URL", URL[i]);
-							startActivity(intent);
-						}
-					})
-					.setOnDeleteClickListener(new Item.OnDeleteClickListener() {
-						@Override
-						public void onDeleteClick() {
-							deleteUnipack(unipacks[i]);
-						}
-					})
-					.setOnEditClickListener(new Item.OnEditClickListener() {
-						@Override
-						public void onEditClick() {
-							editUnipack(unipacks[i]);
-						}
-					})
-					.setOnViewClickListener(new Item.OnViewClickListener() {
-						@Override
-						public void onViewClick(Item v) {
-							togglePlay(i);
-							toggleInfo(-1);
-						}
-					})
-					.setOnViewLongClickListener(new Item.OnViewLongClickListener() {
-						@Override
-						public void onViewLongClick(Item v) {
-							togglePlay(-1);
-							toggleInfo(i);
+						public void run() {
+							LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+								@Override
+								public void onViewClick(Item v) {
+									startActivity(new Intent(Main.this, Store.class));
+								}
+							}));
 						}
 					});
-
-				IT_items[i] = IT_item;
-				LL_list.addView(IT_item);
-			}
-
-			if (count == 0) {
-				LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
-					@Override
-					public void onViewClick(Item v) {
-						startActivity(new Intent(Main.this, Store.class));
-					}
-				}));
-			}
-
-		} else {
-			projectFolder.mkdir();
-
-			LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
-				@Override
-				public void onViewClick(Item v) {
-					startActivity(new Intent(Main.this, Store.class));
 				}
-			}));
-		}
-
-		File nomedia = new File(UnipackRootURL + "/.nomedia");
-		if (!nomedia.isFile()) {
-			try {
-				(new FileWriter(nomedia)).close();
-			} catch (IOException e) {
-				e.printStackTrace();
+				
+				File nomedia = new File(UnipackRootURL + "/.nomedia");
+				if (!nomedia.isFile()) {
+					try {
+						(new FileWriter(nomedia)).close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
-		}
+		}).start();
 	}
 
-	void deleteUnipack(final Unipack unipack) {
+	void deleteUnipack(final Unipack uni) {
 		new AlertDialog.Builder(Main.this)
-			.setTitle(unipack.title)
-			.setMessage(lang(R.string.doYouWantToDeleteProject) + "\n" + unipack.URL)
+			.setTitle(uni.title)
+			.setMessage(lang(R.string.doYouWantToDeleteProject) + "\n" + uni.URL)
 			.setPositiveButton(lang(R.string.cancel), null)
 			.setNegativeButton(lang(R.string.delete), new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					FileManager.deleteFolder(unipack.URL);
+					FileManager.deleteFolder(uni.URL);
 					update();
 				}
 			})
@@ -305,7 +325,6 @@ public class Main extends BaseActivity {
 	}
 
 	void editUnipack(final Unipack uni) {
-
 		new AlertDialog.Builder(Main.this)
 			.setTitle(uni.title)
 			.setMessage(lang(R.string.doYouWantToRemapProject) + "\n" + uni.URL)
