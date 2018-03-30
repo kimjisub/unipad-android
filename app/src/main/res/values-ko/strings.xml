@@ -41,8 +41,8 @@
 
 	<!--Community-->
 	<string name="community">커뮤니티</string>
-	<string name="officialHomepage">공식 홈페이지</string>
-	<string name="officialHomepage_">개발중입니다…</string>
+	<string name="officialHomepage">공식 웹사이트</string>
+	<string name="officialHomepage_">유니패드 공식 웹사이트</string>
 	<string name="officialFacebook">공식 페이스북</string>
 	<string name="officialFacebook_">기술 지원</string>
 	<string name="facebookCommunity">페이스북 커뮤니티</string>
