@@ -25,21 +25,6 @@ public class SaveSetting {
 		}
 	}
 
-	public static class PrevNotice {
-
-		public static void save(Context context, String value) {
-			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
-			SharedPreferences.Editor editor = pref.edit();
-			editor.putString("PrevNotice", value);
-			editor.apply();
-		}
-
-		public static String load(Context context) {
-			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
-			return pref.getString("PrevNotice", "");
-		}
-	}
-
 	public static class FileExplorerPath {
 
 		public static void save(Context context, String value) {
