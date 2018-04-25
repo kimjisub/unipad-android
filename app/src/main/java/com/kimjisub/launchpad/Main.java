@@ -78,7 +78,6 @@ public class Main extends BaseActivity {
 		initVar();
 
 		updateCheck();
-		noticeCheck();
 
 		FAB_loadUniPack.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -100,7 +99,7 @@ public class Main extends BaseActivity {
 				startActivity(new Intent(Main.this, Setting.class));
 			}
 		});
-		
+
 		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
 
@@ -175,31 +174,31 @@ public class Main extends BaseActivity {
 
 
 		LL_list.removeAllViews();
-		
+
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				File projectFolder = new File(UnipackRootURL);
-				
+
 				if (projectFolder.isDirectory()) {
-					
+
 					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
 					int num = projects.length;
-					
+
 					IT_items = new Item[num];
 					URL = new String[num];
 					unipacks = new Unipack[num];
-					
+
 					int count = 0;
 					for (int i_ = 0; i_ < num; i_++) {
 						final int i = i_;
 						File project = projects[i];
 						if (project.isFile()) continue;
 						count++;
-						
+
 						URL[i] = UnipackRootURL + "/" + project.getName();
 						unipacks[i] = new Unipack(URL[i], false);
-						
+
 						int color;
 						if (unipacks[i].ErrorDetail == null)
 							color = com.kimjisub.design.R.drawable.border_play_blue;
@@ -207,7 +206,7 @@ public class Main extends BaseActivity {
 							color = com.kimjisub.design.R.drawable.border_play_red;
 						else
 							color = com.kimjisub.design.R.drawable.border_play_orange;
-						
+
 						final Item IT_item = new Item(Main.this)
 							.setFlagColor(color)
 							.setTitle(unipacks[i].title)
@@ -224,7 +223,7 @@ public class Main extends BaseActivity {
 									UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
 									UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
 									UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
-									
+
 									Intent intent = new Intent(Main.this, Play.class);
 									intent.putExtra("URL", URL[i]);
 									startActivity(intent);
@@ -256,19 +255,19 @@ public class Main extends BaseActivity {
 									toggleInfo(i);
 								}
 							});
-						
+
 						IT_items[i] = IT_item;
-						runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
+						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
 								LL_list.addView(IT_item);
 							}
 						});
-						
+
 					}
-					
+
 					if (count == 0) {
-						runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
+						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
 								LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
@@ -280,11 +279,11 @@ public class Main extends BaseActivity {
 							}
 						});
 					}
-					
+
 				} else {
 					projectFolder.mkdir();
-					
-					runOnUiThread(new Runnable() {	// UI Thread 자원 사용 이벤트 큐에 저장.
+
+					runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 						@Override
 						public void run() {
 							LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
@@ -296,7 +295,7 @@ public class Main extends BaseActivity {
 						}
 					});
 				}
-				
+
 				File nomedia = new File(UnipackRootURL + "/.nomedia");
 				if (!nomedia.isFile()) {
 					try {
@@ -708,54 +707,9 @@ public class Main extends BaseActivity {
 		}).run();
 	}
 
-	void noticeCheck() {
-		new Networks.CheckNotice(lang(R.string.language)).setOnEndListener(new Networks.CheckNotice.onEndListener() {
-			@Override
-			public void onEnd(final String title, final String content) {
-				int px1 = UIManager.dpToPx(Main.this, 25);
-				int px2 = UIManager.dpToPx(Main.this, 15);
-
-
-				if (title != null && content != null) {
-					String prevNotice = SaveSetting.PrevNotice.load(Main.this);
-
-					if (!prevNotice.equals(content)) {
-
-						TextView textView = new TextView(Main.this);
-						textView.setText(Html.fromHtml(content));
-						textView.setPadding(px1, px2, px1, 0);
-						textView.setTextColor(0xFF000000);
-						textView.setLinkTextColor(0xffffaf00);
-						textView.setHighlightColor(0xffffaf00);
-						textView.setTextSize(16);
-						textView.setClickable(true);
-						textView.setMovementMethod(LinkMovementMethod.getInstance());
-
-						LinearLayout linearLayout = new LinearLayout(Main.this);
-						linearLayout.addView(textView);
-
-						new AlertDialog.Builder(Main.this)
-							.setTitle(title)
-							.setPositiveButton(lang(R.string.accept), null)
-							.setNegativeButton(lang(R.string.doNotSee), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialogInterface, int i) {
-									SaveSetting.PrevNotice.save(Main.this, content);
-								}
-							})
-							.setCancelable(false)
-							.setView(linearLayout)
-							.show();
-
-					}
-				}
-			}
-		}).run();
-	}
-
 	@Override
 	public void onBackPressed() {
-		if(IT_items != null) {
+		if (IT_items != null) {
 			boolean clear = true;
 			for (Item item : IT_items) {
 				if (item != null) {
