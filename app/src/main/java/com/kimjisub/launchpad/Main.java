@@ -13,15 +13,18 @@ import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.kimjisub.design.Item;
+import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
@@ -43,6 +46,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
+import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 
 public class Main extends BaseActivity {
@@ -174,6 +178,40 @@ public class Main extends BaseActivity {
 
 
 		LL_list.removeAllViews();
+		
+		
+		
+		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+		int left = dpToPx(Main.this, 16);
+		int top = 0;
+		int right = dpToPx(Main.this, 16);
+		int bottom = dpToPx(Main.this, 10);
+		lp.setMargins(left, top, right, bottom);
+		
+		final PackView packView = new PackView(Main.this)
+			.setOnEventListener(new PackView.OnEventListener() {
+				@Override
+				public void onPlayClick(PackView v) {
+				
+				}
+				
+				@Override
+				public void onFunctionBtnClick(PackView v, int index) {
+				
+				}
+				
+				@Override
+				public void onViewClick(PackView v) {
+				
+				}
+				
+				@Override
+				public void onViewLongClick(PackView v) {
+				
+				}
+			});
+		packView.setLayoutParams(lp);
+		LL_list.addView(packView);
 
 		new Thread(new Runnable() {
 			@Override

@@ -5,13 +5,31 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.kimjisub.design.manage.UIManager;
 
 public class PackView extends RelativeLayout {
 
 	Context context;
+	
+	RelativeLayout RL_root;
+	RelativeLayout RL_info;
+	TextView TV_delete;
+	TextView TV_edit;
+	LinearLayout LL_leftView;
+	RelativeLayout RL_playBtn;
+	
+	RelativeLayout RL_flag;
+	TextView TV_title;
+	TextView TV_subTitle;
+	TextView TV_LED;
+	TextView TV_autoPlay;
+	TextView TV_size;
+	TextView TV_chain;
+	TextView TV_capacity;
 
 	public PackView(Context context) {
 		super(context);
@@ -31,12 +49,12 @@ public class PackView extends RelativeLayout {
 	}
 
 	private void getAttrs(AttributeSet attrs) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item);
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView);
 		setTypeArray(typedArray);
 	}
 
 	private void getAttrs(AttributeSet attrs, int defStyle) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.Item, defStyle, 0);
+		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView, defStyle, 0);
 		setTypeArray(typedArray);
 	}
 
@@ -45,7 +63,7 @@ public class PackView extends RelativeLayout {
 
 		String infService = Context.LAYOUT_INFLATER_SERVICE;
 		LayoutInflater li = (LayoutInflater) getContext().getSystemService(infService);
-		View v = li.inflate(R.layout.item, this, false);
+		View v = li.inflate(R.layout.packview, this, false);
 		addView(v);
 
 		RL_root = findViewById(R.id.root);
@@ -71,33 +89,61 @@ public class PackView extends RelativeLayout {
 	private void setTypeArray(TypedArray typedArray) {
 
 		int color = typedArray.getResourceId(R.styleable.Item_flagColor, R.drawable.border_play_blue);
-		setFlagColor(color);
+		//setFlagColor(color);
 
 		String title = typedArray.getString(R.styleable.Item_title);
-		setTitle(title);
+		//setTitle(title);
 
 		String subTitle = typedArray.getString(R.styleable.Item_subTitle);
-		setSubTitle(subTitle);
+		//setSubTitle(subTitle);
 
 		Boolean LED = typedArray.getBoolean(R.styleable.Item_LED, false);
-		setLED(LED);
+		//setLED(LED);
 
 		Boolean autoPlay = typedArray.getBoolean(R.styleable.Item_AutoPlay, false);
-		setAutoPlay(autoPlay);
+		//setAutoPlay(autoPlay);
 
 		String size = typedArray.getString(R.styleable.Item_size);
-		setSize(size);
+		//setSize(size);
 
 		String chain = typedArray.getString(R.styleable.Item_chain);
-		setChain(chain);
+		//setChain(chain);
 
 		int capacity = typedArray.getInteger(R.styleable.Item_capacity, 0);
-		setCapacity(capacity);
+		//setCapacity(capacity);
 
 		Boolean optionVisibility = typedArray.getBoolean(R.styleable.Item_optionVisibility, true);
-		setOptionVisibility(optionVisibility);
+		//setOptionVisibility(optionVisibility);
 
 		typedArray.recycle();
+	}
+	
+	
+	private OnEventListener onEventListener = null;
+	
+	public interface OnEventListener {
+		void onPlayClick(PackView v);
+		void onFunctionBtnClick(PackView v, int index);
+		void onViewClick(PackView v);
+		void onViewLongClick(PackView v);
+	}
+	
+	public PackView setOnEventListener(OnEventListener listener) {
+		this.onEventListener = listener;
+		return this;
+	}
+	
+	void onPlayClick() {
+		if (onEventListener != null) onEventListener.onPlayClick(this);
+	}
+	void onFunctionBtnClick(int index) {
+		if (onEventListener != null) onEventListener.onFunctionBtnClick(this, index);
+	}
+	void onViewClick() {
+		if (onEventListener != null) onEventListener.onViewClick(this);
+	}
+	void onViewLongClick() {
+		if (onEventListener != null) onEventListener.onViewLongClick(this);
 	}
 
 

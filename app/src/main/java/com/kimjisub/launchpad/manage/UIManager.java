@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.manage;
 import android.content.Context;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -68,7 +70,6 @@ public class UIManager {
 			.setPositiveButton(BaseActivity.lang(context, R.string.accept), null)
 			.show();
 	}
-
 
 	public static int pxToDp(Context context, int pixel) {
 		float dp = 0;
