@@ -32,31 +32,7 @@
 				    android:orientation="horizontal"
 				    android:id="@+id/btns">
 					
-					<TextView
-					    android:id="@+id/delete"
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginRight="5dp"
-					    android:background="@drawable/border_all_round_delete"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/delete"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:id="@+id/edit"
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginRight="5dp"
-					    android:background="@drawable/border_all_round_edit"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/edit"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
+					<include layout="@layout/res_btn"/>
 				
 				</LinearLayout>
 				
@@ -66,79 +42,10 @@
 				    android:layout_height="match_parent"
 				    android:layout_alignParentEnd="true"
 				    android:layout_alignParentRight="true"
+				    android:orientation="horizontal"
 				    android:id="@+id/infos">
 					
-					<TextView
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="30dp"
-					    android:background="@drawable/border_all_round_item"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/scale"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:id="@+id/size"
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="5dp"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/scale"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="30dp"
-					    android:background="@drawable/border_all_round_item"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/chainCount"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:id="@+id/chain"
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="5dp"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/chainCount"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="30dp"
-					    android:background="@drawable/border_all_round_item"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/capacity"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
-					
-					<TextView
-					    android:id="@+id/capacity"
-					    android:layout_width="wrap_content"
-					    android:layout_height="match_parent"
-					    android:layout_marginLeft="5dp"
-					    android:gravity="center"
-					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp"
-					    android:text="@string/capacity"
-					    android:textColor="@color/text5"
-					    android:textSize="10dp"/>
+					<include layout="@layout/res_info"/>
 				
 				</LinearLayout>
 			
