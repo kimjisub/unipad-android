@@ -5,13 +5,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/dark1">
-
+	
 	<com.kimjisub.design.Item
 	    android:layout_height="wrap_content"
 	    android:layout_width="match_parent"/>
-
+	
 	<com.kimjisub.design.PackView
 	    android:layout_height="wrap_content"
 	    android:layout_width="match_parent"/>
-
+	
 </LinearLayout>
