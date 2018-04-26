@@ -209,7 +209,7 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleInfo();
 					}
-				}).setInfomations(new String[] {"asdf"}, new String[] {"asdf"}, new int[3]);
+				}).setInfomations(new String[] {"asdf"}, new String[] {"asdf"});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}

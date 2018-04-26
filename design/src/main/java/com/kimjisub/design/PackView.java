@@ -174,7 +174,7 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setInfomations(String[] titles, String[] contents, int[] color) {
+	public PackView setInfomations(String[] titles, String[] contents) {
 		
 		LL_infos.removeAllViews();
 		
