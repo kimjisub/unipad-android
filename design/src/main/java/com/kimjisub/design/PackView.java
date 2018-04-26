@@ -183,7 +183,9 @@ public class PackView extends RelativeLayout {
 			((TextView) LL_infoitem.findViewById(R.id.title)).setText(titles[i]);
 			((TextView) LL_infoitem.findViewById(R.id.content)).setText(contents[i]);
 			
-			LL_infos.addView(LL_infoitem);
+			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+			
+			LL_infos.addView(LL_infoitem, lp);
 		}
 		
 		return this;
