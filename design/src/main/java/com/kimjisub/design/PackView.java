@@ -178,23 +178,13 @@ public class PackView extends RelativeLayout {
 		
 		LL_infos.removeAllViews();
 		
-		LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.infoitem, null);
-		((TextView) LL_infoitem.findViewById(R.id.title)).setText("asdf");
-		((TextView) LL_infoitem.findViewById(R.id.content)).setText("asdf");
-		
-		LL_infos.addView(LL_infoitem);
-		
-		LinearLayout LL_infoitem1 = (LinearLayout) View.inflate(context, R.layout.infoitem, null);
-		((TextView) LL_infoitem1.findViewById(R.id.title)).setText("asdf");
-		((TextView) LL_infoitem1.findViewById(R.id.content)).setText("asdf");
-		
-		LL_infos.addView(LL_infoitem1);
-		
-		LinearLayout LL_infoitem2 = (LinearLayout) View.inflate(context, R.layout.infoitem, null);
-		((TextView) LL_infoitem2.findViewById(R.id.title)).setText("asdf");
-		((TextView) LL_infoitem2.findViewById(R.id.content)).setText("asdf");
-		
-		LL_infos.addView(LL_infoitem2);
+		for(int i=0;i<titles.length;i++){
+			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.infoitem, null);
+			((TextView) LL_infoitem.findViewById(R.id.title)).setText(titles[i]);
+			((TextView) LL_infoitem.findViewById(R.id.content)).setText(contents[i]);
+			
+			LL_infos.addView(LL_infoitem);
+		}
 		
 		return this;
 	}

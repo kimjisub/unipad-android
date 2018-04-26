@@ -209,7 +209,7 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleInfo();
 					}
-				}).setInfomations(new String[] {"asdf"}, new String[] {"asdf"});
+				}).setInfomations(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}
