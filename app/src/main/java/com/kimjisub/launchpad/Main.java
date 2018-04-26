@@ -212,6 +212,40 @@ public class Main extends BaseActivity {
 				.setBtns(new String[] {"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
+		}for(int i=0;i<3;i++){
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			int left = dpToPx(Main.this, 16);
+			int top = 0;
+			int right = dpToPx(Main.this, 16);
+			int bottom = dpToPx(Main.this, 10);
+			lp.setMargins(left, top, right, bottom);
+			
+			String[] a = new String[]{"asdf"};
+			
+			final PackView packView = new PackView(Main.this)
+				.setOnEventListener(new PackView.OnEventListener() {
+					@Override
+					public void onPlayClick(PackView v) {
+						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
+					}
+					
+					@Override
+					public void onFunctionBtnClick(PackView v, int index) {
+						Toast.makeText(Main.this, "onFunctionBtnClick "+ index, Toast.LENGTH_SHORT).show();
+					}
+					
+					@Override
+					public void onViewClick(PackView v) {
+						v.togglePlay();
+					}
+					
+					@Override
+					public void onViewLongClick(PackView v) {
+						v.toggleInfo();
+					}
+				}).setInformations(new String[] {"다운로드"}, new String[] {"1634069"});
+			packView.setLayoutParams(lp);
+			LL_list.addView(packView);
 		}
 		
 		
