@@ -32,7 +32,7 @@
 				    android:orientation="horizontal"
 				    android:id="@+id/btns">
 					
-					<include layout="@layout/res_btn"/>
+					<!--<include layout="@layout/res_btn"/>-->
 				
 				</LinearLayout>
 				
@@ -45,7 +45,7 @@
 				    android:orientation="horizontal"
 				    android:id="@+id/infos">
 					
-					<include layout="@layout/res_info"/>
+					<!--<include layout="@layout/res_info"/>-->
 				
 				</LinearLayout>
 			
