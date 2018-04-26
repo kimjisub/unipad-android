@@ -2,6 +2,8 @@ package com.kimjisub.design;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -176,7 +178,7 @@ public class PackView extends RelativeLayout {
 		
 		LL_infos.removeAllViews();
 		
-		for(int i=0;i<titles.length;i++){
+		for (int i = 0; i < titles.length; i++) {
 			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_info, null);
 			((TextView) LL_infoitem.findViewById(R.id.title)).setText(titles[i]);
 			((TextView) LL_infoitem.findViewById(R.id.content)).setText(contents[i]);
@@ -189,15 +191,19 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setBtns(String[] titles, int[] color) {
+	public PackView setBtns(String[] titles, int[] colors) {
 		
 		LL_btns.removeAllViews();
 		
-		for(int i=0;i<titles.length;i++){
+		for (int i = 0; i < titles.length; i++) {
 			final int I = i;
 			
+			String title = titles[i];
+			int color = colors[i];
+			
 			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
-			((TextView) LL_infoitem.findViewById(R.id.btn)).setText(titles[i]);
+			((TextView) LL_infoitem.findViewById(R.id.btn)).setText(title);
+			((GradientDrawable) LL_infoitem.findViewById(R.id.btn).getBackground()).setColor(color);
 			
 			LL_infoitem.setOnClickListener(new OnClickListener() {
 				@Override

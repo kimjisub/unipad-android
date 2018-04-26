@@ -209,7 +209,7 @@ public class Main extends BaseActivity {
 						v.toggleInfo();
 					}
 				}).setInformations(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"})
-				.setBtns(new String[] {"크기", "용량", "체인"}, new int[]{0xff112233, 0xff112233, 0xff112233});
+				.setBtns(new String[] {"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}
