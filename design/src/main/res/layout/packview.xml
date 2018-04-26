@@ -11,28 +11,32 @@
 	    android:id="@+id/info"
 	    android:layout_width="match_parent"
 	    android:layout_height="40dp"
-	    android:layout_marginTop="20dp">
+	    android:layout_marginTop="20dp"
+	    android:background="@drawable/border_bottom_round">
 		
 		<RelativeLayout
 		    android:layout_width="match_parent"
-		    android:layout_height="80dp"
-		    android:background="@drawable/border_bottom_round"
-		    android:gravity="center">
+		    android:layout_height="35dp"
+		    android:layout_alignParentBottom="true"
+		    android:padding="7dp">
 			
 			<RelativeLayout
 			    android:layout_width="match_parent"
-			    android:layout_height="35dp"
-			    android:layout_marginTop="5dp"
-			    android:padding="7dp">
+			    android:layout_height="match_parent">
 				
-				<RelativeLayout
-				    android:layout_width="match_parent"
-				    android:layout_height="match_parent">
+				<LinearLayout
+				    android:layout_width="wrap_content"
+				    android:layout_height="match_parent"
+				    android:layout_alignParentLeft="true"
+				    android:layout_alignParentStart="true"
+				    android:orientation="horizontal"
+				    android:id="@+id/btns">
 					
 					<TextView
 					    android:id="@+id/delete"
 					    android:layout_width="wrap_content"
 					    android:layout_height="match_parent"
+					    android:layout_marginRight="5dp"
 					    android:background="@drawable/border_all_round_delete"
 					    android:gravity="center"
 					    android:paddingLeft="5dp"
@@ -45,10 +49,7 @@
 					    android:id="@+id/edit"
 					    android:layout_width="wrap_content"
 					    android:layout_height="match_parent"
-					    android:layout_alignParentTop="true"
-					    android:layout_marginLeft="5dp"
-					    android:layout_toEndOf="@+id/delete"
-					    android:layout_toRightOf="@+id/delete"
+					    android:layout_marginRight="5dp"
 					    android:background="@drawable/border_all_round_edit"
 					    android:gravity="center"
 					    android:paddingLeft="5dp"
@@ -56,89 +57,90 @@
 					    android:text="@string/edit"
 					    android:textColor="@color/text5"
 					    android:textSize="10dp"/>
+				
+				</LinearLayout>
+				
+				
+				<LinearLayout
+				    android:layout_width="wrap_content"
+				    android:layout_height="match_parent"
+				    android:layout_alignParentEnd="true"
+				    android:layout_alignParentRight="true"
+				    android:id="@+id/infos">
 					
-					<LinearLayout
+					<TextView
 					    android:layout_width="wrap_content"
 					    android:layout_height="match_parent"
-					    android:layout_alignParentRight="true"
+					    android:layout_marginLeft="30dp"
+					    android:background="@drawable/border_all_round_item"
+					    android:gravity="center"
 					    android:paddingLeft="5dp"
-					    android:paddingRight="5dp">
-						
-						<TextView
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="5dp"
-						    android:background="@drawable/border_all_round_item"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/scale"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
-						
-						<TextView
-						    android:id="@+id/size"
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="5dp"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/scale"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
-						
-						<TextView
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="30dp"
-						    android:background="@drawable/border_all_round_item"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/chainCount"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
-						
-						<TextView
-						    android:id="@+id/chain"
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="5dp"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/chainCount"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
-						
-						<TextView
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="30dp"
-						    android:background="@drawable/border_all_round_item"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/capacity"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
-						
-						<TextView
-						    android:id="@+id/capacity"
-						    android:layout_width="wrap_content"
-						    android:layout_height="match_parent"
-						    android:layout_marginLeft="5dp"
-						    android:gravity="center"
-						    android:paddingLeft="5dp"
-						    android:paddingRight="5dp"
-						    android:text="@string/capacity"
-						    android:textColor="@color/text5"
-						    android:textSize="10dp"/>
+					    android:paddingRight="5dp"
+					    android:text="@string/scale"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
 					
-					</LinearLayout>
+					<TextView
+					    android:id="@+id/size"
+					    android:layout_width="wrap_content"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="5dp"
+					    android:gravity="center"
+					    android:paddingLeft="5dp"
+					    android:paddingRight="5dp"
+					    android:text="@string/scale"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="30dp"
+					    android:background="@drawable/border_all_round_item"
+					    android:gravity="center"
+					    android:paddingLeft="5dp"
+					    android:paddingRight="5dp"
+					    android:text="@string/chainCount"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
+					
+					<TextView
+					    android:id="@+id/chain"
+					    android:layout_width="wrap_content"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="5dp"
+					    android:gravity="center"
+					    android:paddingLeft="5dp"
+					    android:paddingRight="5dp"
+					    android:text="@string/chainCount"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="30dp"
+					    android:background="@drawable/border_all_round_item"
+					    android:gravity="center"
+					    android:paddingLeft="5dp"
+					    android:paddingRight="5dp"
+					    android:text="@string/capacity"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
+					
+					<TextView
+					    android:id="@+id/capacity"
+					    android:layout_width="wrap_content"
+					    android:layout_height="match_parent"
+					    android:layout_marginLeft="5dp"
+					    android:gravity="center"
+					    android:paddingLeft="5dp"
+					    android:paddingRight="5dp"
+					    android:text="@string/capacity"
+					    android:textColor="@color/text5"
+					    android:textSize="10dp"/>
 				
-				</RelativeLayout>
+				</LinearLayout>
 			
 			</RelativeLayout>
 		

@@ -179,39 +179,42 @@ public class Main extends BaseActivity {
 
 		LL_list.removeAllViews();
 		
+		for(int i=0;i<3;i++){
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			int left = dpToPx(Main.this, 16);
+			int top = 0;
+			int right = dpToPx(Main.this, 16);
+			int bottom = dpToPx(Main.this, 10);
+			lp.setMargins(left, top, right, bottom);
+			
+			String[] a = new String[]{"asdf"};
+			
+			final PackView packView = new PackView(Main.this)
+				.setOnEventListener(new PackView.OnEventListener() {
+					@Override
+					public void onPlayClick(PackView v) {
+					}
+					
+					@Override
+					public void onFunctionBtnClick(PackView v, int index) {
+					
+					}
+					
+					@Override
+					public void onViewClick(PackView v) {
+						v.togglePlay();
+					}
+					
+					@Override
+					public void onViewLongClick(PackView v) {
+						v.toggleInfo();
+					}
+				}).setInfomations(new String[] {"asdf"}, new String[] {"asdf"}, new int[3]);
+			packView.setLayoutParams(lp);
+			LL_list.addView(packView);
+		}
 		
 		
-		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = dpToPx(Main.this, 16);
-		int top = 0;
-		int right = dpToPx(Main.this, 16);
-		int bottom = dpToPx(Main.this, 10);
-		lp.setMargins(left, top, right, bottom);
-		
-		final PackView packView = new PackView(Main.this)
-			.setOnEventListener(new PackView.OnEventListener() {
-				@Override
-				public void onPlayClick(PackView v) {
-				
-				}
-				
-				@Override
-				public void onFunctionBtnClick(PackView v, int index) {
-				
-				}
-				
-				@Override
-				public void onViewClick(PackView v) {
-				
-				}
-				
-				@Override
-				public void onViewLongClick(PackView v) {
-				
-				}
-			});
-		packView.setLayoutParams(lp);
-		LL_list.addView(packView);
 
 		new Thread(new Runnable() {
 			@Override
