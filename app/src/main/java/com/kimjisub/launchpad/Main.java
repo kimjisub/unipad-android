@@ -177,7 +177,7 @@ public class Main extends BaseActivity {
 
 		LL_list.removeAllViews();
 		
-		for(int i=0;i<3;i++){
+		for(int i=0;i<2;i++){
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			int left = dpToPx(Main.this, 16);
 			int top = 0;
@@ -206,13 +206,13 @@ public class Main extends BaseActivity {
 					
 					@Override
 					public void onViewLongClick(PackView v) {
-						v.toggleInfo();
+						v.toggleDetail();
 					}
-				}).setInformations(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"})
+				}).setInfos(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"})
 				.setBtns(new String[] {"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
-		}for(int i=0;i<3;i++){
+		}for(int i=0;i<2;i++){
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			int left = dpToPx(Main.this, 16);
 			int top = 0;
@@ -227,6 +227,7 @@ public class Main extends BaseActivity {
 					@Override
 					public void onPlayClick(PackView v) {
 						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
+						v.updateInfo(0,"asdf");
 					}
 					
 					@Override
@@ -241,9 +242,9 @@ public class Main extends BaseActivity {
 					
 					@Override
 					public void onViewLongClick(PackView v) {
-						v.toggleInfo();
+						v.toggleDetail();
 					}
-				}).setInformations(new String[] {"다운로드"}, new String[] {"1634069"});
+				}).setInfos(new String[] {"다운로드"}, new String[] {"1634069"});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}
