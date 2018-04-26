@@ -10,8 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -193,11 +191,12 @@ public class Main extends BaseActivity {
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onPlayClick(PackView v) {
+						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
 					}
 					
 					@Override
 					public void onFunctionBtnClick(PackView v, int index) {
-					
+						Toast.makeText(Main.this, "onFunctionBtnClick "+ index, Toast.LENGTH_SHORT).show();
 					}
 					
 					@Override
@@ -209,7 +208,8 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleInfo();
 					}
-				}).setInfomations(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"});
+				}).setInformations(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"})
+				.setBtns(new String[] {"크기", "용량", "체인"}, new int[]{0xff112233, 0xff112233, 0xff112233});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}

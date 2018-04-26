@@ -14,8 +14,6 @@ import android.widget.TextView;
 
 import com.kimjisub.design.manage.UIManager;
 
-import java.util.zip.Inflater;
-
 public class PackView extends RelativeLayout {
 	
 	Context context;
@@ -174,18 +172,43 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setInfomations(String[] titles, String[] contents) {
+	public PackView setInformations(String[] titles, String[] contents) {
 		
 		LL_infos.removeAllViews();
 		
 		for(int i=0;i<titles.length;i++){
-			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.infoitem, null);
+			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_info, null);
 			((TextView) LL_infoitem.findViewById(R.id.title)).setText(titles[i]);
 			((TextView) LL_infoitem.findViewById(R.id.content)).setText(contents[i]);
 			
 			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
 			
 			LL_infos.addView(LL_infoitem, lp);
+		}
+		
+		return this;
+	}
+	
+	public PackView setBtns(String[] titles, int[] color) {
+		
+		LL_btns.removeAllViews();
+		
+		for(int i=0;i<titles.length;i++){
+			final int I = i;
+			
+			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
+			((TextView) LL_infoitem.findViewById(R.id.btn)).setText(titles[i]);
+			
+			LL_infoitem.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					onFunctionBtnClick(I);
+				}
+			});
+			
+			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+			
+			LL_btns.addView(LL_infoitem, lp);
 		}
 		
 		return this;
@@ -279,10 +302,10 @@ public class PackView extends RelativeLayout {
 				RL_info.startAnimation(a);
 				
 				//clickEvent
-				TV_delete.setOnClickListener(null);
-				TV_delete.setClickable(false);
-				TV_edit.setOnClickListener(null);
-				TV_edit.setClickable(false);
+				//TV_delete.setOnClickListener(null);
+				//TV_delete.setClickable(false);
+				//TV_edit.setOnClickListener(null);
+				//TV_edit.setClickable(false);
 			}
 			
 			isInfo = bool;
