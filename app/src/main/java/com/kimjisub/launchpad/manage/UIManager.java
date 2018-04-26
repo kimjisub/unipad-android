@@ -29,7 +29,8 @@ public class UIManager {
 
 
 	public static void showAds(final Context context) {
-		if (!isPremium) {
+		
+		/*if (!isPremium) {
 			long prevTime = PrevAdsShowTime.load(context);
 			long currTime = System.currentTimeMillis();
 
@@ -52,7 +53,7 @@ public class UIManager {
 					});
 				}
 			}
-		}
+		}*/
 	}
 
 	public static void initAds(Context context) {
