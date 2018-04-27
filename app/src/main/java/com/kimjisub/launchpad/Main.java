@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
@@ -57,6 +58,7 @@ public class Main extends BaseActivity {
 	FloatingActionButton FAB_setting;
 	LinearLayout LL_scale;
 	LinearLayout LL_paddingScale;
+	LinearLayout LL_testView;
 	
 	String UnipackRootURL;
 	
@@ -71,6 +73,7 @@ public class Main extends BaseActivity {
 		FAB_setting = findViewById(R.id.fab_setting);
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
+		LL_testView = findViewById(R.id.testView);
 		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
@@ -273,17 +276,31 @@ public class Main extends BaseActivity {
 								}
 								
 								@Override
-								public void onFunctionBtnClick(PackView v, int index) {
+								public void onFunctionBtnClick(final PackView v, int index) {
 									switch (index) {
 										case 0:
-											deleteUnipack(unipack);
-											LinearLayout linearLayout = new LinearLayout(Main.this);
+											//deleteUnipack(unipack);
+											final LinearLayout linearLayout = new LinearLayout(Main.this);
 											TextView textView = new TextView(Main.this);
-											textView.setText("asdf\nasdfwvvw");
+											textView.setText("asdf\nasdfwvvㅜ\n\n\n호ㅓㅏ");
 											linearLayout.addView(textView);
 											linearLayout.setBackgroundColor(getResources().getColor(R.color.app_blue));
-											v.setExtendView(linearLayout);
-											v.toggleDetail(2);
+											
+											LL_testView.removeAllViews();
+											LL_testView.addView(linearLayout);
+											LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+												@Override
+												public void onGlobalLayout() {
+													LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+													
+													int height = LL_testView.getHeight();
+													LL_testView.removeAllViews();
+													
+													v.setExtendView(linearLayout, height);
+													v.toggleDetail(2);
+												}
+											});
+											
 											break;
 										case 1:
 											editUnipack(unipack);

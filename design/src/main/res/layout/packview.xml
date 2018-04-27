@@ -74,7 +74,7 @@
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentStart="true"
 	    android:layout_alignParentTop="true"
-	    android:alpha="0.5">
+	    android:alpha="0.9">
 		
 		<RelativeLayout
 		    android:id="@+id/flag1"
