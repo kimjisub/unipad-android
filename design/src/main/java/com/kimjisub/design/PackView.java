@@ -268,7 +268,6 @@ public class PackView extends RelativeLayout {
 			if (bool) {
 				//animation
 				LL_leftView.animate().x(flag_enable).setDuration(500).start();
-				updateFlagColor(getResources().getColor(R.color.red));
 
 				//clickEvent
 				RL_playBtn.setOnClickListener(new View.OnClickListener() {
@@ -280,7 +279,6 @@ public class PackView extends RelativeLayout {
 			} else {
 				//animation
 				LL_leftView.animate().x(flag_default).setDuration(500).start();
-				updateFlagColor(getResources().getColor(R.color.skyblue));
 
 				//clickEvent
 				RL_playBtn.setOnClickListener(null);
@@ -289,9 +287,27 @@ public class PackView extends RelativeLayout {
 			isPlay = bool;
 		}
 	}
-
+	
 	public void togglePlay() {
 		togglePlay(!isPlay);
+	}
+	
+	public void togglePlay(boolean bool, int onColor, int offColor) {
+		togglePlay(bool);
+		if(isPlay)
+			updateFlagColor(onColor);
+		else
+			updateFlagColor(offColor);
+		
+	}
+	
+	public void togglePlay(int onColor, int offColor) {
+		togglePlay(!isPlay);
+		if(isPlay)
+			updateFlagColor(onColor);
+		else
+			updateFlagColor(offColor);
+		
 	}
 
 	public boolean isPlay() {
