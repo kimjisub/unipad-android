@@ -21,7 +21,7 @@ import static com.kimjisub.design.manage.Tools.lang;
  * Created by rlawl on 2017-09-12.
  */
 
-public class ItemStore extends RelativeLayout {
+public class _ItemStore{/* extends RelativeLayout {
 
 	Context context;
 
@@ -312,5 +312,5 @@ public class ItemStore extends RelativeLayout {
 
 	void onViewLongClick() {
 		if (onViewLongClickListener != null) onViewLongClickListener.onViewLongClick(this);
-	}
+	}*/
 }
