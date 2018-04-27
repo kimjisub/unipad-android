@@ -250,14 +250,32 @@ public class Main extends BaseActivity {
 						else
 							flagColor = getResources().getColor(R.color.orange);
 						
+						
+						@SuppressLint("ResourceType") String[] infoTitles = new String[]{
+							getResources().getString(R.string.scale),
+							getResources().getString(R.string.chainCount),
+							getResources().getString(R.string.capacity)
+						};
+						String[] infoContents = new String[]{
+							unipack.buttonX + " x " + unipack.buttonY,
+							unipack.chain + "",
+							FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
+						};
+						@SuppressLint("ResourceType") String[] btnTitles = new String[]{
+							getResources().getString(R.string.delete),
+							getResources().getString(R.string.edit)
+						};
+						int[] btnColors = new int[]{
+							getResources().getColor(R.color.red),
+							getResources().getColor(R.color.orange)
+						};
+						
 						final PackView packView = new PackView(Main.this)
 							.setFlagColor(flagColor)
 							.setTitle(unipack.title)
 							.setSubTitle(unipack.producerName)
-							.setInfos(new String[]{"크기", "체인", "용량"},
-								new String[]{unipack.buttonX + " x " + unipack.buttonY, unipack.chain + "", FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"})
-							.setBtns(new String[]{"삭제", "수정"},
-								new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)})
+							.setInfos(infoTitles, infoContents)
+							.setBtns(btnTitles, btnColors)
 							.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
 							.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
 							.setOnEventListener(new PackView.OnEventListener() {
@@ -298,7 +316,6 @@ public class Main extends BaseActivity {
 									}
 								}
 							});
-						
 						
 						
 						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -355,7 +372,7 @@ public class Main extends BaseActivity {
 	
 	void addErrorItem() {
 		String title = lang(Main.this, R.string.unipackNotFound);
-		String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
+		String subTitle = lang(Main.this, R.string.clickToAddUnipack);
 		
 		PackView packView = PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
 			@Override
