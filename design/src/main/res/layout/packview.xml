@@ -16,11 +16,23 @@
 	    android:layout_marginTop="20dp"
 	    android:background="@drawable/border_bottom_round">
 		
+		<LinearLayout
+		    android:id="@+id/extendView"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_above="@+id/bottomView"
+		    android:orientation="vertical"
+		    android:paddingLeft="7dp"
+		    android:paddingRight="7dp"
+		    android:paddingTop="7dp"/>
+		
 		<RelativeLayout
+		    android:id="@+id/bottomView"
 		    android:layout_width="match_parent"
 		    android:layout_height="35dp"
 		    android:layout_alignParentBottom="true"
 		    android:padding="7dp">
+			
 			
 			<RelativeLayout
 			    android:layout_width="match_parent"
@@ -61,7 +73,8 @@
 	    android:layout_height="60dp"
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentStart="true"
-	    android:layout_alignParentTop="true">
+	    android:layout_alignParentTop="true"
+	    android:alpha="0.5">
 		
 		<RelativeLayout
 		    android:id="@+id/flag1"

@@ -27,9 +27,9 @@ public class PackView extends RelativeLayout {
 	RelativeLayout RL_playBtn;
 	ImageView IV_playImg;
 	TextView TV_playText;
-	
 	LinearLayout LL_btns;
 	LinearLayout LL_infos;
+	LinearLayout LL_extendView;
 	
 	RelativeLayout RL_flag1;
 	RelativeLayout RL_flag2;
@@ -40,11 +40,11 @@ public class PackView extends RelativeLayout {
 	
 	boolean status = false;
 	
-	int flag_default;
-	int flag_enable;
-	int info_default;
-	int info_enable;
-	int info_extend;
+	int PX_flag_default;
+	int PX_flag_enable;
+	int PX_info_default;
+	int PX_info_enable;
+	int PX_info_extend;
 	
 	private void initView(Context context) {
 		this.context = context;
@@ -62,9 +62,9 @@ public class PackView extends RelativeLayout {
 		RL_playBtn = findViewById(R.id.playBtn);
 		IV_playImg = findViewById(R.id.playImg);
 		TV_playText = findViewById(R.id.playText);
-		
 		LL_btns = findViewById(R.id.btns);
 		LL_infos = findViewById(R.id.infos);
+		LL_extendView = findViewById(R.id.extendView);
 		
 		RL_flag1 = findViewById(R.id.flag1);
 		RL_flag2 = findViewById(R.id.flag2);
@@ -95,11 +95,11 @@ public class PackView extends RelativeLayout {
 		
 		
 		// set vars
-		flag_default = UIManager.dpToPx(context, 10);
-		flag_enable = UIManager.dpToPx(context, 100);
-		info_default = UIManager.dpToPx(context, 40);
-		info_enable = UIManager.dpToPx(context, 75);
-		info_extend = UIManager.dpToPx(context, 300);
+		PX_flag_default = UIManager.dpToPx(context, 10);
+		PX_flag_enable = UIManager.dpToPx(context, 100);
+		PX_info_default = UIManager.dpToPx(context, 40);
+		PX_info_enable = UIManager.dpToPx(context, 75);
+		PX_info_extend = UIManager.dpToPx(context, 300);
 	}
 	
 	public PackView(Context context) {
@@ -305,6 +305,14 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
+	public PackView setExtendView(View v){
+		LL_extendView.removeAllViews();
+		LL_extendView.addView(v);
+		PX_info_extend = UIManager.dpToPx(context,LL_extendView.getMinimumHeight()+14) + PX_info_enable;
+		
+		return this;
+	}
+	
 	//========================================================================================= Play
 	
 	private boolean isPlay = false;
@@ -313,7 +321,7 @@ public class PackView extends RelativeLayout {
 		if (isPlay != bool) {
 			if (bool) {
 				//animation
-				LL_leftView.animate().x(flag_enable).setDuration(500).start();
+				LL_leftView.animate().x(PX_flag_enable).setDuration(500).start();
 				
 				//clickEvent
 				RL_playBtn.setOnClickListener(new View.OnClickListener() {
@@ -324,7 +332,7 @@ public class PackView extends RelativeLayout {
 				});
 			} else {
 				//animation
-				LL_leftView.animate().x(flag_default).setDuration(500).start();
+				LL_leftView.animate().x(PX_flag_default).setDuration(500).start();
 				
 				//clickEvent
 				RL_playBtn.setOnClickListener(null);
@@ -365,10 +373,10 @@ public class PackView extends RelativeLayout {
 	private int levDetail = 0;
 	
 	public void toggleDetail(int lev) {
-		if (levDetail != lev) {
-			final int px_default = info_default;
-			final int px_enable = info_enable;
-			final int px_extend = info_extend;
+		if (levDetail != lev || lev == 2) {
+			final int px_default = PX_info_default;
+			final int px_enable = PX_info_enable;
+			final int px_extend = PX_info_extend;
 			
 			int start = 0;
 			int end = 0;
