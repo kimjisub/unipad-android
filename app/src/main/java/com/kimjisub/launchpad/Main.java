@@ -48,7 +48,7 @@ import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 
 public class Main extends BaseActivity {
-
+	
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_loadUniPack;
@@ -56,11 +56,11 @@ public class Main extends BaseActivity {
 	FloatingActionButton FAB_setting;
 	LinearLayout LL_scale;
 	LinearLayout LL_paddingScale;
-
+	
 	String UnipackRootURL;
-
+	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-
+	
 	void initVar() {
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
@@ -69,49 +69,49 @@ public class Main extends BaseActivity {
 		FAB_setting = findViewById(R.id.fab_setting);
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
-
+		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar();
-
+		
 		updateCheck();
-
+		
 		FAB_loadUniPack.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				unipackExplorer();
 			}
 		});
-
+		
 		FAB_store.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Store.class));
 			}
 		});
-
+		
 		FAB_setting.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				startActivity(new Intent(Main.this, Setting.class));
 			}
 		});
-
+		
 		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
-
+			
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
 					FAM_floatingMenu.close(true);
 				}
 			};
-
+			
 			@Override
 			public void onMenuToggle(boolean opened) {
 				if (opened) {
@@ -121,16 +121,16 @@ public class Main extends BaseActivity {
 				}
 			}
 		});
-
-
+		
+		
 	}
-
+	
 	Item[] IT_items;
 	String[] URL;
 	Unipack[] unipacks;
-
+	
 	Timer timer = new Timer();
-
+	
 	void blink(final boolean bool) {
 		runOnUiThread(new Runnable() {
 			@Override
@@ -148,9 +148,9 @@ public class Main extends BaseActivity {
 				}
 			}
 		});
-
+		
 	}
-
+	
 	void update() {
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
@@ -163,7 +163,7 @@ public class Main extends BaseActivity {
 					timer = new Timer();
 					timer.schedule(new TimerTask() {
 						int i;
-
+						
 						@Override
 						public void run() {
 							blink(i % 2 == 0);
@@ -173,11 +173,11 @@ public class Main extends BaseActivity {
 				}
 			}
 		}).run();
-
-
+		
+		
 		LL_list.removeAllViews();
 		
-		for(int i=0;i<2;i++){
+		for (int i = 0; i < 2; i++) {
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			int left = dpToPx(Main.this, 16);
 			int top = 0;
@@ -187,7 +187,7 @@ public class Main extends BaseActivity {
 			
 			String[] a = new String[]{"asdf"};
 			
-			final PackView packView = new PackView(Main.this)
+			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.skyblue))
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onPlayClick(PackView v) {
@@ -196,7 +196,7 @@ public class Main extends BaseActivity {
 					
 					@Override
 					public void onFunctionBtnClick(PackView v, int index) {
-						Toast.makeText(Main.this, "onFunctionBtnClick "+ index, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onFunctionBtnClick " + index, Toast.LENGTH_SHORT).show();
 					}
 					
 					@Override
@@ -208,11 +208,12 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleDetail();
 					}
-				}).setInfos(new String[] {"크기", "용량", "체인"}, new String[] {"8*8", "123MB", "5"})
-				.setBtns(new String[] {"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
+				}).setInfos(new String[]{"크기", "용량", "체인"}, new String[]{"8*8", "123MB", "5"})
+				.setBtns(new String[]{"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
-		}for(int i=0;i<2;i++){
+		}
+		for (int i = 0; i < 2; i++) {
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 			int left = dpToPx(Main.this, 16);
 			int top = 0;
@@ -222,17 +223,17 @@ public class Main extends BaseActivity {
 			
 			String[] a = new String[]{"asdf"};
 			
-			final PackView packView = new PackView(Main.this)
+			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.red))
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onPlayClick(PackView v) {
 						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
-						v.updateInfo(0,"asdf");
+						v.updateInfo(0, "asdf");
 					}
 					
 					@Override
 					public void onFunctionBtnClick(PackView v, int index) {
-						Toast.makeText(Main.this, "onFunctionBtnClick "+ index, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onFunctionBtnClick " + index, Toast.LENGTH_SHORT).show();
 					}
 					
 					@Override
@@ -244,37 +245,36 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleDetail();
 					}
-				}).setInfos(new String[] {"다운로드"}, new String[] {"1634069"});
+				}).setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
 			packView.setLayoutParams(lp);
 			LL_list.addView(packView);
 		}
 		
 		
-
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				File projectFolder = new File(UnipackRootURL);
-
+				
 				if (projectFolder.isDirectory()) {
-
+					
 					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
 					int num = projects.length;
-
+					
 					IT_items = new Item[num];
 					URL = new String[num];
 					unipacks = new Unipack[num];
-
+					
 					int count = 0;
 					for (int i_ = 0; i_ < num; i_++) {
 						final int i = i_;
 						File project = projects[i];
 						if (project.isFile()) continue;
 						count++;
-
+						
 						URL[i] = UnipackRootURL + "/" + project.getName();
 						unipacks[i] = new Unipack(URL[i], false);
-
+						
 						int color;
 						if (unipacks[i].ErrorDetail == null)
 							color = com.kimjisub.design.R.drawable.border_play_blue;
@@ -282,7 +282,7 @@ public class Main extends BaseActivity {
 							color = com.kimjisub.design.R.drawable.border_play_red;
 						else
 							color = com.kimjisub.design.R.drawable.border_play_orange;
-
+						
 						final Item IT_item = new Item(Main.this)
 							.setFlagColor(color)
 							.setTitle(unipacks[i].title)
@@ -299,7 +299,7 @@ public class Main extends BaseActivity {
 									UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
 									UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
 									UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
-
+									
 									Intent intent = new Intent(Main.this, Play.class);
 									intent.putExtra("URL", URL[i]);
 									startActivity(intent);
@@ -331,7 +331,7 @@ public class Main extends BaseActivity {
 									toggleInfo(i);
 								}
 							});
-
+						
 						IT_items[i] = IT_item;
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
@@ -339,9 +339,9 @@ public class Main extends BaseActivity {
 								LL_list.addView(IT_item);
 							}
 						});
-
+						
 					}
-
+					
 					if (count == 0) {
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
@@ -355,10 +355,10 @@ public class Main extends BaseActivity {
 							}
 						});
 					}
-
+					
 				} else {
 					projectFolder.mkdir();
-
+					
 					runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 						@Override
 						public void run() {
@@ -371,7 +371,7 @@ public class Main extends BaseActivity {
 						}
 					});
 				}
-
+				
 				File nomedia = new File(UnipackRootURL + "/.nomedia");
 				if (!nomedia.isFile()) {
 					try {
@@ -383,7 +383,7 @@ public class Main extends BaseActivity {
 			}
 		}).start();
 	}
-
+	
 	void deleteUnipack(final Unipack uni) {
 		new AlertDialog.Builder(Main.this)
 			.setTitle(uni.title)
@@ -398,7 +398,7 @@ public class Main extends BaseActivity {
 			})
 			.show();
 	}
-
+	
 	void editUnipack(final Unipack uni) {
 		new AlertDialog.Builder(Main.this)
 			.setTitle(uni.title)
@@ -408,20 +408,20 @@ public class Main extends BaseActivity {
 				@SuppressLint("StaticFieldLeak")
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-
-
+					
+					
 					final Unipack unipack = new Unipack(uni.URL, true);
-
-
+					
+					
 					if (unipack.isAutoPlay) {
 						(new AsyncTask<String, String, String>() {
-
+							
 							ProgressDialog progressDialog;
-
+							
 							ArrayList<Unipack.AutoPlay> autoplay1;
 							ArrayList<Unipack.AutoPlay> autoplay2;
 							ArrayList<Unipack.AutoPlay> autoplay3;
-
+							
 							@Override
 							protected void onPreExecute() {
 								autoplay1 = new ArrayList<>();
@@ -440,7 +440,7 @@ public class Main extends BaseActivity {
 											break;
 									}
 								}
-
+								
 								autoplay2 = new ArrayList<>();
 								Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
 								for (Unipack.AutoPlay e : autoplay1) {
@@ -463,7 +463,7 @@ public class Main extends BaseActivity {
 											break;
 									}
 								}
-
+								
 								progressDialog = new ProgressDialog(Main.this);
 								progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 								progressDialog.setTitle(lang(R.string.analyzing));
@@ -473,10 +473,10 @@ public class Main extends BaseActivity {
 								progressDialog.show();
 								super.onPreExecute();
 							}
-
+							
 							@Override
 							protected String doInBackground(String... params) {
-
+								
 								autoplay3 = new ArrayList<>();
 								int nextDuration = 0;
 								MediaPlayer mplayer = new MediaPlayer();
@@ -503,7 +503,7 @@ public class Main extends BaseActivity {
 									publishProgress();
 								}
 								mplayer.release();
-
+								
 								StringBuilder stringBuilder = new StringBuilder();
 								for (Unipack.AutoPlay e : autoplay3) {
 									switch (e.func) {
@@ -526,7 +526,7 @@ public class Main extends BaseActivity {
 									File filePre = new File(unipack.URL, "autoPlay");
 									File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 									filePre.renameTo(fileNow);
-
+									
 									BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
 									writer.write(stringBuilder.toString());
 									writer.close();
@@ -535,20 +535,20 @@ public class Main extends BaseActivity {
 								} catch (IOException ee) {
 									ee.printStackTrace();
 								}
-
+								
 								return null;
 							}
-
+							
 							@Override
 							protected void onProgressUpdate(String... progress) {
 								if (progressDialog.isShowing())
 									progressDialog.incrementProgressBy(1);
 							}
-
+							
 							@Override
 							protected void onPostExecute(String result) {
 								super.onPostExecute(result);
-
+								
 								try {
 									if (progressDialog != null && progressDialog.isShowing())
 										progressDialog.dismiss();
@@ -562,8 +562,8 @@ public class Main extends BaseActivity {
 								}
 							}
 						}).execute();
-
-
+						
+						
 					} else {
 						new AlertDialog.Builder(Main.this)
 							.setTitle(lang(R.string.failed))
@@ -575,7 +575,7 @@ public class Main extends BaseActivity {
 			})
 			.show();
 	}
-
+	
 	void togglePlay(int n) {
 		for (int i = 0; i < IT_items.length; i++) {
 			Item item = IT_items[i];
@@ -587,7 +587,7 @@ public class Main extends BaseActivity {
 			}
 		}
 	}
-
+	
 	void toggleInfo(int n) {
 		for (int i = 0; i < IT_items.length; i++) {
 			Item item = IT_items[i];
@@ -599,25 +599,25 @@ public class Main extends BaseActivity {
 			}
 		}
 	}
-
-
+	
+	
 	List<String> mItem;
 	List<String> mPath;
-
+	
 	LinearLayout LL_explorer;
 	TextView TV_path;
 	ListView LV_list;
-
+	
 	void unipackExplorer() {
 		LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
 		TV_path = LL_explorer.findViewById(R.id.path);
 		LV_list = LL_explorer.findViewById(R.id.list);
-
+		
 		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
-
+		
 		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
-
-
+		
+		
 		LV_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -632,22 +632,22 @@ public class Main extends BaseActivity {
 						loadUnipack(file.getPath());
 					else
 						UIManager.showDialog(Main.this, file.getName(), lang(R.string.cantReadFile));
-
-
+					
+					
 				}
 			}
 		});
 		getDir(fileExplorerPath);
-
-
+		
+		
 		dialog.setView(LL_explorer);
 		dialog.show();
 	}
-
+	
 	void getDir(String dirPath) {
 		SaveSetting.FileExplorerPath.save(Main.this, dirPath);
 		TV_path.setText(dirPath);
-
+		
 		mItem = new ArrayList<>();
 		mPath = new ArrayList<>();
 		File f = new File(dirPath);
@@ -671,50 +671,50 @@ public class Main extends BaseActivity {
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(Main.this, android.R.layout.simple_list_item_1, mItem);
 		LV_list.setAdapter(fileList);
 	}
-
+	
 	@SuppressLint("StaticFieldLeak")
 	void loadUnipack(final String UnipackZipURL) {
-
+		
 		(new AsyncTask<String, String, String>() {
-
+			
 			ProgressDialog progressDialog = new ProgressDialog(Main.this);
-
+			
 			String msg1;
 			String msg2;
-
+			
 			@Override
 			protected void onPreExecute() {
-
+				
 				progressDialog.setTitle(lang(R.string.analyzing));
 				progressDialog.setMessage(lang(R.string.wait));
 				progressDialog.setCancelable(false);
 				progressDialog.show();
 				super.onPreExecute();
 			}
-
+			
 			@Override
 			protected String doInBackground(String... params) {
-
-
+				
+				
 				File file = new File(UnipackZipURL);
 				String name = file.getName();
 				String name_ = name.substring(0, name.lastIndexOf("."));
-
+				
 				String UnipackURL;
 				for (int i = 1; ; i++) {
 					if (i == 1)
 						UnipackURL = UnipackRootURL + "/" + name_ + "/";
 					else
 						UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
-
+					
 					if (!new File(UnipackURL).exists())
 						break;
 				}
-
+				
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
-
+					
 					if (unipack.ErrorDetail == null) {
 						msg1 = lang(R.string.analyzeComplete);
 						msg2 = unipack.getInfoText(Main.this);
@@ -726,20 +726,20 @@ public class Main extends BaseActivity {
 						msg1 = lang(R.string.warning);
 						msg2 = unipack.ErrorDetail;
 					}
-
+					
 				} catch (IOException e) {
 					msg1 = lang(R.string.analyzeFailed);
 					msg2 = e.toString();
 					FileManager.deleteFolder(UnipackURL);
 				}
-
+				
 				return null;
 			}
-
+			
 			@Override
 			protected void onProgressUpdate(String... progress) {
 			}
-
+			
 			@Override
 			protected void onPostExecute(String result) {
 				update();
@@ -749,8 +749,8 @@ public class Main extends BaseActivity {
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-
-
+	
+	
 	void updateCheck() {
 		new Networks.CheckVersion(getPackageName()).setOnEndListener(new Networks.CheckVersion.onEndListener() {
 			@Override
@@ -782,7 +782,7 @@ public class Main extends BaseActivity {
 			}
 		}).run();
 	}
-
+	
 	@Override
 	public void onBackPressed() {
 		if (IT_items != null) {
@@ -791,29 +791,29 @@ public class Main extends BaseActivity {
 				if (item != null) {
 					if (item.isPlay() || item.isInfo())
 						clear = false;
-
+					
 					item.togglePlay(false);
 					item.toggleInfo(false);
 				}
 			}
-
+			
 			if (clear)
 				super.onBackPressed();
 		}
 	}
-
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		initVar();
-
+		
 		update();
 	}
-
+	
 	@Override
 	protected void onPause() {
 		super.onPause();
-
+		
 		timer.cancel();
 		getStoreCount.setOnChangeListener(null);
 	}

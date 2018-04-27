@@ -28,8 +28,9 @@ public class PackView extends RelativeLayout {
 
 	LinearLayout LL_btns;
 	LinearLayout LL_infos;
-
-	RelativeLayout RL_flag;
+	
+	RelativeLayout RL_flag1;
+	RelativeLayout RL_flag2;
 	TextView TV_title;
 	TextView TV_subTitle;
 	TextView TV_LED;
@@ -63,8 +64,9 @@ public class PackView extends RelativeLayout {
 
 		LL_btns = findViewById(R.id.btns);
 		LL_infos = findViewById(R.id.infos);
-
-		RL_flag = findViewById(R.id.flag);
+		
+		RL_flag1 = findViewById(R.id.flag1);
+		RL_flag2 = findViewById(R.id.flag2);
 		TV_title = findViewById(R.id.title);
 		TV_subTitle = findViewById(R.id.subTitle);
 		TV_LED = findViewById(R.id.LED);
@@ -101,10 +103,16 @@ public class PackView extends RelativeLayout {
 		info_enable = UIManager.dpToPx(context, 100);
 		info_extend = UIManager.dpToPx(context, 35);
 	}
-
+	
 	public PackView(Context context) {
 		super(context);
 		initView(context);
+	}
+	
+	public PackView(Context context, int flagColor) {
+		super(context);
+		initView(context);
+		setFlagColor(flagColor);
 	}
 
 	public PackView(Context context, AttributeSet attrs) {
@@ -215,7 +223,7 @@ public class PackView extends RelativeLayout {
 			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
 			((TextView) LL_infoitem.findViewById(R.id.btn)).setText(title);
 			((GradientDrawable) LL_infoitem.findViewById(R.id.btn).getBackground()).setColor(color);
-
+			
 			LL_infoitem.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View view) {
@@ -223,11 +231,31 @@ public class PackView extends RelativeLayout {
 				}
 			});
 
-			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-			LL_btns.addView(LL_infoitem, lp);
+			LL_btns.addView(LL_infoitem, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
 		}
 
+		return this;
+	}
+	
+	public PackView setFlagColor(int color){
+		GradientDrawable flag1Background = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
+		flag1Background.setColor(color);
+		RL_flag1.setBackground(flag1Background);
+		
+		return this;
+	}
+	
+	public PackView updateFlagColor(int color){
+		GradientDrawable flag1Background = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
+		flag1Background.setColor(color);
+		GradientDrawable flag2Background = (GradientDrawable) RL_flag1.getBackground();
+		
+		RL_flag1.setBackground(flag1Background);
+		RL_flag2.setBackground(flag2Background);
+
+		RL_flag2.setAlpha(1);
+		RL_flag2.animate().alpha(0).setDuration(500).start();
+		
 		return this;
 	}
 
@@ -240,7 +268,7 @@ public class PackView extends RelativeLayout {
 			if (bool) {
 				//animation
 				LL_leftView.animate().x(flag_enable).setDuration(500).start();
-				RL_flag.animate().alpha(0).setDuration(500).start();
+				updateFlagColor(getResources().getColor(R.color.red));
 
 				//clickEvent
 				RL_playBtn.setOnClickListener(new View.OnClickListener() {
@@ -252,7 +280,7 @@ public class PackView extends RelativeLayout {
 			} else {
 				//animation
 				LL_leftView.animate().x(flag_default).setDuration(500).start();
-				RL_flag.animate().alpha(1).setDuration(500).start();
+				updateFlagColor(getResources().getColor(R.color.skyblue));
 
 				//clickEvent
 				RL_playBtn.setOnClickListener(null);
