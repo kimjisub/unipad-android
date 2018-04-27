@@ -250,11 +250,6 @@ public class Main extends BaseActivity {
 						else
 							flagColor = getResources().getColor(R.color.orange);
 						
-						
-						log(url);
-						log(unipack.CriticalError + " ");
-						log(unipack.ErrorDetail + " ");
-						
 						final PackView packView = new PackView(Main.this)
 							.setFlagColor(flagColor)
 							.setTitle(unipack.title)

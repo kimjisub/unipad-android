@@ -89,13 +89,13 @@ public class PackView extends RelativeLayout {
 			}
 		});
 		
-		// set vars
 		
+		// set vars
 		flag_default = UIManager.dpToPx(context, 10);
 		flag_enable = UIManager.dpToPx(context, 100);
 		info_default = UIManager.dpToPx(context, 40);
-		info_enable = UIManager.dpToPx(context, 100);
-		info_extend = UIManager.dpToPx(context, 35);
+		info_enable = UIManager.dpToPx(context, 35);
+		info_extend = UIManager.dpToPx(context, 100);
 	}
 	
 	public PackView(Context context) {
@@ -432,11 +432,11 @@ public class PackView extends RelativeLayout {
 	}
 	
 	void onPlayClick() {
-		if (onEventListener != null) onEventListener.onPlayClick(this);
+		if (onEventListener != null && isPlay) onEventListener.onPlayClick(this);
 	}
 	
 	void onFunctionBtnClick(int index) {
-		if (onEventListener != null) onEventListener.onFunctionBtnClick(this, index);
+		if (onEventListener != null && isDetail) onEventListener.onFunctionBtnClick(this, index);
 	}
 	
 	
