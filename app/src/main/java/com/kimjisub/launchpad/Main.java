@@ -125,7 +125,8 @@ public class Main extends BaseActivity {
 		
 	}
 	
-	Item[] IT_items;
+	PackView[] PV_items;
+	int[] flagColors;
 	String[] URL;
 	Unipack[] unipacks;
 	
@@ -185,44 +186,6 @@ public class Main extends BaseActivity {
 			int bottom = dpToPx(Main.this, 10);
 			lp.setMargins(left, top, right, bottom);
 			
-			String[] a = new String[]{"asdf"};
-			
-			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.skyblue))
-				.setOnEventListener(new PackView.OnEventListener() {
-					@Override
-					public void onPlayClick(PackView v) {
-						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
-					}
-					
-					@Override
-					public void onFunctionBtnClick(PackView v, int index) {
-						Toast.makeText(Main.this, "onFunctionBtnClick " + index, Toast.LENGTH_SHORT).show();
-					}
-					
-					@Override
-					public void onViewClick(PackView v) {
-						v.togglePlay();
-					}
-					
-					@Override
-					public void onViewLongClick(PackView v) {
-						v.toggleDetail();
-					}
-				}).setInfos(new String[]{"크기", "용량", "체인"}, new String[]{"8*8", "123MB", "5"})
-				.setBtns(new String[]{"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
-			packView.setLayoutParams(lp);
-			LL_list.addView(packView);
-		}
-		for (int i = 0; i < 2; i++) {
-			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			int left = dpToPx(Main.this, 16);
-			int top = 0;
-			int right = dpToPx(Main.this, 16);
-			int bottom = dpToPx(Main.this, 10);
-			lp.setMargins(left, top, right, bottom);
-			
-			String[] a = new String[]{"asdf"};
-			
 			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.red))
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
@@ -261,7 +224,8 @@ public class Main extends BaseActivity {
 					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
 					int num = projects.length;
 					
-					IT_items = new Item[num];
+					PV_items = new PackView[num];
+					flagColors = new int[num];
 					URL = new String[num];
 					unipacks = new Unipack[num];
 					
@@ -275,26 +239,28 @@ public class Main extends BaseActivity {
 						URL[i] = UnipackRootURL + "/" + project.getName();
 						unipacks[i] = new Unipack(URL[i], false);
 						
-						int color;
+						int flagColor;
 						if (unipacks[i].ErrorDetail == null)
-							color = com.kimjisub.design.R.drawable.border_play_blue;
+							flagColor = getResources().getColor(R.color.skyblue);
 						else if (unipacks[i].CriticalError)
-							color = com.kimjisub.design.R.drawable.border_play_red;
+							flagColor = getResources().getColor(R.color.red);
 						else
-							color = com.kimjisub.design.R.drawable.border_play_orange;
+							flagColor = getResources().getColor(R.color.orange);
 						
-						final Item IT_item = new Item(Main.this)
-							.setFlagColor(color)
+						
+						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+						int left = dpToPx(Main.this, 16);
+						int top = 0;
+						int right = dpToPx(Main.this, 16);
+						int bottom = dpToPx(Main.this, 10);
+						lp.setMargins(left, top, right, bottom);
+						
+						final PackView packView = new PackView(Main.this, flagColor)
 							.setTitle(unipacks[i].title)
 							.setSubTitle(unipacks[i].producerName)
-							.setSize(unipacks[i].buttonX + " x " + unipacks[i].buttonY)
-							.setChain(unipacks[i].chain + "")
-							.setCapacity(FileManager.getFolderSize(URL[i]))
-							.setLED(unipacks[i].isKeyLED)
-							.setAutoPlay(unipacks[i].isAutoPlay)
-							.setOnPlayClickListener(new Item.OnPlayClickListener() {
+							.setOnEventListener(new PackView.OnEventListener() {
 								@Override
-								public void onPlayClick() {
+								public void onPlayClick(PackView v) {
 									UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
 									UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
 									UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
@@ -304,39 +270,40 @@ public class Main extends BaseActivity {
 									intent.putExtra("URL", URL[i]);
 									startActivity(intent);
 								}
-							})
-							.setOnDeleteClickListener(new Item.OnDeleteClickListener() {
+								
 								@Override
-								public void onDeleteClick() {
-									deleteUnipack(unipacks[i]);
+								public void onFunctionBtnClick(PackView v, int index) {
+									switch (index) {
+										case 0:
+											deleteUnipack(unipacks[i]);
+											break;
+										case 1:
+											editUnipack(unipacks[i]);
+											break;
+									}
 								}
-							})
-							.setOnEditClickListener(new Item.OnEditClickListener() {
+								
 								@Override
-								public void onEditClick() {
-									editUnipack(unipacks[i]);
-								}
-							})
-							.setOnViewClickListener(new Item.OnViewClickListener() {
-								@Override
-								public void onViewClick(Item v) {
+								public void onViewClick(PackView v) {
 									togglePlay(i);
-									toggleInfo(-1);
+									toggleDetail(-1);
 								}
-							})
-							.setOnViewLongClickListener(new Item.OnViewLongClickListener() {
+								
 								@Override
-								public void onViewLongClick(Item v) {
+								public void onViewLongClick(PackView v) {
 									togglePlay(-1);
-									toggleInfo(i);
+									toggleDetail(i);
 								}
-							});
+							}).setInfos(new String[]{"크기", "체인", "용량"}, new String[]{unipacks[i].buttonX + " x " + unipacks[i].buttonY, unipacks[i].chain + "", com.kimjisub.design.manage.FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB"})
+							.setBtns(new String[]{"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 						
-						IT_items[i] = IT_item;
+						
+						PV_items[i] = packView;
+						flagColors[i] = flagColor;
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
-								LL_list.addView(IT_item);
+								LL_list.addView(packView, lp);
 							}
 						});
 						
@@ -577,25 +544,25 @@ public class Main extends BaseActivity {
 	}
 	
 	void togglePlay(int n) {
-		for (int i = 0; i < IT_items.length; i++) {
-			Item item = IT_items[i];
-			if (item != null) {
+		for (int i = 0; i < PV_items.length; i++) {
+			PackView packView = PV_items[i];
+			if (packView != null) {
 				if (n != i)
-					item.togglePlay(false);
+					packView.togglePlay(false, getResources().getColor(R.color.red), flagColors[i]);
 				else
-					item.togglePlay();
+					packView.togglePlay(getResources().getColor(R.color.red), flagColors[i]);
 			}
 		}
 	}
 	
-	void toggleInfo(int n) {
-		for (int i = 0; i < IT_items.length; i++) {
-			Item item = IT_items[i];
-			if (item != null) {
+	void toggleDetail(int n) {
+		for (int i = 0; i < PV_items.length; i++) {
+			PackView packView = PV_items[i];
+			if (packView != null) {
 				if (n != i)
-					item.toggleInfo(false);
+					packView.toggleDetail(false);
 				else
-					item.toggleInfo();
+					packView.toggleDetail();
 			}
 		}
 	}
@@ -785,15 +752,15 @@ public class Main extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-		if (IT_items != null) {
+		if (PV_items != null) {
 			boolean clear = true;
-			for (Item item : IT_items) {
+			for (PackView item : PV_items) {
 				if (item != null) {
-					if (item.isPlay() || item.isInfo())
+					if (item.isPlay() || item.isDetail())
 						clear = false;
 					
 					item.togglePlay(false);
-					item.toggleInfo(false);
+					item.toggleDetail(false);
 				}
 			}
 			
