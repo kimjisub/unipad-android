@@ -25,6 +25,7 @@
 	<string name="information">정보</string>
 
 	<!--Menu-->
+	<string name="list_refresh">목록 새로고침</string>
 	<string name="import_unipack">유니팩 불러오기</string>
 	<string name="store">스토어</string>
 

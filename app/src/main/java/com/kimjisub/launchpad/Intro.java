@@ -130,20 +130,22 @@ public class Intro extends BaseActivity {
 		}
 
 		finish();
+		
 		super.onStop();
 	}
 
 	@Override
 	protected void onResume() {
-		super.onResume();
 		initVar();
+		
+		super.onResume();
 	}
 
 	@Override
 	protected void onDestroy() {
-		super.onDestroy();
-
 		if (mService != null)
 			unbindService(mServiceConn);
+		
+		super.onDestroy();
 	}
 }
