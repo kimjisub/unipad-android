@@ -123,11 +123,10 @@ public class Main extends BaseActivity {
 			
 			@Override
 			public void onMenuToggle(boolean opened) {
-				if (opened) {
-					handler.postDelayed(runnable, 3000);
-				} else {
+				if (opened)
+					handler.postDelayed(runnable, 5000);
+				else
 					handler.removeCallbacks(runnable);
-				}
 			}
 		});
 		
