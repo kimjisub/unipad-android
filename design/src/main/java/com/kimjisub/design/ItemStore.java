@@ -85,7 +85,7 @@ public class ItemStore extends RelativeLayout {
 		addView(v);
 
 		RL_root =  findViewById(R.id.root);
-		RL_info =  findViewById(R.id.info);
+		RL_info =  findViewById(R.id.detail);
 		LL_leftView = findViewById(R.id.leftView);
 
 		RL_flag1 =  findViewById(R.id.play1);
@@ -213,25 +213,25 @@ public class ItemStore extends RelativeLayout {
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.info).getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.detail).getLayoutParams();
 						params.topMargin = px + (int) (px2 * interpolatedTime);
-						findViewById(R.id.info).setLayoutParams(params);
+						findViewById(R.id.detail).setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				findViewById(R.id.info).startAnimation(a);
+				findViewById(R.id.detail).startAnimation(a);
 			} else {
 				//animation
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.info).getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) findViewById(R.id.detail).getLayoutParams();
 						params.topMargin = px + px2 + (int) (-px2 * interpolatedTime);
-						findViewById(R.id.info).setLayoutParams(params);
+						findViewById(R.id.detail).setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				findViewById(R.id.info).startAnimation(a);
+				findViewById(R.id.detail).startAnimation(a);
 			}
 
 			isInfo = bool;

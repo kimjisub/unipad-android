@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,7 @@ public class PackView extends RelativeLayout {
 	Context context;
 	
 	RelativeLayout RL_root;
-	RelativeLayout RL_info;
+	RelativeLayout RL_detail;
 	TextView TV_delete;
 	TextView TV_edit;
 	LinearLayout LL_leftView;
@@ -53,7 +54,7 @@ public class PackView extends RelativeLayout {
 		
 		// set view
 		RL_root = findViewById(R.id.root);
-		RL_info = findViewById(R.id.info);
+		RL_detail = findViewById(R.id.detail);
 		TV_delete = findViewById(R.id.delete);
 		TV_edit = findViewById(R.id.edit);
 		LL_leftView = findViewById(R.id.leftView);
@@ -94,7 +95,7 @@ public class PackView extends RelativeLayout {
 		flag_default = UIManager.dpToPx(context, 10);
 		flag_enable = UIManager.dpToPx(context, 100);
 		info_default = UIManager.dpToPx(context, 40);
-		info_enable = UIManager.dpToPx(context, 35);
+		info_enable = UIManager.dpToPx(context, 75);
 		info_extend = UIManager.dpToPx(context, 100);
 	}
 	
@@ -336,69 +337,62 @@ public class PackView extends RelativeLayout {
 	
 	//========================================================================================= Info
 	
-	private boolean isDetail = false;
+	private int levDetail = 0;
 	
-	public void toggleDetail(boolean bool) {
-		if (isDetail != bool) {
-			final int px = info_default;
-			final int px2 = info_enable;
-			if (bool) {
-				//animation
-				Animation a = new Animation() {
-					@Override
-					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
-						params.height = px + (int) (px2 * interpolatedTime);
-						RL_info.setLayoutParams(params);
-					}
-				};
-				a.setDuration(500);
-				RL_info.startAnimation(a);
-				
-				//clickEvent
-				/*
-				TV_delete.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						onDeleteClick();
-					}
-				});
-				TV_edit.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						onEditClick();
-					}
-				});*/
-			} else {
-				//animation
-				Animation a = new Animation() {
-					@Override
-					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
-						params.height = px + px2 + (int) (-px2 * interpolatedTime);
-						RL_info.setLayoutParams(params);
-					}
-				};
-				a.setDuration(500);
-				RL_info.startAnimation(a);
-				
-				//clickEvent
-				//TV_delete.setOnClickListener(null);
-				//TV_delete.setClickable(false);
-				//TV_edit.setOnClickListener(null);
-				//TV_edit.setClickable(false);
+	public void toggleDetail(int lev) {
+		if (levDetail != lev) {
+			final int px_default = info_default;
+			final int px_enable = info_enable;
+			final int px_extend = info_extend;
+			
+			int start = 0;
+			int end = 0;
+			if (lev == 0) {
+				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
+				start = params.height;
+				end = px_default;
+			} else if (lev == 1) {
+				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
+				start = params.height;
+				end = px_enable;
+			} else if (lev == 2) {
+				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
+				start = params.height;
+				end = px_extend;
 			}
 			
-			isDetail = bool;
+			animateDetail(start, end);
+			
+			levDetail = lev;
 		}
 	}
 	
+	public void animateDetail(final int start, final int end) {
+		Log.d("com.kimjisub.log", start + " / " + end);
+		final int change = end - start;
+		
+		Animation a = new Animation() {
+			@Override
+			protected void applyTransformation(float interpolatedTime, Transformation t) {
+				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
+				params.height = start + (int) (change * interpolatedTime);
+				RL_detail.setLayoutParams(params);
+			}
+		};
+		a.setDuration(500);
+		RL_detail.startAnimation(a);
+	}
+	
 	public void toggleDetail() {
-		toggleDetail(!isDetail);
+		toggleDetail(levDetail == 0 ? 1 : 0);
 	}
 	
 	public boolean isDetail() {
-		return isDetail;
+		return levDetail != 0;
+	}
+	
+	public int levDetail() {
+		return levDetail;
 	}
 	
 	
@@ -432,11 +426,12 @@ public class PackView extends RelativeLayout {
 	}
 	
 	void onPlayClick() {
-		if (onEventListener != null && isPlay) onEventListener.onPlayClick(this);
+		if (onEventListener != null && isPlay()) onEventListener.onPlayClick(this);
 	}
 	
 	void onFunctionBtnClick(int index) {
-		if (onEventListener != null && isDetail) onEventListener.onFunctionBtnClick(this, index);
+		if (onEventListener != null && isDetail())
+			onEventListener.onFunctionBtnClick(this, index);
 	}
 	
 	

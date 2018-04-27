@@ -594,7 +594,7 @@ public class Main extends BaseActivity {
 			PackView packView = PV_items[i];
 			if (packView != null) {
 				if (n != i)
-					packView.toggleDetail(false);
+					packView.toggleDetail(0);
 				else
 					packView.toggleDetail();
 			}
@@ -794,7 +794,7 @@ public class Main extends BaseActivity {
 						clear = false;
 					
 					item.togglePlay(false);
-					item.toggleDetail(false);
+					item.toggleDetail(0);
 				}
 			}
 			
