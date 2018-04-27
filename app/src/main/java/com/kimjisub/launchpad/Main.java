@@ -184,6 +184,16 @@ public class Main extends BaseActivity {
 				.setFlagColor(getResources().getColor(R.color.red))
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
+					public void onViewClick(PackView v) {
+						v.togglePlay();
+					}
+					
+					@Override
+					public void onViewLongClick(PackView v) {
+						v.toggleDetail();
+					}
+					
+					@Override
 					public void onPlayClick(PackView v) {
 						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
 						v.updateInfo(0, "asdf");
@@ -192,16 +202,6 @@ public class Main extends BaseActivity {
 					@Override
 					public void onFunctionBtnClick(PackView v, int index) {
 						Toast.makeText(Main.this, "onFunctionBtnClick " + index, Toast.LENGTH_SHORT).show();
-					}
-					
-					@Override
-					public void onViewClick(PackView v) {
-						v.togglePlay();
-					}
-					
-					@Override
-					public void onViewLongClick(PackView v) {
-						v.toggleDetail();
 					}
 				})
 				.setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
@@ -289,7 +289,8 @@ public class Main extends BaseActivity {
 								public void onFunctionBtnClick(PackView v, int index) {
 									switch (index) {
 										case 0:
-											deleteUnipack(unipack);
+											//deleteUnipack(unipack);
+											v.toggleDetail(2);
 											break;
 										case 1:
 											editUnipack(unipack);

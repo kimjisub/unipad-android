@@ -96,7 +96,7 @@ public class PackView extends RelativeLayout {
 		flag_enable = UIManager.dpToPx(context, 100);
 		info_default = UIManager.dpToPx(context, 40);
 		info_enable = UIManager.dpToPx(context, 75);
-		info_extend = UIManager.dpToPx(context, 100);
+		info_extend = UIManager.dpToPx(context, 300);
 	}
 	
 	public PackView(Context context) {
@@ -368,7 +368,6 @@ public class PackView extends RelativeLayout {
 	}
 	
 	public void animateDetail(final int start, final int end) {
-		Log.d("com.kimjisub.log", start + " / " + end);
 		final int change = end - start;
 		
 		Animation a = new Animation() {
