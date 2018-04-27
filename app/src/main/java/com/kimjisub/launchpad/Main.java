@@ -277,6 +277,12 @@ public class Main extends BaseActivity {
 									switch (index) {
 										case 0:
 											deleteUnipack(unipack);
+											LinearLayout linearLayout = new LinearLayout(Main.this);
+											TextView textView = new TextView(Main.this);
+											textView.setText("asdf\nasdfwvvw");
+											linearLayout.addView(textView);
+											linearLayout.setBackgroundColor(getResources().getColor(R.color.app_blue));
+											v.setExtendView(linearLayout);
 											v.toggleDetail(2);
 											break;
 										case 1:
