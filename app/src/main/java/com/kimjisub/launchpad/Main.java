@@ -12,6 +12,8 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -296,6 +298,9 @@ public class Main extends BaseActivity {
 							@Override
 							public void run() {
 								LL_list.addView(packView, lp);
+								Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
+								a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
+								packView.setAnimation(a);
 							}
 						});
 						
