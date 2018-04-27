@@ -93,7 +93,7 @@ public class Intro extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					UIManager.initAds(Intro.this);
-					(handler = new Handler()).postDelayed(runnable, 1500);
+					(handler = new Handler()).postDelayed(runnable, 300);//1500);
 				}
 
 				@Override
