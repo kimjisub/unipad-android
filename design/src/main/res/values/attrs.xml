@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-
-	<declare-styleable name="Item">
+	
+	
+	<declare-styleable name="PackView">
 		<attr name="flagColor" format="reference|integer"/>
-
+		
 		<attr name="title" format="string"/>
 		<attr name="subTitle" format="string"/>
-
+		
 		<attr name="LED" format="boolean"/>
 		<attr name="AutoPlay" format="boolean"/>
-
+		
 		<attr name="size" format="string"/>
 		<attr name="chain" format="string"/>
 		<attr name="capacity" format="integer"/>
-
+		
 		<attr name="optionVisibility" format="boolean"/>
 	</declare-styleable>
 
-	<declare-styleable name="ItemStore" parent="Item">
+	<declare-styleable name="ItemStore" parent="PackView">
 		<attr name="flagColor"/>
 
 		<attr name="title"/>
@@ -33,19 +33,5 @@
 	</declare-styleable>
 	
 	
-	<declare-styleable name="PackView" parent="Item">
-		<attr name="flagColor"/>
-		
-		<attr name="title"/>
-		<attr name="subTitle"/>
-		
-		<attr name="LED"/>
-		<attr name="AutoPlay"/>
-		
-		<attr name="size"/>
-		<attr name="chain"/>
-		<attr name="capacity"/>
-		
-		<attr name="optionVisibility"/>
-	</declare-styleable>
+	
 </resources>

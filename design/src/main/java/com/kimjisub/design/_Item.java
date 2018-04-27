@@ -20,7 +20,7 @@ import static com.kimjisub.design.manage.Tools.lang;
  * Created by rlawl on 2017-09-07
  */
 
-public class Item extends RelativeLayout {
+public class _Item {/*extends RelativeLayout {
 
 	Context context;
 
@@ -403,5 +403,5 @@ public class Item extends RelativeLayout {
 	void onViewLongClick() {
 		if (onViewLongClickListener != null) onViewLongClickListener.onViewLongClick(this);
 	}
-
+*/
 }

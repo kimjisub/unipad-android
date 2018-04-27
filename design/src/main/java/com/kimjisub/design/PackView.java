@@ -126,7 +126,15 @@ public class PackView extends RelativeLayout {
 		initView(context);
 		getAttrs(attrs, defStyle);
 	}
-
+	
+	public static PackView errItem(Context context, String title, String subTitle, OnEventListener listener) {
+		return new PackView(context, context.getResources().getColor(R.color.red))
+			.setTitle(title)
+			.setSubTitle(subTitle)
+			//.setOptionVisibility(false)
+			.setOnEventListener(listener);
+	}
+	
 	private void getAttrs(AttributeSet attrs) {
 		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView);
 		setTypeArray(typedArray);
@@ -388,18 +396,26 @@ public class PackView extends RelativeLayout {
 	private OnEventListener onEventListener = null;
 
 	public interface OnEventListener {
+		
+		void onViewClick(PackView v);
+		
+		void onViewLongClick(PackView v);
 		void onPlayClick(PackView v);
 
 		void onFunctionBtnClick(PackView v, int index);
-
-		void onViewClick(PackView v);
-
-		void onViewLongClick(PackView v);
 	}
 
 	public PackView setOnEventListener(OnEventListener listener) {
 		this.onEventListener = listener;
 		return this;
+	}
+	
+	void onViewClick() {
+		if (onEventListener != null) onEventListener.onViewClick(this);
+	}
+	
+	void onViewLongClick() {
+		if (onEventListener != null) onEventListener.onViewLongClick(this);
 	}
 
 	void onPlayClick() {
@@ -408,14 +424,6 @@ public class PackView extends RelativeLayout {
 
 	void onFunctionBtnClick(int index) {
 		if (onEventListener != null) onEventListener.onFunctionBtnClick(this, index);
-	}
-
-	void onViewClick() {
-		if (onEventListener != null) onEventListener.onViewClick(this);
-	}
-
-	void onViewLongClick() {
-		if (onEventListener != null) onEventListener.onViewLongClick(this);
 	}
 
 
