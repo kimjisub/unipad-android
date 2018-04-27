@@ -82,10 +82,14 @@ public class Intro extends BaseActivity {
 			e.printStackTrace();
 		}
 
-		//구글플레이 결제
-		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
-		serviceIntent.setPackage("com.android.vending");
-		bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+		try {
+			//구글플레이 결제
+			Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
+			serviceIntent.setPackage("com.android.vending");
+			bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+		}catch(Exception e){
+		
+		}
 
 
 		new TedPermission(Intro.this)
