@@ -177,46 +177,6 @@ public class Main extends BaseActivity {
 		
 		LL_list.removeAllViews();
 		
-		
-		for (int i = 0; i < 2; i++) {
-			
-			final PackView packView = new PackView(Main.this)
-				.setFlagColor(getResources().getColor(R.color.red))
-				.setOnEventListener(new PackView.OnEventListener() {
-					@Override
-					public void onViewClick(PackView v) {
-						v.togglePlay();
-					}
-					
-					@Override
-					public void onViewLongClick(PackView v) {
-						v.toggleDetail();
-					}
-					
-					@Override
-					public void onPlayClick(PackView v) {
-						Toast.makeText(Main.this, "onPlayClick", Toast.LENGTH_SHORT).show();
-						v.updateInfo(0, "asdf");
-					}
-					
-					@Override
-					public void onFunctionBtnClick(PackView v, int index) {
-						Toast.makeText(Main.this, "onFunctionBtnClick " + index, Toast.LENGTH_SHORT).show();
-					}
-				})
-				.setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
-			
-			
-			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			int left = dpToPx(Main.this, 16);
-			int top = 0;
-			int right = dpToPx(Main.this, 16);
-			int bottom = dpToPx(Main.this, 10);
-			lp.setMargins(left, top, right, bottom);
-			LL_list.addView(packView, lp);
-		}
-		
-		
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -307,7 +267,7 @@ public class Main extends BaseActivity {
 								public void onFunctionBtnClick(PackView v, int index) {
 									switch (index) {
 										case 0:
-											//deleteUnipack(unipack);
+											deleteUnipack(unipack);
 											v.toggleDetail(2);
 											break;
 										case 1:
