@@ -178,13 +178,11 @@ public class Main extends BaseActivity {
 		
 		LL_list.removeAllViews();
 		
+		
+		addErrorItem();
+		
+		
 		for (int i = 0; i < 2; i++) {
-			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-			int left = dpToPx(Main.this, 16);
-			int top = 0;
-			int right = dpToPx(Main.this, 16);
-			int bottom = dpToPx(Main.this, 10);
-			lp.setMargins(left, top, right, bottom);
 			
 			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.red))
 				.setOnEventListener(new PackView.OnEventListener() {
@@ -209,8 +207,15 @@ public class Main extends BaseActivity {
 						v.toggleDetail();
 					}
 				}).setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
-			packView.setLayoutParams(lp);
-			LL_list.addView(packView);
+			
+			
+			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+			int left = dpToPx(Main.this, 16);
+			int top = 0;
+			int right = dpToPx(Main.this, 16);
+			int bottom = dpToPx(Main.this, 10);
+			lp.setMargins(left, top, right, bottom);
+			LL_list.addView(packView, lp);
 		}
 		
 		
@@ -247,18 +252,22 @@ public class Main extends BaseActivity {
 						else
 							flagColor = getResources().getColor(R.color.orange);
 						
-						
-						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-						int left = dpToPx(Main.this, 16);
-						int top = 0;
-						int right = dpToPx(Main.this, 16);
-						int bottom = dpToPx(Main.this, 10);
-						lp.setMargins(left, top, right, bottom);
-						
 						final PackView packView = new PackView(Main.this, flagColor)
 							.setTitle(unipacks[i].title)
 							.setSubTitle(unipacks[i].producerName)
 							.setOnEventListener(new PackView.OnEventListener() {
+								@Override
+								public void onViewClick(PackView v) {
+									togglePlay(i);
+									toggleDetail(-1);
+								}
+								
+								@Override
+								public void onViewLongClick(PackView v) {
+									togglePlay(-1);
+									toggleDetail(i);
+								}
+								
 								@Override
 								public void onPlayClick(PackView v) {
 									UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
@@ -282,24 +291,19 @@ public class Main extends BaseActivity {
 											break;
 									}
 								}
-								
-								@Override
-								public void onViewClick(PackView v) {
-									togglePlay(i);
-									toggleDetail(-1);
-								}
-								
-								@Override
-								public void onViewLongClick(PackView v) {
-									togglePlay(-1);
-									toggleDetail(i);
-								}
 							}).setInfos(new String[]{"크기", "체인", "용량"}, new String[]{unipacks[i].buttonX + " x " + unipacks[i].buttonY, unipacks[i].chain + "", com.kimjisub.design.manage.FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB"})
 							.setBtns(new String[]{"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
 						
-						
 						PV_items[i] = packView;
 						flagColors[i] = flagColor;
+						
+						
+						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+						int left = dpToPx(Main.this, 16);
+						int top = 0;
+						int right = dpToPx(Main.this, 16);
+						int bottom = dpToPx(Main.this, 10);
+						lp.setMargins(left, top, right, bottom);
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
@@ -313,10 +317,26 @@ public class Main extends BaseActivity {
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
-								LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+								
+								String title = lang(Main.this, R.string.unipackNotFound);
+								String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
+								
+								LL_list.addView(PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
 									@Override
-									public void onViewClick(Item v) {
+									public void onViewClick(PackView v) {
 										startActivity(new Intent(Main.this, Store.class));
+									}
+									
+									@Override
+									public void onViewLongClick(PackView v) {
+									}
+									
+									@Override
+									public void onPlayClick(PackView v) {
+									}
+									
+									@Override
+									public void onFunctionBtnClick(PackView v, int index) {
 									}
 								}));
 							}
@@ -329,10 +349,25 @@ public class Main extends BaseActivity {
 					runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 						@Override
 						public void run() {
-							LL_list.addView(Item.errItem(Main.this, new Item.OnViewClickListener() {
+							String title = lang(Main.this, R.string.unipackNotFound);
+							String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
+							
+							LL_list.addView(PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
 								@Override
-								public void onViewClick(Item v) {
+								public void onViewClick(PackView v) {
 									startActivity(new Intent(Main.this, Store.class));
+								}
+								
+								@Override
+								public void onViewLongClick(PackView v) {
+								}
+								
+								@Override
+								public void onPlayClick(PackView v) {
+								}
+								
+								@Override
+								public void onFunctionBtnClick(PackView v, int index) {
 								}
 							}));
 						}
@@ -349,6 +384,39 @@ public class Main extends BaseActivity {
 				}
 			}
 		}).start();
+	}
+	
+	void addErrorItem(){
+		String title = lang(Main.this, R.string.unipackNotFound);
+		String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
+		
+		PackView packView = PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
+			@Override
+			public void onViewClick(PackView v) {
+				startActivity(new Intent(Main.this, Store.class));
+			}
+			
+			@Override
+			public void onViewLongClick(PackView v) {
+			}
+			
+			@Override
+			public void onPlayClick(PackView v) {
+			}
+			
+			@Override
+			public void onFunctionBtnClick(PackView v, int index) {
+			}
+		});
+		
+		
+		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+		int left = dpToPx(Main.this, 16);
+		int top = 0;
+		int right = dpToPx(Main.this, 16);
+		int bottom = dpToPx(Main.this, 10);
+		lp.setMargins(left, top, right, bottom);
+		LL_list.addView(packView, lp);
 	}
 	
 	void deleteUnipack(final Unipack uni) {
