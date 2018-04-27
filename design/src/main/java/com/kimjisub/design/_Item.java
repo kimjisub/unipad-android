@@ -25,7 +25,7 @@ public class _Item {/*extends RelativeLayout {
 	Context context;
 
 	RelativeLayout RL_root;
-	RelativeLayout RL_info;
+	RelativeLayout RL_detail;
 	TextView TV_delete;
 	TextView TV_edit;
 	LinearLayout LL_leftView;
@@ -85,7 +85,7 @@ public class _Item {/*extends RelativeLayout {
 		addView(v);
 
 		RL_root = findViewById(R.id.root);
-		RL_info = findViewById(R.id.info);
+		RL_detail = findViewById(R.id.info);
 		TV_delete = findViewById(R.id.delete);
 		TV_edit = findViewById(R.id.edit);
 		LL_leftView = findViewById(R.id.leftView);
@@ -249,13 +249,13 @@ public class _Item {/*extends RelativeLayout {
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
 						params.topMargin = px + (int) (px2 * interpolatedTime);
-						RL_info.setLayoutParams(params);
+						RL_detail.setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				RL_info.startAnimation(a);
+				RL_detail.startAnimation(a);
 
 				//clickEvent
 				TV_delete.setOnClickListener(new View.OnClickListener() {
@@ -275,13 +275,13 @@ public class _Item {/*extends RelativeLayout {
 				Animation a = new Animation() {
 					@Override
 					protected void applyTransformation(float interpolatedTime, Transformation t) {
-						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_info.getLayoutParams();
+						RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
 						params.topMargin = px + px2 + (int) (-px2 * interpolatedTime);
-						RL_info.setLayoutParams(params);
+						RL_detail.setLayoutParams(params);
 					}
 				};
 				a.setDuration(500);
-				RL_info.startAnimation(a);
+				RL_detail.startAnimation(a);
 
 				//clickEvent
 				TV_delete.setOnClickListener(null);
