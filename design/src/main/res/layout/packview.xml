@@ -150,21 +150,19 @@
 				    android:paddingRight="15dp">
 					
 					<TextView
-					    android:id="@+id/LED"
+					    android:id="@+id/option1"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
 					    android:layout_gravity="end"
-					    android:text="@string/LED_"
 					    android:textColor="@color/pink"
 					    android:textSize="10dp"/>
 					
 					<TextView
-					    android:id="@+id/autoPlay"
+					    android:id="@+id/option2"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
 					    android:layout_gravity="end"
 					    android:layout_marginTop="1dp"
-					    android:text="@string/autoPlay_"
 					    android:textColor="@color/pink"
 					    android:textSize="10dp"/>
 				
