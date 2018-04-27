@@ -17,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -50,6 +49,7 @@ public class Main extends BaseActivity {
 	
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
+	FloatingActionButton FAB_refreshList;
 	FloatingActionButton FAB_loadUniPack;
 	FloatingActionButton FAB_store;
 	FloatingActionButton FAB_setting;
@@ -63,6 +63,7 @@ public class Main extends BaseActivity {
 	void initVar() {
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
+		FAB_refreshList = findViewById(R.id.fab_refreshList);
 		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
 		FAB_store = findViewById(R.id.fab_store);
 		FAB_setting = findViewById(R.id.fab_setting);
@@ -79,6 +80,13 @@ public class Main extends BaseActivity {
 		initVar();
 		
 		updateCheck();
+		
+		FAB_refreshList.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				update();
+			}
+		});
 		
 		FAB_loadUniPack.setOnClickListener(new View.OnClickListener() {
 			@Override

@@ -23,8 +23,6 @@ public class PackView extends RelativeLayout {
 	
 	RelativeLayout RL_root;
 	RelativeLayout RL_detail;
-	TextView TV_delete;
-	TextView TV_edit;
 	LinearLayout LL_leftView;
 	RelativeLayout RL_playBtn;
 	ImageView IV_playImg;
@@ -60,8 +58,6 @@ public class PackView extends RelativeLayout {
 		// set view
 		RL_root = findViewById(R.id.root);
 		RL_detail = findViewById(R.id.detail);
-		TV_delete = findViewById(R.id.delete);
-		TV_edit = findViewById(R.id.edit);
 		LL_leftView = findViewById(R.id.leftView);
 		RL_playBtn = findViewById(R.id.playBtn);
 		IV_playImg = findViewById(R.id.playImg);

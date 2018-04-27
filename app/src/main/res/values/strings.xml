@@ -25,6 +25,7 @@
 	<string name="information">Information</string>
 
 	<!--Menu-->
+	<string name="list_refresh">Refresh List</string>
 	<string name="import_unipack">Load Unipack</string>
 	<string name="store">Store</string>
 
