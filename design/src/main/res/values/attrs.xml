@@ -17,21 +17,4 @@
 		
 		<attr name="optionVisibility" format="boolean"/>
 	</declare-styleable>
-
-	<declare-styleable name="ItemStore" parent="PackView">
-		<attr name="flagColor"/>
-
-		<attr name="title"/>
-		<attr name="subTitle"/>
-
-		<attr name="LED"/>
-		<attr name="AutoPlay"/>
-
-		<attr name="downloadCount" format="integer"/>
-
-		<attr name="optionVisibility"/>
-	</declare-styleable>
-	
-	
-	
 </resources>
