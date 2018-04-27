@@ -23,6 +23,7 @@
 	<string name="restart">Restart</string>
 	<string name="using">Using</string>
 	<string name="information">Information</string>
+	<string name="path">Path</string>
 
 	<!--Menu-->
 	<string name="list_refresh">Refresh List</string>

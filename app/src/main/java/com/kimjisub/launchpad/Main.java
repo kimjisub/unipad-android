@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
@@ -280,14 +281,11 @@ public class Main extends BaseActivity {
 									switch (index) {
 										case 0:
 											//deleteUnipack(unipack);
-											final LinearLayout linearLayout = new LinearLayout(Main.this);
-											TextView textView = new TextView(Main.this);
-											textView.setText("asdf\nasdfwvvㅜ\n\n\n호ㅓㅏ");
-											linearLayout.addView(textView);
-											linearLayout.setBackgroundColor(getResources().getColor(R.color.app_blue));
+											final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
+											((TextView)RL_delete.findViewById(R.id.path)).setText(unipack.URL);
 											
 											LL_testView.removeAllViews();
-											LL_testView.addView(linearLayout);
+											LL_testView.addView(RL_delete);
 											LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 												@Override
 												public void onGlobalLayout() {
@@ -296,7 +294,7 @@ public class Main extends BaseActivity {
 													int height = LL_testView.getHeight();
 													LL_testView.removeAllViews();
 													
-													v.setExtendView(linearLayout, height);
+													v.setExtendView(RL_delete, height);
 													v.toggleDetail(2);
 												}
 											});
