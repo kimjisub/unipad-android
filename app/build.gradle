@@ -8,6 +8,8 @@ android {
 		targetSdkVersion 26
 		versionCode 55
 		versionName "3.3.3"
+		//광고 다시 열기
+		//intro 로딩속도
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 	}
