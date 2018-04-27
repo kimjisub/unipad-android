@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.kimjisub.design.Item;
 import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
@@ -127,7 +126,7 @@ public class Main extends BaseActivity {
 	
 	PackView[] PV_items;
 	int[] flagColors;
-	String[] URL;
+	String[] URLs;
 	Unipack[] unipacks;
 	
 	Timer timer = new Timer();
@@ -179,12 +178,10 @@ public class Main extends BaseActivity {
 		LL_list.removeAllViews();
 		
 		
-		addErrorItem();
-		
-		
 		for (int i = 0; i < 2; i++) {
 			
-			final PackView packView = new PackView(Main.this, getResources().getColor(R.color.red))
+			final PackView packView = new PackView(Main.this)
+				.setFlagColor(getResources().getColor(R.color.red))
 				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onPlayClick(PackView v) {
@@ -206,7 +203,8 @@ public class Main extends BaseActivity {
 					public void onViewLongClick(PackView v) {
 						v.toggleDetail();
 					}
-				}).setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
+				})
+				.setInfos(new String[]{"다운로드"}, new String[]{"1634069"});
 			
 			
 			LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -231,41 +229,53 @@ public class Main extends BaseActivity {
 					
 					PV_items = new PackView[num];
 					flagColors = new int[num];
-					URL = new String[num];
+					URLs = new String[num];
 					unipacks = new Unipack[num];
 					
 					int count = 0;
-					for (int i_ = 0; i_ < num; i_++) {
-						final int i = i_;
-						File project = projects[i];
+					for (int i = 0; i < num; i++) {
+						final int I = i;
+						File project = projects[I];
 						if (project.isFile()) continue;
 						count++;
 						
-						URL[i] = UnipackRootURL + "/" + project.getName();
-						unipacks[i] = new Unipack(URL[i], false);
-						
+						final String url = UnipackRootURL + "/" + project.getName();
+						final Unipack unipack = new Unipack(url, false);
 						int flagColor;
-						if (unipacks[i].ErrorDetail == null)
+						
+						if (unipack.ErrorDetail == null)
 							flagColor = getResources().getColor(R.color.skyblue);
-						else if (unipacks[i].CriticalError)
+						else if (unipack.CriticalError)
 							flagColor = getResources().getColor(R.color.red);
 						else
 							flagColor = getResources().getColor(R.color.orange);
 						
-						final PackView packView = new PackView(Main.this, flagColor)
-							.setTitle(unipacks[i].title)
-							.setSubTitle(unipacks[i].producerName)
+						
+						log(url);
+						log(unipack.CriticalError + " ");
+						log(unipack.ErrorDetail + " ");
+						
+						final PackView packView = new PackView(Main.this)
+							.setFlagColor(flagColor)
+							.setTitle(unipack.title)
+							.setSubTitle(unipack.producerName)
+							.setInfos(new String[]{"크기", "체인", "용량"},
+								new String[]{unipack.buttonX + " x " + unipack.buttonY, unipack.chain + "", FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"})
+							.setBtns(new String[]{"삭제", "수정"},
+								new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)})
+							.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
+							.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
 							.setOnEventListener(new PackView.OnEventListener() {
 								@Override
 								public void onViewClick(PackView v) {
-									togglePlay(i);
+									togglePlay(I);
 									toggleDetail(-1);
 								}
 								
 								@Override
 								public void onViewLongClick(PackView v) {
 									togglePlay(-1);
-									toggleDetail(i);
+									toggleDetail(I);
 								}
 								
 								@Override
@@ -276,7 +286,7 @@ public class Main extends BaseActivity {
 									UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
 									
 									Intent intent = new Intent(Main.this, Play.class);
-									intent.putExtra("URL", URL[i]);
+									intent.putExtra("URL", url);
 									startActivity(intent);
 								}
 								
@@ -284,18 +294,15 @@ public class Main extends BaseActivity {
 								public void onFunctionBtnClick(PackView v, int index) {
 									switch (index) {
 										case 0:
-											deleteUnipack(unipacks[i]);
+											deleteUnipack(unipack);
 											break;
 										case 1:
-											editUnipack(unipacks[i]);
+											editUnipack(unipack);
 											break;
 									}
 								}
-							}).setInfos(new String[]{"크기", "체인", "용량"}, new String[]{unipacks[i].buttonX + " x " + unipacks[i].buttonY, unipacks[i].chain + "", com.kimjisub.design.manage.FileManager.byteToMB(FileManager.getFolderSize(URL[i])) + " MB"})
-							.setBtns(new String[]{"삭제", "수정"}, new int[]{getResources().getColor(R.color.red), getResources().getColor(R.color.orange)});
+							});
 						
-						PV_items[i] = packView;
-						flagColors[i] = flagColor;
 						
 						
 						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -311,34 +318,18 @@ public class Main extends BaseActivity {
 							}
 						});
 						
+						PV_items[I] = packView;
+						flagColors[I] = flagColor;
+						URLs[I] = url;
+						unipacks[I] = unipack;
+						
 					}
 					
 					if (count == 0) {
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
-								
-								String title = lang(Main.this, R.string.unipackNotFound);
-								String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
-								
-								LL_list.addView(PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
-									@Override
-									public void onViewClick(PackView v) {
-										startActivity(new Intent(Main.this, Store.class));
-									}
-									
-									@Override
-									public void onViewLongClick(PackView v) {
-									}
-									
-									@Override
-									public void onPlayClick(PackView v) {
-									}
-									
-									@Override
-									public void onFunctionBtnClick(PackView v, int index) {
-									}
-								}));
+								addErrorItem();
 							}
 						});
 					}
@@ -349,27 +340,7 @@ public class Main extends BaseActivity {
 					runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 						@Override
 						public void run() {
-							String title = lang(Main.this, R.string.unipackNotFound);
-							String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
-							
-							LL_list.addView(PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
-								@Override
-								public void onViewClick(PackView v) {
-									startActivity(new Intent(Main.this, Store.class));
-								}
-								
-								@Override
-								public void onViewLongClick(PackView v) {
-								}
-								
-								@Override
-								public void onPlayClick(PackView v) {
-								}
-								
-								@Override
-								public void onFunctionBtnClick(PackView v, int index) {
-								}
-							}));
+							addErrorItem();
 						}
 					});
 				}
@@ -386,7 +357,7 @@ public class Main extends BaseActivity {
 		}).start();
 	}
 	
-	void addErrorItem(){
+	void addErrorItem() {
 		String title = lang(Main.this, R.string.unipackNotFound);
 		String subTitle = lang(Main.this, com.kimjisub.design.R.string.clickToAddUnipack);
 		
