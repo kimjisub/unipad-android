@@ -87,8 +87,7 @@ public class Intro extends BaseActivity {
 			Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
 			serviceIntent.setPackage("com.android.vending");
 			bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
-		}catch(Exception e){
-		
+		}catch(Exception ignore){
 		}
 
 

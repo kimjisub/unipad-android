@@ -172,13 +172,13 @@ public class PackView extends RelativeLayout {
 	
 	//========================================================================================= set / update / etc..
 	
-	public PackView setStatus(boolean bool){
+	public PackView setStatus(boolean bool) {
 		status = bool;
 		
 		return this;
 	}
 	
-	public boolean getStatus(){
+	public boolean getStatus() {
 		return status;
 	}
 	
@@ -293,22 +293,23 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setPlayImageShow(boolean bool){
+	public PackView setPlayImageShow(boolean bool) {
 		IV_playImg.setVisibility(bool ? VISIBLE : GONE);
 		
 		return this;
 	}
 	
-	public PackView setPlayText(String str){
+	public PackView setPlayText(String str) {
 		TV_playText.setText(str);
 		
 		return this;
 	}
 	
-	public PackView setExtendView(View v){
+	public PackView setExtendView(View v, int height) {
 		LL_extendView.removeAllViews();
 		LL_extendView.addView(v);
-		PX_info_extend = UIManager.dpToPx(context,LL_extendView.getMinimumHeight()+14) + PX_info_enable;
+		
+		PX_info_extend = height + UIManager.dpToPx(context, 7) + PX_info_enable;
 		
 		return this;
 	}
@@ -394,13 +395,30 @@ public class PackView extends RelativeLayout {
 				end = px_extend;
 			}
 			
-			animateDetail(start, end);
+			Animation a = animateDetail(start, end);
+			if (lev != 2)
+				a.setAnimationListener(new Animation.AnimationListener() {
+					@Override
+					public void onAnimationStart(Animation animation) {
+					
+					}
+					
+					@Override
+					public void onAnimationEnd(Animation animation) {
+						LL_extendView.removeAllViews();
+					}
+					
+					@Override
+					public void onAnimationRepeat(Animation animation) {
+					
+					}
+				});
 			
 			levDetail = lev;
 		}
 	}
 	
-	public void animateDetail(final int start, final int end) {
+	public Animation animateDetail(final int start, final int end) {
 		final int change = end - start;
 		
 		Animation a = new Animation() {
@@ -413,6 +431,7 @@ public class PackView extends RelativeLayout {
 		};
 		a.setDuration(500);
 		RL_detail.startAnimation(a);
+		return a;
 	}
 	
 	public void toggleDetail() {
