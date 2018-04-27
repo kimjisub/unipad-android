@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.BoringLayout;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -99,7 +100,7 @@ public class Store extends BaseActivity {
 					
 					
 					@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-						getResources().getString(R.id.downloadCount)
+						getResources().getString(R.string.downloadCount)
 					};
 					String[] infoContents = new String[]{
 						d.downloadCount + ""
@@ -117,16 +118,17 @@ public class Store extends BaseActivity {
 						.setBtns(btnTitles, btnColors)
 						.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
 						.setOptionBools(d.isLED, d.isAutoPlay)
+						.setPlayImageShow(false)
 						.setOnEventListener(new PackView.OnEventListener() {
 							@Override
 							public void onViewClick(PackView v) {
-								if (!v.isPlay())
+								if (v.getStatus())
 									itemClicked(v, d.index);
 							}
 							
 							@Override
 							public void onViewLongClick(PackView v) {
-								if (isDownloaded) v.toggleDetail();
+								v.toggleDetail();
 							}
 							
 							@Override
@@ -145,7 +147,8 @@ public class Store extends BaseActivity {
 										break;
 								}
 							}
-						});
+						})
+						.setStatus(!isDownloaded);
 					
 					
 					final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -206,7 +209,8 @@ public class Store extends BaseActivity {
 		
 		v.togglePlay(true);
 		v.updateFlagColor(getResources().getColor(R.color.dark5));
-		//v.setProgress("0%");
+		v.setStatus(false);
+		v.setPlayText("0%");
 		
 		(new AsyncTask<String, Long, String>() {
 			
@@ -318,15 +322,16 @@ public class Store extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					//v.setProgress((int) ((float) progress[1] / fileSize * 100) + "%");
+					v.setPlayText((int) ((float) progress[1] / fileSize * 100) + "%");
 				} else if (progress[0] == 1) {//분석중
-					//v.setProgress(lang(R.string.analyzing));
+					v.setPlayText(lang(R.string.analyzing));
 					v.updateFlagColor(getResources().getColor(R.color.orange));
 				} else if (progress[0] == -1) {//실패
-					//v.setProgress(lang(R.string.failed));
+					v.setPlayText(lang(R.string.failed));
 					v.updateFlagColor(getResources().getColor(R.color.red));
+					v.setStatus(true);
 				} else if (progress[0] == 2) {//완료
-					//v.setProgress("");
+					v.setPlayText("");
 					v.updateFlagColor(getResources().getColor(R.color.green));
 					v.togglePlay(false);
 				}

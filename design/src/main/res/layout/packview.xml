@@ -11,9 +11,9 @@
 	    android:id="@+id/detail"
 	    android:layout_width="match_parent"
 	    android:layout_height="40dp"
-	    android:layout_marginTop="20dp"
 	    android:layout_marginLeft="5dp"
 	    android:layout_marginRight="5dp"
+	    android:layout_marginTop="20dp"
 	    android:background="@drawable/border_bottom_round">
 		
 		<RelativeLayout
@@ -81,12 +81,22 @@
 		    android:background="@drawable/border_all_round"/>
 		
 		<ImageView
+		    android:id="@+id/playImg"
 		    android:layout_width="100dp"
 		    android:layout_height="15dp"
 		    android:layout_centerVertical="true"
 		    android:layout_gravity="center"
 		    android:scaleType="centerInside"
 		    android:src="@drawable/playbtn"/>
+		
+		<TextView
+		    android:id="@+id/playText"
+		    android:layout_width="100dp"
+		    android:layout_height="wrap_content"
+		    android:layout_centerVertical="true"
+		    android:layout_gravity="center"
+		    android:gravity="center"
+		    android:textSize="10dp"/>
 		
 		<RelativeLayout
 		    android:layout_width="match_parent"

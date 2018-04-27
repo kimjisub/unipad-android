@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -26,6 +27,8 @@ public class PackView extends RelativeLayout {
 	TextView TV_edit;
 	LinearLayout LL_leftView;
 	RelativeLayout RL_playBtn;
+	ImageView IV_playImg;
+	TextView TV_playText;
 	
 	LinearLayout LL_btns;
 	LinearLayout LL_infos;
@@ -36,6 +39,8 @@ public class PackView extends RelativeLayout {
 	TextView TV_subTitle;
 	TextView TV_option1;
 	TextView TV_option2;
+	
+	boolean status = false;
 	
 	int flag_default;
 	int flag_enable;
@@ -59,6 +64,8 @@ public class PackView extends RelativeLayout {
 		TV_edit = findViewById(R.id.edit);
 		LL_leftView = findViewById(R.id.leftView);
 		RL_playBtn = findViewById(R.id.playBtn);
+		IV_playImg = findViewById(R.id.playImg);
+		TV_playText = findViewById(R.id.playText);
 		
 		LL_btns = findViewById(R.id.btns);
 		LL_infos = findViewById(R.id.infos);
@@ -169,6 +176,16 @@ public class PackView extends RelativeLayout {
 	
 	//========================================================================================= set / update / etc..
 	
+	public PackView setStatus(boolean bool){
+		status = bool;
+		
+		return this;
+	}
+	
+	public boolean getStatus(){
+		return status;
+	}
+	
 	public PackView setFlagColor(int color) {
 		GradientDrawable flag1Background = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
 		flag1Background.setColor(color);
@@ -276,6 +293,18 @@ public class PackView extends RelativeLayout {
 		int pink = getResources().getColor(R.color.pink);
 		
 		setOptionColors(bool1 ? green : pink, bool2 ? green : pink);
+		
+		return this;
+	}
+	
+	public PackView setPlayImageShow(boolean bool){
+		IV_playImg.setVisibility(bool ? VISIBLE : GONE);
+		
+		return this;
+	}
+	
+	public PackView setPlayText(String str){
+		TV_playText.setText(str);
 		
 		return this;
 	}
