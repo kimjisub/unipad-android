@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
@@ -103,7 +104,7 @@ public class Store extends BaseActivity {
 						getResources().getString(R.string.downloadCount)
 					};
 					String[] infoContents = new String[]{
-						d.downloadCount + ""
+						(new DecimalFormat("#,##0")).format(d.downloadCount)
 					};
 					@SuppressLint("ResourceType") String[] btnTitles = new String[]{
 					};
@@ -179,7 +180,7 @@ public class Store extends BaseActivity {
 					itemStore.setTitle(d.title)
 						.setSubTitle(d.producerName)
 						.setOptionBools(d.isLED, d.isAutoPlay)
-						.updateInfo(0, d.downloadCount + "");
+						.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
