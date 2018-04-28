@@ -280,25 +280,7 @@ public class Main extends BaseActivity {
 								public void onFunctionBtnClick(final PackView v, int index) {
 									switch (index) {
 										case 0:
-											//deleteUnipack(unipack);
-											final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
-											((TextView)RL_delete.findViewById(R.id.path)).setText(unipack.URL);
-											
-											LL_testView.removeAllViews();
-											LL_testView.addView(RL_delete);
-											LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-												@Override
-												public void onGlobalLayout() {
-													LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-													
-													int height = LL_testView.getHeight();
-													LL_testView.removeAllViews();
-													
-													v.setExtendView(RL_delete, height);
-													v.toggleDetail(2);
-												}
-											});
-											
+											deleteUnipack(v, unipack);
 											break;
 										case 1:
 											editUnipack(unipack);
@@ -318,7 +300,7 @@ public class Main extends BaseActivity {
 							@Override
 							public void run() {
 								LL_list.addView(packView, lp);
-								Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
+								Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
 								a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 								packView.setAnimation(a);
 							}
@@ -396,19 +378,45 @@ public class Main extends BaseActivity {
 		LL_list.addView(packView, lp);
 	}
 	
-	void deleteUnipack(final Unipack uni) {
-		new AlertDialog.Builder(Main.this)
-			.setTitle(uni.title)
-			.setMessage(lang(R.string.doYouWantToDeleteProject) + "\n" + uni.URL)
-			.setPositiveButton(lang(R.string.cancel), null)
-			.setNegativeButton(lang(R.string.delete), new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					FileManager.deleteFolder(uni.URL);
-					update();
-				}
-			})
-			.show();
+	void deleteUnipack(final PackView v, final Unipack unipack) {
+		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
+		((TextView)RL_delete.findViewById(R.id.path)).setText(unipack.URL);
+
+		LL_testView.removeAllViews();
+		LL_testView.addView(RL_delete);
+		LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+				int height = LL_testView.getHeight();
+				LL_testView.removeAllViews();
+
+				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
+					getResources().getString(R.string.delete),
+					getResources().getString(R.string.cancel)
+				};
+				int[] btnColors = new int[]{
+					getResources().getColor(R.color.red),
+					getResources().getColor(R.color.text3)
+				};
+
+				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
+					@Override
+					public void onExtendFunctionBtnClick(PackView v, int index) {
+						switch (index) {
+							case 0:
+								FileManager.deleteFolder(unipack.URL);
+								update();
+								break;
+							case 1:
+								v.toggleDetail(1);
+								break;
+						}
+					}
+				}).toggleDetail(2);
+			}
+		});
 	}
 	
 	void editUnipack(final Unipack uni) {
