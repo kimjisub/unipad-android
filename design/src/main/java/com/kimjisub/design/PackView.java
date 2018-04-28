@@ -4,11 +4,11 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,6 +28,7 @@ public class PackView extends RelativeLayout {
 	ImageView IV_playImg;
 	TextView TV_playText;
 	LinearLayout LL_btns;
+	LinearLayout LL_extendBtns;
 	LinearLayout LL_infos;
 	LinearLayout LL_extendView;
 
@@ -63,6 +64,7 @@ public class PackView extends RelativeLayout {
 		IV_playImg = findViewById(R.id.playImg);
 		TV_playText = findViewById(R.id.playText);
 		LL_btns = findViewById(R.id.btns);
+		LL_extendBtns = findViewById(R.id.extendBtns);
 		LL_infos = findViewById(R.id.infos);
 		LL_extendView = findViewById(R.id.extendView);
 
@@ -169,7 +171,6 @@ public class PackView extends RelativeLayout {
 
 		typedArray.recycle();
 	}
-
 	//========================================================================================= set / update / etc..
 
 	public PackView setStatus(boolean bool) {
@@ -219,13 +220,13 @@ public class PackView extends RelativeLayout {
 		LL_infos.removeAllViews();
 
 		for (int i = 0; i < titles.length; i++) {
-			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_info, null);
-			((TextView) LL_infoitem.findViewById(R.id.title)).setText(titles[i]);
-			((TextView) LL_infoitem.findViewById(R.id.content)).setText(contents[i]);
+			LinearLayout LL_info = (LinearLayout) View.inflate(context, R.layout.res_info, null);
+			((TextView) LL_info.findViewById(R.id.title)).setText(titles[i]);
+			((TextView) LL_info.findViewById(R.id.content)).setText(contents[i]);
 
 			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-			LL_infos.addView(LL_infoitem, lp);
+			LL_infos.addView(LL_info, lp);
 		}
 
 		return this;
@@ -253,18 +254,18 @@ public class PackView extends RelativeLayout {
 			String title = titles[i];
 			int color = colors[i];
 
-			LinearLayout LL_infoitem = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
-			((TextView) LL_infoitem.findViewById(R.id.btn)).setText(title);
-			((GradientDrawable) LL_infoitem.findViewById(R.id.btn).getBackground()).setColor(color);
+			LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
+			((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
+			((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
 
-			LL_infoitem.setOnClickListener(new OnClickListener() {
+			LL_btn.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View view) {
 					onFunctionBtnClick(I);
 				}
 			});
 
-			LL_btns.addView(LL_infoitem, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+			LL_btns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
 		}
 
 		return this;
@@ -305,11 +306,35 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 
-	public PackView setExtendView(View v, int height) {
+	public PackView setExtendView(View v, int height, String[] btnTitles, int[] btnColors, final OnExtendEventListener listener) {
 		LL_extendView.removeAllViews();
 		LL_extendView.addView(v);
 
 		PX_info_extend = height + PX_info_enable - UIManager.dpToPx(context, 7);
+
+		LL_extendBtns.removeAllViews();
+
+		for (int i = 0; i < btnTitles.length; i++) {
+			final int I = i;
+
+			String title = btnTitles[i];
+			int color = btnColors[i];
+
+			LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
+			((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
+			((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
+
+			final PackView packView = this;
+			LL_btn.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					if (listener != null)
+						listener.onExtendFunctionBtnClick(packView, I);
+				}
+			});
+
+			LL_extendBtns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+		}
 
 		return this;
 	}
@@ -385,14 +410,17 @@ public class PackView extends RelativeLayout {
 				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
 				start = params.height;
 				end = px_default;
+				animateExtendBtns(false);
 			} else if (lev == 1) {
 				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
 				start = params.height;
 				end = px_enable;
+				animateExtendBtns(false);
 			} else if (lev == 2) {
 				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) RL_detail.getLayoutParams();
 				start = params.height;
 				end = px_extend;
+				animateExtendBtns(true);
 			}
 
 			Animation a = animateDetail(start, end);
@@ -406,6 +434,7 @@ public class PackView extends RelativeLayout {
 					@Override
 					public void onAnimationEnd(Animation animation) {
 						LL_extendView.removeAllViews();
+						LL_extendBtns.removeAllViews();
 					}
 
 					@Override
@@ -432,6 +461,30 @@ public class PackView extends RelativeLayout {
 		a.setDuration(500);
 		RL_detail.startAnimation(a);
 		return a;
+	}
+
+	public void animateExtendBtns(boolean bool) {
+		if (LL_btns.getVisibility() == VISIBLE && !bool)
+			return;
+		if (LL_extendBtns.getVisibility() == VISIBLE && bool)
+			return;
+		Animation fade_in = AnimationUtils.loadAnimation(context, R.anim.btn_fade_in);
+		fade_in.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.accelerate_decelerate_interpolator));
+
+		Animation fade_out = AnimationUtils.loadAnimation(context, R.anim.btn_fade_out);
+		fade_in.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.accelerate_decelerate_interpolator));
+
+		if (bool) {
+			LL_extendBtns.setVisibility(VISIBLE);
+			LL_btns.setAnimation(fade_out);
+			LL_extendBtns.setAnimation(fade_in);
+			LL_btns.setVisibility(GONE);
+		} else {
+			LL_btns.setVisibility(VISIBLE);
+			LL_extendBtns.setAnimation(fade_out);
+			LL_btns.setAnimation(fade_in);
+			LL_extendBtns.setVisibility(GONE);
+		}
 	}
 
 	public void toggleDetail() {
@@ -483,6 +536,10 @@ public class PackView extends RelativeLayout {
 	void onFunctionBtnClick(int index) {
 		if (onEventListener != null && isDetail())
 			onEventListener.onFunctionBtnClick(this, index);
+	}
+
+	public interface OnExtendEventListener {
+		void onExtendFunctionBtnClick(PackView v, int index);
 	}
 
 

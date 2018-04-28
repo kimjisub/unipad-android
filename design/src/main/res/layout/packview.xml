@@ -44,24 +44,16 @@
 				    android:layout_alignParentLeft="true"
 				    android:layout_alignParentStart="true"
 				    android:orientation="horizontal"
-				    android:visibility="visible">
-					
-					<!--<include layout="@layout/res_btn"/>-->
-				
-				</LinearLayout>
+				    android:visibility="visible"/>
 				
 				<LinearLayout
-				    android:id="@+id/exTendBtns"
+				    android:id="@+id/extendBtns"
 				    android:layout_width="wrap_content"
 				    android:layout_height="match_parent"
 				    android:layout_alignParentLeft="true"
 				    android:layout_alignParentStart="true"
 				    android:orientation="horizontal"
-				    android:visibility="gone">
-					
-					<!--<include layout="@layout/res_btn"/>-->
-				
-				</LinearLayout>
+				    android:visibility="gone"/>
 				
 				
 				<LinearLayout
@@ -70,11 +62,7 @@
 				    android:layout_height="match_parent"
 				    android:layout_alignParentEnd="true"
 				    android:layout_alignParentRight="true"
-				    android:orientation="horizontal">
-					
-					<!--<include layout="@layout/res_info"/>-->
-				
-				</LinearLayout>
+				    android:orientation="horizontal"/>
 			
 			</RelativeLayout>
 		
@@ -86,8 +74,7 @@
 	    android:layout_height="60dp"
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentStart="true"
-	    android:layout_alignParentTop="true"
-	    android:alpha="0.9">
+	    android:layout_alignParentTop="true">
 		
 		<RelativeLayout
 		    android:id="@+id/flag1"
