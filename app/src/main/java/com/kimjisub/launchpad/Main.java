@@ -290,20 +290,20 @@ public class Main extends BaseActivity {
 							});
 						
 						
-						final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-						int left = dpToPx(Main.this, 16);
-						int top = 0;
-						int right = dpToPx(Main.this, 16);
-						int bottom = dpToPx(Main.this, 10);
-						lp.setMargins(left, top, right, bottom);
+
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
+								final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+								int left = dpToPx(Main.this, 16);
+								int top = 0;
+								int right = dpToPx(Main.this, 16);
+								int bottom = dpToPx(Main.this, 10);
+								lp.setMargins(left, top, right, bottom);
 								LL_list.addView(packView, lp);
 								Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
 								a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 								packView.setAnimation(a);
-
 							}
 						});
 						
