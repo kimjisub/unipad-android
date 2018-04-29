@@ -33,6 +33,7 @@ public class Billing {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			mService = null;
+			getAll();
 			Billing.this.onServiceDisconnected();
 		}
 		
@@ -62,6 +63,10 @@ public class Billing {
 		}
 		
 		return this;
+	}
+	
+	void getAll(){
+		getPremium();
 	}
 	
 	boolean getPremium() {
@@ -116,7 +121,7 @@ public class Billing {
 		}
 	}
 	
-	void onActivityResult(int requestCode, int resultCode, Intent data){
+	public void onActivityResult(int requestCode, int resultCode, Intent data){
 		if (requestCode == 1001) {
 			int responseCode = data.getIntExtra("RESPONSE_CODE", 0);
 			String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
