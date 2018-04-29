@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.android.vending.billing.IInAppBillingService;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.SaveSetting.IsUsingSDCard;
 import com.kimjisub.launchpad.manage.UIManager;
 
@@ -51,8 +52,8 @@ public class Intro extends BaseActivity {
 
 						try {
 							JSONObject jo = new JSONObject(purchaseData);
-							UIManager.isPremium = jo.getBoolean("autoRenewing");
-							if (UIManager.isPremium)
+							Billing.isPremium = jo.getBoolean("autoRenewing");
+							if (Billing.isPremium)
 								TV_version.setTextColor(0xFFffa726);
 						} catch (JSONException e) {
 							e.printStackTrace();
