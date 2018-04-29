@@ -18,6 +18,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Tools.log;
+
 public class Intro extends BaseActivity {
 	
 	static TextView TV_version;
