@@ -20,7 +20,7 @@
 		    android:padding="5dp"
 		    android:text="@string/doYouWantToRemapProject"
 		    android:textColor="@color/text5"
-		    android:textSize="20dp"/>
+		    android:textSize="17dp"/>
 
 		<LinearLayout
 		    android:layout_width="wrap_content"
