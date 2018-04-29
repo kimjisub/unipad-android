@@ -1,18 +1,12 @@
 package com.kimjisub.launchpad;
 
 import android.app.AlertDialog;
-import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
-import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.view.LayoutInflater;
@@ -25,10 +19,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.vending.billing.IInAppBillingService;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.SaveSetting;
-import com.kimjisub.launchpad.manage.UIManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,18 +31,7 @@ import java.util.ArrayList;
 public class Setting extends PreferenceActivity {
 
 
-	static IInAppBillingService mService;
-	static ServiceConnection mServiceConn = new ServiceConnection() {
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			mService = null;
-		}
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			mService = IInAppBillingService.Stub.asInterface(service);
-		}
-	};
+	Billing billing;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +40,22 @@ public class Setting extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.setting);
 
 
-		//구글플레이 결제
-		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
-		serviceIntent.setPackage("com.android.vending");
-		bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
+		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
+			@Override
+			public void onServiceDisconnected(Billing v) {
+			
+			}
+			
+			@Override
+			public void onServiceConnected(Billing v) {
+			
+			}
+			
+			@Override
+			public void onPurchaseDone(Billing v, JSONObject jo) {
+			
+			}
+		}).start();
 
 		findPreference("select_theme").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 			@Override
@@ -160,24 +154,7 @@ public class Setting extends PreferenceActivity {
 		findPreference("removeAds").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-
-				try {
-					Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), "premium", "inapp", UIManager.DEVELOPERPAYLOAD);
-					PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
-
-					startIntentSenderForResult(pendingIntent.getIntentSender(), 1001, new Intent(), 0, 0, 0);
-
-
-				} catch (RemoteException e) {
-					e.printStackTrace();
-					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-				} catch (IntentSender.SendIntentException e) {
-					e.printStackTrace();
-					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-				}catch(NullPointerException e){
-					e.printStackTrace();
-					Toast.makeText(Setting.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-				}
+				billing.buyPremium();
 				return false;
 			}
 		});
@@ -295,7 +272,7 @@ public class Setting extends PreferenceActivity {
 			if (resultCode == RESULT_OK) {
 				try {
 					JSONObject jo = new JSONObject(purchaseData);
-					UIManager.isPremium = jo.getBoolean("autoRenewing");
+					Billing.isPremium = jo.getBoolean("autoRenewing");
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -307,7 +284,7 @@ public class Setting extends PreferenceActivity {
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SaveSetting.SelectedTheme.load(Setting.this));
 		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL(Setting.this));
-		if (UIManager.isPremium)
+		if (Billing.isPremium)
 			findPreference("removeAds").setSummary(lang(R.string.using));
 		
 		
@@ -319,8 +296,7 @@ public class Setting extends PreferenceActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		BaseActivity.finishActivity(this);
-		if (mService != null)
-			unbindService(mServiceConn);
+		billing.onDestroy();
 	}
 
 	String lang(int id) {
