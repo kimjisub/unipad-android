@@ -118,7 +118,6 @@ public class Main extends BaseActivity {
 			int color2 = getResources().getColor(R.color.orange);
 			VA_floatingAnimation = ObjectAnimator.ofObject(new ArgbEvaluator(), color2, color1);
 			VA_floatingAnimation.setDuration(300);
-			VA_floatingAnimation.setEvaluator(new ArgbEvaluator());
 			VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
 			VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
 			VA_floatingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -291,7 +290,6 @@ public class Main extends BaseActivity {
 					});
 			}
 		}).run();
-		
 		
 		LL_list.removeAllViews();
 		
