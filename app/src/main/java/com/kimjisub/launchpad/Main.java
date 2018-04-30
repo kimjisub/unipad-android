@@ -959,11 +959,13 @@ public class Main extends BaseActivity {
 				boolean clear = true;
 				for (PackView item : PV_items) {
 					if (item != null) {
-						if (item.isPlay() || item.isDetail())
+						if (item.isPlay() || item.isDetail()) {
+							togglePlay(-1);
+							toggleDetail(-1);
+							
 							clear = false;
-						
-						item.togglePlay(false);
-						item.toggleDetail(0);
+							break;
+						}
 					}
 				}
 				
