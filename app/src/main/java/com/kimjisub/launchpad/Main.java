@@ -547,11 +547,11 @@ public class Main extends BaseActivity {
 				LL_testView.removeAllViews();
 				
 				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-					getResources().getString(R.string.accept),
+					getResources().getString(R.string.edit),
 					getResources().getString(R.string.cancel)
 				};
 				int[] btnColors = new int[]{
-					getResources().getColor(R.color.red),
+					getResources().getColor(R.color.orange),
 					getResources().getColor(R.color.text3)
 				};
 				
