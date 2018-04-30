@@ -53,9 +53,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
 
-import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 
@@ -91,7 +89,12 @@ public class Main extends BaseActivity {
 	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 	
+	
 	void initVar() {
+		initVar(false);
+	}
+	
+	void initVar(boolean onFirst) {
 		// intro
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
@@ -110,23 +113,25 @@ public class Main extends BaseActivity {
 		
 		
 		// animation
-		int color1 = getResources().getColor(R.color.red);
-		int color2 = getResources().getColor(R.color.orange);
-		VA_floatingAnimation = ObjectAnimator.ofObject(new ArgbEvaluator(), color2, color1);
-		VA_floatingAnimation.setDuration(300);
-		VA_floatingAnimation.setEvaluator(new ArgbEvaluator());
-		VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
-		VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
-		VA_floatingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-			@Override
-			public void onAnimationUpdate(ValueAnimator valueAnimator) {
-				int color = (int) valueAnimator.getAnimatedValue();
-				FAM_floatingMenu.setMenuButtonColorNormal(color);
-				FAM_floatingMenu.setMenuButtonColorPressed(color);
-				FAB_store.setColorNormal(color);
-				FAB_store.setColorPressed(color);
-			}
-		});
+		if (onFirst) {
+			int color1 = getResources().getColor(R.color.red);
+			int color2 = getResources().getColor(R.color.orange);
+			VA_floatingAnimation = ObjectAnimator.ofObject(new ArgbEvaluator(), color2, color1);
+			VA_floatingAnimation.setDuration(300);
+			VA_floatingAnimation.setEvaluator(new ArgbEvaluator());
+			VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
+			VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
+			VA_floatingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+				@Override
+				public void onAnimationUpdate(ValueAnimator valueAnimator) {
+					int color = (int) valueAnimator.getAnimatedValue();
+					FAM_floatingMenu.setMenuButtonColorNormal(color);
+					FAM_floatingMenu.setMenuButtonColorPressed(color);
+					FAB_store.setColorNormal(color);
+					FAB_store.setColorPressed(color);
+				}
+			});
+		}
 		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
@@ -135,7 +140,7 @@ public class Main extends BaseActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		initVar();
+		initVar(true);
 		
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
@@ -146,7 +151,7 @@ public class Main extends BaseActivity {
 			@Override
 			public void onServiceConnected(Billing v) {
 				if (Billing.isPremium)
-					TV_version.setTextColor(0xFFffa726);
+					TV_version.setTextColor(getResources().getColor(R.color.orange));
 			}
 			
 			@Override
@@ -166,7 +171,7 @@ public class Main extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					UIManager.initAds(Main.this);
-					(handler = new Handler()).postDelayed(runnable, 1000);//1500);
+					(handler = new Handler()).postDelayed(runnable, 1000);
 				}
 				
 				@Override
@@ -179,7 +184,6 @@ public class Main extends BaseActivity {
 			})
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
-		
 		
 	}
 	
@@ -254,8 +258,6 @@ public class Main extends BaseActivity {
 	String[] URLs;
 	Unipack[] unipacks;
 	
-	Timer timer = new Timer();
-	
 	void blink(final boolean bool) {
 		if (bool)
 			VA_floatingAnimation.start();
@@ -272,24 +274,21 @@ public class Main extends BaseActivity {
 		
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
-			public void onChange(long data) {
-				
-				
-				if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
+			public void onChange(long count) {
+				if (SaveSetting.PrevStoreCount.load(Main.this) == count)
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
 							blink(false);
 						}
 					});
-				} else {
+				else
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
 							blink(true);
 						}
 					});
-				}
 			}
 		}).run();
 		
@@ -993,7 +992,6 @@ public class Main extends BaseActivity {
 		if (!isDoneIntro)
 			;
 		else {
-			timer.cancel();
 			getStoreCount.setOnChangeListener(null);
 		}
 	}

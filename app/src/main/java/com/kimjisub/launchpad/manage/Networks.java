@@ -183,7 +183,7 @@ public class Networks {
 		private onChangeListener dataListener = null;
 		
 		public interface onChangeListener {
-			void onChange(long data);
+			void onChange(long count);
 		}
 		
 		
@@ -192,9 +192,9 @@ public class Networks {
 			return this;
 		}
 		
-		void onChange(long data) {
+		void onChange(long count) {
 			if (dataListener != null)
-				dataListener.onChange(data);
+				dataListener.onChange(count);
 		}
 		
 		
