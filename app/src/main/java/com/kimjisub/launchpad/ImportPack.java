@@ -14,20 +14,20 @@ import java.io.File;
 import java.io.IOException;
 
 public class ImportPack extends BaseActivity {
-
+	
 	TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
-
+	
 	String UnipackRootURL;
 	String UnipackZipURL;
 	String UnipackURL;
-
+	
 	void initVar() {
 		TV_title = findViewById(R.id.title);
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
-
+		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPack.this);
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);
@@ -42,23 +42,23 @@ public class ImportPack extends BaseActivity {
 				break;
 		}
 	}
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		initVar();
-
+		
 		processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-
+	
 	@SuppressLint("StaticFieldLeak")
 	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
-
-
+		
+		
 		String title = null;
 		String message = null;
-
+		
 		@Override
 		protected void onPreExecute() {
 			TV_title.setText(lang(R.string.analyzing));
@@ -66,14 +66,14 @@ public class ImportPack extends BaseActivity {
 			TV_info.setText("URL : " + UnipackZipURL);
 			super.onPreExecute();
 		}
-
+		
 		@SuppressLint("DefaultLocale")
 		@Override
 		protected String doInBackground(String... params) {
 			try {
 				FileManager.unZipFile(UnipackZipURL, UnipackURL);
 				Unipack unipack = new Unipack(UnipackURL, true);
-
+				
 				if (unipack.ErrorDetail == null) {
 					title = lang(R.string.analyzeComplete);
 					message = unipack.getInfoText(ImportPack.this);
@@ -85,20 +85,20 @@ public class ImportPack extends BaseActivity {
 					title = lang(R.string.warning);
 					message = unipack.ErrorDetail;
 				}
-
+				
 			} catch (IOException e) {
 				title = lang(R.string.analyzeFailed);
 				message = e.getMessage();
 				FileManager.deleteFolder(UnipackURL);
 			}
-
+			
 			return null;
 		}
-
+		
 		@Override
 		protected void onProgressUpdate(String... progress) {
 		}
-
+		
 		@Override
 		protected void onPostExecute(String result) {
 			super.onPostExecute(result);
@@ -112,13 +112,13 @@ public class ImportPack extends BaseActivity {
 			}, 3000);
 		}
 	};
-
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		initVar();
 	}
-
+	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();

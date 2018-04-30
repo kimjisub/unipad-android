@@ -18,7 +18,10 @@ import android.widget.TextView;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
-import static com.kimjisub.launchpad.Launchpad.midiDevice.*;
+import static com.kimjisub.launchpad.Launchpad.midiDevice.MK2;
+import static com.kimjisub.launchpad.Launchpad.midiDevice.Piano;
+import static com.kimjisub.launchpad.Launchpad.midiDevice.Pro;
+import static com.kimjisub.launchpad.Launchpad.midiDevice.S;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;

@@ -1,10 +1,8 @@
 package com.kimjisub.launchpad;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.BoringLayout;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -14,7 +12,6 @@ import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
-import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.BufferedInputStream;
