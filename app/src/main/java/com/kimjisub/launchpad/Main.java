@@ -270,8 +270,14 @@ public class Main extends BaseActivity {
 		
 	}
 	
+	boolean updateComplete = true;
 	
 	void update() {
+		if (!updateComplete)
+			return;
+		
+		updateComplete = false;
+		
 		blink(true);
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
@@ -308,127 +314,144 @@ public class Main extends BaseActivity {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				File projectFolder = new File(UnipackRootURL);
-				
-				if (projectFolder.isDirectory()) {
+				try {
+					File projectFolder = new File(UnipackRootURL);
 					
-					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
-					int num = projects.length;
-					
-					PV_items = new PackView[num];
-					flagColors = new int[num];
-					URLs = new String[num];
-					unipacks = new Unipack[num];
-					
-					int count = 0;
-					for (int i = 0; i < num; i++) {
-						final int I = i;
-						File project = projects[I];
-						if (project.isFile()) continue;
-						count++;
+					if (projectFolder.isDirectory()) {
 						
-						final String url = UnipackRootURL + "/" + project.getName();
-						final Unipack unipack = new Unipack(url, false);
-						int flagColor;
+						File[] projects = FileManager.sortByTime(projectFolder.listFiles());
+						int num = projects.length;
 						
-						if (unipack.ErrorDetail == null)
-							flagColor = getResources().getColor(R.color.skyblue);
-						else if (unipack.CriticalError)
-							flagColor = getResources().getColor(R.color.red);
-						else
-							flagColor = getResources().getColor(R.color.orange);
+						PV_items = new PackView[num];
+						flagColors = new int[num];
+						URLs = new String[num];
+						unipacks = new Unipack[num];
 						
-						
-						@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-							getResources().getString(R.string.scale),
-							getResources().getString(R.string.chainCount),
-							getResources().getString(R.string.capacity)
-						};
-						String[] infoContents = new String[]{
-							unipack.buttonX + " x " + unipack.buttonY,
-							unipack.chain + "",
-							FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
-						};
-						@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-							getResources().getString(R.string.delete),
-							getResources().getString(R.string.edit)
-						};
-						int[] btnColors = new int[]{
-							getResources().getColor(R.color.red),
-							getResources().getColor(R.color.orange)
-						};
-						
-						final PackView packView = new PackView(Main.this)
-							.setFlagColor(flagColor)
-							.setTitle(unipack.title)
-							.setSubTitle(unipack.producerName)
-							.setInfos(infoTitles, infoContents)
-							.setBtns(btnTitles, btnColors)
-							.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
-							.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
-							.setOnEventListener(new PackView.OnEventListener() {
-								@Override
-								public void onViewClick(PackView v) {
-									togglePlay(I);
-									toggleDetail(-1);
-								}
-								
-								@Override
-								public void onViewLongClick(PackView v) {
-									togglePlay(-1);
-									toggleDetail(I);
-								}
-								
-								@Override
-								public void onPlayClick(PackView v) {
-									UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
-									UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
-									UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
-									UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
-									
-									Intent intent = new Intent(Main.this, Play.class);
-									intent.putExtra("URL", url);
-									startActivity(intent);
-								}
-								
-								@Override
-								public void onFunctionBtnClick(final PackView v, int index) {
-									switch (index) {
-										case 0:
-											deleteUnipack(v, unipack);
-											break;
-										case 1:
-											editUnipack(v, unipack);
-											break;
+						int count = 0;
+						for (int i = 0; i < num; i++) {
+							final int I = i;
+							File project = projects[I];
+							if (project.isFile()) continue;
+							count++;
+							
+							final String url = UnipackRootURL + "/" + project.getName();
+							final Unipack unipack = new Unipack(url, false);
+							int flagColor;
+							String title = unipack.title;
+							String producerName = unipack.producerName;
+							
+							
+							if (unipack.ErrorDetail == null) {
+								flagColor = getResources().getColor(R.color.skyblue);
+							} else if (unipack.CriticalError) {
+								flagColor = getResources().getColor(R.color.red);
+								title = getResources().getString(R.string.errOccur);
+								producerName = unipack.URL;
+							} else {
+								flagColor = getResources().getColor(R.color.orange);
+							}
+							
+							
+							@SuppressLint("ResourceType") String[] infoTitles = new String[]{
+								getResources().getString(R.string.scale),
+								getResources().getString(R.string.chainCount),
+								getResources().getString(R.string.capacity)
+							};
+							String[] infoContents = new String[]{
+								unipack.buttonX + " x " + unipack.buttonY,
+								unipack.chain + "",
+								FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
+							};
+							@SuppressLint("ResourceType") String[] btnTitles = new String[]{
+								getResources().getString(R.string.delete),
+								getResources().getString(R.string.edit)
+							};
+							int[] btnColors = new int[]{
+								getResources().getColor(R.color.red),
+								getResources().getColor(R.color.orange)
+							};
+							
+							final PackView packView = new PackView(Main.this)
+								.setFlagColor(flagColor)
+								.setTitle(title)
+								.setSubTitle(producerName)
+								.setInfos(infoTitles, infoContents)
+								.setBtns(btnTitles, btnColors)
+								.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
+								.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
+								.setOnEventListener(new PackView.OnEventListener() {
+									@Override
+									public void onViewClick(PackView v) {
+										togglePlay(I);
+										toggleDetail(-1);
 									}
+									
+									@Override
+									public void onViewLongClick(PackView v) {
+										togglePlay(-1);
+										toggleDetail(I);
+									}
+									
+									@Override
+									public void onPlayClick(PackView v) {
+										UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
+										UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
+										UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
+										UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
+										
+										Intent intent = new Intent(Main.this, Play.class);
+										intent.putExtra("URL", url);
+										startActivity(intent);
+									}
+									
+									@Override
+									public void onFunctionBtnClick(final PackView v, int index) {
+										switch (index) {
+											case 0:
+												deleteUnipack(v, unipack);
+												break;
+											case 1:
+												editUnipack(v, unipack);
+												break;
+										}
+									}
+								});
+							
+							runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
+								@Override
+								public void run() {
+									final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+									int left = dpToPx(Main.this, 16);
+									int top = 0;
+									int right = dpToPx(Main.this, 16);
+									int bottom = dpToPx(Main.this, 10);
+									lp.setMargins(left, top, right, bottom);
+									LL_list.addView(packView, lp);
+									Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
+									a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
+									packView.setAnimation(a);
 								}
 							});
+							
+							PV_items[I] = packView;
+							flagColors[I] = flagColor;
+							URLs[I] = url;
+							unipacks[I] = unipack;
+							
+						}
 						
+						if (count == 0) {
+							runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
+								@Override
+								public void run() {
+									addErrorItem();
+								}
+							});
+						}
 						
-						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
-							@Override
-							public void run() {
-								final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-								int left = dpToPx(Main.this, 16);
-								int top = 0;
-								int right = dpToPx(Main.this, 16);
-								int bottom = dpToPx(Main.this, 10);
-								lp.setMargins(left, top, right, bottom);
-								LL_list.addView(packView, lp);
-								Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
-								a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
-								packView.setAnimation(a);
-							}
-						});
+					} else {
+						projectFolder.mkdir();
 						
-						PV_items[I] = packView;
-						flagColors[I] = flagColor;
-						URLs[I] = url;
-						unipacks[I] = unipack;
-						
-					}
-					
-					if (count == 0) {
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
@@ -437,24 +460,16 @@ public class Main extends BaseActivity {
 						});
 					}
 					
-				} else {
-					projectFolder.mkdir();
-					
-					runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
-						@Override
-						public void run() {
-							addErrorItem();
+					File nomedia = new File(UnipackRootURL + "/.nomedia");
+					if (!nomedia.isFile()) {
+						try {
+							(new FileWriter(nomedia)).close();
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
-					});
-				}
-				
-				File nomedia = new File(UnipackRootURL + "/.nomedia");
-				if (!nomedia.isFile()) {
-					try {
-						(new FileWriter(nomedia)).close();
-					} catch (IOException e) {
-						e.printStackTrace();
 					}
+				} finally {
+					updateComplete = true;
 				}
 			}
 		}).start();
@@ -563,7 +578,7 @@ public class Main extends BaseActivity {
 					public void onExtendFunctionBtnClick(PackView v, int index) {
 						switch (index) {
 							case 0:
-								autoMapping(unipack);
+								autoMapping(v, unipack);
 								break;
 							case 1:
 								v.toggleDetail(1);
@@ -576,11 +591,11 @@ public class Main extends BaseActivity {
 	}
 	
 	@SuppressLint("StaticFieldLeak")
-	void autoMapping(Unipack uni) {
+	void autoMapping(final PackView v, Unipack uni) {
 		final Unipack unipack = new Unipack(uni.URL, true);
 		
 		
-		if (unipack.isAutoPlay) {
+		if (unipack.isAutoPlay && unipack.autoPlay != null) {
 			(new AsyncTask<String, String, String>() {
 				
 				ProgressDialog progressDialog;
@@ -675,15 +690,15 @@ public class Main extends BaseActivity {
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
 								int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-								log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
+								//log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
 								stringBuilder.append("t " + (e.x + 1) + " " + (e.y + 1) + "\n");
 								break;
 							case Unipack.AutoPlay.CHAIN:
-								log("c " + (e.c + 1));
+								//log("c " + (e.c + 1));
 								stringBuilder.append("c " + (e.c + 1) + "\n");
 								break;
 							case Unipack.AutoPlay.DELAY:
-								log("d " + e.d);
+								//log("d " + e.d);
 								stringBuilder.append("d " + e.d + "\n");
 								break;
 						}
@@ -721,7 +736,12 @@ public class Main extends BaseActivity {
 						new AlertDialog.Builder(Main.this)
 							.setTitle(lang(R.string.success))
 							.setMessage(lang(R.string.remapDone))
-							.setPositiveButton(lang(R.string.accept), null)
+							.setPositiveButton(lang(R.string.accept), new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialogInterface, int i) {
+									v.toggleDetail(0);
+								}
+							})
 							.show();
 					} catch (Exception e) {
 						e.printStackTrace();
