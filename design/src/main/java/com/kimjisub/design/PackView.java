@@ -77,9 +77,16 @@ public class PackView extends RelativeLayout {
 		TV_option1 = findViewById(R.id.option1);
 		TV_option2 = findViewById(R.id.option2);
 		
+		// set vars
+		PX_flag_default = UIManager.dpToPx(context, 10);
+		PX_flag_enable = UIManager.dpToPx(context, 100);
+		PX_info_default = UIManager.dpToPx(context, 40);
+		PX_info_enable = UIManager.dpToPx(context, 75);
+		PX_info_extend = UIManager.dpToPx(context, 300);
+		
 		
 		// set preset
-		LL_leftView.setX(UIManager.dpToPx(context, 10));
+		LL_leftView.setX(PX_flag_default);
 		
 		
 		// set listener
@@ -96,14 +103,6 @@ public class PackView extends RelativeLayout {
 				return true;
 			}
 		});
-		
-		
-		// set vars
-		PX_flag_default = UIManager.dpToPx(context, 10);
-		PX_flag_enable = UIManager.dpToPx(context, 100);
-		PX_info_default = UIManager.dpToPx(context, 40);
-		PX_info_enable = UIManager.dpToPx(context, 75);
-		PX_info_extend = UIManager.dpToPx(context, 300);
 	}
 	
 	public PackView(Context context) {
