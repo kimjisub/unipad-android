@@ -25,8 +25,8 @@
 	    android:id="@+id/testView"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    android:visibility="invisible"
-	    android:orientation="vertical"/>
+	    android:orientation="vertical"
+	    android:visibility="invisible"/>
 	
 	<ScrollView
 	    android:layout_width="match_parent"
@@ -109,4 +109,48 @@
 		    fab:fab_label="@string/setting"
 		    fab:fab_size="mini"/>
 	</com.github.clans.fab.FloatingActionMenu>
+	
+	<RelativeLayout
+	    android:id="@+id/intro"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:background="@color/dark1">
+		
+		<ImageView
+		    android:layout_width="wrap_content"
+		    android:layout_height="70dp"
+		    android:layout_centerHorizontal="true"
+		    android:layout_centerVertical="true"
+		    android:src="@drawable/app_intro"/>
+		
+		<LinearLayout
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_alignParentBottom="true"
+		    android:layout_centerHorizontal="true"
+		    android:orientation="vertical">
+			
+			<TextView
+			    android:id="@+id/version"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:layout_gravity="center_horizontal"
+			    android:layout_marginBottom="5dp"
+			    android:text="1.2.3"
+			    android:textColor="@color/text5"
+			    android:textSize="12dp"/>
+			
+			<TextView
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:layout_marginBottom="10dp"
+			    android:text="@string/credit_simple"
+			    android:textColor="@color/text1"
+			    android:textSize="10dp"/>
+		
+		
+		</LinearLayout>
+	
+	
+	</RelativeLayout>
 </RelativeLayout>

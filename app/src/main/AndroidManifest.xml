@@ -26,8 +26,8 @@
 	    android:supportsRtl="true"
 	    android:theme="@style/AppTheme">
 		<activity
-		    android:name=".Intro"
-		    android:configChanges="orientation|keyboardHidden"
+		    android:name=".Main"
+		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 		    android:screenOrientation="sensorLandscape">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
@@ -35,10 +35,6 @@
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
-		<activity
-		    android:name=".Main"
-		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-		    android:screenOrientation="sensorLandscape"/>
 		<activity
 		    android:name=".Store"
 		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"

@@ -90,7 +90,7 @@ public class BaseActivity extends AppCompatActivity {
 			activityList.get(i).finish();
 			activityList.remove(i);
 		}
-		activity.startActivity(new Intent(activity, Intro.class));
+		activity.startActivity(new Intent(activity, Main.class));
 		printActivityLog(activity.getLocalClassName() + " requestRestart");
 
 		Process.killProcess(Process.myPid());

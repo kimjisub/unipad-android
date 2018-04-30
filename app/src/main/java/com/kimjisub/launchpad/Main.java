@@ -1,9 +1,14 @@
 package com.kimjisub.launchpad;
 
+import android.Manifest;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -21,15 +26,21 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.design.PackView;
+import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
+
+import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,6 +62,17 @@ import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 public class Main extends BaseActivity {
 	
+	boolean isDoneIntro = false;
+	
+	// intro
+	RelativeLayout RL_intro;
+	TextView TV_version;
+	
+	Handler handler;
+	Billing billing;
+	
+	
+	// main
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_refreshList;
@@ -66,6 +88,12 @@ public class Main extends BaseActivity {
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 	
 	void initVar() {
+		// intro
+		RL_intro = findViewById(R.id.intro);
+		TV_version = findViewById(R.id.version);
+		
+		
+		//main
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_refreshList = findViewById(R.id.fab_refreshList);
@@ -85,6 +113,64 @@ public class Main extends BaseActivity {
 		setContentView(R.layout.activity_main);
 		initVar();
 		
+		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
+			@Override
+			public void onServiceDisconnected(Billing v) {
+			
+			}
+			
+			@Override
+			public void onServiceConnected(Billing v) {
+				if (Billing.isPremium)
+					TV_version.setTextColor(0xFFffa726);
+			}
+			
+			@Override
+			public void onPurchaseDone(Billing v, JSONObject jo) {
+			
+			}
+		}).start();
+		
+		try {
+			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+		} catch (PackageManager.NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		new TedPermission(Main.this)
+			.setPermissionListener(new PermissionListener() {
+				@Override
+				public void onPermissionGranted() {
+					UIManager.initAds(Main.this);
+					(handler = new Handler()).postDelayed(runnable, 1000);//1500);
+				}
+				
+				@Override
+				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+					Toast.makeText(Main.this, lang(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
+					finish();
+				}
+				
+				
+			})
+			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+			.check();
+		
+		
+	}
+	
+	Runnable runnable = new Runnable() {
+		@Override
+		public void run() {
+			SaveSetting.IsUsingSDCard.load(Main.this);
+			UIManager.showAds(Main.this);
+			
+			RL_intro.setAlpha(0);
+			startMain();
+		}
+	};
+	
+	void startMain() {
 		updateCheck();
 		
 		FAB_refreshList.setOnClickListener(new View.OnClickListener() {
@@ -134,7 +220,9 @@ public class Main extends BaseActivity {
 			}
 		});
 		
+		isDoneIntro = true;
 		
+		update();
 	}
 	
 	PackView[] PV_items;
@@ -145,32 +233,60 @@ public class Main extends BaseActivity {
 	Timer timer = new Timer();
 	
 	void blink(final boolean bool) {
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				if (bool) {
-					FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.red);
-					FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.red);
-					FAB_store.setColorNormalResId(R.color.red);
-					FAB_store.setColorPressedResId(R.color.red);
-				} else {
-					FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.orange);
-					FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.orange);
-					FAB_store.setColorNormalResId(R.color.orange);
-					FAB_store.setColorPressedResId(R.color.orange);
-				}
+		
+		if (bool) {
+			int color1 = getResources().getColor(R.color.red);
+			int color2 = getResources().getColor(R.color.orange);
+			
+			@SuppressLint("ObjectAnimatorBinding") ValueAnimator[] animators = new ValueAnimator[]{
+				ObjectAnimator.ofInt(FAM_floatingMenu, "menu_colorNormal", color1, color2),
+				ObjectAnimator.ofInt(FAM_floatingMenu, "menu_colorPressed", color1, color2),
+				ObjectAnimator.ofInt(FAB_store, "fab_colorNormal", color1, color2),
+				ObjectAnimator.ofInt(FAB_store, "fab_colorPressed", color1, color2)
+			};
+			
+			for (ValueAnimator animator : animators) {
+				//ValueAnimator animator = ObjectAnimator.ofInt(FAM_floatingMenu, "menu_labels_colorNormal", color1, color2);
+				animator.setDuration(500);
+				animator.setEvaluator(new ArgbEvaluator());
+				animator.setRepeatCount(Animation.INFINITE);
+				animator.setRepeatMode(ValueAnimator.REVERSE);
+				animator.start();
 			}
-		});
+			
+			
+		}
+				
+		/*if (bool) {
+			FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.red);
+			FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.red);
+			FAB_store.setColorNormalResId(R.color.red);
+			FAB_store.setColorPressedResId(R.color.red);
+		} else {
+			FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.orange);
+			FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.orange);
+			FAB_store.setColorNormalResId(R.color.orange);
+			FAB_store.setColorPressedResId(R.color.orange);
+		}*/
 		
 	}
 	
+	
 	void update() {
+		blink(true);
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
-				if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						//blink(true);
+					}
+				});
+				
+				/*if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
 					timer.cancel();
-					blink(true);
+					blink(false);
 				} else {
 					timer.cancel();
 					timer = new Timer();
@@ -183,7 +299,7 @@ public class Main extends BaseActivity {
 							i++;
 						}
 					}, 0, 500);
-				}
+				}*/
 			}
 		}).run();
 		
@@ -290,7 +406,6 @@ public class Main extends BaseActivity {
 							});
 						
 						
-
 						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
 							@Override
 							public void run() {
@@ -381,18 +496,18 @@ public class Main extends BaseActivity {
 	
 	void deleteUnipack(final PackView v, final Unipack unipack) {
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
-		((TextView)RL_delete.findViewById(R.id.path)).setText(unipack.URL);
-
+		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
+		
 		LL_testView.removeAllViews();
 		LL_testView.addView(RL_delete);
 		LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 			@Override
 			public void onGlobalLayout() {
 				LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
+				
 				int height = LL_testView.getHeight();
 				LL_testView.removeAllViews();
-
+				
 				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
 					getResources().getString(R.string.delete),
 					getResources().getString(R.string.cancel)
@@ -401,7 +516,7 @@ public class Main extends BaseActivity {
 					getResources().getColor(R.color.red),
 					getResources().getColor(R.color.text3)
 				};
-
+				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
 					@Override
 					public void onExtendFunctionBtnClick(PackView v, int index) {
@@ -421,20 +536,20 @@ public class Main extends BaseActivity {
 	}
 	
 	void editUnipack(final PackView v, final Unipack unipack) {
-
+		
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_automapping, null);
-		((TextView)RL_delete.findViewById(R.id.path)).setText(unipack.URL);
-
+		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
+		
 		LL_testView.removeAllViews();
 		LL_testView.addView(RL_delete);
 		LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 			@Override
 			public void onGlobalLayout() {
 				LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
+				
 				int height = LL_testView.getHeight();
 				LL_testView.removeAllViews();
-
+				
 				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
 					getResources().getString(R.string.accept),
 					getResources().getString(R.string.cancel)
@@ -443,13 +558,13 @@ public class Main extends BaseActivity {
 					getResources().getColor(R.color.red),
 					getResources().getColor(R.color.text3)
 				};
-
+				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
 					@Override
 					public void onExtendFunctionBtnClick(PackView v, int index) {
 						switch (index) {
 							case 0:
-								autoMapping(v, unipack);
+								autoMapping(unipack);
 								break;
 							case 1:
 								v.toggleDetail(1);
@@ -460,21 +575,21 @@ public class Main extends BaseActivity {
 			}
 		});
 	}
-
+	
 	@SuppressLint("StaticFieldLeak")
-	void autoMapping(final PackView v, Unipack uni){
+	void autoMapping(Unipack uni) {
 		final Unipack unipack = new Unipack(uni.URL, true);
-
-
+		
+		
 		if (unipack.isAutoPlay) {
 			(new AsyncTask<String, String, String>() {
-
+				
 				ProgressDialog progressDialog;
-
+				
 				ArrayList<Unipack.AutoPlay> autoplay1;
 				ArrayList<Unipack.AutoPlay> autoplay2;
 				ArrayList<Unipack.AutoPlay> autoplay3;
-
+				
 				@Override
 				protected void onPreExecute() {
 					autoplay1 = new ArrayList<>();
@@ -493,7 +608,7 @@ public class Main extends BaseActivity {
 								break;
 						}
 					}
-
+					
 					autoplay2 = new ArrayList<>();
 					Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
 					for (Unipack.AutoPlay e : autoplay1) {
@@ -516,7 +631,7 @@ public class Main extends BaseActivity {
 								break;
 						}
 					}
-
+					
 					progressDialog = new ProgressDialog(Main.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setTitle(lang(R.string.analyzing));
@@ -526,10 +641,10 @@ public class Main extends BaseActivity {
 					progressDialog.show();
 					super.onPreExecute();
 				}
-
+				
 				@Override
 				protected String doInBackground(String... params) {
-
+					
 					autoplay3 = new ArrayList<>();
 					int nextDuration = 0;
 					MediaPlayer mplayer = new MediaPlayer();
@@ -538,8 +653,7 @@ public class Main extends BaseActivity {
 							switch (e.func) {
 								case Unipack.AutoPlay.ON:
 									int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-									int duration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
-									nextDuration = duration;
+									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
 									autoplay3.add(e);
 									break;
 								case Unipack.AutoPlay.CHAIN:
@@ -556,7 +670,7 @@ public class Main extends BaseActivity {
 						publishProgress();
 					}
 					mplayer.release();
-
+					
 					StringBuilder stringBuilder = new StringBuilder();
 					for (Unipack.AutoPlay e : autoplay3) {
 						switch (e.func) {
@@ -579,7 +693,7 @@ public class Main extends BaseActivity {
 						File filePre = new File(unipack.URL, "autoPlay");
 						File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
-
+						
 						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
 						writer.write(stringBuilder.toString());
 						writer.close();
@@ -588,20 +702,20 @@ public class Main extends BaseActivity {
 					} catch (IOException ee) {
 						ee.printStackTrace();
 					}
-
+					
 					return null;
 				}
-
+				
 				@Override
 				protected void onProgressUpdate(String... progress) {
 					if (progressDialog.isShowing())
 						progressDialog.incrementProgressBy(1);
 				}
-
+				
 				@Override
 				protected void onPostExecute(String result) {
 					super.onPostExecute(result);
-
+					
 					try {
 						if (progressDialog != null && progressDialog.isShowing())
 							progressDialog.dismiss();
@@ -615,8 +729,8 @@ public class Main extends BaseActivity {
 					}
 				}
 			}).execute();
-
-
+			
+			
 		} else {
 			new AlertDialog.Builder(Main.this)
 				.setTitle(lang(R.string.failed))
@@ -835,19 +949,25 @@ public class Main extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-		if (PV_items != null) {
-			boolean clear = true;
-			for (PackView item : PV_items) {
-				if (item != null) {
-					if (item.isPlay() || item.isDetail())
-						clear = false;
-					
-					item.togglePlay(false);
-					item.toggleDetail(0);
+		if (!isDoneIntro) {
+		
+		} else {
+			if (PV_items != null) {
+				boolean clear = true;
+				for (PackView item : PV_items) {
+					if (item != null) {
+						if (item.isPlay() || item.isDetail())
+							clear = false;
+						
+						item.togglePlay(false);
+						item.toggleDetail(0);
+					}
 				}
+				
+				if (clear)
+					super.onBackPressed();
 			}
-			
-			if (clear)
+			else
 				super.onBackPressed();
 		}
 	}
@@ -855,16 +975,45 @@ public class Main extends BaseActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		initVar();
 		
-		update();
+		initVar();
+		if (!isDoneIntro)
+			;
+		else
+			update();
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		
-		timer.cancel();
-		getStoreCount.setOnChangeListener(null);
+		if(!isDoneIntro)
+			;
+		else{
+			timer.cancel();
+			getStoreCount.setOnChangeListener(null);
+		}
+	}
+	
+	@Override
+	public void onStop() {
+		super.onStop();
+		
+		if (!isDoneIntro) {
+			try {
+				handler.removeCallbacks(runnable);
+			} catch (RuntimeException ignore) {
+			}
+			
+			finish();
+		} else {
+		}
+		
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		billing.onDestroy();
 	}
 }
