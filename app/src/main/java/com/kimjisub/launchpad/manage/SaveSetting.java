@@ -74,7 +74,7 @@ public class SaveSetting {
 			return isSDCard;
 		}
 
-		public static String URL(Context context){
+		public static String URL(Context context) {
 			load(context);
 			return URL;
 		}

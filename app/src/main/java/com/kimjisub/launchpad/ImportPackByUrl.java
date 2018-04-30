@@ -18,7 +18,6 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -43,7 +42,7 @@ public class ImportPackByUrl extends BaseActivity {
 		TV_info = findViewById(R.id.info);
 
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPackByUrl.this);
-}
+	}
 
 	@SuppressLint("StaticFieldLeak")
 	@Override
@@ -83,7 +82,6 @@ public class ImportPackByUrl extends BaseActivity {
 					URL = jsonObject.getString("url");
 					fileSize = jsonObject.getInt("fileSize");
 					downloadCount = jsonObject.getInt("downloadCount");
-
 
 
 					for (int i = 1; ; i++) {
@@ -170,13 +168,12 @@ public class ImportPackByUrl extends BaseActivity {
 				}
 
 
-
 				return null;
 			}
 
 			@Override
 			protected void onProgressUpdate(String... progress) {
-				switch (progress[0]){
+				switch (progress[0]) {
 					case "down":
 						TV_title.setText(lang(R.string.downloading));
 						TV_message.setText(progress[1]);

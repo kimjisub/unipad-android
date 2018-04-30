@@ -15,60 +15,60 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
 
 public class BaseActivity extends AppCompatActivity {
-
+	
 	public static ArrayList<Activity> activityList = new ArrayList();
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		logActivity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
 	}
-
+	
 	@Override
 	protected void onStart() {
 		logActivity("onStart " + this.getLocalClassName());
 		super.onStart();
 	}
-
+	
 	@Override
 	protected void onResume() {
 		logActivity("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
-
+	
 	@Override
 	protected void onPause() {
 		logActivity("onPause " + this.getLocalClassName());
 		super.onPause();
 	}
-
+	
 	@Override
 	protected void onStop() {
 		logActivity("onStop " + this.getLocalClassName());
 		super.onStop();
 	}
-
+	
 	@Override
 	protected void onRestart() {
 		logActivity("onRestart " + this.getLocalClassName());
 		super.onRestart();
 	}
-
+	
 	@Override
 	protected void onDestroy() {
 		logActivity("onDestroy " + this.getLocalClassName());
 		super.onDestroy();
 		finishActivity(this);
 	}
-
-
+	
+	
 	static void startActivity(Activity activity) {
 		activityList.add(activity);
 		printActivityLog(activity.getLocalClassName() + " start");
 	}
-
+	
 	static void finishActivity(Activity activity) {
 		boolean exist = false;
 		int size = activityList.size();
@@ -82,9 +82,9 @@ public class BaseActivity extends AppCompatActivity {
 		}
 		printActivityLog(activity.getLocalClassName() + " finish" + (exist ? "" : " error"));
 	}
-
+	
 	static void restartApp(Activity activity) {
-
+		
 		int size = activityList.size();
 		for (int i = size - 1; i >= 0; i--) {
 			activityList.get(i).finish();
@@ -92,10 +92,10 @@ public class BaseActivity extends AppCompatActivity {
 		}
 		activity.startActivity(new Intent(activity, Main.class));
 		printActivityLog(activity.getLocalClassName() + " requestRestart");
-
+		
 		Process.killProcess(Process.myPid());
 	}
-
+	
 	static void printActivityLog(String log) {
 		String str = "ACTIVITY STACK - " + log;
 		int size = activityList.size();
@@ -105,7 +105,7 @@ public class BaseActivity extends AppCompatActivity {
 		}
 		logActivity(str);
 	}
-
+	
 	static void requestRestart(final Context context) {
 		new AlertDialog.Builder(context)
 			.setTitle(lang(context, R.string.requireRestart))
@@ -126,12 +126,12 @@ public class BaseActivity extends AppCompatActivity {
 			})
 			.show();
 	}
-
-
+	
+	
 	public String lang(int id) {
 		return (BaseActivity.this).getResources().getString(id);
 	}
-
+	
 	public static String lang(Context context, int id) {
 		return context.getResources().getString(id);
 	}

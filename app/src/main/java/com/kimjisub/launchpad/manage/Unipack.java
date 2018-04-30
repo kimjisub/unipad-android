@@ -350,7 +350,7 @@ public class Unipack {
 											case "o":
 												try {
 													_x = Integer.parseInt(split2[1]) - 1;
-												}catch(NumberFormatException ignore){
+												} catch (NumberFormatException ignore) {
 												}
 												_y = Integer.parseInt(split2[2]) - 1;
 
@@ -373,7 +373,7 @@ public class Unipack {
 											case "f":
 												try {
 													_x = Integer.parseInt(split2[1]) - 1;
-												}catch(NumberFormatException ignore){
+												} catch (NumberFormatException ignore) {
 												}
 												_y = Integer.parseInt(split2[2]) - 1;
 												break;

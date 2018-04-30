@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
@@ -966,8 +965,7 @@ public class Main extends BaseActivity {
 				
 				if (clear)
 					super.onBackPressed();
-			}
-			else
+			} else
 				super.onBackPressed();
 		}
 	}
@@ -987,9 +985,9 @@ public class Main extends BaseActivity {
 	protected void onPause() {
 		super.onPause();
 		
-		if(!isDoneIntro)
+		if (!isDoneIntro)
 			;
-		else{
+		else {
 			timer.cancel();
 			getStoreCount.setOnChangeListener(null);
 		}

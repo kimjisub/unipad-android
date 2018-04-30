@@ -43,7 +43,7 @@ public class ThemePack {
 			this.btn_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn_", null, null));
 			try {
 				this.chainled = res.getDrawable(res.getIdentifier(package_name + ":drawable/chainled", null, null));
-			}catch(Exception e){
+			} catch (Exception e) {
 				isChainLED = false;
 				this.chain = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain", null, null));
 				this.chain_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain_", null, null));
