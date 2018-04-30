@@ -22,6 +22,7 @@ public class PackView extends RelativeLayout {
 	Context context;
 	
 	RelativeLayout RL_root;
+	RelativeLayout RL_touchView;
 	RelativeLayout RL_detail;
 	LinearLayout LL_leftView;
 	RelativeLayout RL_playBtn;
@@ -58,6 +59,7 @@ public class PackView extends RelativeLayout {
 		
 		// set view
 		RL_root = findViewById(R.id.root);
+		RL_touchView = findViewById(R.id.touchView);
 		RL_detail = findViewById(R.id.detail);
 		LL_leftView = findViewById(R.id.leftView);
 		RL_playBtn = findViewById(R.id.playBtn);
@@ -81,13 +83,13 @@ public class PackView extends RelativeLayout {
 		
 		
 		// set listener
-		RL_root.setOnClickListener(new View.OnClickListener() {
+		RL_touchView.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				onViewClick();
 			}
 		});
-		RL_root.setOnLongClickListener(new View.OnLongClickListener() {
+		RL_touchView.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
 				onViewLongClick();
