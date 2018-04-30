@@ -164,7 +164,7 @@ public class Main extends BaseActivity {
 			SaveSetting.IsUsingSDCard.load(Main.this);
 			UIManager.showAds(Main.this);
 			
-			RL_intro.setAlpha(0);
+			RL_intro.setVisibility(View.GONE);
 			startMain();
 		}
 	};
