@@ -3,7 +3,6 @@
                 android:id="@+id/root"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clickable="true"
                 android:gravity="center">
 	
 	
@@ -70,11 +69,13 @@
 	</RelativeLayout>
 	
 	<RelativeLayout
+	    android:id="@+id/touchView"
 	    android:layout_width="match_parent"
 	    android:layout_height="60dp"
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentStart="true"
-	    android:layout_alignParentTop="true">
+	    android:layout_alignParentTop="true"
+	    android:clickable="true">
 		
 		<RelativeLayout
 		    android:id="@+id/flag1"
