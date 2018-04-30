@@ -62,6 +62,7 @@ import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 public class Main extends BaseActivity {
 	
 	boolean isDoneIntro = false;
+	boolean updateComplete = true;
 	
 	// intro
 	RelativeLayout RL_intro;
@@ -82,6 +83,10 @@ public class Main extends BaseActivity {
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
 	
+	
+	// animation
+	ValueAnimator VA_floatingAnimation;
+	
 	String UnipackRootURL;
 	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
@@ -92,7 +97,7 @@ public class Main extends BaseActivity {
 		TV_version = findViewById(R.id.version);
 		
 		
-		//main
+		// main
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_refreshList = findViewById(R.id.fab_refreshList);
@@ -102,6 +107,26 @@ public class Main extends BaseActivity {
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
+		
+		
+		// animation
+		int color1 = getResources().getColor(R.color.red);
+		int color2 = getResources().getColor(R.color.orange);
+		VA_floatingAnimation = ObjectAnimator.ofObject(new ArgbEvaluator(), color2, color1);
+		VA_floatingAnimation.setDuration(300);
+		VA_floatingAnimation.setEvaluator(new ArgbEvaluator());
+		VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
+		VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
+		VA_floatingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator valueAnimator) {
+				int color = (int) valueAnimator.getAnimatedValue();
+				FAM_floatingMenu.setMenuButtonColorNormal(color);
+				FAM_floatingMenu.setMenuButtonColorPressed(color);
+				FAB_store.setColorNormal(color);
+				FAB_store.setColorPressed(color);
+			}
+		});
 		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
@@ -232,45 +257,12 @@ public class Main extends BaseActivity {
 	Timer timer = new Timer();
 	
 	void blink(final boolean bool) {
-		
-		if (bool) {
-			int color1 = getResources().getColor(R.color.red);
-			int color2 = getResources().getColor(R.color.orange);
-			
-			@SuppressLint("ObjectAnimatorBinding") ValueAnimator[] animators = new ValueAnimator[]{
-				ObjectAnimator.ofInt(FAM_floatingMenu, "menu_colorNormal", color1, color2),
-				ObjectAnimator.ofInt(FAM_floatingMenu, "menu_colorPressed", color1, color2),
-				ObjectAnimator.ofInt(FAB_store, "fab_colorNormal", color1, color2),
-				ObjectAnimator.ofInt(FAB_store, "fab_colorPressed", color1, color2)
-			};
-			
-			for (ValueAnimator animator : animators) {
-				//ValueAnimator animator = ObjectAnimator.ofInt(FAM_floatingMenu, "menu_labels_colorNormal", color1, color2);
-				animator.setDuration(500);
-				animator.setEvaluator(new ArgbEvaluator());
-				animator.setRepeatCount(Animation.INFINITE);
-				animator.setRepeatMode(ValueAnimator.REVERSE);
-				animator.start();
-			}
-			
-			
-		}
-				
-		/*if (bool) {
-			FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.red);
-			FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.red);
-			FAB_store.setColorNormalResId(R.color.red);
-			FAB_store.setColorPressedResId(R.color.red);
-		} else {
-			FAM_floatingMenu.setMenuButtonColorNormalResId(R.color.orange);
-			FAM_floatingMenu.setMenuButtonColorPressedResId(R.color.orange);
-			FAB_store.setColorNormalResId(R.color.orange);
-			FAB_store.setColorPressedResId(R.color.orange);
-		}*/
-		
+		if (bool)
+			VA_floatingAnimation.start();
+		else
+			VA_floatingAnimation.end();
 	}
 	
-	boolean updateComplete = true;
 	
 	void update() {
 		if (!updateComplete)
@@ -278,33 +270,26 @@ public class Main extends BaseActivity {
 		
 		updateComplete = false;
 		
-		blink(true);
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						//blink(true);
-					}
-				});
 				
-				/*if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
-					timer.cancel();
-					blink(false);
-				} else {
-					timer.cancel();
-					timer = new Timer();
-					timer.schedule(new TimerTask() {
-						int i;
-						
+				
+				if (SaveSetting.PrevStoreCount.load(Main.this) == data) {
+					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							blink(i % 2 == 0);
-							i++;
+							blink(false);
 						}
-					}, 0, 500);
-				}*/
+					});
+				} else {
+					runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							blink(true);
+						}
+					});
+				}
 			}
 		}).run();
 		
