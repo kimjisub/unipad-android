@@ -29,10 +29,8 @@ import static com.kimjisub.launchpad.manage.Tools.logRecv;
 public class Launchpad extends BaseActivity {
 	
 	TextView TV_info;
-	View[] VL_launchpad;
-	TextView[][] TVL_launchpad;
-	View[] VL_mode;
-	TextView[][] TVL_mode;
+	LinearLayout[] LL_Launchpad;
+	LinearLayout[] LL_mode;
 	
 	
 	static UsbManager usbManager;
@@ -45,7 +43,7 @@ public class Launchpad extends BaseActivity {
 	static boolean isRun = false;
 	
 	public enum MidiDevice {
-		S(0), MK2(1), Pro(2), Piano(3);
+		S(0), MK2(1), Pro(2), MidiFighter(3), Piano(4);
 		
 		private final int value;
 		
@@ -65,27 +63,16 @@ public class Launchpad extends BaseActivity {
 	@SuppressLint("CutPasteId")
 	void initVar() {
 		TV_info = findViewById(R.id.info);
-		VL_launchpad = new View[]{
+		LL_Launchpad = new LinearLayout[]{
 			findViewById(R.id.s),
 			findViewById(R.id.mk2),
 			findViewById(R.id.pro),
+			findViewById(R.id.midifighter),
 			findViewById(R.id.piano)
 		};
-		
-		TVL_launchpad = new TextView[][]{
-			{findViewById(R.id.s)},
-			{findViewById(R.id.mk2)},
-			{findViewById(R.id.pro1), findViewById(R.id.pro2)},
-			{findViewById(R.id.piano)}
-		};
-		
-		VL_mode = new View[]{
+		LL_mode = new LinearLayout[]{
 			findViewById(R.id.speedFirst),
 			findViewById(R.id.avoidAfterimage)
-		};
-		TVL_mode = new TextView[][]{
-			{findViewById(R.id.speedFirst)},
-			{findViewById(R.id.avoidAfterimage)}
 		};
 		
 		onSendSignalListener = new LaunchpadDriver.DriverRef.OnSendSignalListener() {
@@ -247,7 +234,7 @@ public class Launchpad extends BaseActivity {
 	
 	public void selectDevice(int num) {
 		
-		switch (VL_launchpad[num].getId()) {
+		switch (LL_Launchpad[num].getId()) {
 			case R.id.s:
 				device = S;
 				driver = new LaunchpadDriver.LaunchpadS();
@@ -260,21 +247,31 @@ public class Launchpad extends BaseActivity {
 				device = Pro;
 				driver = new LaunchpadDriver.LaunchpadPRO();
 				break;
+			case R.id.midifighter:
+				device = MidiFighter;
+				driver = new LaunchpadDriver.MidiFighter();
+				break;
 			case R.id.piano:
 				device = Piano;
 				driver = new LaunchpadDriver.Piano();
 				break;
 		}
 		
-		for (int i = 0; i < VL_launchpad.length; i++) {
+		for (int i = 0; i < LL_Launchpad.length; i++) {
 			if (device.value == i) {
-				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TVL_launchpad[i])
+				LL_Launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				int count = LL_Launchpad[i].getChildCount();
+				for (int j = 0; j < count; j++) {
+					TextView textView = (TextView) LL_Launchpad[i].getChildAt(j);
 					textView.setTextColor(getResources().getColor(R.color.dark1));
+				}
 			} else {
-				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TVL_launchpad[i])
+				LL_Launchpad[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				int count = LL_Launchpad[i].getChildCount();
+				for (int j = 0; j < count; j++) {
+					TextView textView = (TextView) LL_Launchpad[i].getChildAt(j);
 					textView.setTextColor(getResources().getColor(R.color.text1));
+				}
 			}
 		}
 		

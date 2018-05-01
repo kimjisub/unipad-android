@@ -312,6 +312,46 @@ public class LaunchpadDriver {
 		}
 	}
 	
+	public static class MidiFighter extends DriverRef {
+		
+		@Override
+		public void getSignal(int cmd, int sig, int note, int velo) {
+			if (cmd == 9) {
+				int x = 9 - (note / 10);
+				int y = note % 10;
+				
+				if (y >= 1 && y <= 8)
+					onPadTouch(x - 1, y - 1, velo != 0, velo);
+			} else if (cmd == 11) {
+				int x = 9 - (note / 10);
+				int y = note % 10;
+				
+				if (y == 9)
+					onChainTouch(x - 1, velo != 0);
+			}if (cmd == 11 && sig == -80) {
+				if (91 <= note && note <= 98) {
+					onFunctionkeyTouch(note - 91, velo != 0);
+				}
+			} else if (cmd == 7 && sig == 46 && velo == -9)
+				logRecv("PRO >??");
+		}
+		
+		@Override
+		public void sendPadLED(int x, int y, int velo) {
+			send09Signal(10 * (8 - x) + y + 1, velo);
+		}
+		
+		@Override
+		public void sendFunctionkeyLED(int f, int velo) {
+		}
+		
+		@Override
+		public void sendChainLED(int c, int velo) {
+			if (0 <= c && c <= 7)
+				sendFunctionkeyLED(c + 8, velo);
+		}
+	}
+	
 	public static class Piano extends DriverRef {
 		@Override
 		public void getSignal(int cmd, int sig, int note, int velo) {
