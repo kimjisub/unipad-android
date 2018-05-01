@@ -1533,6 +1533,10 @@ public class Play extends BaseActivity {
 			Launchpad.driver.sendFunctionkeyLED(6, 61);
 			Launchpad.driver.sendFunctionkeyLED(7, 40);
 		} else {
+			Launchpad.driver.sendFunctionkeyLED(0, 0);
+			Launchpad.driver.sendFunctionkeyLED(1, 0);
+			Launchpad.driver.sendFunctionkeyLED(2, 0);
+			Launchpad.driver.sendFunctionkeyLED(3, 0);
 			Launchpad.driver.sendFunctionkeyLED(4, 0);
 			Launchpad.driver.sendFunctionkeyLED(5, 0);
 			Launchpad.driver.sendFunctionkeyLED(6, 0);
