@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kimjisub.launchpad.manage.LaunchpadColor;
+import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.UIManager;
@@ -325,36 +326,16 @@ public class Play extends BaseActivity {
 		ColorManager.Item Item = colorManager.get(x, y);
 		
 		if (x != -1) {
-			if (Item != null) {
-				switch (Item.chanel) {
-					case ColorManager.GUIDE:
-						Launchpad.btnLED(x, y, Item.code);
-						break;
-					case ColorManager.PRESSED:
-						Launchpad.btnLED(x, y, Item.code);
-						break;
-					case ColorManager.LED:
-						Launchpad.btnLED(x, y, Item.code);
-						break;
-				}
-			} else
-				Launchpad.btnLED(x, y, 0);
+			if (Item != null)
+				Launchpad.driver.sendPadLED(x, y, Item.code);
+			else
+				Launchpad.driver.sendPadLED(x, y, 0);
 		} else {
 			int c = y - 8;
-			if (Item != null) {
-				switch (Item.chanel) {
-					case ColorManager.GUIDE:
-						Launchpad.circleBtnLED(y, Item.code);
-						break;
-					case ColorManager.PRESSED:
-						Launchpad.chainLED(c, Item.code);
-						break;
-					case ColorManager.LED:
-						Launchpad.circleBtnLED(y, Item.code);
-						break;
-				}
-			} else
-				Launchpad.circleBtnLED(y, 0);
+			if (Item != null)
+				Launchpad.driver.sendChainLED(c, Item.code);
+			else
+				Launchpad.driver.sendChainLED(c, 0);
 			
 		}
 		
@@ -772,32 +753,45 @@ public class Play extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		
-		Launchpad.ReceiveTask.setEventListener(new Launchpad.ReceiveTask.eventListener() {
-			@Override
-			public void onConnect() {
-				(new Handler()).postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						chainChange(chain);
-					}
-				}, 3000);
-			}
-			
-			@Override
-			public void onGetSignal(int cmd, int note, int velocity) {
-			}
-			
-			@Override
-			public void onPadTouch(int x, int y, boolean upDown) {
-				padTouch(x, y, upDown);
-			}
-			
-			@Override
-			public void onChainChange(int c) {
-				if (unipack.chain > c)
-					chainChange(c);
-			}
-		});
+		Launchpad.driver.
+			setOnConnectionEventListener(new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+				@Override
+				public void onConnected() {
+					(new Handler()).postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							chainChange(chain);
+						}
+					}, 3000);
+				}
+				
+				@Override
+				public void onDisconnected() {
+				
+				}
+			})
+			.setOnGetSignalListener(new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+				@Override
+				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					padTouch(x, y, upDown);
+				}
+				
+				@Override
+				public void onFunctionkeyTouch(int f, boolean upDown) {
+				
+				}
+				
+				@Override
+				public void onChainTouch(int c, boolean upDown) {
+					if (upDown && unipack.chain > c)
+						chainChange(c);
+				}
+				
+				@Override
+				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				
+				}
+			});
 		
 		skin_set();
 	}
@@ -1647,9 +1641,12 @@ public class Play extends BaseActivity {
 			@Override
 			public void run() {
 				for (int i = 0; i < 36; i++)
-					Launchpad.circleBtnLED(i, 0);
-				Launchpad.ReceiveTask.setEventListener(null);
+					Launchpad.driver.sendFunctionkeyLED(i, 0);
 				Launchpad.chainUpdate(-1);
+				Launchpad.driver
+					.setOnConnectionEventListener(null)
+					.setOnGetSignalListener(null)
+					.setOnSendSignalListener(null);
 			}
 		}, 1000);
 		
