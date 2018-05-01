@@ -775,24 +775,25 @@ public class Play extends BaseActivity {
 			@Override
 			public void onFunctionkeyTouch(int f, boolean upDown) {
 				logRecv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
-				if (4 <= f && f <= 7)
+				if (4 <= f && f <= 7 && upDown)
 					toggleWatermark();
 			}
 			
 			@Override
 			public void onChainTouch(int c, boolean upDown) {
-				logRecv("onFunctionkeyTouch(" + c + ", " + upDown + ")");
+				logRecv("onChainTouch(" + c + ", " + upDown + ")");
 				if (upDown && unipack.chain > c)
 					chainChange(c);
 			}
 			
 			@Override
 			public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				logRecv("onPadTouch(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
+				logRecv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
 				
 			}
 		};
 		Launchpad.updateDriver();
+		showWatermark();
 		
 		skin_set();
 	}
