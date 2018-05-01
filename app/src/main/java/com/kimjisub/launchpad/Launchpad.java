@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbConstants;
@@ -24,6 +25,7 @@ import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
+import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
 
 public class Launchpad extends BaseActivity {
@@ -54,10 +56,11 @@ public class Launchpad extends BaseActivity {
 	
 	static MidiDevice device = S;
 	static int mode = 0;
-	public static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
-	public static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
-	public static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
-	public static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
+	static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
+	private static Activity driverFrom = null;
+	private static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
+	private static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
+	private static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
 	
 	
 	@SuppressLint("CutPasteId")
@@ -75,7 +78,7 @@ public class Launchpad extends BaseActivity {
 			findViewById(R.id.avoidAfterimage)
 		};
 		
-		onSendSignalListener = new LaunchpadDriver.DriverRef.OnSendSignalListener() {
+		setDriverListener(new LaunchpadDriver.DriverRef.OnSendSignalListener() {
 			@SuppressLint("StaticFieldLeak")
 			@Override
 			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
@@ -97,15 +100,9 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 			}
-		};
+		});
 	}
 	
-	public static void updateDriver() {
-		logRecv("updateDriver");
-		driver.setOnConnectionEventListener(onConnectionEventListener);
-		driver.setOnGetSignalListener(onGetSignalListener);
-		driver.setOnSendSignalListener(onSendSignalListener);
-	}
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -392,6 +389,36 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	
+	// ========================================================================================= Driver
+	
+	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2){
+		driverFrom = activity;
+		onConnectionEventListener = listener1;
+		onGetSignalListener = listener2;
+		
+		updateDriver();
+	}
+	
+	static void removeDriverListener(Activity activity){
+		log("driverFrom == activity = "+ (driverFrom == activity));
+		if(driverFrom == activity)
+			setDriverListener(null, null, null);
+	}
+	
+	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener){
+		onSendSignalListener = listener;
+		
+		updateDriver();
+	}
+	
+	public static void updateDriver() {
+		logRecv("updateDriver");
+		driver.setOnConnectionEventListener(onConnectionEventListener);
+		driver.setOnGetSignalListener(onGetSignalListener);
+		driver.setOnSendSignalListener(onSendSignalListener);
+		driver.onConnected();
+	}
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -403,6 +430,5 @@ public class Launchpad extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		updateDriver();
 	}
 }

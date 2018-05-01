@@ -12,6 +12,7 @@ public class LaunchpadDriver {
 		
 		public interface OnConnectionEventListener {
 			void onConnected();
+			
 			void onDisconnected();
 		}
 		
@@ -21,11 +22,13 @@ public class LaunchpadDriver {
 		}
 		
 		public void onConnected() {
+			logRecv("onConnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onConnected();
 		}
 		
 		public void onDisconnected() {
+			logRecv("onDisconnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onDisconnected();
 		}
@@ -50,21 +53,25 @@ public class LaunchpadDriver {
 		}
 		
 		void onPadTouch(int x, int y, boolean upDown, int velo) {
+			logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onPadTouch(x, y, upDown, velo);
 		}
 		
 		void onFunctionkeyTouch(int f, boolean upDown) {
+			logRecv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onFunctionkeyTouch(f, upDown);
 		}
 		
 		void onChainTouch(int c, boolean upDown) {
+			logRecv("onChainTouch(" + c + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onChainTouch(c, upDown);
 		}
 		
 		void onUnknownEvent(int cmd, int sig, int note, int velo) {
+			logRecv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onUnknownEvent(cmd, sig, note, velo);
 		}
@@ -286,7 +293,8 @@ public class LaunchpadDriver {
 				
 				if (y == 9)
 					onChainTouch(x - 1, velo != 0);
-			}if (cmd == 11 && sig == -80) {
+			}
+			if (cmd == 11 && sig == -80) {
 				if (91 <= note && note <= 98) {
 					onFunctionkeyTouch(note - 91, velo != 0);
 				}
@@ -328,7 +336,8 @@ public class LaunchpadDriver {
 				
 				if (y == 9)
 					onChainTouch(x - 1, velo != 0);
-			}if (cmd == 11 && sig == -80) {
+			}
+			if (cmd == 11 && sig == -80) {
 				if (91 <= note && note <= 98) {
 					onFunctionkeyTouch(note - 91, velo != 0);
 				}

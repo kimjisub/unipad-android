@@ -38,7 +38,6 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
-import static com.kimjisub.launchpad.manage.Tools.logRecv;
 
 public class Play extends BaseActivity {
 	
@@ -532,15 +531,15 @@ public class Play extends BaseActivity {
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
 		log("[11] showUI");
-		int buttonX;
-		int buttonY;
+		int buttonSizeX;
+		int buttonSizeY;
 		
 		if (unipack.squareButton) {
-			buttonX = buttonY = Math.min(UIManager.Scale[UIManager.PaddingHeight] / unipack.buttonX, UIManager.Scale[UIManager.PaddingWidth] / unipack.buttonY);
+			buttonSizeX = buttonSizeY = Math.min(UIManager.Scale[UIManager.PaddingHeight] / unipack.buttonX, UIManager.Scale[UIManager.PaddingWidth] / unipack.buttonY);
 			
 		} else {
-			buttonX = UIManager.Scale[UIManager.Width] / unipack.buttonY;
-			buttonY = UIManager.Scale[UIManager.Height] / unipack.buttonX;
+			buttonSizeX = UIManager.Scale[UIManager.Width] / unipack.buttonY;
+			buttonSizeY = UIManager.Scale[UIManager.Height] / unipack.buttonX;
 		}
 		
 		
@@ -642,7 +641,7 @@ public class Play extends BaseActivity {
 			
 			for (int j = 0; j < unipack.buttonY; j++) {
 				final RelativeLayout RL_btn = (RelativeLayout) View.inflate(this, R.layout.button, null);
-				RL_btn.setLayoutParams(new LinearLayout.LayoutParams(buttonX, buttonY));
+				RL_btn.setLayoutParams(new LinearLayout.LayoutParams(buttonSizeX, buttonSizeY));
 				
 				
 				final int finalI = i;
@@ -670,7 +669,7 @@ public class Play extends BaseActivity {
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
 				RL_chains[i] = (RelativeLayout) View.inflate(this, R.layout.chain, null);
-				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonX, buttonY));
+				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
 				
 				final int finalI = i;
 				RL_chains[i].findViewById(R.id.touchView).setOnClickListener(new View.OnClickListener() {
@@ -686,9 +685,10 @@ public class Play extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		
-		updateDriver();
-		
 		skin_set();
+		
+		UILoaded = true;
+		updateDriver();
 	}
 	
 	void skin_set() {
@@ -732,7 +732,7 @@ public class Play extends BaseActivity {
 			}
 		}
 		
-		chainInit();
+		chainBtnsRefrash();
 		
 		IV_prev.setBackground(theme.xml_prev);
 		IV_play.setBackground(theme.xml_play);
@@ -755,54 +755,48 @@ public class Play extends BaseActivity {
 	}
 	
 	
-	void updateDriver(){
-		Launchpad.onConnectionEventListener = new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-			@Override
-			public void onConnected() {
-				logRecv("onConnected");
-				(new Handler()).postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						chainChange(chain);
-						showWatermark();
-					}
-				}, 3000);
-			}
-			
-			@Override
-			public void onDisconnected() {
-				logRecv("onDisconnected");
-			}
-		};
-		Launchpad.onGetSignalListener = new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-			@Override
-			public void onPadTouch(int x, int y, boolean upDown, int velo) {
-				logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
-				padTouch(x, y, upDown);
-			}
-			
-			@Override
-			public void onFunctionkeyTouch(int f, boolean upDown) {
-				logRecv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
-				if (4 <= f && f <= 7 && upDown)
-					toggleWatermark();
-			}
-			
-			@Override
-			public void onChainTouch(int c, boolean upDown) {
-				logRecv("onChainTouch(" + c + ", " + upDown + ")");
-				if (upDown && unipack.chain > c)
-					chainChange(c);
-			}
-			
-			@Override
-			public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				logRecv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
+	// ========================================================================================= Launchpad Connection
+	
+	void updateDriver() {
+		Launchpad.setDriverListener(Play.this,
+			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+				@Override
+				public void onConnected() {
+					(new Handler()).postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							chainChange(chain);
+							showWatermark();
+						}
+					}, 3000);
+				}
 				
-			}
-		};
-		Launchpad.updateDriver();
-		showWatermark();
+				@Override
+				public void onDisconnected() {
+				}
+			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+				@Override
+				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					padTouch(x, y, upDown);
+				}
+				
+				@Override
+				public void onFunctionkeyTouch(int f, boolean upDown) {
+					if (4 <= f && f <= 7 && upDown)
+						toggleWatermark();
+				}
+				
+				@Override
+				public void onChainTouch(int c, boolean upDown) {
+					if (upDown && unipack.chain > c)
+						chainChange(c);
+				}
+				
+				@Override
+				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				
+				}
+			});
 	}
 	
 	// ========================================================================================= LEDTask
@@ -1267,7 +1261,7 @@ public class Play extends BaseActivity {
 			} else if (progress[0] == 8) {
 				autoPlay_removeGuide();
 			} else if (progress[0] == 9) {
-				chainInit();
+				chainBtnsRefrash();
 			}
 			PB_autoPlayProgressBar.setProgress(this.progress);
 		}
@@ -1367,7 +1361,7 @@ public class Play extends BaseActivity {
 		} else {
 			colorManager.remove(-1, 8 + c, ColorManager.GUIDE);
 			setLED(-1, 8 + c);
-			chainInit();
+			chainBtnsRefrash();
 		}
 	}
 	
@@ -1380,7 +1374,7 @@ public class Play extends BaseActivity {
 			for (int i = 0; i < unipack.chain; i++) {
 				autoPlay_guideChain(i, false);
 			}
-			chainInit();
+			chainBtnsRefrash();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1471,7 +1465,7 @@ public class Play extends BaseActivity {
 		try {
 			if (unipack.chain > 1 && num >= 0 && num < unipack.chain) {
 				chain = num;
-				chainInit();
+				chainBtnsRefrash();
 			}
 			
 			// 다중매핑 초기화
@@ -1497,8 +1491,8 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	void chainInit() {
-		log("chainInit");
+	void chainBtnsRefrash() {
+		log("chainBtnsRefrash");
 		if (unipack.chain > 1) {
 			
 			for (int i = 0; i < unipack.chain; i++) {
@@ -1545,7 +1539,7 @@ public class Play extends BaseActivity {
 			Launchpad.driver.sendFunctionkeyLED(7, 0);
 		}
 		
-		chainInit();
+		chainBtnsRefrash();
 	}
 	
 	// ========================================================================================= Trace Log
@@ -1634,6 +1628,9 @@ public class Play extends BaseActivity {
 		
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
+		if (UILoaded)
+			updateDriver();
+		
 		if (UIManager.Scale[0] == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
 			requestRestart(Play.this);
@@ -1678,10 +1675,7 @@ public class Play extends BaseActivity {
 				for (int i = 0; i < 36; i++)
 					Launchpad.driver.sendFunctionkeyLED(i, 0);
 				removeChain();
-				Launchpad.driver
-					.setOnConnectionEventListener(null)
-					.setOnGetSignalListener(null)
-					.setOnSendSignalListener(null);
+				Launchpad.removeDriverListener(Play.this);
 			}
 		}, 1000);
 		
