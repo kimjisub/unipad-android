@@ -44,29 +44,45 @@
 			    android:layout_centerVertical="true"
 			    android:orientation="horizontal">
 				
-				<TextView
+				<LinearLayout
 				    android:id="@+id/s"
 				    android:layout_width="120dp"
 				    android:layout_height="100dp"
-				    android:layout_gravity="center_horizontal"
 				    android:gravity="center"
 				    android:onClick="selectDeviceXml"
-				    android:tag="0"
-				    android:text="S\nmini"
-				    android:textColor="@color/text1"
-				    android:textSize="30dp"/>
+				    android:orientation="vertical"
+				    android:tag="0">
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:gravity="center"
+					    android:text="S\nmini"
+					    android:textColor="@color/text1"
+					    android:textSize="30dp"/>
 				
-				<TextView
+				
+				</LinearLayout>
+				
+				<LinearLayout
 				    android:id="@+id/mk2"
 				    android:layout_width="120dp"
 				    android:layout_height="100dp"
-				    android:layout_gravity="center_horizontal"
 				    android:gravity="center"
 				    android:onClick="selectDeviceXml"
-				    android:tag="1"
-				    android:text="MK2"
-				    android:textColor="@color/text1"
-				    android:textSize="30dp"/>
+				    android:orientation="vertical"
+				    android:tag="1">
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:gravity="center"
+					    android:text="MK2"
+					    android:textColor="@color/text1"
+					    android:textSize="30dp"/>
+				
+				
+				</LinearLayout>
 				
 				<LinearLayout
 				    android:id="@+id/pro"
@@ -78,20 +94,16 @@
 				    android:tag="2">
 					
 					<TextView
-					    android:id="@+id/pro1"
-					    android:layout_width="120dp"
-					    android:layout_height="50dp"
-					    android:layout_gravity="center_horizontal"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
 					    android:gravity="center"
 					    android:text="Pro"
 					    android:textColor="@color/text1"
 					    android:textSize="30dp"/>
 					
 					<TextView
-					    android:id="@+id/pro2"
-					    android:layout_width="120dp"
-					    android:layout_height="20dp"
-					    android:layout_gravity="center_horizontal"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
 					    android:gravity="center"
 					    android:text="(Live mode)"
 					    android:textColor="@color/text1"
@@ -99,23 +111,51 @@
 				
 				</LinearLayout>
 				
-				<TextView
+				
+				<LinearLayout
+				    android:id="@+id/midifighter"
+				    android:layout_width="120dp"
+				    android:layout_height="100dp"
+				    android:gravity="center"
+				    android:onClick="selectDeviceXml"
+				    android:orientation="vertical"
+				    android:tag="3">
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:gravity="center"
+					    android:text="Midi\nFighter"
+					    android:textColor="@color/text1"
+					    android:textSize="25dp"/>
+				
+				
+				</LinearLayout>
+				
+				<LinearLayout
 				    android:id="@+id/piano"
 				    android:layout_width="120dp"
 				    android:layout_height="100dp"
-				    android:layout_gravity="center_horizontal"
 				    android:gravity="center"
 				    android:onClick="selectDeviceXml"
-				    android:tag="3"
-				    android:text="piano"
-				    android:textColor="@color/text1"
-				    android:textSize="30dp"/>
+				    android:orientation="vertical"
+				    android:tag="4">
+					
+					<TextView
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:gravity="center"
+					    android:text="Piano"
+					    android:textColor="@color/text1"
+					    android:textSize="30dp"/>
+				
+				
+				</LinearLayout>
 			
 			</LinearLayout>
-			
+		
 		</HorizontalScrollView>
-		
-		
+	
 	
 	</LinearLayout>
 	
@@ -128,31 +168,49 @@
 	    android:layout_margin="10dp"
 	    android:orientation="vertical">
 		
-		<TextView
+		<LinearLayout
 		    android:id="@+id/speedFirst"
 		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content"
-		    android:layout_gravity="center_horizontal"
 		    android:gravity="center"
 		    android:onClick="selectModeXml"
-		    android:padding="10dp"
-		    android:tag="0"
-		    android:text="@string/signal_SpeedFirst"
-		    android:textColor="@color/text1"
-		    android:textSize="15dp"/>
+		    android:orientation="vertical"
+		    android:tag="0">
+			
+			<TextView
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:onClick="selectModeXml"
+			    android:padding="10dp"
+			    android:text="@string/signal_SpeedFirst"
+			    android:textColor="@color/text1"
+			    android:textSize="15dp"/>
 		
-		<TextView
+		
+		</LinearLayout>
+		
+		<LinearLayout
 		    android:id="@+id/avoidAfterimage"
-		    android:layout_width="wrap_content"
+		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content"
-		    android:layout_gravity="center_horizontal"
 		    android:gravity="center"
 		    android:onClick="selectModeXml"
-		    android:padding="10dp"
-		    android:tag="1"
-		    android:text="@string/signal_avoidAfterimage"
-		    android:textColor="@color/text1"
-		    android:textSize="15dp"/>
+		    android:orientation="vertical"
+		    android:tag="1">
+			
+			<TextView
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:onClick="selectModeXml"
+			    android:padding="10dp"
+			    android:text="@string/signal_avoidAfterimage"
+			    android:textColor="@color/text1"
+			    android:textSize="15dp"/>
+		
+		
+		</LinearLayout>
 	
 	</LinearLayout>
 
