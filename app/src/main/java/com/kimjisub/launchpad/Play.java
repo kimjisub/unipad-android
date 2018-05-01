@@ -84,7 +84,6 @@ public class Play extends BaseActivity {
 	Unipack unipack;
 	boolean loaded = false;
 	
-	boolean isShowWatermark = true;
 	
 	RelativeLayout[][] RL_btns;
 	RelativeLayout[] RL_chains;
@@ -97,10 +96,11 @@ public class Play extends BaseActivity {
 	
 	int chain = 0;
 	
-	boolean bool_pressedShow;
-	boolean bool_LEDEvent;
-	boolean bool_traceLog;
-	boolean bool_record;
+	boolean isPressedShow;
+	boolean isLEDEvent;
+	boolean isTraceLog;
+	boolean isRecord;
+	boolean isShowWatermark = true;
 	
 	final long DELAY = 1;
 	
@@ -404,10 +404,10 @@ public class Play extends BaseActivity {
 				CB_LED.setChecked(true);
 				CB_pressedPadShow.setChecked(false);
 			}
-			bool_pressedShow = CB_pressedPadShow.isChecked();
-			bool_LEDEvent = CB_LED.isChecked();
-			bool_traceLog = CB_traceLog.isChecked();
-			bool_record = CB_record.isChecked();
+			isPressedShow = CB_pressedPadShow.isChecked();
+			isLEDEvent = CB_LED.isChecked();
+			isTraceLog = CB_traceLog.isChecked();
+			isRecord = CB_record.isChecked();
 			
 			
 			(new AsyncTask<String, String, String>() {
@@ -609,15 +609,15 @@ public class Play extends BaseActivity {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				padInit();
-				bool_pressedShow = isChecked;
+				isPressedShow = isChecked;
 			}
 		});
 		CB_LED.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if (unipack.isKeyLED) {
-					bool_LEDEvent = isChecked;
-					if (!bool_LEDEvent)
+					isLEDEvent = isChecked;
+					if (!isLEDEvent)
 						LEDInit();
 				}
 			}
@@ -644,7 +644,7 @@ public class Play extends BaseActivity {
 		CB_traceLog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				bool_traceLog = isChecked;
+				isTraceLog = isChecked;
 			}
 		});
 		CB_traceLog.setOnLongClickListener(new View.OnLongClickListener() {
@@ -659,8 +659,8 @@ public class Play extends BaseActivity {
 		CB_record.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				bool_record = isChecked;
-				if (bool_record) {
+				isRecord = isChecked;
+				if (isRecord) {
 					rec_prevEventMS = System.currentTimeMillis();
 					rec_log = "c " + (chain + 1);
 				} else {
@@ -1414,21 +1414,21 @@ public class Play extends BaseActivity {
 				
 				soundItemPush(chain, x, y);
 				
-				if (bool_record) {
+				if (isRecord) {
 					long currTime = System.currentTimeMillis();
 					rec_addLog("d " + (currTime - rec_prevEventMS));
 					rec_addLog("t " + (x + 1) + " " + (y + 1));
 					rec_prevEventMS = currTime;
 				}
-				if (bool_traceLog)
+				if (isTraceLog)
 					traceLog_log(x, y);
 				
-				if (bool_pressedShow) {
+				if (isPressedShow) {
 					colorManager.add(x, y, ColorManager.PRESSED, LaunchpadColor.ARGB[119] + 0xFF000000, 119);
 					setLED(x, y);
 				}
 				
-				if (bool_LEDEvent)
+				if (isLEDEvent)
 					ledTask.addEvent(x, y);
 				
 				autoPlay_checkGuide(x, y);
@@ -1436,12 +1436,12 @@ public class Play extends BaseActivity {
 				if (soundItem_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 				
-				if (bool_pressedShow) {
+				if (isPressedShow) {
 					colorManager.remove(x, y, ColorManager.PRESSED);
 					setLED(x, y);
 				}
 				
-				if (bool_LEDEvent) {
+				if (isLEDEvent) {
 					LEDTask.LEDEvent e = ledTask.searchEvent(x, y);
 					if (e != null && e.loop == 0)
 						ledTask.eventShutdown(x, y);
@@ -1476,7 +1476,7 @@ public class Play extends BaseActivity {
 			
 			
 			// 녹음 chain 추가
-			if (bool_record) {
+			if (isRecord) {
 				long currTime = System.currentTimeMillis();
 				rec_addLog("d " + (currTime - rec_prevEventMS));
 				rec_addLog("chain " + (chain + 1));
