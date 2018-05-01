@@ -59,6 +59,8 @@ public class Play extends BaseActivity {
 	ImageView IV_play;
 	ImageView IV_next;
 	
+	boolean isShowWatermark = true;
+	
 	void initVar() {
 		RL_rootView = findViewById(R.id.rootView);
 		IV_background = findViewById(R.id.background);
@@ -502,34 +504,25 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	
 	boolean skin_init(int num) {
 		log("[10] skin_init (" + num + ")");
 		String packageName = SaveSetting.SelectedTheme.load(Play.this);
 		if (num >= 2)
 			return false;
 		try {
-			log("[10-1] skin_init try " + packageName);
 			ThemePack mTheme = new ThemePack(Play.this, packageName);
-			log("[10-1] 1");
 			mTheme.loadThemeResources();
-			log("[10-1] 2");
 			theme = mTheme.resources;
-			log("[10-1] skin_init 정상");
 			return true;
 		} catch (OutOfMemoryError e) {
-			log("[10-1] skin_init OutOfMemoryError");
 			e.printStackTrace();
 			requestRestart(this);
 			Toast.makeText(Play.this, lang(R.string.skinMemoryErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
-			log("[10-1] skin_init 메모리 부족");
 			return false;
 		} catch (Exception e) {
-			log("[10-1] skin_init Exception");
 			e.printStackTrace();
 			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
 			SaveSetting.SelectedTheme.save(Play.this, getPackageName());
-			log("[10-1] skin_init 문제발생, 초기화후 재시작");
 			return skin_init(num + 1);
 		}
 	}
@@ -754,48 +747,52 @@ public class Play extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		
-		Launchpad.driver.
-			setOnConnectionEventListener(new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-				@Override
-				public void onConnected() {
-					logRecv("onConnected");
-					(new Handler()).postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							chainChange(chain);
-						}
-					}, 3000);
-				}
+		Launchpad.onConnectionEventListener = new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+			@Override
+			public void onConnected() {
+				logRecv("onConnected");
+				(new Handler()).postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						chainChange(chain);
+						showWatermark();
+					}
+				}, 3000);
+			}
+			
+			@Override
+			public void onDisconnected() {
+				logRecv("onDisconnected");
+			}
+		};
+		Launchpad.onGetSignalListener = new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+			@Override
+			public void onPadTouch(int x, int y, boolean upDown, int velo) {
+				logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
+				padTouch(x, y, upDown);
+			}
+			
+			@Override
+			public void onFunctionkeyTouch(int f, boolean upDown) {
+				logRecv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
+				if (4 <= f && f <= 7)
+					toggleWatermark();
+			}
+			
+			@Override
+			public void onChainTouch(int c, boolean upDown) {
+				logRecv("onFunctionkeyTouch(" + c + ", " + upDown + ")");
+				if (upDown && unipack.chain > c)
+					chainChange(c);
+			}
+			
+			@Override
+			public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				logRecv("onPadTouch(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
 				
-				@Override
-				public void onDisconnected() {
-					logRecv("onDisconnected");
-				}
-			})
-			.setOnGetSignalListener(new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-				@Override
-				public void onPadTouch(int x, int y, boolean upDown, int velo) {
-					logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
-					padTouch(x, y, upDown);
-				}
-				
-				@Override
-				public void onFunctionkeyTouch(int f, boolean upDown) {
-					logRecv("onFunctionkeyTouch(" + f +  ", " + upDown + ")");
-				}
-				
-				@Override
-				public void onChainTouch(int c, boolean upDown) {
-					logRecv("onFunctionkeyTouch(" + c +  ", " + upDown + ")");
-					if (upDown && unipack.chain > c)
-						chainChange(c);
-				}
-				
-				@Override
-				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				
-				}
-			});
+			}
+		};
+		Launchpad.updateDriver();
 		
 		skin_set();
 	}
@@ -1454,6 +1451,13 @@ public class Play extends BaseActivity {
 		}
 	}
 	
+	void padInit() {
+		log("padInit");
+		for (int i = 0; i < unipack.buttonX; i++)
+			for (int j = 0; j < unipack.buttonY; j++)
+				padTouch(i, j, false);
+	}
+	
 	void chainChange(int num) {
 		//log("chainChange (" + num + ")");
 		try {
@@ -1485,37 +1489,56 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	void padInit() {
-		log("padInit");
-		for (int i = 0; i < unipack.buttonX; i++)
-			for (int j = 0; j < unipack.buttonY; j++)
-				padTouch(i, j, false);
-	}
-	
 	void chainInit() {
 		log("chainInit");
 		if (unipack.chain > 1) {
 			
-			Launchpad.chainUpdate(chain);
-			
 			for (int i = 0; i < unipack.chain; i++) {
 				
-				if (i == chain) {
+				if (i == chain && isShowWatermark) {
 					colorManager.add(-1, 8 + i, ColorManager.PRESSED, 0xFFdfe5ee, 119);
 				} else {
 					colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
 				}
 				setLEDUI(-1, 8 + i);
-				if (Launchpad.isShowWatermark)
-					setLEDLaunchpad(-1, 8 + i);
+				setLEDLaunchpad(-1, 8 + i);
 			}
 			
+		}
+	}
+	
+	void removeChain() {
+		for (int i = 0; i < unipack.chain; i++) {
+			
+			colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
+			setLEDUI(-1, 8 + i);
+			setLEDLaunchpad(-1, 8 + i);
 		}
 	}
 	
 	
 	// ========================================================================================= Watermark
 	
+	void toggleWatermark() {
+		isShowWatermark = !isShowWatermark;
+		showWatermark();
+	}
+	
+	void showWatermark() {
+		if (isShowWatermark) {
+			Launchpad.driver.sendFunctionkeyLED(4, 61);
+			Launchpad.driver.sendFunctionkeyLED(5, 40);
+			Launchpad.driver.sendFunctionkeyLED(6, 61);
+			Launchpad.driver.sendFunctionkeyLED(7, 40);
+		} else {
+			Launchpad.driver.sendFunctionkeyLED(4, 0);
+			Launchpad.driver.sendFunctionkeyLED(5, 0);
+			Launchpad.driver.sendFunctionkeyLED(6, 0);
+			Launchpad.driver.sendFunctionkeyLED(7, 0);
+		}
+		
+		chainInit();
+	}
 	
 	// ========================================================================================= Trace Log
 	
@@ -1646,7 +1669,7 @@ public class Play extends BaseActivity {
 			public void run() {
 				for (int i = 0; i < 36; i++)
 					Launchpad.driver.sendFunctionkeyLED(i, 0);
-				Launchpad.chainUpdate(-1);
+				removeChain();
 				Launchpad.driver
 					.setOnConnectionEventListener(null)
 					.setOnGetSignalListener(null)

@@ -45,12 +45,12 @@ public class Launchpad extends BaseActivity {
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
 	
-	public static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
 	static MidiDevice device = S;
 	static int mode = 0;
-	
-	static boolean isShowWatermark = true;
-	static int chain = -1;
+	public static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
+	public static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
+	public static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
+	public static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
 	
 	public enum MidiDevice {
 		S(0), MK2(1), Pro(2), Piano(3);
@@ -235,7 +235,7 @@ public class Launchpad extends BaseActivity {
 				break;
 		}
 		
-		driver.setOnSendSignalListener(new LaunchpadDriver.DriverRef.OnSendSignalListener() {
+		onSendSignalListener= new LaunchpadDriver.DriverRef.OnSendSignalListener() {
 			@SuppressLint("StaticFieldLeak")
 			@Override
 			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
@@ -257,7 +257,8 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 			}
-		});
+		};
+		updateDriver();
 		
 		for (int i = 0; i < VL_launchpad.length; i++) {
 			if (device.value == i) {
@@ -270,6 +271,12 @@ public class Launchpad extends BaseActivity {
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
+	}
+	
+	public static void updateDriver(){
+		driver.setOnConnectionEventListener(onConnectionEventListener);
+		driver.setOnGetSignalListener(onGetSignalListener);
+		driver.setOnSendSignalListener(onSendSignalListener);
 	}
 	
 	public void selectModeXml(View v) {
@@ -332,24 +339,6 @@ public class Launchpad extends BaseActivity {
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
 								
-								if (device == S || device == MK2) {
-									if (cmd == 11 && sig == -80) {
-										if (108 <= note && note <= 111) {
-											if (velocity != 0)
-												toggleWatermark();
-										}
-									}
-								} else if (device == Pro) {
-									if (cmd == 11 && sig == -80) {
-										if (95 <= note && note <= 98) {
-											if (velocity != 0)
-												toggleWatermark();
-										}
-									} else if (cmd == 7 && sig == 46 && velocity == -9)
-										toggleWatermark();
-								}
-								
-								
 								publishProgress(cmd, sig, note, velocity);
 								logRecv(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
@@ -379,7 +368,6 @@ public class Launchpad extends BaseActivity {
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
 			driver.getSignal(progress[0], progress[1], progress[2], progress[3]);
-			//getSignal(progress[0], progress[1], progress[2]);
 		}
 		
 		@Override
@@ -388,26 +376,6 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 	
-	static void toggleWatermark() {
-		isShowWatermark = !isShowWatermark;
-		showWatermark();
-	}
-	
-	static void showWatermark() {
-		if (isShowWatermark) {
-			driver.sendFunctionkeyLED(4, 61);
-			driver.sendFunctionkeyLED(5, 40);
-			driver.sendFunctionkeyLED(6, 61);
-			driver.sendFunctionkeyLED(7, 40);
-		} else {
-			driver.sendFunctionkeyLED(4, 0);
-			driver.sendFunctionkeyLED(5, 0);
-			driver.sendFunctionkeyLED(6, 0);
-			driver.sendFunctionkeyLED(7, 0);
-		}
-		
-		chainRefresh();
-	}
 	
 	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
 		try {
@@ -415,24 +383,6 @@ public class Launchpad extends BaseActivity {
 			usbDeviceConnection.bulkTransfer(usbEndpoint_out, buffer, buffer.length, 1000);
 		} catch (Exception ignored) {
 		}
-	}
-	
-	
-	
-	static void chainUpdate(int c) {
-		log("chainUpdate");
-		
-		chain = c;
-	}
-	
-	static void chainRefresh() {
-		log("chainRefresh(" + chain + ")");
-		
-		if (isShowWatermark)
-			driver.sendChainLED(chain, 119);
-		else
-			driver.sendChainLED(chain, 0);
-		
 	}
 	
 	
@@ -447,16 +397,5 @@ public class Launchpad extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		(new AsyncTask<String, Integer, String>() {
-			@Override
-			protected String doInBackground(String... params) {
-				isShowWatermark = true;
-				if (device == Pro)
-					isShowWatermark = !isShowWatermark;
-				
-				showWatermark();
-				return null;
-			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 }
