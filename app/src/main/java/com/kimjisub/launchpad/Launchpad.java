@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
@@ -23,7 +22,6 @@ import static com.kimjisub.launchpad.Launchpad.MidiDevice.MK2;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
-import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
 import static com.kimjisub.launchpad.manage.Tools.logSig;
 
@@ -45,13 +43,6 @@ public class Launchpad extends BaseActivity {
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
 	
-	static MidiDevice device = S;
-	static int mode = 0;
-	public static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
-	public static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
-	public static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
-	public static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
-	
 	public enum MidiDevice {
 		S(0), MK2(1), Pro(2), Piano(3);
 		
@@ -61,6 +52,15 @@ public class Launchpad extends BaseActivity {
 			this.value = value;
 		}
 	}
+	
+	static MidiDevice device = S;
+	static int mode = 0;
+	public static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
+	public static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
+	public static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
+	public static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
+	
+	
 	
 	@SuppressLint("CutPasteId")
 	void initVar() {
@@ -235,7 +235,7 @@ public class Launchpad extends BaseActivity {
 				break;
 		}
 		
-		onSendSignalListener= new LaunchpadDriver.DriverRef.OnSendSignalListener() {
+		onSendSignalListener = new LaunchpadDriver.DriverRef.OnSendSignalListener() {
 			@SuppressLint("StaticFieldLeak")
 			@Override
 			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
@@ -273,7 +273,7 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 	
-	public static void updateDriver(){
+	public static void updateDriver() {
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);
