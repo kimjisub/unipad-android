@@ -97,13 +97,13 @@ public class BaseActivity extends AppCompatActivity {
 	}
 	
 	static void printActivityLog(String log) {
-		String str = "ACTIVITY STACK - " + log;
+		String str = "ACTIVITY STACK - " + log + "[";
 		int size = activityList.size();
 		for (int i = 0; i < size; i++) {
 			Activity activity = activityList.get(i);
 			str += ", " + activity.getLocalClassName();
 		}
-		logActivity(str);
+		logActivity(str + "]");
 	}
 	
 	static void requestRestart(final Context context) {

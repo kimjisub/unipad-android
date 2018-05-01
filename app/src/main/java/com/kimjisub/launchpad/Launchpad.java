@@ -87,6 +87,37 @@ public class Launchpad extends BaseActivity {
 			{findViewById(R.id.speedFirst)},
 			{findViewById(R.id.avoidAfterimage)}
 		};
+		
+		onSendSignalListener = new LaunchpadDriver.DriverRef.OnSendSignalListener() {
+			@SuppressLint("StaticFieldLeak")
+			@Override
+			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
+				if (usbDeviceConnection != null) {
+					if (mode == 0) {
+						try {
+							(new AsyncTask<String, Integer, String>() {
+								@Override
+								protected String doInBackground(String... params) {
+									sendBuffer(cmd, sig, note, velo);
+									return null;
+								}
+							}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+						} catch (Exception ignore) {
+							logSig("런치패드 led 에러");
+						}
+					} else if (mode == 1) {
+						sendBuffer(cmd, sig, note, velo);
+					}
+				}
+			}
+		};
+	}
+	
+	public static void updateDriver() {
+		logRecv("updateDriver");
+		driver.setOnConnectionEventListener(onConnectionEventListener);
+		driver.setOnGetSignalListener(onGetSignalListener);
+		driver.setOnSendSignalListener(onSendSignalListener);
 	}
 	
 	protected void onCreate(Bundle savedInstanceState) {
@@ -235,31 +266,6 @@ public class Launchpad extends BaseActivity {
 				break;
 		}
 		
-		onSendSignalListener = new LaunchpadDriver.DriverRef.OnSendSignalListener() {
-			@SuppressLint("StaticFieldLeak")
-			@Override
-			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
-				if (usbDeviceConnection != null) {
-					if (mode == 0) {
-						try {
-							(new AsyncTask<String, Integer, String>() {
-								@Override
-								protected String doInBackground(String... params) {
-									sendBuffer(cmd, sig, note, velo);
-									return null;
-								}
-							}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-						} catch (Exception ignore) {
-							logSig("런치패드 led 에러");
-						}
-					} else if (mode == 1) {
-						sendBuffer(cmd, sig, note, velo);
-					}
-				}
-			}
-		};
-		updateDriver();
-		
 		for (int i = 0; i < VL_launchpad.length; i++) {
 			if (device.value == i) {
 				VL_launchpad[i].setBackgroundColor(getResources().getColor(R.color.text1));
@@ -273,11 +279,7 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 	
-	public static void updateDriver() {
-		driver.setOnConnectionEventListener(onConnectionEventListener);
-		driver.setOnGetSignalListener(onGetSignalListener);
-		driver.setOnSendSignalListener(onSendSignalListener);
-	}
+	
 	
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
@@ -397,5 +399,6 @@ public class Launchpad extends BaseActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		updateDriver();
 	}
 }

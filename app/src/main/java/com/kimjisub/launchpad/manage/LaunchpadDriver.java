@@ -6,9 +6,6 @@ public class LaunchpadDriver {
 	
 	public static abstract class DriverRef {
 		
-		
-		
-		
 		// ================================================================================= OnConnectionEventListener
 		
 		private OnConnectionEventListener onConnectionEventListener = null;
@@ -114,7 +111,6 @@ public class LaunchpadDriver {
 	}
 	
 	public static class Nothing extends DriverRef {
-		
 		@Override
 		public void getSignal(int cmd, int sig, int note, int velo) {
 		}
