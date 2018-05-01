@@ -59,7 +59,6 @@ public class Play extends BaseActivity {
 	ImageView IV_play;
 	ImageView IV_next;
 	
-	boolean isShowWatermark = true;
 	
 	void initVar() {
 		RL_rootView = findViewById(R.id.rootView);
@@ -84,6 +83,8 @@ public class Play extends BaseActivity {
 	
 	Unipack unipack;
 	boolean loaded = false;
+	
+	boolean isShowWatermark = true;
 	
 	RelativeLayout[][] RL_btns;
 	RelativeLayout[] RL_chains;
@@ -355,8 +356,7 @@ public class Play extends BaseActivity {
 		
 		//================================================================================== URL 불러오기
 		String URL = getIntent().getStringExtra("URL");
-		log("unipack URL : " + URL);
-		log("[01] Start Load Unipack");
+		log("[01] Start Load Unipack " + URL);
 		unipack = new Unipack(URL, true);
 		
 		try {
