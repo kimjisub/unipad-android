@@ -28,7 +28,7 @@
 		    android:orientation="vertical">
 
 			<CheckBox
-			    android:id="@+id/누른키표시"
+			    android:id="@+id/CB_pressedPadShow"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -37,7 +37,7 @@
 			    android:textColor="@color/text1"/>
 
 			<CheckBox
-			    android:id="@+id/LED효과"
+			    android:id="@+id/CB_LED"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -47,7 +47,7 @@
 
 
 			<CheckBox
-			    android:id="@+id/자동재생"
+			    android:id="@+id/CB_autoPlay"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -56,7 +56,7 @@
 			    android:textColor="@color/text1"/>
 
 			<LinearLayout
-			    android:id="@+id/자동재생제어뷰"
+			    android:id="@+id/autoPlayControlView"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:gravity="center"
@@ -64,7 +64,7 @@
 			    android:visibility="gone">
 
 				<ProgressBar
-				    android:id="@+id/진행도"
+				    android:id="@+id/autoPlayProgressBar"
 				    style="?android:attr/progressBarStyleHorizontal"
 				    android:layout_width="match_parent"
 				    android:layout_height="wrap_content"
@@ -112,7 +112,7 @@
 		    android:orientation="vertical">
 
 			<CheckBox
-			    android:id="@+id/순서기록"
+			    android:id="@+id/CB_traceLog"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -121,7 +121,7 @@
 			    android:textColor="@color/text1"/>
 
 			<CheckBox
-			    android:id="@+id/녹음"
+			    android:id="@+id/CB_record"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
