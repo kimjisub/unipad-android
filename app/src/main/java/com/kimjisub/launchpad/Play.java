@@ -754,51 +754,6 @@ public class Play extends BaseActivity {
 		
 	}
 	
-	
-	// ========================================================================================= Launchpad Connection
-	
-	void updateDriver() {
-		Launchpad.setDriverListener(Play.this,
-			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-				@Override
-				public void onConnected() {
-					(new Handler()).postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							chainChange(chain);
-							showWatermark();
-						}
-					}, 3000);
-				}
-				
-				@Override
-				public void onDisconnected() {
-				}
-			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-				@Override
-				public void onPadTouch(int x, int y, boolean upDown, int velo) {
-					padTouch(x, y, upDown);
-				}
-				
-				@Override
-				public void onFunctionkeyTouch(int f, boolean upDown) {
-					if (4 <= f && f <= 7 && upDown)
-						toggleWatermark();
-				}
-				
-				@Override
-				public void onChainTouch(int c, boolean upDown) {
-					if (upDown && unipack.chain > c)
-						chainChange(c);
-				}
-				
-				@Override
-				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				
-				}
-			});
-	}
-	
 	// ========================================================================================= LEDTask
 	
 	@SuppressLint("StaticFieldLeak")
@@ -1518,6 +1473,58 @@ public class Play extends BaseActivity {
 		}
 	}
 	
+	// ========================================================================================= Launchpad Connection
+	
+	void updateDriver() {
+		Launchpad.setDriverListener(Play.this,
+			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+				@Override
+				public void onConnected() {
+					(new Handler()).postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							Launchpad.driver.sendFunctionkeyLED(0, 0);
+							Launchpad.driver.sendFunctionkeyLED(1, 0);
+							Launchpad.driver.sendFunctionkeyLED(2, 0);
+							Launchpad.driver.sendFunctionkeyLED(3, 0);
+							Launchpad.driver.sendFunctionkeyLED(4, 0);
+							Launchpad.driver.sendFunctionkeyLED(5, 0);
+							Launchpad.driver.sendFunctionkeyLED(6, 0);
+							Launchpad.driver.sendFunctionkeyLED(7, 0);
+							
+							chainChange(chain);
+							showWatermark();
+						}
+					}, 3000);
+				}
+				
+				@Override
+				public void onDisconnected() {
+				}
+			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+				@Override
+				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					padTouch(x, y, upDown);
+				}
+				
+				@Override
+				public void onFunctionkeyTouch(int f, boolean upDown) {
+					if (4 <= f && f <= 7 && upDown)
+						toggleWatermark();
+				}
+				
+				@Override
+				public void onChainTouch(int c, boolean upDown) {
+					if (upDown && unipack.chain > c)
+						chainChange(c);
+				}
+				
+				@Override
+				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				
+				}
+			});
+	} 
 	
 	// ========================================================================================= Watermark
 	
