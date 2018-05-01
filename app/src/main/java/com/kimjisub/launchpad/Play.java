@@ -38,6 +38,7 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
+import static com.kimjisub.launchpad.manage.Tools.logRecv;
 
 public class Play extends BaseActivity {
 	
@@ -757,6 +758,7 @@ public class Play extends BaseActivity {
 			setOnConnectionEventListener(new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
+					logRecv("onConnected");
 					(new Handler()).postDelayed(new Runnable() {
 						@Override
 						public void run() {
@@ -767,22 +769,24 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onDisconnected() {
-				
+					logRecv("onDisconnected");
 				}
 			})
 			.setOnGetSignalListener(new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
 				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
 					padTouch(x, y, upDown);
 				}
 				
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
-				
+					logRecv("onFunctionkeyTouch(" + f +  ", " + upDown + ")");
 				}
 				
 				@Override
 				public void onChainTouch(int c, boolean upDown) {
+					logRecv("onFunctionkeyTouch(" + c +  ", " + upDown + ")");
 					if (upDown && unipack.chain > c)
 						chainChange(c);
 				}
@@ -1511,8 +1515,6 @@ public class Play extends BaseActivity {
 	
 	
 	// ========================================================================================= Watermark
-	
-	
 	
 	
 	// ========================================================================================= Trace Log
