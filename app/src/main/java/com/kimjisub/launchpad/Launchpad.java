@@ -236,6 +236,7 @@ public class Launchpad extends BaseActivity {
 		}
 		
 		driver.setOnSendSignalListener(new LaunchpadDriver.DriverRef.OnSendSignalListener() {
+			@SuppressLint("StaticFieldLeak")
 			@Override
 			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
 				if (usbDeviceConnection != null) {
@@ -302,7 +303,7 @@ public class Launchpad extends BaseActivity {
 		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
 	
-	// ========================================================================================= 리스너
+	// ========================================================================================= ReceiveTask
 	
 	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
 		
@@ -394,30 +395,15 @@ public class Launchpad extends BaseActivity {
 	
 	static void showWatermark() {
 		if (isShowWatermark) {
-			if (device == S || device == MK2) {
-				driver.send11Signal(108, 61);
-				driver.send11Signal(108, 61);
-				driver.send11Signal(109, 40);
-				driver.send11Signal(110, 61);
-				driver.send11Signal(111, 40);
-			} else if (device == Pro) {
-				driver.send11Signal(95, 61);
-				driver.send11Signal(96, 40);
-				driver.send11Signal(97, 61);
-				driver.send11Signal(98, 40);
-			}
+			driver.sendFunctionkeyLED(4, 61);
+			driver.sendFunctionkeyLED(5, 40);
+			driver.sendFunctionkeyLED(6, 61);
+			driver.sendFunctionkeyLED(7, 40);
 		} else {
-			if (device == S || device == MK2) {
-				driver.send11Signal(108, 0);
-				driver.send11Signal(109, 0);
-				driver.send11Signal(110, 0);
-				driver.send11Signal(111, 0);
-			} else if (device == Pro) {
-				driver.send11Signal(95, 0);
-				driver.send11Signal(96, 0);
-				driver.send11Signal(97, 0);
-				driver.send11Signal(98, 0);
-			}
+			driver.sendFunctionkeyLED(4, 0);
+			driver.sendFunctionkeyLED(5, 0);
+			driver.sendFunctionkeyLED(6, 0);
+			driver.sendFunctionkeyLED(7, 0);
 		}
 		
 		chainRefresh();
