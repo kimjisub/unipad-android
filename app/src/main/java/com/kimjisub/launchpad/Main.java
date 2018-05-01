@@ -35,6 +35,7 @@ import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.UIManager;
@@ -60,6 +61,7 @@ import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 public class Main extends BaseActivity {
 	
 	boolean isDoneIntro = false;
+	boolean isShowWatermark = true;
 	boolean updateComplete = true;
 	
 	// intro
@@ -948,6 +950,68 @@ public class Main extends BaseActivity {
 		}).run();
 	}
 	
+	void updateDriver() {
+		Launchpad.setDriverListener(Main.this,
+			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+				@Override
+				public void onConnected() {
+					(new Handler()).postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							showWatermark();
+						}
+					}, 3000);
+				}
+				
+				@Override
+				public void onDisconnected() {
+				}
+			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+				@Override
+				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+				}
+				
+				@Override
+				public void onFunctionkeyTouch(int f, boolean upDown) {
+					if (4 <= f && f <= 7 && upDown)
+						toggleWatermark();
+				}
+				
+				@Override
+				public void onChainTouch(int c, boolean upDown) {
+				}
+				
+				@Override
+				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				
+				}
+			});
+	}
+	
+	
+	// ========================================================================================= Watermark
+	
+	void toggleWatermark() {
+		isShowWatermark = !isShowWatermark;
+		showWatermark();
+	}
+	
+	void showWatermark() {
+		if (isShowWatermark) {
+			Launchpad.driver.sendFunctionkeyLED(4, 61);
+			Launchpad.driver.sendFunctionkeyLED(5, 40);
+			Launchpad.driver.sendFunctionkeyLED(6, 61);
+			Launchpad.driver.sendFunctionkeyLED(7, 40);
+		} else {
+			Launchpad.driver.sendFunctionkeyLED(4, 0);
+			Launchpad.driver.sendFunctionkeyLED(5, 0);
+			Launchpad.driver.sendFunctionkeyLED(6, 0);
+			Launchpad.driver.sendFunctionkeyLED(7, 0);
+		}
+	}
+	
+	// ========================================================================================= Activity
+	
 	@Override
 	public void onBackPressed() {
 		if (!isDoneIntro) {
@@ -981,8 +1045,10 @@ public class Main extends BaseActivity {
 		initVar();
 		if (!isDoneIntro)
 			;
-		else
+		else {
 			update();
+			updateDriver();
+		}
 	}
 	
 	@Override
@@ -991,9 +1057,8 @@ public class Main extends BaseActivity {
 		
 		if (!isDoneIntro)
 			;
-		else {
+		else
 			getStoreCount.setOnChangeListener(null);
-		}
 	}
 	
 	@Override
@@ -1007,8 +1072,8 @@ public class Main extends BaseActivity {
 			}
 			
 			finish();
-		} else {
-		}
+		} else
+			;
 		
 	}
 	
