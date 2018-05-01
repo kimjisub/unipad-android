@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.manage;
 
+import static com.kimjisub.launchpad.manage.Tools.logRecv;
+
 public class LaunchpadDriver {
 	
 	public static abstract class DriverRef {
@@ -161,7 +163,8 @@ public class LaunchpadDriver {
 				else if (y == 9)
 					onChainTouch(x - 1, velo != 0);
 			} else if (cmd == 11) {
-			
+				if (104 <= note && note <= 111)
+					onFunctionkeyTouch(note - 104, velo != 0);
 			}
 		}
 		
@@ -214,6 +217,8 @@ public class LaunchpadDriver {
 				else if (y == 9)
 					onChainTouch(x - 1, velo != 0);
 			} else if (cmd == 11) {
+				if (104 <= note && note <= 111)
+					onFunctionkeyTouch(note - 104, velo != 0);
 			}
 		}
 		
@@ -285,7 +290,12 @@ public class LaunchpadDriver {
 				
 				if (y == 9)
 					onChainTouch(x - 1, velo != 0);
-			}
+			}if (cmd == 11 && sig == -80) {
+				if (91 <= note && note <= 98) {
+					onFunctionkeyTouch(note - 91, velo != 0);
+				}
+			} else if (cmd == 7 && sig == 46 && velo == -9)
+				logRecv("PRO >??");
 		}
 		
 		@Override
