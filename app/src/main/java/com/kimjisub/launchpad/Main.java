@@ -950,6 +950,8 @@ public class Main extends BaseActivity {
 		}).run();
 	}
 	
+	// ========================================================================================= Launchpad Connection
+	
 	void updateDriver() {
 		Launchpad.setDriverListener(Main.this,
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
