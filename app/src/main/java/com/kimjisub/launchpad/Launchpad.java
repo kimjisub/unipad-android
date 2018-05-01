@@ -13,17 +13,18 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.MK2;
+import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
-import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 public class Launchpad extends BaseActivity {
 	
@@ -59,7 +60,6 @@ public class Launchpad extends BaseActivity {
 	public static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
 	public static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
 	public static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
-	
 	
 	
 	@SuppressLint("CutPasteId")
@@ -103,7 +103,7 @@ public class Launchpad extends BaseActivity {
 								}
 							}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 						} catch (Exception ignore) {
-							logSig("런치패드 led 에러");
+							logRecv("런치패드 led 에러");
 						}
 					} else if (mode == 1) {
 						sendBuffer(cmd, sig, note, velo);
@@ -157,41 +157,41 @@ public class Launchpad extends BaseActivity {
 		int interfaceNum = 0;
 		
 		if (device == null) {
-			logSig("USB 에러 : device == null");
+			logRecv("USB 에러 : device == null");
 			return false;
 		} else {
 			try {
-				logSig("DeviceName : " + device.getDeviceName());
-				logSig("DeviceClass : " + device.getDeviceClass());
-				logSig("DeviceId : " + device.getDeviceId());
-				logSig("DeviceProtocol : " + device.getDeviceProtocol());
-				logSig("DeviceSubclass : " + device.getDeviceSubclass());
-				logSig("InterfaceCount : " + device.getInterfaceCount());
-				logSig("VendorId : " + device.getVendorId());
+				logRecv("DeviceName : " + device.getDeviceName());
+				logRecv("DeviceClass : " + device.getDeviceClass());
+				logRecv("DeviceId : " + device.getDeviceId());
+				logRecv("DeviceProtocol : " + device.getDeviceProtocol());
+				logRecv("DeviceSubclass : " + device.getDeviceSubclass());
+				logRecv("InterfaceCount : " + device.getInterfaceCount());
+				logRecv("VendorId : " + device.getVendorId());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			try {
-				logSig("ProductId : " + device.getProductId());
+				logRecv("ProductId : " + device.getProductId());
 				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
-					case 105://mk2
+					case 105:
 						selectDevice(MK2.value);
 						TV_info.append("prediction : MK2\n");
 						break;
-					case 81://pro
+					case 81:
 						selectDevice(Pro.value);
 						TV_info.append("prediction : Pro\n");
 						break;
-					case 54://mk2 mini
+					case 54:
 						selectDevice(S.value);
 						TV_info.append("prediction : mk2 mini\n");
 						break;
-					case 8211://LX 61 piano
+					case 8211:
 						selectDevice(Piano.value);
 						TV_info.append("prediction : LX 61 piano\n");
 						break;
-					case 32822://Arduino Leonardo midi
+					case 32822:
 						selectDevice(MK2.value);
 						TV_info.append("prediction : Arduino Leonardo midi\n");
 						interfaceNum = 3;
@@ -227,14 +227,14 @@ public class Launchpad extends BaseActivity {
 		}
 		usbDeviceConnection = usbManager.openDevice(device);
 		if (usbDeviceConnection == null) {
-			logSig("USB 에러 : usbDeviceConnection == null");
+			logRecv("USB 에러 : usbDeviceConnection == null");
 			return false;
 		}
 		if (usbDeviceConnection.claimInterface(usbInterface, true)) {
 			(new ReceiveTask()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			return true;
 		} else {
-			logSig("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
+			logRecv("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
 			return false;
 		}
 	}
@@ -277,8 +277,9 @@ public class Launchpad extends BaseActivity {
 					textView.setTextColor(getResources().getColor(R.color.text1));
 			}
 		}
+		
+		updateDriver();
 	}
-	
 	
 	
 	public void selectModeXml(View v) {
@@ -287,7 +288,7 @@ public class Launchpad extends BaseActivity {
 	
 	public void selectMode(int num) {
 		
-		switch (VL_mode[num].getId()) {
+		switch (LL_mode[num].getId()) {
 			case R.id.speedFirst:
 				mode = 0;
 				break;
@@ -296,15 +297,21 @@ public class Launchpad extends BaseActivity {
 				break;
 		}
 		
-		for (int i = 0; i < VL_mode.length; i++) {
+		for (int i = 0; i < LL_mode.length; i++) {
 			if (mode == i) {
-				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
-				for (TextView textView : TVL_mode[i])
+				LL_mode[i].setBackgroundColor(getResources().getColor(R.color.text1));
+				int count = LL_mode[i].getChildCount();
+				for (int j = 0; j < count; j++) {
+					TextView textView = (TextView) LL_mode[i].getChildAt(j);
 					textView.setTextColor(getResources().getColor(R.color.dark1));
+				}
 			} else {
-				VL_mode[i].setBackgroundColor(getResources().getColor(R.color.dark1));
-				for (TextView textView : TVL_mode[i])
+				LL_mode[i].setBackgroundColor(getResources().getColor(R.color.dark1));
+				int count = LL_mode[i].getChildCount();
+				for (int j = 0; j < count; j++) {
+					TextView textView = (TextView) LL_mode[i].getChildAt(j);
 					textView.setTextColor(getResources().getColor(R.color.text1));
+				}
 			}
 		}
 		
@@ -326,7 +333,7 @@ public class Launchpad extends BaseActivity {
 		protected String doInBackground(String... params) {
 			if (!isRun) {
 				isRun = true;
-				logSig("USB 시작");
+				logRecv("USB 시작");
 				
 				long prevTime = System.currentTimeMillis();
 				int count = 0;
@@ -361,7 +368,7 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 				
-				logSig("USB 끝");
+				logRecv("USB 끝");
 			}
 			isRun = false;
 			return null;
