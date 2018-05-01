@@ -82,7 +82,8 @@ public class Play extends BaseActivity {
 	ThemePack.Resources theme;
 	
 	Unipack unipack;
-	boolean loaded = false;
+	boolean unipackLoaded = false;
+	boolean UILoaded = false;
 	
 	
 	RelativeLayout[][] RL_btns;
@@ -302,26 +303,26 @@ public class Play extends BaseActivity {
 							if (theme.isChainLED)
 								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.버튼).setBackground(theme.chain__);
+								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain__);
 							break;
 						case ColorManager.PRESSED:
 							if (theme.isChainLED)
 								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.버튼).setBackground(theme.chain_);
+								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain_);
 							break;
 						case ColorManager.LED:
 							if (theme.isChainLED)
 								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.버튼).setBackground(theme.chain);
+								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain);
 							break;
 					}
 				} else {
 					if (theme.isChainLED)
 						RL_chains[c].findViewById(R.id.LED).setBackgroundColor(0);
 					else
-						RL_chains[c].findViewById(R.id.버튼).setBackground(theme.chain);
+						RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain);
 				}
 		}
 	}
@@ -459,7 +460,7 @@ public class Play extends BaseActivity {
 								}
 							}
 						}
-						loaded = true;
+						unipackLoaded = true;
 					} catch (Exception e) {
 						logErr("[08] doInBackground");
 						e.printStackTrace();
@@ -476,7 +477,7 @@ public class Play extends BaseActivity {
 				@Override
 				protected void onPostExecute(String result) {
 					log("[09] onPostExecute");
-					if (loaded) {
+					if (unipackLoaded) {
 						try {
 							if (progressDialog != null && progressDialog.isShowing())
 								progressDialog.dismiss();
@@ -527,68 +528,6 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	void skin_set() {
-		log("[12] skin_set");
-		IV_background.setImageDrawable(theme.playbg);
-		for (int i = 0; i < unipack.buttonX; i++)
-			for (int j = 0; j < unipack.buttonY; j++) {
-				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
-				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
-			}
-		
-		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
-			for (int i = 0; i < unipack.buttonX; i++)
-				for (int j = 0; j < unipack.buttonY; j++)
-					RL_btns[i][j].findViewById(R.id.phantom).setBackground(theme.phantom);
-			
-			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.phantom_ != null) {
-				int x = unipack.buttonX / 2 - 1;
-				int y = unipack.buttonY / 2 - 1;
-				
-				RL_btns[x][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				
-				RL_btns[x + 1][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x + 1][y].findViewById(R.id.phantom).setRotation(270);
-				
-				RL_btns[x][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x][y + 1].findViewById(R.id.phantom).setRotation(90);
-				
-				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setRotation(180);
-			}
-		}
-		
-		for (int i = 0; i < unipack.chain; i++) {
-			if (theme.isChainLED) {
-				RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
-				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chainled);
-			} else {
-				RL_chains[i].findViewById(R.id.버튼).setBackground(theme.chain);
-				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
-			}
-		}
-		
-		chainInit();
-		
-		IV_prev.setBackground(theme.xml_prev);
-		IV_play.setBackground(theme.xml_play);
-		IV_next.setBackground(theme.xml_next);
-		
-		CB_pressedPadShow.setTextColor(theme.setting_btn);
-		CB_LED.setTextColor(theme.setting_btn);
-		CB_autoPlay.setTextColor(theme.setting_btn);
-		CB_traceLog.setTextColor(theme.setting_btn);
-		CB_record.setTextColor(theme.setting_btn);
-		
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			CB_pressedPadShow.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_LED.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_autoPlay.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_traceLog.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_record.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		}
-		
-	}
 	
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
@@ -734,7 +673,7 @@ public class Play extends BaseActivity {
 				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonX, buttonY));
 				
 				final int finalI = i;
-				RL_chains[i].findViewById(R.id.버튼).setOnClickListener(new View.OnClickListener() {
+				RL_chains[i].findViewById(R.id.touchView).setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						chainChange(finalI);
@@ -747,6 +686,76 @@ public class Play extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		
+		updateDriver();
+		
+		skin_set();
+	}
+	
+	void skin_set() {
+		log("[12] skin_set");
+		IV_background.setImageDrawable(theme.playbg);
+		for (int i = 0; i < unipack.buttonX; i++)
+			for (int j = 0; j < unipack.buttonY; j++) {
+				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
+				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
+			}
+		
+		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
+			for (int i = 0; i < unipack.buttonX; i++)
+				for (int j = 0; j < unipack.buttonY; j++)
+					RL_btns[i][j].findViewById(R.id.phantom).setBackground(theme.phantom);
+			
+			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.phantom_ != null) {
+				int x = unipack.buttonX / 2 - 1;
+				int y = unipack.buttonY / 2 - 1;
+				
+				RL_btns[x][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
+				
+				RL_btns[x + 1][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
+				RL_btns[x + 1][y].findViewById(R.id.phantom).setRotation(270);
+				
+				RL_btns[x][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
+				RL_btns[x][y + 1].findViewById(R.id.phantom).setRotation(90);
+				
+				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
+				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setRotation(180);
+			}
+		}
+		
+		for (int i = 0; i < unipack.chain; i++) {
+			if (theme.isChainLED) {
+				RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
+				RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chainled);
+			} else {
+				RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chain);
+				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
+			}
+		}
+		
+		chainInit();
+		
+		IV_prev.setBackground(theme.xml_prev);
+		IV_play.setBackground(theme.xml_play);
+		IV_next.setBackground(theme.xml_next);
+		
+		CB_pressedPadShow.setTextColor(theme.setting_btn);
+		CB_LED.setTextColor(theme.setting_btn);
+		CB_autoPlay.setTextColor(theme.setting_btn);
+		CB_traceLog.setTextColor(theme.setting_btn);
+		CB_record.setTextColor(theme.setting_btn);
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			CB_pressedPadShow.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_LED.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_autoPlay.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_traceLog.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+			CB_record.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		}
+		
+	}
+	
+	
+	void updateDriver(){
 		Launchpad.onConnectionEventListener = new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 			@Override
 			public void onConnected() {
@@ -794,8 +803,6 @@ public class Play extends BaseActivity {
 		};
 		Launchpad.updateDriver();
 		showWatermark();
-		
-		skin_set();
 	}
 	
 	// ========================================================================================= LEDTask
@@ -1678,7 +1685,7 @@ public class Play extends BaseActivity {
 			}
 		}, 1000);
 		
-		if (loaded)
+		if (unipackLoaded)
 			UIManager.showAds(Play.this);
 	}
 }
