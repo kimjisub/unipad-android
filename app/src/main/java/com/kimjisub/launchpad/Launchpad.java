@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.LaunchpadColor;
+import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
 import static com.kimjisub.launchpad.Launchpad.midiDevice.MK2;
@@ -44,6 +45,7 @@ public class Launchpad extends BaseActivity {
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
 	
+	static LaunchpadDriver.DriverRef driver = null;
 	static midiDevice device = S;
 	static int mode = 0;
 	
@@ -217,15 +219,19 @@ public class Launchpad extends BaseActivity {
 		switch (VL_launchpad[num].getId()) {
 			case R.id.s:
 				device = S;
+				driver = new LaunchpadDriver.LaunchpadS();
 				break;
 			case R.id.mk2:
 				device = MK2;
+				driver = new LaunchpadDriver.LaunchpadMK2();
 				break;
 			case R.id.pro:
 				device = Pro;
+				driver = new LaunchpadDriver.LaunchpadPRO();
 				break;
 			case R.id.piano:
 				device = Piano;
+				driver = new LaunchpadDriver.Piano();
 				break;
 		}
 		
