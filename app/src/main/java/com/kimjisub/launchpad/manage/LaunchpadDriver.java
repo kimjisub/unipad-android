@@ -4,6 +4,31 @@ public class LaunchpadDriver {
 	
 	public static abstract class DriverRef {
 		
+		
+		// ================================================================================= OnGetSignalListener
+		
+		private OnConnectionEventListener onConnectionEventListener = null;
+		
+		public interface OnConnectionEventListener {
+			void onConnected();
+			void onDisconnected();
+		}
+		
+		public DriverRef setOnConnectionEventListener(OnConnectionEventListener listener) {
+			onConnectionEventListener = listener;
+			return this;
+		}
+		
+		public void onConnected() {
+			if (onConnectionEventListener != null)
+				onConnectionEventListener.onConnected();
+		}
+		
+		public void onDisconnected() {
+			if (onConnectionEventListener != null)
+				onConnectionEventListener.onDisconnected();
+		}
+		
 		// ================================================================================= OnGetSignalListener
 		
 		private OnGetSignalListener onGetSignalListener = null;
@@ -51,7 +76,7 @@ public class LaunchpadDriver {
 		private OnSendSignalListener onSendSignalListener = null;
 		
 		public interface OnSendSignalListener {
-			void onSend(int cmd, int sig, int note, int velo);
+			void onSend(final byte cmd, final byte sig, final byte note, final byte velo);
 		}
 		
 		public DriverRef setOnSendSignalListener(OnSendSignalListener listener) {
@@ -59,21 +84,21 @@ public class LaunchpadDriver {
 			return this;
 		}
 		
-		void onSend(int cmd, int sig, int note, int velo) {
+		void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
 			if (onSendSignalListener != null)
 				onSendSignalListener.onSend(cmd, sig, note, velo);
 		}
 		
-		void onSend09(final int note, final int velo) {
-			onSend((byte) 9, (byte) -112, (byte) note, (byte) velo);
-		}
-		
-		void onSend11(final int note, final int velo) {
-			onSend((byte) 11, (byte) -80, (byte) note, (byte) velo);
-		}
-		
 		public void sendSignal(int cmd, int sig, int note, int velo) {
-			onSend(cmd, sig, note, velo);
+			onSend((byte) cmd, (byte) sig, (byte) note, (byte) velo);
+		}
+		
+		public void send09Signal(final int note, final int velo) {
+			sendSignal((byte) 9, (byte) -112, (byte) note, (byte) velo);
+		}
+		
+		public void send11Signal(final int note, final int velo) {
+			sendSignal((byte) 11, (byte) -80, (byte) note, (byte) velo);
 		}
 		
 		public abstract void sendPadLED(int x, int y, int velo);
@@ -82,6 +107,25 @@ public class LaunchpadDriver {
 		
 		public abstract void sendFunctionkeyLED(int f, int velo);
 		
+	}
+	
+	public static class Nothing extends DriverRef {
+		
+		@Override
+		public void getSignal(int cmd, int sig, int note, int velo) {
+		}
+		
+		@Override
+		public void sendPadLED(int x, int y, int velo) {
+		}
+		
+		@Override
+		public void sendFunctionkeyLED(int f, int velo) {
+		}
+		
+		@Override
+		public void sendChainLED(int c, int velo) {
+		}
 	}
 	
 	public static class LaunchpadS extends DriverRef {
@@ -121,7 +165,7 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendPadLED(int x, int y, int velo) {
-			onSend09(x * 16 + y, LaunchpadColor.SCode[velo]);
+			send09Signal(x * 16 + y, LaunchpadColor.SCode[velo]);
 		}
 		
 		@Override
@@ -173,7 +217,7 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendPadLED(int x, int y, int velo) {
-			onSend09(10 * (8 - x) + y + 1, velo);
+			send09Signal(10 * (8 - x) + y + 1, velo);
 		}
 		
 		@Override
@@ -244,7 +288,7 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendPadLED(int x, int y, int velo) {
-			onSend09(10 * (8 - x) + y + 1, velo);
+			send09Signal(10 * (8 - x) + y + 1, velo);
 		}
 		
 		@Override
@@ -259,6 +303,7 @@ public class LaunchpadDriver {
 				sendFunctionkeyLED(c + 8, velo);
 		}
 	}
+	
 	public static class Piano extends DriverRef {
 		@Override
 		public void getSignal(int cmd, int sig, int note, int velo) {
