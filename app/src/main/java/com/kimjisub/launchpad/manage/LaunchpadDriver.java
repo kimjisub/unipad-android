@@ -5,7 +5,9 @@ public class LaunchpadDriver {
 	public static abstract class DriverRef {
 		
 		
-		// ================================================================================= OnGetSignalListener
+		
+		
+		// ================================================================================= OnConnectionEventListener
 		
 		private OnConnectionEventListener onConnectionEventListener = null;
 		
