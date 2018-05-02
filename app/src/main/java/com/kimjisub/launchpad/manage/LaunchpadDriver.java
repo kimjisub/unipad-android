@@ -324,30 +324,44 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void getSignal(int cmd, int sig, int note, int velo) {
+			
+			int x;
+			int y;
 			if (cmd == 9) {
-				int x = 9 - (note / 10);
-				int y = note % 10;
-				
-				if (y >= 1 && y <= 8)
-					onPadTouch(x - 1, y - 1, velo != 0, velo);
-			} else if (cmd == 11) {
-				int x = 9 - (note / 10);
-				int y = note % 10;
-				
-				if (y == 9)
-					onChainTouch(x - 1, velo != 0);
-			}
-			if (cmd == 11 && sig == -80) {
-				if (91 <= note && note <= 98) {
-					onFunctionkeyTouch(note - 91, velo != 0);
+				if (note >= 36 && note <= 67) {
+					x = (67 - note) / 4 + 1;
+					y = 4 - (67 - note) % 4;
+					onPadTouch(x - 1, y - 1, true, velo);
+				} else if (note >= 68 && note <= 99) {
+					x = (99 - note) / 4 + 1;
+					y = 8 - (99 - note) % 4;
+					onPadTouch(x - 1, y - 1, true, velo);
 				}
-			} else if (cmd == 7 && sig == 46 && velo == -9)
-				logRecv("PRO >??");
+				
+			} else if (cmd == 8) {
+				if (note >= 36 && note <= 67) {
+					x = (67 - note) / 4 + 1;
+					y = 4 - (67 - note) % 4;
+					onPadTouch(x - 1, y - 1, false, velo);
+				} else if (note >= 68 && note <= 99) {
+					x = (99 - note) / 4 + 1;
+					y = 8 - (99 - note) % 4;
+					onPadTouch(x - 1, y - 1, false, velo);
+				}
+				
+			}
 		}
 		
 		@Override
 		public void sendPadLED(int x, int y, int velo) {
-			send09Signal(10 * (8 - x) + y + 1, velo);
+			x += 1;
+			y += 1;
+			
+			if (1 <= y && y <= 4) {
+				sendSignal(9, -123, (-4) * x + y + 67, velo);
+			} else if (5 <= y && y <= 8) {
+				sendSignal(9, -123, (-4) * x + y + 95, velo);
+			}
 		}
 		
 		@Override
@@ -356,8 +370,6 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendChainLED(int c, int velo) {
-			if (0 <= c && c <= 7)
-				sendFunctionkeyLED(c + 8, velo);
 		}
 	}
 	

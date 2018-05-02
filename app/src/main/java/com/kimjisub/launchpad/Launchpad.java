@@ -159,6 +159,10 @@ public class Launchpad extends BaseActivity {
 				logRecv("ProductId : " + device.getProductId());
 				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
+					case 8:
+						selectDevice(MidiFighter.value);
+						TV_info.append("prediction : MidiFighter\n");
+						break;
 					case 105:
 						selectDevice(MK2.value);
 						TV_info.append("prediction : MK2\n");
