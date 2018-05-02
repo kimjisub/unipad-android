@@ -255,11 +255,11 @@ public class Play extends BaseActivity {
 			return ret;
 		}
 		
-		void add(int x, int y, int chanel, int color_, int code_) {
+		void add(int x, int y, int chanel, int color, int code) {
 			if (x != -1)
-				btn[x][y][chanel] = new Item(x, y, chanel, color_, code_);
+				btn[x][y][chanel] = new Item(x, y, chanel, color, code);
 			else
-				cir[y][chanel] = new Item(x, y, chanel, color_, code_);
+				cir[y][chanel] = new Item(x, y, chanel, color, code);
 		}
 		
 		void remove(int x, int y, int chanel) {
@@ -1539,19 +1539,15 @@ public class Play extends BaseActivity {
 	
 	void showWatermark() {
 		if (isShowWatermark) {
-			Launchpad.driver.sendFunctionkeyLED(4, 61);
-			Launchpad.driver.sendFunctionkeyLED(5, 40);
-			Launchpad.driver.sendFunctionkeyLED(6, 61);
-			Launchpad.driver.sendFunctionkeyLED(7, 40);
+			for (int i = 4; i <= 7; i++) {
+				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
+				setLED(-1, i);
+			}
 		} else {
-			Launchpad.driver.sendFunctionkeyLED(0, 0);
-			Launchpad.driver.sendFunctionkeyLED(1, 0);
-			Launchpad.driver.sendFunctionkeyLED(2, 0);
-			Launchpad.driver.sendFunctionkeyLED(3, 0);
-			Launchpad.driver.sendFunctionkeyLED(4, 0);
-			Launchpad.driver.sendFunctionkeyLED(5, 0);
-			Launchpad.driver.sendFunctionkeyLED(6, 0);
-			Launchpad.driver.sendFunctionkeyLED(7, 0);
+			for (int i = 4; i <= 7; i++) {
+				colorManager.remove(-1, i, ColorManager.GUIDE);
+				setLED(-1, i);
+			}
 		}
 		
 		chainBtnsRefrash();
