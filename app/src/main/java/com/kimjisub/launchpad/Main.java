@@ -92,6 +92,9 @@ public class Main extends BaseActivity {
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 	
 	
+	final int AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15;
+	
+	
 	void initVar() {
 		initVar(false);
 	}
@@ -645,7 +648,7 @@ public class Main extends BaseActivity {
 				protected String doInBackground(String... params) {
 					
 					autoplay3 = new ArrayList<>();
-					int nextDuration = 0;
+					int nextDuration = 1000;
 					MediaPlayer mplayer = new MediaPlayer();
 					for (Unipack.AutoPlay e : autoplay2) {
 						try {
@@ -659,7 +662,7 @@ public class Main extends BaseActivity {
 									autoplay3.add(e);
 									break;
 								case Unipack.AutoPlay.DELAY:
-									e.d = nextDuration - 5;
+									e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 									autoplay3.add(e);
 									break;
 							}
