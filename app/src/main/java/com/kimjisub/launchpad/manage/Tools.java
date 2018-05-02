@@ -19,6 +19,11 @@ public class Tools {
 			msg = "(null)";
 		Log.e("com.kimjisub.recv", msg);
 	}
+	public static void logSig(String msg) {
+		if (msg == null)
+			msg = "(null)";
+		Log.e("com.kimjisub.sig", msg);
+	}
 
 	public static void logErr(String msg) {
 		if (msg == null)

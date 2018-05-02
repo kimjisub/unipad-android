@@ -252,6 +252,7 @@ public class Main extends BaseActivity {
 		isDoneIntro = true;
 		
 		update();
+		updateDriver();
 	}
 	
 	PackView[] PV_items;
