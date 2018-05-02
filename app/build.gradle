@@ -6,9 +6,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 16
 		targetSdkVersion 26
-		versionCode 56
-		versionName "3.4.0a1"
-		//intro 로딩속도
+		versionCode 57
+		versionName "3.4.0a2"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 	}
