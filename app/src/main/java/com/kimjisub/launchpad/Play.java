@@ -38,6 +38,7 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
+import static com.kimjisub.launchpad.manage.Tools.logRecv;
 
 public class Play extends BaseActivity {
 	
@@ -722,13 +723,16 @@ public class Play extends BaseActivity {
 			}
 		}
 		
-		for (int i = 0; i < unipack.chain; i++) {
-			if (theme.isChainLED) {
-				RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
-				RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chainled);
-			} else {
-				RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chain);
-				RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
+		
+		if (unipack.chain > 1) {
+			for (int i = 0; i < unipack.chain; i++) {
+				if (theme.isChainLED) {
+					RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
+					RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chainled);
+				} else {
+					RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chain);
+					RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
+				}
 			}
 		}
 		
@@ -1465,13 +1469,13 @@ public class Play extends BaseActivity {
 	}
 	
 	void removeChain() {
-		if(unipack.chain > 1)
-		for (int i = 0; i < unipack.chain; i++) {
-			
-			colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
-			setLEDUI(-1, 8 + i);
-			setLEDLaunchpad(-1, 8 + i);
-		}
+		if (unipack.chain > 1)
+			for (int i = 0; i < unipack.chain; i++) {
+				
+				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
+				setLEDUI(-1, 8 + i);
+				setLEDLaunchpad(-1, 8 + i);
+			}
 	}
 	
 	// ========================================================================================= Launchpad Connection
@@ -1525,7 +1529,7 @@ public class Play extends BaseActivity {
 				
 				}
 			});
-	} 
+	}
 	
 	// ========================================================================================= Watermark
 	
@@ -1680,7 +1684,7 @@ public class Play extends BaseActivity {
 		}
 		LEDInit();
 		padInit();
-
+		
 		for (int i = 0; i < 36; i++)
 			Launchpad.driver.sendFunctionkeyLED(i, 0);
 		removeChain();

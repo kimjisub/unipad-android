@@ -27,6 +27,7 @@ import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logRecv;
+import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 public class Launchpad extends BaseActivity {
 	
@@ -313,7 +314,6 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 		
-		
 		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
 	
@@ -327,6 +327,7 @@ public class Launchpad extends BaseActivity {
 			driver.onConnected();
 		}
 		
+		@SuppressLint("DefaultLocale")
 		@Override
 		protected String doInBackground(String... params) {
 			if (!isRun) {
@@ -347,7 +348,7 @@ public class Launchpad extends BaseActivity {
 								int velocity = byteArray[i + 3];
 								
 								publishProgress(cmd, sig, note, velocity);
-								logRecv(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
+								logSig(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
 						} else if (length == -1) {
 							long currTime = System.currentTimeMillis();
