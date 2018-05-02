@@ -1465,6 +1465,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void removeChain() {
+		if(unipack.chain > 1)
 		for (int i = 0; i < unipack.chain; i++) {
 			
 			colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
@@ -1679,16 +1680,11 @@ public class Play extends BaseActivity {
 		}
 		LEDInit();
 		padInit();
-		
-		(new Handler()).postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				for (int i = 0; i < 36; i++)
-					Launchpad.driver.sendFunctionkeyLED(i, 0);
-				removeChain();
-				Launchpad.removeDriverListener(Play.this);
-			}
-		}, 1000);
+
+		for (int i = 0; i < 36; i++)
+			Launchpad.driver.sendFunctionkeyLED(i, 0);
+		removeChain();
+		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded)
 			UIManager.showAds(Play.this);
