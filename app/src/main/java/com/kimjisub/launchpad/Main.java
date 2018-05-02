@@ -972,6 +972,10 @@ public class Main extends BaseActivity {
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
 				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					if (upDown)
+						Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+					else
+						Launchpad.driver.sendPadLED(x, y, 0);
 				}
 				
 				@Override
