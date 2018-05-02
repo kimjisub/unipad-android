@@ -336,11 +336,10 @@ public class Play extends BaseActivity {
 			else
 				Launchpad.driver.sendPadLED(x, y, 0);
 		} else {
-			int c = y - 8;
 			if (Item != null)
-				Launchpad.driver.sendChainLED(c, Item.code);
+				Launchpad.driver.sendFunctionkeyLED(y, Item.code);
 			else
-				Launchpad.driver.sendChainLED(c, 0);
+				Launchpad.driver.sendFunctionkeyLED(y, 0);
 			
 		}
 		
