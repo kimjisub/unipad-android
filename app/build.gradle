@@ -6,8 +6,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 16
 		targetSdkVersion 26
-		versionCode 57
-		versionName "3.4.0a2"
+		versionCode 58
+		versionName "3.4.0a3"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 	}
