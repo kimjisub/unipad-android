@@ -1391,6 +1391,10 @@ public class Play extends BaseActivity {
 					ledTask.addEvent(x, y);
 				
 				autoPlay_checkGuide(x, y);
+				
+				
+				if(e.wormhole != -1)
+					chainChange(e.wormhole);
 			} else {
 				if (soundItem_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);

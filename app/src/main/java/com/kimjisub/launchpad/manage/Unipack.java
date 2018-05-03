@@ -38,13 +38,21 @@ public class Unipack {
 	public static class Sound {
 		public String URL = null;
 		public int loop = -1;
-
-		public int id = -1;
+		public int wormhole = -1;
+		
 		public int num;
+		public int id = -1;
+		
 
 		Sound(String URL, int loop) {
 			this.URL = URL;
 			this.loop = loop;
+		}
+		
+		Sound(String URL, int loop, int wormhole) {
+			this.URL = URL;
+			this.loop = loop;
+			this.wormhole = wormhole;
 		}
 
 		public Sound() {
@@ -236,6 +244,7 @@ public class Unipack {
 							int y;
 							String soundURL;
 							int loop = 0;
+							int wormhole = -1;
 
 							try {
 								if (split.length <= 2)
@@ -245,9 +254,13 @@ public class Unipack {
 								x = Integer.parseInt(split[1]) - 1;
 								y = Integer.parseInt(split[2]) - 1;
 								soundURL = split[3];
-
+								
 								if (split.length >= 5)
 									loop = Integer.parseInt(split[4]) - 1;
+								if (split.length >= 6) {
+									loop = Integer.parseInt(split[4]) - 1;
+									wormhole = Integer.parseInt(split[5]) - 1;
+								}
 
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
 								addErr("keySound : [" + s + "]" + " format is incorrect");
@@ -263,7 +276,7 @@ public class Unipack {
 								addErr("keySound : [" + s + "]" + " y is incorrect");
 							else {
 
-								Sound tmp = new Sound(URL + "/sounds/" + soundURL, loop);
+								Sound tmp = new Sound(URL + "/sounds/" + soundURL, loop, wormhole);
 
 								if (!new File(tmp.URL).isFile()) {
 									addErr("keySound : [" + s + "]" + " sound was not found");
