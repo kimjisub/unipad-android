@@ -179,7 +179,7 @@ public class LaunchpadDriver {
 		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 15)
-				onSend((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) LaunchpadColor.SCode[velo]);
+				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) LaunchpadColor.SCode[velo]);
 		}
 		
 		@Override
@@ -233,7 +233,7 @@ public class LaunchpadDriver {
 		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 15)
-				onSend((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
+				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
 		}
 		
 		@Override
@@ -310,7 +310,7 @@ public class LaunchpadDriver {
 		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 31)
-				onSend((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
+				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
 		}
 		
 		@Override
@@ -357,11 +357,10 @@ public class LaunchpadDriver {
 			x += 1;
 			y += 1;
 			
-			if (1 <= y && y <= 4) {
+			if (1 <= y && y <= 4)
 				sendSignal(9, -123, (-4) * x + y + 67, velo);
-			} else if (5 <= y && y <= 8) {
+			else if (5 <= y && y <= 8)
 				sendSignal(9, -123, (-4) * x + y + 95, velo);
-			}
 		}
 		
 		@Override
