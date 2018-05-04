@@ -169,26 +169,24 @@ public class Main extends BaseActivity {
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		new TedPermission(Main.this)
+
+		TedPermission.with(this)
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
 					UIManager.initAds(Main.this);
 					(handler = new Handler()).postDelayed(runnable, 1000);
 				}
-				
+
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
 					Toast.makeText(Main.this, lang(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
 					finish();
 				}
-				
-				
 			})
+			.setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
-		
 	}
 	
 	Runnable runnable = new Runnable() {
