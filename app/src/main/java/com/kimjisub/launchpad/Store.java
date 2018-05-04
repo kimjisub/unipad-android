@@ -103,17 +103,12 @@ public class Store extends BaseActivity {
 					String[] infoContents = new String[]{
 						(new DecimalFormat("#,##0")).format(d.downloadCount)
 					};
-					@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-					};
-					int[] btnColors = new int[]{
-					};
 					
 					final PackView packView = new PackView(Store.this)
 						.setFlagColor(isDownloaded ? getResources().getColor(R.color.green) : getResources().getColor(R.color.red))
 						.setTitle(d.title)
 						.setSubTitle(d.producerName)
 						.setInfos(infoTitles, infoContents)
-						.setBtns(btnTitles, btnColors)
 						.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
 						.setOptionBools(d.isLED, d.isAutoPlay)
 						.setPlayImageShow(false)
@@ -135,15 +130,6 @@ public class Store extends BaseActivity {
 							
 							@Override
 							public void onFunctionBtnClick(PackView v, int index) {
-								switch (index) {
-									case 0:
-										//deleteUnipack(unipack);
-										//v.toggleDetail(2);
-										break;
-									case 1:
-										//editUnipack(unipack);
-										break;
-								}
 							}
 						})
 						.setStatus(!isDownloaded);
