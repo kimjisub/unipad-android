@@ -358,9 +358,9 @@ public class LaunchpadDriver {
 			y += 1;
 			
 			if (1 <= y && y <= 4)
-				sendSignal(9, -123, (-4) * x + y + 67, velo);
+				sendSignal(9, -110, (-4) * x + y + 67, velo);
 			else if (5 <= y && y <= 8)
-				sendSignal(9, -123, (-4) * x + y + 95, velo);
+				sendSignal(9, -110, (-4) * x + y + 95, velo);
 		}
 		
 		@Override
