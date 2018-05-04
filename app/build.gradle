@@ -44,7 +44,7 @@ dependencies {
 	implementation 'com.google.firebase:firebase-ads:11.8.0'
 	implementation 'com.azoft.carousellayoutmanager:carousel:1.2.1'
 	implementation 'com.github.clans:fab:1.6.4'
-	implementation 'com.github.ParkSangGwon:TedPermission:v1.0.6'
+	implementation 'gun0912.ted:tedpermission:2.1.0'
 	implementation 'com.android.support:multidex:1.0.2'
 	api project(':design')
 	testImplementation 'junit:junit:4.12'
