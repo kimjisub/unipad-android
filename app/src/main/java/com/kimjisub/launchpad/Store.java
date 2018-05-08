@@ -26,7 +26,6 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
-import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 public class Store extends BaseActivity {
 	LinearLayout LL_list;
@@ -98,14 +97,14 @@ public class Store extends BaseActivity {
 					
 					
 					@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-						getResources().getString(R.string.downloadCount)
+						lang(R.string.downloadCount)
 					};
 					String[] infoContents = new String[]{
 						(new DecimalFormat("#,##0")).format(d.downloadCount)
 					};
 					
 					final PackView packView = new PackView(Store.this)
-						.setFlagColor(isDownloaded ? getResources().getColor(R.color.green) : getResources().getColor(R.color.red))
+						.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 						.setTitle(d.title)
 						.setSubTitle(d.producerName)
 						.setInfos(infoTitles, infoContents)
@@ -136,10 +135,10 @@ public class Store extends BaseActivity {
 					
 					
 					final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-					int left = dpToPx(Store.this, 16);
+					int left = dpToPx(16);
 					int top = 0;
-					int right = dpToPx(Store.this, 16);
-					int bottom = dpToPx(Store.this, 10);
+					int right = dpToPx(16);
+					int bottom = dpToPx(10);
 					lp.setMargins(left, top, right, bottom);
 					PV_items.add(packView);
 					LL_list.addView(packView, 0, lp);
@@ -172,17 +171,17 @@ public class Store extends BaseActivity {
 	}
 	
 	void addErrorItem() {
-		String title = lang(Store.this, R.string.errOccur);
-		String subTitle = lang(Store.this, R.string.UnableToAccessServer);
+		String title = lang(R.string.errOccur);
+		String subTitle = lang(R.string.UnableToAccessServer);
 		
 		PackView packView = PackView.errItem(Store.this, title, subTitle, null);
 		
 		
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = dpToPx(Store.this, 16);
+		int left = dpToPx(16);
 		int top = 0;
-		int right = dpToPx(Store.this, 16);
-		int bottom = dpToPx(Store.this, 10);
+		int right = dpToPx(16);
+		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
 		LL_list.addView(packView, lp);
 	}
@@ -192,7 +191,7 @@ public class Store extends BaseActivity {
 		log("itemClicked(" + i + ")");
 		
 		v.togglePlay(true);
-		v.updateFlagColor(getResources().getColor(R.color.dark5));
+		v.updateFlagColor(color(R.color.dark5));
 		v.setStatus(false);
 		v.setPlayText("0%");
 		
@@ -309,14 +308,14 @@ public class Store extends BaseActivity {
 					v.setPlayText((int) ((float) progress[1] / fileSize * 100) + "%");
 				} else if (progress[0] == 1) {//분석중
 					v.setPlayText(lang(R.string.analyzing));
-					v.updateFlagColor(getResources().getColor(R.color.orange));
+					v.updateFlagColor(color(R.color.orange));
 				} else if (progress[0] == -1) {//실패
 					v.setPlayText(lang(R.string.failed));
-					v.updateFlagColor(getResources().getColor(R.color.red));
+					v.updateFlagColor(color(R.color.red));
 					v.setStatus(true);
 				} else if (progress[0] == 2) {//완료
 					v.setPlayText("");
-					v.updateFlagColor(getResources().getColor(R.color.green));
+					v.updateFlagColor(color(R.color.green));
 					v.togglePlay(false);
 				}
 			}

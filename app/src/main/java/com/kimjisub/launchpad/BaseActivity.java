@@ -4,17 +4,120 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.kimjisub.launchpad.manage.Billing;
+import com.kimjisub.launchpad.manage.SaveSetting;
 
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
 
 public class BaseActivity extends AppCompatActivity {
+	
+	
+	//========================================================================================== Function
+	
+	public static int Scale_PaddingWidth = 0;
+	public static int Scale_PaddingHeight = 0;
+	public static int Scale_Width = 0;
+	public static int Scale_Height = 0;
+	
+	private static InterstitialAd interstitialAd;
+	
+	public void showAds() {
+		
+		if (!Billing.isPremium) {
+			long prevTime = SaveSetting.PrevAdsShowTime.load(BaseActivity.this);
+			long currTime = System.currentTimeMillis();
+			
+			if ((currTime < prevTime) || currTime - prevTime >= 30000) {
+				SaveSetting.PrevAdsShowTime.save(this, currTime);
+				
+				if (interstitialAd.isLoaded()) {
+					interstitialAd.show();
+					interstitialAd = new InterstitialAd(BaseActivity.this);
+					interstitialAd.setAdUnitId(Billing.ADUNITID);
+					interstitialAd.loadAd(new AdRequest.Builder().build());
+				} else {
+					interstitialAd.setAdListener(new AdListener() {
+						public void onAdLoaded() {
+							interstitialAd.show();
+							interstitialAd = new InterstitialAd(BaseActivity.this);
+							interstitialAd.setAdUnitId(Billing.ADUNITID);
+							interstitialAd.loadAd(new AdRequest.Builder().build());
+						}
+					});
+				}
+			}
+		}
+	}
+	
+	public void initAds() {
+		if (!Billing.isPremium) {
+			interstitialAd = new InterstitialAd(BaseActivity.this);
+			interstitialAd.setAdUnitId(Billing.ADUNITID);
+			interstitialAd.loadAd(new AdRequest.Builder().build());
+		}
+	}
+	
+	public void showDialog(String title, String content) {
+		new AlertDialog.Builder(BaseActivity.this)
+			.setTitle(title)
+			.setMessage(content)
+			.setPositiveButton(lang(R.string.accept), null)
+			.show();
+	}
+	
+	public int pxToDp(int pixel) {
+		float dp = 0;
+		try {
+			DisplayMetrics metrics = getResources().getDisplayMetrics();
+			dp = pixel / (metrics.densityDpi / 160f);
+		} catch (Exception e) {
+		}
+		return (int) dp;
+	}
+	
+	public int dpToPx(float dp) {
+		DisplayMetrics metrics = getResources().getDisplayMetrics();
+		float px = dp * (metrics.densityDpi / 160f);
+		return Math.round(px);
+	}
+	
+	public String lang(int id) {
+		return getResources().getString(id);
+	}
+	
+	public static String lang(Context context, int id) {
+		return context.getResources().getString(id);
+	}
+	
+	
+	public int color(int id) {
+		return getResources().getColor(id);
+	}
+	public static int color(Context context, int id) {
+		return context.getResources().getColor(id);
+	}
+	
+	public Drawable drawable(int id) {
+		return getResources().getDrawable(id);
+	}
+	public static Drawable drawable(Context context, int id) {
+		return context.getResources().getDrawable(id);
+	}
+	
+	//========================================================================================== Activity
 	
 	public static ArrayList<Activity> activityList = new ArrayList();
 	
@@ -125,14 +228,5 @@ public class BaseActivity extends AppCompatActivity {
 				}
 			})
 			.show();
-	}
-	
-	
-	public String lang(int id) {
-		return (BaseActivity.this).getResources().getString(id);
-	}
-	
-	public static String lang(Context context, int id) {
-		return context.getResources().getString(id);
 	}
 }

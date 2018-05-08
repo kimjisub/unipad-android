@@ -111,7 +111,7 @@ public class Theme extends BaseActivity {
 				holder.theme_version.setText(theme.version);
 				holder.theme_author.setText(theme.author);
 			} catch (Exception ignore) {
-				holder.theme_icon.setBackground(getResources().getDrawable(R.drawable.theme_add));
+				holder.theme_icon.setBackground(drawable(R.drawable.theme_add));
 				holder.theme_version.setText(lang(R.string.themeDownload));
 			}
 		}

@@ -31,14 +31,12 @@ import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
-import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
-import static com.kimjisub.launchpad.manage.Tools.logRecv;
 
 public class Play extends BaseActivity {
 	
@@ -535,11 +533,11 @@ public class Play extends BaseActivity {
 		int buttonSizeY;
 		
 		if (unipack.squareButton) {
-			buttonSizeX = buttonSizeY = Math.min(UIManager.Scale[UIManager.PaddingHeight] / unipack.buttonX, UIManager.Scale[UIManager.PaddingWidth] / unipack.buttonY);
+			buttonSizeX = buttonSizeY = Math.min(Scale_PaddingHeight / unipack.buttonX, Scale_PaddingWidth / unipack.buttonY);
 			
 		} else {
-			buttonSizeX = UIManager.Scale[UIManager.Width] / unipack.buttonY;
-			buttonSizeY = UIManager.Scale[UIManager.Height] / unipack.buttonX;
+			buttonSizeX = Scale_Width / unipack.buttonY;
+			buttonSizeY = Scale_Height / unipack.buttonX;
 		}
 		
 		
@@ -1646,7 +1644,7 @@ public class Play extends BaseActivity {
 		if (UILoaded)
 			updateDriver();
 		
-		if (UIManager.Scale[0] == 0) {
+		if (Scale_PaddingHeight == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
 			requestRestart(Play.this);
 		}
@@ -1690,6 +1688,6 @@ public class Play extends BaseActivity {
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded)
-			UIManager.showAds(Play.this);
+			showAds();
 	}
 }
