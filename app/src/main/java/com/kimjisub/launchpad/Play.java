@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.OptionManager;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -82,7 +83,6 @@ public class Play extends BaseActivity {
 	Unipack unipack;
 	boolean unipackLoaded = false;
 	boolean UILoaded = false;
-	
 	
 	RelativeLayout[][] RL_btns;
 	RelativeLayout[] RL_chains;
@@ -402,6 +402,7 @@ public class Play extends BaseActivity {
 				CB_LED.setChecked(true);
 				CB_pressedPadShow.setChecked(false);
 			}
+			
 			isPressedShow = CB_pressedPadShow.isChecked();
 			isLEDEvent = CB_LED.isChecked();
 			isTraceLog = CB_traceLog.isChecked();

@@ -13,9 +13,6 @@ public class OptionManager {
 		
 		
 		//================================================================================== constructor
-		public BoolManager(boolean bool) {
-			this.bool = bool;
-		}
 		
 		public BoolManager(boolean bool, OnValueChangeListener listener) {
 			this.bool = bool;
@@ -58,23 +55,23 @@ public class OptionManager {
 	
 	private Map<String, BoolManager> boolManagers = new HashMap<>();
 	
-	void add(String key, BoolManager.OnValueChangeListener listener) {
-		boolManagers.put(key, new BoolManager(false, listener));
+	public void add(String key, boolean bool, BoolManager.OnValueChangeListener listener) {
+		boolManagers.put(key, new BoolManager(bool, listener));
 	}
 	
-	void addOnValueChangeListener(String key, BoolManager.OnValueChangeListener listener){
+	public void addOnValueChangeListener(String key, BoolManager.OnValueChangeListener listener){
 		boolManagers.get(key).addOnValueChangeListener(listener);
 	}
 	
-	void set(String key, boolean bool) {
+	public void set(String key, boolean bool) {
 		boolManagers.get(key).set(bool);
 	}
-	void toggle(String key) {
+	public void toggle(String key) {
 		BoolManager boolManager = boolManagers.get(key);
 		boolManager.set(!boolManager.get());
 	}
 	
-	boolean get(String key) {
+	public boolean get(String key) {
 		return boolManagers.get(key).get();
 	}
 	
