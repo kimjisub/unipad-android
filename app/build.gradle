@@ -39,6 +39,7 @@ dependencies {
 	implementation 'com.google.android.gms:play-services-ads:11.8.0'
 	implementation 'com.google.android.gms:play-services-identity:11.8.0'
 	implementation 'com.google.android.gms:play-services-gcm:11.8.0'
+	implementation 'com.google.firebase:firebase-core:11.8.0'
 	implementation 'com.google.firebase:firebase-database:11.8.0'
 	implementation 'com.google.firebase:firebase-messaging:11.8.0'
 	implementation 'com.google.firebase:firebase-ads:11.8.0'
