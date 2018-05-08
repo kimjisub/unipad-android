@@ -6,28 +6,31 @@ public class Tools {
 	public static void log(String msg) {
 		if (msg == null)
 			msg = "(null)";
-		Log.e("com.kimjisub.log", msg);
+		Log.e("com.kimjisub._log", msg);
 	}
-
 	public static void logActivity(String msg) {
 		if (msg == null)
 			msg = "(null)";
-		Log.e("com.kimjisub.activity", msg);
+		Log.e("com.kimjisub._activity", msg);
+	}
+	public static void logFirebase(String msg) {
+		if (msg == null)
+			msg = "(null)";
+		Log.e("com.kimjisub._firebase", msg);
 	}
 	public static void logRecv(String msg) {
 		if (msg == null)
 			msg = "(null)";
-		Log.e("com.kimjisub.recv", msg);
+		Log.e("com.kimjisub._recv", msg);
 	}
 	public static void logSig(String msg) {
 		if (msg == null)
 			msg = "(null)";
-		Log.e("com.kimjisub.sig", msg);
+		Log.e("com.kimjisub._sig", msg);
 	}
-
 	public static void logErr(String msg) {
 		if (msg == null)
 			msg = "(null)";
-		Log.e("com.kimjisub.err", msg);
+		Log.e("com.kimjisub._err", msg);
 	}
 }
