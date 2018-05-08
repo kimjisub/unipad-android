@@ -248,7 +248,7 @@ public class Setting extends PreferenceActivity {
 			
 			title.setText(item.getTitle());
 			summary.setText(item.getSummuary());
-			icon.setBackground(getApplicationContext().getResources().getDrawable(item.getIcon()));
+			icon.setBackground(BaseActivity.drawable(getApplicationContext(), item.getIcon()));
 			return convertView;
 		}
 	}

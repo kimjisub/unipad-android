@@ -38,7 +38,6 @@ import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SaveSetting;
-import com.kimjisub.launchpad.manage.UIManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import org.json.JSONObject;
@@ -54,8 +53,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static com.kimjisub.launchpad.manage.UIManager.dpToPx;
 
 
 public class Main extends BaseActivity {
@@ -119,8 +116,8 @@ public class Main extends BaseActivity {
 		
 		// animation
 		if (onFirst) {
-			int color1 = getResources().getColor(R.color.red);
-			int color2 = getResources().getColor(R.color.orange);
+			int color1 = color(R.color.red);
+			int color2 = color(R.color.orange);
 			VA_floatingAnimation = ObjectAnimator.ofObject(new ArgbEvaluator(), color2, color1);
 			VA_floatingAnimation.setDuration(300);
 			VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
@@ -155,7 +152,7 @@ public class Main extends BaseActivity {
 			@Override
 			public void onServiceConnected(Billing v) {
 				if (Billing.isPremium)
-					TV_version.setTextColor(getResources().getColor(R.color.orange));
+					TV_version.setTextColor(color(R.color.orange));
 			}
 			
 			@Override
@@ -174,7 +171,7 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					UIManager.initAds(Main.this);
+					initAds();
 					(handler = new Handler()).postDelayed(runnable, 1000);
 				}
 
@@ -193,7 +190,7 @@ public class Main extends BaseActivity {
 		@Override
 		public void run() {
 			SaveSetting.IsUsingSDCard.load(Main.this);
-			UIManager.showAds(Main.this);
+			showAds();
 			
 			RL_intro.setVisibility(View.GONE);
 			startMain();
@@ -328,20 +325,20 @@ public class Main extends BaseActivity {
 							
 							
 							if (unipack.ErrorDetail == null) {
-								flagColor = getResources().getColor(R.color.skyblue);
+								flagColor = color(R.color.skyblue);
 							} else if (unipack.CriticalError) {
-								flagColor = getResources().getColor(R.color.red);
-								title = getResources().getString(R.string.errOccur);
+								flagColor = color(R.color.red);
+								title = lang(R.string.errOccur);
 								producerName = unipack.URL;
 							} else {
-								flagColor = getResources().getColor(R.color.orange);
+								flagColor = color(R.color.orange);
 							}
 							
 							
 							@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-								getResources().getString(R.string.scale),
-								getResources().getString(R.string.chainCount),
-								getResources().getString(R.string.capacity)
+								lang(R.string.scale),
+								lang(R.string.chainCount),
+								lang(R.string.capacity)
 							};
 							String[] infoContents = new String[]{
 								unipack.buttonX + " x " + unipack.buttonY,
@@ -349,12 +346,12 @@ public class Main extends BaseActivity {
 								FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
 							};
 							@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-								getResources().getString(R.string.delete),
-								getResources().getString(R.string.edit)
+								lang(R.string.delete),
+								lang(R.string.edit)
 							};
 							int[] btnColors = new int[]{
-								getResources().getColor(R.color.red),
-								getResources().getColor(R.color.orange)
+								color(R.color.red),
+								color(R.color.orange)
 							};
 							
 							final PackView packView = new PackView(Main.this)
@@ -380,10 +377,10 @@ public class Main extends BaseActivity {
 									
 									@Override
 									public void onPlayClick(PackView v) {
-										UIManager.Scale[UIManager.PaddingWidth] = LL_paddingScale.getWidth();
-										UIManager.Scale[UIManager.PaddingHeight] = LL_paddingScale.getHeight();
-										UIManager.Scale[UIManager.Width] = LL_scale.getWidth();
-										UIManager.Scale[UIManager.Height] = LL_scale.getHeight();
+										Scale_PaddingWidth = LL_paddingScale.getWidth();
+										Scale_PaddingHeight = LL_paddingScale.getHeight();
+										Scale_Width = LL_scale.getWidth();
+										Scale_Height = LL_scale.getHeight();
 										
 										Intent intent = new Intent(Main.this, Play.class);
 										intent.putExtra("URL", url);
@@ -407,10 +404,10 @@ public class Main extends BaseActivity {
 								@Override
 								public void run() {
 									final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-									int left = dpToPx(Main.this, 16);
+									int left = dpToPx(16);
 									int top = 0;
-									int right = dpToPx(Main.this, 16);
-									int bottom = dpToPx(Main.this, 10);
+									int right = dpToPx(16);
+									int bottom = dpToPx(10);
 									lp.setMargins(left, top, right, bottom);
 									LL_list.addView(packView, lp);
 									Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
@@ -462,8 +459,8 @@ public class Main extends BaseActivity {
 	}
 	
 	void addErrorItem() {
-		String title = lang(Main.this, R.string.unipackNotFound);
-		String subTitle = lang(Main.this, R.string.clickToAddUnipack);
+		String title = lang(R.string.unipackNotFound);
+		String subTitle = lang(R.string.clickToAddUnipack);
 		
 		PackView packView = PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
 			@Override
@@ -486,10 +483,10 @@ public class Main extends BaseActivity {
 		
 		
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = dpToPx(Main.this, 16);
+		int left = dpToPx(16);
 		int top = 0;
-		int right = dpToPx(Main.this, 16);
-		int bottom = dpToPx(Main.this, 10);
+		int right = dpToPx(16);
+		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
 		LL_list.addView(packView, lp);
 	}
@@ -509,12 +506,12 @@ public class Main extends BaseActivity {
 				LL_testView.removeAllViews();
 				
 				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-					getResources().getString(R.string.delete),
-					getResources().getString(R.string.cancel)
+					lang(R.string.delete),
+					lang(R.string.cancel)
 				};
 				int[] btnColors = new int[]{
-					getResources().getColor(R.color.red),
-					getResources().getColor(R.color.text3)
+					color(R.color.red),
+					color(R.color.text3)
 				};
 				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
@@ -551,12 +548,12 @@ public class Main extends BaseActivity {
 				LL_testView.removeAllViews();
 				
 				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-					getResources().getString(R.string.edit),
-					getResources().getString(R.string.cancel)
+					lang(R.string.edit),
+					lang(R.string.cancel)
 				};
 				int[] btnColors = new int[]{
-					getResources().getColor(R.color.orange),
-					getResources().getColor(R.color.text3)
+					color(R.color.orange),
+					color(R.color.text3)
 				};
 				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
@@ -750,9 +747,9 @@ public class Main extends BaseActivity {
 			PackView packView = PV_items[i];
 			if (packView != null) {
 				if (n != i)
-					packView.togglePlay(false, getResources().getColor(R.color.red), flagColors[i]);
+					packView.togglePlay(false, color(R.color.red), flagColors[i]);
 				else
-					packView.togglePlay(getResources().getColor(R.color.red), flagColors[i]);
+					packView.togglePlay(color(R.color.red), flagColors[i]);
 			}
 		}
 	}
@@ -795,12 +792,12 @@ public class Main extends BaseActivity {
 					if (file.canRead())
 						getDir(mPath.get(position));
 					else
-						UIManager.showDialog(Main.this, file.getName(), lang(R.string.cantReadFolder));
+						showDialog(file.getName(), lang(R.string.cantReadFolder));
 				} else {
 					if (file.canRead())
 						loadUnipack(file.getPath());
 					else
-						UIManager.showDialog(Main.this, file.getName(), lang(R.string.cantReadFile));
+						showDialog(file.getName(), lang(R.string.cantReadFile));
 					
 					
 				}
@@ -912,7 +909,7 @@ public class Main extends BaseActivity {
 			@Override
 			protected void onPostExecute(String result) {
 				update();
-				UIManager.showDialog(Main.this, msg1, msg2);
+				showDialog(msg1, msg2);
 				progressDialog.dismiss();
 				super.onPostExecute(result);
 			}
