@@ -142,6 +142,7 @@ public class Main extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
+		initAds();
 		
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
@@ -171,7 +172,7 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					initAds();
+					showAds();
 					(handler = new Handler()).postDelayed(runnable, 1000);
 				}
 
@@ -190,7 +191,6 @@ public class Main extends BaseActivity {
 		@Override
 		public void run() {
 			SaveSetting.IsUsingSDCard.load(Main.this);
-			showAds();
 			
 			RL_intro.setVisibility(View.GONE);
 			startMain();
