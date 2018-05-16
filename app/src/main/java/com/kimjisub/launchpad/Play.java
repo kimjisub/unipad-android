@@ -550,92 +550,60 @@ public class Play extends BaseActivity {
 		}
 		
 		
-		CB_pressedPadShow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				padInit();
-				isPressedShow = isChecked;
-			}
+		CB_pressedPadShow.setOnCheckedChangeListener((buttonView, isChecked) -> {
+			padInit();
+			isPressedShow = isChecked;
 		});
-		CB_LED.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (unipack.isKeyLED) {
-					isLEDEvent = isChecked;
-					if (!isLEDEvent)
-						LEDInit();
-				}
-			}
-		});
-		CB_autoPlay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					autoPlayTask = new AutoPlayTask();
-					try {
-						autoPlayTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-					} catch (Exception e) {
-						buttonView.setChecked(false);
-						e.printStackTrace();
-					}
-				} else {
-					autoPlayTask.loop = false;
-					padInit();
+		CB_LED.setOnCheckedChangeListener((buttonView, isChecked) -> {
+			if (unipack.isKeyLED) {
+				isLEDEvent = isChecked;
+				if (!isLEDEvent)
 					LEDInit();
-					autoPlay_removeGuide();
+			}
+		});
+		CB_autoPlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
+			if (isChecked) {
+				autoPlayTask = new AutoPlayTask();
+				try {
+					autoPlayTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+				} catch (Exception e) {
+					buttonView.setChecked(false);
+					e.printStackTrace();
 				}
+			} else {
+				autoPlayTask.loop = false;
+				padInit();
+				LEDInit();
+				autoPlay_removeGuide();
 			}
 		});
-		CB_traceLog.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				isTraceLog = isChecked;
+		CB_traceLog.setOnCheckedChangeListener((buttonView, isChecked) -> isTraceLog = isChecked);
+		CB_traceLog.setOnLongClickListener(v -> {
+			
+			traceLog_init();
+			Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
+			return false;
+		});
+		CB_record.setOnCheckedChangeListener((buttonView, isChecked) -> {
+			isRecord = isChecked;
+			if (isRecord) {
+				rec_prevEventMS = System.currentTimeMillis();
+				rec_log = "c " + (chain + 1);
+			} else {
+				putClipboard(rec_log);
+				Toast.makeText(Play.this, lang(R.string.copied), Toast.LENGTH_SHORT).show();
+				rec_log = "";
 			}
 		});
-		CB_traceLog.setOnLongClickListener(new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				
-				traceLog_init();
-				Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
-				return false;
-			}
+		IV_prev.setOnClickListener(v -> autoPlay_prev());
+		IV_play.setOnClickListener(v -> {
+			if (autoPlayTask.isPlaying)
+				autoPlay_stop();
+			else
+				autoPlay_play();
 		});
-		CB_record.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				isRecord = isChecked;
-				if (isRecord) {
-					rec_prevEventMS = System.currentTimeMillis();
-					rec_log = "c " + (chain + 1);
-				} else {
-					putClipboard(rec_log);
-					Toast.makeText(Play.this, lang(R.string.copied), Toast.LENGTH_SHORT).show();
-					rec_log = "";
-				}
-			}
-		});
-		IV_prev.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				autoPlay_prev();
-			}
-		});
-		IV_play.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (autoPlayTask.isPlaying)
-					autoPlay_stop();
-				else
-					autoPlay_play();
-			}
-		});
-		IV_next.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				autoPlay_after();
-			}
-		});
+		IV_next.setOnClickListener(v -> autoPlay_after());
+		BTN_quit.setOnClickListener(v -> finish());
 		
 		
 		LL_pads.removeAllViews();
@@ -653,19 +621,16 @@ public class Play extends BaseActivity {
 				
 				final int finalI = i;
 				final int finalJ = j;
-				RL_btn.setOnTouchListener(new View.OnTouchListener() {
-					@Override
-					public boolean onTouch(View v, MotionEvent event) {
-						switch (event.getAction()) {
-							case MotionEvent.ACTION_DOWN:
-								padTouch(finalI, finalJ, true);
-								break;
-							case MotionEvent.ACTION_UP:
-								padTouch(finalI, finalJ, false);
-								break;
-						}
-						return false;
+				RL_btn.setOnTouchListener((v, event) -> {
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							padTouch(finalI, finalJ, true);
+							break;
+						case MotionEvent.ACTION_UP:
+							padTouch(finalI, finalJ, false);
+							break;
 					}
+					return false;
 				});
 				RL_btns[i][j] = RL_btn;
 				row.addView(RL_btn);
@@ -1495,21 +1460,18 @@ public class Play extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					(new Handler()).postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							Launchpad.driver.sendFunctionkeyLED(0, 0);
-							Launchpad.driver.sendFunctionkeyLED(1, 0);
-							Launchpad.driver.sendFunctionkeyLED(2, 0);
-							Launchpad.driver.sendFunctionkeyLED(3, 0);
-							Launchpad.driver.sendFunctionkeyLED(4, 0);
-							Launchpad.driver.sendFunctionkeyLED(5, 0);
-							Launchpad.driver.sendFunctionkeyLED(6, 0);
-							Launchpad.driver.sendFunctionkeyLED(7, 0);
-							
-							chainChange(chain);
-							showWatermark();
-						}
+					(new Handler()).postDelayed(() -> {
+						Launchpad.driver.sendFunctionkeyLED(0, 0);
+						Launchpad.driver.sendFunctionkeyLED(1, 0);
+						Launchpad.driver.sendFunctionkeyLED(2, 0);
+						Launchpad.driver.sendFunctionkeyLED(3, 0);
+						Launchpad.driver.sendFunctionkeyLED(4, 0);
+						Launchpad.driver.sendFunctionkeyLED(5, 0);
+						Launchpad.driver.sendFunctionkeyLED(6, 0);
+						Launchpad.driver.sendFunctionkeyLED(7, 0);
+						
+						chainChange(chain);
+						showWatermark();
 					}, 3000);
 				}
 				
@@ -1693,19 +1655,9 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	long lastBackMS = 0;
-	
-	@SuppressLint("RtlHardcoded")
 	@Override
 	public void onBackPressed() {
 		toggleOptionWindow();
-		/*if (lastBackMS == 0 || System.currentTimeMillis() - lastBackMS > 2000) {
-			Toast toast = Toast.makeText(Play.this, lang(R.string.pressAgainToGoBack), Toast.LENGTH_SHORT);
-			toast.setGravity(Gravity.RIGHT | Gravity.BOTTOM, 50, 50);
-			toast.show();
-			lastBackMS = System.currentTimeMillis();
-		} else
-			super.onBackPressed();*/
 	}
 	
 	@Override
