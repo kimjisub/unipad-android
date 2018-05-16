@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -1603,11 +1604,13 @@ public class Play extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RBV_optionBlur.setBlurRadius(20 * interpolatedTime);
+					//RBV_optionBlur.setBlurRadius(20 * interpolatedTime);
+					RBV_optionBlur.setAlpha(interpolatedTime);
 					RL_optionWindow.setAlpha(interpolatedTime);
 				}
 			};
 			a.setDuration(200);
+			//a.setInterpolator(AnimationUtils.loadInterpolator(Play.this, android.R.anim.accelerate_decelerate_interpolator));
 			a.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
@@ -1629,11 +1632,13 @@ public class Play extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RBV_optionBlur.setBlurRadius(20 - 20 * interpolatedTime);
+					//RBV_optionBlur.setBlurRadius(20 - 20 * interpolatedTime);
+					RBV_optionBlur.setAlpha(1- interpolatedTime);
 					RL_optionWindow.setAlpha(1 - interpolatedTime);
 				}
 			};
 			a.setDuration(500);
+			//a.setInterpolator(AnimationUtils.loadInterpolator(Play.this, android.R.anim.accelerate_decelerate_interpolator));
 			a.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
@@ -1642,8 +1647,8 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					RBV_optionBlur.setVisibility(View.GONE);
-					RL_optionWindow.setVisibility(View.GONE);
+					RBV_optionBlur.setVisibility(View.INVISIBLE);
+					RL_optionWindow.setVisibility(View.INVISIBLE);
 				}
 				
 				@Override
