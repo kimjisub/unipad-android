@@ -13,11 +13,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -27,9 +29,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.OptionManager;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -57,6 +59,9 @@ public class Play extends BaseActivity {
 	ImageView IV_prev;
 	ImageView IV_play;
 	ImageView IV_next;
+	RealtimeBlurView RBV_optionBlur;
+	RelativeLayout RL_optionWindow;
+	Button BTN_quit;
 	
 	
 	void initVar() {
@@ -74,6 +79,9 @@ public class Play extends BaseActivity {
 		IV_prev = findViewById(R.id.prev);
 		IV_play = findViewById(R.id.play);
 		IV_next = findViewById(R.id.next);
+		RBV_optionBlur = findViewById(R.id.option_blur);
+		RL_optionWindow = findViewById(R.id.option_window);
+		BTN_quit = findViewById(R.id.quit);
 	}
 	
 	// =========================================================================================
@@ -1392,7 +1400,7 @@ public class Play extends BaseActivity {
 				autoPlay_checkGuide(x, y);
 				
 				
-				if(e.wormhole != -1)
+				if (e.wormhole != -1)
 					chainChange(e.wormhole);
 			} else {
 				if (soundItem_get(chain, x, y).loop == -1)
@@ -1621,18 +1629,83 @@ public class Play extends BaseActivity {
 	
 	// ========================================================================================= Activity
 	
+	boolean bool_toggleOptionWindow = false;
+	
+	void toggleOptionWindow() {
+		toggleOptionWindow(bool_toggleOptionWindow = !bool_toggleOptionWindow);
+	}
+	
+	void toggleOptionWindow(boolean bool) {
+		bool_toggleOptionWindow = bool;
+		if (bool) {
+			Animation a = new Animation() {
+				@Override
+				protected void applyTransformation(float interpolatedTime, Transformation t) {
+					RBV_optionBlur.setBlurRadius(20 * interpolatedTime);
+					RL_optionWindow.setAlpha(interpolatedTime);
+				}
+			};
+			a.setDuration(200);
+			a.setAnimationListener(new Animation.AnimationListener() {
+				@Override
+				public void onAnimationStart(Animation animation) {
+					RBV_optionBlur.setVisibility(View.VISIBLE);
+					RL_optionWindow.setVisibility(View.VISIBLE);
+				}
+				
+				@Override
+				public void onAnimationEnd(Animation animation) {
+				}
+				
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+				
+				}
+			});
+			RBV_optionBlur.startAnimation(a);
+		} else {
+			Animation a = new Animation() {
+				@Override
+				protected void applyTransformation(float interpolatedTime, Transformation t) {
+					RBV_optionBlur.setBlurRadius(20 - 20 * interpolatedTime);
+					RL_optionWindow.setAlpha(1 - interpolatedTime);
+				}
+			};
+			a.setDuration(500);
+			a.setAnimationListener(new Animation.AnimationListener() {
+				@Override
+				public void onAnimationStart(Animation animation) {
+				
+				}
+				
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					RBV_optionBlur.setVisibility(View.GONE);
+					RL_optionWindow.setVisibility(View.GONE);
+				}
+				
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+				
+				}
+			});
+			RBV_optionBlur.startAnimation(a);
+		}
+	}
+	
 	long lastBackMS = 0;
 	
 	@SuppressLint("RtlHardcoded")
 	@Override
 	public void onBackPressed() {
-		if (lastBackMS == 0 || System.currentTimeMillis() - lastBackMS > 2000) {
+		toggleOptionWindow();
+		/*if (lastBackMS == 0 || System.currentTimeMillis() - lastBackMS > 2000) {
 			Toast toast = Toast.makeText(Play.this, lang(R.string.pressAgainToGoBack), Toast.LENGTH_SHORT);
 			toast.setGravity(Gravity.RIGHT | Gravity.BOTTOM, 50, 50);
 			toast.show();
 			lastBackMS = System.currentTimeMillis();
 		} else
-			super.onBackPressed();
+			super.onBackPressed();*/
 	}
 	
 	@Override

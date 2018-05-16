@@ -24,3 +24,4 @@
 -keepclassmembers class com.kimjisub.launchpad.fb.** {
   *;
 }
+-keep class android.support.v8.renderscript.** { *; }
