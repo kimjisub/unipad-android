@@ -178,6 +178,7 @@
 		    android:background="@drawable/border_settings"
 		    android:clickable="true"
 		    android:focusable="true"
+		    android:padding="8dp"
 		    android:visibility="invisible">
 			
 			<LinearLayout
@@ -196,13 +197,15 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:text="asdf"/>
-				
-				<Button
-				    android:id="@+id/quit"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"/>
 			
 			</LinearLayout>
+			
+			<Button
+			    android:id="@+id/quit"
+			    android:layout_width="wrap_content"
+			    android:layout_alignParentBottom="true"
+			    android:layout_alignParentRight="true"
+			    android:layout_height="wrap_content"/>
 		</RelativeLayout>
 	
 	
