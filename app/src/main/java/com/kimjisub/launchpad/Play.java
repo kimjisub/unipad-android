@@ -18,11 +18,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -60,9 +58,9 @@ public class Play extends BaseActivity {
 	ImageView IV_prev;
 	ImageView IV_play;
 	ImageView IV_next;
-	RealtimeBlurView RBV_optionBlur;
-	RelativeLayout RL_optionWindow;
-	Button BTN_quit;
+	RealtimeBlurView RBV_option_blur;
+	RelativeLayout RL_option_window;
+	Button BTN_option_quit;
 	
 	
 	void initVar() {
@@ -80,9 +78,9 @@ public class Play extends BaseActivity {
 		IV_prev = findViewById(R.id.prev);
 		IV_play = findViewById(R.id.play);
 		IV_next = findViewById(R.id.next);
-		RBV_optionBlur = findViewById(R.id.option_blur);
-		RL_optionWindow = findViewById(R.id.option_window);
-		BTN_quit = findViewById(R.id.quit);
+		RBV_option_blur = findViewById(R.id.option_blur);
+		RL_option_window = findViewById(R.id.option_window);
+		BTN_option_quit = findViewById(R.id.quit);
 	}
 	
 	// =========================================================================================
@@ -604,8 +602,8 @@ public class Play extends BaseActivity {
 				autoPlay_play();
 		});
 		IV_next.setOnClickListener(v -> autoPlay_after());
-		BTN_quit.setOnClickListener(v -> finish());
-		
+		RBV_option_blur.setOnClickListener(v -> toggleOptionWindow(false));
+		BTN_option_quit.setOnClickListener(v -> finish());
 		
 		LL_pads.removeAllViews();
 		LL_chains.removeAllViews();
@@ -1604,18 +1602,16 @@ public class Play extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					//RBV_optionBlur.setBlurRadius(20 * interpolatedTime);
-					RBV_optionBlur.setAlpha(interpolatedTime);
-					RL_optionWindow.setAlpha(interpolatedTime);
+					RBV_option_blur.setAlpha(interpolatedTime);
+					RL_option_window.setAlpha(interpolatedTime);
 				}
 			};
 			a.setDuration(200);
-			//a.setInterpolator(AnimationUtils.loadInterpolator(Play.this, android.R.anim.accelerate_decelerate_interpolator));
 			a.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
-					RBV_optionBlur.setVisibility(View.VISIBLE);
-					RL_optionWindow.setVisibility(View.VISIBLE);
+					RBV_option_blur.setVisibility(View.VISIBLE);
+					RL_option_window.setVisibility(View.VISIBLE);
 				}
 				
 				@Override
@@ -1627,18 +1623,16 @@ public class Play extends BaseActivity {
 				
 				}
 			});
-			RBV_optionBlur.startAnimation(a);
+			RBV_option_blur.startAnimation(a);
 		} else {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					//RBV_optionBlur.setBlurRadius(20 - 20 * interpolatedTime);
-					RBV_optionBlur.setAlpha(1- interpolatedTime);
-					RL_optionWindow.setAlpha(1 - interpolatedTime);
+					RBV_option_blur.setAlpha(1- interpolatedTime);
+					RL_option_window.setAlpha(1 - interpolatedTime);
 				}
 			};
 			a.setDuration(500);
-			//a.setInterpolator(AnimationUtils.loadInterpolator(Play.this, android.R.anim.accelerate_decelerate_interpolator));
 			a.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
@@ -1647,8 +1641,8 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					RBV_optionBlur.setVisibility(View.INVISIBLE);
-					RL_optionWindow.setVisibility(View.INVISIBLE);
+					RBV_option_blur.setVisibility(View.INVISIBLE);
+					RL_option_window.setVisibility(View.INVISIBLE);
 				}
 				
 				@Override
@@ -1656,7 +1650,7 @@ public class Play extends BaseActivity {
 				
 				}
 			});
-			RBV_optionBlur.startAnimation(a);
+			RBV_option_blur.startAnimation(a);
 		}
 	}
 	
