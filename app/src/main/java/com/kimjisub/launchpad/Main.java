@@ -122,15 +122,12 @@ public class Main extends BaseActivity {
 			VA_floatingAnimation.setDuration(300);
 			VA_floatingAnimation.setRepeatCount(Animation.INFINITE);
 			VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
-			VA_floatingAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-				@Override
-				public void onAnimationUpdate(ValueAnimator valueAnimator) {
-					int color = (int) valueAnimator.getAnimatedValue();
-					FAM_floatingMenu.setMenuButtonColorNormal(color);
-					FAM_floatingMenu.setMenuButtonColorPressed(color);
-					FAB_store.setColorNormal(color);
-					FAB_store.setColorPressed(color);
-				}
+			VA_floatingAnimation.addUpdateListener(valueAnimator -> {
+				int color = (int) valueAnimator.getAnimatedValue();
+				FAM_floatingMenu.setMenuButtonColorNormal(color);
+				FAM_floatingMenu.setMenuButtonColorPressed(color);
+				FAB_store.setColorNormal(color);
+				FAB_store.setColorPressed(color);
 			});
 		}
 		
@@ -200,33 +197,13 @@ public class Main extends BaseActivity {
 	void startMain() {
 		updateCheck();
 		
-		FAB_refreshList.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				update();
-			}
-		});
+		FAB_refreshList.setOnClickListener(view -> update());
 		
-		FAB_loadUniPack.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				unipackExplorer();
-			}
-		});
+		FAB_loadUniPack.setOnClickListener(v -> unipackExplorer());
 		
-		FAB_store.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivity(new Intent(Main.this, Store.class));
-			}
-		});
+		FAB_store.setOnClickListener(v -> startActivity(new Intent(Main.this, Store.class)));
 		
-		FAB_setting.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivity(new Intent(Main.this, Setting.class));
-			}
-		});
+		FAB_setting.setOnClickListener(v -> startActivity(new Intent(Main.this, Setting.class)));
 		
 		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
@@ -272,188 +249,162 @@ public class Main extends BaseActivity {
 		
 		updateComplete = false;
 		
-		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
-			@Override
-			public void onChange(long count) {
-				if (SaveSetting.PrevStoreCount.load(Main.this) == count)
-					runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							blink(false);
-						}
-					});
-				else
-					runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							blink(true);
-						}
-					});
-			}
+		getStoreCount.setOnChangeListener(count -> {
+			if (SaveSetting.PrevStoreCount.load(Main.this) == count)
+				runOnUiThread(() -> blink(false));
+			else
+				runOnUiThread(() -> blink(true));
 		}).run();
 		
 		LL_list.removeAllViews();
 		
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					File projectFolder = new File(UnipackRootURL);
+		new Thread(() -> {
+			try {
+				File projectFolder = new File(UnipackRootURL);
+				
+				if (projectFolder.isDirectory()) {
 					
-					if (projectFolder.isDirectory()) {
+					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
+					int num = projects.length;
+					
+					PV_items = new PackView[num];
+					flagColors = new int[num];
+					URLs = new String[num];
+					unipacks = new Unipack[num];
+					
+					int count = 0;
+					for (int i = 0; i < num; i++) {
+						final int I = i;
+						File project = projects[I];
+						if (project.isFile()) continue;
+						count++;
 						
-						File[] projects = FileManager.sortByTime(projectFolder.listFiles());
-						int num = projects.length;
+						final String url = UnipackRootURL + "/" + project.getName();
+						final Unipack unipack = new Unipack(url, false);
+						int flagColor;
+						String title = unipack.title;
+						String producerName = unipack.producerName;
 						
-						PV_items = new PackView[num];
-						flagColors = new int[num];
-						URLs = new String[num];
-						unipacks = new Unipack[num];
 						
-						int count = 0;
-						for (int i = 0; i < num; i++) {
-							final int I = i;
-							File project = projects[I];
-							if (project.isFile()) continue;
-							count++;
-							
-							final String url = UnipackRootURL + "/" + project.getName();
-							final Unipack unipack = new Unipack(url, false);
-							int flagColor;
-							String title = unipack.title;
-							String producerName = unipack.producerName;
-							
-							
-							if (unipack.ErrorDetail == null) {
-								flagColor = color(R.color.skyblue);
-							} else if (unipack.CriticalError) {
-								flagColor = color(R.color.red);
-								title = lang(R.string.errOccur);
-								producerName = unipack.URL;
-							} else {
-								flagColor = color(R.color.orange);
-							}
-							
-							
-							@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-								lang(R.string.scale),
-								lang(R.string.chainCount),
-								lang(R.string.capacity)
-							};
-							String[] infoContents = new String[]{
-								unipack.buttonX + " x " + unipack.buttonY,
-								unipack.chain + "",
-								FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
-							};
-							@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-								lang(R.string.delete),
-								lang(R.string.edit)
-							};
-							int[] btnColors = new int[]{
-								color(R.color.red),
-								color(R.color.orange)
-							};
-							
-							final PackView packView = new PackView(Main.this)
-								.setFlagColor(flagColor)
-								.setTitle(title)
-								.setSubTitle(producerName)
-								.setInfos(infoTitles, infoContents)
-								.setBtns(btnTitles, btnColors)
-								.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
-								.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
-								.setOnEventListener(new PackView.OnEventListener() {
-									@Override
-									public void onViewClick(PackView v) {
-										togglePlay(I);
-										toggleDetail(-1);
-									}
-									
-									@Override
-									public void onViewLongClick(PackView v) {
-										togglePlay(-1);
-										toggleDetail(I);
-									}
-									
-									@Override
-									public void onPlayClick(PackView v) {
-										Scale_PaddingWidth = LL_paddingScale.getWidth();
-										Scale_PaddingHeight = LL_paddingScale.getHeight();
-										Scale_Width = LL_scale.getWidth();
-										Scale_Height = LL_scale.getHeight();
-										
-										Intent intent = new Intent(Main.this, Play.class);
-										intent.putExtra("URL", url);
-										startActivity(intent);
-									}
-									
-									@Override
-									public void onFunctionBtnClick(final PackView v, int index) {
-										switch (index) {
-											case 0:
-												deleteUnipack(v, unipack);
-												break;
-											case 1:
-												editUnipack(v, unipack);
-												break;
-										}
-									}
-								});
-							
-							runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
-								@Override
-								public void run() {
-									final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-									int left = dpToPx(16);
-									int top = 0;
-									int right = dpToPx(16);
-									int bottom = dpToPx(10);
-									lp.setMargins(left, top, right, bottom);
-									LL_list.addView(packView, lp);
-									Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
-									a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
-									packView.setAnimation(a);
-								}
-							});
-							
-							PV_items[I] = packView;
-							flagColors[I] = flagColor;
-							URLs[I] = url;
-							unipacks[I] = unipack;
-							
+						if (unipack.ErrorDetail == null) {
+							flagColor = color(R.color.skyblue);
+						} else if (unipack.CriticalError) {
+							flagColor = color(R.color.red);
+							title = lang(R.string.errOccur);
+							producerName = unipack.URL;
+						} else {
+							flagColor = color(R.color.orange);
 						}
 						
-						if (count == 0) {
-							runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
+						
+						@SuppressLint("ResourceType") String[] infoTitles = new String[]{
+							lang(R.string.scale),
+							lang(R.string.chainCount),
+							lang(R.string.capacity)
+						};
+						String[] infoContents = new String[]{
+							unipack.buttonX + " x " + unipack.buttonY,
+							unipack.chain + "",
+							FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
+						};
+						@SuppressLint("ResourceType") String[] btnTitles = new String[]{
+							lang(R.string.delete),
+							lang(R.string.edit)
+						};
+						int[] btnColors = new int[]{
+							color(R.color.red),
+							color(R.color.orange)
+						};
+						
+						final PackView packView = new PackView(Main.this)
+							.setFlagColor(flagColor)
+							.setTitle(title)
+							.setSubTitle(producerName)
+							.setInfos(infoTitles, infoContents)
+							.setBtns(btnTitles, btnColors)
+							.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
+							.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
+							.setOnEventListener(new PackView.OnEventListener() {
 								@Override
-								public void run() {
-									addErrorItem();
+								public void onViewClick(PackView v) {
+									togglePlay(I);
+									toggleDetail(-1);
+								}
+								
+								@Override
+								public void onViewLongClick(PackView v) {
+									togglePlay(-1);
+									toggleDetail(I);
+								}
+								
+								@Override
+								public void onPlayClick(PackView v) {
+									Scale_PaddingWidth = LL_paddingScale.getWidth();
+									Scale_PaddingHeight = LL_paddingScale.getHeight();
+									Scale_Width = LL_scale.getWidth();
+									Scale_Height = LL_scale.getHeight();
+									
+									Intent intent = new Intent(Main.this, Play.class);
+									intent.putExtra("URL", url);
+									startActivity(intent);
+								}
+								
+								@Override
+								public void onFunctionBtnClick(final PackView v, int index) {
+									switch (index) {
+										case 0:
+											deleteUnipack(v, unipack);
+											break;
+										case 1:
+											editUnipack(v, unipack);
+											break;
+									}
 								}
 							});
-						}
 						
-					} else {
-						projectFolder.mkdir();
-						
-						runOnUiThread(new Runnable() {        // UI Thread 자원 사용 이벤트 큐에 저장.
-							@Override
-							public void run() {
-								addErrorItem();
-							}
+						// UI Thread 자원 사용 이벤트 큐에 저장.
+						runOnUiThread(() -> {
+							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+							int left = dpToPx(16);
+							int top = 0;
+							int right = dpToPx(16);
+							int bottom = dpToPx(10);
+							lp.setMargins(left, top, right, bottom);
+							LL_list.addView(packView, lp);
+							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
+							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
+							packView.setAnimation(a);
 						});
+						
+						PV_items[I] = packView;
+						flagColors[I] = flagColor;
+						URLs[I] = url;
+						unipacks[I] = unipack;
+						
 					}
 					
-					File nomedia = new File(UnipackRootURL + "/.nomedia");
-					if (!nomedia.isFile()) {
-						try {
-							(new FileWriter(nomedia)).close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+					if (count == 0) {
+						// UI Thread 자원 사용 이벤트 큐에 저장.
+						runOnUiThread(() -> addErrorItem());
 					}
-				} finally {
-					updateComplete = true;
+					
+				} else {
+					projectFolder.mkdir();
+					
+					// UI Thread 자원 사용 이벤트 큐에 저장.
+					runOnUiThread(() -> addErrorItem());
 				}
+				
+				File nomedia = new File(UnipackRootURL + "/.nomedia");
+				if (!nomedia.isFile()) {
+					try {
+						(new FileWriter(nomedia)).close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			} finally {
+				updateComplete = true;
 			}
 		}).start();
 	}
@@ -514,18 +465,15 @@ public class Main extends BaseActivity {
 					color(R.color.text3)
 				};
 				
-				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
-					@Override
-					public void onExtendFunctionBtnClick(PackView v, int index) {
-						switch (index) {
-							case 0:
-								FileManager.deleteFolder(unipack.URL);
-								update();
-								break;
-							case 1:
-								v.toggleDetail(1);
-								break;
-						}
+				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
+					switch (index) {
+						case 0:
+							FileManager.deleteFolder(unipack.URL);
+							update();
+							break;
+						case 1:
+							v1.toggleDetail(1);
+							break;
 					}
 				}).toggleDetail(2);
 			}
@@ -556,17 +504,14 @@ public class Main extends BaseActivity {
 					color(R.color.text3)
 				};
 				
-				v.setExtendView(RL_delete, height, btnTitles, btnColors, new PackView.OnExtendEventListener() {
-					@Override
-					public void onExtendFunctionBtnClick(PackView v, int index) {
-						switch (index) {
-							case 0:
-								autoMapping(v, unipack);
-								break;
-							case 1:
-								v.toggleDetail(1);
-								break;
-						}
+				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
+					switch (index) {
+						case 0:
+							autoMapping(v1, unipack);
+							break;
+						case 1:
+							v1.toggleDetail(1);
+							break;
 					}
 				}).toggleDetail(2);
 			}
@@ -688,7 +633,7 @@ public class Main extends BaseActivity {
 					}
 					try {
 						File filePre = new File(unipack.URL, "autoPlay");
-						File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
 						
 						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
@@ -719,12 +664,7 @@ public class Main extends BaseActivity {
 						new AlertDialog.Builder(Main.this)
 							.setTitle(lang(R.string.success))
 							.setMessage(lang(R.string.remapDone))
-							.setPositiveButton(lang(R.string.accept), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialogInterface, int i) {
-									v.toggleDetail(0);
-								}
-							})
+							.setPositiveButton(lang(R.string.accept), (dialogInterface, i) -> v.toggleDetail(0))
 							.show();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -784,23 +724,20 @@ public class Main extends BaseActivity {
 		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
 		
 		
-		LV_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				final File file = new File(mPath.get(position));
-				if (file.isDirectory()) {
-					if (file.canRead())
-						getDir(mPath.get(position));
-					else
-						showDialog(file.getName(), lang(R.string.cantReadFolder));
-				} else {
-					if (file.canRead())
-						loadUnipack(file.getPath());
-					else
-						showDialog(file.getName(), lang(R.string.cantReadFile));
-					
-					
-				}
+		LV_list.setOnItemClickListener((parent, view, position, id) -> {
+			final File file = new File(mPath.get(position));
+			if (file.isDirectory()) {
+				if (file.canRead())
+					getDir(mPath.get(position));
+				else
+					showDialog(file.getName(), lang(R.string.cantReadFolder));
+			} else {
+				if (file.canRead())
+					loadUnipack(file.getPath());
+				else
+					showDialog(file.getName(), lang(R.string.cantReadFile));
+				
+				
 			}
 		});
 		getDir(fileExplorerPath);
@@ -945,12 +882,7 @@ public class Main extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					(new Handler()).postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							showWatermark();
-						}
-					}, 3000);
+					(new Handler()).postDelayed(() -> showWatermark(), 3000);
 				}
 				
 				@Override
