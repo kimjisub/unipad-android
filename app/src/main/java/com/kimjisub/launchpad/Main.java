@@ -918,33 +918,22 @@ public class Main extends BaseActivity {
 	
 	
 	void updateCheck() {
-		new Networks.CheckVersion(getPackageName()).setOnEndListener(new Networks.CheckVersion.onEndListener() {
-			@Override
-			public void onEnd(String verson) {
-				try {
-					String currVerson = BuildConfig.VERSION_NAME;
-					if (verson != null && !currVerson.equals(verson)) {
-						new AlertDialog.Builder(Main.this)
-							.setTitle(lang(R.string.newVersionFound))
-							.setMessage(lang(R.string.currentVersion) + " : " + currVerson + "\n" +
-								lang(R.string.newVersion) + " : " + verson)
-							.setPositiveButton(lang(R.string.update), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
-									dialog.dismiss();
-								}
-							})
-							.setNegativeButton(lang(R.string.ignore), new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									dialog.dismiss();
-								}
-							})
-							.show();
-					}
-				} catch (Exception ignore) {
+		new Networks.CheckVersion().setOnChangeListener(version -> {
+			try {
+				String currVersion = BuildConfig.VERSION_NAME;
+				if (version != null && !currVersion.equals(version)) {
+					new AlertDialog.Builder(Main.this)
+						.setTitle(lang(R.string.newVersionFound))
+						.setMessage(lang(R.string.currentVersion) + " : " + currVersion + "\n" +
+							lang(R.string.newVersion) + " : " + version)
+						.setPositiveButton(lang(R.string.update), (dialog, which) -> {
+							startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+							dialog.dismiss();
+						})
+						.setNegativeButton(lang(R.string.ignore), (dialog, which) -> dialog.dismiss())
+						.show();
 				}
+			} catch (Exception ignore) {
 			}
 		}).run();
 	}
