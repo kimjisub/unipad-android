@@ -533,20 +533,20 @@ public class PackView extends RelativeLayout {
 		this.onEventListener = listener;
 		return this;
 	}
-
-	void onViewClick() {
+	
+	public void onViewClick() {
 		if (onEventListener != null) onEventListener.onViewClick(this);
 	}
-
-	void onViewLongClick() {
+	
+	public void onViewLongClick() {
 		if (onEventListener != null) onEventListener.onViewLongClick(this);
 	}
 
-	void onPlayClick() {
+	public void onPlayClick() {
 		if (onEventListener != null && isPlay()) onEventListener.onPlayClick(this);
 	}
-
-	void onFunctionBtnClick(int index) {
+	
+	public void onFunctionBtnClick(int index) {
 		if (onEventListener != null && isDetail())
 			onEventListener.onFunctionBtnClick(this, index);
 	}
@@ -554,6 +554,4 @@ public class PackView extends RelativeLayout {
 	public interface OnExtendEventListener {
 		void onExtendFunctionBtnClick(PackView v, int index);
 	}
-
-
 }

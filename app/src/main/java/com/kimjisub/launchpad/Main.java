@@ -54,6 +54,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Tools.log;
+
 
 public class Main extends BaseActivity {
 	
@@ -164,7 +166,7 @@ public class Main extends BaseActivity {
 		} catch (PackageManager.NameNotFoundException e) {
 			e.printStackTrace();
 		}
-
+		
 		TedPermission.with(this)
 			.setPermissionListener(new PermissionListener() {
 				@Override
@@ -172,7 +174,7 @@ public class Main extends BaseActivity {
 					showAds();
 					(handler = new Handler()).postDelayed(runnable, 1000);
 				}
-
+				
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
 					Toast.makeText(Main.this, lang(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
@@ -682,13 +684,19 @@ public class Main extends BaseActivity {
 		}
 	}
 	
+	// =========================================================================================
+	
+	int playIndex = -1;
+	
 	void togglePlay(int n) {
+		playIndex = n;
 		for (int i = 0; i < PV_items.length; i++) {
 			PackView packView = PV_items[i];
 			if (packView != null) {
-				if (n != i)
+				if (n != i) {
 					packView.togglePlay(false, color(R.color.red), flagColors[i]);
-				else
+					Launchpad.driver.sendFunctionkeyLED(2, 63);
+				} else
 					packView.togglePlay(color(R.color.red), flagColors[i]);
 			}
 		}
@@ -706,6 +714,101 @@ public class Main extends BaseActivity {
 		}
 	}
 	
+	
+	// ========================================================================================= Launchpad Connection
+	
+	void updateDriver() {
+		Launchpad.setDriverListener(Main.this,
+			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
+				@Override
+				public void onConnected() {
+					(new Handler()).postDelayed(() -> showWatermark(), 3000);
+					showSelectUI();
+				}
+				
+				@Override
+				public void onDisconnected() {
+				}
+			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
+				@Override
+				public void onPadTouch(int x, int y, boolean upDown, int velo) {
+					if (upDown)
+						Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+					else
+						Launchpad.driver.sendPadLED(x, y, 0);
+				}
+				
+				@Override
+				public void onFunctionkeyTouch(int f, boolean upDown) {
+					if (f == 0 && upDown) {
+						if (havePrev())
+							togglePlay(playIndex - 1);
+						showSelectUI();
+					} else if (f == 1 && upDown) {
+						if (haveNext())
+							togglePlay(playIndex + 1);
+						showSelectUI();
+					} else if (f == 2 && upDown)
+						PV_items[playIndex].onPlayClick();
+					else if(f == 3 && upDown)
+						log(playIndex + " " + (PV_items.length-1));
+					else if (4 <= f && f <= 7 && upDown)
+						toggleWatermark();
+				}
+				
+				@Override
+				public void onChainTouch(int c, boolean upDown) {
+				}
+				
+				@Override
+				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				
+				}
+			});
+	}
+	
+	boolean haveNext() {
+		return PV_items != null && playIndex < PV_items.length - 1;
+	}
+	
+	boolean havePrev() {
+		return PV_items != null && 0 < playIndex;
+	}
+	
+	void showSelectUI() {
+		if (PV_items != null) {
+			if (havePrev())
+				Launchpad.driver.sendFunctionkeyLED(0, 40);
+			else
+				Launchpad.driver.sendFunctionkeyLED(0, 0);
+			if (haveNext())
+				Launchpad.driver.sendFunctionkeyLED(1, 40);
+			else
+				Launchpad.driver.sendFunctionkeyLED(1, 0);
+		}
+	}
+	
+	// ========================================================================================= Watermark
+	
+	void toggleWatermark() {
+		isShowWatermark = !isShowWatermark;
+		showWatermark();
+	}
+	
+	void showWatermark() {
+		if (isShowWatermark) {
+			Launchpad.driver.sendFunctionkeyLED(4, 61);
+			Launchpad.driver.sendFunctionkeyLED(5, 40);
+			Launchpad.driver.sendFunctionkeyLED(6, 61);
+			Launchpad.driver.sendFunctionkeyLED(7, 40);
+		} else {
+			Launchpad.driver.sendFunctionkeyLED(4, 0);
+			Launchpad.driver.sendFunctionkeyLED(5, 0);
+			Launchpad.driver.sendFunctionkeyLED(6, 0);
+			Launchpad.driver.sendFunctionkeyLED(7, 0);
+		}
+	}
+	// =========================================================================================
 	
 	List<String> mItem;
 	List<String> mPath;
@@ -873,82 +976,6 @@ public class Main extends BaseActivity {
 			} catch (Exception ignore) {
 			}
 		}).run();
-	}
-	
-	// ========================================================================================= Launchpad Connection
-	
-	void updateDriver() {
-		Launchpad.setDriverListener(Main.this,
-			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-				@Override
-				public void onConnected() {
-					(new Handler()).postDelayed(() -> showWatermark(), 3000);
-				}
-				
-				@Override
-				public void onDisconnected() {
-				}
-			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-				@Override
-				public void onPadTouch(int x, int y, boolean upDown, int velo) {
-					if (upDown)
-						Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
-					else
-						Launchpad.driver.sendPadLED(x, y, 0);
-				}
-				
-				@Override
-				public void onFunctionkeyTouch(int f, boolean upDown) {
-					/*if (4 <= f && f <= 7 && upDown)
-						toggleWatermark();*/
-					
-					if (upDown)
-						Launchpad.driver.sendFunctionkeyLED(f, new int[]{40, 61}[(int) (Math.random() * 2)]);
-					else
-						Launchpad.driver.sendFunctionkeyLED(f, 0);
-				}
-				
-				@Override
-				public void onChainTouch(int c, boolean upDown) {
-					if (upDown)
-						Launchpad.driver.sendChainLED(c, new int[]{40, 61}[(int) (Math.random() * 2)]);
-					else
-						Launchpad.driver.sendChainLED(c, 0);
-				}
-				
-				@Override
-				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				
-				}
-			});
-	}
-	
-	
-	// ========================================================================================= Watermark
-	
-	void toggleWatermark() {
-		isShowWatermark = !isShowWatermark;
-		showWatermark();
-	}
-	
-	void showWatermark() {
-		if (isShowWatermark) {
-			Launchpad.driver.sendFunctionkeyLED(0, 61);
-			
-			Launchpad.driver.sendFunctionkeyLED(4, 61);
-			Launchpad.driver.sendFunctionkeyLED(5, 40);
-			Launchpad.driver.sendFunctionkeyLED(6, 61);
-			Launchpad.driver.sendFunctionkeyLED(7, 40);
-		} else {
-			Launchpad.driver.sendFunctionkeyLED(0, 0);
-			Launchpad.driver.sendFunctionkeyLED(1, 0);
-			Launchpad.driver.sendFunctionkeyLED(2, 0);
-			Launchpad.driver.sendFunctionkeyLED(3, 0);
-			Launchpad.driver.sendFunctionkeyLED(4, 0);
-			Launchpad.driver.sendFunctionkeyLED(5, 0);
-			Launchpad.driver.sendFunctionkeyLED(6, 0);
-			Launchpad.driver.sendFunctionkeyLED(7, 0);
-		}
 	}
 	
 	// ========================================================================================= Activity
