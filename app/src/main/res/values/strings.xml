@@ -24,6 +24,7 @@
 	<string name="using">Using</string>
 	<string name="information">Information</string>
 	<string name="path">Path</string>
+	<string name="quit">Quit</string>
 
 	<!--Menu-->
 	<string name="list_refresh">Refresh List</string>
