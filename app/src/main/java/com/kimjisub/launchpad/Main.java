@@ -899,12 +899,21 @@ public class Main extends BaseActivity {
 				
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
-					if (4 <= f && f <= 7 && upDown)
-						toggleWatermark();
+					/*if (4 <= f && f <= 7 && upDown)
+						toggleWatermark();*/
+					
+					if (upDown)
+						Launchpad.driver.sendFunctionkeyLED(f, new int[]{40, 61}[(int) (Math.random() * 2)]);
+					else
+						Launchpad.driver.sendFunctionkeyLED(f, 0);
 				}
 				
 				@Override
 				public void onChainTouch(int c, boolean upDown) {
+					if (upDown)
+						Launchpad.driver.sendChainLED(c, new int[]{40, 61}[(int) (Math.random() * 2)]);
+					else
+						Launchpad.driver.sendChainLED(c, 0);
 				}
 				
 				@Override

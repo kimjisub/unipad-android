@@ -163,8 +163,10 @@ public class LaunchpadDriver {
 				
 				if (y >= 1 && y <= 8)
 					onPadTouch(x - 1, y - 1, velo != 0, velo);
-				else if (y == 9)
+				else if (y == 9) {
 					onChainTouch(x - 1, velo != 0);
+					onFunctionkeyTouch(x - 1 + 8, velo != 0);
+				}
 			} else if (cmd == 11) {
 				if (104 <= note && note <= 111)
 					onFunctionkeyTouch(note - 104, velo != 0);
@@ -217,8 +219,10 @@ public class LaunchpadDriver {
 				
 				if (y >= 1 && y <= 8)
 					onPadTouch(x - 1, y - 1, velo != 0, velo);
-				else if (y == 9)
+				else if (y == 9) {
 					onChainTouch(x - 1, velo != 0);
+					onFunctionkeyTouch(x - 1 + 8, velo != 0);
+				}
 			} else if (cmd == 11) {
 				if (104 <= note && note <= 111)
 					onFunctionkeyTouch(note - 104, velo != 0);
@@ -291,13 +295,27 @@ public class LaunchpadDriver {
 				int x = 9 - (note / 10);
 				int y = note % 10;
 				
-				if (y == 9)
+				if (y == 9) {
 					onChainTouch(x - 1, velo != 0);
+					onFunctionkeyTouch(x - 1 + 8, velo != 0);
+				}
 			}
 			if (cmd == 11 && sig == -80) {
 				if (91 <= note && note <= 98) {
 					onFunctionkeyTouch(note - 91, velo != 0);
 				}
+				if (19 <= note && note <= 89 && note % 10 == 9) {
+					int c = 9 - (note / 10) - 1;
+					onChainTouch(c, velo != 0);
+					onFunctionkeyTouch(c + 8, velo != 0);
+				}
+				if (1 <= note && note <= 8) {
+					onFunctionkeyTouch(8 - note + 16, velo != 0);
+				}
+				if (10 <= note && note <= 80 && note % 10 == 0) {
+					onFunctionkeyTouch((note / 10) - 1 + 24, velo != 0);
+				}
+				
 			} else if (cmd == 7 && sig == 46 && velo == -9)
 				logRecv("PRO >??");
 		}
