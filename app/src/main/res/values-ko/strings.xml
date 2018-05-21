@@ -24,6 +24,7 @@
 	<string name="using">사용중</string>
 	<string name="information">정보</string>
 	<string name="path">경로</string>
+	<string name="quit">나가기</string>
 
 	<!--Menu-->
 	<string name="list_refresh">목록 새로고침</string>
