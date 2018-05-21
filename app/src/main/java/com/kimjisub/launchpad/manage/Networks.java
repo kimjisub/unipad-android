@@ -16,90 +16,44 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class Networks {
-	public static class CheckVersion extends AsyncTask<String, String, Boolean> {
-		String packageName;
-		String version = null;
+	public static class CheckVersion {
+		FirebaseDatabase database;
+		DatabaseReference myRef;
 		
-		public CheckVersion(String packageName) {
-			this.packageName = packageName;
+		private onChangeListener dataListener = null;
+		
+		public interface onChangeListener {
+			void onChange(String version);
 		}
 		
-		private onEndListener listener = null;
 		
-		public interface onEndListener {
-			void onEnd(String verson);
-		}
-		
-		public CheckVersion setOnEndListener(onEndListener listener) {
-			this.listener = listener;
+		public CheckVersion setOnChangeListener(onChangeListener listener) {
+			this.dataListener = listener;
 			return this;
 		}
 		
-		void onEnd(String version) {
-			if (listener != null) listener.onEnd(version);
+		void onChange(String version) {
+			if (dataListener != null)
+				dataListener.onChange(version);
 		}
+		
 		
 		public void run() {
-			this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		}
-		
-		@Override
-		protected Boolean doInBackground(String... params) {
+			database = FirebaseDatabase.getInstance();
+			myRef = database.getReference("appVersion");
 			
-			String mData = "";
-			
-			try {
-				URL mUrl = new URL("https://play.google.com/store/apps/details?id=" + packageName);
-				HttpURLConnection mConnection = (HttpURLConnection) mUrl
-					.openConnection();
-				
-				if (mConnection == null)
-					return null;
-				
-				mConnection.setConnectTimeout(5000);
-				mConnection.setUseCaches(false);
-				mConnection.setDoOutput(true);
-				
-				if (mConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-					BufferedReader mReader = new BufferedReader(
-						new InputStreamReader(mConnection.getInputStream()));
-					
-					while (true) {
-						String line = mReader.readLine();
-						if (line == null)
-							break;
-						mData += line;
-					}
-					
-					mReader.close();
+			myRef.addValueEventListener(new ValueEventListener() {
+				@Override
+				public void onDataChange(DataSnapshot dataSnapshot) {
+					onChange(dataSnapshot.getValue(String.class));
 				}
 				
-				mConnection.disconnect();
+				@Override
+				public void onCancelled(DatabaseError databaseError) {
 				
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				return null;
-			}
+				}
+			});
 			
-			String startToken = "softwareVersion\">";
-			String endToken = "<";
-			int index = mData.indexOf(startToken);
-			
-			if (index == -1)
-				version = null;
-			else {
-				version = mData.substring(index + startToken.length(), index
-					+ startToken.length() + 100);
-				version = version.substring(0, version.indexOf(endToken)).trim();
-			}
-			
-			return false;
-		}
-		
-		@Override
-		protected void onPostExecute(Boolean result) {
-			super.onPostExecute(result);
-			onEnd(version);
 		}
 	}
 	
