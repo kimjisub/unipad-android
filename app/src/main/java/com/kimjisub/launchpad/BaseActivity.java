@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.view.View;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -76,6 +78,19 @@ public class BaseActivity extends AppCompatActivity {
 			.setMessage(content)
 			.setPositiveButton(lang(R.string.accept), null)
 			.show();
+	}
+	
+	public boolean isViewVisible(final View view) {
+		if (view == null) {
+			return false;
+		}
+		if (!view.isShown()) {
+			return false;
+		}
+		final Rect actualPosition = new Rect();
+		view.getGlobalVisibleRect(actualPosition);
+		final Rect screen = new Rect(0, 0, getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().heightPixels);
+		return actualPosition.intersect(screen);
 	}
 	
 	public int pxToDp(int pixel) {

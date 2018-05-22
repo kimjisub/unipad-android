@@ -25,6 +25,7 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +73,7 @@ public class Main extends BaseActivity {
 	
 	
 	// main
+	ScrollView SV_scrollView;
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_refreshList;
@@ -105,6 +107,7 @@ public class Main extends BaseActivity {
 		
 		
 		// main
+		SV_scrollView = findViewById(R.id.scrollView);
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_refreshList = findViewById(R.id.fab_refreshList);
@@ -232,6 +235,7 @@ public class Main extends BaseActivity {
 		updateDriver();
 	}
 	
+	int projectsCount = 0;
 	PackView[] PV_items;
 	int[] flagColors;
 	String[] URLs;
@@ -274,12 +278,12 @@ public class Main extends BaseActivity {
 					URLs = new String[num];
 					unipacks = new Unipack[num];
 					
-					int count = 0;
+					projectsCount = 0;
 					for (int i = 0; i < num; i++) {
 						final int I = i;
 						File project = projects[I];
 						if (project.isFile()) continue;
-						count++;
+						projectsCount++;
 						
 						final String url = UnipackRootURL + "/" + project.getName();
 						final Unipack unipack = new Unipack(url, false);
@@ -378,6 +382,8 @@ public class Main extends BaseActivity {
 							packView.setAnimation(a);
 						});
 						
+						log("title: " + title);
+						
 						PV_items[I] = packView;
 						flagColors[I] = flagColor;
 						URLs[I] = url;
@@ -385,7 +391,7 @@ public class Main extends BaseActivity {
 						
 					}
 					
-					if (count == 0) {
+					if (projectsCount == 0) {
 						// UI Thread 자원 사용 이벤트 큐에 저장.
 						runOnUiThread(() -> addErrorItem());
 					}
@@ -700,6 +706,7 @@ public class Main extends BaseActivity {
 					packView.togglePlay(color(R.color.red), flagColors[i]);
 			}
 		}
+		showSelectUI();
 	}
 	
 	void toggleDetail(int n) {
@@ -722,7 +729,13 @@ public class Main extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					(new Handler()).postDelayed(() -> showWatermark(), 3000);
+					onConnected_();
+					(new Handler()).postDelayed(() -> onConnected_(), 3000);
+					
+				}
+				
+				public void onConnected_() {
+					showWatermark();
 					showSelectUI();
 				}
 				
@@ -741,17 +754,23 @@ public class Main extends BaseActivity {
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
 					if (f == 0 && upDown) {
-						if (havePrev())
+						if (havePrev()) {
 							togglePlay(playIndex - 1);
-						showSelectUI();
+							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
+								//SV_scrollView.smoothScrollBy(0, PV_items[playIndex].getHeight() + dpToPx(10));
+						} else
+							showSelectUI();
 					} else if (f == 1 && upDown) {
-						if (haveNext())
+						if (haveNext()) {
 							togglePlay(playIndex + 1);
-						showSelectUI();
+							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
+								//SV_scrollView.smoothScrollBy(0, -(PV_items[playIndex].getHeight() + dpToPx(10)));
+						} else
+							showSelectUI();
 					} else if (f == 2 && upDown)
 						PV_items[playIndex].onPlayClick();
-					else if(f == 3 && upDown)
-						log(playIndex + " " + (PV_items.length-1));
 					else if (4 <= f && f <= 7 && upDown)
 						toggleWatermark();
 				}
@@ -768,7 +787,7 @@ public class Main extends BaseActivity {
 	}
 	
 	boolean haveNext() {
-		return PV_items != null && playIndex < PV_items.length - 1;
+		return PV_items != null && playIndex < projectsCount - 1;
 	}
 	
 	boolean havePrev() {
@@ -1025,8 +1044,11 @@ public class Main extends BaseActivity {
 		
 		if (!isDoneIntro)
 			;
-		else
+		else {
 			getStoreCount.setOnChangeListener(null);
+			Launchpad.driver.sendClearLED();
+			Launchpad.removeDriverListener(Main.this);
+		}
 	}
 	
 	@Override
@@ -1049,5 +1071,9 @@ public class Main extends BaseActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		billing.onDestroy();
+		
+		
+		Launchpad.driver.sendClearLED();
+		Launchpad.removeDriverListener(Main.this);
 	}
 }
