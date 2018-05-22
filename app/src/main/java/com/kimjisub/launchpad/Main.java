@@ -758,7 +758,7 @@ public class Main extends BaseActivity {
 							togglePlay(playIndex - 1);
 							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
 							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
-								//SV_scrollView.smoothScrollBy(0, PV_items[playIndex].getHeight() + dpToPx(10));
+							//SV_scrollView.smoothScrollBy(0, PV_items[playIndex].getHeight() + dpToPx(10));
 						} else
 							showSelectUI();
 					} else if (f == 1 && upDown) {
@@ -766,12 +766,13 @@ public class Main extends BaseActivity {
 							togglePlay(playIndex + 1);
 							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
 							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
-								//SV_scrollView.smoothScrollBy(0, -(PV_items[playIndex].getHeight() + dpToPx(10)));
+							//SV_scrollView.smoothScrollBy(0, -(PV_items[playIndex].getHeight() + dpToPx(10)));
 						} else
 							showSelectUI();
-					} else if (f == 2 && upDown)
-						PV_items[playIndex].onPlayClick();
-					else if (4 <= f && f <= 7 && upDown)
+					} else if (f == 2 && upDown) {
+						if (haveNow())
+							PV_items[playIndex].onPlayClick();
+					} else if (4 <= f && f <= 7 && upDown)
 						toggleWatermark();
 				}
 				
@@ -784,6 +785,10 @@ public class Main extends BaseActivity {
 				
 				}
 			});
+	}
+	
+	boolean haveNow() {
+		return PV_items != null && 0 <= playIndex && playIndex <= projectsCount - 1;
 	}
 	
 	boolean haveNext() {
