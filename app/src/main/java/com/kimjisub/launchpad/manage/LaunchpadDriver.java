@@ -115,6 +115,8 @@ public class LaunchpadDriver {
 		
 		public abstract void sendFunctionkeyLED(int f, int velo);
 		
+		public abstract void sendClearLED();
+		
 	}
 	
 	public static class Nothing extends DriverRef {
@@ -127,12 +129,17 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 		}
 		
 		@Override
-		public void sendChainLED(int c, int velo) {
+		public void sendClearLED() {
 		}
+		
 	}
 	
 	public static class LaunchpadS extends DriverRef {
@@ -179,15 +186,24 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+			if (0 <= c && c <= 7)
+				sendFunctionkeyLED(c + 8, velo);
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 15)
 				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) LaunchpadColor.SCode[velo]);
 		}
 		
 		@Override
-		public void sendChainLED(int c, int velo) {
-			if (0 <= c && c <= 7)
-				sendFunctionkeyLED(c + 8, velo);
+		public void sendClearLED() {
+			for(int i=0;i<8;i++)
+				for(int j=0;j<8;j++)
+					sendPadLED(i, j, 0);
+			for(int i=0;i<16;i++)
+				sendFunctionkeyLED(i, 0);
 		}
 	}
 	
@@ -235,15 +251,24 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+			if (0 <= c && c <= 7)
+				sendFunctionkeyLED(c + 8, velo);
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 15)
 				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
 		}
 		
 		@Override
-		public void sendChainLED(int c, int velo) {
-			if (0 <= c && c <= 7)
-				sendFunctionkeyLED(c + 8, velo);
+		public void sendClearLED() {
+			for(int i=0;i<8;i++)
+				for(int j=0;j<8;j++)
+					sendPadLED(i, j, 0);
+			for(int i=0;i<16;i++)
+				sendFunctionkeyLED(i, 0);
 		}
 	}
 	
@@ -326,15 +351,25 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+			if (0 <= c && c <= 7)
+				sendFunctionkeyLED(c + 8, velo);
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 			if (0 <= f && f <= 31)
 				sendSignal((byte) circleCode[f][0], (byte) circleCode[f][1], (byte) circleCode[f][2], (byte) velo);
 		}
 		
+		
 		@Override
-		public void sendChainLED(int c, int velo) {
-			if (0 <= c && c <= 7)
-				sendFunctionkeyLED(c + 8, velo);
+		public void sendClearLED() {
+			for(int i=0;i<8;i++)
+				for(int j=0;j<8;j++)
+					sendPadLED(i, j, 0);
+			for(int i=0;i<32;i++)
+				sendFunctionkeyLED(i, 0);
 		}
 	}
 	
@@ -382,11 +417,18 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 		}
 		
 		@Override
-		public void sendChainLED(int c, int velo) {
+		public void sendClearLED() {
+			for(int i=0;i<8;i++)
+				for(int j=0;j<8;j++)
+					sendPadLED(i, j, 0);
 		}
 	}
 	
@@ -426,11 +468,16 @@ public class LaunchpadDriver {
 		}
 		
 		@Override
+		public void sendChainLED(int c, int velo) {
+		}
+		
+		@Override
 		public void sendFunctionkeyLED(int f, int velo) {
 		}
 		
 		@Override
-		public void sendChainLED(int c, int velo) {
+		public void sendClearLED() {
 		}
+		
 	}
 }

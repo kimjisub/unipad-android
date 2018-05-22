@@ -1442,16 +1442,6 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	void removeChain() {
-		if (unipack.chain > 1)
-			for (int i = 0; i < unipack.chain; i++) {
-				
-				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
-				setLEDUI(-1, 8 + i);
-				setLEDLaunchpad(-1, 8 + i);
-			}
-	}
-	
 	// ========================================================================================= Launchpad Connection
 	
 	void updateDriver() {
@@ -1459,19 +1449,22 @@ public class Play extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					(new Handler()).postDelayed(() -> {
-						Launchpad.driver.sendFunctionkeyLED(0, 0);
-						Launchpad.driver.sendFunctionkeyLED(1, 0);
-						Launchpad.driver.sendFunctionkeyLED(2, 0);
-						Launchpad.driver.sendFunctionkeyLED(3, 0);
-						Launchpad.driver.sendFunctionkeyLED(4, 0);
-						Launchpad.driver.sendFunctionkeyLED(5, 0);
-						Launchpad.driver.sendFunctionkeyLED(6, 0);
-						Launchpad.driver.sendFunctionkeyLED(7, 0);
-						
-						chainChange(chain);
-						showWatermark();
-					}, 3000);
+					onConnected_();
+					(new Handler()).postDelayed(() -> onConnected_(), 3000);
+				}
+				
+				public void onConnected_(){
+					Launchpad.driver.sendFunctionkeyLED(0, 0);
+					Launchpad.driver.sendFunctionkeyLED(1, 0);
+					Launchpad.driver.sendFunctionkeyLED(2, 0);
+					Launchpad.driver.sendFunctionkeyLED(3, 0);
+					Launchpad.driver.sendFunctionkeyLED(4, 0);
+					Launchpad.driver.sendFunctionkeyLED(5, 0);
+					Launchpad.driver.sendFunctionkeyLED(6, 0);
+					Launchpad.driver.sendFunctionkeyLED(7, 0);
+					
+					chainChange(chain);
+					showWatermark();
 				}
 				
 				@Override
@@ -1707,9 +1700,8 @@ public class Play extends BaseActivity {
 		LEDInit();
 		padInit();
 		
-		for (int i = 0; i < 36; i++)
-			Launchpad.driver.sendFunctionkeyLED(i, 0);
-		removeChain();
+		
+		Launchpad.driver.sendClearLED();
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded)
