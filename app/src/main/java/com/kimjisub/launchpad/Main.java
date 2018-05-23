@@ -250,6 +250,7 @@ public class Main extends BaseActivity {
 	
 	
 	void update() {
+		playIndex = -1;
 		if (!updateComplete)
 			return;
 		
@@ -699,10 +700,9 @@ public class Main extends BaseActivity {
 		for (int i = 0; i < PV_items.length; i++) {
 			PackView packView = PV_items[i];
 			if (packView != null) {
-				if (n != i) {
+				if (n != i)
 					packView.togglePlay(false, color(R.color.red), flagColors[i]);
-					Launchpad.driver.sendFunctionkeyLED(2, 63);
-				} else
+				else
 					packView.togglePlay(color(R.color.red), flagColors[i]);
 			}
 		}
@@ -769,7 +769,7 @@ public class Main extends BaseActivity {
 							//SV_scrollView.smoothScrollBy(0, -(PV_items[playIndex].getHeight() + dpToPx(10)));
 						} else
 							showSelectUI();
-					} else if (f == 2 && upDown) {
+					} else if (f == 3 && upDown) {
 						if (haveNow())
 							PV_items[playIndex].onPlayClick();
 					} else if (4 <= f && f <= 7 && upDown)
@@ -805,6 +805,10 @@ public class Main extends BaseActivity {
 				Launchpad.driver.sendFunctionkeyLED(0, 40);
 			else
 				Launchpad.driver.sendFunctionkeyLED(0, 0);
+			if(haveNow())
+				Launchpad.driver.sendFunctionkeyLED(3, 63);
+			else
+				Launchpad.driver.sendFunctionkeyLED(3, 0);
 			if (haveNext())
 				Launchpad.driver.sendFunctionkeyLED(1, 40);
 			else
