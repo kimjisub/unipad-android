@@ -191,7 +191,7 @@
 				<CheckBox
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:text="asdf"/>
+				    android:text="@string/watermark"/>
 				
 				<CheckBox
 				    android:layout_width="wrap_content"

@@ -1453,7 +1453,7 @@ public class Play extends BaseActivity {
 					(new Handler()).postDelayed(() -> onConnected_(), 3000);
 				}
 				
-				public void onConnected_(){
+				public void onConnected_() {
 					Launchpad.driver.sendFunctionkeyLED(0, 0);
 					Launchpad.driver.sendFunctionkeyLED(1, 0);
 					Launchpad.driver.sendFunctionkeyLED(2, 0);
@@ -1464,7 +1464,7 @@ public class Play extends BaseActivity {
 					Launchpad.driver.sendFunctionkeyLED(7, 0);
 					
 					chainChange(chain);
-					showWatermark();
+					toggleWatermark(true);
 				}
 				
 				@Override
@@ -1498,11 +1498,12 @@ public class Play extends BaseActivity {
 	// ========================================================================================= Watermark
 	
 	void toggleWatermark() {
-		isShowWatermark = !isShowWatermark;
-		showWatermark();
+		toggleWatermark(!isShowWatermark);
 	}
 	
-	void showWatermark() {
+	void toggleWatermark(boolean bool) {
+		isShowWatermark = bool;
+		
 		if (isShowWatermark) {
 			for (int i = 4; i <= 7; i++) {
 				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
@@ -1621,7 +1622,7 @@ public class Play extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RBV_option_blur.setAlpha(1- interpolatedTime);
+					RBV_option_blur.setAlpha(1 - interpolatedTime);
 					RL_option_window.setAlpha(1 - interpolatedTime);
 				}
 			};

@@ -25,6 +25,7 @@
 	<string name="information">정보</string>
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
+	<string name="watermark">워터마크</string>
 
 	<!--Menu-->
 	<string name="list_refresh">목록 새로고침</string>

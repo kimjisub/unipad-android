@@ -25,6 +25,7 @@
 	<string name="information">Information</string>
 	<string name="path">Path</string>
 	<string name="quit">Quit</string>
+	<string name="watermark">Watermark</string>
 
 	<!--Menu-->
 	<string name="list_refresh">Refresh List</string>
