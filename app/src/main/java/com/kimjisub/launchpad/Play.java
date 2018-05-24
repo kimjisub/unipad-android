@@ -61,6 +61,7 @@ public class Play extends BaseActivity {
 	RealtimeBlurView RBV_option_blur;
 	RelativeLayout RL_option_window;
 	Button BTN_option_quit;
+	CheckBox CB_watermark;
 	
 	
 	void initVar() {
@@ -81,6 +82,7 @@ public class Play extends BaseActivity {
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
 		BTN_option_quit = findViewById(R.id.quit);
+		CB_watermark = findViewById(R.id.watermark);
 	}
 	
 	// =========================================================================================
@@ -604,6 +606,7 @@ public class Play extends BaseActivity {
 		IV_next.setOnClickListener(v -> autoPlay_after());
 		RBV_option_blur.setOnClickListener(v -> toggleOptionWindow(false));
 		BTN_option_quit.setOnClickListener(v -> finish());
+		CB_watermark.setOnCheckedChangeListener((buttonView, isChecked) -> toggleWatermark(isChecked));
 		
 		LL_pads.removeAllViews();
 		LL_chains.removeAllViews();
@@ -1503,6 +1506,7 @@ public class Play extends BaseActivity {
 	
 	void toggleWatermark(boolean bool) {
 		isShowWatermark = bool;
+		CB_watermark.setChecked(isShowWatermark);
 		
 		if (isShowWatermark) {
 			for (int i = 4; i <= 7; i++) {
