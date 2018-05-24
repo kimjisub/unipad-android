@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -372,7 +373,7 @@ public class Play extends BaseActivity {
 				new AlertDialog.Builder(Play.this)
 					.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
 					.setMessage(unipack.ErrorDetail)
-					.setPositiveButton(lang(R.string.accept), null)
+					.setPositiveButton(unipack.CriticalError ? lang(R.string.quit) : lang(R.string.accept), unipack.CriticalError ? (dialogInterface, i) -> finish() : null)
 					.setCancelable(false)
 					.show();
 			}
