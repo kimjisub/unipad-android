@@ -29,7 +29,7 @@
 		    android:orientation="vertical">
 			
 			<CheckBox
-			    android:id="@+id/CB_pressedPadShow"
+			    android:id="@+id/CB1_pressedPadShow"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -38,7 +38,7 @@
 			    android:textColor="@color/text1"/>
 			
 			<CheckBox
-			    android:id="@+id/CB_LED"
+			    android:id="@+id/CB1_LED"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -48,7 +48,7 @@
 			
 			
 			<CheckBox
-			    android:id="@+id/CB_autoPlay"
+			    android:id="@+id/CB1_autoPlay"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -113,7 +113,7 @@
 		    android:orientation="vertical">
 			
 			<CheckBox
-			    android:id="@+id/CB_traceLog"
+			    android:id="@+id/CB1_traceLog"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -122,7 +122,7 @@
 			    android:textColor="@color/text1"/>
 			
 			<CheckBox
-			    android:id="@+id/CB_record"
+			    android:id="@+id/CB1_record"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:buttonTint="@color/text1"
@@ -187,16 +187,58 @@
 			    android:layout_gravity="center"
 			    android:orientation="vertical">
 				
-				<CheckBox
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:id="@+id/watermark"
-				    android:text="@string/watermark"/>
 				
 				<CheckBox
+				    android:id="@+id/CB2_pressedPadShow"
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:text="asdf"/>
+				    android:buttonTint="@color/text1"
+				    android:checked="true"
+				    android:text="@string/pressedPadShow"
+				    android:textColor="@color/text1"/>
+				
+				<CheckBox
+				    android:id="@+id/CB2_LED"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/text1"
+				    android:checked="false"
+				    android:text="@string/LED"
+				    android:textColor="@color/text1"/>
+				
+				
+				<CheckBox
+				    android:id="@+id/CB2_autoPlay"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/text1"
+				    android:checked="false"
+				    android:text="@string/autoPlay"
+				    android:textColor="@color/text1"/>
+				
+				<CheckBox
+				    android:id="@+id/CB2_traceLog"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/text1"
+				    android:checked="false"
+				    android:text="@string/traceLog"
+				    android:textColor="@color/text1"/>
+				
+				<CheckBox
+				    android:id="@+id/CB2_record"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/text1"
+				    android:checked="false"
+				    android:text="@string/record"
+				    android:textColor="@color/text1"/>
+				
+				<CheckBox
+				    android:id="@+id/CB2_watermark"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:text="@string/watermark"/>
 			
 			</LinearLayout>
 			
@@ -204,9 +246,9 @@
 			    android:id="@+id/quit"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:text="@string/quit"
 			    android:layout_alignParentBottom="true"
-			    android:layout_alignParentRight="true"/>
+			    android:layout_alignParentRight="true"
+			    android:text="@string/quit"/>
 		</RelativeLayout>
 	
 	

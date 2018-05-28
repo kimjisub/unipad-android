@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -35,6 +34,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.launchpad.view.SyncCheckBox;
 
 import java.util.ArrayList;
 
@@ -47,11 +47,6 @@ public class Play extends BaseActivity {
 	
 	RelativeLayout RL_rootView;
 	ImageView IV_background;
-	CheckBox CB_pressedPadShow;
-	CheckBox CB_LED;
-	CheckBox CB_autoPlay;
-	CheckBox CB_traceLog;
-	CheckBox CB_record;
 	LinearLayout LL_pads;
 	LinearLayout LL_chains;
 	LinearLayout LL_autoPlayControlView;
@@ -62,17 +57,31 @@ public class Play extends BaseActivity {
 	RealtimeBlurView RBV_option_blur;
 	RelativeLayout RL_option_window;
 	Button BTN_option_quit;
-	CheckBox CB_watermark;
+	
+	CheckBox CB1_pressedPadShow;
+	CheckBox CB1_LED;
+	CheckBox CB1_autoPlay;
+	CheckBox CB1_traceLog;
+	CheckBox CB1_record;
+	
+	CheckBox CB2_pressedPadShow;
+	CheckBox CB2_LED;
+	CheckBox CB2_autoPlay;
+	CheckBox CB2_traceLog;
+	CheckBox CB2_record;
+	CheckBox CB2_watermark;
+	
+	SyncCheckBox SCV_pressedPadShow;
+	SyncCheckBox SCV_LED;
+	SyncCheckBox SCV_autoPlay;
+	SyncCheckBox SCV_traceLog;
+	SyncCheckBox SCV_record;
+	SyncCheckBox SCV_watermark;
 	
 	
 	void initVar() {
 		RL_rootView = findViewById(R.id.rootView);
 		IV_background = findViewById(R.id.background);
-		CB_pressedPadShow = findViewById(R.id.CB_pressedPadShow);
-		CB_LED = findViewById(R.id.CB_LED);
-		CB_autoPlay = findViewById(R.id.CB_autoPlay);
-		CB_traceLog = findViewById(R.id.CB_traceLog);
-		CB_record = findViewById(R.id.CB_record);
 		LL_pads = findViewById(R.id.pads);
 		LL_chains = findViewById(R.id.chains);
 		LL_autoPlayControlView = findViewById(R.id.autoPlayControlView);
@@ -83,7 +92,27 @@ public class Play extends BaseActivity {
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
 		BTN_option_quit = findViewById(R.id.quit);
-		CB_watermark = findViewById(R.id.watermark);
+		
+		CB1_pressedPadShow = findViewById(R.id.CB1_pressedPadShow);
+		CB1_LED = findViewById(R.id.CB1_LED);
+		CB1_autoPlay = findViewById(R.id.CB1_autoPlay);
+		CB1_traceLog = findViewById(R.id.CB1_traceLog);
+		CB1_record = findViewById(R.id.CB1_record);
+		
+		
+		CB2_pressedPadShow = findViewById(R.id.CB2_pressedPadShow);
+		CB2_LED = findViewById(R.id.CB2_LED);
+		CB2_autoPlay = findViewById(R.id.CB2_autoPlay);
+		CB2_traceLog = findViewById(R.id.CB2_traceLog);
+		CB2_record = findViewById(R.id.CB2_record);
+		CB2_watermark = findViewById(R.id.CB2_watermark);
+		
+		SCV_pressedPadShow = new SyncCheckBox(CB1_pressedPadShow, CB2_pressedPadShow);
+		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
+		SCV_autoPlay = new SyncCheckBox(CB1_autoPlay, CB2_autoPlay);
+		SCV_traceLog = new SyncCheckBox(CB1_traceLog, CB2_traceLog);
+		SCV_record = new SyncCheckBox(CB1_record, CB2_record);
+		SCV_watermark = new SyncCheckBox(CB2_watermark);
 	}
 	
 	// =========================================================================================
@@ -607,7 +636,7 @@ public class Play extends BaseActivity {
 		IV_next.setOnClickListener(v -> autoPlay_after());
 		RBV_option_blur.setOnClickListener(v -> toggleOptionWindow(false));
 		BTN_option_quit.setOnClickListener(v -> finish());
-		CB_watermark.setOnCheckedChangeListener((buttonView, isChecked) -> toggleWatermark(isChecked));
+		CB2_watermark.setOnCheckedChangeListener((buttonView, isChecked) -> toggleWatermark(isChecked));
 		
 		LL_pads.removeAllViews();
 		LL_chains.removeAllViews();
@@ -1507,7 +1536,7 @@ public class Play extends BaseActivity {
 	
 	void toggleWatermark(boolean bool) {
 		isShowWatermark = bool;
-		CB_watermark.setChecked(isShowWatermark);
+		CB2_watermark.setChecked(isShowWatermark);
 		
 		if (isShowWatermark) {
 			for (int i = 4; i <= 7; i++) {
