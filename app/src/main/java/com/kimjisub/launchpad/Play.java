@@ -99,7 +99,6 @@ public class Play extends BaseActivity {
 		CB1_traceLog = findViewById(R.id.CB1_traceLog);
 		CB1_record = findViewById(R.id.CB1_record);
 		
-		
 		CB2_pressedPadShow = findViewById(R.id.CB2_pressedPadShow);
 		CB2_LED = findViewById(R.id.CB2_LED);
 		CB2_autoPlay = findViewById(R.id.CB2_autoPlay);
@@ -421,31 +420,31 @@ public class Play extends BaseActivity {
 			log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
 			if (unipack.squareButton) {
 				if (!unipack.isKeyLED)
-					CB_LED.setVisibility(View.GONE);
+					SCV_LED.setVisibility(View.GONE);
 				
 				if (!unipack.isAutoPlay)
-					CB_autoPlay.setVisibility(View.GONE);
+					SCV_autoPlay.setVisibility(View.GONE);
 			} else {
 				RL_rootView.setPadding(0, 0, 0, 0);
 				
-				CB_pressedPadShow.setVisibility(View.GONE);
-				CB_LED.setVisibility(View.GONE);
-				CB_autoPlay.setVisibility(View.GONE);
+				SCV_pressedPadShow.setVisibility(View.GONE);
+				SCV_LED.setVisibility(View.GONE);
+				SCV_autoPlay.setVisibility(View.GONE);
 				
-				CB_traceLog.setVisibility(View.GONE);
-				CB_record.setVisibility(View.GONE);
+				SCV_traceLog.setVisibility(View.GONE);
+				SCV_record.setVisibility(View.GONE);
 			}
 			
 			log("[06] Set CheckBox Checked");
 			if (unipack.isKeyLED) {
-				CB_LED.setChecked(true);
-				CB_pressedPadShow.setChecked(false);
+				SCV_LED.setChecked(true);
+				SCV_pressedPadShow.setChecked(false);
 			}
 			
-			isPressedShow = CB_pressedPadShow.isChecked();
-			isLEDEvent = CB_LED.isChecked();
-			isTraceLog = CB_traceLog.isChecked();
-			isRecord = CB_record.isChecked();
+			isPressedShow = SCV_pressedPadShow.isChecked();
+			isLEDEvent = SCV_LED.isChecked();
+			isTraceLog = SCV_traceLog.isChecked();
+			isRecord = SCV_record.isChecked();
 			
 			
 			(new AsyncTask<String, String, String>() {
@@ -581,18 +580,18 @@ public class Play extends BaseActivity {
 		}
 		
 		
-		CB_pressedPadShow.setOnCheckedChangeListener((buttonView, isChecked) -> {
+		SCV_pressedPadShow.setOnCheckedChange((isChecked) -> {
 			padInit();
 			isPressedShow = isChecked;
 		});
-		CB_LED.setOnCheckedChangeListener((buttonView, isChecked) -> {
+		SCV_LED.setOnCheckedChange((isChecked) -> {
 			if (unipack.isKeyLED) {
 				isLEDEvent = isChecked;
 				if (!isLEDEvent)
 					LEDInit();
 			}
 		});
-		CB_autoPlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
+		SCV_autoPlay.setOnCheckedChange((isChecked) -> {
 			if (isChecked) {
 				autoPlayTask = new AutoPlayTask();
 				try {
@@ -608,14 +607,13 @@ public class Play extends BaseActivity {
 				autoPlay_removeGuide();
 			}
 		});
-		CB_traceLog.setOnCheckedChangeListener((buttonView, isChecked) -> isTraceLog = isChecked);
-		CB_traceLog.setOnLongClickListener(v -> {
-			
+		SCV_traceLog.setOnCheckedChange((isChecked) -> isTraceLog = isChecked);
+		SCV_traceLog.setOnLongClickListener(v -> {
 			traceLog_init();
 			Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
 			return false;
 		});
-		CB_record.setOnCheckedChangeListener((buttonView, isChecked) -> {
+		SCV_record.setOnCheckedChange((isChecked) -> {
 			isRecord = isChecked;
 			if (isRecord) {
 				rec_prevEventMS = System.currentTimeMillis();
