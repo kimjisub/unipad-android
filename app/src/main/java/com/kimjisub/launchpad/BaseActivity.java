@@ -35,6 +35,7 @@ public class BaseActivity extends AppCompatActivity {
 	public static int Scale_Height = 0;
 	
 	private static InterstitialAd interstitialAd;
+	public static final String ADUNITID = "ca-app-pub-1077445788578961/6843593938";
 	
 	public void showAds() {
 		
@@ -48,14 +49,14 @@ public class BaseActivity extends AppCompatActivity {
 				if (interstitialAd.isLoaded()) {
 					interstitialAd.show();
 					interstitialAd = new InterstitialAd(BaseActivity.this);
-					interstitialAd.setAdUnitId(Billing.ADUNITID);
+					interstitialAd.setAdUnitId(ADUNITID);
 					interstitialAd.loadAd(new AdRequest.Builder().build());
 				} else {
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
 							interstitialAd = new InterstitialAd(BaseActivity.this);
-							interstitialAd.setAdUnitId(Billing.ADUNITID);
+							interstitialAd.setAdUnitId(ADUNITID);
 							interstitialAd.loadAd(new AdRequest.Builder().build());
 						}
 					});
@@ -67,7 +68,7 @@ public class BaseActivity extends AppCompatActivity {
 	public void initAds() {
 		if (!Billing.isPremium) {
 			interstitialAd = new InterstitialAd(BaseActivity.this);
-			interstitialAd.setAdUnitId(Billing.ADUNITID);
+			interstitialAd.setAdUnitId(ADUNITID);
 			interstitialAd.loadAd(new AdRequest.Builder().build());
 		}
 	}
