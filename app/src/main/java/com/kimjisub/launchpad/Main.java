@@ -175,7 +175,7 @@ public class Main extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					showAds();
-					(handler = new Handler()).postDelayed(runnable, 1000);
+					(handler = new Handler()).postDelayed(runnable, 3000);
 				}
 				
 				@Override
