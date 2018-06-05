@@ -58,13 +58,14 @@ public class Launchpad extends BaseActivity {
 	static MidiDevice device = S;
 	static int mode = 0;
 	static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
+	@SuppressLint("StaticFieldLeak")
 	private static Activity driverFrom = null;
 	private static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
 	private static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
 	private static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
 	
 	
-	@SuppressLint("CutPasteId")
+	@SuppressLint({"CutPasteId", "StaticFieldLeak"})
 	void initVar() {
 		TV_info = findViewById(R.id.info);
 		LL_Launchpad = new LinearLayout[]{
@@ -79,26 +80,22 @@ public class Launchpad extends BaseActivity {
 			findViewById(R.id.avoidAfterimage)
 		};
 		
-		setDriverListener(new LaunchpadDriver.DriverRef.OnSendSignalListener() {
-			@SuppressLint("StaticFieldLeak")
-			@Override
-			public void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
-				if (usbDeviceConnection != null) {
-					if (mode == 0) {
-						try {
-							(new AsyncTask<String, Integer, String>() {
-								@Override
-								protected String doInBackground(String... params) {
-									sendBuffer(cmd, sig, note, velo);
-									return null;
-								}
-							}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-						} catch (Exception ignore) {
-							logRecv("런치패드 led 에러");
-						}
-					} else if (mode == 1) {
-						sendBuffer(cmd, sig, note, velo);
+		setDriverListener((cmd, sig, note, velo) -> {
+			if (usbDeviceConnection != null) {
+				if (mode == 0) {
+					try {
+						(new AsyncTask<String, Integer, String>() {
+							@Override
+							protected String doInBackground(String... params) {
+								sendBuffer(cmd, sig, note, velo);
+								return null;
+							}
+						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+					} catch (Exception ignore) {
+						logRecv("런치패드 led 에러");
 					}
+				} else if (mode == 1) {
+					sendBuffer(cmd, sig, note, velo);
 				}
 			}
 		});
@@ -128,22 +125,17 @@ public class Launchpad extends BaseActivity {
 		}*/
 		
 		
-		(new Handler()).postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				finish();
-			}
-		}, 2000);
+		(new Handler()).postDelayed(this::finish, 2000);
 	}
 	
 	
-	private boolean selectDevice(UsbDevice device) {
+	private void selectDevice(UsbDevice device) {
 		
 		int interfaceNum = 0;
 		
 		if (device == null) {
 			logRecv("USB 에러 : device == null");
-			return false;
+			return;
 		} else {
 			try {
 				logRecv("DeviceName : " + device.getDeviceName());
@@ -217,14 +209,12 @@ public class Launchpad extends BaseActivity {
 		usbDeviceConnection = usbManager.openDevice(device);
 		if (usbDeviceConnection == null) {
 			logRecv("USB 에러 : usbDeviceConnection == null");
-			return false;
+			return;
 		}
 		if (usbDeviceConnection.claimInterface(usbInterface, true)) {
 			(new ReceiveTask()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-			return true;
 		} else {
 			logRecv("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
-			return false;
 		}
 	}
 	
