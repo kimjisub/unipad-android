@@ -9,7 +9,6 @@ import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -597,7 +596,7 @@ public class Play extends BaseActivity {
 				try {
 					autoPlayTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} catch (Exception e) {
-					buttonView.setChecked(false);
+					SCV_autoPlay.setChecked(false);
 					e.printStackTrace();
 				}
 			} else {
@@ -608,10 +607,9 @@ public class Play extends BaseActivity {
 			}
 		});
 		SCV_traceLog.setOnCheckedChange((isChecked) -> isTraceLog = isChecked);
-		SCV_traceLog.setOnLongClickListener(v -> {
+		SCV_traceLog.setOnLongClick(() -> {
 			traceLog_init();
 			Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
-			return false;
 		});
 		SCV_record.setOnCheckedChange((isChecked) -> {
 			isRecord = isChecked;
@@ -624,6 +622,7 @@ public class Play extends BaseActivity {
 				rec_log = "";
 			}
 		});
+		SCV_watermark.setOnCheckedChange((isChecked) -> toggleWatermark(isChecked));
 		IV_prev.setOnClickListener(v -> autoPlay_prev());
 		IV_play.setOnClickListener(v -> {
 			if (autoPlayTask.isPlaying)
@@ -634,7 +633,6 @@ public class Play extends BaseActivity {
 		IV_next.setOnClickListener(v -> autoPlay_after());
 		RBV_option_blur.setOnClickListener(v -> toggleOptionWindow(false));
 		BTN_option_quit.setOnClickListener(v -> finish());
-		CB2_watermark.setOnCheckedChangeListener((buttonView, isChecked) -> toggleWatermark(isChecked));
 		
 		LL_pads.removeAllViews();
 		LL_chains.removeAllViews();
@@ -743,19 +741,20 @@ public class Play extends BaseActivity {
 		IV_play.setBackground(theme.xml_play);
 		IV_next.setBackground(theme.xml_next);
 		
-		CB_pressedPadShow.setTextColor(theme.setting_btn);
-		CB_LED.setTextColor(theme.setting_btn);
-		CB_autoPlay.setTextColor(theme.setting_btn);
-		CB_traceLog.setTextColor(theme.setting_btn);
-		CB_record.setTextColor(theme.setting_btn);
+		SCV_pressedPadShow.setTextColor(theme.setting_btn);
+		SCV_LED.setTextColor(theme.setting_btn);
+		SCV_autoPlay.setTextColor(theme.setting_btn);
+		SCV_traceLog.setTextColor(theme.setting_btn);
+		SCV_record.setTextColor(theme.setting_btn);
+		SCV_watermark.setTextColor(theme.setting_btn);
 		
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			CB_pressedPadShow.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_LED.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_autoPlay.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_traceLog.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-			CB_record.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		}
+		
+		SCV_pressedPadShow.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		SCV_LED.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		SCV_autoPlay.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		SCV_traceLog.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		SCV_record.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		SCV_watermark.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
 		
 	}
 	
@@ -1228,12 +1227,12 @@ public class Play extends BaseActivity {
 		
 		@Override
 		protected void onPostExecute(String result) {
-			CB_autoPlay.setChecked(false);
+			SCV_autoPlay.setChecked(false);
 			if (unipack.isKeyLED) {
-				CB_LED.setChecked(true);
-				CB_pressedPadShow.setChecked(false);
+				SCV_LED.setChecked(true);
+				SCV_pressedPadShow.setChecked(false);
 			} else {
-				CB_pressedPadShow.setChecked(true);
+				SCV_pressedPadShow.setChecked(true);
 			}
 			LL_autoPlayControlView.setVisibility(View.GONE);
 		}
@@ -1249,10 +1248,10 @@ public class Play extends BaseActivity {
 		IV_play.setBackground(theme.xml_pause);
 		
 		if (unipack.isKeyLED) {
-			CB_LED.setChecked(true);
-			CB_pressedPadShow.setChecked(false);
+			SCV_LED.setChecked(true);
+			SCV_pressedPadShow.setChecked(false);
 		} else {
-			CB_pressedPadShow.setChecked(true);
+			SCV_pressedPadShow.setChecked(true);
 		}
 		autoPlayTask.beforeStartPlaying = true;
 	}
@@ -1269,8 +1268,8 @@ public class Play extends BaseActivity {
 		
 		autoPlayTask.achieve = -1;
 		
-		CB_pressedPadShow.setChecked(false);
-		CB_LED.setChecked(false);
+		SCV_pressedPadShow.setChecked(false);
+		SCV_LED.setChecked(false);
 	}
 	
 	void autoPlay_prev() {
@@ -1534,7 +1533,7 @@ public class Play extends BaseActivity {
 	
 	void toggleWatermark(boolean bool) {
 		isShowWatermark = bool;
-		CB2_watermark.setChecked(isShowWatermark);
+		SCV_watermark.setChecked(isShowWatermark);
 		
 		if (isShowWatermark) {
 			for (int i = 4; i <= 7; i++) {
