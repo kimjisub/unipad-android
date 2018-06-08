@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="dark1">#161e2b</color> <!--ㅁㄴㄹ-->
-	<!--<color name="dark2">#414F66</color>-->
-	<color name="gray">#565f6c</color>
-	<!--<color name="dark4">#808A99</color>-->
-	<color name="dark5">#a6b4c9</color>
+	<color name="dark">#161e2b</color>
+	<color name="gray1">#565f6c</color>
+	<color name="gray2">#808A99</color>
+	<color name="gray3">#a6b4c9</color>
+	<color name="dark2">#414F66</color>
 	<color name="white">#FFFFFF</color>
-
-	<color name="text1">#a6b4c9</color>
-	<!--<color name="text2">#565f6c</color>-->
-	<color name="text3">#767d89</color>
-	<!--<color name="text4">#a1a6ae</color>-->
-	<color name="text5">#ffffff</color>
 
 	<color name="setting_btn">#a6b4c9</color>
 	<color name="trace_log">#161e2b</color>

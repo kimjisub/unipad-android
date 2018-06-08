@@ -14,7 +14,7 @@
 	    android:paddingLeft="5dp"
 	    android:paddingRight="5dp"
 	    android:text="example"
-	    android:textColor="@color/text5"
+	    android:textColor="@color/white"
 	    android:textSize="10dp"/>
 	
 	<TextView
@@ -26,7 +26,7 @@
 	    android:paddingLeft="5dp"
 	    android:paddingRight="5dp"
 	    android:text="text"
-	    android:textColor="@color/text5"
+	    android:textColor="@color/white"
 	    android:textSize="10dp"/>
 
 </LinearLayout>
