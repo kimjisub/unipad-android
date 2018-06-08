@@ -19,7 +19,7 @@
 		    android:layout_marginTop="7dp"
 		    android:padding="5dp"
 		    android:text="@string/doYouWantToRemapProject"
-		    android:textColor="@color/text5"
+		    android:textColor="@color/white"
 		    android:textSize="17dp"/>
 		
 		<LinearLayout
@@ -40,7 +40,7 @@
 			    android:paddingLeft="5dp"
 			    android:paddingRight="5dp"
 			    android:text="@string/path"
-			    android:textColor="@color/text5"
+			    android:textColor="@color/white"
 			    android:textSize="10dp"/>
 			
 			<TextView
@@ -52,7 +52,7 @@
 			    android:paddingLeft="5dp"
 			    android:paddingRight="5dp"
 			    android:text="example"
-			    android:textColor="@color/text5"
+			    android:textColor="@color/white"
 			    android:textSize="10dp"/>
 		
 		</LinearLayout>

@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dark1">
+    android:background="@color/dark">
 	
 	<TextView
 	    android:layout_width="wrap_content"
@@ -14,7 +14,7 @@
 	    android:fontFamily="@font/quicksand_bold"
 	    android:gravity="center"
 	    android:text="UNISKIN"
-	    android:textColor="@color/text5"
+	    android:textColor="@color/white"
 	    android:textSize="32dp"/>
 	
 	<android.support.v7.widget.RecyclerView
@@ -37,7 +37,7 @@
 	    android:clickable="true"
 	    android:gravity="center"
 	    android:text="@string/apply"
-	    android:textColor="@color/text5"
+	    android:textColor="@color/white"
 	    android:textSize="12dp"/>
 
 </RelativeLayout>

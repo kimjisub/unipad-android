@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
@@ -20,7 +19,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -471,7 +469,7 @@ public class Main extends BaseActivity {
 				};
 				int[] btnColors = new int[]{
 					color(R.color.red),
-					color(R.color.text3)
+					color(R.color.gray2)
 				};
 				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
@@ -510,7 +508,7 @@ public class Main extends BaseActivity {
 				};
 				int[] btnColors = new int[]{
 					color(R.color.orange),
-					color(R.color.text3)
+					color(R.color.gray2)
 				};
 				
 				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {

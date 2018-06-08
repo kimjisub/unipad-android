@@ -24,7 +24,7 @@
 	    android:paddingRight="30dp"
 	    android:paddingTop="3dp"
 	    android:text="Version : 1.0.0"
-	    android:textColor="@color/text5"/>
+	    android:textColor="@color/white"/>
 
 	<TextView
 	    android:id="@+id/theme_author"
@@ -33,5 +33,5 @@
 	    android:layout_gravity="center"
 	    android:layout_marginTop="5dp"
 	    android:text="UniPad"
-	    android:textColor="@color/text5"/>
+	    android:textColor="@color/white"/>
 </LinearLayout>
