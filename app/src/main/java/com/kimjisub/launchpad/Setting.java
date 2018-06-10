@@ -167,7 +167,7 @@ public class Setting extends PreferenceActivity {
 			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
-			builder.setTitle(lang(R.string.community));
+			builder.setTitle(lang(R.string.openSourceLicense));
 			builder.setView(listView);
 			builder.show();
 			return false;
