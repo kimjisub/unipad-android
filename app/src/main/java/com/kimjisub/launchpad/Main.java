@@ -754,20 +754,16 @@ public class Main extends BaseActivity {
 					if (f == 0 && upDown) {
 						if (havePrev()) {
 							togglePlay(playIndex - 1);
-							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
-							//SV_scrollView.smoothScrollBy(0, PV_items[playIndex].getHeight() + dpToPx(10));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
 							showSelectUI();
 					} else if (f == 1 && upDown) {
 						if (haveNext()) {
 							togglePlay(playIndex + 1);
-							log(PV_items[playIndex].getTop() + " + " + (getResources().getDisplayMetrics().heightPixels / 2));
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2));
-							//SV_scrollView.smoothScrollBy(0, -(PV_items[playIndex].getHeight() + dpToPx(10)));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
 							showSelectUI();
-					} else if (f == 3 && upDown) {
+					} else if (f == 2 && upDown) {
 						if (haveNow())
 							PV_items[playIndex].onPlayClick();
 					} else if (4 <= f && f <= 7 && upDown)
@@ -800,17 +796,19 @@ public class Main extends BaseActivity {
 	void showSelectUI() {
 		if (PV_items != null) {
 			if (havePrev())
-				Launchpad.driver.sendFunctionkeyLED(0, 40);
+				Launchpad.driver.sendFunctionkeyLED(0, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(0, 0);
-			if(haveNow())
-				Launchpad.driver.sendFunctionkeyLED(3, 63);
+				Launchpad.driver.sendFunctionkeyLED(0, 52);
+			
+			if (haveNow())
+				Launchpad.driver.sendFunctionkeyLED(2, 61);
 			else
-				Launchpad.driver.sendFunctionkeyLED(3, 0);
+				Launchpad.driver.sendFunctionkeyLED(2, 0);
+			
 			if (haveNext())
-				Launchpad.driver.sendFunctionkeyLED(1, 40);
+				Launchpad.driver.sendFunctionkeyLED(1, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(1, 0);
+				Launchpad.driver.sendFunctionkeyLED(1, 52);
 		}
 	}
 	
