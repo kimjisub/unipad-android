@@ -74,6 +74,7 @@ public class Main extends BaseActivity {
 	ScrollView SV_scrollView;
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
+	FloatingActionButton FAB_reconnectLaunchpad;
 	FloatingActionButton FAB_refreshList;
 	FloatingActionButton FAB_loadUniPack;
 	FloatingActionButton FAB_store;
@@ -108,6 +109,7 @@ public class Main extends BaseActivity {
 		SV_scrollView = findViewById(R.id.scrollView);
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
+		FAB_reconnectLaunchpad = findViewById(R.id.fab_reconnectLaunchpad);
 		FAB_refreshList = findViewById(R.id.fab_refreshList);
 		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
 		FAB_store = findViewById(R.id.fab_store);
@@ -200,7 +202,9 @@ public class Main extends BaseActivity {
 	void startMain() {
 		updateCheck();
 		
-		FAB_refreshList.setOnClickListener(view -> update());
+		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(Main.this, Launchpad.class)));
+		
+		FAB_refreshList.setOnClickListener(v -> update());
 		
 		FAB_loadUniPack.setOnClickListener(v -> unipackExplorer());
 		

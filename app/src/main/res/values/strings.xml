@@ -28,6 +28,7 @@
 	<string name="watermark">Watermark</string>
 
 	<!--Menu-->
+	<string name="reconnect_launchpad">Reconnect Launchpad</string>
 	<string name="list_refresh">Refresh List</string>
 	<string name="import_unipack">Load Unipack</string>
 	<string name="store">Store</string>
