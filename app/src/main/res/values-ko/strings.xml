@@ -28,6 +28,7 @@
 	<string name="watermark">워터마크</string>
 
 	<!--Menu-->
+	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
 	<string name="list_refresh">목록 새로고침</string>
 	<string name="import_unipack">유니팩 불러오기</string>
 	<string name="store">스토어</string>

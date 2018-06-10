@@ -20,6 +20,8 @@ import android.widget.TextView;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
+import java.util.Iterator;
+
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.MK2;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
@@ -118,11 +120,11 @@ public class Launchpad extends BaseActivity {
 		usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction()))
 			selectDevice(usbDevice);
-		/*else {
+		else {
 			Iterator<UsbDevice> deviceIterator = ((UsbManager) getSystemService(Context.USB_SERVICE)).getDeviceList().values().iterator();
 			if (deviceIterator.hasNext())
 				selectDevice(deviceIterator.next());
-		}*/
+		}
 		
 		
 		(new Handler()).postDelayed(this::finish, 2000);
