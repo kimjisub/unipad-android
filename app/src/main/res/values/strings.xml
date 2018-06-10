@@ -39,6 +39,7 @@
 	<string name="use_sd_card">Using SD Card</string>
 	<string name="removeAds">Remove Ads</string>
 	<string name="purchaseComplete">Purchase Complete</string>
+	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
 
 	<!--Credit-->

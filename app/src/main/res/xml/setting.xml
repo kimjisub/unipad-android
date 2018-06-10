@@ -27,6 +27,9 @@
 	<PreferenceCategory
 	    android:title="@string/information">
 		<Preference
+		    android:key="OpenSourceLicense"
+		    android:title="@string/openSourceLicense"/>
+		<Preference
 		    android:key="FCMToken"
 		    android:title="@string/FCMToken"/>
 	</PreferenceCategory>
