@@ -7,12 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -55,166 +53,193 @@ public class Setting extends PreferenceActivity {
 			}
 		}).start();
 		
-		findPreference("select_theme").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				startActivity(new Intent(Setting.this, Theme.class));
-				return false;
-			}
+		findPreference("select_theme").setOnPreferenceClickListener(preference -> {
+			startActivity(new Intent(Setting.this, Theme.class));
+			return false;
 		});
 		
-		findPreference("use_sd_card").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-			@Override
-			public boolean onPreferenceChange(Preference preference, Object newValue) {
-				BaseActivity.requestRestart(Setting.this);
-				return true;
-			}
+		findPreference("use_sd_card").setOnPreferenceChangeListener((preference, newValue) -> {
+			BaseActivity.requestRestart(Setting.this);
+			return true;
 		});
 		
-		findPreference("community").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				int[] RlistT = {R.string.officialHomepage,
-					R.string.officialFacebook,
-					R.string.facebookCommunity,
-					R.string.naverCafe,
-					R.string.discord,
-					R.string.kakaotalk,
-					R.string.email};
-				int[] RlistS = {R.string.officialHomepage_,
-					R.string.officialFacebook_,
-					R.string.facebookCommunity_,
-					R.string.naverCafe_,
-					R.string.discord_,
-					R.string.kakaotalk_,
-					R.string.email_};
-				
-				int[] RlistI = {
-					R.drawable.web,
-					R.drawable.facebook,
-					R.drawable.facebook_community,
-					R.drawable.cafe,
-					R.drawable.discord,
-					R.drawable.kakaotalk,
-					R.drawable.mail
-				};
-				
-				final String[] listT = new String[RlistT.length];
-				final String[] listS = new String[RlistS.length];
-				final int[] listI = new int[RlistI.length];
-				for (int i = 0; i < listT.length; i++) {
-					listT[i] = lang(RlistT[i]);
-					listS[i] = lang(RlistS[i]);
-					listI[i] = RlistI[i];
-				}
-				
-				
-				ListView listView = new ListView(Setting.this);
-				ArrayList<communityItem> data = new ArrayList<>();
-				for (int i = 0; i < listT.length; i++)
-					data.add(new communityItem(listT[i], listS[i], listI[i]));
-				
-				listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_community_item, data));
-				listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-					@Override
-					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-						String[] urls = {
-							"http://unipad.kr",
-							"https://www.facebook.com/playunipad",
-							"https://www.facebook.com/groups/unipadcommunity",
-							"http://cafe.naver.com/unipad",
-							"https://discord.gg/ESDgyNs",
-							"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
-							"mailto:0226unipad@gmail.com"
-						};
-						String[] actions = {
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_VIEW,
-							Intent.ACTION_SENDTO
-						};
-						startActivity(new Intent(actions[position], Uri.parse(urls[position])));
-					}
-				});
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
-				builder.setTitle(lang(R.string.community));
-				builder.setView(listView);
-				builder.show();
-				return false;
+		findPreference("community").setOnPreferenceClickListener(preference -> {
+			int[] RlistT = {R.string.officialHomepage,
+				R.string.officialFacebook,
+				R.string.facebookCommunity,
+				R.string.naverCafe,
+				R.string.discord,
+				R.string.kakaotalk,
+				R.string.email};
+			int[] RlistS = {R.string.officialHomepage_,
+				R.string.officialFacebook_,
+				R.string.facebookCommunity_,
+				R.string.naverCafe_,
+				R.string.discord_,
+				R.string.kakaotalk_,
+				R.string.email_};
+			
+			int[] RlistI = {
+				R.drawable.web,
+				R.drawable.facebook,
+				R.drawable.facebook_community,
+				R.drawable.cafe,
+				R.drawable.discord,
+				R.drawable.kakaotalk,
+				R.drawable.mail
+			};
+			String[] urls = {
+				"http://unipad.kr",
+				"https://www.facebook.com/playunipad",
+				"https://www.facebook.com/groups/unipadcommunity",
+				"http://cafe.naver.com/unipad",
+				"https://discord.gg/ESDgyNs",
+				"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
+				"mailto:0226unipad@gmail.com"
+			};
+			String[] actions = {
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_VIEW,
+				Intent.ACTION_SENDTO
+			};
+			
+			final String[] listT = new String[RlistT.length];
+			final String[] listS = new String[RlistS.length];
+			final int[] listI = new int[RlistI.length];
+			for (int i = 0; i < listT.length; i++) {
+				listT[i] = lang(RlistT[i]);
+				listS[i] = lang(RlistS[i]);
+				listI[i] = RlistI[i];
 			}
+			
+			
+			ListView listView = new ListView(Setting.this);
+			ArrayList<mItem> data = new ArrayList<>();
+			for (int i = 0; i < listT.length; i++)
+				data.add(new mItem(listT[i], listS[i], listI[i]));
+			
+			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(actions[position], Uri.parse(urls[position]))));
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			builder.setTitle(lang(R.string.community));
+			builder.setView(listView);
+			builder.show();
+			return false;
 		});
 		
-		findPreference("removeAds").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				billing.buyPremium();
-				return false;
-			}
+		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
+			billing.buyPremium();
+			return false;
 		});
 		
-		findPreference("FCMToken").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				putClipboard(FirebaseInstanceId.getInstance().getToken());
-				Toast.makeText(Setting.this, R.string.copied, Toast.LENGTH_SHORT).show();
-				return false;
-			}
+		findPreference("OpenSourceLicense").setOnPreferenceClickListener(preference -> {
+			String[] titleList = {
+				"CarouselLayoutManager",
+				"FloatingActionButton",
+				"TedPermission",
+				"RealtimeBlurView"
+			};
+			String[] summaryList = {
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0"
+			};
+			String[] urlList = {
+				"https://github.com/Azoft/CarouselLayoutManager",
+				"https://github.com/Clans/FloatingActionButton",
+				"https://github.com/ParkSangGwon/TedPermission",
+				"https://github.com/mmin18/RealtimeBlurView"
+			};
+			
+			ListView listView = new ListView(Setting.this);
+			ArrayList<mItem> data = new ArrayList<>();
+			for (int i = 0; i < titleList.length; i++)
+				data.add(new mItem(titleList[i], summaryList[i]));
+			
+			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			builder.setTitle(lang(R.string.community));
+			builder.setView(listView);
+			builder.show();
+			return false;
+		});
+		
+		findPreference("FCMToken").setOnPreferenceClickListener(preference -> {
+			putClipboard(FirebaseInstanceId.getInstance().getToken());
+			Toast.makeText(Setting.this, R.string.copied, Toast.LENGTH_SHORT).show();
+			return false;
 		});
 		
 	}
 	
 	
-	public class communityItem {
+	public class mItem {
 		private String title;
-		private String summuary;
+		private String summary;
 		private int icon;
+		private boolean isIcon = false;
 		
 		
-		public communityItem(String title, String summuary, int icon) {
+		public mItem(String title, String summary, int icon) {
 			setTitle(title);
-			setSummuary(summuary);
+			setSummary(summary);
 			setIcon(icon);
 		}
+		public mItem(String title, String summary) {
+			setTitle(title);
+			setSummary(summary);
+		}
 		
+		// setter
 		
 		public void setTitle(String title) {
 			this.title = title;
 		}
 		
-		public void setSummuary(String summuary) {
-			this.summuary = summuary;
+		public void setSummary(String summary) {
+			this.summary = summary;
 		}
 		
 		public void setIcon(int icon) {
 			this.icon = icon;
+			isIcon = true;
 		}
+		
+		
+		// getter
 		
 		public String getTitle() {
 			return title;
 		}
 		
-		public String getSummuary() {
-			return summuary;
+		public String getSummary() {
+			return summary;
 		}
 		
 		public int getIcon() {
 			return icon;
 		}
 		
+		public boolean isIcon(){return isIcon;}
+		
 	}
 	
 	class mAdapter extends BaseAdapter {
 		private LayoutInflater inflater;
-		private ArrayList<communityItem> data;
+		private ArrayList<mItem> data;
 		private int layout;
 		
 		
-		public mAdapter(Context context, int layout, ArrayList<communityItem> data) {
+		public mAdapter(Context context, int layout, ArrayList<mItem> data) {
 			this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			this.data = data;
 			this.layout = layout;
@@ -240,15 +265,18 @@ public class Setting extends PreferenceActivity {
 			if (convertView == null)
 				convertView = inflater.inflate(layout, parent, false);
 			
-			communityItem item = data.get(position);
+			mItem item = data.get(position);
 			
 			TextView title = convertView.findViewById(R.id.title);
 			TextView summary = convertView.findViewById(R.id.summary);
 			ImageView icon = convertView.findViewById(R.id.icon);
 			
 			title.setText(item.getTitle());
-			summary.setText(item.getSummuary());
-			icon.setBackground(BaseActivity.drawable(getApplicationContext(), item.getIcon()));
+			summary.setText(item.getSummary());
+			if(item.isIcon())
+				icon.setBackground(BaseActivity.drawable(getApplicationContext(), item.getIcon()));
+			else
+				icon.setVisibility(View.GONE);
 			return convertView;
 		}
 	}

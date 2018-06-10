@@ -39,6 +39,7 @@
 	<string name="use_sd_card">SD 카드 사용</string>
 	<string name="removeAds">광고 제거</string>
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
+	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
 
 	<!--Credit-->
