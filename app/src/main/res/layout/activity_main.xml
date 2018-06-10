@@ -3,7 +3,7 @@
                 xmlns:fab="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/dark">
+                android:background="@color/background1">
 	
 	<LinearLayout
 	    android:id="@+id/scale"
@@ -115,7 +115,7 @@
 	    android:id="@+id/intro"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:background="@color/dark">
+	    android:background="@color/background1">
 		
 		<ImageView
 		    android:layout_width="wrap_content"
@@ -146,7 +146,7 @@
 			    android:layout_height="wrap_content"
 			    android:layout_marginBottom="10dp"
 			    android:text="@string/credit_simple"
-			    android:textColor="@color/gray3"
+			    android:textColor="@color/gray1"
 			    android:textSize="10dp"/>
 		
 		

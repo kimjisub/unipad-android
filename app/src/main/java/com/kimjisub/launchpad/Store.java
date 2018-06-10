@@ -191,7 +191,7 @@ public class Store extends BaseActivity {
 		log("itemClicked(" + i + ")");
 		
 		v.togglePlay(true);
-		v.updateFlagColor(color(R.color.gray3));
+		v.updateFlagColor(color(R.color.gray1));
 		v.setStatus(false);
 		v.setPlayText("0%");
 		

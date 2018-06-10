@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="dark">#161e2b</color>
-	<color name="gray1">#565f6c</color>
+	<color name="background1">#161e2b</color>
+	<color name="gray1">#a6b4c9</color>
+	<color name="background2">#414F66</color>
 	<color name="gray2">#808A99</color>
-	<color name="gray3">#a6b4c9</color>
-	<color name="dark2">#414F66</color>
 	<color name="white">#FFFFFF</color>
+	
+	<color name="title">#767d89</color>
+	<color name="subTitle">#a1a6ae</color>
 
 	<color name="setting_btn">#a6b4c9</color>
 	<color name="trace_log">#161e2b</color>

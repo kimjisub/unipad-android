@@ -131,7 +131,7 @@
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
 					    android:text="Title"
-					    android:textColor="@color/text1"
+					    android:textColor="@color/title"
 					    android:textSize="15dp"/>
 					
 					<TextView
@@ -140,7 +140,7 @@
 					    android:layout_height="wrap_content"
 					    android:layout_marginTop="3dp"
 					    android:text="Producer"
-					    android:textColor="@color/text2"
+					    android:textColor="@color/subTitle"
 					    android:textSize="10dp"/>
 				
 				</LinearLayout>
