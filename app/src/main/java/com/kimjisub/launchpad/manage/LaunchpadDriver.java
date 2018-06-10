@@ -316,14 +316,6 @@ public class LaunchpadDriver {
 				
 				if (y >= 1 && y <= 8)
 					onPadTouch(x - 1, y - 1, velo != 0, velo);
-			} else if (cmd == 11) {
-				int x = 9 - (note / 10);
-				int y = note % 10;
-				
-				if (y == 9) {
-					onChainTouch(x - 1, velo != 0);
-					onFunctionkeyTouch(x - 1 + 8, velo != 0);
-				}
 			}
 			if (cmd == 11 && sig == -80) {
 				if (91 <= note && note <= 98) {
