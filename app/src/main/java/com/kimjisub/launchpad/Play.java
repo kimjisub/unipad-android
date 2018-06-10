@@ -9,6 +9,7 @@ import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
@@ -741,20 +742,23 @@ public class Play extends BaseActivity {
 		IV_play.setBackground(theme.xml_play);
 		IV_next.setBackground(theme.xml_next);
 		
-		SCV_pressedPadShow.setTextColor(theme.setting_btn);
-		SCV_LED.setTextColor(theme.setting_btn);
-		SCV_autoPlay.setTextColor(theme.setting_btn);
-		SCV_traceLog.setTextColor(theme.setting_btn);
-		SCV_record.setTextColor(theme.setting_btn);
-		SCV_watermark.setTextColor(theme.setting_btn);
 		
+		CheckBox[] CB1s = new CheckBox[]{CB1_pressedPadShow, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
+		CheckBox[] CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark};
 		
-		SCV_pressedPadShow.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		SCV_LED.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		SCV_autoPlay.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		SCV_traceLog.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		SCV_record.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
-		SCV_watermark.setButtonTintList(ColorStateList.valueOf(theme.setting_btn));
+		for (CheckBox cb1 : CB1s) {
+			cb1.setTextColor(theme.checkbox);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+				cb1.setButtonTintList(ColorStateList.valueOf(theme.checkbox));
+		}
+		for (CheckBox cb2 : CB2s) {
+			cb2.setTextColor(theme.option_window_checkbox);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+				cb2.setButtonTintList(ColorStateList.valueOf(theme.option_window_checkbox));
+		}
+		//RL_option_window.setBackgroundColor(theme.option_window);
+		//BTN_option_quit.setBackgroundColor(theme.option_window_btn);
+		//BTN_option_quit.setTextColor(theme.option_window_btn_text);
 		
 	}
 	

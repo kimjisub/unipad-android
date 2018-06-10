@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.manage;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+import com.kimjisub.launchpad.R;
+
 public class ThemePack {
 	public Context context;
 	public String package_name = "";
@@ -33,11 +35,16 @@ public class ThemePack {
 	}
 
 	public class Resources {
-		public Drawable playbg, btn, btn_, chainled, chain, chain_, chain__, phantom, phantom_, xml_prev, xml_play, xml_pause, xml_next;
-		public int setting_btn, trace_log;
+		public Drawable playbg;
+		public Drawable btn, btn_;
+		public Drawable chainled, chain, chain_, chain__;
+		public Drawable phantom, phantom_;
+		public Drawable xml_prev, xml_play, xml_pause, xml_next;
+		public int checkbox, trace_log, option_window, option_window_checkbox, option_window_btn, option_window_btn_text;
 		public boolean isChainLED = true;
 
 		public Resources(android.content.res.Resources res) throws Exception {
+			// Drawable
 			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
 			this.btn = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn", null, null));
 			this.btn_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn_", null, null));
@@ -58,15 +65,37 @@ public class ThemePack {
 			this.xml_play = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_play", null, null));
 			this.xml_pause = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_pause", null, null));
 			this.xml_next = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_next", null, null));
+			
+			// Color
 			try {
-				this.setting_btn = res.getColor(res.getIdentifier(package_name + ":color/setting_btn", null, null));
+				this.checkbox = res.getColor(res.getIdentifier(package_name + ":color/checkbox", null, null));
 			} catch (Exception ignore) {
-				this.setting_btn = res.getColor(res.getIdentifier(package_name + ":color/text1", null, null));
+				this.checkbox = context.getResources().getColor(R.color.checkbox);
 			}
 			try {
 				this.trace_log = res.getColor(res.getIdentifier(package_name + ":color/trace_log", null, null));
 			} catch (Exception ignore) {
-				this.trace_log = res.getColor(res.getIdentifier(package_name + ":color/text1", null, null));
+				this.trace_log = context.getResources().getColor(R.color.trace_log);
+			}
+			try {
+				this.option_window = res.getColor(res.getIdentifier(package_name + ":color/option_window", null, null));
+			} catch (Exception ignore) {
+				this.option_window = context.getResources().getColor(R.color.option_window);
+			}
+			try {
+				this.option_window_checkbox = res.getColor(res.getIdentifier(package_name + ":color/option_window_checkbox", null, null));
+			} catch (Exception ignore) {
+				this.option_window_checkbox = context.getResources().getColor(R.color.option_window_checkbox);
+			}
+			try {
+				this.option_window_btn = res.getColor(res.getIdentifier(package_name + ":color/option_window_btn", null, null));
+			} catch (Exception ignore) {
+				this.option_window_btn = context.getResources().getColor(R.color.option_window_btn);
+			}
+			try {
+				this.option_window_btn_text = res.getColor(res.getIdentifier(package_name + ":color/option_window_btn_text", null, null));
+			} catch (Exception ignore) {
+				this.option_window_btn_text = context.getResources().getColor(R.color.option_window_btn_text);
 			}
 		}
 	}
