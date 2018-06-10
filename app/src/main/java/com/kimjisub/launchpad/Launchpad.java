@@ -251,18 +251,18 @@ public class Launchpad extends BaseActivity {
 		
 		for (int i = 0; i < LL_Launchpad.length; i++) {
 			if (device.value == i) {
-				LL_Launchpad[i].setBackgroundColor(color(R.color.gray3));
+				LL_Launchpad[i].setBackgroundColor(color(R.color.gray1));
 				int count = LL_Launchpad[i].getChildCount();
 				for (int j = 0; j < count; j++) {
 					TextView textView = (TextView) LL_Launchpad[i].getChildAt(j);
-					textView.setTextColor(color(R.color.dark));
+					textView.setTextColor(color(R.color.background1));
 				}
 			} else {
-				LL_Launchpad[i].setBackgroundColor(color(R.color.dark));
+				LL_Launchpad[i].setBackgroundColor(color(R.color.background1));
 				int count = LL_Launchpad[i].getChildCount();
 				for (int j = 0; j < count; j++) {
 					TextView textView = (TextView) LL_Launchpad[i].getChildAt(j);
-					textView.setTextColor(color(R.color.gray3));
+					textView.setTextColor(color(R.color.gray1));
 				}
 			}
 		}
@@ -288,18 +288,18 @@ public class Launchpad extends BaseActivity {
 		
 		for (int i = 0; i < LL_mode.length; i++) {
 			if (mode == i) {
-				LL_mode[i].setBackgroundColor(color(R.color.gray3));
+				LL_mode[i].setBackgroundColor(color(R.color.gray1));
 				int count = LL_mode[i].getChildCount();
 				for (int j = 0; j < count; j++) {
 					TextView textView = (TextView) LL_mode[i].getChildAt(j);
-					textView.setTextColor(color(R.color.dark));
+					textView.setTextColor(color(R.color.background1));
 				}
 			} else {
-				LL_mode[i].setBackgroundColor(color(R.color.dark));
+				LL_mode[i].setBackgroundColor(color(R.color.background1));
 				int count = LL_mode[i].getChildCount();
 				for (int j = 0; j < count; j++) {
 					TextView textView = (TextView) LL_mode[i].getChildAt(j);
-					textView.setTextColor(color(R.color.gray3));
+					textView.setTextColor(color(R.color.gray1));
 				}
 			}
 		}
