@@ -21,6 +21,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.MK2;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
@@ -121,7 +122,7 @@ public class Launchpad extends BaseActivity {
 		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction()))
 			selectDevice(usbDevice);
 		else {
-			Iterator<UsbDevice> deviceIterator = ((UsbManager) getSystemService(Context.USB_SERVICE)).getDeviceList().values().iterator();
+			Iterator<UsbDevice> deviceIterator = ((UsbManager) Objects.requireNonNull(getSystemService(Context.USB_SERVICE))).getDeviceList().values().iterator();
 			if (deviceIterator.hasNext())
 				selectDevice(deviceIterator.next());
 		}
