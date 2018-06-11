@@ -71,16 +71,6 @@
 	    fab:menu_openDirection="up">
 		
 		<com.github.clans.fab.FloatingActionButton
-		    android:id="@+id/fab_reconnectLaunchpad"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:src="@drawable/ic_refresh_white_24dp"
-		    fab:fab_colorNormal="@color/red"
-		    fab:fab_colorPressed="@color/red"
-		    fab:fab_label="@string/reconnect_launchpad"
-		    fab:fab_size="mini"/>
-		
-		<com.github.clans.fab.FloatingActionButton
 		    android:id="@+id/fab_refreshList"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -88,6 +78,16 @@
 		    fab:fab_colorNormal="@color/red"
 		    fab:fab_colorPressed="@color/red"
 		    fab:fab_label="@string/list_refresh"
+		    fab:fab_size="mini"/>
+		
+		<com.github.clans.fab.FloatingActionButton
+		    android:id="@+id/fab_reconnectLaunchpad"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:src="@drawable/ic_launchpad_24dp"
+		    fab:fab_colorNormal="@color/red"
+		    fab:fab_colorPressed="@color/red"
+		    fab:fab_label="@string/reconnect_launchpad"
 		    fab:fab_size="mini"/>
 		
 		<com.github.clans.fab.FloatingActionButton
