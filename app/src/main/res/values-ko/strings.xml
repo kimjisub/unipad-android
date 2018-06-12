@@ -109,6 +109,7 @@
 
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">런치패드 연결중…</string>
+	<string name="midiDevicesNotDetected">MIDI 장치가 감지되지 않았습니다.</string>
 	<string name="signal_SpeedFirst">속도 우선</string>
 	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
 

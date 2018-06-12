@@ -109,6 +109,7 @@
 
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Connecting launchpad…</string>
+	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 

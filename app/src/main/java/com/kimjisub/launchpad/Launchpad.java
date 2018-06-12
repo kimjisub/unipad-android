@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
@@ -34,6 +35,7 @@ import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 public class Launchpad extends BaseActivity {
 	
+	RelativeLayout RL_err;
 	TextView TV_info;
 	LinearLayout[] LL_Launchpad;
 	LinearLayout[] LL_mode;
@@ -58,7 +60,7 @@ public class Launchpad extends BaseActivity {
 		}
 	}
 	
-	static MidiDevice device = S;
+	static MidiDevice device = null;
 	static int mode = 0;
 	static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
 	@SuppressLint("StaticFieldLeak")
@@ -70,6 +72,7 @@ public class Launchpad extends BaseActivity {
 	
 	@SuppressLint({"CutPasteId", "StaticFieldLeak"})
 	void initVar() {
+		RL_err = findViewById(R.id.err);
 		TV_info = findViewById(R.id.info);
 		LL_Launchpad = new LinearLayout[]{
 			findViewById(R.id.s),
@@ -97,9 +100,8 @@ public class Launchpad extends BaseActivity {
 					} catch (Exception ignore) {
 						logRecv("런치패드 led 에러");
 					}
-				} else if (mode == 1) {
+				} else if (mode == 1)
 					sendBuffer(cmd, sig, note, velo);
-				}
 			}
 		});
 	}
@@ -112,19 +114,18 @@ public class Launchpad extends BaseActivity {
 		
 		mode = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
 		
-		selectDevice(device.value);
-		
+		selectDevice(device);
 		selectMode(mode);
 		
 		Intent intent = getIntent();
 		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction()))
-			selectDevice(usbDevice);
+			initDevice(usbDevice);
 		else {
 			Iterator<UsbDevice> deviceIterator = ((UsbManager) Objects.requireNonNull(getSystemService(Context.USB_SERVICE))).getDeviceList().values().iterator();
 			if (deviceIterator.hasNext())
-				selectDevice(deviceIterator.next());
+				initDevice(deviceIterator.next());
 		}
 		
 		
@@ -132,7 +133,9 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	
-	private void selectDevice(UsbDevice device) {
+	private void initDevice(UsbDevice device) {
+		
+		RL_err.setVisibility(View.GONE);
 		
 		int interfaceNum = 0;
 		
@@ -181,6 +184,7 @@ public class Launchpad extends BaseActivity {
 						interfaceNum = 3;
 						break;
 					default:
+						selectDevice(Piano.value);
 						TV_info.append("prediction : unknown\n");
 						break;
 				}
@@ -225,6 +229,11 @@ public class Launchpad extends BaseActivity {
 	
 	public void selectDeviceXml(View v) {
 		selectDevice(Integer.parseInt((String) v.getTag()));
+	}
+	
+	public void selectDevice(MidiDevice m){
+		if(m != null)
+		selectDevice(m.value);
 	}
 	
 	public void selectDevice(int num) {

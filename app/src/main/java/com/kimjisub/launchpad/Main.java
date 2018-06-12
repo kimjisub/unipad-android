@@ -53,8 +53,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.kimjisub.launchpad.manage.Tools.log;
-
 
 public class Main extends BaseActivity {
 	
@@ -385,8 +383,6 @@ public class Main extends BaseActivity {
 							packView.setAnimation(a);
 						});
 						
-						log("title: " + title);
-						
 						PV_items[I] = packView;
 						flagColors[I] = flagColor;
 						URLs[I] = url;
@@ -628,16 +624,13 @@ public class Main extends BaseActivity {
 					for (Unipack.AutoPlay e : autoplay3) {
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
-								int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-								//log("t " + (e.x + 1) + " " + (e.y + 1) + " (" + (e.currChain + 1) + " " + (e.x + 1) + " " + (e.y + 1) + " " + num + ") " + new File(unipack.sound[e.currChain][e.x][e.y].get(num).URL).getName());
+								//int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
 								stringBuilder.append("t " + (e.x + 1) + " " + (e.y + 1) + "\n");
 								break;
 							case Unipack.AutoPlay.CHAIN:
-								//log("c " + (e.c + 1));
 								stringBuilder.append("c " + (e.c + 1) + "\n");
 								break;
 							case Unipack.AutoPlay.DELAY:
-								//log("d " + e.d);
 								stringBuilder.append("d " + e.d + "\n");
 								break;
 						}
@@ -732,7 +725,7 @@ public class Main extends BaseActivity {
 				@Override
 				public void onConnected() {
 					onConnected_();
-					(new Handler()).postDelayed(() -> onConnected_(), 3000);
+					(new Handler()).postDelayed(this::onConnected_, 3000);
 					
 				}
 				
