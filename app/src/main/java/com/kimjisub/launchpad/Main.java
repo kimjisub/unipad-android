@@ -392,14 +392,14 @@ public class Main extends BaseActivity {
 					
 					if (projectsCount == 0) {
 						// UI Thread 자원 사용 이벤트 큐에 저장.
-						runOnUiThread(() -> addErrorItem());
+						runOnUiThread(this::addErrorItem);
 					}
 					
 				} else {
 					projectFolder.mkdir();
 					
 					// UI Thread 자원 사용 이벤트 큐에 저장.
-					runOnUiThread(() -> addErrorItem());
+					runOnUiThread(this::addErrorItem);
 				}
 				
 				File nomedia = new File(UnipackRootURL + "/.nomedia");
