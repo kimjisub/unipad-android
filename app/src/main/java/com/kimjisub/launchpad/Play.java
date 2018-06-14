@@ -247,8 +247,8 @@ public class Play extends BaseActivity {
 		static final int PRESSED = 1;
 		static final int LED = 2;
 		
-		Item[][][] btn = null;
-		Item[][] cir = null;
+		Item[][][] btn;
+		Item[][] cir;
 		
 		static class Item {
 			int x;
