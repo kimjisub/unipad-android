@@ -36,7 +36,6 @@
 	<!--Setting-->
 	<string name="setting">설정</string>
 	<string name="select_theme">스킨 선택</string>
-	<string name="default_font">기본 폰트</string>
 	<string name="use_sd_card">SD 카드 사용</string>
 	<string name="removeAds">광고 제거</string>
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
@@ -118,11 +117,12 @@
 	<string name="downloadCount">다운로드 수</string>
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
 
-	<!--ThemePack-->
+	<!--Theme-->
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
-
+	
+	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default Unipad Skin</string>
 	<string name="theme_author">Unipad dev.</string>

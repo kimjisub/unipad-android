@@ -36,7 +36,6 @@
 	<!--Setting-->
 	<string name="setting">Paramètres</string>
 	<string name="select_theme">Choisir un skin</string>
-	<string name="default_font">Police par défaut</string>
 	<string name="use_sd_card">Utiliser la carte SD</string>
 	<string name="removeAds">Supprimer les publicités</string>
 	<string name="purchaseComplete">Achat terminé !</string>
@@ -118,11 +117,12 @@
 	<string name="downloadCount">Nombre de téléchargements</string>
 	<string name="UnableToAccessServer">Serveur inaccessible.</string>
 
-	<!--ThemePack-->
+	<!--Theme-->
 	<string name="themeDownload">Télécharger des thèmes</string>
 	<string name="requireRestart">Veuillez redémarrer l\'appli.</string>
 	<string name="doYouWantToRestartApp">Voulez-vous redémarrer l\'appli ?</string>
-
+	
+	<!--ThemePack-->
 	<string name="theme_name">Skin par défaut</string>
 	<string name="theme_description">Le skin par défaut d\'unipad.</string>
 	<string name="theme_author">Unipad dev.</string>

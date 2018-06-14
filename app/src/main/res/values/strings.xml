@@ -36,7 +36,6 @@
 	<!--Setting-->
 	<string name="setting">Setting</string>
 	<string name="select_theme">Select Skin</string>
-	<string name="default_font">Default font</string>
 	<string name="use_sd_card">Using SD Card</string>
 	<string name="removeAds">Remove Ads</string>
 	<string name="purchaseComplete">Purchase Complete</string>
@@ -118,11 +117,12 @@
 	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Unable to access server.</string>
 
-	<!--ThemePack-->
+	<!--Theme-->
 	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
 	<string name="doYouWantToRestartApp">Do you want to restart the app?</string>
-
+	
+	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default Unipad Skin</string>
 	<string name="theme_author">Unipad dev.</string>
