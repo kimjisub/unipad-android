@@ -113,7 +113,7 @@
 	<string name="signal_SpeedFirst">속도 우선</string>
 	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
 
-	<!--fbStore-->
+	<!--Store-->
 	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
 	<string name="downloadCount">다운로드 수</string>
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
