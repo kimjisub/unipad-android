@@ -124,7 +124,7 @@
 	
 	<!--ThemePack-->
 	<string name="theme_name">Skin Standar</string>
-	<string name="theme_description">Ini Adalah Skin Standar Unipad</string>
-	<string name="theme_author">Pengembang Unipad</string>
+	<string name="theme_description">Ini Adalah Skin Standar UniPad</string>
+	<string name="theme_author">Pengembang UniPad</string>
 
 </resources>

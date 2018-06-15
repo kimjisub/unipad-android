@@ -83,7 +83,7 @@
 	<!--Version-->
 	<string name="newVersionFound">New version detected.</string>
 	<string name="currentVersion">Current version</string>
-	<string name="newVersion">The lastest version</string>
+	<string name="newVersion">The latest version</string>
 
 	<string name="unipackNotFound">Unipack not found.</string>
 	<string name="clickToAddUnipack">Click to add Unipacks.</string>
@@ -124,7 +124,7 @@
 	
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">This is Default Unipad Skin</string>
-	<string name="theme_author">Unipad dev.</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>

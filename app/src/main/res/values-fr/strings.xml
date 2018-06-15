@@ -124,7 +124,7 @@
 	
 	<!--ThemePack-->
 	<string name="theme_name">Skin par défaut</string>
-	<string name="theme_description">Le skin par défaut d\'unipad.</string>
-	<string name="theme_author">Unipad dev.</string>
+	<string name="theme_description">Le skin par défaut d\'UniPad.</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>
