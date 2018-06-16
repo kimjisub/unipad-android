@@ -1,5 +1,7 @@
 <resources>
-	<string name="language">ko</string>
+	<string name="languageCode">ko</string>
+	<string name="language">Korean</string>
+	<string name="translator">Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
 
