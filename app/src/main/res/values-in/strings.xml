@@ -1,5 +1,7 @@
 <resources>
-	<string name="language">in</string>
+	<string name="languageCode">in</string>
+	<string name="language">Indonesian</string>
+	<string name="translator">Kyung Kyung</string>
 
 	<string name="app_name">UniPad</string>
 

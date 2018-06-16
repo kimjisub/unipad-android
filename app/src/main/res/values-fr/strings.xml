@@ -1,5 +1,7 @@
 <resources>
-	<string name="language">fr</string>
+	<string name="languageCode">fr</string>
+	<string name="language">French</string>
+	<string name="translator">Medhy Fournier (PowerPixel)</string>
 
 	<string name="app_name">UniPad</string>
 
