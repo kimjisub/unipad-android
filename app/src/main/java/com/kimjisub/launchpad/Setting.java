@@ -89,7 +89,7 @@ public class Setting extends PreferenceActivity {
 				R.drawable.mail
 			};
 			String[] urls = {
-				"http://unipad.kr",
+				"https://unipad.kr",
 				"https://www.facebook.com/playunipad",
 				"https://www.facebook.com/groups/unipadcommunity",
 				"http://cafe.naver.com/unipad",

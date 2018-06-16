@@ -238,15 +238,15 @@ public class Store extends BaseActivity {
 			@Override
 			protected String doInBackground(String[] params) {
 				
-				Networks.sendGet("http://unipad.kr:8081/?code=" + code);
+				Networks.sendGet("https://us-central1-unipad-e41ab.cloudfunctions.net/increaseDownloadCount/" + code);
 				try {
 					
 					URL url = new URL(URL);
-					HttpURLConnection conexion = (HttpURLConnection) url.openConnection();
-					conexion.setConnectTimeout(5000);
-					conexion.setReadTimeout(5000);
+					HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+					connection.setConnectTimeout(5000);
+					connection.setReadTimeout(5000);
 					
-					fileSize = conexion.getContentLength();
+					fileSize = connection.getContentLength();
 					log(URL);
 					log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
