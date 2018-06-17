@@ -2,6 +2,7 @@
 	<string name="languageCode">es</string>
 	<string name="language">Spanish</string>
 	<string name="translator">Mateo Greslebin</string>
+	<string name="translatedBy">Translated by %1$s</string>
 	
 	<string name="app_name">UniPad</string>
 	

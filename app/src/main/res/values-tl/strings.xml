@@ -2,6 +2,7 @@
 	<string name="languageCode">tl</string>
 	<string name="language">Tagalog (Philippines)</string>
 	<string name="translator">Joshtine Nel Tubon (Black Spx)</string>
+	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
 

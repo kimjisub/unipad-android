@@ -2,6 +2,7 @@
 	<string name="languageCode">in</string>
 	<string name="language">Indonesian</string>
 	<string name="translator">Kyung Kyung</string>
+	<string name="translatedBy">Translated by %1$s</string>
 	
 	<string name="app_name">UniPad</string>
 	

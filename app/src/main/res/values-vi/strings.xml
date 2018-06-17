@@ -2,6 +2,7 @@
 	<string name="languageCode">vi</string>
 	<string name="language">Vietnamese</string>
 	<string name="translator">Marty Nam</string>
+	<string name="translatedBy">Translated by %1$s</string>
 	
 	<string name="app_name">UniPad</string>
 	

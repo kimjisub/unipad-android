@@ -27,6 +27,10 @@
 		    android:key="FCMToken"
 		    android:title="@string/FCMToken"/>
 		<Preference
+		    android:key="language"
+		    android:title="@string/language"
+		    android:summary="@string/languageCode"/>
+		<Preference
 		    android:title="@string/copyright"/>
 	</PreferenceCategory>
 </PreferenceScreen>
