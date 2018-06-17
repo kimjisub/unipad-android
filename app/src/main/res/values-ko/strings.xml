@@ -2,6 +2,7 @@
 	<string name="languageCode">ko</string>
 	<string name="language">Korean</string>
 	<string name="translator">Kimjisub</string>
+	<string name="translatedBy">Translated by %1$s</string>
 	
 	<string name="app_name">UniPad</string>
 	

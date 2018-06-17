@@ -301,6 +301,8 @@ public class Setting extends PreferenceActivity {
 			findPreference("removeAds").setSummary(lang(R.string.using));
 		
 		
+		findPreference("language").setTitle(lang(R.string.language) + " (" + lang(R.string.languageCode) + ")");
+		findPreference("language").setSummary(String.format(lang(R.string.translatedBy), lang(R.string.translator)));
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 		super.onResume();
 	}

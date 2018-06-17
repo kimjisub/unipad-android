@@ -2,6 +2,7 @@
 	<string name="languageCode">hi</string>
 	<string name="language">Hindi</string>
 	<string name="translator">Gaurav Mandal</string>
+	<string name="translatedBy">%1$s द्वारा अनुवाद किया गया है।</string>
 
 	<string name="app_name">UniPad</string>
 
