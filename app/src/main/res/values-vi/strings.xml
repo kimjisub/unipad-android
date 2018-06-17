@@ -102,7 +102,7 @@
 	<string name="skinMemoryErr">Không thể cài đặt skin. Khởi động lại ứng dụng</string>
 	<string name="skinErr">Không thể cài đặt skin.Khởi động lại</string>
 	
-	<string name="outOfmemory">Hết bộ nhớ.Hãy làm sạch bộ nhớ của bạn</string>
+	<string name="outOfMemory">Hết bộ nhớ.Hãy làm sạch bộ nhớ của bạn</string>
 	<string name="outOfCPU">Không thể mở pack</string>
 	<string name="doNotSee">Không thấy nữa</string>
 	
@@ -119,7 +119,7 @@
 	
 	<!--Theme-->
 	<string name="themeDownload">Tải Skins</string>
-	<string name="requireApprestarts">Cần khởi động lại ứng dụng</string>
+	<string name="requireRestart">Cần khởi động lại ứng dụng</string>
 	<string name="doYouWantToRestartApp">Bạn muốn khởi động lại Unipad không?</string>
 	
 	<!--ThemePack-->
