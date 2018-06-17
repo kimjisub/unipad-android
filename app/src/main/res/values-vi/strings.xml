@@ -125,8 +125,8 @@
 	<string name="doYouWantToRestartApp">Bạn muốn khởi động lại Unipad không?</string>
 	
 	<!--ThemePack-->
-	<string name="theme_name">Skin mặc định</string>
-	<string name="theme_description">Đây là Skin mặc định của Unipad</string>
-	<string name="theme_author">Nhà sản xuất Unipad</string>
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>

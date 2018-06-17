@@ -46,7 +46,7 @@
 	
 	<!--Credit-->
 	<string name="credit">Credits</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) Tous droit réservés.</string>
+	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 	
 	<!--Community-->
 	<string name="community">Communauté</string>
@@ -125,8 +125,8 @@
 	<string name="doYouWantToRestartApp">Voulez-vous redémarrer l\'appli ?</string>
 	
 	<!--ThemePack-->
-	<string name="theme_name">Skin par défaut</string>
-	<string name="theme_description">Le skin par défaut d\'UniPad.</string>
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
 
 </resources>

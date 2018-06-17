@@ -46,7 +46,7 @@
 
 	<!--Credit-->
 	<string name="credit">Kredito</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) Ang Lahat ng Karapatan.</string>
+	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Komunidad</string>
@@ -126,7 +126,7 @@
 	
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">Ito ang Default UniPad Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
 
 </resources>
