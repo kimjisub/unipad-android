@@ -13,15 +13,13 @@
 	</PreferenceCategory>
 	
 	<PreferenceCategory
-	    android:title="@string/credit">
+	    android:title="@string/etc">
 		<Preference
 		    android:key="community"
 		    android:title="@string/community"/>
 		<Preference
 		    android:key="removeAds"
 		    android:title="@string/removeAds"/>
-		<Preference
-		    android:title="@string/credit_simple"/>
 	</PreferenceCategory>
 	
 	<PreferenceCategory
@@ -32,5 +30,7 @@
 		<Preference
 		    android:key="FCMToken"
 		    android:title="@string/FCMToken"/>
+		<Preference
+		    android:title="@string/copyright"/>
 	</PreferenceCategory>
 </PreferenceScreen>
