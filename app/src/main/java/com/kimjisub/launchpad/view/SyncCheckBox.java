@@ -70,7 +70,8 @@ public class SyncCheckBox {
 	}
 	
 	public void onLongClick(){
-		onLongClick.onLongClick();
+		if(onLongClick != null)
+			onLongClick.onLongClick();
 	}
 	
 	public void longClick() {
@@ -80,7 +81,7 @@ public class SyncCheckBox {
 	
 	// =========================================================================================
 	
-	public void setTextColor(int color) {
+	/*public void setTextColor(int color) {
 		for (CheckBox checkBox : checkBoxes)
 			checkBox.setTextColor(color);
 	}
@@ -90,7 +91,7 @@ public class SyncCheckBox {
 			for (CheckBox checkBox : checkBoxes)
 				checkBox.setButtonTintList(colorStateList);
 		}
-	}
+	}*/
 	
 	public void setVisibility(int visibility) {
 		for (CheckBox checkBox : checkBoxes)
