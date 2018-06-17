@@ -36,7 +36,6 @@
 	
 	<!--Setting-->
 	<string name="setting">Setting</string>
-	<string name="etc">Credit</string>
 	<string name="information">Information</string>
 	<string name="select_theme">Select Skin</string>
 	<string name="use_sd_card">Using SD Card</string>

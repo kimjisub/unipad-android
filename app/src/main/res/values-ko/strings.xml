@@ -36,7 +36,6 @@
 	
 	<!--Setting-->
 	<string name="setting">설정</string>
-	<string name="etc">크레딧</string>
 	<string name="information">정보</string>
 	<string name="select_theme">스킨 선택</string>
 	<string name="use_sd_card">SD 카드 사용</string>

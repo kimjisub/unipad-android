@@ -36,7 +36,6 @@
 	
 	<!--Setting-->
 	<string name="setting">Ajustes</string>
-	<string name="etc">Créditos</string>
 	<string name="information">Información</string>
 	<string name="select_theme">Seleccionar Skin</string>
 	<string name="use_sd_card">Usar Tarjeta SD</string>
