@@ -24,7 +24,6 @@
 	<string name="apply">Cài đặt</string>
 	<string name="restart">Khởi động lại</string>
 	<string name="using">Sử dụng</string>
-	<string name="information">Thông tin</string>
 	<string name="path">Đường dẫn</string>
 	<string name="quit">Thoát</string>
 	<string name="watermark">Watermark</string>
@@ -37,16 +36,15 @@
 	
 	<!--Setting-->
 	<string name="setting">Cài đặt</string>
+	<string name="etc">Credit</string>
+	<string name="information">Thông tin</string>
 	<string name="select_theme">Chọn Skin</string>
 	<string name="use_sd_card">Sử dụng thẻ SD</string>
 	<string name="removeAds">Bỏ quảng cáo</string>
 	<string name="purchaseComplete">Mua thành công</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
-	
-	<!--Credit-->
-	<string name="credit">Credit</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 	
 	<!--Community-->
 	<string name="community">Community</string>

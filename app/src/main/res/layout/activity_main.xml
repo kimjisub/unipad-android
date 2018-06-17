@@ -214,7 +214,7 @@
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:layout_marginBottom="10dp"
-			    android:text="@string/credit_simple"
+			    android:text="@string/copyright"
 			    android:textColor="@color/gray1"
 			    android:textSize="10dp"/>
 		

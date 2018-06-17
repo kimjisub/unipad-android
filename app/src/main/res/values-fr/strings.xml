@@ -24,7 +24,6 @@
 	<string name="apply">Appliquer</string>
 	<string name="restart">Redémarrer</string>
 	<string name="using">Using</string>
-	<string name="information">Information</string>
 	<string name="path">Chemin</string>
 	<string name="quit">Quitter</string>
 	<string name="watermark">Watermark</string>
@@ -37,16 +36,15 @@
 	
 	<!--Setting-->
 	<string name="setting">Paramètres</string>
+	<string name="etc">Credits</string>
+	<string name="information">Information</string>
 	<string name="select_theme">Choisir un skin</string>
 	<string name="use_sd_card">Utiliser la carte SD</string>
 	<string name="removeAds">Supprimer les publicités</string>
 	<string name="purchaseComplete">Achat terminé !</string>
 	<string name="openSourceLicense">Licence Open Source</string>
 	<string name="FCMToken">Token FCM</string>
-	
-	<!--Credit-->
-	<string name="credit">Credits</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 	
 	<!--Community-->
 	<string name="community">Communauté</string>

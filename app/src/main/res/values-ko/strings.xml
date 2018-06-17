@@ -24,7 +24,6 @@
 	<string name="apply">적용</string>
 	<string name="restart">재시작</string>
 	<string name="using">사용중</string>
-	<string name="information">정보</string>
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
 	<string name="watermark">워터마크</string>
@@ -37,16 +36,15 @@
 	
 	<!--Setting-->
 	<string name="setting">설정</string>
+	<string name="etc">크레딧</string>
+	<string name="information">정보</string>
 	<string name="select_theme">스킨 선택</string>
 	<string name="use_sd_card">SD 카드 사용</string>
 	<string name="removeAds">광고 제거</string>
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
-	
-	<!--Credit-->
-	<string name="credit">크레딧</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 	
 	<!--Community-->
 	<string name="community">커뮤니티</string>

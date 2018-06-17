@@ -24,7 +24,6 @@
 	<string name="apply">Ilagay</string>
 	<string name="restart">Ulitin</string>
 	<string name="using">Paggamit</string>
-	<string name="information">Kaalaman</string>
 	<string name="path">Path</string>
 	<string name="quit">Umalis</string>
 	<string name="watermark">Watermark</string>
@@ -37,16 +36,15 @@
 
 	<!--Setting-->
 	<string name="setting">Setting</string>
+	<string name="etc">Kredito</string>
+	<string name="information">Kaalaman</string>
 	<string name="select_theme">Pumili ng Skin</string>
 	<string name="use_sd_card">Gamitin ang SD Card</string>
 	<string name="removeAds">Alisin ang Ads</string>
 	<string name="purchaseComplete">Tapos na ang Pagbili</string>
 	<string name="openSourceLicense">Buksan ang Source License</string>
 	<string name="FCMToken">FCM Token</string>
-
-	<!--Credit-->
-	<string name="credit">Kredito</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Komunidad</string>

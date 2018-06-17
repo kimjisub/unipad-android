@@ -24,7 +24,6 @@
 	<string name="apply">Terapkan</string>
 	<string name="restart">Mulai Ulang</string>
 	<string name="using">Gunakan</string>
-	<string name="information">Informasi</string>
 	<string name="path">Path</string>
 	<string name="quit">Berhenti</string>
 	<string name="watermark">Watermark</string>
@@ -37,16 +36,15 @@
 	
 	<!--Setting-->
 	<string name="setting">Pengaturan</string>
+	<string name="information">Informasi</string>
+	<string name="etc">Kredit</string>
 	<string name="select_theme">Memilih Skin</string>
 	<string name="use_sd_card">Gunakan SD Card</string>
 	<string name="removeAds">Hilangkan Ads</string>
 	<string name="purchaseComplete">Pembelian Selesai</string>
 	<string name="openSourceLicense">Lisensi Sumber Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
-	
-	<!--Credit-->
-	<string name="credit">Kredit</string>
-	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
 	
 	<!--Community-->
 	<string name="community">Komunitas</string>
