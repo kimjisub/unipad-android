@@ -2,9 +2,9 @@
 	<string name="languageCode">en</string>
 	<string name="language">English</string>
 	<string name="translator">Kimjisub</string>
-
+	
 	<string name="app_name">UniPad</string>
-
+	
 	<!--Word-->
 	<string name="accept">Accept</string>
 	<string name="cancel">Cancel</string>
@@ -28,13 +28,13 @@
 	<string name="path">Path</string>
 	<string name="quit">Quit</string>
 	<string name="watermark">Watermark</string>
-
+	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
 	<string name="list_refresh">Refresh List</string>
 	<string name="import_unipack">Load Unipack</string>
 	<string name="store">Store</string>
-
+	
 	<!--Setting-->
 	<string name="setting">Setting</string>
 	<string name="select_theme">Select Skin</string>
@@ -43,11 +43,11 @@
 	<string name="purchaseComplete">Purchase Complete</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
-
+	
 	<!--Credit-->
 	<string name="credit">Credit</string>
 	<string name="credit_simple">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-
+	
 	<!--Community-->
 	<string name="community">Community</string>
 	<string name="officialHomepage">Official Website</string>
@@ -64,14 +64,14 @@
 	<string name="kakaotalk_">Other than Technical Support</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
-
+	
 	<!--Unipack Info-->
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
 	<string name="scale">size</string>
 	<string name="chainCount">Chain count</string>
 	<string name="capacity">File size</string>
-
+	
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
@@ -81,12 +81,12 @@
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>
 	<string name="record">Record</string>
-
+	
 	<!--Version-->
 	<string name="newVersionFound">New version detected.</string>
 	<string name="currentVersion">Current version</string>
 	<string name="newVersion">The latest version</string>
-
+	
 	<string name="unipackNotFound">Unipack not found.</string>
 	<string name="clickToAddUnipack">Click to add Unipacks.</string>
 	<string name="doYouWantToDeleteProject">Do you want to delete this project?</string>
@@ -103,22 +103,22 @@
 	<string name="copied">Copied to clipboard.</string>
 	<string name="skinMemoryErr">Failed to apply skin.\nRestart app.</string>
 	<string name="skinErr">Failed to apply skin.\nReset skin.</string>
-
+	
 	<string name="outOfMemory">Out of memory..\nFree some memory and retry.</string>
 	<string name="outOfCPU">Couldn\'t start pack\nbecause of phone specifications…\nTry again.</string>
 	<string name="doNotSee">Do not see anymore</string>
-
+	
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Connecting launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
-
+	
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Can\'t quit while downloading the pack</string>
 	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Unable to access server.</string>
-
+	
 	<!--Theme-->
 	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
