@@ -1,0 +1,130 @@
+<resources>
+	<string name="languageCode">ms</string>
+	<string name="language">Bahasa melayu</string>
+	<string name="translator">Villager</string>
+	<string name="translatedBy">Translated by %1$s</string>
+	
+	<string name="app_name">UniPad</string>
+	
+	<!--Word-->
+	<string name="accept">Terima</string>
+	<string name="cancel">Batal</string>
+	<string name="warning">Amaran</string>
+	<string name="error">RALAT</string>
+	<string name="errOccur">Sesuatu Ralat dikesan…</string>
+	<string name="wait">Sila tunggu sebentar…</string>
+	<string name="analyzing">Menganalisis</string>
+	<string name="loading">Memuat</string>
+	<string name="downloading">Memuat Turun</string>
+	<string name="success">Berjaya</string>
+	<string name="failed">Gagal</string>
+	<string name="delete">Padam</string>
+	<string name="edit">Edit</string>
+	<string name="update">Kemaskini</string>
+	<string name="ignore">Abaikan</string>
+	<string name="apply">Terima</string>
+	<string name="restart">Mula semula</string>
+	<string name="using">Menggunakan</string>
+	<string name="path">Jalan</string>
+	<string name="quit">Keluar</string>
+	<string name="watermark">Tanda Tempat</string>
+	
+	<!--Menu-->
+	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>
+	<string name="list_refresh">Memuat semula senarai</string>
+	<string name="import_unipack">Memuat Unipack</string>
+	<string name="store">Kedai</string>
+	
+	<!--Setting-->
+	<string name="setting">Tetapan</string>
+	<string name="information">Informasi</string>
+	<string name="select_theme">Pilih kulit</string>
+	<string name="use_sd_card">Guna Kad SD</string>
+	<string name="removeAds">Buang Iklan</string>
+	<string name="purchaseComplete">Pembelian Selesai</string>
+	<string name="openSourceLicense">Sumber Lesen Terbuka</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	
+	<!--Community-->
+	<string name="community">Komuniti</string>
+	<string name="officialHomepage">Laman Web Rasmi</string>
+	<string name="officialHomepage_">Laman Web Rasmi Unipad</string>
+	<string name="officialFacebook">Facebook Rasmi</string>
+	<string name="officialFacebook_">Bantuan sokongan</string>
+	<string name="facebookCommunity">Komuniti Facebook</string>
+	<string name="facebookCommunity_">English</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">korean</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk Kepada Kimjisub</string>
+	<string name="kakaotalk_">Lain Daripada Bantuan Sokongan</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Lain Daripada Bantuan Sokongan</string>
+	
+	<!--Unipack Info-->
+	<string name="title">Tajuk</string>
+	<string name="producerName">Pemilik</string>
+	<string name="scale">Saiz</string>
+	<string name="chainCount">Bilangan Chain</string>
+	<string name="capacity">Saiz Fail</string>
+	
+	<!--Unipack Function-->
+	<string name="LED">LED</string>
+	<string name="autoPlay">Auto Main</string>
+	<string name="LED_">LED ●</string>
+	<string name="autoPlay_">AUTOMAIN ●</string>
+	<string name="pressedPadShow">Tunjuk Tekanan</string>
+	<string name="traceLog">Trace Log</string>
+	<string name="traceLogClear">Trace Log Telah di padam.</string>
+	<string name="record">Rakam</string>
+	
+	<!--Version-->
+	<string name="newVersionFound">Versi Baharu Dikesan.</string>
+	<string name="currentVersion">Versi Terkini</string>
+	<string name="newVersion">Versi Terbaharu</string>
+	
+	<string name="unipackNotFound">Unipack Tidak Dijumpai.</string>
+	<string name="clickToAddUnipack">Tekan Untuk Tambah Unipack.</string>
+	<string name="doYouWantToDeleteProject">Adakah anda mahu membuang unipack ini?</string>
+	<string name="doYouWantToRemapProject">Adakah anda mahu membetulkan automain?</string>
+	<string name="remapDone">Pembetulan Automain telah berjaya.</string>
+	<string name="remapFail">Tiada Automain</string>
+	<string name="cantReadFolder">Tidak boleh membaca folder ini.</string>
+	<string name="cantReadFile">Tidak boleh membaca fail ini.</string>
+	<string name="analyzeComplete">Analisis Selesai!</string>
+	<string name="analyzeFailed">Gagal Untuk Menganalisis…</string>
+	<string name="isNotAnUniPack">Ini bukan Unipack</string>
+	<string name="pressAgainToGoBack">Tekan Sekali Lagi Untuk Keluar.</string>
+	<string name="permissionDenied">Tiada Akses.</string>
+	<string name="copied">Telah di salin.</string>
+	<string name="skinMemoryErr">Gagal Untuk Menggunakan Kulit.\nMula semula?.</string>
+	<string name="skinErr">Gagal untuk memilih kulit.\nReset Kulit.</string>
+	
+	<string name="outOfMemory">Melebihi had Memori…\nPadamkan fail yang tidak digunakan lagi dan Cuba sekali lagi.</string>
+	<string name="outOfCPU">Tidak boleh membuka unipack\nKerana spesifikasi telifon anda…\nCuba lagi.</string>
+	<string name="doNotSee">Jangan lihat lagi</string>
+	
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Menyambung ke Launchpad…</string>
+	<string name="midiDevicesNotDetected">Peralatan MIDI tidak disambung</string>
+	<string name="signal_SpeedFirst">Kelajuan Dahulu</string>
+	<string name="signal_avoidAfterimage">Halang afterimage</string>
+	
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Tidak boleh keluar semasa memuat turun unipack</string>
+	<string name="downloadCount">Bilangan muat turun</string>
+	<string name="UnableToAccessServer">Tidak boleh mengakses Pelayar.</string>
+	
+	<!--Theme-->
+	<string name="themeDownload">Muat turun Tema</string>
+	<string name="requireRestart">Muat semula aplikasi!</string>
+	<string name="doYouWantToRestartApp">Adakah anda mahu memuat semuat aplikasai?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Kulit Lalai</string>
+	<string name="theme_description">Ini adalah kulit lalai Unipad</string>
+	<string name="theme_author">UniPad dev.</string>
+
+</resources>
