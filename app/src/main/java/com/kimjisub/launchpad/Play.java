@@ -1025,6 +1025,14 @@ public class Play extends BaseActivity {
 						setLED(i, j);
 					}
 				}
+				
+				for(int i=0;i<36;i++){
+					if (ledTask.isEventExist(-1, i))
+						ledTask.eventShutdown(-1, i);
+					
+					colorManager.remove(-1, i, ColorManager.LED);
+					setLED(-1, i);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
