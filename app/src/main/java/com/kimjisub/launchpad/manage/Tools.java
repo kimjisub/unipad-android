@@ -18,6 +18,11 @@ public class Tools {
 			msg = "(null)";
 		Log.e("com.kimjisub._firebase", msg);
 	}
+	public static void logAds(String msg) {
+		if (msg == null)
+			msg = "(null)";
+		Log.e("com.kimjisub._ads", msg);
+	}
 	public static void logRecv(String msg) {
 		if (msg == null)
 			msg = "(null)";
