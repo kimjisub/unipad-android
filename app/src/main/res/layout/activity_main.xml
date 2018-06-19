@@ -104,7 +104,7 @@
 		    android:id="@+id/fab_store"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
-		    app:srcCompat="@drawable/ic_shopping_basket_white_24dp"
+		    android:src="@drawable/ic_shopping_basket_white_24dp"
 		    app:fab_colorNormal="@color/red"
 		    app:fab_colorPressed="@color/red"
 		    app:fab_label="@string/store"
