@@ -23,6 +23,7 @@ import com.kimjisub.launchpad.manage.SaveSetting;
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
+import static com.kimjisub.launchpad.manage.Tools.logAds;
 
 public class BaseActivity extends AppCompatActivity {
 	
@@ -36,6 +37,8 @@ public class BaseActivity extends AppCompatActivity {
 	
 	private static InterstitialAd interstitialAd;
 	public static final String ADUNITID = "ca-app-pub-1077445788578961/6843593938";
+	//public static final String ADUNITID = "ca-app-pub-3940256099942544/8691691433";
+	public static final int ADSCOOLTIME = 30000;
 	
 	public void showAds() {
 		
@@ -43,21 +46,30 @@ public class BaseActivity extends AppCompatActivity {
 			long prevTime = SaveSetting.PrevAdsShowTime.load(BaseActivity.this);
 			long currTime = System.currentTimeMillis();
 			
-			if ((currTime < prevTime) || currTime - prevTime >= 30000) {
+			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
 				SaveSetting.PrevAdsShowTime.save(this, currTime);
+				logAds("showAds");
 				
 				if (interstitialAd.isLoaded()) {
+					logAds("isLoaded");
 					interstitialAd.show();
 					interstitialAd = new InterstitialAd(BaseActivity.this);
 					interstitialAd.setAdUnitId(ADUNITID);
-					interstitialAd.loadAd(new AdRequest.Builder().build());
+					interstitialAd.loadAd(new AdRequest.Builder()
+						//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
+						.build());
+					logAds("show!");
 				} else {
+					logAds("! isLoaded (set listener)");
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
 							interstitialAd = new InterstitialAd(BaseActivity.this);
 							interstitialAd.setAdUnitId(ADUNITID);
-							interstitialAd.loadAd(new AdRequest.Builder().build());
+							interstitialAd.loadAd(new AdRequest.Builder()
+								//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
+								.build());
+							logAds("show!");
 						}
 					});
 				}
@@ -67,9 +79,12 @@ public class BaseActivity extends AppCompatActivity {
 	
 	public void initAds() {
 		if (!Billing.isPremium) {
+			logAds("initAds");
 			interstitialAd = new InterstitialAd(BaseActivity.this);
 			interstitialAd.setAdUnitId(ADUNITID);
-			interstitialAd.loadAd(new AdRequest.Builder().build());
+			interstitialAd.loadAd(new AdRequest.Builder()
+				//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
+				.build());
 		}
 	}
 	
@@ -122,6 +137,7 @@ public class BaseActivity extends AppCompatActivity {
 	public int color(int id) {
 		return getResources().getColor(id);
 	}
+	
 	public static int color(Context context, int id) {
 		return context.getResources().getColor(id);
 	}
@@ -129,6 +145,7 @@ public class BaseActivity extends AppCompatActivity {
 	public Drawable drawable(int id) {
 		return getResources().getDrawable(id);
 	}
+	
 	public static Drawable drawable(Context context, int id) {
 		return context.getResources().getDrawable(id);
 	}
