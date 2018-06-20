@@ -79,6 +79,7 @@
 	<string name="traceLogClear">Trace Log has been reset.</string>
 	<string name="record">Record</string>
 	<string name="watermark">Watermark</string>
+	<string name="hideUI">Hide UI</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">New version detected.</string>
