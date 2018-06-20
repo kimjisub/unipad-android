@@ -54,6 +54,7 @@ public class Play extends BaseActivity {
 	ImageView IV_prev;
 	ImageView IV_play;
 	ImageView IV_next;
+	RelativeLayout RL_option_view;
 	RealtimeBlurView RBV_option_blur;
 	RelativeLayout RL_option_window;
 	Button BTN_option_quit;
@@ -70,6 +71,7 @@ public class Play extends BaseActivity {
 	CheckBox CB2_traceLog;
 	CheckBox CB2_record;
 	CheckBox CB2_watermark;
+	CheckBox CB2_hideUI;
 	
 	SyncCheckBox SCV_pressedPadShow;
 	SyncCheckBox SCV_LED;
@@ -77,6 +79,7 @@ public class Play extends BaseActivity {
 	SyncCheckBox SCV_traceLog;
 	SyncCheckBox SCV_record;
 	SyncCheckBox SCV_watermark;
+	SyncCheckBox SCV_hideUI;
 	
 	
 	void initVar() {
@@ -89,6 +92,7 @@ public class Play extends BaseActivity {
 		IV_prev = findViewById(R.id.prev);
 		IV_play = findViewById(R.id.play);
 		IV_next = findViewById(R.id.next);
+		RL_option_view = findViewById(R.id.option_view);
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
 		BTN_option_quit = findViewById(R.id.quit);
@@ -105,6 +109,7 @@ public class Play extends BaseActivity {
 		CB2_traceLog = findViewById(R.id.CB2_traceLog);
 		CB2_record = findViewById(R.id.CB2_record);
 		CB2_watermark = findViewById(R.id.CB2_watermark);
+		CB2_hideUI = findViewById(R.id.CB2_hideUI);
 		
 		SCV_pressedPadShow = new SyncCheckBox(CB1_pressedPadShow, CB2_pressedPadShow);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
@@ -112,6 +117,7 @@ public class Play extends BaseActivity {
 		SCV_traceLog = new SyncCheckBox(CB1_traceLog, CB2_traceLog);
 		SCV_record = new SyncCheckBox(CB1_record, CB2_record);
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
+		SCV_hideUI = new SyncCheckBox(CB2_hideUI);
 	}
 	
 	// =========================================================================================
@@ -623,7 +629,13 @@ public class Play extends BaseActivity {
 				rec_log = "";
 			}
 		});
-		SCV_watermark.setOnCheckedChange((isChecked) -> toggleWatermark(isChecked));
+		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
+		SCV_hideUI.setOnCheckedChange(isChecked -> {
+			if (isChecked)
+				RL_option_view.setVisibility(View.GONE);
+			else
+				RL_option_view.setVisibility(View.VISIBLE);
+		});
 		IV_prev.setOnClickListener(v -> autoPlay_prev());
 		IV_play.setOnClickListener(v -> {
 			if (autoPlayTask.isPlaying)
@@ -1026,7 +1038,7 @@ public class Play extends BaseActivity {
 					}
 				}
 				
-				for(int i=0;i<36;i++){
+				for (int i = 0; i < 36; i++) {
 					if (ledTask.isEventExist(-1, i))
 						ledTask.eventShutdown(-1, i);
 					
