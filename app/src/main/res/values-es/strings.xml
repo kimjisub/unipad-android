@@ -27,7 +27,6 @@
 	<string name="using">Usando</string>
 	<string name="path">Ruta</string>
 	<string name="quit">Quitar</string>
-	<string name="watermark">Marca de agua</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconectar Launchpad</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">Registrar Botón</string>
 	<string name="traceLogClear">El registro ha sido reseteado.</string>
 	<string name="record">Grabar</string>
+	<string name="watermark">Marca de agua</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Nueva versión detectada.</string>
