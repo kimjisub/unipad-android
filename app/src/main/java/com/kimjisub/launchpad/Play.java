@@ -47,6 +47,7 @@ public class Play extends BaseActivity {
 	
 	RelativeLayout RL_rootView;
 	ImageView IV_background;
+	ImageView IV_custom_logo;
 	LinearLayout LL_pads;
 	LinearLayout LL_chains;
 	LinearLayout LL_autoPlayControlView;
@@ -84,6 +85,7 @@ public class Play extends BaseActivity {
 	
 	void initVar() {
 		RL_rootView = findViewById(R.id.rootView);
+		IV_custom_logo = findViewById(R.id.custom_logo);
 		IV_background = findViewById(R.id.background);
 		LL_pads = findViewById(R.id.pads);
 		LL_chains = findViewById(R.id.chains);
@@ -143,7 +145,8 @@ public class Play extends BaseActivity {
 	boolean isLEDEvent;
 	boolean isTraceLog;
 	boolean isRecord;
-	boolean isShowWatermark = true;
+	boolean isShowWatermark;
+	boolean isHideUI;
 	
 	final long DELAY = 1;
 	
@@ -451,6 +454,7 @@ public class Play extends BaseActivity {
 			isLEDEvent = SCV_LED.isChecked();
 			isTraceLog = SCV_traceLog.isChecked();
 			isRecord = SCV_record.isChecked();
+			isShowWatermark = SCV_watermark.isChecked();
 			
 			
 			(new AsyncTask<String, String, String>() {
@@ -631,7 +635,8 @@ public class Play extends BaseActivity {
 		});
 		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
 		SCV_hideUI.setOnCheckedChange(isChecked -> {
-			if (isChecked)
+			isHideUI = isChecked;
+			if (isHideUI)
 				RL_option_view.setVisibility(View.GONE);
 			else
 				RL_option_view.setVisibility(View.VISIBLE);
@@ -685,12 +690,7 @@ public class Play extends BaseActivity {
 				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
 				
 				final int finalI = i;
-				RL_chains[i].findViewById(R.id.touchView).setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						chainChange(finalI);
-					}
-				});
+				RL_chains[i].findViewById(R.id.touchView).setOnClickListener(v -> chainChange(finalI));
 				
 				LL_chains.addView(RL_chains[i]);
 			}
@@ -707,6 +707,12 @@ public class Play extends BaseActivity {
 	void skin_set() {
 		log("[12] skin_set");
 		IV_background.setImageDrawable(theme.playbg);
+		if(theme.custom_logo !=null)
+			IV_custom_logo.setImageDrawable(theme.custom_logo);
+		else
+			IV_custom_logo.setImageDrawable(null);
+		
+		
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
 				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
