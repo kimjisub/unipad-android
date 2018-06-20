@@ -1550,7 +1550,6 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				
 				}
 			});
 	}
