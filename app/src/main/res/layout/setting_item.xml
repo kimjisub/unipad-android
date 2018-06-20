@@ -12,8 +12,9 @@
 	    android:id="@+id/icon"
 	    android:layout_width="45dp"
 	    android:layout_height="45dp"
-	    android:layout_margin="7dp"/>
-	    <!--android:background="@drawable/facebook"-->
+	    android:layout_margin="7dp"
+	    android:scaleType="fitCenter"/>
+	    <!--android:background="@drawable/community_facebook"-->
 	
 	<LinearLayout
 	    android:layout_marginLeft="7dp"

@@ -80,13 +80,13 @@ public class Setting extends PreferenceActivity {
 				R.string.email_};
 			
 			int[] RlistI = {
-				R.drawable.web,
-				R.drawable.facebook,
-				R.drawable.facebook_community,
-				R.drawable.cafe,
-				R.drawable.discord,
-				R.drawable.kakaotalk,
-				R.drawable.mail
+				R.drawable.community_web,
+				R.drawable.community_facebook,
+				R.drawable.community_facebook_group,
+				R.drawable.community_cafe,
+				R.drawable.community_discord,
+				R.drawable.community_kakaotalk,
+				R.drawable.community_mail
 			};
 			String[] urls = {
 				"https://unipad.kr",
@@ -273,9 +273,10 @@ public class Setting extends PreferenceActivity {
 			
 			title.setText(item.getTitle());
 			summary.setText(item.getSummary());
-			if(item.isIcon())
+			if(item.isIcon()) {
 				icon.setBackground(BaseActivity.drawable(getApplicationContext(), item.getIcon()));
-			else
+				icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+			}else
 				icon.setVisibility(View.GONE);
 			return convertView;
 		}
