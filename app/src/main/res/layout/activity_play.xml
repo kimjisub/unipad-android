@@ -19,116 +19,124 @@
 	    android:layout_height="match_parent"
 	    android:padding="8dp">
 		
-		<LinearLayout
+		<RelativeLayout
+		    android:id="@+id/option_view"
 		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:layout_alignParentLeft="true"
 		    android:layout_alignParentStart="true"
-		    android:layout_alignParentTop="true"
-		    android:orientation="vertical">
-			
-			<CheckBox
-			    android:id="@+id/CB1_pressedPadShow"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:buttonTint="@color/checkbox"
-			    android:checked="true"
-			    android:text="@string/pressedPadShow"
-			    android:textColor="@color/checkbox"/>
-			
-			<CheckBox
-			    android:id="@+id/CB1_LED"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:buttonTint="@color/checkbox"
-			    android:checked="false"
-			    android:text="@string/LED"
-			    android:textColor="@color/checkbox"/>
-			
-			
-			<CheckBox
-			    android:id="@+id/CB1_autoPlay"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:buttonTint="@color/checkbox"
-			    android:checked="false"
-			    android:text="@string/autoPlay"
-			    android:textColor="@color/checkbox"/>
+		    android:layout_height="match_parent"
+		    android:layout_alignParentLeft="true">
 			
 			<LinearLayout
-			    android:id="@+id/autoPlayControlView"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:gravity="center"
-			    android:orientation="vertical"
-			    android:visibility="gone">
+			    android:layout_alignParentLeft="true"
+			    android:layout_alignParentStart="true"
+			    android:layout_alignParentTop="true"
+			    android:orientation="vertical">
 				
-				<ProgressBar
-				    android:id="@+id/autoPlayProgressBar"
-				    style="?android:attr/progressBarStyleHorizontal"
-				    android:layout_width="match_parent"
-				    android:layout_height="wrap_content"
-				    android:clickable="false"/>
-				
-				
-				<LinearLayout
+				<CheckBox
+				    android:id="@+id/CB1_pressedPadShow"
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:orientation="horizontal">
+				    android:buttonTint="@color/checkbox"
+				    android:checked="true"
+				    android:text="@string/pressedPadShow"
+				    android:textColor="@color/checkbox"/>
+				
+				<CheckBox
+				    android:id="@+id/CB1_LED"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/checkbox"
+				    android:checked="false"
+				    android:text="@string/LED"
+				    android:textColor="@color/checkbox"/>
+				
+				
+				<CheckBox
+				    android:id="@+id/CB1_autoPlay"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/checkbox"
+				    android:checked="false"
+				    android:text="@string/autoPlay"
+				    android:textColor="@color/checkbox"/>
+				
+				<LinearLayout
+				    android:id="@+id/autoPlayControlView"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:gravity="center"
+				    android:orientation="vertical"
+				    android:visibility="gone">
 					
-					<ImageView
-					    android:id="@+id/prev"
-					    android:layout_width="32dp"
-					    android:layout_height="32dp"
-					    android:background="@drawable/xml_prev"
-					    android:clickable="true"/>
+					<ProgressBar
+					    android:id="@+id/autoPlayProgressBar"
+					    style="?android:attr/progressBarStyleHorizontal"
+					    android:layout_width="match_parent"
+					    android:layout_height="wrap_content"
+					    android:clickable="false"/>
 					
-					<ImageView
-					    android:id="@+id/play"
-					    android:layout_width="32dp"
-					    android:layout_height="32dp"
-					    android:background="@drawable/xml_play"
-					    android:clickable="true"/>
 					
-					<ImageView
-					    android:id="@+id/next"
-					    android:layout_width="32dp"
-					    android:layout_height="32dp"
-					    android:background="@drawable/xml_next"
-					    android:clickable="true"/>
+					<LinearLayout
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:orientation="horizontal">
+						
+						<ImageView
+						    android:id="@+id/prev"
+						    android:layout_width="32dp"
+						    android:layout_height="32dp"
+						    android:background="@drawable/xml_prev"
+						    android:clickable="true"/>
+						
+						<ImageView
+						    android:id="@+id/play"
+						    android:layout_width="32dp"
+						    android:layout_height="32dp"
+						    android:background="@drawable/xml_play"
+						    android:clickable="true"/>
+						
+						<ImageView
+						    android:id="@+id/next"
+						    android:layout_width="32dp"
+						    android:layout_height="32dp"
+						    android:background="@drawable/xml_next"
+						    android:clickable="true"/>
+					</LinearLayout>
+				
 				</LinearLayout>
 			
+			
 			</LinearLayout>
-		
-		
-		</LinearLayout>
-		
-		<LinearLayout
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:layout_alignParentBottom="true"
-		    android:layout_alignParentLeft="true"
-		    android:layout_alignParentStart="true"
-		    android:orientation="vertical">
 			
-			<CheckBox
-			    android:id="@+id/CB1_traceLog"
+			<LinearLayout
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:buttonTint="@color/checkbox"
-			    android:checked="false"
-			    android:text="@string/traceLog"
-			    android:textColor="@color/checkbox"/>
-			
-			<CheckBox
-			    android:id="@+id/CB1_record"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:buttonTint="@color/checkbox"
-			    android:checked="false"
-			    android:text="@string/record"
-			    android:textColor="@color/checkbox"/>
-		</LinearLayout>
+			    android:layout_alignParentBottom="true"
+			    android:layout_alignParentLeft="true"
+			    android:layout_alignParentStart="true"
+			    android:orientation="vertical">
+				
+				<CheckBox
+				    android:id="@+id/CB1_traceLog"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/checkbox"
+				    android:checked="false"
+				    android:text="@string/traceLog"
+				    android:textColor="@color/checkbox"/>
+				
+				<CheckBox
+				    android:id="@+id/CB1_record"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:buttonTint="@color/checkbox"
+				    android:checked="false"
+				    android:text="@string/record"
+				    android:textColor="@color/checkbox"/>
+			</LinearLayout>
+		</RelativeLayout>
 		
 		<LinearLayout
 		    android:id="@+id/pads"
@@ -173,7 +181,7 @@
 		    android:id="@+id/option_window"
 		    android:layout_width="0dp"
 		    android:layout_height="200dp"
-		    android:layout_weight="0.7"
+		    android:layout_weight="0.6"
 		    android:background="@drawable/border_settings"
 		    android:clickable="true"
 		    android:focusable="true"
@@ -181,76 +189,101 @@
 		    android:visibility="invisible">
 			
 			<LinearLayout
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
+			    android:layout_width="match_parent"
+			    android:layout_height="match_parent"
+			    android:orientation="horizontal"
 			    android:layout_gravity="center"
-			    android:orientation="vertical">
+			    android:weightSum="2">
 				
-				
-				<CheckBox
-				    android:id="@+id/CB2_pressedPadShow"
+				<LinearLayout
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:checked="true"
-				    android:text="@string/pressedPadShow"
-				    android:textColor="@color/option_window_checkbox"/>
+				    android:layout_weight="1"
+				    android:orientation="vertical">
+					
+					<CheckBox
+					    android:id="@+id/CB2_pressedPadShow"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="true"
+					    android:text="@string/pressedPadShow"
+					    android:textColor="@color/option_window_checkbox"/>
+					
+					<CheckBox
+					    android:id="@+id/CB2_LED"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="false"
+					    android:text="@string/LED"
+					    android:textColor="@color/option_window_checkbox"/>
+					
+					
+					<CheckBox
+					    android:id="@+id/CB2_autoPlay"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="false"
+					    android:text="@string/autoPlay"
+					    android:textColor="@color/option_window_checkbox"/>
+					
+					<CheckBox
+					    android:id="@+id/CB2_traceLog"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="false"
+					    android:text="@string/traceLog"
+					    android:textColor="@color/option_window_checkbox"/>
+					
+					<CheckBox
+					    android:id="@+id/CB2_record"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="false"
+					    android:text="@string/record"
+					    android:textColor="@color/option_window_checkbox"/>
 				
-				<CheckBox
-				    android:id="@+id/CB2_LED"
+				</LinearLayout>
+				
+				
+				<LinearLayout
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:checked="false"
-				    android:text="@string/LED"
-				    android:textColor="@color/option_window_checkbox"/>
+				    android:layout_weight="1"
+				    android:orientation="vertical">
+					
+					<CheckBox
+					    android:id="@+id/CB2_watermark"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:text="@string/watermark"
+					    android:textColor="@color/option_window_checkbox"/>
+					
+					<CheckBox
+					    android:id="@+id/CB2_hideUI"
+					    android:layout_width="wrap_content"
+					    android:layout_height="wrap_content"
+					    android:buttonTint="@color/option_window_checkbox"
+					    android:text="@string/hideUI"
+					    android:textColor="@color/option_window_checkbox"/>
 				
+				</LinearLayout>
 				
-				<CheckBox
-				    android:id="@+id/CB2_autoPlay"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:checked="false"
-				    android:text="@string/autoPlay"
-				    android:textColor="@color/option_window_checkbox"/>
-				
-				<CheckBox
-				    android:id="@+id/CB2_traceLog"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:checked="false"
-				    android:text="@string/traceLog"
-				    android:textColor="@color/option_window_checkbox"/>
-				
-				<CheckBox
-				    android:id="@+id/CB2_record"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:checked="false"
-				    android:text="@string/record"
-				    android:textColor="@color/option_window_checkbox"/>
-				
-				<CheckBox
-				    android:id="@+id/CB2_watermark"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:buttonTint="@color/option_window_checkbox"
-				    android:text="@string/watermark"
-				    android:textColor="@color/option_window_checkbox"/>
-			
 			</LinearLayout>
 			
 			<Button
 			    android:id="@+id/quit"
 			    android:layout_width="wrap_content"
-			    android:textColor="@color/option_window_btn_text"
 			    android:layout_height="wrap_content"
 			    android:layout_alignParentBottom="true"
 			    android:layout_alignParentRight="true"
-			    android:text="@string/quit"/>
+			    android:text="@string/quit"
+			    android:textColor="@color/option_window_btn_text"/>
 		</RelativeLayout>
 	
 	
