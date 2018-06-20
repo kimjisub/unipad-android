@@ -79,6 +79,7 @@
 	<string name="traceLogClear">Le Log des touches à été réinitialisé.</string>
 	<string name="record">Enregistrer</string>
 	<string name="watermark">Watermark</string>
+	<string name="hideUI">Hide UI</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Nouvelle version détectée.</string>

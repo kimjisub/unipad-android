@@ -79,6 +79,7 @@
 	<string name="traceLogClear">Ang Bakas Talaan ay umulit.</string>
 	<string name="record">Rekord</string>
 	<string name="watermark">Watermark</string>
+	<string name="hideUI">Hide UI</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">May bagong bersyon na natuklasan.</string>

@@ -79,6 +79,7 @@
 	<string name="traceLogClear">Trace Log Telah di padam.</string>
 	<string name="record">Rakam</string>
 	<string name="watermark">Tanda Tempat</string>
+	<string name="hideUI">Hide UI</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Versi Baharu Dikesan.</string>

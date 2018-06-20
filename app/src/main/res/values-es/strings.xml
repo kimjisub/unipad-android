@@ -79,6 +79,7 @@
 	<string name="traceLogClear">El registro ha sido reseteado.</string>
 	<string name="record">Grabar</string>
 	<string name="watermark">Marca de agua</string>
+	<string name="hideUI">Hide UI</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Nueva versión detectada.</string>
