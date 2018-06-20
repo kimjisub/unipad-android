@@ -27,7 +27,6 @@
 	<string name="using">उपयोग में</string>
 	<string name="path">रास्ता</string>
 	<string name="quit">बंद</string>
-	<string name="watermark">वाटर-मार्क</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">फिर से कनेक्ट करें लोंच-पैड</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">ट्रेस लॉग</string>
 	<string name="traceLogClear">ट्रेस लॉग रीसेट कर दिया गया  है।</string>
 	<string name="record">रिकॉर्ड</string>
+	<string name="watermark">वाटर-मार्क</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">नया वर्जनपता चला</string>

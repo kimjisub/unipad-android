@@ -27,7 +27,6 @@
 	<string name="using">Gunakan</string>
 	<string name="path">Path</string>
 	<string name="quit">Berhenti</string>
-	<string name="watermark">Watermark</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Menghubungkan kembali ke Launchpad</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">Jejak Sentuhan</string>
 	<string name="traceLogClear">Jejak sentuhan di ulangi.</string>
 	<string name="record">Merekam</string>
+	<string name="watermark">Watermark</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Versi Terbaru Terdeteksi.</string>

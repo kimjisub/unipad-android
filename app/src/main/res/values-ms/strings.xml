@@ -27,7 +27,6 @@
 	<string name="using">Menggunakan</string>
 	<string name="path">Jalan</string>
 	<string name="quit">Keluar</string>
-	<string name="watermark">Tanda Tempat</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log Telah di padam.</string>
 	<string name="record">Rakam</string>
+	<string name="watermark">Tanda Tempat</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Versi Baharu Dikesan.</string>

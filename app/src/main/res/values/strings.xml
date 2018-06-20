@@ -27,7 +27,6 @@
 	<string name="using">Using</string>
 	<string name="path">Path</string>
 	<string name="quit">Quit</string>
-	<string name="watermark">Watermark</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>
 	<string name="record">Record</string>
+	<string name="watermark">Watermark</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">New version detected.</string>

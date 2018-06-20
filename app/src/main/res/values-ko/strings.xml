@@ -27,7 +27,6 @@
 	<string name="using">사용중</string>
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
-	<string name="watermark">워터마크</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
@@ -79,6 +78,7 @@
 	<string name="traceLog">순서 기록</string>
 	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
 	<string name="record">녹음</string>
+	<string name="watermark">워터마크</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
