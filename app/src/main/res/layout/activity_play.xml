@@ -13,6 +13,16 @@
 	    android:scaleType="centerCrop"
 	    android:src="@drawable/playbg"/>
 	
+	<ImageView
+	    android:id="@+id/custom_logo"
+	    android:layout_width="90dp"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:layout_margin="16dp"
+	    android:scaleType="fitStart"
+	    android:src="@drawable/custom_logo"/>
+	
 	
 	<RelativeLayout
 	    android:layout_width="match_parent"
@@ -22,9 +32,9 @@
 		<RelativeLayout
 		    android:id="@+id/option_view"
 		    android:layout_width="wrap_content"
-		    android:layout_alignParentStart="true"
 		    android:layout_height="match_parent"
-		    android:layout_alignParentLeft="true">
+		    android:layout_alignParentLeft="true"
+		    android:layout_alignParentStart="true">
 			
 			<LinearLayout
 			    android:layout_width="wrap_content"
@@ -151,8 +161,8 @@
 		<LinearLayout
 		    android:id="@+id/chains"
 		    android:layout_width="wrap_content"
-		    android:layout_height="match_parent"
-		    android:layout_alignParentTop="true"
+		    android:layout_height="wrap_content"
+		    android:layout_centerVertical="true"
 		    android:layout_toEndOf="@+id/pads"
 		    android:layout_toRightOf="@+id/pads"
 		    android:orientation="vertical">
@@ -191,8 +201,8 @@
 			<LinearLayout
 			    android:layout_width="match_parent"
 			    android:layout_height="match_parent"
-			    android:orientation="horizontal"
 			    android:layout_gravity="center"
+			    android:orientation="horizontal"
 			    android:weightSum="2">
 				
 				<LinearLayout
@@ -273,7 +283,7 @@
 					    android:textColor="@color/option_window_checkbox"/>
 				
 				</LinearLayout>
-				
+			
 			</LinearLayout>
 			
 			<Button
