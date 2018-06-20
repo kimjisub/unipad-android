@@ -270,6 +270,7 @@
 					    android:id="@+id/CB2_watermark"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
+					    android:checked="true"
 					    android:buttonTint="@color/option_window_checkbox"
 					    android:text="@string/watermark"
 					    android:textColor="@color/option_window_checkbox"/>
@@ -278,6 +279,7 @@
 					    android:id="@+id/CB2_hideUI"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
+					    android:checked="false"
 					    android:buttonTint="@color/option_window_checkbox"
 					    android:text="@string/hideUI"
 					    android:textColor="@color/option_window_checkbox"/>
