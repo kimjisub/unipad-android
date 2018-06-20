@@ -231,9 +231,9 @@ public class Launchpad extends BaseActivity {
 		selectDevice(Integer.parseInt((String) v.getTag()));
 	}
 	
-	public void selectDevice(MidiDevice m){
-		if(m != null)
-		selectDevice(m.value);
+	public void selectDevice(MidiDevice m) {
+		if (m != null)
+			selectDevice(m.value);
 	}
 	
 	public void selectDevice(int num) {
@@ -398,7 +398,7 @@ public class Launchpad extends BaseActivity {
 	
 	// ========================================================================================= Driver
 	
-	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2){
+	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
 		driverFrom = activity;
 		onConnectionEventListener = listener1;
 		onGetSignalListener = listener2;
@@ -406,13 +406,13 @@ public class Launchpad extends BaseActivity {
 		updateDriver();
 	}
 	
-	static void removeDriverListener(Activity activity){
-		log("driverFrom == activity = "+ (driverFrom == activity));
-		if(driverFrom == activity)
+	static void removeDriverListener(Activity activity) {
+		log("driverFrom == activity = " + (driverFrom == activity));
+		if (driverFrom == activity)
 			setDriverListener(null, null, null);
 	}
 	
-	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener){
+	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener) {
 		onSendSignalListener = listener;
 		
 		updateDriver();
@@ -423,7 +423,8 @@ public class Launchpad extends BaseActivity {
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);
-		driver.onConnected();
+		if (isRun)
+			driver.onConnected();
 	}
 	
 	@Override

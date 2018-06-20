@@ -14,38 +14,42 @@ public class ThemePack {
 	public String description = "";
 	public String version = "";
 	public Resources resources;
-
+	
 	public ThemePack(Context context, String package_name) {
 		this.context = context;
 		this.package_name = package_name;
 	}
-
+	
 	public void init() throws Exception {
 		version = context.getPackageManager().getPackageInfo(package_name, 0).versionName;
-
+		
 		android.content.res.Resources res = context.getPackageManager().getResourcesForApplication(package_name);
 		icon = res.getDrawable(res.getIdentifier(package_name + ":drawable/theme_ic", null, null));
 		name = res.getString(res.getIdentifier(package_name + ":string/theme_name", null, null));
 		description = res.getString(res.getIdentifier(package_name + ":string/theme_description", null, null));
 		author = res.getString(res.getIdentifier(package_name + ":string/theme_author", null, null));
 	}
-
+	
 	public void loadThemeResources() throws Exception {
 		resources = new Resources(context.getPackageManager().getResourcesForApplication(package_name));
 	}
-
+	
 	public class Resources {
-		public Drawable playbg;
+		public Drawable playbg, custom_logo;
 		public Drawable btn, btn_;
 		public Drawable chainled, chain, chain_, chain__;
 		public Drawable phantom, phantom_;
 		public Drawable xml_prev, xml_play, xml_pause, xml_next;
 		public int checkbox, trace_log, option_window, option_window_checkbox, option_window_btn, option_window_btn_text;
 		public boolean isChainLED = true;
-
+		
 		public Resources(android.content.res.Resources res) throws Exception {
 			// Drawable
 			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
+			try {
+				custom_logo = res.getDrawable(res.getIdentifier(package_name + ":drawable/custom_logo", null, null));
+			} catch (Exception ignore) {
+			}
 			this.btn = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn", null, null));
 			this.btn_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn_", null, null));
 			try {
