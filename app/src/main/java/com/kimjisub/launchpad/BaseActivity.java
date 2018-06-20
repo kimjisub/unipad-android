@@ -53,22 +53,14 @@ public class BaseActivity extends AppCompatActivity {
 				if (interstitialAd.isLoaded()) {
 					logAds("isLoaded");
 					interstitialAd.show();
-					interstitialAd = new InterstitialAd(BaseActivity.this);
-					interstitialAd.setAdUnitId(ADUNITID);
-					interstitialAd.loadAd(new AdRequest.Builder()
-						//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
-						.build());
+					loadAds();
 					logAds("show!");
 				} else {
 					logAds("! isLoaded (set listener)");
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
-							interstitialAd = new InterstitialAd(BaseActivity.this);
-							interstitialAd.setAdUnitId(ADUNITID);
-							interstitialAd.loadAd(new AdRequest.Builder()
-								//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
-								.build());
+							loadAds();
 							logAds("show!");
 						}
 					});
@@ -80,12 +72,16 @@ public class BaseActivity extends AppCompatActivity {
 	public void initAds() {
 		if (!Billing.isPremium) {
 			logAds("initAds");
-			interstitialAd = new InterstitialAd(BaseActivity.this);
-			interstitialAd.setAdUnitId(ADUNITID);
-			interstitialAd.loadAd(new AdRequest.Builder()
-				//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
-				.build());
+			loadAds();
 		}
+	}
+	
+	void loadAds(){
+		interstitialAd = new InterstitialAd(BaseActivity.this);
+		interstitialAd.setAdUnitId(ADUNITID);
+		interstitialAd.loadAd(new AdRequest.Builder()
+			//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
+			.build());
 	}
 	
 	public void showDialog(String title, String content) {
