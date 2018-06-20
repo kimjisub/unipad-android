@@ -24,6 +24,7 @@ import com.kimjisub.launchpad.manage.SaveSetting;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class Setting extends PreferenceActivity {
 	
@@ -194,6 +195,7 @@ public class Setting extends PreferenceActivity {
 			setSummary(summary);
 			setIcon(icon);
 		}
+		
 		public mItem(String title, String summary) {
 			setTitle(title);
 			setSummary(summary);
@@ -229,7 +231,9 @@ public class Setting extends PreferenceActivity {
 			return icon;
 		}
 		
-		public boolean isIcon(){return isIcon;}
+		public boolean isIcon() {
+			return isIcon;
+		}
 		
 	}
 	
@@ -273,10 +277,10 @@ public class Setting extends PreferenceActivity {
 			
 			title.setText(item.getTitle());
 			summary.setText(item.getSummary());
-			if(item.isIcon()) {
+			if (item.isIcon()) {
 				icon.setBackground(BaseActivity.drawable(getApplicationContext(), item.getIcon()));
 				icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-			}else
+			} else
 				icon.setVisibility(View.GONE);
 			return convertView;
 		}
@@ -301,10 +305,17 @@ public class Setting extends PreferenceActivity {
 		if (Billing.isPremium)
 			findPreference("removeAds").setSummary(lang(R.string.using));
 		
+		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
+		
+		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
+		String displayCountry = systemLocale.getDisplayCountry(); //국가출력
+		String country = systemLocale.getCountry(); // 국가 코드 출력 ex) KR
+		String language = systemLocale.getLanguage(); // 언어 코드 출력 ex) ko
 		
 		findPreference("language").setTitle(lang(R.string.language) + " (" + lang(R.string.languageCode) + ")");
-		findPreference("language").setSummary(String.format(lang(R.string.translatedBy), lang(R.string.translator)));
-		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
+		findPreference("language").setSummary(displayCountry + " (" + country + ") - " + language);
+		findPreference("copyright").setSummary(String.format(lang(R.string.translatedBy), lang(R.string.translator)));
+		
 		super.onResume();
 	}
 	

@@ -31,6 +31,7 @@
 		    android:title="@string/language"
 		    android:summary="@string/languageCode"/>
 		<Preference
+		    android:key="copyright"
 		    android:title="@string/copyright"/>
 	</PreferenceCategory>
 </PreferenceScreen>
