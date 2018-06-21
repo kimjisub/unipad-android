@@ -79,7 +79,7 @@
 	<string name="traceLogClear">Jejak sentuhan di ulangi.</string>
 	<string name="record">Merekam</string>
 	<string name="watermark">Watermark</string>
-	<string name="hideUI">Hide UI</string>
+	<string name="hideUI">Sembunyikan antarmuka pengguna</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Versi Terbaru Terdeteksi.</string>

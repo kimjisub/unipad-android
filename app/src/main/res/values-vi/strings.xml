@@ -79,7 +79,7 @@
 	<string name="traceLogClear">Số thứ tự đã được cài lại</string>
 	<string name="record">Ghi âm</string>
 	<string name="watermark">Watermark</string>
-	<string name="hideUI">Hide UI</string>
+	<string name="hideUI">Ẩn giao diện người dùng</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Bản cập nhật mới. </string>
