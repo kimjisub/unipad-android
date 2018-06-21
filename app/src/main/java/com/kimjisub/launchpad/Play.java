@@ -762,7 +762,7 @@ public class Play extends BaseActivity {
 		
 		
 		CheckBox[] CB1s = new CheckBox[]{CB1_pressedPadShow, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
-		CheckBox[] CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark};
+		CheckBox[] CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
 		
 		for (CheckBox cb1 : CB1s) {
 			cb1.setTextColor(theme.checkbox);
