@@ -53,6 +53,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Tools.log;
+
 
 public class Main extends BaseActivity {
 	
@@ -271,20 +273,26 @@ public class Main extends BaseActivity {
 				
 				if (projectFolder.isDirectory()) {
 					
-					File[] projects = FileManager.sortByTime(projectFolder.listFiles());
-					int num = projects.length;
+					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
+					File[] projects = new File[projectFiles.length];
 					
-					PV_items = new PackView[num];
-					flagColors = new int[num];
-					URLs = new String[num];
-					unipacks = new Unipack[num];
 					
 					projectsCount = 0;
-					for (int i = 0; i < num; i++) {
+					for (int i = 0; i < projectFiles.length; i++) {
+						File project = projectFiles[i];
+						if (!project.isDirectory()) continue;
+						projects[projectsCount] = project;
+						projectsCount++;
+					}
+					
+					PV_items = new PackView[projectsCount];
+					flagColors = new int[projectsCount];
+					URLs = new String[projectsCount];
+					unipacks = new Unipack[projectsCount];
+					
+					for (int i = 0; i < projectsCount; i++) {
 						final int I = i;
 						File project = projects[I];
-						if (project.isFile()) continue;
-						projectsCount++;
 						
 						final String url = UnipackRootURL + "/" + project.getName();
 						final Unipack unipack = new Unipack(url, false);
@@ -683,7 +691,7 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	void rescanScale(){
+	void rescanScale() {
 		Scale_PaddingWidth = LL_paddingScale.getWidth();
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
 		Scale_Width = LL_scale.getWidth();
