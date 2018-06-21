@@ -65,6 +65,7 @@ public class Play extends BaseActivity {
 	CheckBox CB1_autoPlay;
 	CheckBox CB1_traceLog;
 	CheckBox CB1_record;
+	CheckBox[] CB1s;
 	
 	CheckBox CB2_pressedPadShow;
 	CheckBox CB2_LED;
@@ -73,6 +74,7 @@ public class Play extends BaseActivity {
 	CheckBox CB2_record;
 	CheckBox CB2_watermark;
 	CheckBox CB2_hideUI;
+	CheckBox[] CB2s;
 	
 	SyncCheckBox SCV_pressedPadShow;
 	SyncCheckBox SCV_LED;
@@ -104,6 +106,7 @@ public class Play extends BaseActivity {
 		CB1_autoPlay = findViewById(R.id.CB1_autoPlay);
 		CB1_traceLog = findViewById(R.id.CB1_traceLog);
 		CB1_record = findViewById(R.id.CB1_record);
+		CB1s = new CheckBox[]{CB1_pressedPadShow, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
 		
 		CB2_pressedPadShow = findViewById(R.id.CB2_pressedPadShow);
 		CB2_LED = findViewById(R.id.CB2_LED);
@@ -112,6 +115,7 @@ public class Play extends BaseActivity {
 		CB2_record = findViewById(R.id.CB2_record);
 		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_hideUI = findViewById(R.id.CB2_hideUI);
+		CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
 		
 		SCV_pressedPadShow = new SyncCheckBox(CB1_pressedPadShow, CB2_pressedPadShow);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
@@ -705,7 +709,7 @@ public class Play extends BaseActivity {
 	void skin_set() {
 		log("[12] skin_set");
 		IV_background.setImageDrawable(theme.playbg);
-		if(theme.custom_logo !=null)
+		if (theme.custom_logo != null)
 			IV_custom_logo.setImageDrawable(theme.custom_logo);
 		else
 			IV_custom_logo.setImageDrawable(null);
@@ -758,9 +762,6 @@ public class Play extends BaseActivity {
 		IV_play.setBackground(theme.xml_play);
 		IV_next.setBackground(theme.xml_next);
 		
-		
-		CheckBox[] CB1s = new CheckBox[]{CB1_pressedPadShow, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
-		CheckBox[] CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
 		
 		for (CheckBox cb1 : CB1s) {
 			cb1.setTextColor(theme.checkbox);
