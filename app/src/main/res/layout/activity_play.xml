@@ -162,7 +162,7 @@
 		    android:id="@+id/chains"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
-		    android:layout_centerVertical="true"
+		    android:layout_alignTop="@+id/pads"
 		    android:layout_toEndOf="@+id/pads"
 		    android:layout_toRightOf="@+id/pads"
 		    android:orientation="vertical">
@@ -270,8 +270,8 @@
 					    android:id="@+id/CB2_watermark"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
-					    android:checked="true"
 					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="true"
 					    android:text="@string/watermark"
 					    android:textColor="@color/option_window_checkbox"/>
 					
@@ -279,8 +279,8 @@
 					    android:id="@+id/CB2_hideUI"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
-					    android:checked="false"
 					    android:buttonTint="@color/option_window_checkbox"
+					    android:checked="false"
 					    android:text="@string/hideUI"
 					    android:textColor="@color/option_window_checkbox"/>
 				
