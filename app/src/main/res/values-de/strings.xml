@@ -1,0 +1,131 @@
+<resources>
+	<string name="languageCode">de</string>
+	<string name="language">Deutsch</string>
+	<string name="translator">[SnBt]Launchpad</string>
+	<string name="translatedBy">Übersetzt von %1$s</string>
+	
+	<string name="app_name">UniPad</string>
+	
+	<!--Word-->
+	<string name="accept">Akzeptieren</string>
+	<string name="cancel">Abbrechen</string>
+	<string name="warning">Warnung</string>
+	<string name="error">ERROR</string>
+	<string name="errOccur">Ein Error ist aufgetreten</string>
+	<string name="wait">Warte ein Moment…</string>
+	<string name="analyzing">Analysieren</string>
+	<string name="loading">Ladet…</string>
+	<string name="downloading">Herunterladen</string>
+	<string name="success">Erfolgreich</string>
+	<string name="failed">Fehlgeschlagen</string>
+	<string name="delete">Löschen</string>
+	<string name="edit">Editieren</string>
+	<string name="update">Aktualisieren</string>
+	<string name="ignore">Ignorieren</string>
+	<string name="apply">Anwenden</string>
+	<string name="restart">Neustarten</string>
+	<string name="using">Benutzen</string>
+	<string name="path">Pfad</string>
+	<string name="quit">Quit</string>
+	
+	<!--Menu-->
+	<string name="reconnect_launchpad">Launchpad neu abschließen</string>
+	<string name="list_refresh">Liste Aktualisieren</string>
+	<string name="import_unipack">Unipack Laden</string>
+	<string name="store">Store</string>
+	
+	<!--Setting-->
+	<string name="setting">Einstellungen</string>
+	<string name="information">Information</string>
+	<string name="select_theme">Skin Auswählen</string>
+	<string name="use_sd_card">SD Card Benutzen</string>
+	<string name="removeAds">Ads Entfernen</string>
+	<string name="purchaseComplete">Kauf Erfolgreich</string>
+	<string name="openSourceLicense">Open Source Lizenz</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	
+	<!--Community-->
+	<string name="community">Community</string>
+	<string name="officialHomepage">Offizielle Website</string>
+	<string name="officialHomepage_">UniPad Offiziell Website</string>
+	<string name="officialFacebook">Offiziell Facebook</string>
+	<string name="officialFacebook_">Technischer Support</string>
+	<string name="facebookCommunity">Facebook Community</string>
+	<string name="facebookCommunity_">english</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">korean</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk to Dev. kimjisub</string>
+	<string name="kakaotalk_">anderes als Technischer Support</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">anderes als Technischer Support</string>
+	
+	<!--Unipack Info-->
+	<string name="title">Titel</string>
+	<string name="producerName">Produzent</string>
+	<string name="scale">Größe</string>
+	<string name="chainCount">Seiten Anzahl</string>
+	<string name="capacity">Datei Größe</string>
+	
+	<!--Unipack Function-->
+	<string name="LED">LED</string>
+	<string name="autoPlay">Autoplay</string>
+	<string name="LED_">LED ●</string>
+	<string name="autoPlay_">AUTOPLAY ●</string>
+	<string name="pressedPadShow">Zeige gedrückten Knopf</string>
+	<string name="traceLog">Verfolge Knopfdruck</string>
+	<string name="traceLogClear">Zurückgesetzt.</string>
+	<string name="record">Aufnehmen</string>
+	<string name="watermark">Wasserzeichen</string>
+	<string name="hideUI">UI Verstecken</string>
+	
+	<!--Version-->
+	<string name="newVersionFound">Neue Version Gefunden.</string>
+	<string name="currentVersion">Aktuelle Version</string>
+	<string name="newVersion">Neuste Version</string>
+	
+	<string name="unipackNotFound">Unipack nicht gefunden.</string>
+	<string name="clickToAddUnipack">Drück um UniPack Hinzuzufügen.</string>
+	<string name="doYouWantToDeleteProject">UniPack Löschen?</string>
+	<string name="doYouWantToRemapProject">Willst du die Autoplay Re-Mappen?</string>
+	<string name="remapDone">AutoPlay remapping war erfolgreich.</string>
+	<string name="remapFail">AutoPlay existiert nicht</string>
+	<string name="cantReadFolder">kann den Ordner nicht Lesen.</string>
+	<string name="cantReadFile">kann die datei nicht Lesen.</string>
+	<string name="analyzeComplete">Analyse Fertig!</string>
+	<string name="analyzeFailed">Analysieren fehlgeschlagen…</string>
+	<string name="isNotAnUniPack">Das ist Kein UniPack</string>
+	<string name="pressAgainToGoBack">Nochmal drücken zum Verlassen.</string>
+	<string name="permissionDenied">Keine Berechtigung.</string>
+	<string name="copied">Kopiert.</string>
+	<string name="skinMemoryErr">Skin Übernehmen Fehlgeschlagen.\nApp Neustarten.</string>
+	<string name="skinErr">Skin Übernehmen Fehlgeschlagen. Skin Zurücksetzen.</string>
+	
+	<string name="outOfMemory">Kein Speicherplatz…\nLöschen sie sachen und versuchen sie es nochmal.</string>
+	<string name="outOfCPU">konnte Unipack nicht Starten\nWegen Handy Spec\'s\nApp Neustarten und nochmal Versuchen.</string>
+	<string name="doNotSee">Kann nicht sehen</string>
+	
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Verbinde Launchpad…</string>
+	<string name="midiDevicesNotDetected">MIDI Geräte nicht Gefunden</string>
+	<string name="signal_SpeedFirst">Speed First</string>
+	<string name="signal_avoidAfterimage">Umgehe Afterimage</string>
+	
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Du kannst wärend dem Download Nicht verlassen</string>
+	<string name="downloadCount">So oft Heruntergeladen</string>
+	<string name="UnableToAccessServer">Konnte Server nicht erreichen.</string>
+	
+	<!--Theme-->
+	<string name="themeDownload">Themes Runterladen</string>
+	<string name="requireRestart">Benötigt app Neustart.</string>
+	<string name="doYouWantToRestartApp">Willst du die App Neustarten?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
+
+</resources>
