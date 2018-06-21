@@ -377,11 +377,11 @@ public class Launchpad extends BaseActivity {
 		
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
-			try {
+//			try {
 				driver.getSignal(progress[0], progress[1], progress[2], progress[3]);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
 		}
 		
 		@Override

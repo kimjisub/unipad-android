@@ -193,6 +193,7 @@ public class Main extends BaseActivity {
 			SaveSetting.IsUsingSDCard.load(Main.this);
 			
 			RL_intro.setVisibility(View.GONE);
+			rescanScale();
 			startMain();
 		}
 	};
@@ -247,7 +248,6 @@ public class Main extends BaseActivity {
 		else
 			VA_floatingAnimation.end();
 	}
-	
 	
 	void update() {
 		playIndex = -1;
@@ -346,10 +346,7 @@ public class Main extends BaseActivity {
 								
 								@Override
 								public void onPlayClick(PackView v) {
-									Scale_PaddingWidth = LL_paddingScale.getWidth();
-									Scale_PaddingHeight = LL_paddingScale.getHeight();
-									Scale_Width = LL_scale.getWidth();
-									Scale_Height = LL_scale.getHeight();
+									rescanScale();
 									
 									Intent intent = new Intent(Main.this, Play.class);
 									intent.putExtra("URL", url);
@@ -686,6 +683,13 @@ public class Main extends BaseActivity {
 		}
 	}
 	
+	void rescanScale(){
+		Scale_PaddingWidth = LL_paddingScale.getWidth();
+		Scale_PaddingHeight = LL_paddingScale.getHeight();
+		Scale_Width = LL_scale.getWidth();
+		Scale_Height = LL_scale.getHeight();
+	}
+	
 	// =========================================================================================
 	
 	int playIndex = -1;
@@ -715,7 +719,6 @@ public class Main extends BaseActivity {
 			}
 		}
 	}
-	
 	
 	// ========================================================================================= Launchpad Connection
 	
@@ -751,13 +754,13 @@ public class Main extends BaseActivity {
 					if (f == 0 && upDown) {
 						if (havePrev()) {
 							togglePlay(playIndex - 1);
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2) + (PV_items[playIndex].getHeight() / 2));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
 							showSelectUI();
 					} else if (f == 1 && upDown) {
 						if (haveNext()) {
 							togglePlay(playIndex + 1);
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-getResources().getDisplayMetrics().heightPixels / 2) + (PV_items[playIndex].getHeight() / 2));
+							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
 							showSelectUI();
 					} else if (f == 2 && upDown) {
@@ -829,6 +832,7 @@ public class Main extends BaseActivity {
 			Launchpad.driver.sendFunctionkeyLED(7, 0);
 		}
 	}
+	
 	// =========================================================================================
 	
 	List<String> mItem;
@@ -976,7 +980,6 @@ public class Main extends BaseActivity {
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-	
 	
 	void updateCheck() {
 		new Networks.CheckVersion().setOnChangeListener(version -> {
