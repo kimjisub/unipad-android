@@ -146,7 +146,6 @@ public class Play extends BaseActivity {
 	boolean isTraceLog;
 	boolean isRecord;
 	boolean isShowWatermark;
-	boolean isHideUI;
 	
 	final long DELAY = 1;
 	
@@ -635,8 +634,7 @@ public class Play extends BaseActivity {
 		});
 		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
 		SCV_hideUI.setOnCheckedChange(isChecked -> {
-			isHideUI = isChecked;
-			if (isHideUI)
+			if (isChecked)
 				RL_option_view.setVisibility(View.GONE);
 			else
 				RL_option_view.setVisibility(View.VISIBLE);
