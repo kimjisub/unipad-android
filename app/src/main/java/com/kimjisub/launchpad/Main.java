@@ -53,22 +53,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.kimjisub.launchpad.manage.Tools.log;
-
 
 public class Main extends BaseActivity {
 	
-	boolean isDoneIntro = false;
-	boolean isShowWatermark = true;
-	boolean updateComplete = true;
+	// ========================================================================================= UI 변수 선언 및 초기화
 	
 	// intro
 	RelativeLayout RL_intro;
 	TextView TV_version;
-	
-	Handler handler;
-	Billing billing;
-	
 	
 	// main
 	ScrollView SV_scrollView;
@@ -82,28 +74,15 @@ public class Main extends BaseActivity {
 	LinearLayout LL_scale;
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
-	
-	
-	// animation
 	ValueAnimator VA_floatingAnimation;
 	
+	
 	String UnipackRootURL;
-	
-	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-	
-	
-	final int AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15;
-	
-	
-	void initVar() {
-		initVar(false);
-	}
 	
 	void initVar(boolean onFirst) {
 		// intro
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
-		
 		
 		// main
 		SV_scrollView = findViewById(R.id.scrollView);
@@ -138,6 +117,22 @@ public class Main extends BaseActivity {
 		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
+	
+	// =========================================================================================
+	
+	boolean isDoneIntro = false;
+	boolean isShowWatermark = true;
+	boolean updateComplete = true;
+	
+	Billing billing;
+	
+	
+	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+	
+	
+	final int AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15;
+	
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +170,7 @@ public class Main extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					showAds();
-					(handler = new Handler()).postDelayed(runnable, 3000);
+					new Handler().postDelayed(startMain, 3000);
 				}
 				
 				@Override
@@ -189,7 +184,7 @@ public class Main extends BaseActivity {
 			.check();
 	}
 	
-	Runnable runnable = new Runnable() {
+	Runnable startMain = new Runnable() {
 		@Override
 		public void run() {
 			SaveSetting.IsUsingSDCard.load(Main.this);
@@ -201,7 +196,8 @@ public class Main extends BaseActivity {
 	};
 	
 	void startMain() {
-		updateCheck();
+		versionCheck();
+		newPackCheck();
 		
 		FAB_refreshList.setOnClickListener(v -> update());
 		
@@ -257,13 +253,6 @@ public class Main extends BaseActivity {
 			return;
 		
 		updateComplete = false;
-		
-		getStoreCount.setOnChangeListener(count -> {
-			if (SaveSetting.PrevStoreCount.load(Main.this) == count)
-				runOnUiThread(() -> blink(false));
-			else
-				runOnUiThread(() -> blink(true));
-		}).run();
 		
 		LL_list.removeAllViews();
 		
@@ -989,7 +978,7 @@ public class Main extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 	
-	void updateCheck() {
+	void versionCheck() {
 		new Networks.CheckVersion().setOnChangeListener(version -> {
 			try {
 				String currVersion = BuildConfig.VERSION_NAME;
@@ -1007,6 +996,15 @@ public class Main extends BaseActivity {
 				}
 			} catch (Exception ignore) {
 			}
+		}).run();
+	}
+	
+	void newPackCheck(){
+		getStoreCount.setOnChangeListener(count -> {
+			if (SaveSetting.PrevStoreCount.load(Main.this) == count)
+				runOnUiThread(() -> blink(false));
+			else
+				runOnUiThread(() -> blink(true));
 		}).run();
 	}
 	
@@ -1042,7 +1040,7 @@ public class Main extends BaseActivity {
 	protected void onResume() {
 		super.onResume();
 		
-		initVar();
+		initVar(false);
 		if (!isDoneIntro)
 			;
 		else {
@@ -1062,22 +1060,6 @@ public class Main extends BaseActivity {
 			Launchpad.driver.sendClearLED();
 			Launchpad.removeDriverListener(Main.this);
 		}
-	}
-	
-	@Override
-	public void onStop() {
-		super.onStop();
-		
-		if (!isDoneIntro) {
-			try {
-				handler.removeCallbacks(runnable);
-			} catch (RuntimeException ignore) {
-			}
-			
-			finish();
-		} else
-			;
-		
 	}
 	
 	@Override
