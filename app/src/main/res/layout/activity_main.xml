@@ -29,9 +29,9 @@
 	    android:visibility="invisible"/>
 	
 	<ScrollView
+	    android:id="@+id/scrollView"
 	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:id="@+id/scrollView">
+	    android:layout_height="match_parent">
 		
 		<LinearLayout
 		    android:id="@+id/list"
@@ -47,9 +47,10 @@
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:layout_alignParentBottom="true"
+	    android:layout_alignParentEnd="true"
 	    android:layout_alignParentRight="true"
 	    android:layout_margin="10dp"
-	    app:menu_animationDelayPerItem="100"
+	    app:menu_animationDelayPerItem="50"
 	    app:menu_backgroundColor="@android:color/transparent"
 	    app:menu_buttonSpacing="0dp"
 	    app:menu_colorNormal="@color/red"
