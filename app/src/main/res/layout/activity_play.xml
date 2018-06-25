@@ -10,7 +10,8 @@
 	    android:id="@+id/background"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:scaleType="centerCrop"/>
+	    android:scaleType="centerCrop"
+	    android:src="@drawable/playbg"/>
 	
 	<ImageView
 	    android:id="@+id/custom_logo"
@@ -19,7 +20,8 @@
 	    android:layout_alignParentRight="true"
 	    android:layout_alignParentTop="true"
 	    android:layout_margin="16dp"
-	    android:scaleType="fitStart"/>
+	    android:scaleType="fitStart"
+	    android:src="@drawable/custom_logo"/>
 	
 	
 	<RelativeLayout
@@ -95,18 +97,21 @@
 						    android:id="@+id/prev"
 						    android:layout_width="32dp"
 						    android:layout_height="32dp"
+						    android:background="@drawable/xml_prev"
 						    android:clickable="true"/>
 						
 						<ImageView
 						    android:id="@+id/play"
 						    android:layout_width="32dp"
 						    android:layout_height="32dp"
+						    android:background="@drawable/xml_play"
 						    android:clickable="true"/>
 						
 						<ImageView
 						    android:id="@+id/next"
 						    android:layout_width="32dp"
 						    android:layout_height="32dp"
+						    android:background="@drawable/xml_next"
 						    android:clickable="true"/>
 					</LinearLayout>
 				
