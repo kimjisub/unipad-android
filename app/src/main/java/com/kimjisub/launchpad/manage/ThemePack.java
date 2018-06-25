@@ -37,6 +37,8 @@ public class ThemePack {
 	}
 	
 	public class Resources {
+		android.content.res.Resources res;
+		
 		public Drawable playbg, custom_logo;
 		public Drawable btn, btn_;
 		public Drawable chainled, chain, chain_, chain__;
@@ -46,60 +48,64 @@ public class ThemePack {
 		public boolean isChainLED = true;
 		
 		public Resources(android.content.res.Resources res) throws Exception {
+			this.res = res;
+			
+			
 			// Drawable
-			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
+			this.playbg = getDrawable("playbg");
 			try {
-				this.custom_logo = res.getDrawable(res.getIdentifier(package_name + ":drawable/custom_logo", null, null));
+				this.custom_logo = getDrawable("custom_logo");
 			} catch (Exception ignore) {
 			}
-			this.btn = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn", null, null));
-			this.btn_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn_", null, null));
+			this.btn = getDrawable("btn");
+			this.btn_ = getDrawable("btn_");
 			try {
-				this.chainled = res.getDrawable(res.getIdentifier(package_name + ":drawable/chainled", null, null));
+				this.chainled = getDrawable("chainled");
 			} catch (Exception e) {
 				isChainLED = false;
-				this.chain = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain", null, null));
-				this.chain_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain_", null, null));
-				this.chain__ = res.getDrawable(res.getIdentifier(package_name + ":drawable/chain__", null, null));
+				this.chain = getDrawable("chain");
+				this.chain_ = getDrawable("chain_");
+				this.chain__ = getDrawable("chain__");
 			}
-			this.phantom = res.getDrawable(res.getIdentifier(package_name + ":drawable/phantom", null, null));
+			this.phantom = getDrawable("phantom");
 			try {
-				this.phantom_ = res.getDrawable(res.getIdentifier(package_name + ":drawable/phantom_", null, null));
+				this.phantom_ = getDrawable("phantom_");
 			} catch (Exception ignore) {
 			}
-			this.xml_prev = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_prev", null, null));
-			this.xml_play = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_play", null, null));
-			this.xml_pause = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_pause", null, null));
-			this.xml_next = res.getDrawable(res.getIdentifier(package_name + ":drawable/xml_next", null, null));
+			this.xml_prev = getDrawable("xml_prev");
+			this.xml_play = getDrawable("xml_play");
+			this.xml_pause = getDrawable("xml_pause");
+			this.xml_next = getDrawable("xml_next");
+			
 			
 			// Color
 			try {
-				this.checkbox = res.getColor(res.getIdentifier(package_name + ":color/checkbox", null, null));
+				this.checkbox = getColor("checkbox");
 			} catch (Exception ignore) {
 				this.checkbox = context.getResources().getColor(R.color.checkbox);
 			}
 			try {
-				this.trace_log = res.getColor(res.getIdentifier(package_name + ":color/trace_log", null, null));
+				this.trace_log = getColor("trace_log");
 			} catch (Exception ignore) {
 				this.trace_log = context.getResources().getColor(R.color.trace_log);
 			}
 			try {
-				this.option_window = res.getColor(res.getIdentifier(package_name + ":color/option_window", null, null));
+				this.option_window = getColor("option_window");
 			} catch (Exception ignore) {
 				this.option_window = context.getResources().getColor(R.color.option_window);
 			}
 			try {
-				this.option_window_checkbox = res.getColor(res.getIdentifier(package_name + ":color/option_window_checkbox", null, null));
+				this.option_window_checkbox = getColor("option_window_checkbox");
 			} catch (Exception ignore) {
 				this.option_window_checkbox = context.getResources().getColor(R.color.option_window_checkbox);
 			}
 			try {
-				this.option_window_btn = res.getColor(res.getIdentifier(package_name + ":color/option_window_btn", null, null));
+				this.option_window_btn = getColor("option_window_btn");
 			} catch (Exception ignore) {
 				this.option_window_btn = context.getResources().getColor(R.color.option_window_btn);
 			}
 			try {
-				this.option_window_btn_text = res.getColor(res.getIdentifier(package_name + ":color/option_window_btn_text", null, null));
+				this.option_window_btn_text = getColor("option_window_btn_text");
 			} catch (Exception ignore) {
 				this.option_window_btn_text = context.getResources().getColor(R.color.option_window_btn_text);
 			}
@@ -120,13 +126,20 @@ public class ThemePack {
 			this.xml_next = context.getResources().getDrawable(R.drawable.xml_next);
 			
 			// Color
-			
 			this.checkbox = context.getResources().getColor(R.color.checkbox);
 			this.trace_log = context.getResources().getColor(R.color.trace_log);
 			this.option_window = context.getResources().getColor(R.color.option_window);
 			this.option_window_checkbox = context.getResources().getColor(R.color.option_window_checkbox);
 			this.option_window_btn = context.getResources().getColor(R.color.option_window_btn);
 			this.option_window_btn_text = context.getResources().getColor(R.color.option_window_btn_text);
+		}
+		
+		private Drawable getDrawable(String id) throws Exception {
+			return res.getDrawable(res.getIdentifier(package_name + ":drawable/" + id, null, null));
+		}
+		
+		private int getColor(String id) throws Exception {
+			return res.getColor(res.getIdentifier(package_name + ":color/" + id, null, null));
 		}
 	}
 }
