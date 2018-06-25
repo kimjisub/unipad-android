@@ -122,10 +122,5 @@
 	<string name="themeDownload">Muat turun Tema</string>
 	<string name="requireRestart">Muat semula aplikasi!</string>
 	<string name="doYouWantToRestartApp">Adakah anda mahu memuat semuat aplikasai?</string>
-	
-	<!--ThemePack-->
-	<string name="theme_name">Kulit Lalai</string>
-	<string name="theme_description">Ini adalah kulit lalai Unipad</string>
-	<string name="theme_author">UniPad dev.</string>
 
 </resources>

@@ -36,6 +36,7 @@ allprojects {
 	}
 }
 
+
 dependencies {
 	implementation fileTree(include: ['*.jar'], dir: 'libs')
 	implementation 'com.android.support:appcompat-v7:26.1.0'
@@ -61,6 +62,7 @@ dependencies {
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
 	
 	api project(':design')
+	//api project(':theme')
 }
 
 apply plugin: 'com.google.gms.google-services'
