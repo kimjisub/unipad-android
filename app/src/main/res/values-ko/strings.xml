@@ -122,10 +122,5 @@
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
-	
-	<!--ThemePack-->
-	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">This is Default UniPad Skin</string>
-	<string name="theme_author">UniPad dev.</string>
 
 </resources>

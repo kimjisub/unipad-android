@@ -1,0 +1,45 @@
+apply plugin: 'com.android.application'
+
+android {
+	compileSdkVersion 26
+	defaultConfig {
+		applicationId "com.kimjisub.launchpad.theme"
+		minSdkVersion 16
+		targetSdkVersion 26
+		versionCode 1
+		versionName "1.0"
+		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+		vectorDrawables.useSupportLibrary = true
+		renderscriptTargetApi 19
+		renderscriptSupportModeEnabled true
+	}
+	buildTypes {
+		release {
+			minifyEnabled true
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+	
+	dexOptions {
+		javaMaxHeapSize "4g"
+	}
+	compileOptions {
+		targetCompatibility 1.8
+		sourceCompatibility 1.8
+	}
+}
+
+allprojects {
+	repositories {
+		maven { url "https://jitpack.io" }
+		google()
+	}
+}
+
+
+dependencies {
+	implementation fileTree(include: ['*.jar'], dir: 'libs')
+	implementation 'com.android.support:appcompat-v7:26.1.0'
+	
+	testImplementation 'junit:junit:4.12'
+}

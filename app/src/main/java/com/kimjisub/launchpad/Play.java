@@ -574,7 +574,7 @@ public class Play extends BaseActivity {
 		} catch (Exception e) {
 			e.printStackTrace();
 			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
-			SaveSetting.SelectedTheme.save(Play.this, getPackageName());
+			SaveSetting.SelectedTheme.save(Play.this, "com.kimjisub.launchpad.theme");
 			return skin_init(num + 1);
 		}
 	}

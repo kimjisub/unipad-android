@@ -1,1 +1,1 @@
-include ':app', ':design'
+include ':app', ':design', ':theme'
