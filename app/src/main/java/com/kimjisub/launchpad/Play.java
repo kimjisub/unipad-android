@@ -29,6 +29,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mmin18.widget.RealtimeBlurView;
+import com.kimjisub.design.Chain;
+import com.kimjisub.design.Pad;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
@@ -134,8 +136,8 @@ public class Play extends BaseActivity {
 	boolean unipackLoaded = false;
 	boolean UILoaded = false;
 	
-	RelativeLayout[][] RL_btns;
-	RelativeLayout[] RL_chains;
+	Pad[][] Pads;
+	Chain[] Chains;
 	
 	LEDTask ledTask;
 	AutoPlayTask autoPlayTask;
@@ -331,17 +333,17 @@ public class Play extends BaseActivity {
 			if (Item != null) {
 				switch (Item.chanel) {
 					case ColorManager.GUIDE:
-						RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(Item.color);
+						Pads[x][y].setLedBackgroundColor(Item.color);
 						break;
 					case ColorManager.PRESSED:
-						RL_btns[x][y].findViewById(R.id.LED).setBackground(theme.btn_);
+						Pads[x][y].setLedImageDrawable(theme.btn_);
 						break;
 					case ColorManager.LED:
-						RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(Item.color);
+						Pads[x][y].setLedBackgroundColor(Item.color);
 						break;
 				}
 			} else
-				RL_btns[x][y].findViewById(R.id.LED).setBackgroundColor(0);
+				Pads[x][y].setLedBackgroundColor(0);
 		} else {
 			int c = y - 8;
 			if (0 <= c && c < unipack.chain)
@@ -349,28 +351,28 @@ public class Play extends BaseActivity {
 					switch (Item.chanel) {
 						case ColorManager.GUIDE:
 							if (theme.isChainLED)
-								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
+								Chains[c].setLedBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain__);
+								Chains[c].setBackgroundImageDrawable(theme.chain__);
 							break;
 						case ColorManager.PRESSED:
 							if (theme.isChainLED)
-								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
+								Chains[c].setLedBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain_);
+								Chains[c].setBackgroundImageDrawable(theme.chain_);
 							break;
 						case ColorManager.LED:
 							if (theme.isChainLED)
-								RL_chains[c].findViewById(R.id.LED).setBackgroundColor(Item.color);
+								Chains[c].setLedBackgroundColor(Item.color);
 							else
-								RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain);
+								Chains[c].setBackgroundImageDrawable(theme.chain);
 							break;
 					}
 				} else {
 					if (theme.isChainLED)
-						RL_chains[c].findViewById(R.id.LED).setBackgroundColor(0);
+						Chains[c].setLedBackgroundColor(0);
 					else
-						RL_chains[c].findViewById(R.id.touchView).setBackground(theme.chain);
+						Chains[c].setBackgroundImageDrawable(theme.chain);
 				}
 		}
 	}
@@ -419,8 +421,8 @@ public class Play extends BaseActivity {
 			}
 			
 			log("[03] Init Vars");
-			RL_btns = new RelativeLayout[unipack.buttonX][unipack.buttonY];
-			RL_chains = new RelativeLayout[unipack.chain];
+			Pads = new Pad[unipack.buttonX][unipack.buttonY];
+			Chains = new Chain[unipack.chain];
 			colorManager = new ColorManager(unipack.buttonX, unipack.buttonY);
 			
 			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
@@ -663,13 +665,13 @@ public class Play extends BaseActivity {
 			row.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
 			
 			for (int j = 0; j < unipack.buttonY; j++) {
-				final RelativeLayout RL_btn = (RelativeLayout) View.inflate(this, R.layout.button, null);
-				RL_btn.setLayoutParams(new LinearLayout.LayoutParams(buttonSizeX, buttonSizeY));
+				final Pad pad = new Pad(this);
+				pad.setLayoutParams(new LinearLayout.LayoutParams(buttonSizeX, buttonSizeY));
 				
 				
 				final int finalI = i;
 				final int finalJ = j;
-				RL_btn.setOnTouchListener((v, event) -> {
+				pad.setOnTouchListener((v, event) -> {
 					switch (event.getAction()) {
 						case MotionEvent.ACTION_DOWN:
 							padTouch(finalI, finalJ, true);
@@ -680,21 +682,22 @@ public class Play extends BaseActivity {
 					}
 					return false;
 				});
-				RL_btns[i][j] = RL_btn;
-				row.addView(RL_btn);
+				Pads[i][j] = pad;
+				row.addView(pad);
 			}
 			LL_pads.addView(row);
 		}
 		
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
-				RL_chains[i] = (RelativeLayout) View.inflate(this, R.layout.chain, null);
-				RL_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
-				
 				final int finalI = i;
-				RL_chains[i].findViewById(R.id.touchView).setOnClickListener(v -> chainChange(finalI));
 				
-				LL_chains.addView(RL_chains[i]);
+				Chains[i] = new Chain(this);
+				Chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
+				
+				Chains[i].setOnClickListener(v -> chainChange(finalI));
+				
+				LL_chains.addView(Chains[i]);
 			}
 		}
 		traceLog_init();
@@ -717,29 +720,29 @@ public class Play extends BaseActivity {
 		
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
-				RL_btns[i][j].findViewById(R.id.background).setBackground(theme.btn);
-				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setTextColor(theme.trace_log);
+				Pads[i][j].setBackgroundImageDrawable(theme.btn);
+				Pads[i][j].setTraceLogTextColor(theme.trace_log);
 			}
 		
 		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					RL_btns[i][j].findViewById(R.id.phantom).setBackground(theme.phantom);
+					Pads[i][j].setPhantomImageDrawable(theme.phantom);
 			
 			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.phantom_ != null) {
 				int x = unipack.buttonX / 2 - 1;
 				int y = unipack.buttonY / 2 - 1;
 				
-				RL_btns[x][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
+				Pads[x][y].setPhantomImageDrawable(theme.phantom_);
 				
-				RL_btns[x + 1][y].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x + 1][y].findViewById(R.id.phantom).setRotation(270);
+				Pads[x + 1][y].setPhantomImageDrawable(theme.phantom_);
+				Pads[x + 1][y].setPhantomRotation(270);
 				
-				RL_btns[x][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x][y + 1].findViewById(R.id.phantom).setRotation(90);
+				Pads[x][y + 1].setPhantomImageDrawable(theme.phantom_);
+				Pads[x][y + 1].setPhantomRotation(90);
 				
-				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setBackground(theme.phantom_);
-				RL_btns[x + 1][y + 1].findViewById(R.id.phantom).setRotation(180);
+				Pads[x + 1][y + 1].setPhantomImageDrawable(theme.phantom_);
+				Pads[x + 1][y + 1].setPhantomRotation(180);
 			}
 		}
 		
@@ -747,11 +750,11 @@ public class Play extends BaseActivity {
 		if (unipack.chain > 1) {
 			for (int i = 0; i < unipack.chain; i++) {
 				if (theme.isChainLED) {
-					RL_chains[i].findViewById(R.id.background).setBackground(theme.btn);
-					RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chainled);
+					Chains[i].setBackgroundImageDrawable(theme.btn);
+					Chains[i].setPhantomImageDrawable(theme.chainled);
 				} else {
-					RL_chains[i].findViewById(R.id.touchView).setBackground(theme.chain);
-					RL_chains[i].findViewById(R.id.LED).setVisibility(View.GONE);
+					Chains[i].setPhantomImageDrawable(theme.chain);
+					Chains[i].setVisibility(View.GONE);
 				}
 			}
 		}
@@ -1587,9 +1590,9 @@ public class Play extends BaseActivity {
 		//log("traceLog_show");
 		for (int i = 0; i < unipack.buttonX; i++) {
 			for (int j = 0; j < unipack.buttonY; j++) {
-				((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setText("");
+				Pads[i][j].setTraceLogText("");
 				for (int k = 0; k < traceLog_table[chain][i][j].size(); k++)
-					((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).append(traceLog_table[chain][i][j].get(k) + " ");
+					Pads[i][j].appendTraceLog(traceLog_table[chain][i][j].get(k) + " ");
 			}
 		}
 	}
@@ -1597,9 +1600,9 @@ public class Play extends BaseActivity {
 	void traceLog_log(int x, int y) {
 		//log("traceLog_log (" + buttonX + ", " + buttonY + ")");
 		traceLog_table[chain][x][y].add(traceLog_nextNum[chain]++);
-		((TextView) RL_btns[x][y].findViewById(R.id.traceLog)).setText("");
+		Pads[x][y].setTraceLogText("");
 		for (int i = 0; i < traceLog_table[chain][x][y].size(); i++)
-			((TextView) RL_btns[x][y].findViewById(R.id.traceLog)).append(traceLog_table[chain][x][y].get(i) + " ");
+			Pads[x][y].appendTraceLog(traceLog_table[chain][x][y].get(i) + " ");
 	}
 	
 	void traceLog_init() {
@@ -1619,7 +1622,7 @@ public class Play extends BaseActivity {
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					((TextView) RL_btns[i][j].findViewById(R.id.traceLog)).setText("");
+					Pads[i][j].setTraceLogText("");
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}

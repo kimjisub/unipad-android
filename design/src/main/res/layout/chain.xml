@@ -14,10 +14,14 @@
 	    android:layout_height="match_parent"/>
 	
 	<ImageView
+	    android:id="@+id/phantom"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"/>
+	
+	<View
 	    android:id="@+id/touchView"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:background="@drawable/chain"
 	    android:clickable="true"/>
 
 </RelativeLayout>
