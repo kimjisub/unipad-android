@@ -32,7 +32,7 @@ public class ThemePack {
 		resources = new Resources(context.getPackageManager().getResourcesForApplication(package_name));
 	}
 	
-	public void loadDefaultThemeResources() throws Exception{
+	public void loadDefaultThemeResources() throws Exception {
 		resources = new Resources();
 	}
 	

@@ -213,17 +213,17 @@
 	</LinearLayout>
 	
 	<RelativeLayout
+	    android:id="@+id/err"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:background="@color/background1"
-	    android:id="@+id/err"
 	    android:orientation="vertical">
 		
 		<TextView
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
-		    android:layout_centerVertical="true"
 		    android:layout_centerHorizontal="true"
+		    android:layout_centerVertical="true"
 		    android:layout_marginBottom="10dp"
 		    android:gravity="center"
 		    android:text="@string/midiDevicesNotDetected"

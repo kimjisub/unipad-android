@@ -5,13 +5,13 @@
               android:orientation="vertical"
               android:paddingLeft="50dp"
               android:paddingRight="50dp">
-
+	
 	<ImageView
 	    android:id="@+id/theme_icon"
 	    android:layout_width="150dp"
 	    android:layout_height="150dp"
 	    android:layout_gravity="center"/>
-
+	
 	<TextView
 	    android:id="@+id/theme_version"
 	    android:layout_width="wrap_content"
@@ -25,7 +25,7 @@
 	    android:paddingTop="3dp"
 	    android:text="Version : 1.0.0"
 	    android:textColor="@color/white"/>
-
+	
 	<TextView
 	    android:id="@+id/theme_author"
 	    android:layout_width="wrap_content"

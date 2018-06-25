@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class Main extends BaseActivity {
 	
@@ -128,10 +129,6 @@ public class Main extends BaseActivity {
 	
 	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-	
-	
-	final int AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15;
-	
 	
 	
 	@Override
@@ -999,7 +996,7 @@ public class Main extends BaseActivity {
 		}).run();
 	}
 	
-	void newPackCheck(){
+	void newPackCheck() {
 		getStoreCount.setOnChangeListener(count -> {
 			if (SaveSetting.PrevStoreCount.load(Main.this) == count)
 				runOnUiThread(() -> blink(false));

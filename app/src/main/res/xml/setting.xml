@@ -28,8 +28,8 @@
 		    android:title="@string/FCMToken"/>
 		<Preference
 		    android:key="language"
-		    android:title="@string/language"
-		    android:summary="@string/languageCode"/>
+		    android:summary="@string/languageCode"
+		    android:title="@string/language"/>
 		<Preference
 		    android:key="copyright"
 		    android:title="@string/copyright"/>

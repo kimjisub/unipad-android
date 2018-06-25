@@ -40,8 +40,8 @@ public class SyncCheckBox {
 		onCheckedChange = listener;
 	}
 	
-	public void onCheckedChange(boolean bool){
-		if(onCheckedChange !=null)
+	public void onCheckedChange(boolean bool) {
+		if (onCheckedChange != null)
 			onCheckedChange.onCheckedChange(bool);
 	}
 	
@@ -69,8 +69,8 @@ public class SyncCheckBox {
 		onLongClick = listener;
 	}
 	
-	public void onLongClick(){
-		if(onLongClick != null)
+	public void onLongClick() {
+		if (onLongClick != null)
 			onLongClick.onLongClick();
 	}
 	

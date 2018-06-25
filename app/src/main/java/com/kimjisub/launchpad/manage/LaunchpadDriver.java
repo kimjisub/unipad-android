@@ -199,10 +199,10 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendClearLED() {
-			for(int i=0;i<8;i++)
-				for(int j=0;j<8;j++)
+			for (int i = 0; i < 8; i++)
+				for (int j = 0; j < 8; j++)
 					sendPadLED(i, j, 0);
-			for(int i=0;i<16;i++)
+			for (int i = 0; i < 16; i++)
 				sendFunctionkeyLED(i, 0);
 		}
 	}
@@ -264,10 +264,10 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendClearLED() {
-			for(int i=0;i<8;i++)
-				for(int j=0;j<8;j++)
+			for (int i = 0; i < 8; i++)
+				for (int j = 0; j < 8; j++)
 					sendPadLED(i, j, 0);
-			for(int i=0;i<16;i++)
+			for (int i = 0; i < 16; i++)
 				sendFunctionkeyLED(i, 0);
 		}
 	}
@@ -357,10 +357,10 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendClearLED() {
-			for(int i=0;i<8;i++)
-				for(int j=0;j<8;j++)
+			for (int i = 0; i < 8; i++)
+				for (int j = 0; j < 8; j++)
 					sendPadLED(i, j, 0);
-			for(int i=0;i<32;i++)
+			for (int i = 0; i < 32; i++)
 				sendFunctionkeyLED(i, 0);
 		}
 	}
@@ -418,8 +418,8 @@ public class LaunchpadDriver {
 		
 		@Override
 		public void sendClearLED() {
-			for(int i=0;i<8;i++)
-				for(int j=0;j<8;j++)
+			for (int i = 0; i < 8; i++)
+				for (int j = 0; j < 8; j++)
 					sendPadLED(i, j, 0);
 		}
 	}

@@ -97,10 +97,11 @@ public class Pad extends RelativeLayout {
 		typedArray.recycle();
 	}
 	
-	public void setOnClickListener(OnClickListener listener){
+	public void setOnClickListener(OnClickListener listener) {
 		V_touchView.setOnClickListener(listener);
 	}
-	public void setOnTouchListener(OnTouchListener listener){
+	
+	public void setOnTouchListener(OnTouchListener listener) {
 		V_touchView.setOnTouchListener(listener);
 	}
 	//========================================================================================= Background
