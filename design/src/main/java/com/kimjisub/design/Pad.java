@@ -113,8 +113,8 @@ public class Pad extends RelativeLayout {
 	//========================================================================================= LED
 	
 	
-	public Pad setLedImageDrawable(Drawable drawable) {
-		IV_LED.setImageDrawable(drawable);
+	public Pad setLedBackground(Drawable drawable) {
+		IV_LED.setBackground(drawable);
 		return this;
 	}
 	
