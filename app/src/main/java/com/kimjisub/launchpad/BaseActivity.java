@@ -22,6 +22,8 @@ import com.kimjisub.launchpad.manage.SaveSetting;
 
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
+import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
 import static com.kimjisub.launchpad.manage.Tools.logAds;
 
@@ -36,12 +38,8 @@ public class BaseActivity extends AppCompatActivity {
 	public static int Scale_Height = 0;
 	
 	private static InterstitialAd interstitialAd;
-	public static final String ADUNITID = "ca-app-pub-1077445788578961/6843593938";
-	//public static final String ADUNITID = "ca-app-pub-3940256099942544/8691691433";
-	public static final int ADSCOOLTIME = 30000;
 	
 	public void showAds() {
-		
 		if (!Billing.isPremium) {
 			long prevTime = SaveSetting.PrevAdsShowTime.load(BaseActivity.this);
 			long currTime = System.currentTimeMillis();
@@ -76,7 +74,7 @@ public class BaseActivity extends AppCompatActivity {
 		}
 	}
 	
-	void loadAds(){
+	void loadAds() {
 		interstitialAd = new InterstitialAd(BaseActivity.this);
 		interstitialAd.setAdUnitId(ADUNITID);
 		interstitialAd.loadAd(new AdRequest.Builder()

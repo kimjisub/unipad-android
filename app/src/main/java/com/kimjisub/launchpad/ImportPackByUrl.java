@@ -27,30 +27,30 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class ImportPackByUrl extends BaseActivity {
-
+	
 	TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
-
+	
 	String UnipackRootURL;
 	String UnipackZipURL;
 	String UnipackURL;
-
+	
 	void initVar() {
 		TV_title = findViewById(R.id.title);
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
-
+		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPackByUrl.this);
 	}
-
+	
 	@SuppressLint("StaticFieldLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		initVar();
-
+		
 		(new AsyncTask<String, String, String>() {
 			String code;
 			String title;
@@ -58,38 +58,38 @@ public class ImportPackByUrl extends BaseActivity {
 			String URL;
 			int fileSize;
 			int downloadCount;
-
+			
 			@Override
 			protected void onPreExecute() {
 				Uri url = getIntent().getData();
 				code = url.getQueryParameter("code");
-
+				
 				TV_title.setText(lang(R.string.wait));
 				TV_message.setText(code);
-
+				
 				super.onPreExecute();
 			}
-
+			
 			@Override
 			protected String doInBackground(String[] params) {
-
+				
 				try {
 					JSONObject jsonObject = new JSONObject(Networks.sendGet("https://api.unipad.kr/makeUrl/" + code)).getJSONObject("data");
-
+					
 					code = jsonObject.getString("code");
 					title = jsonObject.getString("title");
 					author = jsonObject.getString("author");
 					URL = jsonObject.getString("url");
 					fileSize = jsonObject.getInt("fileSize");
 					downloadCount = jsonObject.getInt("downloadCount");
-
-
+					
+					
 					for (int i = 1; ; i++) {
 						if (i == 1)
 							UnipackZipURL = UnipackRootURL + "/" + title + ".zip";
 						else
 							UnipackZipURL = UnipackRootURL + "/" + title + " (" + i + ").zip";
-
+						
 						if (!new File(UnipackZipURL).exists())
 							break;
 					}
@@ -98,31 +98,31 @@ public class ImportPackByUrl extends BaseActivity {
 							UnipackURL = UnipackRootURL + "/" + title + "/";
 						else
 							UnipackURL = UnipackRootURL + "/" + title + " (" + i + ")/";
-
+						
 						if (!new File(UnipackURL).exists())
 							break;
 					}
-
-
+					
+					
 					try {
-
+						
 						java.net.URL url = new URL(URL);
 						HttpURLConnection conexion = (HttpURLConnection) url.openConnection();
 						conexion.setConnectTimeout(5000);
 						conexion.setReadTimeout(5000);
-
+						
 						int fileSize_ = conexion.getContentLength();
 						log(URL);
 						fileSize = fileSize_ == -1 ? fileSize : fileSize_;
 						log("fileSize : " + fileSize);
-
+						
 						InputStream input = new BufferedInputStream(url.openStream());
 						OutputStream output = new FileOutputStream(UnipackZipURL);
-
+						
 						byte data[] = new byte[1024];
-
+						
 						long total = 0;
-
+						
 						int count;
 						int skip = 100;
 						while ((count = input.read(data)) != -1) {
@@ -134,12 +134,12 @@ public class ImportPackByUrl extends BaseActivity {
 							}
 							output.write(data, 0, count);
 						}
-
+						
 						output.flush();
 						output.close();
 						input.close();
 						publishProgress("anal", title);
-
+						
 						try {
 							FileManager.unZipFile(UnipackZipURL, UnipackURL);
 							Unipack unipack = new Unipack(UnipackURL, true);
@@ -149,15 +149,15 @@ public class ImportPackByUrl extends BaseActivity {
 								FileManager.deleteFolder(UnipackURL);
 							} else
 								publishProgress("succ", unipack.title);
-
+							
 						} catch (Exception e) {
 							publishProgress("fail", e.toString());
 							FileManager.deleteFolder(UnipackURL);
 							e.printStackTrace();
 						}
 						FileManager.deleteFolder(UnipackZipURL);
-
-
+						
+						
 					} catch (Exception e) {
 						publishProgress("fail", e.toString());
 						e.printStackTrace();
@@ -166,11 +166,11 @@ public class ImportPackByUrl extends BaseActivity {
 					publishProgress("fail", "Not Exist");
 					e.printStackTrace();
 				}
-
-
+				
+				
 				return null;
 			}
-
+			
 			@Override
 			protected void onProgressUpdate(String... progress) {
 				switch (progress[0]) {
@@ -192,7 +192,7 @@ public class ImportPackByUrl extends BaseActivity {
 						break;
 				}
 			}
-
+			
 			@Override
 			protected void onPostExecute(String unused) {
 				new Handler().postDelayed(new Runnable() {
@@ -204,13 +204,13 @@ public class ImportPackByUrl extends BaseActivity {
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		initVar();
 	}
-
+	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();

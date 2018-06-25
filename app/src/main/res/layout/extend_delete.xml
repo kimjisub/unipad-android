@@ -3,12 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
+	
 	<RelativeLayout
 	    android:id="@+id/rootView"
 	    android:layout_width="match_parent"
 	    android:layout_height="80dp">
-
+		
 		<TextView
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -21,7 +21,7 @@
 		    android:text="@string/doYouWantToDeleteProject"
 		    android:textColor="@color/white"
 		    android:textSize="17dp"/>
-
+		
 		<LinearLayout
 		    android:layout_width="wrap_content"
 		    android:layout_height="28dp"
@@ -30,7 +30,7 @@
 		    android:paddingBottom="7dp"
 		    android:paddingLeft="7dp"
 		    android:paddingRight="7dp">
-
+			
 			<TextView
 			    android:layout_width="wrap_content"
 			    android:layout_height="match_parent"
@@ -42,7 +42,7 @@
 			    android:text="@string/path"
 			    android:textColor="@color/white"
 			    android:textSize="10dp"/>
-
+			
 			<TextView
 			    android:id="@+id/path"
 			    android:layout_width="wrap_content"
@@ -54,7 +54,7 @@
 			    android:text="example"
 			    android:textColor="@color/white"
 			    android:textSize="10dp"/>
-
+		
 		</LinearLayout>
 	</RelativeLayout>
 </RelativeLayout>
