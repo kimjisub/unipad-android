@@ -94,10 +94,11 @@ public class Chain extends RelativeLayout {
 		typedArray.recycle();
 	}
 	
-	public void setOnClickListener(OnClickListener listener){
+	public void setOnClickListener(OnClickListener listener) {
 		V_touchView.setOnClickListener(listener);
 	}
-	public void setOnTouchListener(OnTouchListener listener){
+	
+	public void setOnTouchListener(OnTouchListener listener) {
 		V_touchView.setOnTouchListener(listener);
 	}
 	//========================================================================================= Background
@@ -110,8 +111,8 @@ public class Chain extends RelativeLayout {
 	//========================================================================================= LED
 	
 	
-	public Chain setLedImageDrawable(Drawable drawable) {
-		IV_LED.setImageDrawable(drawable);
+	public Chain setLedBackground(Drawable drawable) {
+		IV_LED.setBackground(drawable);
 		return this;
 	}
 	
@@ -120,7 +121,7 @@ public class Chain extends RelativeLayout {
 		return this;
 	}
 	
-	public Chain setLedVisibility(int visibility){
+	public Chain setLedVisibility(int visibility) {
 		IV_LED.setVisibility(visibility);
 		return this;
 	}

@@ -15,12 +15,10 @@ public class ThemePack {
 	public String version = "";
 	public Resources resources;
 	
-	public ThemePack(Context context, String package_name) {
+	public ThemePack(Context context, String package_name) throws Exception {
 		this.context = context;
 		this.package_name = package_name;
-	}
-	
-	public void init() throws Exception {
+		
 		version = context.getPackageManager().getPackageInfo(package_name, 0).versionName;
 		
 		android.content.res.Resources res = context.getPackageManager().getResourcesForApplication(package_name);
@@ -32,6 +30,10 @@ public class ThemePack {
 	
 	public void loadThemeResources() throws Exception {
 		resources = new Resources(context.getPackageManager().getResourcesForApplication(package_name));
+	}
+	
+	public void loadDefaultThemeResources() throws Exception{
+		resources = new Resources();
 	}
 	
 	public class Resources {
@@ -47,7 +49,7 @@ public class ThemePack {
 			// Drawable
 			this.playbg = res.getDrawable(res.getIdentifier(package_name + ":drawable/playbg", null, null));
 			try {
-				custom_logo = res.getDrawable(res.getIdentifier(package_name + ":drawable/custom_logo", null, null));
+				this.custom_logo = res.getDrawable(res.getIdentifier(package_name + ":drawable/custom_logo", null, null));
 			} catch (Exception ignore) {
 			}
 			this.btn = res.getDrawable(res.getIdentifier(package_name + ":drawable/btn", null, null));
@@ -101,6 +103,30 @@ public class ThemePack {
 			} catch (Exception ignore) {
 				this.option_window_btn_text = context.getResources().getColor(R.color.option_window_btn_text);
 			}
+		}
+		
+		public Resources() throws Exception {
+			// Drawable
+			this.playbg = context.getResources().getDrawable(R.drawable.playbg);
+			this.custom_logo = context.getResources().getDrawable(R.drawable.custom_logo);
+			this.btn = context.getResources().getDrawable(R.drawable.btn);
+			this.btn_ = context.getResources().getDrawable(R.drawable.btn_);
+			this.chainled = context.getResources().getDrawable(R.drawable.chainled);
+			this.phantom = context.getResources().getDrawable(R.drawable.phantom);
+			this.phantom_ = context.getResources().getDrawable(R.drawable.phantom_);
+			this.xml_prev = context.getResources().getDrawable(R.drawable.xml_prev);
+			this.xml_play = context.getResources().getDrawable(R.drawable.xml_play);
+			this.xml_pause = context.getResources().getDrawable(R.drawable.xml_pause);
+			this.xml_next = context.getResources().getDrawable(R.drawable.xml_next);
+			
+			// Color
+			
+			this.checkbox = context.getResources().getColor(R.color.checkbox);
+			this.trace_log = context.getResources().getColor(R.color.trace_log);
+			this.option_window = context.getResources().getColor(R.color.option_window);
+			this.option_window_checkbox = context.getResources().getColor(R.color.option_window_checkbox);
+			this.option_window_btn = context.getResources().getColor(R.color.option_window_btn);
+			this.option_window_btn_text = context.getResources().getColor(R.color.option_window_btn_text);
 		}
 	}
 }

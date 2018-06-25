@@ -25,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mmin18.widget.RealtimeBlurView;
@@ -336,7 +335,7 @@ public class Play extends BaseActivity {
 						Pads[x][y].setLedBackgroundColor(Item.color);
 						break;
 					case ColorManager.PRESSED:
-						Pads[x][y].setLedImageDrawable(theme.btn_);
+						Pads[x][y].setLedBackground(theme.btn_);
 						break;
 					case ColorManager.LED:
 						Pads[x][y].setLedBackgroundColor(Item.color);
@@ -559,8 +558,15 @@ public class Play extends BaseActivity {
 	boolean skin_init(int num) {
 		log("[10] skin_init (" + num + ")");
 		String packageName = SaveSetting.SelectedTheme.load(Play.this);
-		if (num >= 2)
-			return false;
+		if (num >= 2) {
+			try {
+				ThemePack mTheme = new ThemePack(Play.this, packageName);
+				mTheme.loadDefaultThemeResources();
+				theme = mTheme.resources;
+			} catch (Exception ignore) {
+			}
+			return true;
+		}
 		try {
 			ThemePack mTheme = new ThemePack(Play.this, packageName);
 			mTheme.loadThemeResources();
@@ -754,7 +760,7 @@ public class Play extends BaseActivity {
 					Chains[i].setPhantomImageDrawable(theme.chainled);
 				} else {
 					Chains[i].setPhantomImageDrawable(theme.chain);
-					Chains[i].setVisibility(View.GONE);
+					Chains[i].setLedVisibility(View.GONE);
 				}
 			}
 		}

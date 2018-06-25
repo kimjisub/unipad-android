@@ -150,9 +150,8 @@ public class Theme extends BaseActivity {
 	}
 
 	void addThemeInList(String packageName) {
-		ThemePack theme = new ThemePack(Theme.this, packageName);
 		try {
-			theme.init();
+			ThemePack theme = new ThemePack(Theme.this, packageName);
 			themeList.add(theme);
 		} catch (Exception e) {
 			e.printStackTrace();
