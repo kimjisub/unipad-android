@@ -90,19 +90,6 @@ public class BaseActivity extends AppCompatActivity {
 			.show();
 	}
 	
-	public boolean isViewVisible(final View view) {
-		if (view == null) {
-			return false;
-		}
-		if (!view.isShown()) {
-			return false;
-		}
-		final Rect actualPosition = new Rect();
-		view.getGlobalVisibleRect(actualPosition);
-		final Rect screen = new Rect(0, 0, getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().heightPixels);
-		return actualPosition.intersect(screen);
-	}
-	
 	public int pxToDp(int pixel) {
 		float dp = 0;
 		try {
@@ -240,19 +227,13 @@ public class BaseActivity extends AppCompatActivity {
 		new AlertDialog.Builder(context)
 			.setTitle(lang(context, R.string.requireRestart))
 			.setMessage(lang(context, R.string.doYouWantToRestartApp))
-			.setPositiveButton(lang(context, R.string.restart), new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					restartApp((Activity) context);
-					dialog.dismiss();
-				}
+			.setPositiveButton(lang(context, R.string.restart), (dialog, which) -> {
+				restartApp((Activity) context);
+				dialog.dismiss();
 			})
-			.setNegativeButton(lang(context, R.string.cancel), new AlertDialog.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.dismiss();
-					((Activity) context).finish();
-				}
+			.setNegativeButton(lang(context, R.string.cancel), (dialog, which) -> {
+				dialog.dismiss();
+				((Activity) context).finish();
 			})
 			.show();
 	}
