@@ -1,7 +1,0 @@
-<resources>
-	<string name="app_name">UniPad theme</string>
-	
-	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">This is Default UniPad Skin</string>
-	<string name="theme_author">UniPad dev.</string>
-</resources>

@@ -122,5 +122,10 @@
 	<string name="themeDownload">थीम्स डाउनलोड करें</string>
 	<string name="requireRestart">ऐप पुनरारंभ करने की आवश्यकता है।</string>
 	<string name="doYouWantToRestartApp">क्या आप ऐप को पुनरारंभ करना चाहते हैं?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>

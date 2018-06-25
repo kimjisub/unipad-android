@@ -106,7 +106,7 @@ public class SaveSetting {
 
 		public static String load(Context context) {
 			SharedPreferences pref = context.getSharedPreferences("data", MODE_PRIVATE);
-			return pref.getString("SelectedTheme", "com.kimjisub.launchpad.theme");
+			return pref.getString("SelectedTheme", "com.kimjisub.launchpad");
 		}
 	}
 

@@ -58,9 +58,12 @@ public class Theme extends BaseActivity {
 
 		layoutManager.scrollToPosition(mGetTheme());
 
-		TV_apply.setOnClickListener(v -> {
-			mSetTheme(layoutManager.getCenterItemPosition());
-			requestRestart(Theme.this);
+		TV_apply.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mSetTheme(layoutManager.getCenterItemPosition());
+				requestRestart(Theme.this);
+			}
 		});
 	}
 
@@ -137,7 +140,7 @@ public class Theme extends BaseActivity {
 
 		List<ApplicationInfo> packages = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
 
-		addThemeInList("com.kimjisub.launchpad.theme");
+		addThemeInList(getPackageName());
 
 		for (ApplicationInfo applicationInfo : packages) {
 			String packageName = applicationInfo.packageName;

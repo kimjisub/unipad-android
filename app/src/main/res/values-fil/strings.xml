@@ -122,5 +122,10 @@
 	<string name="themeDownload">I-download ang Themes</string>
 	<string name="requireRestart">Kailangan ulitin ang app.</string>
 	<string name="doYouWantToRestartApp">Gusto mo bang ulitin ang app?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>

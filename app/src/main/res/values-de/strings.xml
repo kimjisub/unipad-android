@@ -122,5 +122,10 @@
 	<string name="themeDownload">Themes Runterladen</string>
 	<string name="requireRestart">Benötigt app Neustart.</string>
 	<string name="doYouWantToRestartApp">Willst du die App Neustarten?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
 
 </resources>
