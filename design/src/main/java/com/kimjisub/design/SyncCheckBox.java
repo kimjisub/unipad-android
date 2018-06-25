@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.view;
+package com.kimjisub.design;
 
 import android.content.res.ColorStateList;
 import android.os.Build;
