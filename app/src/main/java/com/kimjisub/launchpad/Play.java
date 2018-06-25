@@ -35,7 +35,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SaveSetting;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
-import com.kimjisub.launchpad.view.SyncCheckBox;
+import com.kimjisub.design.SyncCheckBox;
 
 import java.util.ArrayList;
 
