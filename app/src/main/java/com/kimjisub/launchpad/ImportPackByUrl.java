@@ -195,12 +195,7 @@ public class ImportPackByUrl extends BaseActivity {
 			
 			@Override
 			protected void onPostExecute(String unused) {
-				new Handler().postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						finish();
-					}
-				}, 3000);
+				new Handler().postDelayed(() -> finish(), 3000);
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}

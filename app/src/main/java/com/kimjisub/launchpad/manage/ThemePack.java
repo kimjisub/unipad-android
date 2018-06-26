@@ -7,12 +7,12 @@ import com.kimjisub.launchpad.R;
 
 public class ThemePack {
 	public Context context;
-	public String package_name = "";
+	public String package_name;
 	public Drawable icon;
-	public String name = "";
-	public String author = "";
-	public String description = "";
-	public String version = "";
+	public String name;
+	public String author;
+	public String description;
+	public String version;
 	public Resources resources;
 	
 	public ThemePack(Context context, String package_name) throws Exception {
