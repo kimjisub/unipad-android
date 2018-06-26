@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.manage;
 
-public abstract class Constant {
-	
+public class Constant {
 	
 	public static final int AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15;
 	public static final String ADUNITID = "ca-app-pub-1077445788578961/6843593938";//"ca-app-pub-3940256099942544/8691691433";
