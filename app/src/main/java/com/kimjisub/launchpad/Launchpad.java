@@ -107,7 +107,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
@@ -432,7 +432,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		initVar();
 	}
@@ -440,7 +440,7 @@ public class Launchpad extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		super.onDestroy();
 	}
 }

@@ -46,7 +46,7 @@ public class ImportPackByUrl extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		initVar();
@@ -201,13 +201,13 @@ public class ImportPackByUrl extends BaseActivity {
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		initVar();
 	}
 	
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		super.onDestroy();
 		restartApp(this);
 	}

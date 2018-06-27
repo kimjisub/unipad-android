@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
+import android.text.Layout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -57,11 +58,18 @@ import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_
 
 public class Main extends BaseActivity {
 	
-	// intro
+	
+	// =========================================================================================
+	
+	// Intro
+	
 	RelativeLayout RL_intro;
 	TextView TV_version;
 	
-	// main
+	Billing billing;
+	
+	// Main
+	
 	ScrollView SV_scrollView;
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
@@ -75,15 +83,21 @@ public class Main extends BaseActivity {
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
 	
-	// var
+	boolean isDoneIntro = false;
+	boolean isShowWatermark = true;
+	boolean updateComplete = true;
+	
 	String UnipackRootURL;
+	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+	
+	// initVar
 	
 	void initVar(boolean onFirst) {
-		// intro
+		// Intro
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
 		
-		// main
+		// Main
 		SV_scrollView = findViewById(R.id.scrollView);
 		LL_list = findViewById(R.id.list);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
@@ -120,27 +134,20 @@ public class Main extends BaseActivity {
 	
 	// =========================================================================================
 	
-	boolean isDoneIntro = false;
-	boolean isShowWatermark = true;
-	boolean updateComplete = true;
-	
-	Billing billing;
-	
-	
-	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-	
-	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
 		initAds();
 		
+		startIntro();
+	}
+	
+	void startIntro(){
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
 			public void onServiceDisconnected(Billing v) {
-			
 			}
 			
 			@Override
@@ -151,7 +158,6 @@ public class Main extends BaseActivity {
 			
 			@Override
 			public void onPurchaseDone(Billing v, JSONObject jo) {
-			
 			}
 		}).start();
 		
@@ -166,7 +172,10 @@ public class Main extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					showAds();
-					new Handler().postDelayed(startMain, 3000);
+					new Handler().postDelayed(() -> {
+						RL_intro.setVisibility(View.GONE);
+						startMain();
+					}, 3000);
 				}
 				
 				@Override
@@ -180,18 +189,9 @@ public class Main extends BaseActivity {
 			.check();
 	}
 	
-	Runnable startMain = new Runnable() {
-		@Override
-		public void run() {
-			SaveSetting.IsUsingSDCard.load(Main.this);
-			
-			RL_intro.setVisibility(View.GONE);
-			rescanScale();
-			startMain();
-		}
-	};
-	
 	void startMain() {
+		rescanScale(LL_scale, LL_paddingScale);
+		
 		versionCheck();
 		newPackCheck();
 		
@@ -235,13 +235,6 @@ public class Main extends BaseActivity {
 	int[] flagColors;
 	String[] URLs;
 	Unipack[] unipacks;
-	
-	void blink(final boolean bool) {
-		if (bool)
-			VA_floatingAnimation.start();
-		else
-			VA_floatingAnimation.end();
-	}
 	
 	void update() {
 		playIndex = -1;
@@ -338,7 +331,7 @@ public class Main extends BaseActivity {
 								
 								@Override
 								public void onPlayClick(PackView v) {
-									rescanScale();
+									rescanScale(LL_scale, LL_paddingScale);
 									
 									Intent intent = new Intent(Main.this, Play.class);
 									intent.putExtra("URL", url);
@@ -358,7 +351,6 @@ public class Main extends BaseActivity {
 								}
 							});
 						
-						// UI Thread 자원 사용 이벤트 큐에 저장.
 						runOnUiThread(() -> {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 							int left = dpToPx(16);
@@ -380,14 +372,12 @@ public class Main extends BaseActivity {
 					}
 					
 					if (projectsCount == 0) {
-						// UI Thread 자원 사용 이벤트 큐에 저장.
 						runOnUiThread(this::addErrorItem);
 					}
 					
 				} else {
 					projectFolder.mkdir();
 					
-					// UI Thread 자원 사용 이벤트 큐에 저장.
 					runOnUiThread(this::addErrorItem);
 				}
 				
@@ -675,13 +665,6 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	void rescanScale() {
-		Scale_PaddingWidth = LL_paddingScale.getWidth();
-		Scale_PaddingHeight = LL_paddingScale.getHeight();
-		Scale_Width = LL_scale.getWidth();
-		Scale_Height = LL_scale.getHeight();
-	}
-	
 	// =========================================================================================
 	
 	int playIndex = -1;
@@ -712,7 +695,7 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	// ========================================================================================= Launchpad Connection
+	// ========================================================================================= Launchpad
 	
 	void updateDriver() {
 		Launchpad.setDriverListener(Main.this,
@@ -825,7 +808,7 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	// =========================================================================================
+	// ========================================================================================= Explorer
 	
 	List<String> mItem;
 	List<String> mPath;
@@ -973,6 +956,8 @@ public class Main extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 	
+	// ========================================================================================= Check
+	
 	void versionCheck() {
 		new Networks.CheckVersion().setOnChangeListener(version -> {
 			try {
@@ -1001,6 +986,13 @@ public class Main extends BaseActivity {
 			else
 				runOnUiThread(() -> blink(true));
 		}).run();
+	}
+	
+	void blink(final boolean bool) {
+		if (bool)
+			VA_floatingAnimation.start();
+		else
+			VA_floatingAnimation.end();
 	}
 	
 	// ========================================================================================= Activity
@@ -1032,7 +1024,7 @@ public class Main extends BaseActivity {
 	}
 	
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
 				update();
@@ -1041,7 +1033,7 @@ public class Main extends BaseActivity {
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		
 		initVar(false);
@@ -1053,7 +1045,7 @@ public class Main extends BaseActivity {
 	}
 	
 	@Override
-	protected void onPause() {
+	public void onPause() {
 		super.onPause();
 		
 		if (!isDoneIntro)
@@ -1066,7 +1058,7 @@ public class Main extends BaseActivity {
 	}
 	
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		super.onDestroy();
 		billing.onDestroy();
 		

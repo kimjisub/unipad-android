@@ -398,7 +398,7 @@ public class Play extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_play);
 		initVar();
@@ -1722,7 +1722,7 @@ public class Play extends BaseActivity {
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		//initVar();
 		
@@ -1738,7 +1738,7 @@ public class Play extends BaseActivity {
 	}
 	
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		super.onDestroy();
 		if (autoPlayTask != null)
 			autoPlayTask.loop = false;
