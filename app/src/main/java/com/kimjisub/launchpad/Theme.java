@@ -27,13 +27,13 @@ public class Theme extends BaseActivity {
 	RecyclerView RV_list;
 	TextView TV_apply;
 	
-	static ArrayList<ThemePack> themeList;
-	
-	
 	void initVar() {
 		RV_list = findViewById(R.id.list);
 		TV_apply = findViewById(R.id.apply);
 	}
+	
+	static ArrayList<ThemePack> themeList;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

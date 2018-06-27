@@ -1,10 +1,9 @@
 package com.kimjisub.launchpad;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -12,7 +11,6 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.view.View;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -27,17 +25,21 @@ import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
 import static com.kimjisub.launchpad.manage.Tools.logAds;
 
+@SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity {
 	
-	
-	//========================================================================================== Function
-	
+	// scale
 	public static int Scale_PaddingWidth = 0;
 	public static int Scale_PaddingHeight = 0;
 	public static int Scale_Width = 0;
 	public static int Scale_Height = 0;
 	
+	// ads
 	private static InterstitialAd interstitialAd;
+	
+	
+	//========================================================================================== Function
+	
 	
 	public void showAds() {
 		if (!Billing.isPremium) {
@@ -90,21 +92,23 @@ public class BaseActivity extends AppCompatActivity {
 			.show();
 	}
 	
-	public int pxToDp(int pixel) {
+	/*public int pxToDp(int pixel) {
 		float dp = 0;
 		try {
 			DisplayMetrics metrics = getResources().getDisplayMetrics();
 			dp = pixel / (metrics.densityDpi / 160f);
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 		return (int) dp;
-	}
+	}*/
 	
 	public int dpToPx(float dp) {
 		DisplayMetrics metrics = getResources().getDisplayMetrics();
 		float px = dp * (metrics.densityDpi / 160f);
 		return Math.round(px);
 	}
+	
+	// getResources
 	
 	public String lang(int id) {
 		return getResources().getString(id);
@@ -133,7 +137,7 @@ public class BaseActivity extends AppCompatActivity {
 	
 	//========================================================================================== Activity
 	
-	public static ArrayList<Activity> activityList = new ArrayList();
+	public static ArrayList<Activity> activityList = new ArrayList<>();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -214,11 +218,11 @@ public class BaseActivity extends AppCompatActivity {
 	}
 	
 	static void printActivityLog(String log) {
-		String str = "ACTIVITY STACK - " + log + "[";
+		StringBuilder str = new StringBuilder("ACTIVITY STACK - " + log + "[");
 		int size = activityList.size();
 		for (int i = 0; i < size; i++) {
 			Activity activity = activityList.get(i);
-			str += ", " + activity.getLocalClassName();
+			str.append(", ").append(activity.getLocalClassName());
 		}
 		logActivity(str + "]");
 	}
