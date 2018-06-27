@@ -57,8 +57,6 @@ import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_
 
 public class Main extends BaseActivity {
 	
-	// ========================================================================================= UI 변수 선언 및 초기화
-	
 	// intro
 	RelativeLayout RL_intro;
 	TextView TV_version;
@@ -77,7 +75,7 @@ public class Main extends BaseActivity {
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
 	
-	
+	// var
 	String UnipackRootURL;
 	
 	void initVar(boolean onFirst) {
@@ -98,7 +96,6 @@ public class Main extends BaseActivity {
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
 		
-		
 		// animation
 		if (onFirst) {
 			int color1 = color(R.color.red);
@@ -116,6 +113,8 @@ public class Main extends BaseActivity {
 			});
 		}
 		
+		
+		// var
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
 	}
 	
@@ -202,7 +201,7 @@ public class Main extends BaseActivity {
 		
 		FAB_loadUniPack.setOnClickListener(v -> unipackExplorer());
 		
-		FAB_store.setOnClickListener(v -> startActivity(new Intent(Main.this, Store.class)));
+		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, Store.class), 0));
 		
 		FAB_setting.setOnClickListener(v -> startActivity(new Intent(Main.this, Setting.class)));
 		
@@ -264,8 +263,7 @@ public class Main extends BaseActivity {
 					
 					
 					projectsCount = 0;
-					for (int i = 0; i < projectFiles.length; i++) {
-						File project = projectFiles[i];
+					for (File project : projectFiles) {
 						if (!project.isDirectory()) continue;
 						projects[projectsCount] = project;
 						projectsCount++;
@@ -616,13 +614,13 @@ public class Main extends BaseActivity {
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
 								//int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-								stringBuilder.append("t " + (e.x + 1) + " " + (e.y + 1) + "\n");
+								stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
 								break;
 							case Unipack.AutoPlay.CHAIN:
-								stringBuilder.append("c " + (e.c + 1) + "\n");
+								stringBuilder.append("c ").append(e.c + 1).append("\n");
 								break;
 							case Unipack.AutoPlay.DELAY:
-								stringBuilder.append("d " + e.d + "\n");
+								stringBuilder.append("d ").append(e.d).append("\n");
 								break;
 						}
 					}
@@ -726,7 +724,7 @@ public class Main extends BaseActivity {
 					
 				}
 				
-				public void onConnected_() {
+				void onConnected_() {
 					showWatermark();
 					showSelectUI();
 				}
@@ -1009,9 +1007,9 @@ public class Main extends BaseActivity {
 	
 	@Override
 	public void onBackPressed() {
-		if (!isDoneIntro) {
-		
-		} else {
+		if (!isDoneIntro)
+			;
+		else {
 			if (PV_items != null) {
 				boolean clear = true;
 				for (PackView item : PV_items) {
@@ -1034,16 +1032,24 @@ public class Main extends BaseActivity {
 	}
 	
 	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		switch (requestCode) {
+			case 0:
+				update();
+				break;
+		}
+	}
+	
+	@Override
 	protected void onResume() {
 		super.onResume();
 		
 		initVar(false);
 		if (!isDoneIntro)
 			;
-		else {
-			update();
+		else
 			updateDriver();
-		}
+		
 	}
 	
 	@Override
