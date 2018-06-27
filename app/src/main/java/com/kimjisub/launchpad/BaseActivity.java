@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +10,7 @@ import android.os.Process;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -25,21 +25,25 @@ import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
 import static com.kimjisub.launchpad.manage.Tools.logActivity;
 import static com.kimjisub.launchpad.manage.Tools.logAds;
 
-@SuppressLint("Registered")
-public class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity {
 	
-	// scale
-	public static int Scale_PaddingWidth = 0;
-	public static int Scale_PaddingHeight = 0;
+	//========================================================================================== Scale
+	
 	public static int Scale_Width = 0;
 	public static int Scale_Height = 0;
+	public static int Scale_PaddingWidth = 0;
+	public static int Scale_PaddingHeight = 0;
 	
-	// ads
+	void rescanScale(LinearLayout LL_scale, LinearLayout LL_paddingScale) {
+		Scale_Width = LL_scale.getWidth();
+		Scale_Height = LL_scale.getHeight();
+		Scale_PaddingWidth = LL_paddingScale.getWidth();
+		Scale_PaddingHeight = LL_paddingScale.getHeight();
+	}
+	
+	//========================================================================================== Ads
+	
 	private static InterstitialAd interstitialAd;
-	
-	
-	//========================================================================================== Function
-	
 	
 	public void showAds() {
 		if (!Billing.isPremium) {
@@ -84,6 +88,8 @@ public class BaseActivity extends AppCompatActivity {
 			.build());
 	}
 	
+	//========================================================================================== Function
+	
 	public void showDialog(String title, String content) {
 		new AlertDialog.Builder(BaseActivity.this)
 			.setTitle(title)
@@ -108,7 +114,7 @@ public class BaseActivity extends AppCompatActivity {
 		return Math.round(px);
 	}
 	
-	// getResources
+	//========================================================================================== Get Resources
 	
 	public String lang(int id) {
 		return getResources().getString(id);
@@ -140,45 +146,45 @@ public class BaseActivity extends AppCompatActivity {
 	public static ArrayList<Activity> activityList = new ArrayList<>();
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		logActivity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
 	}
 	
 	@Override
-	protected void onStart() {
+	public void onStart() {
 		logActivity("onStart " + this.getLocalClassName());
 		super.onStart();
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		logActivity("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 	
 	@Override
-	protected void onPause() {
+	public void onPause() {
 		logActivity("onPause " + this.getLocalClassName());
 		super.onPause();
 	}
 	
 	@Override
-	protected void onStop() {
+	public void onStop() {
 		logActivity("onStop " + this.getLocalClassName());
 		super.onStop();
 	}
 	
 	@Override
-	protected void onRestart() {
+	public void onRestart() {
 		logActivity("onRestart " + this.getLocalClassName());
 		super.onRestart();
 	}
 	
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		logActivity("onDestroy " + this.getLocalClassName());
 		super.onDestroy();
 		finishActivity(this);

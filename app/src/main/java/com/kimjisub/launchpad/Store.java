@@ -43,7 +43,7 @@ public class Store extends BaseActivity {
 	}
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
 		initVar();
@@ -328,7 +328,7 @@ public class Store extends BaseActivity {
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		initVar();
 		
@@ -341,7 +341,7 @@ public class Store extends BaseActivity {
 	}
 	
 	@Override
-	protected void onPause() {
+	public void onPause() {
 		super.onPause();
 		
 		getStoreCount.setOnChangeListener(null);

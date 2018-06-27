@@ -31,7 +31,7 @@ public class Setting extends PreferenceActivity {
 	Billing billing;
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		BaseActivity.startActivity(this);
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.setting);

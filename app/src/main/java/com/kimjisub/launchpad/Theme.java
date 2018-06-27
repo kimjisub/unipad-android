@@ -36,14 +36,14 @@ public class Theme extends BaseActivity {
 	
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_theme);
 		initVar();
 	}
 	
 	@Override
-	protected void onResume() {
+	public void onResume() {
 		super.onResume();
 		initVar();
 		getThemeList();
@@ -58,12 +58,9 @@ public class Theme extends BaseActivity {
 		
 		layoutManager.scrollToPosition(mGetTheme());
 		
-		TV_apply.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mSetTheme(layoutManager.getCenterItemPosition());
-				requestRestart(Theme.this);
-			}
+		TV_apply.setOnClickListener(v -> {
+			mSetTheme(layoutManager.getCenterItemPosition());
+			requestRestart(Theme.this);
 		});
 	}
 	
