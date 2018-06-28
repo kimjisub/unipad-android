@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class Unipack {
-	public String URL = null;
+	public String URL;
 
 	public String ErrorDetail = null;
 	public boolean CriticalError = false;

@@ -182,7 +182,6 @@ public class Setting extends PreferenceActivity {
 		
 	}
 	
-	
 	public class mItem {
 		private String title;
 		private String summary;
