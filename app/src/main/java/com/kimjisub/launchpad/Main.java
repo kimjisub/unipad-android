@@ -14,7 +14,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
-import android.text.Layout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -58,18 +57,13 @@ import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_
 
 public class Main extends BaseActivity {
 	
-	
-	// =========================================================================================
-	
 	// Intro
-	
 	RelativeLayout RL_intro;
 	TextView TV_version;
 	
 	Billing billing;
 	
 	// Main
-	
 	ScrollView SV_scrollView;
 	LinearLayout LL_list;
 	FloatingActionMenu FAM_floatingMenu;
@@ -144,7 +138,7 @@ public class Main extends BaseActivity {
 		startIntro();
 	}
 	
-	void startIntro(){
+	void startIntro() {
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
 			public void onServiceDisconnected(Billing v) {
@@ -665,7 +659,7 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	// =========================================================================================
+	// ========================================================================================= toggle Play, Detail
 	
 	int playIndex = -1;
 	
@@ -680,7 +674,7 @@ public class Main extends BaseActivity {
 					packView.togglePlay(color(R.color.red), flagColors[i]);
 			}
 		}
-		showSelectUI();
+		showSelectLPUI();
 	}
 	
 	void toggleDetail(int n) {
@@ -709,7 +703,7 @@ public class Main extends BaseActivity {
 				
 				void onConnected_() {
 					showWatermark();
-					showSelectUI();
+					showSelectLPUI();
 				}
 				
 				@Override
@@ -731,13 +725,13 @@ public class Main extends BaseActivity {
 							togglePlay(playIndex - 1);
 							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
-							showSelectUI();
+							showSelectLPUI();
 					} else if (f == 1 && upDown) {
 						if (haveNext()) {
 							togglePlay(playIndex + 1);
 							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
 						} else
-							showSelectUI();
+							showSelectLPUI();
 					} else if (f == 2 && upDown) {
 						if (haveNow())
 							PV_items[playIndex].onPlayClick();
@@ -768,7 +762,7 @@ public class Main extends BaseActivity {
 		return PV_items != null && 0 < playIndex;
 	}
 	
-	void showSelectUI() {
+	void showSelectLPUI() {
 		if (PV_items != null) {
 			if (havePrev())
 				Launchpad.driver.sendFunctionkeyLED(0, 63);

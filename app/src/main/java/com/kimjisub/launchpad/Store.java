@@ -28,6 +28,7 @@ import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class Store extends BaseActivity {
+	
 	LinearLayout LL_list;
 	
 	String UnipackRootURL;
@@ -41,6 +42,8 @@ public class Store extends BaseActivity {
 		
 		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Store.this);
 	}
+	
+	// =========================================================================================
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -185,6 +188,8 @@ public class Store extends BaseActivity {
 		lp.setMargins(left, top, right, bottom);
 		LL_list.addView(packView, lp);
 	}
+	
+	// ========================================================================================= Activity
 	
 	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final PackView v, final int i) {

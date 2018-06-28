@@ -44,8 +44,6 @@ import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class Play extends BaseActivity {
 	
-	// ========================================================================================= UI 변수 선언 및 초기화
-	
 	RelativeLayout RL_rootView;
 	ImageView IV_background;
 	ImageView IV_custom_logo;
