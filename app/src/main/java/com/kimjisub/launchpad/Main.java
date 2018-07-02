@@ -186,9 +186,6 @@ public class Main extends BaseActivity {
 	void startMain() {
 		rescanScale(LL_scale, LL_paddingScale);
 		
-		versionCheck();
-		newPackCheck();
-		
 		FAB_refreshList.setOnClickListener(v -> update());
 		
 		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(Main.this, Launchpad.class)));
@@ -231,6 +228,10 @@ public class Main extends BaseActivity {
 	Unipack[] unipacks;
 	
 	void update() {
+		
+		versionCheck();
+		newPackCheck();
+		
 		playIndex = -1;
 		if (!updateComplete)
 			return;

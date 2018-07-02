@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.manage;
 
+import android.annotation.SuppressLint;
 import android.media.MediaPlayer;
 
 import net.sf.jazzlib.ZipEntry;
@@ -114,6 +115,7 @@ public class FileManager {
 		return totalMemory;
 	}
 	
+	@SuppressLint("DefaultLocale")
 	public static String byteToMB(float Byte) {
 		return String.format("%.2f", Byte / 1024L / 1024L);
 	}
