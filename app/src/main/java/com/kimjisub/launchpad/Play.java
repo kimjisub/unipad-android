@@ -657,7 +657,9 @@ public class Play extends BaseActivity {
 				autoPlay_play();
 		});
 		IV_next.setOnClickListener(v -> autoPlay_after());
-		RBV_option_blur.setOnClickListener(v -> toggleOptionWindow(false));
+		RBV_option_blur.setOnClickListener(v -> {
+			if (bool_toggleOptionWindow) toggleOptionWindow(false);
+		});
 		BTN_option_quit.setOnClickListener(v -> finish());
 		
 		LL_pads.removeAllViews();
