@@ -1024,6 +1024,7 @@ public class Main extends BaseActivity {
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
+				checkThings();
 				update();
 				break;
 		}
