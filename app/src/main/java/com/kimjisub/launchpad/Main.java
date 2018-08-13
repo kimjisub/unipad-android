@@ -217,6 +217,7 @@ public class Main extends BaseActivity {
 		
 		isDoneIntro = true;
 		
+		checkThings();
 		update();
 		updateDriver();
 	}
@@ -227,11 +228,12 @@ public class Main extends BaseActivity {
 	String[] URLs;
 	Unipack[] unipacks;
 	
-	void update() {
-		
+	void checkThings(){
 		versionCheck();
 		newPackCheck();
-		
+	}
+	
+	void update() {
 		playIndex = -1;
 		if (!updateComplete)
 			return;
