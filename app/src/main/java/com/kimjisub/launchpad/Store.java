@@ -11,7 +11,7 @@ import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.BufferedInputStream;
@@ -40,7 +40,7 @@ public class Store extends BaseActivity {
 	void initVar() {
 		LL_list = findViewById(R.id.list);
 		
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Store.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Store.this);
 	}
 	
 	// =========================================================================================
@@ -340,7 +340,7 @@ public class Store extends BaseActivity {
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
-				SaveSetting.PrevStoreCount.save(Store.this, data);
+				SettingManager.PrevStoreCount.save(Store.this, data);
 			}
 		});
 	}

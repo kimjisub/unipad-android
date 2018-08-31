@@ -33,7 +33,7 @@ import com.kimjisub.design.Pad;
 import com.kimjisub.design.SyncCheckBox;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
 
@@ -555,7 +555,7 @@ public class Play extends BaseActivity {
 	
 	boolean skin_init(int num) {
 		log("[10] skin_init (" + num + ")");
-		String packageName = SaveSetting.SelectedTheme.load(Play.this);
+		String packageName = SettingManager.SelectedTheme.load(Play.this);
 		if (num >= 2) {
 			try {
 				ThemePack mTheme = new ThemePack(Play.this, packageName);
@@ -578,7 +578,7 @@ public class Play extends BaseActivity {
 		} catch (Exception e) {
 			e.printStackTrace();
 			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
-			SaveSetting.SelectedTheme.save(Play.this, getPackageName());
+			SettingManager.SelectedTheme.save(Play.this, getPackageName());
 			return skin_init(num + 1);
 		}
 	}

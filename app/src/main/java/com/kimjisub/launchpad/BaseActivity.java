@@ -16,7 +16,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.manage.Billing;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 
 import java.util.ArrayList;
 
@@ -47,11 +47,11 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	public void showAds() {
 		if (!Billing.isPremium) {
-			long prevTime = SaveSetting.PrevAdsShowTime.load(BaseActivity.this);
+			long prevTime = SettingManager.PrevAdsShowTime.load(BaseActivity.this);
 			long currTime = System.currentTimeMillis();
 			
 			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
-				SaveSetting.PrevAdsShowTime.save(this, currTime);
+				SettingManager.PrevAdsShowTime.save(this, currTime);
 				logAds("showAds");
 				
 				if (interstitialAd.isLoaded()) {

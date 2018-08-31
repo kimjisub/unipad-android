@@ -36,7 +36,7 @@ import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import org.json.JSONObject;
@@ -123,7 +123,7 @@ public class Main extends BaseActivity {
 		
 		
 		// var
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(Main.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Main.this);
 	}
 	
 	// =========================================================================================
@@ -821,7 +821,7 @@ public class Main extends BaseActivity {
 		
 		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
 		
-		String fileExplorerPath = SaveSetting.FileExplorerPath.load(Main.this);
+		String fileExplorerPath = SettingManager.FileExplorerPath.load(Main.this);
 		
 		
 		LV_list.setOnItemClickListener((parent, view, position, id) -> {
@@ -848,7 +848,7 @@ public class Main extends BaseActivity {
 	}
 	
 	void getDir(String dirPath) {
-		SaveSetting.FileExplorerPath.save(Main.this, dirPath);
+		SettingManager.FileExplorerPath.save(Main.this, dirPath);
 		TV_path.setText(dirPath);
 		
 		mItem = new ArrayList<>();
@@ -978,7 +978,7 @@ public class Main extends BaseActivity {
 	
 	void newPackCheck() {
 		getStoreCount.setOnChangeListener(count -> {
-			if (SaveSetting.PrevStoreCount.load(Main.this) == count)
+			if (SettingManager.PrevStoreCount.load(Main.this) == count)
 				runOnUiThread(() -> blink(false));
 			else
 				runOnUiThread(() -> blink(true));
