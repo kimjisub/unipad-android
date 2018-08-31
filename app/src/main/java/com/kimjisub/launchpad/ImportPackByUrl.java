@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import org.json.JSONException;
@@ -41,7 +41,7 @@ public class ImportPackByUrl extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 		
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPackByUrl.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByUrl.this);
 	}
 	
 	@SuppressLint("StaticFieldLeak")

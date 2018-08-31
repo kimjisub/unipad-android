@@ -8,7 +8,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static com.kimjisub.launchpad.manage.Tools.log;
 
-public class SaveSetting {
+public class SettingManager {
 	
 	final static String DATA = "data";
 	

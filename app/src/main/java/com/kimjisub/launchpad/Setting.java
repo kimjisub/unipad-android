@@ -19,7 +19,7 @@ import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manage.Billing;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 
 import org.json.JSONObject;
 
@@ -299,8 +299,8 @@ public class Setting extends PreferenceActivity {
 	
 	@Override
 	protected void onResume() {
-		findPreference("select_theme").setSummary(SaveSetting.SelectedTheme.load(Setting.this));
-		findPreference("use_sd_card").setSummary(SaveSetting.IsUsingSDCard.URL(Setting.this));
+		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(Setting.this));
+		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(Setting.this));
 		if (Billing.isPremium)
 			findPreference("removeAds").setSummary(lang(R.string.using));
 		

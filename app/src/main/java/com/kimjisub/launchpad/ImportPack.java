@@ -7,7 +7,7 @@ import android.os.Handler;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.FileManager;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 
 import java.io.File;
@@ -28,7 +28,7 @@ public class ImportPack extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 		
-		UnipackRootURL = SaveSetting.IsUsingSDCard.URL(ImportPack.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPack.this);
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);
 		String name = file.getName();

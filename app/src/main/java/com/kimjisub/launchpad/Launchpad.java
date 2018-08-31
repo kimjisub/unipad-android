@@ -19,7 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.SaveSetting;
+import com.kimjisub.launchpad.manage.SettingManager;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -112,7 +112,7 @@ public class Launchpad extends BaseActivity {
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
 		
-		mode = SaveSetting.LaunchpadConnectMethod.load(Launchpad.this);
+		mode = SettingManager.LaunchpadConnectMethod.load(Launchpad.this);
 		
 		selectDevice(device);
 		selectMode(mode);
@@ -316,7 +316,7 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 		
-		SaveSetting.LaunchpadConnectMethod.save(Launchpad.this, mode);
+		SettingManager.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
 	
 	// ========================================================================================= ReceiveTask
