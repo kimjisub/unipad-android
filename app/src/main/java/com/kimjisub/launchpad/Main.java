@@ -174,11 +174,11 @@ public class Main extends BaseActivity {
 				
 				@Override
 				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-					Toast.makeText(Main.this, lang(R.string.permissionDenied), Toast.LENGTH_SHORT).show();
 					finish();
 				}
 			})
-			.setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
+			.setRationaleMessage(lang(R.string.permissionRequire))
+			.setDeniedMessage(lang(R.string.permissionDenied))
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
 	}
