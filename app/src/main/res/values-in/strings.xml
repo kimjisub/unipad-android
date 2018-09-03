@@ -86,6 +86,8 @@
 	<string name="currentVersion">Versi sekarang</string>
 	<string name="newVersion">Versi terbaru</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack tidak ditemukan.</string>
 	<string name="clickToAddUnipack">Klik Untuk Menambahkan Unipacks.</string>
 	<string name="doYouWantToDeleteProject">Apakah Anda ingin menghapus proyek ini?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Analisis gagal…</string>
 	<string name="isNotAnUniPack">Ini bukan Unipack</string>
 	<string name="pressAgainToGoBack">Tekan lagi untuk keluar.</string>
-	<string name="permissionDenied">Akses ditolak.</string>
 	<string name="copied">Disalin ke clipboard.</string>
 	<string name="skinMemoryErr">Gagal menerapkan skin.\nRestart app.</string>
 	<string name="skinErr">Gagal menerapkan skin.\nReset skin.</string>

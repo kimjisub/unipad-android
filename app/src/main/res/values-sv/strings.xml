@@ -86,6 +86,8 @@
 	<string name="currentVersion">Denna versionen</string>
 	<string name="newVersion">Senaste versionen</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack ej hittad.</string>
 	<string name="clickToAddUnipack">Tryck för att ladda Unipack</string>
 	<string name="doYouWantToDeleteProject">Vill du ta bort detta??</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Misslyckades att analysera.</string>
 	<string name="isNotAnUniPack">Detta är inte ett Unipack</string>
 	<string name="pressAgainToGoBack">Tryck igen för att gå tillbaka</string>
-	<string name="permissionDenied">Ej tillåtet.</string>
 	<string name="copied">Kopierat!</string>
 	<string name="skinMemoryErr">Kunde inte ladda tema. Starta om appen.</string>
 	<string name="skinErr">Misslyckades att ladda tema.</string>

@@ -86,6 +86,8 @@
 	<string name="currentVersion">Version actuelle</string>
 	<string name="newVersion">Dernière version</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Pack introuvable.</string>
 	<string name="clickToAddUnipack">Ajouter un pack.</string>
 	<string name="doYouWantToDeleteProject">Supprimer ce pack ?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Échec de l\'analyse…</string>
 	<string name="isNotAnUniPack">Ce n\'est pas un pack</string>
 	<string name="pressAgainToGoBack">Appuyer de nouveau pour quitter.</string>
-	<string name="permissionDenied">Accés refusé.</string>
 	<string name="copied">Copié dans le presse-papier.</string>
 	<string name="skinMemoryErr">Impossible d\'appliquer le skin.\nRedemarrez l\'appli.</string>
 	<string name="skinErr">Impossible d\'appliquer le skin.\nReinitialisez le skin.</string>

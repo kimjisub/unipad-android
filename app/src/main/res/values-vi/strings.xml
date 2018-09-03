@@ -86,6 +86,8 @@
 	<string name="currentVersion">Bản cập nhật hiện tại</string>
 	<string name="newVersion">Bản cập nhật mới nhất</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack không tìm thấy được. </string>
 	<string name="clickToAddUnipack">Nhấn để thêm Unipacks.</string>
 	<string name="doYouWantToDeleteProject">Bạn có muốn xóa Unipack này không?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Không thể xác định</string>
 	<string name="isNotAnUniPack">Đây không phải một Unipack</string>
 	<string name="pressAgainToGoBack">Bấm lần nữa để thoát</string>
-	<string name="permissionDenied">Từ chối truy cập.</string>
 	<string name="copied">Copy vào clipboard</string>
 	<string name="skinMemoryErr">Không thể cài đặt skin. Khởi động lại ứng dụng</string>
 	<string name="skinErr">Không thể cài đặt skin.Khởi động lại</string>
