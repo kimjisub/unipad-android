@@ -86,6 +86,8 @@
 	<string name="currentVersion">Kasalukuyang bersyon</string>
 	<string name="newVersion">Ang pinakabagong bersyon</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Walang nahanap na Unipack.</string>
 	<string name="clickToAddUnipack">Pindutin para magdagdag ng mga Unipack.</string>
 	<string name="doYouWantToDeleteProject">Gusto mo bang tanggalin ang proyekto?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Nabigo ang Pagsusuri…</string>
 	<string name="isNotAnUniPack">hindi ito Unipack</string>
 	<string name="pressAgainToGoBack">Pindutin uli \npara lumabas.</string>
-	<string name="permissionDenied">Walang Pahintulot.</string>
 	<string name="copied">Nakopya na sa clipboard.</string>
 	<string name="skinMemoryErr">Nabigong ilagay ang skin.\nUlitin ang app.</string>
 	<string name="skinErr">Nabigong ilagay ang skin.\nUlitin ang skin.</string>

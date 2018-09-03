@@ -86,6 +86,8 @@
 	<string name="currentVersion">अभी का वर्जन</string>
 	<string name="newVersion">नया वर्जन</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">युनिपैक नहीं मिला।</string>
 	<string name="clickToAddUnipack">युनिपैक लाने के लिए दबाए</string>
 	<string name="doYouWantToDeleteProject">क्या आप इस परियोजना को मिटाना चाहते हैं?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">विश्लेषण करने में असफल …</string>
 	<string name="isNotAnUniPack">एक यूनिपैक नहीं है</string>
 	<string name="pressAgainToGoBack">बाहर निकलने के लिए फिर दबाएं।</string>
-	<string name="permissionDenied">पहुंच अस्वीकृत।</string>
 	<string name="copied">क्लिपबोर्ड पर नकल है।</string>
 	<string name="skinMemoryErr">Skin लागू करने में विफल।\n ऐप पुनरारंभ करें।</string>
 	<string name="skinErr">Skin लागू करने में विफल।\n skin रीसेट करें.</string>

@@ -86,6 +86,8 @@
 	<string name="currentVersion">Aktuelle Version</string>
 	<string name="newVersion">Neuste Version</string>
 	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack nicht gefunden.</string>
 	<string name="clickToAddUnipack">Drück um UniPack Hinzuzufügen.</string>
 	<string name="doYouWantToDeleteProject">UniPack Löschen?</string>
@@ -98,7 +100,6 @@
 	<string name="analyzeFailed">Analysieren fehlgeschlagen…</string>
 	<string name="isNotAnUniPack">Das ist Kein UniPack</string>
 	<string name="pressAgainToGoBack">Nochmal drücken zum Verlassen.</string>
-	<string name="permissionDenied">Keine Berechtigung.</string>
 	<string name="copied">Kopiert.</string>
 	<string name="skinMemoryErr">Skin Übernehmen Fehlgeschlagen.\nApp Neustarten.</string>
 	<string name="skinErr">Skin Übernehmen Fehlgeschlagen. Skin Zurücksetzen.</string>
