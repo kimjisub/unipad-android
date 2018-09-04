@@ -190,7 +190,23 @@ public class Main extends BaseActivity {
 		
 		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(Main.this, Launchpad.class)));
 		
-		FAB_loadUniPack.setOnClickListener(v -> unipackExplorer());
+		FAB_loadUniPack.setOnClickListener(v -> {
+			new FileExplorer(Main.this, SettingManager.FileExplorerPath.load(Main.this))
+				.setOnEventListener(new FileExplorer.OnEventListener() {
+					@Override
+					public void onFileSelected(String fileURL) {
+						Toast.makeText(Main.this, "onFileSelected: "+ fileURL, Toast.LENGTH_SHORT).show();
+						loadUnipack(fileURL);
+					}
+					
+					@Override
+					public void onURLChanged(String folderURL) {
+						Toast.makeText(Main.this, "onURLChanged: "+ folderURL, Toast.LENGTH_SHORT).show();
+						SettingManager.FileExplorerPath.save(Main.this, folderURL);
+					}
+				})
+				.show();
+		});
 		
 		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, Store.class), 0));
 		
@@ -662,6 +678,84 @@ public class Main extends BaseActivity {
 		}
 	}
 	
+	@SuppressLint("StaticFieldLeak")
+	void loadUnipack(final String UnipackZipURL) {
+		
+		(new AsyncTask<String, String, String>() {
+			
+			ProgressDialog progressDialog = new ProgressDialog(Main.this);
+			
+			String msg1;
+			String msg2;
+			
+			@Override
+			protected void onPreExecute() {
+				
+				progressDialog.setTitle(lang(R.string.analyzing));
+				progressDialog.setMessage(lang(R.string.wait));
+				progressDialog.setCancelable(false);
+				progressDialog.show();
+				super.onPreExecute();
+			}
+			
+			@Override
+			protected String doInBackground(String... params) {
+				
+				
+				File file = new File(UnipackZipURL);
+				String name = file.getName();
+				String name_ = name.substring(0, name.lastIndexOf("."));
+				
+				String UnipackURL;
+				for (int i = 1; ; i++) {
+					if (i == 1)
+						UnipackURL = UnipackRootURL + "/" + name_ + "/";
+					else
+						UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
+					
+					if (!new File(UnipackURL).exists())
+						break;
+				}
+				
+				try {
+					FileManager.unZipFile(UnipackZipURL, UnipackURL);
+					Unipack unipack = new Unipack(UnipackURL, true);
+					
+					if (unipack.ErrorDetail == null) {
+						msg1 = lang(R.string.analyzeComplete);
+						msg2 = unipack.getInfoText(Main.this);
+					} else if (unipack.CriticalError) {
+						msg1 = lang(R.string.analyzeFailed);
+						msg2 = unipack.ErrorDetail;
+						FileManager.deleteFolder(UnipackURL);
+					} else {
+						msg1 = lang(R.string.warning);
+						msg2 = unipack.ErrorDetail;
+					}
+					
+				} catch (IOException e) {
+					msg1 = lang(R.string.analyzeFailed);
+					msg2 = e.toString();
+					FileManager.deleteFolder(UnipackURL);
+				}
+				
+				return null;
+			}
+			
+			@Override
+			protected void onProgressUpdate(String... progress) {
+			}
+			
+			@Override
+			protected void onPostExecute(String result) {
+				update();
+				showDialog(msg1, msg2);
+				progressDialog.dismiss();
+				super.onPostExecute(result);
+			}
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+	}
+	
 	// ========================================================================================= toggle Play, Detail
 	
 	int playIndex = -1;
@@ -803,154 +897,6 @@ public class Main extends BaseActivity {
 			Launchpad.driver.sendFunctionkeyLED(6, 0);
 			Launchpad.driver.sendFunctionkeyLED(7, 0);
 		}
-	}
-	
-	// ========================================================================================= Explorer
-	
-	List<String> mItem;
-	List<String> mPath;
-	
-	LinearLayout LL_explorer;
-	TextView TV_path;
-	ListView LV_list;
-	
-	void unipackExplorer() {
-		LL_explorer = (LinearLayout) View.inflate(Main.this, R.layout.file_explorer, null);
-		TV_path = LL_explorer.findViewById(R.id.path);
-		LV_list = LL_explorer.findViewById(R.id.list);
-		
-		final AlertDialog dialog = (new AlertDialog.Builder(Main.this)).create();
-		
-		String fileExplorerPath = SettingManager.FileExplorerPath.load(Main.this);
-		
-		
-		LV_list.setOnItemClickListener((parent, view, position, id) -> {
-			final File file = new File(mPath.get(position));
-			if (file.isDirectory()) {
-				if (file.canRead())
-					getDir(mPath.get(position));
-				else
-					showDialog(file.getName(), lang(R.string.cantReadFolder));
-			} else {
-				if (file.canRead())
-					loadUnipack(file.getPath());
-				else
-					showDialog(file.getName(), lang(R.string.cantReadFile));
-				
-				
-			}
-		});
-		getDir(fileExplorerPath);
-		
-		
-		dialog.setView(LL_explorer);
-		dialog.show();
-	}
-	
-	void getDir(String dirPath) {
-		SettingManager.FileExplorerPath.save(Main.this, dirPath);
-		TV_path.setText(dirPath);
-		
-		mItem = new ArrayList<>();
-		mPath = new ArrayList<>();
-		File f = new File(dirPath);
-		File[] files = FileManager.sortByName(f.listFiles());
-		if (!dirPath.equals("/")) {
-			mItem.add("../");
-			mPath.add(f.getParent());
-		}
-		for (File file : files) {
-			String name = file.getName();
-			if (name.indexOf('.') != 0) {
-				if (file.isDirectory()) {
-					mPath.add(file.getPath());
-					mItem.add(name + "/");
-				} else if (name.lastIndexOf(".zip") == name.length() - 4 || name.lastIndexOf(".uni") == name.length() - 4) {
-					mPath.add(file.getPath());
-					mItem.add(file.getName());
-				}
-			}
-		}
-		ArrayAdapter<String> fileList = new ArrayAdapter<>(Main.this, android.R.layout.simple_list_item_1, mItem);
-		LV_list.setAdapter(fileList);
-	}
-	
-	@SuppressLint("StaticFieldLeak")
-	void loadUnipack(final String UnipackZipURL) {
-		
-		(new AsyncTask<String, String, String>() {
-			
-			ProgressDialog progressDialog = new ProgressDialog(Main.this);
-			
-			String msg1;
-			String msg2;
-			
-			@Override
-			protected void onPreExecute() {
-				
-				progressDialog.setTitle(lang(R.string.analyzing));
-				progressDialog.setMessage(lang(R.string.wait));
-				progressDialog.setCancelable(false);
-				progressDialog.show();
-				super.onPreExecute();
-			}
-			
-			@Override
-			protected String doInBackground(String... params) {
-				
-				
-				File file = new File(UnipackZipURL);
-				String name = file.getName();
-				String name_ = name.substring(0, name.lastIndexOf("."));
-				
-				String UnipackURL;
-				for (int i = 1; ; i++) {
-					if (i == 1)
-						UnipackURL = UnipackRootURL + "/" + name_ + "/";
-					else
-						UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
-					
-					if (!new File(UnipackURL).exists())
-						break;
-				}
-				
-				try {
-					FileManager.unZipFile(UnipackZipURL, UnipackURL);
-					Unipack unipack = new Unipack(UnipackURL, true);
-					
-					if (unipack.ErrorDetail == null) {
-						msg1 = lang(R.string.analyzeComplete);
-						msg2 = unipack.getInfoText(Main.this);
-					} else if (unipack.CriticalError) {
-						msg1 = lang(R.string.analyzeFailed);
-						msg2 = unipack.ErrorDetail;
-						FileManager.deleteFolder(UnipackURL);
-					} else {
-						msg1 = lang(R.string.warning);
-						msg2 = unipack.ErrorDetail;
-					}
-					
-				} catch (IOException e) {
-					msg1 = lang(R.string.analyzeFailed);
-					msg2 = e.toString();
-					FileManager.deleteFolder(UnipackURL);
-				}
-				
-				return null;
-			}
-			
-			@Override
-			protected void onProgressUpdate(String... progress) {
-			}
-			
-			@Override
-			protected void onPostExecute(String result) {
-				update();
-				showDialog(msg1, msg2);
-				progressDialog.dismiss();
-				super.onPostExecute(result);
-			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 	
 	// ========================================================================================= Check
