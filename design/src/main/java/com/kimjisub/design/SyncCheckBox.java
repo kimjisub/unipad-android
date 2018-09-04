@@ -1,7 +1,5 @@
 package com.kimjisub.design;
 
-import android.content.res.ColorStateList;
-import android.os.Build;
 import android.widget.CheckBox;
 
 import java.util.ArrayList;
