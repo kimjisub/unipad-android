@@ -9,7 +9,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.FileManager;
-import com.kimjisub.launchpad.manage.SettingManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -97,6 +96,8 @@ public class FileExplorer {
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, mItem);
 		LV_list.setAdapter(fileList);
 	}
+	
+	// BaseActivity.java
 	
 	public void showDialog(String title, String content) {
 		new AlertDialog.Builder(context)
