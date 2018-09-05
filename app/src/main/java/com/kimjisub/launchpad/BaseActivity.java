@@ -98,6 +98,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 			.show();
 	}
 	
+	public static void showDialog(Context context, String title, String content) {
+		new AlertDialog.Builder(context)
+			.setTitle(title)
+			.setMessage(content)
+			.setPositiveButton(lang(context, R.string.accept), null)
+			.show();
+	}
+	
 	/*public int pxToDp(int pixel) {
 		float dp = 0;
 		try {
@@ -123,7 +131,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public static String lang(Context context, int id) {
 		return context.getResources().getString(id);
 	}
-	
 	
 	public int color(int id) {
 		return getResources().getColor(id);
