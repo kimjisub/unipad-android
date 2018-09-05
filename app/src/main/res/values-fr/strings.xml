@@ -27,6 +27,7 @@
 	<string name="using">Using</string>
 	<string name="path">Chemin</string>
 	<string name="quit">Quitter</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnecter le Launchpad</string>

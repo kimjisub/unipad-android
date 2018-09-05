@@ -27,6 +27,7 @@
 	<string name="using">사용중</string>
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
+	<string name="website">웹사이트</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
