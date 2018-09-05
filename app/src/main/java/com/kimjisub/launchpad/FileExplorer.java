@@ -28,10 +28,6 @@ public class FileExplorer {
 	String URL;
 	
 	
-	public FileExplorer(Context context) {
-		this.context = context;
-	}
-	
 	public FileExplorer(Context context, String URL) {
 		this.context = context;
 		this.URL = URL;
@@ -51,14 +47,12 @@ public class FileExplorer {
 				if (file.canRead())
 					getDir(mPath.get(position));
 				else
-					showDialog(file.getName(), lang(R.string.cantReadFolder));
+					BaseActivity.showDialog(context, file.getName(), BaseActivity.lang(context, R.string.cantReadFolder));
 			} else {
 				if (file.canRead())
 					onFileSelected(file.getPath());
 				else
-					showDialog(file.getName(), lang(R.string.cantReadFile));
-				
-				
+					BaseActivity.showDialog(context, file.getName(), BaseActivity.lang(context, R.string.cantReadFile));
 			}
 		});
 		getDir(URL);
@@ -95,21 +89,6 @@ public class FileExplorer {
 		}
 		ArrayAdapter<String> fileList = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, mItem);
 		LV_list.setAdapter(fileList);
-	}
-	
-	// BaseActivity.java
-	
-	public void showDialog(String title, String content) {
-		new AlertDialog.Builder(context)
-			.setTitle(title)
-			.setMessage(content)
-			.setPositiveButton(lang(R.string.accept), null)
-			.show();
-	}
-	
-	
-	public String lang(int id) {
-		return context.getResources().getString(id);
 	}
 	
 	// =========================================================================================
