@@ -27,6 +27,7 @@
 	<string name="using">Menggunakan</string>
 	<string name="path">Jalan</string>
 	<string name="quit">Keluar</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>

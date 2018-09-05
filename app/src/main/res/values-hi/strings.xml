@@ -27,6 +27,7 @@
 	<string name="using">उपयोग में</string>
 	<string name="path">रास्ता</string>
 	<string name="quit">बंद</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">फिर से कनेक्ट करें लोंच-पैड</string>

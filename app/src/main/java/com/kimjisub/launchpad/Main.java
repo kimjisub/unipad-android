@@ -301,34 +301,17 @@ public class Main extends BaseActivity {
 							flagColor = color(R.color.orange);
 						}
 						
-						
-						@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-							lang(R.string.scale),
-							lang(R.string.chainCount),
-							lang(R.string.capacity)
-						};
-						String[] infoContents = new String[]{
-							unipack.buttonX + " x " + unipack.buttonY,
-							unipack.chain + "",
-							FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB"
-						};
-						@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-							lang(R.string.delete),
-							lang(R.string.edit)
-						};
-						int[] btnColors = new int[]{
-							color(R.color.red),
-							color(R.color.orange)
-						};
-						
 						final PackView packView = new PackView(Main.this)
 							.setFlagColor(flagColor)
 							.setTitle(title)
 							.setSubTitle(producerName)
-							.setInfos(infoTitles, infoContents)
-							.setBtns(btnTitles, btnColors)
-							.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
-							.setOptionBools(unipack.isKeyLED, unipack.isAutoPlay)
+							.addInfo(lang(R.string.scale), unipack.buttonX + " x " + unipack.buttonY)
+							.addInfo(lang(R.string.chainCount), unipack.chain + "")
+							.addInfo(lang(R.string.capacity), FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB")
+							.addBtn(lang(R.string.delete), color(R.color.red))
+							.addBtn(lang(R.string.edit), color(R.color.orange))
+							.setOption1(lang(R.string.LED_), unipack.isKeyLED)
+							.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
 							.setOnEventListener(new PackView.OnEventListener() {
 								@Override
 								public void onViewClick(PackView v) {
@@ -360,9 +343,15 @@ public class Main extends BaseActivity {
 										case 1:
 											editUnipack(v, unipack);
 											break;
+										case 2:
+											startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(unipack.websiteURL)));
+											break;
 									}
 								}
 							});
+						
+						if(unipack.websiteURL != null)
+							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
 						runOnUiThread(() -> {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);

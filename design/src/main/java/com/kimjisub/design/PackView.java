@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,18 +93,10 @@ public class PackView extends RelativeLayout {
 		
 		
 		// set listener
-		RL_touchView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				onViewClick();
-			}
-		});
-		RL_touchView.setOnLongClickListener(new View.OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				onViewLongClick();
-				return true;
-			}
+		RL_touchView.setOnClickListener(v1 -> onViewClick());
+		RL_touchView.setOnLongClickListener(v2 -> {
+			onViewLongClick();
+			return true;
 		});
 	}
 	
@@ -145,7 +138,7 @@ public class PackView extends RelativeLayout {
 	
 	private void setTypeArray(TypedArray typedArray) {
 		
-		int color = typedArray.getResourceId(R.styleable.PackView_flagColor, R.drawable.border_play_blue);
+		/*int color = typedArray.getResourceId(R.styleable.PackView_flagColor, R.drawable.border_play_blue);
 		//setFlagColor(color);
 		
 		String title = typedArray.getString(R.styleable.PackView_title);
@@ -170,7 +163,7 @@ public class PackView extends RelativeLayout {
 		//setCapacity(capacity);
 		
 		Boolean optionVisibility = typedArray.getBoolean(R.styleable.PackView_optionVisibility, true);
-		//setOptionVisibility(optionVisibility);
+		//setOptionVisibility(optionVisibility);*/
 		
 		typedArray.recycle();
 	}
@@ -195,24 +188,20 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView updateFlagColor(int color) {
+	public PackView updateFlagColor(int colorNext) {
 		
-		int color1 = RL_flag_color;
-		int color2 = color;
-		ValueAnimator animator = ObjectAnimator.ofObject(new ArgbEvaluator(), color1, color2);
+		int colorPrev = RL_flag_color;
+		ValueAnimator animator = ObjectAnimator.ofObject(new ArgbEvaluator(), colorPrev, colorNext);
 		animator.setDuration(500);
-		animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-			@Override
-			public void onAnimationUpdate(ValueAnimator valueAnimator) {
-				int color = (int) valueAnimator.getAnimatedValue();
-				
-				GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
-				flagBackground.setColor(color);
-				RL_flag.setBackground(flagBackground);
-			}
+		animator.addUpdateListener(valueAnimator -> {
+			int color3 = (int) valueAnimator.getAnimatedValue();
+			
+			GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
+			flagBackground.setColor(color3);
+			RL_flag.setBackground(flagBackground);
 		});
 		animator.start();
-		RL_flag_color = color;
+		RL_flag_color = colorNext;
 		
 		return this;
 	}
@@ -227,19 +216,23 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setInfos(String[] titles, String[] contents) {
+	
+	public PackView addInfo(String title, String content) {
+		
+		LinearLayout LL_info = (LinearLayout) View.inflate(context, R.layout.res_info, null);
+		((TextView) LL_info.findViewById(R.id.title)).setText(title);
+		((TextView) LL_info.findViewById(R.id.content)).setText(content);
+		
+		ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+		
+		LL_infos.addView(LL_info, lp);
+		
+		return this;
+	}
+	
+	public PackView clearInfo() {
 		
 		LL_infos.removeAllViews();
-		
-		for (int i = 0; i < titles.length; i++) {
-			LinearLayout LL_info = (LinearLayout) View.inflate(context, R.layout.res_info, null);
-			((TextView) LL_info.findViewById(R.id.title)).setText(titles[i]);
-			((TextView) LL_info.findViewById(R.id.content)).setText(contents[i]);
-			
-			ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-			
-			LL_infos.addView(LL_info, lp);
-		}
 		
 		return this;
 	}
@@ -256,52 +249,44 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 	
-	public PackView setBtns(String[] titles, int[] colors) {
+	public PackView addBtn(String title, int color) {
+		
+		LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
+		((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
+		((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
+		
+		
+		final int count = LL_btns.getChildCount();
+		LL_btn.setOnClickListener(view -> onFunctionBtnClick(count));
+		
+		LL_btns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+		
+		return this;
+	}
+	
+	public PackView clearBtn() {
 		
 		LL_btns.removeAllViews();
 		
-		for (int i = 0; i < titles.length; i++) {
-			final int I = i;
-			
-			String title = titles[i];
-			int color = colors[i];
-			
-			LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
-			((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
-			((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
-			
-			LL_btn.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View view) {
-					onFunctionBtnClick(I);
-				}
-			});
-			
-			LL_btns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-		}
-		
 		return this;
 	}
 	
-	public PackView setOptions(String msg1, String msg2) {
-		TV_option1.setText(msg1);
-		TV_option2.setText(msg2);
-		
-		return this;
-	}
-	
-	public PackView setOptionColors(int color1, int color2) {
-		TV_option1.setTextColor(color1);
-		TV_option2.setTextColor(color2);
-		
-		return this;
-	}
-	
-	public PackView setOptionBools(boolean bool1, boolean bool2) {
+	public PackView setOption1(String msg, boolean bool) {
 		int green = getResources().getColor(R.color.green);
 		int pink = getResources().getColor(R.color.pink);
 		
-		setOptionColors(bool1 ? green : pink, bool2 ? green : pink);
+		TV_option1.setText(msg);
+		TV_option1.setTextColor(bool ? green : pink);
+		
+		return this;
+	}
+	
+	public PackView setOption2(String msg, boolean bool) {
+		int green = getResources().getColor(R.color.green);
+		int pink = getResources().getColor(R.color.pink);
+		
+		TV_option2.setText(msg);
+		TV_option2.setTextColor(bool ? green : pink);
 		
 		return this;
 	}

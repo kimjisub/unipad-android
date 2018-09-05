@@ -27,6 +27,7 @@
 	<string name="using">Använder</string>
 	<string name="path">Sökväg</string>
 	<string name="quit">Avsluta</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Återanslut Launchpad</string>

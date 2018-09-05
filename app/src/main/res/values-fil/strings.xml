@@ -27,6 +27,7 @@
 	<string name="using">Paggamit</string>
 	<string name="path">Path</string>
 	<string name="quit">Umalis</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Ikabit uli ang Launchpad</string>

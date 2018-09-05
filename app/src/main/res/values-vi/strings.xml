@@ -27,6 +27,7 @@
 	<string name="using">Sử dụng</string>
 	<string name="path">Đường dẫn</string>
 	<string name="quit">Thoát</string>
+	<string name="website">Website</string>
 	
 	<!--Menu-->
 	<string name="reconnect_launchpad">Kết nối lại với Launchpad</string>

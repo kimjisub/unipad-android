@@ -98,21 +98,13 @@ public class Store extends BaseActivity {
 					}
 					final boolean isDownloaded = _isDownloaded;
 					
-					
-					@SuppressLint("ResourceType") String[] infoTitles = new String[]{
-						lang(R.string.downloadCount)
-					};
-					String[] infoContents = new String[]{
-						(new DecimalFormat("#,##0")).format(d.downloadCount)
-					};
-					
 					final PackView packView = new PackView(Store.this)
 						.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 						.setTitle(d.title)
 						.setSubTitle(d.producerName)
-						.setInfos(infoTitles, infoContents)
-						.setOptions(lang(R.string.LED_), lang(R.string.autoPlay_))
-						.setOptionBools(d.isLED, d.isAutoPlay)
+						.addInfo(lang(R.string.downloadCount), (new DecimalFormat("#,##0")).format(d.downloadCount))
+						.setOption1(lang(R.string.LED_), d.isLED)
+						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
 						.setPlayImageShow(false)
 						.setOnEventListener(new PackView.OnEventListener() {
 							@Override
@@ -164,7 +156,8 @@ public class Store extends BaseActivity {
 					PackView itemStore = PV_items.get(i);
 					itemStore.setTitle(d.title)
 						.setSubTitle(d.producerName)
-						.setOptionBools(d.isLED, d.isAutoPlay)
+						.setOption1(lang(R.string.LED_), d.isLED)
+						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
 						.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
 				} catch (Exception e) {
 					e.printStackTrace();
