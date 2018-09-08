@@ -75,7 +75,7 @@
 	<string name="autoPlay">Awtoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AWTOPLAY ●</string>
-	<string name="pressedPadShow">Ipakita ang napindot</string>
+	<string name="feedbackLight">Ipakita ang napindot</string>
 	<string name="traceLog">Bakas Talaan</string>
 	<string name="traceLogClear">Ang Bakas Talaan ay umulit.</string>
 	<string name="record">Rekord</string>

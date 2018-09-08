@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Montrer la touche active</string>
+	<string name="feedbackLight">Montrer la touche active</string>
 	<string name="traceLog">Log touches</string>
 	<string name="traceLogClear">Le Log des touches à été réinitialisé.</string>
 	<string name="record">Enregistrer</string>

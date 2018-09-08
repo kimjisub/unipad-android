@@ -75,7 +75,7 @@
 	<string name="autoPlay">Putar Otomatis</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">PUTAR OTOMATIS ●</string>
-	<string name="pressedPadShow">Tampilkan Sentuhan</string>
+	<string name="feedbackLight">Tampilkan Sentuhan</string>
 	<string name="traceLog">Jejak Sentuhan</string>
 	<string name="traceLogClear">Jejak sentuhan di ulangi.</string>
 	<string name="record">Merekam</string>

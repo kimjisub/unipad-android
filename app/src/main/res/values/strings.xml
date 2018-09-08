@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Show pressed</string>
+	<string name="feedbackLight">Feedback light</string>
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>
 	<string name="record">Record</string>

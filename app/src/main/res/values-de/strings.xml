@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Zeige gedrückten Knopf</string>
+	<string name="feedbackLight">Zeige gedrückten Knopf</string>
 	<string name="traceLog">Verfolge Knopfdruck</string>
 	<string name="traceLogClear">Zurückgesetzt.</string>
 	<string name="record">Aufnehmen</string>
