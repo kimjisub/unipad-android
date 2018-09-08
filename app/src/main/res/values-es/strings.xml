@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Botón Presionado</string>
+	<string name="feedbackLight">Botón Presionado</string>
 	<string name="traceLog">Registrar Botón</string>
 	<string name="traceLogClear">El registro ha sido reseteado.</string>
 	<string name="record">Grabar</string>

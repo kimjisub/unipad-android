@@ -59,14 +59,14 @@ public class Play extends BaseActivity {
 	RelativeLayout RL_option_window;
 	Button BTN_option_quit;
 	
-	CheckBox CB1_pressedPadShow;
+	CheckBox CB1_feedbackLight;
 	CheckBox CB1_LED;
 	CheckBox CB1_autoPlay;
 	CheckBox CB1_traceLog;
 	CheckBox CB1_record;
 	CheckBox[] CB1s;
 	
-	CheckBox CB2_pressedPadShow;
+	CheckBox CB2_feedbackLight;
 	CheckBox CB2_LED;
 	CheckBox CB2_autoPlay;
 	CheckBox CB2_traceLog;
@@ -75,7 +75,7 @@ public class Play extends BaseActivity {
 	CheckBox CB2_hideUI;
 	CheckBox[] CB2s;
 	
-	SyncCheckBox SCV_pressedPadShow;
+	SyncCheckBox SCV_feedbackLight;
 	SyncCheckBox SCV_LED;
 	SyncCheckBox SCV_autoPlay;
 	SyncCheckBox SCV_traceLog;
@@ -100,23 +100,23 @@ public class Play extends BaseActivity {
 		RL_option_window = findViewById(R.id.option_window);
 		BTN_option_quit = findViewById(R.id.quit);
 		
-		CB1_pressedPadShow = findViewById(R.id.CB1_pressedPadShow);
+		CB1_feedbackLight = findViewById(R.id.CB1_feedbackLight);
 		CB1_LED = findViewById(R.id.CB1_LED);
 		CB1_autoPlay = findViewById(R.id.CB1_autoPlay);
 		CB1_traceLog = findViewById(R.id.CB1_traceLog);
 		CB1_record = findViewById(R.id.CB1_record);
-		CB1s = new CheckBox[]{CB1_pressedPadShow, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
+		CB1s = new CheckBox[]{CB1_feedbackLight, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
 		
-		CB2_pressedPadShow = findViewById(R.id.CB2_pressedPadShow);
+		CB2_feedbackLight = findViewById(R.id.CB2_feedbackLight);
 		CB2_LED = findViewById(R.id.CB2_LED);
 		CB2_autoPlay = findViewById(R.id.CB2_autoPlay);
 		CB2_traceLog = findViewById(R.id.CB2_traceLog);
 		CB2_record = findViewById(R.id.CB2_record);
 		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_hideUI = findViewById(R.id.CB2_hideUI);
-		CB2s = new CheckBox[]{CB2_pressedPadShow, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
+		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
 		
-		SCV_pressedPadShow = new SyncCheckBox(CB1_pressedPadShow, CB2_pressedPadShow);
+		SCV_feedbackLight = new SyncCheckBox(CB1_feedbackLight, CB2_feedbackLight);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
 		SCV_autoPlay = new SyncCheckBox(CB1_autoPlay, CB2_autoPlay);
 		SCV_traceLog = new SyncCheckBox(CB1_traceLog, CB2_traceLog);
@@ -144,7 +144,7 @@ public class Play extends BaseActivity {
 	
 	int chain = 0;
 	
-	boolean isPressedShow;
+	boolean isFeedbackLight;
 	boolean isLEDEvent;
 	boolean isTraceLog;
 	boolean isRecord;
@@ -438,7 +438,7 @@ public class Play extends BaseActivity {
 			} else {
 				RL_rootView.setPadding(0, 0, 0, 0);
 				
-				SCV_pressedPadShow.setVisibility(View.GONE);
+				SCV_feedbackLight.setVisibility(View.GONE);
 				SCV_LED.setVisibility(View.GONE);
 				SCV_autoPlay.setVisibility(View.GONE);
 				
@@ -449,10 +449,10 @@ public class Play extends BaseActivity {
 			log("[06] Set CheckBox Checked");
 			if (unipack.isKeyLED) {
 				SCV_LED.setChecked(true);
-				SCV_pressedPadShow.setChecked(false);
+				SCV_feedbackLight.setChecked(false);
 			}
 			
-			isPressedShow = SCV_pressedPadShow.isChecked();
+			isFeedbackLight = SCV_feedbackLight.isChecked();
 			isLEDEvent = SCV_LED.isChecked();
 			isTraceLog = SCV_traceLog.isChecked();
 			isRecord = SCV_record.isChecked();
@@ -599,9 +599,9 @@ public class Play extends BaseActivity {
 		}
 		
 		
-		SCV_pressedPadShow.setOnCheckedChange((isChecked) -> {
+		SCV_feedbackLight.setOnCheckedChange((isChecked) -> {
 			padInit();
-			isPressedShow = isChecked;
+			isFeedbackLight = isChecked;
 		});
 		SCV_LED.setOnCheckedChange((isChecked) -> {
 			if (unipack.isKeyLED) {
@@ -1268,9 +1268,9 @@ public class Play extends BaseActivity {
 			SCV_autoPlay.setChecked(false);
 			if (unipack.isKeyLED) {
 				SCV_LED.setChecked(true);
-				SCV_pressedPadShow.setChecked(false);
+				SCV_feedbackLight.setChecked(false);
 			} else {
-				SCV_pressedPadShow.setChecked(true);
+				SCV_feedbackLight.setChecked(true);
 			}
 			LL_autoPlayControlView.setVisibility(View.GONE);
 		}
@@ -1287,9 +1287,9 @@ public class Play extends BaseActivity {
 		
 		if (unipack.isKeyLED) {
 			SCV_LED.setChecked(true);
-			SCV_pressedPadShow.setChecked(false);
+			SCV_feedbackLight.setChecked(false);
 		} else {
-			SCV_pressedPadShow.setChecked(true);
+			SCV_feedbackLight.setChecked(true);
 		}
 		autoPlayTask.beforeStartPlaying = true;
 	}
@@ -1306,7 +1306,7 @@ public class Play extends BaseActivity {
 		
 		autoPlayTask.achieve = -1;
 		
-		SCV_pressedPadShow.setChecked(false);
+		SCV_feedbackLight.setChecked(false);
 		SCV_LED.setChecked(false);
 	}
 	
@@ -1421,7 +1421,7 @@ public class Play extends BaseActivity {
 				if (isTraceLog)
 					traceLog_log(x, y);
 				
-				if (isPressedShow) {
+				if (isFeedbackLight) {
 					colorManager.add(x, y, ColorManager.PRESSED, LaunchpadColor.ARGB[119] + 0xFF000000, 119);
 					setLED(x, y);
 				}
@@ -1438,7 +1438,7 @@ public class Play extends BaseActivity {
 				if (soundItem_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 				
-				if (isPressedShow) {
+				if (isFeedbackLight) {
 					colorManager.remove(x, y, ColorManager.PRESSED);
 					setLED(x, y);
 				}

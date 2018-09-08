@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">दबाया दिखाओ</string>
+	<string name="feedbackLight">दबाया दिखाओ</string>
 	<string name="traceLog">ट्रेस लॉग</string>
 	<string name="traceLogClear">ट्रेस लॉग रीसेट कर दिया गया  है।</string>
 	<string name="record">रिकॉर्ड</string>

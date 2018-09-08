@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Hiện nút</string>
+	<string name="feedbackLight">Hiện nút</string>
 	<string name="traceLog">Đánh số thứ tự</string>
 	<string name="traceLogClear">Số thứ tự đã được cài lại</string>
 	<string name="record">Ghi âm</string>

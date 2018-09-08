@@ -75,7 +75,7 @@
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
 	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="pressedPadShow">Visa tryckta</string>
+	<string name="feedbackLight">Visa tryckta</string>
 	<string name="traceLog">Spårlogg</string>
 	<string name="traceLogClear">Spårlogg har raderats</string>
 	<string name="record">Filma</string>
