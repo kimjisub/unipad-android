@@ -73,6 +73,7 @@ public class Play extends BaseActivity {
 	CheckBox CB2_record;
 	CheckBox CB2_watermark;
 	CheckBox CB2_hideUI;
+	CheckBox CB2_proMode;
 	CheckBox[] CB2s;
 	
 	SyncCheckBox SCV_feedbackLight;
@@ -114,7 +115,8 @@ public class Play extends BaseActivity {
 		CB2_record = findViewById(R.id.CB2_record);
 		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_hideUI = findViewById(R.id.CB2_hideUI);
-		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI};
+		CB2_proMode = findViewById(R.id.CB2_proMode);
+		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI, CB2_proMode};
 		
 		SCV_feedbackLight = new SyncCheckBox(CB1_feedbackLight, CB2_feedbackLight);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
