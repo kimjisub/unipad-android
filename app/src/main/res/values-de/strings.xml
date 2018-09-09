@@ -81,6 +81,7 @@
 	<string name="record">Aufnehmen</string>
 	<string name="watermark">Wasserzeichen</string>
 	<string name="hideUI">UI Verstecken</string>
+	<string name="proMode">Pro Mode</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Neue Version Gefunden.</string>

@@ -81,6 +81,7 @@
 	<string name="record">녹음</string>
 	<string name="watermark">워터마크</string>
 	<string name="hideUI">UI 숨기기</string>
+	<string name="proMode">프로 모드</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>

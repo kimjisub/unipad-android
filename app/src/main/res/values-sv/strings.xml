@@ -81,6 +81,7 @@
 	<string name="record">Filma</string>
 	<string name="watermark">Vattenstämpel</string>
 	<string name="hideUI">Göm UI</string>
+	<string name="proMode">Pro Mode</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Ny version hittad.</string>
