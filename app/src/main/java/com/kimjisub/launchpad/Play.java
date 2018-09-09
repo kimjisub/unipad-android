@@ -36,6 +36,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.launchpad.playManager.ColorManager;
 
 import java.util.ArrayList;
 
@@ -154,6 +155,11 @@ public class Play extends BaseActivity {
 	
 	final long DELAY = 1;
 	
+	
+	// ========================================================================================= Manager
+	
+	ColorManager colorManager;
+	
 	// ========================================================================================= 다중 sound 처리
 	
 	void soundItemPush(int c, int x, int y) {
@@ -253,72 +259,8 @@ public class Play extends BaseActivity {
 	
 	// ========================================================================================= 특성 다른 LED 처리
 	
-	ColorManager colorManager;
 	
-	static class ColorManager {
-		static final int GUIDE = 0;
-		static final int PRESSED = 1;
-		static final int LED = 2;
-		
-		Item[][][] btn;
-		Item[][] cir;
-		
-		static class Item {
-			int x;
-			int y;
-			int chanel;
-			int color;
-			int code;
-			
-			Item(int x, int y, int chanel, int color, int code) {
-				this.x = x;
-				this.y = y;
-				this.chanel = chanel;
-				this.color = color;
-				this.code = code;
-			}
-		}
-		
-		ColorManager(int x, int y) {
-			btn = new Item[x][y][3];
-			cir = new Item[36][3];
-		}
-		
-		Item get(int x, int y) {
-			Item ret = null;
-			if (x != -1) {
-				for (int i = 0; i < 3; i++) {
-					if (btn[x][y][i] != null) {
-						ret = btn[x][y][i];
-						break;
-					}
-				}
-			} else {
-				for (int i = 0; i < 3; i++) {
-					if (cir[y][i] != null) {
-						ret = cir[y][i];
-						break;
-					}
-				}
-			}
-			return ret;
-		}
-		
-		void add(int x, int y, int chanel, int color, int code) {
-			if (x != -1)
-				btn[x][y][chanel] = new Item(x, y, chanel, color, code);
-			else
-				cir[y][chanel] = new Item(x, y, chanel, color, code);
-		}
-		
-		void remove(int x, int y, int chanel) {
-			if (x != -1)
-				btn[x][y][chanel] = null;
-			else
-				cir[y][chanel] = null;
-		}
-		
-	}
+	
 	
 	void setLED(int x, int y) {
 		setLEDUI(x, y);
@@ -403,7 +345,7 @@ public class Play extends BaseActivity {
 		setContentView(R.layout.activity_play);
 		initVar();
 		
-		//================================================================================== URL 불러오기
+		// ================================================================================= URL 불러오기
 		String URL = getIntent().getStringExtra("URL");
 		log("[01] Start Load Unipack " + URL);
 		unipack = new Unipack(URL, true);
