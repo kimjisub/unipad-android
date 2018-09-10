@@ -155,20 +155,26 @@
 		    android:layout_height="wrap_content"
 		    android:layout_centerHorizontal="true"
 		    android:layout_centerVertical="true"
-		    android:orientation="vertical">
-		
-		</LinearLayout>
+		    android:orientation="vertical"/>
 		
 		<LinearLayout
-		    android:id="@+id/chains"
+		    android:id="@+id/chainsRight"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:layout_alignTop="@+id/pads"
 		    android:layout_toEndOf="@+id/pads"
 		    android:layout_toRightOf="@+id/pads"
-		    android:orientation="vertical">
+		    android:orientation="vertical"/>
 		
-		</LinearLayout>
+		
+		<LinearLayout
+		    android:id="@+id/chainsLeft"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_alignTop="@+id/pads"
+		    android:layout_toStartOf="@+id/pads"
+		    android:layout_toLeftOf="@+id/pads"
+		    android:orientation="vertical"/>
 	</RelativeLayout>
 	
 	<com.github.mmin18.widget.RealtimeBlurView
@@ -286,12 +292,12 @@
 					    android:textColor="@color/option_window_checkbox"/>
 					
 					<CheckBox
-					    android:id="@+id/CB2_proMode"
+					    android:id="@+id/CB2_proLightMode"
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
 					    android:buttonTint="@color/option_window_checkbox"
 					    android:checked="false"
-					    android:text="@string/proMode"
+					    android:text="@string/proLightMode"
 					    android:textColor="@color/option_window_checkbox"/>
 				
 				</LinearLayout>

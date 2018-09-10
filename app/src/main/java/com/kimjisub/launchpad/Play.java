@@ -49,7 +49,8 @@ public class Play extends BaseActivity {
 	ImageView IV_background;
 	ImageView IV_custom_logo;
 	LinearLayout LL_pads;
-	LinearLayout LL_chains;
+	LinearLayout LL_chainsRight;
+	LinearLayout LL_chainsLeft;
 	LinearLayout LL_autoPlayControlView;
 	ProgressBar PB_autoPlayProgressBar;
 	ImageView IV_prev;
@@ -74,7 +75,7 @@ public class Play extends BaseActivity {
 	CheckBox CB2_record;
 	CheckBox CB2_watermark;
 	CheckBox CB2_hideUI;
-	CheckBox CB2_proMode;
+	CheckBox CB2_proLightMode;
 	CheckBox[] CB2s;
 	
 	SyncCheckBox SCV_feedbackLight;
@@ -84,6 +85,7 @@ public class Play extends BaseActivity {
 	SyncCheckBox SCV_record;
 	SyncCheckBox SCV_watermark;
 	SyncCheckBox SCV_hideUI;
+	SyncCheckBox SCV_proLightMode;
 	
 	
 	void initVar() {
@@ -91,7 +93,8 @@ public class Play extends BaseActivity {
 		IV_custom_logo = findViewById(R.id.custom_logo);
 		IV_background = findViewById(R.id.background);
 		LL_pads = findViewById(R.id.pads);
-		LL_chains = findViewById(R.id.chains);
+		LL_chainsRight = findViewById(R.id.chainsRight);
+		LL_chainsLeft = findViewById(R.id.chainsLeft);
 		LL_autoPlayControlView = findViewById(R.id.autoPlayControlView);
 		PB_autoPlayProgressBar = findViewById(R.id.autoPlayProgressBar);
 		IV_prev = findViewById(R.id.prev);
@@ -116,8 +119,8 @@ public class Play extends BaseActivity {
 		CB2_record = findViewById(R.id.CB2_record);
 		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_hideUI = findViewById(R.id.CB2_hideUI);
-		CB2_proMode = findViewById(R.id.CB2_proMode);
-		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI, CB2_proMode};
+		CB2_proLightMode = findViewById(R.id.CB2_proLightMode);
+		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI, CB2_proLightMode};
 		
 		SCV_feedbackLight = new SyncCheckBox(CB1_feedbackLight, CB2_feedbackLight);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
@@ -126,6 +129,7 @@ public class Play extends BaseActivity {
 		SCV_record = new SyncCheckBox(CB1_record, CB2_record);
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_hideUI = new SyncCheckBox(CB2_hideUI);
+		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
 	}
 	
 	// =========================================================================================
@@ -136,8 +140,8 @@ public class Play extends BaseActivity {
 	boolean unipackLoaded = false;
 	boolean UILoaded = false;
 	
-	Pad[][] Pads;
-	Chain[] Chains;
+	Pad[][] U_pads;
+	Chain[] U_chains;
 	
 	LEDTask ledTask;
 	AutoPlayTask autoPlayTask;
@@ -259,9 +263,6 @@ public class Play extends BaseActivity {
 	
 	// ========================================================================================= 특성 다른 LED 처리
 	
-	
-	
-	
 	void setLED(int x, int y) {
 		setLEDUI(x, y);
 		setLEDLaunchpad(x, y);
@@ -274,46 +275,46 @@ public class Play extends BaseActivity {
 			if (Item != null) {
 				switch (Item.chanel) {
 					case ColorManager.GUIDE:
-						Pads[x][y].setLedBackgroundColor(Item.color);
+						U_pads[x][y].setLedBackgroundColor(Item.color);
 						break;
 					case ColorManager.PRESSED:
-						Pads[x][y].setLedBackground(theme.btn_);
+						U_pads[x][y].setLedBackground(theme.btn_);
 						break;
 					case ColorManager.LED:
-						Pads[x][y].setLedBackgroundColor(Item.color);
+						U_pads[x][y].setLedBackgroundColor(Item.color);
 						break;
 				}
 			} else
-				Pads[x][y].setLedBackgroundColor(0);
+				U_pads[x][y].setLedBackgroundColor(0);
 		} else {
 			int c = y - 8;
-			if (0 <= c && c < unipack.chain)
+			if (0 <= c && c < 32)
 				if (Item != null) {
 					switch (Item.chanel) {
 						case ColorManager.GUIDE:
 							if (theme.isChainLED)
-								Chains[c].setLedBackgroundColor(Item.color);
+								U_chains[c].setLedBackgroundColor(Item.color);
 							else
-								Chains[c].setBackgroundImageDrawable(theme.chain__);
+								U_chains[c].setBackgroundImageDrawable(theme.chain__);
 							break;
 						case ColorManager.PRESSED:
 							if (theme.isChainLED)
-								Chains[c].setLedBackgroundColor(Item.color);
+								U_chains[c].setLedBackgroundColor(Item.color);
 							else
-								Chains[c].setBackgroundImageDrawable(theme.chain_);
+								U_chains[c].setBackgroundImageDrawable(theme.chain_);
 							break;
 						case ColorManager.LED:
 							if (theme.isChainLED)
-								Chains[c].setLedBackgroundColor(Item.color);
+								U_chains[c].setLedBackgroundColor(Item.color);
 							else
-								Chains[c].setBackgroundImageDrawable(theme.chain);
+								U_chains[c].setBackgroundImageDrawable(theme.chain);
 							break;
 					}
 				} else {
 					if (theme.isChainLED)
-						Chains[c].setLedBackgroundColor(0);
+						U_chains[c].setLedBackgroundColor(0);
 					else
-						Chains[c].setBackgroundImageDrawable(theme.chain);
+						U_chains[c].setBackgroundImageDrawable(theme.chain);
 				}
 		}
 	}
@@ -362,8 +363,8 @@ public class Play extends BaseActivity {
 			}
 			
 			log("[03] Init Vars");
-			Pads = new Pad[unipack.buttonX][unipack.buttonY];
-			Chains = new Chain[unipack.chain];
+			U_pads = new Pad[unipack.buttonX][unipack.buttonY];
+			U_chains = new Chain[32];
 			colorManager = new ColorManager(unipack.buttonX, unipack.buttonY);
 			
 			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
@@ -593,6 +594,9 @@ public class Play extends BaseActivity {
 			else
 				RL_option_view.setVisibility(View.VISIBLE);
 		});
+		SCV_proLightMode.setOnCheckedChange(isChecked -> {
+			proLightMode(isChecked);
+		});
 		IV_prev.setOnClickListener(v -> autoPlay_prev());
 		IV_play.setOnClickListener(v -> {
 			if (autoPlayTask.isPlaying)
@@ -607,7 +611,8 @@ public class Play extends BaseActivity {
 		BTN_option_quit.setOnClickListener(v -> finish());
 		
 		LL_pads.removeAllViews();
-		LL_chains.removeAllViews();
+		LL_chainsRight.removeAllViews();
+		LL_chainsLeft.removeAllViews();
 		
 		
 		for (int i = 0; i < unipack.buttonX; i++) {
@@ -632,24 +637,28 @@ public class Play extends BaseActivity {
 					}
 					return false;
 				});
-				Pads[i][j] = pad;
+				U_pads[i][j] = pad;
 				row.addView(pad);
 			}
 			LL_pads.addView(row);
 		}
 		
-		if (unipack.chain > 1) {
-			for (int i = 0; i < unipack.chain; i++) {
-				final int finalI = i;
-				
-				Chains[i] = new Chain(this);
-				Chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
-				
-				Chains[i].setOnClickListener(v -> chainChange(finalI));
-				
-				LL_chains.addView(Chains[i]);
+		for (int i = 0; i < 32; i++) {
+			final int finalI = i;
+			
+			U_chains[i] = new Chain(this);
+			U_chains[i].setLayoutParams(new RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY));
+			
+			if (0 <= i && i <= 7) {
+				U_chains[i].setOnClickListener(v -> chainChange(finalI));
+				LL_chainsRight.addView(U_chains[i]);
+			}
+			if (16 <= i && i <= 23) {
+				//U_chains[i].setOnClickListener(v -> chainChange(finalI));
+				LL_chainsLeft.addView(U_chains[i], 0);
 			}
 		}
+		
 		traceLog_init();
 		chainChange(chain);
 		
@@ -670,42 +679,39 @@ public class Play extends BaseActivity {
 		
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
-				Pads[i][j].setBackgroundImageDrawable(theme.btn);
-				Pads[i][j].setTraceLogTextColor(theme.trace_log);
+				U_pads[i][j].setBackgroundImageDrawable(theme.btn);
+				U_pads[i][j].setTraceLogTextColor(theme.trace_log);
 			}
 		
 		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					Pads[i][j].setPhantomImageDrawable(theme.phantom);
+					U_pads[i][j].setPhantomImageDrawable(theme.phantom);
 			
 			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.phantom_ != null) {
 				int x = unipack.buttonX / 2 - 1;
 				int y = unipack.buttonY / 2 - 1;
 				
-				Pads[x][y].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x][y].setPhantomImageDrawable(theme.phantom_);
 				
-				Pads[x + 1][y].setPhantomImageDrawable(theme.phantom_);
-				Pads[x + 1][y].setPhantomRotation(270);
+				U_pads[x + 1][y].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x + 1][y].setPhantomRotation(270);
 				
-				Pads[x][y + 1].setPhantomImageDrawable(theme.phantom_);
-				Pads[x][y + 1].setPhantomRotation(90);
+				U_pads[x][y + 1].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x][y + 1].setPhantomRotation(90);
 				
-				Pads[x + 1][y + 1].setPhantomImageDrawable(theme.phantom_);
-				Pads[x + 1][y + 1].setPhantomRotation(180);
+				U_pads[x + 1][y + 1].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x + 1][y + 1].setPhantomRotation(180);
 			}
 		}
 		
-		
-		if (unipack.chain > 1) {
-			for (int i = 0; i < unipack.chain; i++) {
-				if (theme.isChainLED) {
-					Chains[i].setBackgroundImageDrawable(theme.btn);
-					Chains[i].setPhantomImageDrawable(theme.chainled);
-				} else {
-					Chains[i].setPhantomImageDrawable(theme.chain);
-					Chains[i].setLedVisibility(View.GONE);
-				}
+		for (int i = 0; i < 32; i++) {
+			if (theme.isChainLED) {
+				U_chains[i].setBackgroundImageDrawable(theme.btn);
+				U_chains[i].setPhantomImageDrawable(theme.chainled);
+			} else {
+				U_chains[i].setPhantomImageDrawable(theme.chain);
+				U_chains[i].setLedVisibility(View.GONE);
 			}
 		}
 		
@@ -1408,7 +1414,7 @@ public class Play extends BaseActivity {
 	void chainChange(int num) {
 		//log("chainChange (" + num + ")");
 		try {
-			if (unipack.chain > 1 && num >= 0 && num < unipack.chain) {
+			if (num >= 0 && num < unipack.chain) {
 				chain = num;
 				chainBtnsRefrash();
 			}
@@ -1438,19 +1444,15 @@ public class Play extends BaseActivity {
 	
 	void chainBtnsRefrash() {
 		log("chainBtnsRefrash");
-		if (unipack.chain > 1) {
+		for (int i = 0; i < unipack.chain; i++) {
 			
-			for (int i = 0; i < unipack.chain; i++) {
-				
-				if (i == chain && isShowWatermark) {
-					colorManager.add(-1, 8 + i, ColorManager.PRESSED, 0xFFdfe5ee, 119);
-				} else {
-					colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
-				}
-				setLEDUI(-1, 8 + i);
-				setLEDLaunchpad(-1, 8 + i);
+			if (i == chain && isShowWatermark) {
+				colorManager.add(-1, 8 + i, ColorManager.PRESSED, 0xFFdfe5ee, 119);
+			} else {
+				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
 			}
-			
+			setLEDUI(-1, 8 + i);
+			setLEDLaunchpad(-1, 8 + i);
 		}
 	}
 	
@@ -1540,9 +1542,9 @@ public class Play extends BaseActivity {
 		//log("traceLog_show");
 		for (int i = 0; i < unipack.buttonX; i++) {
 			for (int j = 0; j < unipack.buttonY; j++) {
-				Pads[i][j].setTraceLogText("");
+				U_pads[i][j].setTraceLogText("");
 				for (int k = 0; k < traceLog_table[chain][i][j].size(); k++)
-					Pads[i][j].appendTraceLog(traceLog_table[chain][i][j].get(k) + " ");
+					U_pads[i][j].appendTraceLog(traceLog_table[chain][i][j].get(k) + " ");
 			}
 		}
 	}
@@ -1550,9 +1552,9 @@ public class Play extends BaseActivity {
 	void traceLog_log(int x, int y) {
 		//log("traceLog_log (" + buttonX + ", " + buttonY + ")");
 		traceLog_table[chain][x][y].add(traceLog_nextNum[chain]++);
-		Pads[x][y].setTraceLogText("");
+		U_pads[x][y].setTraceLogText("");
 		for (int i = 0; i < traceLog_table[chain][x][y].size(); i++)
-			Pads[x][y].appendTraceLog(traceLog_table[chain][x][y].get(i) + " ");
+			U_pads[x][y].appendTraceLog(traceLog_table[chain][x][y].get(i) + " ");
 	}
 	
 	void traceLog_init() {
@@ -1572,7 +1574,7 @@ public class Play extends BaseActivity {
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					Pads[i][j].setTraceLogText("");
+					U_pads[i][j].setTraceLogText("");
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 		}
@@ -1592,6 +1594,28 @@ public class Play extends BaseActivity {
 		ClipData clipData = ClipData.newPlainText("LABEL", msg);
 		assert clipboardManager != null;
 		clipboardManager.setPrimaryClip(clipData);
+	}
+	
+	// ========================================================================================= Pro Mode
+	
+	void proLightMode(boolean bool) {
+		if (bool) {
+			for (Chain chain : U_chains)
+				chain.setVisibility(View.VISIBLE);
+		} else {
+			if (unipack.chain > 1) {
+				for (int i = 0; i < 32; i++) {
+					if (i < unipack.chain)
+						U_chains[i].setVisibility(View.VISIBLE);
+					else
+						U_chains[i].setVisibility(View.INVISIBLE);
+				}
+			} else {
+				for (Chain chain : U_chains)
+					chain.setVisibility(View.INVISIBLE);
+			}
+			
+		}
 	}
 	
 	// ========================================================================================= Activity
