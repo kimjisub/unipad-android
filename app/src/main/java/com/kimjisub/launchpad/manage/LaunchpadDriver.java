@@ -327,9 +327,11 @@ public class LaunchpadDriver {
 					onFunctionkeyTouch(c + 8, velo != 0);
 				}
 				if (1 <= note && note <= 8) {
+					onChainTouch(8 - note + 16 -8, velo != 0);
 					onFunctionkeyTouch(8 - note + 16, velo != 0);
 				}
 				if (10 <= note && note <= 80 && note % 10 == 0) {
+					onChainTouch((note / 10) - 1 + 24-8, velo != 0);
 					onFunctionkeyTouch((note / 10) - 1 + 24, velo != 0);
 				}
 				
