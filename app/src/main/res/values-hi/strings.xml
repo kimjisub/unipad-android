@@ -79,8 +79,8 @@
 	<string name="traceLog">ट्रेस लॉग</string>
 	<string name="traceLogClear">ट्रेस लॉग रीसेट कर दिया गया  है।</string>
 	<string name="record">रिकॉर्ड</string>
-	<string name="watermark">वाटर-मार्क</string>
 	<string name="hideUI">UI छुपाये</string>
+	<string name="watermark">वाटर-मार्क</string>
 	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->

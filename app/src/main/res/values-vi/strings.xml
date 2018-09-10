@@ -79,8 +79,8 @@
 	<string name="traceLog">Đánh số thứ tự</string>
 	<string name="traceLogClear">Số thứ tự đã được cài lại</string>
 	<string name="record">Ghi âm</string>
-	<string name="watermark">Watermark</string>
 	<string name="hideUI">Ẩn giao diện người dùng</string>
+	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->

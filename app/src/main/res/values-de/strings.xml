@@ -79,8 +79,8 @@
 	<string name="traceLog">Verfolge Knopfdruck</string>
 	<string name="traceLogClear">Zurückgesetzt.</string>
 	<string name="record">Aufnehmen</string>
-	<string name="watermark">Wasserzeichen</string>
 	<string name="hideUI">UI Verstecken</string>
+	<string name="watermark">Wasserzeichen</string>
 	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->

@@ -79,8 +79,8 @@
 	<string name="traceLog">Log touches</string>
 	<string name="traceLogClear">Le Log des touches à été réinitialisé.</string>
 	<string name="record">Enregistrer</string>
-	<string name="watermark">Watermark</string>
 	<string name="hideUI">Hide UI</string>
+	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->
