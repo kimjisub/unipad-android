@@ -81,7 +81,7 @@
 	<string name="record">रिकॉर्ड</string>
 	<string name="watermark">वाटर-मार्क</string>
 	<string name="hideUI">UI छुपाये</string>
-	<string name="proMode">Pro Mode</string>
+	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">नया वर्जनपता चला</string>

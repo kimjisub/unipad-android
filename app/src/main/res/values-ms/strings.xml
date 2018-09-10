@@ -81,7 +81,7 @@
 	<string name="record">Rakam</string>
 	<string name="watermark">Tanda Tempat</string>
 	<string name="hideUI">Hide UI</string>
-	<string name="proMode">Pro Mode</string>
+	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Versi Baharu Dikesan.</string>
