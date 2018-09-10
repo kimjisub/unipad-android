@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Tools.logErr;
+
 public class Unipack {
 	public String URL;
 	
@@ -60,6 +62,54 @@ public class Unipack {
 		}
 	}
 	
+	public void Sound_push(int c, int x, int y) {
+		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ")");
+		try {
+			Sound tmp = sound[c][x][y].get(0);
+			sound[c][x][y].remove(0);
+			sound[c][x][y].add(tmp);
+		} catch (NullPointerException ignored) {
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("Sound_push (" + c + ", " + x + ", " + y + ")");
+			ee.printStackTrace();
+		}
+	}
+	
+	public void Sound_push(int c, int x, int y, int num) {
+		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
+		try {
+			ArrayList<Sound> e = sound[c][x][y];
+			if (sound[c][x][y].get(0).num != num)
+				while (true) {
+					Sound tmp = e.get(0);
+					e.remove(0);
+					e.add(tmp);
+					if (e.get(0).num == num % e.size())
+						break;
+				}
+		} catch (NullPointerException ignored) {
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			ee.printStackTrace();
+		} catch (ArithmeticException ee) {
+			logErr("ArithmeticException : Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			ee.printStackTrace();
+		}
+	}
+	
+	public Sound Sound_get(int c, int x, int y) {
+		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
+		try {
+			return sound[c][x][y].get(0);
+		} catch (NullPointerException ignored) {
+			return new Sound();
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("Sound_get (" + c + ", " + x + ", " + y + ")");
+			ee.printStackTrace();
+			return new Sound();
+		}
+	}
+	
 	//==========================================================================================
 	
 	public ArrayList<LED>[][][] led = null;
@@ -105,6 +155,51 @@ public class Unipack {
 				this.func = DELAY;
 				this.delay = d;
 			}
+		}
+	}
+	
+	public void LED_push(int c, int x, int y) {
+		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ")");
+		try {
+			LED e = led[c][x][y].get(0);
+			led[c][x][y].remove(0);
+			led[c][x][y].add(e);
+		} catch (NullPointerException ignored) {
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("LED_push (" + c + ", " + x + ", " + y + ")");
+			ee.printStackTrace();
+		}
+	}
+	
+	public void LED_push(int c, int x, int y, int num) {
+		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
+		try {
+			ArrayList<LED> e = led[c][x][y];
+			if (e.get(0).num != num)
+				while (true) {
+					LED tmp = e.get(0);
+					e.remove(0);
+					e.add(tmp);
+					if (e.get(0).num == num % e.size())
+						break;
+				}
+		} catch (NullPointerException ignored) {
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("LED_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			ee.printStackTrace();
+		}
+	}
+	
+	public LED LED_get(int c, int x, int y) {
+		//log("LED_get (" + c + ", " + buttonX + ", " + buttonY + ")");
+		try {
+			return led[c][x][y].get(0);
+		} catch (NullPointerException ignored) {
+			return null;
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("LED_get (" + c + ", " + x + ", " + y + ")");
+			ee.printStackTrace();
+			return null;
 		}
 	}
 	
@@ -567,7 +662,7 @@ public class Unipack {
 		return null;
 	}
 
-	/*public String[] getAutoplays() {
+	public String[] getAutoplays() {
 		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
@@ -576,7 +671,7 @@ public class Unipack {
 		}
 
 		return (String[]) autoPlays.toArray(new String[]{""});
-	}*/
+	}
 	
 	private void addErr(String content) {
 		if (ErrorDetail == null)
