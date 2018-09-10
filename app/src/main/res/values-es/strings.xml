@@ -81,7 +81,7 @@
 	<string name="record">Grabar</string>
 	<string name="watermark">Marca de agua</string>
 	<string name="hideUI">Hide UI</string>
-	<string name="proMode">Pro Mode</string>
+	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->
 	<string name="newVersionFound">Nueva versión detectada.</string>
