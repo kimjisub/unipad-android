@@ -1537,12 +1537,12 @@ public class Play extends BaseActivity {
 		chainBtnsRefrash();
 	}
 	
-	// ========================================================================================= Activity
+	// ========================================================================================= Option Window
 	
 	boolean bool_toggleOptionWindow = false;
 	
 	void toggleOptionWindow() {
-		toggleOptionWindow(bool_toggleOptionWindow = !bool_toggleOptionWindow);
+		toggleOptionWindow(!bool_toggleOptionWindow);
 	}
 	
 	void toggleOptionWindow(boolean bool) {
@@ -1602,6 +1602,8 @@ public class Play extends BaseActivity {
 			RBV_option_blur.startAnimation(a);
 		}
 	}
+	
+	// ========================================================================================= Activity
 	
 	@Override
 	public void onBackPressed() {
