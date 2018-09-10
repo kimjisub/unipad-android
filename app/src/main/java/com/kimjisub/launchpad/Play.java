@@ -164,87 +164,6 @@ public class Play extends BaseActivity {
 	
 	ColorManager colorManager;
 	
-	// ========================================================================================= 특성 다른 LED 처리
-	
-	void setLED(int x, int y) {
-		setLEDUI(x, y);
-		setLEDLaunchpad(x, y);
-	}
-	
-	void setLEDUI(int x, int y) {
-		ColorManager.Item Item = colorManager.get(x, y);
-		
-		if (x != -1) {
-			if (Item != null) {
-				switch (Item.chanel) {
-					case ColorManager.GUIDE:
-						U_pads[x][y].setLedBackgroundColor(Item.color);
-						break;
-					case ColorManager.PRESSED:
-						U_pads[x][y].setLedBackground(theme.btn_);
-						break;
-					case ColorManager.LED:
-						U_pads[x][y].setLedBackgroundColor(Item.color);
-						break;
-				}
-			} else
-				U_pads[x][y].setLedBackgroundColor(0);
-		} else {
-			int c = y - 8;
-			if (0 <= c && c < 32)
-				if (theme.isChainLED) {
-					if (Item != null) {
-						switch (Item.chanel) {
-							case ColorManager.GUIDE:
-								U_chains[c].setLedBackgroundColor(Item.color);
-								break;
-							case ColorManager.PRESSED:
-								U_chains[c].setLedBackgroundColor(Item.color);
-								break;
-							case ColorManager.LED:
-								U_chains[c].setLedBackgroundColor(Item.color);
-								break;
-						}
-					} else
-						U_chains[c].setLedBackgroundColor(0);
-				} else {
-					if (Item != null) {
-						switch (Item.chanel) {
-							case ColorManager.GUIDE:
-								U_chains[c].setBackgroundImageDrawable(theme.chain__);
-								break;
-							case ColorManager.PRESSED:
-								U_chains[c].setBackgroundImageDrawable(theme.chain_);
-								break;
-							case ColorManager.LED:
-								U_chains[c].setBackgroundImageDrawable(theme.chain);
-								break;
-						}
-					} else
-						U_chains[c].setBackgroundImageDrawable(theme.chain);
-				}
-			
-		}
-	}
-	
-	void setLEDLaunchpad(int x, int y) {
-		ColorManager.Item Item = colorManager.get(x, y);
-		
-		if (x != -1) {
-			if (Item != null)
-				Launchpad.driver.sendPadLED(x, y, Item.code);
-			else
-				Launchpad.driver.sendPadLED(x, y, 0);
-		} else {
-			if (Item != null)
-				Launchpad.driver.sendFunctionkeyLED(y, Item.code);
-			else
-				Launchpad.driver.sendFunctionkeyLED(y, 0);
-			
-		}
-		
-	}
-	
 	// ========================================================================================= 앱 시작
 	
 	@SuppressLint("StaticFieldLeak")
@@ -435,7 +354,6 @@ public class Play extends BaseActivity {
 			return skin_init(num + 1);
 		}
 	}
-	
 	
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
@@ -644,6 +562,87 @@ public class Play extends BaseActivity {
 		//RL_option_window.setBackgroundColor(theme.option_window);
 		//BTN_option_quit.setBackgroundColor(theme.option_window_btn);
 		//BTN_option_quit.setTextColor(theme.option_window_btn_text);
+		
+	}
+	
+	// ========================================================================================= 특성 다른 LED 처리
+	
+	void setLED(int x, int y) {
+		setLEDUI(x, y);
+		setLEDLaunchpad(x, y);
+	}
+	
+	void setLEDUI(int x, int y) {
+		ColorManager.Item Item = colorManager.get(x, y);
+		
+		if (x != -1) {
+			if (Item != null) {
+				switch (Item.chanel) {
+					case ColorManager.GUIDE:
+						U_pads[x][y].setLedBackgroundColor(Item.color);
+						break;
+					case ColorManager.PRESSED:
+						U_pads[x][y].setLedBackground(theme.btn_);
+						break;
+					case ColorManager.LED:
+						U_pads[x][y].setLedBackgroundColor(Item.color);
+						break;
+				}
+			} else
+				U_pads[x][y].setLedBackgroundColor(0);
+		} else {
+			int c = y - 8;
+			if (0 <= c && c < 32)
+				if (theme.isChainLED) {
+					if (Item != null) {
+						switch (Item.chanel) {
+							case ColorManager.GUIDE:
+								U_chains[c].setLedBackgroundColor(Item.color);
+								break;
+							case ColorManager.PRESSED:
+								U_chains[c].setLedBackgroundColor(Item.color);
+								break;
+							case ColorManager.LED:
+								U_chains[c].setLedBackgroundColor(Item.color);
+								break;
+						}
+					} else
+						U_chains[c].setLedBackgroundColor(0);
+				} else {
+					if (Item != null) {
+						switch (Item.chanel) {
+							case ColorManager.GUIDE:
+								U_chains[c].setBackgroundImageDrawable(theme.chain__);
+								break;
+							case ColorManager.PRESSED:
+								U_chains[c].setBackgroundImageDrawable(theme.chain_);
+								break;
+							case ColorManager.LED:
+								U_chains[c].setBackgroundImageDrawable(theme.chain);
+								break;
+						}
+					} else
+						U_chains[c].setBackgroundImageDrawable(theme.chain);
+				}
+			
+		}
+	}
+	
+	void setLEDLaunchpad(int x, int y) {
+		ColorManager.Item Item = colorManager.get(x, y);
+		
+		if (x != -1) {
+			if (Item != null)
+				Launchpad.driver.sendPadLED(x, y, Item.code);
+			else
+				Launchpad.driver.sendPadLED(x, y, 0);
+		} else {
+			if (Item != null)
+				Launchpad.driver.sendFunctionkeyLED(y, Item.code);
+			else
+				Launchpad.driver.sendFunctionkeyLED(y, 0);
+			
+		}
 		
 	}
 	
