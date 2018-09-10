@@ -289,33 +289,38 @@ public class Play extends BaseActivity {
 		} else {
 			int c = y - 8;
 			if (0 <= c && c < 32)
-				if (Item != null) {
-					switch (Item.chanel) {
-						case ColorManager.GUIDE:
-							if (theme.isChainLED)
+				if (theme.isChainLED) {
+					if (Item != null) {
+						switch (Item.chanel) {
+							case ColorManager.GUIDE:
 								U_chains[c].setLedBackgroundColor(Item.color);
-							else
-								U_chains[c].setBackgroundImageDrawable(theme.chain__);
-							break;
-						case ColorManager.PRESSED:
-							if (theme.isChainLED)
+								break;
+							case ColorManager.PRESSED:
 								U_chains[c].setLedBackgroundColor(Item.color);
-							else
-								U_chains[c].setBackgroundImageDrawable(theme.chain_);
-							break;
-						case ColorManager.LED:
-							if (theme.isChainLED)
+								break;
+							case ColorManager.LED:
 								U_chains[c].setLedBackgroundColor(Item.color);
-							else
-								U_chains[c].setBackgroundImageDrawable(theme.chain);
-							break;
-					}
-				} else {
-					if (theme.isChainLED)
+								break;
+						}
+					} else
 						U_chains[c].setLedBackgroundColor(0);
-					else
+				} else {
+					if (Item != null) {
+						switch (Item.chanel) {
+							case ColorManager.GUIDE:
+								U_chains[c].setBackgroundImageDrawable(theme.chain__);
+								break;
+							case ColorManager.PRESSED:
+								U_chains[c].setBackgroundImageDrawable(theme.chain_);
+								break;
+							case ColorManager.LED:
+								U_chains[c].setBackgroundImageDrawable(theme.chain);
+								break;
+						}
+					} else
 						U_chains[c].setBackgroundImageDrawable(theme.chain);
 				}
+			
 		}
 	}
 	
@@ -654,7 +659,7 @@ public class Play extends BaseActivity {
 				LL_chainsRight.addView(U_chains[i]);
 			}
 			if (16 <= i && i <= 23) {
-				//U_chains[i].setOnClickListener(v -> chainChange(finalI));
+				U_chains[i].setOnClickListener(v -> chainChange(finalI));
 				LL_chainsLeft.addView(U_chains[i], 0);
 			}
 		}
@@ -1447,7 +1452,7 @@ public class Play extends BaseActivity {
 		log("chainBtnsRefrash");
 		for (int i = 0; i < unipack.chain; i++) {
 			
-			if (i == chain && isShowWatermark) {
+			if (i == chain) {
 				colorManager.add(-1, 8 + i, ColorManager.PRESSED, 0xFFdfe5ee, 119);
 			} else {
 				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
@@ -1507,31 +1512,6 @@ public class Play extends BaseActivity {
 				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
 				}
 			});
-	}
-	
-	// ========================================================================================= Watermark
-	
-	void toggleWatermark() {
-		toggleWatermark(!isShowWatermark);
-	}
-	
-	void toggleWatermark(boolean bool) {
-		isShowWatermark = bool;
-		SCV_watermark.setChecked(isShowWatermark);
-		
-		if (isShowWatermark) {
-			for (int i = 4; i <= 7; i++) {
-				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
-				setLED(-1, i);
-			}
-		} else {
-			for (int i = 4; i <= 7; i++) {
-				colorManager.remove(-1, i, ColorManager.GUIDE);
-				setLED(-1, i);
-			}
-		}
-		
-		chainBtnsRefrash();
 	}
 	
 	// ========================================================================================= Trace Log
@@ -1597,19 +1577,51 @@ public class Play extends BaseActivity {
 		clipboardManager.setPrimaryClip(clipData);
 	}
 	
+	// ========================================================================================= Watermark
+	
+	void toggleWatermark() {
+		toggleWatermark(!isShowWatermark);
+	}
+	
+	void toggleWatermark(boolean bool) {
+		isShowWatermark = bool;
+		SCV_watermark.setChecked(isShowWatermark);
+		
+		if (isShowWatermark) {
+			for (int i = 4; i <= 7; i++) {
+				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
+				setLED(-1, i);
+			}
+		} else {
+			for (int i = 4; i <= 7; i++) {
+				colorManager.remove(-1, i, ColorManager.GUIDE);
+				setLED(-1, i);
+			}
+		}
+		
+		colorManager.setCirIgnore(ColorManager.PRESSED, !isShowWatermark);
+		chainBtnsRefrash();
+	}
+	
 	// ========================================================================================= Pro Mode
 	
 	void proLightMode(boolean bool) {
 		if (bool) {
-			for (Chain chain : U_chains)
+			for (Chain chain : U_chains) {
 				chain.setVisibility(View.VISIBLE);
+				//chain.setLedVisibility(View.VISIBLE);
+			}
 		} else {
 			if (unipack.chain > 1) {
 				for (int i = 0; i < 32; i++) {
+					Chain chain = U_chains[i];
+					
 					if (i < unipack.chain)
-						U_chains[i].setVisibility(View.VISIBLE);
+						chain.setVisibility(View.VISIBLE);
 					else
-						U_chains[i].setVisibility(View.INVISIBLE);
+						chain.setVisibility(View.INVISIBLE);
+					
+					//chain.setLedVisibility(View.INVISIBLE);
 				}
 			} else {
 				for (Chain chain : U_chains)
@@ -1617,6 +1629,10 @@ public class Play extends BaseActivity {
 			}
 			
 		}
+		
+		
+		colorManager.setCirIgnore(ColorManager.LED, !bool);
+		chainBtnsRefrash();
 	}
 	
 	// ========================================================================================= Activity

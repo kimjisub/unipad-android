@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.playManager;
 
+import java.util.ArrayList;
+
 public class ColorManager {
 	public static final int GUIDE = 0;
 	public static final int PRESSED = 1;
@@ -7,6 +9,9 @@ public class ColorManager {
 	
 	Item[][][] btn;
 	Item[][] cir;
+	
+	boolean[] btnIgnoreList;
+	boolean[] cirIgnoreList;
 	
 	public static class Item {
 		public int x;
@@ -27,12 +32,18 @@ public class ColorManager {
 	public ColorManager(int x, int y) {
 		btn = new Item[x][y][3];
 		cir = new Item[36][3];
+		
+		btnIgnoreList = new boolean[]{false, false, false};
+		cirIgnoreList = new boolean[]{false, false, false};
 	}
 	
 	public Item get(int x, int y) {
 		Item ret = null;
+		
 		if (x != -1) {
 			for (int i = 0; i < 3; i++) {
+				if (btnIgnoreList[i])
+					continue;
 				if (btn[x][y][i] != null) {
 					ret = btn[x][y][i];
 					break;
@@ -40,12 +51,17 @@ public class ColorManager {
 			}
 		} else {
 			for (int i = 0; i < 3; i++) {
+				if (cirIgnoreList[i])
+					continue;
+				
 				if (cir[y][i] != null) {
 					ret = cir[y][i];
 					break;
 				}
 			}
 		}
+		
+		
 		return ret;
 	}
 	
@@ -61,6 +77,14 @@ public class ColorManager {
 			btn[x][y][chanel] = null;
 		else
 			cir[y][chanel] = null;
+	}
+	
+	public void setBtnIgnore(int chanel, boolean ignore) {
+		btnIgnoreList[chanel] = ignore;
+	}
+	
+	public void setCirIgnore(int chanel, boolean ignore) {
+		cirIgnoreList[chanel] = ignore;
 	}
 	
 }
