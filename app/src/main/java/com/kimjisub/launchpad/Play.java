@@ -73,8 +73,8 @@ public class Play extends BaseActivity {
 	CheckBox CB2_autoPlay;
 	CheckBox CB2_traceLog;
 	CheckBox CB2_record;
-	CheckBox CB2_watermark;
 	CheckBox CB2_hideUI;
+	CheckBox CB2_watermark;
 	CheckBox CB2_proLightMode;
 	CheckBox[] CB2s;
 	
@@ -83,8 +83,8 @@ public class Play extends BaseActivity {
 	SyncCheckBox SCV_autoPlay;
 	SyncCheckBox SCV_traceLog;
 	SyncCheckBox SCV_record;
-	SyncCheckBox SCV_watermark;
 	SyncCheckBox SCV_hideUI;
+	SyncCheckBox SCV_watermark;
 	SyncCheckBox SCV_proLightMode;
 	
 	
@@ -117,18 +117,18 @@ public class Play extends BaseActivity {
 		CB2_autoPlay = findViewById(R.id.CB2_autoPlay);
 		CB2_traceLog = findViewById(R.id.CB2_traceLog);
 		CB2_record = findViewById(R.id.CB2_record);
-		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_hideUI = findViewById(R.id.CB2_hideUI);
+		CB2_watermark = findViewById(R.id.CB2_watermark);
 		CB2_proLightMode = findViewById(R.id.CB2_proLightMode);
-		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_watermark, CB2_hideUI, CB2_proLightMode};
+		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_hideUI, CB2_watermark, CB2_proLightMode};
 		
 		SCV_feedbackLight = new SyncCheckBox(CB1_feedbackLight, CB2_feedbackLight);
 		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
 		SCV_autoPlay = new SyncCheckBox(CB1_autoPlay, CB2_autoPlay);
 		SCV_traceLog = new SyncCheckBox(CB1_traceLog, CB2_traceLog);
 		SCV_record = new SyncCheckBox(CB1_record, CB2_record);
-		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_hideUI = new SyncCheckBox(CB2_hideUI);
+		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
 	}
 	
@@ -587,13 +587,13 @@ public class Play extends BaseActivity {
 				rec_log = "";
 			}
 		});
-		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
 		SCV_hideUI.setOnCheckedChange(isChecked -> {
 			if (isChecked)
 				RL_option_view.setVisibility(View.GONE);
 			else
 				RL_option_view.setVisibility(View.VISIBLE);
 		});
+		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
 		SCV_proLightMode.setOnCheckedChange(isChecked -> {
 			proLightMode(isChecked);
 		});

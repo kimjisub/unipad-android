@@ -79,8 +79,8 @@
 	<string name="traceLog">순서 기록</string>
 	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
 	<string name="record">녹음</string>
-	<string name="watermark">워터마크</string>
 	<string name="hideUI">UI 숨기기</string>
+	<string name="watermark">워터마크</string>
 	<string name="proLightMode">프로 라이트 모드</string>
 	
 	<!--Version-->

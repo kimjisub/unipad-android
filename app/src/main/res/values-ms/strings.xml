@@ -79,8 +79,8 @@
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log Telah di padam.</string>
 	<string name="record">Rakam</string>
-	<string name="watermark">Tanda Tempat</string>
 	<string name="hideUI">Hide UI</string>
+	<string name="watermark">Tanda Tempat</string>
 	<string name="proLightMode">Pro Light Mode</string>
 	
 	<!--Version-->
