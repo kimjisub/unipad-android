@@ -661,6 +661,7 @@ public class Play extends BaseActivity {
 		
 		traceLog_init();
 		chainChange(chain);
+		proLightMode(SCV_proLightMode.isChecked());
 		
 		skin_set();
 		
