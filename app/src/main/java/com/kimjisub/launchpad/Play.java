@@ -164,103 +164,6 @@ public class Play extends BaseActivity {
 	
 	ColorManager colorManager;
 	
-	// ========================================================================================= 다중 sound 처리
-	
-	void soundItemPush(int c, int x, int y) {
-		//log("soundItemPush (" + c + ", " + buttonX + ", " + buttonY + ")");
-		try {
-			Unipack.Sound tmp = unipack.sound[c][x][y].get(0);
-			unipack.sound[c][x][y].remove(0);
-			unipack.sound[c][x][y].add(tmp);
-		} catch (NullPointerException ignored) {
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("soundItemPush (" + c + ", " + x + ", " + y + ")");
-			ee.printStackTrace();
-		}
-	}
-	
-	void soundItemPush(int c, int x, int y, int num) {
-		//log("soundItemPush (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
-		try {
-			ArrayList<Unipack.Sound> e = unipack.sound[c][x][y];
-			if (unipack.sound[c][x][y].get(0).num != num)
-				while (true) {
-					Unipack.Sound tmp = e.get(0);
-					e.remove(0);
-					e.add(tmp);
-					if (e.get(0).num == num % e.size())
-						break;
-				}
-		} catch (NullPointerException ignored) {
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
-			ee.printStackTrace();
-		} catch (ArithmeticException ee) {
-			logErr("ArithmeticException : soundItemPush (" + c + ", " + x + ", " + y + ", " + num + ")");
-			ee.printStackTrace();
-		}
-	}
-	
-	Unipack.Sound soundItem_get(int c, int x, int y) {
-		//log("soundItem_get (" + c + ", " + buttonX + ", " + buttonY + ")");
-		try {
-			return unipack.sound[c][x][y].get(0);
-		} catch (NullPointerException ignored) {
-			return new Unipack.Sound();
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("soundItem_get (" + c + ", " + x + ", " + y + ")");
-			ee.printStackTrace();
-			return new Unipack.Sound();
-		}
-	}
-	
-	// ========================================================================================= 다중 LED 처리
-	
-	void LEDItem_push(int c, int x, int y) {
-		//log("LEDItem_push (" + c + ", " + buttonX + ", " + buttonY + ")");
-		try {
-			Unipack.LED e = unipack.led[c][x][y].get(0);
-			unipack.led[c][x][y].remove(0);
-			unipack.led[c][x][y].add(e);
-		} catch (NullPointerException ignored) {
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("LEDItem_push (" + c + ", " + x + ", " + y + ")");
-			ee.printStackTrace();
-		}
-	}
-	
-	void LEDItem_push(int c, int x, int y, int num) {
-		//log("LEDItem_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
-		try {
-			ArrayList<Unipack.LED> e = unipack.led[c][x][y];
-			if (e.get(0).num != num)
-				while (true) {
-					Unipack.LED tmp = e.get(0);
-					e.remove(0);
-					e.add(tmp);
-					if (e.get(0).num == num % e.size())
-						break;
-				}
-		} catch (NullPointerException ignored) {
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("LEDItem_push (" + c + ", " + x + ", " + y + ", " + num + ")");
-			ee.printStackTrace();
-		}
-	}
-	
-	Unipack.LED LEDItem_get(int c, int x, int y) {
-		//log("LEDItem_get (" + c + ", " + buttonX + ", " + buttonY + ")");
-		try {
-			return unipack.led[c][x][y].get(0);
-		} catch (NullPointerException ignored) {
-			return null;
-		} catch (IndexOutOfBoundsException ee) {
-			logErr("LEDItem_get (" + c + ", " + x + ", " + y + ")");
-			ee.printStackTrace();
-			return null;
-		}
-	}
-	
 	// ========================================================================================= 특성 다른 LED 처리
 	
 	void setLED(int x, int y) {
@@ -800,8 +703,8 @@ public class Play extends BaseActivity {
 				this.buttonX = buttonX;
 				this.buttonY = buttonY;
 				
-				Unipack.LED e = LEDItem_get(chain, buttonX, buttonY);
-				LEDItem_push(chain, buttonX, buttonY);
+				Unipack.LED e = unipack.LED_get(chain, buttonX, buttonY);
+				unipack.LED_push(chain, buttonX, buttonY);
 				if (e != null) {
 					syntaxs = e.syntaxs;
 					loop = e.loop;
@@ -1084,8 +987,8 @@ public class Play extends BaseActivity {
 							case Unipack.AutoPlay.ON:
 								if (chain != currChain)
 									publishProgress(3, currChain);
-								soundItemPush(currChain, x, y, num);
-								LEDItem_push(currChain, x, y, num);
+								unipack.Sound_push(currChain, x, y, num);
+								unipack.LED_push(currChain, x, y, num);
 								publishProgress(1, x, y);
 								
 								break;
@@ -1178,8 +1081,8 @@ public class Play extends BaseActivity {
 						
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
-								soundItemPush(e.currChain, e.x, e.y, e.num);
-								LEDItem_push(e.currChain, e.x, e.y, e.num);
+								unipack.Sound_push(e.currChain, e.x, e.y, e.num);
+								unipack.LED_push(e.currChain, e.x, e.y, e.num);
 								publishProgress(4, e.x, e.y);
 								complete = true;
 								break;
@@ -1363,10 +1266,10 @@ public class Play extends BaseActivity {
 		try {
 			if (upDown) {
 				soundPool.stop(stopID[chain][x][y]);
-				Unipack.Sound e = soundItem_get(chain, x, y);
+				Unipack.Sound e = unipack.Sound_get(chain, x, y);
 				stopID[chain][x][y] = soundPool.play(e.id, 1.0F, 1.0F, 0, e.loop, 1.0F);
 				
-				soundItemPush(chain, x, y);
+				unipack.Sound_push(chain, x, y);
 				
 				if (isRecord) {
 					long currTime = System.currentTimeMillis();
@@ -1391,7 +1294,7 @@ public class Play extends BaseActivity {
 				if (e.wormhole != -1)
 					chainChange(e.wormhole);
 			} else {
-				if (soundItem_get(chain, x, y).loop == -1)
+				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 				
 				if (isFeedbackLight) {
@@ -1428,8 +1331,8 @@ public class Play extends BaseActivity {
 			// 다중매핑 초기화
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++) {
-					soundItemPush(chain, i, j, 0);
-					LEDItem_push(chain, i, j, 0);
+					unipack.Sound_push(chain, i, j, 0);
+					unipack.LED_push(chain, i, j, 0);
 				}
 			
 			
