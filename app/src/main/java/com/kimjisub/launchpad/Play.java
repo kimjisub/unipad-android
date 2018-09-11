@@ -1076,22 +1076,19 @@ public class Play extends BaseActivity {
 				for (; progress < unipack.autoPlay.size() && (addedDelay <= 20 || !complete); progress++) {
 					Unipack.AutoPlay e = unipack.autoPlay.get(progress);
 					
-					if (e.func == Unipack.AutoPlay.ON || e.func == Unipack.AutoPlay.DELAY) {
-						
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
-								unipack.Sound_push(e.currChain, e.x, e.y, e.num);
-								unipack.LED_push(e.currChain, e.x, e.y, e.num);
-								publishProgress(4, e.x, e.y);
-								complete = true;
-								break;
-							case Unipack.AutoPlay.DELAY:
-								if (complete)
-									addedDelay += e.d;
-								break;
-						}
-						if (e.func == Unipack.AutoPlay.ON)
+					switch (e.func) {
+						case Unipack.AutoPlay.ON:
+							unipack.Sound_push(e.currChain, e.x, e.y, e.num);
+							unipack.LED_push(e.currChain, e.x, e.y, e.num);
+							publishProgress(4, e.x, e.y);
+							complete = true;
 							guideItems.add(e);
+							log(e.currChain + " " + e.x + " " + e.y);
+							break;
+						case Unipack.AutoPlay.DELAY:
+							if (complete)
+								addedDelay += e.d;
+							break;
 					}
 				}
 			}

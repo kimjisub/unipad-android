@@ -110,6 +110,20 @@ public class Unipack {
 		}
 	}
 	
+	public Sound Sound_get(int c, int x, int y, int num){
+		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
+		try {
+			ArrayList<Sound> e = sound[c][x][y];
+			return sound[c][x][y].get(num % e.size());
+		} catch (NullPointerException ignored) {
+			return new Sound();
+		} catch (IndexOutOfBoundsException ee) {
+			logErr("Sound_get (" + c + ", " + x + ", " + y + ")");
+			ee.printStackTrace();
+			return new Sound();
+		}
+	}
+	
 	//==========================================================================================
 	
 	public ArrayList<LED>[][][] led = null;
@@ -619,7 +633,15 @@ public class Unipack {
 								case "on":
 								case "o":
 									autoPlay.add(new AutoPlay(x, y, currChain, map[x][y]));
+									Sound sound = Sound_get(currChain, x, y, map[x][y]);
 									map[x][y]++;
+									if(sound.wormhole != -1) {
+										autoPlay.add(new AutoPlay(currChain = sound.wormhole));
+										for (int i = 0; i < buttonX; i++)
+											for (int j = 0; j < buttonY; j++)
+												map[i][j] = 0;
+										logErr("shut the fuck up please");
+									}
 									break;
 								case "off":
 								case "f":
