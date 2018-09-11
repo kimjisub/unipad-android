@@ -1288,7 +1288,9 @@ public class Play extends BaseActivity {
 				
 				
 				if (e.wormhole != -1)
-					chainChange(e.wormhole);
+					new Handler().postDelayed(() -> {
+						chainChange(e.wormhole);
+					}, 100);
 			} else {
 				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
