@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
@@ -24,12 +23,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Map;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
 import static com.kimjisub.launchpad.manage.Tools.logErr;
 
-public class Store extends BaseActivity {
+public class FBStore extends BaseActivity {
 	
 	LinearLayout LL_list;
 	
@@ -37,15 +35,12 @@ public class Store extends BaseActivity {
 	
 	int downloadCount = 0;
 	
-	FirebaseFirestore db;
-	Map<String, Data> mapData;
-	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 	
 	void initVar() {
 		LL_list = findViewById(R.id.list);
 		
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Store.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStore.this);
 	}
 	
 	// =========================================================================================
@@ -53,7 +48,7 @@ public class Store extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_store);
+		setContentView(R.layout.activity_fbstore);
 		initVar();
 		
 		initUI();
@@ -103,7 +98,7 @@ public class Store extends BaseActivity {
 					}
 					final boolean isDownloaded = _isDownloaded;
 					
-					final PackView packView = new PackView(Store.this)
+					final PackView packView = new PackView(FBStore.this)
 						.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 						.setTitle(d.title)
 						.setSubTitle(d.producerName)
@@ -175,7 +170,7 @@ public class Store extends BaseActivity {
 		String title = lang(R.string.errOccur);
 		String subTitle = lang(R.string.UnableToAccessServer);
 		
-		PackView packView = PackView.errItem(Store.this, title, subTitle, null);
+		PackView packView = PackView.errItem(FBStore.this, title, subTitle, null);
 		
 		
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -214,7 +209,7 @@ public class Store extends BaseActivity {
 			
 			@Override
 			protected void onPreExecute() {
-				Store.this.downloadCount++;
+				FBStore.this.downloadCount++;
 				
 				code = DStoreDatas.get(i).code;
 				title = DStoreDatas.get(i).title;
@@ -300,7 +295,7 @@ public class Store extends BaseActivity {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
-				Store.this.downloadCount--;
+				FBStore.this.downloadCount--;
 				
 				return null;
 			}
@@ -338,7 +333,7 @@ public class Store extends BaseActivity {
 		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
 			@Override
 			public void onChange(long data) {
-				SettingManager.PrevStoreCount.save(Store.this, data);
+				SettingManager.PrevStoreCount.save(FBStore.this, data);
 			}
 		});
 	}
@@ -353,7 +348,7 @@ public class Store extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		if (downloadCount > 0)
-			Toast.makeText(Store.this, lang(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+			Toast.makeText(FBStore.this, lang(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
 		else
 			super.onBackPressed();
 	}
