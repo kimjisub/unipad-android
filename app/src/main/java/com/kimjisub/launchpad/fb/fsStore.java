@@ -26,14 +26,14 @@ public class fsStore {
 	String producerName;
 	long rank;
 	String title;
-	Date upload_at;
+	Date uploadAt;
 	String url;
 	String websiteURL;
 	
 	public fsStore() {
 	}
 	
-	public fsStore(long chainCount, String code, String description, long difficulty, long downloadCount, boolean isAutoPlay, boolean isLED, boolean isNew, boolean isProLight, boolean isWormhole, long playTime, String producerName, long rank, String title, Date upload_at, String url, String websiteURL) {
+	public fsStore(long chainCount, String code, String description, long difficulty, long downloadCount, boolean isAutoPlay, boolean isLED, boolean isNew, boolean isProLight, boolean isWormhole, long playTime, String producerName, long rank, String title, Date uploadAt, String url, String websiteURL) {
 		this.chainCount = chainCount;
 		this.code = code;
 		this.description = description;
@@ -48,7 +48,7 @@ public class fsStore {
 		this.producerName = producerName;
 		this.rank = rank;
 		this.title = title;
-		this.upload_at = upload_at;
+		this.uploadAt = uploadAt;
 		this.url = url;
 		this.websiteURL = websiteURL;
 	}
@@ -56,6 +56,7 @@ public class fsStore {
 	@Exclude
 	public Map<String, Object> toMap() {
 		HashMap<String, Object> result = new HashMap<>();
+		
 		result.put("chainCount", chainCount);
 		result.put("code", code);
 		result.put("description", description);
@@ -70,7 +71,7 @@ public class fsStore {
 		result.put("producerName", producerName);
 		result.put("rank", rank);
 		result.put("title", title);
-		result.put("upload_at", upload_at);
+		result.put("uploadAt", uploadAt);
 		result.put("url", url);
 		result.put("websiteURL", websiteURL);
 		
