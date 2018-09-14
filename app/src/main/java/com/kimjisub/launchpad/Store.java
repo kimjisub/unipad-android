@@ -3,13 +3,16 @@ package com.kimjisub.launchpad;
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.kimjisub.design.PackView;
-import com.kimjisub.launchpad.fb.fbStore;
+import com.kimjisub.launchpad.fb.FsStore;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
@@ -24,6 +27,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.kimjisub.launchpad.manage.Tools.log;
@@ -31,48 +35,41 @@ import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class Store extends BaseActivity {
 	
+	// UI
 	LinearLayout LL_list;
 	
+	// Vars
 	String UnipackRootURL;
-	
+	File folder;
 	int downloadCount = 0;
+	String[] downloadedProjectList;
+	Map<String, PackItem> MAP_packItem;
+	ArrayList<String> AL_packList;
 	
+	// FireBase
 	FirebaseFirestore db;
-	Map<String, Data> mapData;
-	
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 	
+	class PackItem {
+		PackView packView;
+		FsStore fsStore;
+		
+		public PackItem(PackView packView, FsStore fsStore) {
+			this.packView = packView;
+			this.fsStore = fsStore;
+		}
+		
+	}
+	
 	void initVar() {
+		// UI
 		LL_list = findViewById(R.id.list);
 		
+		// Vars
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Store.this);
-	}
-	
-	// =========================================================================================
-	
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_store);
-		initVar();
-		
-		initUI();
-		getStoreCount.run();
-	}
-	
-	ArrayList<PackView> PV_items;
-	ArrayList<fbStore> DStoreDatas;
-	
-	void initUI() {
-		LL_list.removeAllViews();
-		PV_items = new ArrayList<>();
-		DStoreDatas = new ArrayList<>();
-		
-		addErrorItem();
-		
-		final String[] downloadedProjectList;
-		
-		File folder = new File(UnipackRootURL);
+		folder = new File(UnipackRootURL);
+		MAP_packItem = new HashMap<>();
+		AL_packList = new ArrayList<>();
 		
 		if (folder.isDirectory()) {
 			downloadedProjectList = new String[folder.listFiles().length];
@@ -83,93 +80,145 @@ public class Store extends BaseActivity {
 			downloadedProjectList = new String[0];
 			folder.mkdir();
 		}
-		
-		new Networks.GetStoreList().setDataListener(new Networks.GetStoreList.onDataListener() {
-			@Override
-			public void onAdd(final fbStore d) {
-				try {
-					if (DStoreDatas.size() == 0)
-						LL_list.removeAllViews();
-					DStoreDatas.add(d);
-					d.index = DStoreDatas.size() - 1;
-					
-					
-					boolean _isDownloaded = false;
-					for (String downloadedProject : downloadedProjectList) {
-						if (d.code.equals(downloadedProject)) {
-							_isDownloaded = true;
-							break;
-						}
-					}
-					final boolean isDownloaded = _isDownloaded;
-					
-					final PackView packView = new PackView(Store.this)
-						.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
-						.setTitle(d.title)
-						.setSubTitle(d.producerName)
-						.addInfo(lang(R.string.downloadCount), (new DecimalFormat("#,##0")).format(d.downloadCount))
-						.setOption1(lang(R.string.LED_), d.isLED)
-						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
-						.setPlayImageShow(false)
-						.setOnEventListener(new PackView.OnEventListener() {
-							@Override
-							public void onViewClick(PackView v) {
-								if (v.getStatus())
-									itemClicked(v, d.index);
-							}
-							
-							@Override
-							public void onViewLongClick(PackView v) {
-								v.toggleDetail();
-							}
-							
-							@Override
-							public void onPlayClick(PackView v) {
-							}
-							
-							@Override
-							public void onFunctionBtnClick(PackView v, int index) {
-							}
-						})
-						.setStatus(!isDownloaded);
-					
-					
-					final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-					int left = dpToPx(16);
-					int top = 0;
-					int right = dpToPx(16);
-					int bottom = dpToPx(10);
-					lp.setMargins(left, top, right, bottom);
-					PV_items.add(packView);
-					LL_list.addView(packView, 0, lp);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			
-			@Override
-			public void onChange(final fbStore d) {
-				try {
-					
-					int i;
-					for (i = 0; i < DStoreDatas.size(); i++) {
-						fbStore item = DStoreDatas.get(i);
-						if (item.code.equals(d.code))
-							break;
-					}
-					
-					PackView itemStore = PV_items.get(i);
-					itemStore.setTitle(d.title)
-						.setSubTitle(d.producerName)
-						.setOption1(lang(R.string.LED_), d.isLED)
-						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
-						.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}).run();
 	}
+	
+	// =========================================================================================
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_store);
+		initVar();
+		
+		initList();
+		
+		getStoreCount.run();
+	}
+	
+	
+	void initList() {
+		LL_list.removeAllViews();
+		
+		addErrorItem();
+		
+		db = FirebaseFirestore.getInstance();
+		
+		db.collection("Unipack-Store")
+			.addSnapshotListener((value, e) -> {
+				if (e != null) {
+					Log.e("com.kimjisub.log", "Listen failed.", e);
+					return;
+				}
+				
+				for (DocumentChange dc : value.getDocumentChanges()) {
+					QueryDocumentSnapshot document = dc.getDocument();
+					
+					try {
+						String key = document.getId();
+						
+						FsStore item = new FsStore(document);
+						
+						
+						switch (dc.getType()) {
+							
+							case ADDED:
+								added(key, item);
+								Log.e("com.kimjisub.log", "New: " + key);
+								break;
+							case MODIFIED:
+								modified(key, item);
+								Log.e("com.kimjisub.log", "Modified: " + key);
+								break;
+							case REMOVED:
+								removed(key);
+								Log.e("com.kimjisub.log", "Removed: " + key);
+								break;
+						}
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+				}
+				
+			});
+	}
+	
+	void added(String key, FsStore d) throws Exception {
+		if (MAP_packItem.size() == 0)
+			LL_list.removeAllViews();
+		
+		
+		boolean _isDownloaded = false;
+		for (String downloadedProject : downloadedProjectList) {
+			if (d.code.equals(downloadedProject)) {
+				_isDownloaded = true;
+				break;
+			}
+		}
+		final boolean isDownloaded = _isDownloaded;
+		
+		final PackView packView = new PackView(Store.this)
+			.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
+			.setTitle(d.title)
+			.setSubTitle(d.producerName)
+			.addInfo(lang(R.string.downloadCount), (new DecimalFormat("#,##0")).format(d.downloadCount))
+			.setOption1(lang(R.string.LED_), d.isLED)
+			.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
+			.setPlayImageShow(false)
+			.setOnEventListener(new PackView.OnEventListener() {
+				@Override
+				public void onViewClick(PackView v) {
+					if (v.getStatus())
+						itemClicked(v, d.index);
+				}
+				
+				@Override
+				public void onViewLongClick(PackView v) {
+					v.toggleDetail();
+				}
+				
+				@Override
+				public void onPlayClick(PackView v) {
+				}
+				
+				@Override
+				public void onFunctionBtnClick(PackView v, int index) {
+				}
+			})
+			.setStatus(!isDownloaded);
+		
+		
+		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+		int left = dpToPx(16);
+		int top = 0;
+		int right = dpToPx(16);
+		int bottom = dpToPx(10);
+		lp.setMargins(left, top, right, bottom);
+		
+		
+		MAP_packItem.put(key, new PackItem(packView, d));
+		LL_list.addView(packView, 0, lp);
+	}
+	
+	void modified(String key, FsStore d) throws Exception {
+		PackItem packItem = MAP_packItem.get(key);
+		
+		
+		packItem.packView.setTitle(d.title)
+			.setSubTitle(d.producerName)
+			.setOption1(lang(R.string.LED_), d.isLED)
+			.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
+			.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
+		
+		packItem.fsStore = d;
+		
+		
+		MAP_packItem.put(key, packItem);
+	}
+	
+	void removed(String key) throws Exception {
+		MAP_packItem.remove(key);
+	}
+	
 	
 	void addErrorItem() {
 		String title = lang(R.string.errOccur);
@@ -205,23 +254,12 @@ public class Store extends BaseActivity {
 			String UnipackURL;
 			
 			String code;
-			String title;
-			String producerName;
-			boolean isAutoPlay;
-			boolean isLED;
-			int downloadCount;
 			String URL;
 			
 			@Override
 			protected void onPreExecute() {
 				Store.this.downloadCount++;
 				
-				code = DStoreDatas.get(i).code;
-				title = DStoreDatas.get(i).title;
-				producerName = DStoreDatas.get(i).producerName;
-				isAutoPlay = DStoreDatas.get(i).isAutoPlay;
-				isLED = DStoreDatas.get(i).isLED;
-				downloadCount = DStoreDatas.get(i).downloadCount;
 				URL = DStoreDatas.get(i).URL;
 				
 				for (int i = 1; ; i++) {
