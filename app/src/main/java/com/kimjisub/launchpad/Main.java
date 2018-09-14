@@ -19,9 +19,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -51,7 +49,6 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
@@ -208,7 +205,12 @@ public class Main extends BaseActivity {
 				.show();
 		});
 		
-		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, Store.class), 0));
+		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, FBStore.class), 0));
+		
+		FAB_store.setOnLongClickListener(view -> {
+			startActivityForResult(new Intent(Main.this, Store.class), 0);
+			return false;
+		});
 		
 		FAB_setting.setOnClickListener(v -> startActivity(new Intent(Main.this, Setting.class)));
 		
@@ -404,7 +406,7 @@ public class Main extends BaseActivity {
 		PackView packView = PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
 			@Override
 			public void onViewClick(PackView v) {
-				startActivity(new Intent(Main.this, Store.class));
+				startActivity(new Intent(Main.this, FBStore.class));
 			}
 			
 			@Override
