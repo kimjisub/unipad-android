@@ -12,6 +12,7 @@ android {
 		vectorDrawables.useSupportLibrary = true
 		renderscriptTargetApi 19
 		renderscriptSupportModeEnabled true
+		multiDexEnabled true
 	}
 	buildTypes {
 		release {
@@ -21,6 +22,7 @@ android {
 	}
 	
 	dexOptions {
+		jumboMode true
 		javaMaxHeapSize "4g"
 	}
 	compileOptions {

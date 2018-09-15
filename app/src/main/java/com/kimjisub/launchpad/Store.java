@@ -168,7 +168,7 @@ public class Store extends BaseActivity {
 				@Override
 				public void onViewClick(PackView v) {
 					if (v.getStatus())
-						itemClicked(v, d.index);
+						itemClicked(v, key);
 				}
 				
 				@Override
@@ -239,8 +239,8 @@ public class Store extends BaseActivity {
 	// ========================================================================================= Activity
 	
 	@SuppressLint("StaticFieldLeak")
-	void itemClicked(final PackView v, final int i) {
-		log("itemClicked(" + i + ")");
+	void itemClicked(final PackView v, final String key) {
+		log("itemClicked(" + key + ")");
 		
 		v.togglePlay(true);
 		v.updateFlagColor(color(R.color.gray1));
@@ -254,13 +254,13 @@ public class Store extends BaseActivity {
 			String UnipackURL;
 			
 			String code;
-			String URL;
+			String url;
 			
 			@Override
 			protected void onPreExecute() {
 				Store.this.downloadCount++;
 				
-				URL = DStoreDatas.get(i).URL;
+				url = MAP_packItem.get(key).fsStore.url;
 				
 				for (int i = 1; ; i++) {
 					if (i == 1)
@@ -282,13 +282,13 @@ public class Store extends BaseActivity {
 				Networks.sendGet("https://us-central1-unipad-e41ab.cloudfunctions.net/increaseDownloadCount/" + code);
 				try {
 					
-					URL url = new URL(URL);
+					URL url = new URL(this.url);
 					HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 					connection.setConnectTimeout(5000);
 					connection.setReadTimeout(5000);
 					
 					fileSize = connection.getContentLength();
-					log(URL);
+					log(this.url);
 					log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 					
@@ -373,12 +373,7 @@ public class Store extends BaseActivity {
 		super.onResume();
 		initVar();
 		
-		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
-			@Override
-			public void onChange(long data) {
-				SettingManager.PrevStoreCount.save(Store.this, data);
-			}
-		});
+		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(Store.this, data));
 	}
 	
 	@Override
