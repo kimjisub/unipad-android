@@ -11,8 +11,6 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class FsStore {
 	
-	public int index = 0;
-	
 	public long chainCount;
 	public String code;
 	public String description;
