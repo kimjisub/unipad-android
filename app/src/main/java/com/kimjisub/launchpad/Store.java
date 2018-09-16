@@ -91,7 +91,6 @@ public class Store extends BaseActivity {
 		initVar();
 		
 		initList();
-		
 		getStoreCount.run();
 	}
 	
