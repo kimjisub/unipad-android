@@ -1,0 +1,134 @@
+<resources>
+	<string name="languageCode">in</string>
+	<string name="language">Indonesian</string>
+	<string name="translator">Kyung Kyung</string>
+	<string name="translatedBy">Translated by %1$s</string>
+	
+	<string name="app_name">UniPad</string>
+	
+	<!--Word-->
+	<string name="accept">Terima</string>
+	<string name="cancel">Batal</string>
+	<string name="warning">Peringatan</string>
+	<string name="error">ERROR</string>
+	<string name="errOccur">Terjadi Masalah.</string>
+	<string name="wait">Tunggu sebentar…</string>
+	<string name="analyzing">Menganalisis</string>
+	<string name="loading">Memuat</string>
+	<string name="downloading">Mengunduh</string>
+	<string name="success">Sukses</string>
+	<string name="failed">Gagal</string>
+	<string name="delete">Hapus</string>
+	<string name="edit">Edit</string>
+	<string name="update">Pembaharuan</string>
+	<string name="ignore">Abaikan</string>
+	<string name="apply">Terapkan</string>
+	<string name="restart">Mulai Ulang</string>
+	<string name="using">Gunakan</string>
+	<string name="path">Path</string>
+	<string name="quit">Berhenti</string>
+	<string name="website">Website</string>
+	
+	<!--Menu-->
+	<string name="reconnect_launchpad">Menghubungkan kembali ke Launchpad</string>
+	<string name="list_refresh">Segarkan Daftar</string>
+	<string name="import_unipack">Muat Unipack</string>
+	<string name="store">Toko</string>
+	
+	<!--Setting-->
+	<string name="setting">Pengaturan</string>
+	<string name="information">Informasi</string>
+	<string name="select_theme">Memilih Skin</string>
+	<string name="use_sd_card">Gunakan SD Card</string>
+	<string name="removeAds">Hilangkan Ads</string>
+	<string name="purchaseComplete">Pembelian Selesai</string>
+	<string name="openSourceLicense">Lisensi Sumber Terbuka</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	
+	<!--Community-->
+	<string name="community">Komunitas</string>
+	<string name="officialHomepage">Situs Web Resmi</string>
+	<string name="officialHomepage_">Situs Web Resmi Unipad</string>
+	<string name="officialFacebook">Facebook Resmi</string>
+	<string name="officialFacebook_">Dukungan Teknis</string>
+	<string name="facebookCommunity">Komunitas Facebook</string>
+	<string name="facebookCommunity_">Inggris</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Korea</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk untuk pengembang kimjisub</string>
+	<string name="kakaotalk_">Dukungan Teknis Lainnya</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Dukungan Teknis Lainnya</string>
+	
+	<!--Unipack Info-->
+	<string name="title">Judul</string>
+	<string name="producerName">Pembuat</string>
+	<string name="scale">ukuran</string>
+	<string name="chainCount">Banyaknya Chain</string>
+	<string name="capacity">Ukuran file</string>
+	
+	<!--Unipack Function-->
+	<string name="LED">LED</string>
+	<string name="autoPlay">Putar Otomatis</string>
+	<string name="LED_">LED ●</string>
+	<string name="autoPlay_">PUTAR OTOMATIS ●</string>
+	<string name="feedbackLight">Tampilkan Sentuhan</string>
+	<string name="traceLog">Jejak Sentuhan</string>
+	<string name="traceLogClear">Jejak sentuhan di ulangi.</string>
+	<string name="record">Merekam</string>
+	<string name="hideUI">Sembunyikan antarmuka pengguna</string>
+	<string name="watermark">Watermark</string>
+	<string name="proLightMode">Pro Light Mode</string>
+	
+	<!--Version-->
+	<string name="newVersionFound">Versi Terbaru Terdeteksi.</string>
+	<string name="currentVersion">Versi sekarang</string>
+	<string name="newVersion">Versi terbaru</string>
+	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
+	<string name="unipackNotFound">Unipack tidak ditemukan.</string>
+	<string name="clickToAddUnipack">Klik Untuk Menambahkan Unipacks.</string>
+	<string name="doYouWantToDeleteProject">Apakah Anda ingin menghapus proyek ini?</string>
+	<string name="doYouWantToRemapProject">Apakah Anda ingin memetakan ulang Putar Otomatis ini?</string>
+	<string name="remapDone">Pemetakan ulang Putar Otomatis telah berhasil diselesaikan.</string>
+	<string name="remapFail">Putar Otomatis tidak ada</string>
+	<string name="cantReadFolder">Tidak dapat membaca folder.</string>
+	<string name="cantReadFile">Tidak dapat membaca file.</string>
+	<string name="analyzeComplete">Analisis berhasil!</string>
+	<string name="analyzeFailed">Analisis gagal…</string>
+	<string name="isNotAnUniPack">Ini bukan Unipack</string>
+	<string name="pressAgainToGoBack">Tekan lagi untuk keluar.</string>
+	<string name="copied">Disalin ke clipboard.</string>
+	<string name="skinMemoryErr">Gagal menerapkan skin.\nRestart app.</string>
+	<string name="skinErr">Gagal menerapkan skin.\nReset skin.</string>
+	
+	<string name="outOfMemory">Memori penuh..\nHapus beberapa dan ulangi.</string>
+	<string name="outOfCPU">Tidak dapat memulai pack\nkarena spesifikasi telepon…\nCoba lagi.</string>
+	<string name="doNotSee">Tidak melihat lagi</string>
+	
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Menghubungkan ke Launchpad…</string>
+	<string name="midiDevicesNotDetected">MIDI Perangkat Tidak Terdeteksi</string>
+	<string name="signal_SpeedFirst">Kecepatan Pertama</string>
+	<string name="signal_avoidAfterimage">Menghindari setelah gambar</string>
+	
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Tidak dapat kembali saat unduhan berlangsung</string>
+	<string name="downloadCount">Unduh count</string>
+	<string name="UnableToAccessServer">Server tidak dapat diakses.</string>
+	
+	<!--Theme-->
+	<string name="themeDownload">Unduh Tema</string>
+	<string name="requireRestart">Mohon mulai ulang app.</string>
+	<string name="doYouWantToRestartApp">Apakah Anda ingin memulai ulang app?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
+
+</resources>
