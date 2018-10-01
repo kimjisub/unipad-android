@@ -526,16 +526,16 @@ public class Main extends BaseActivity {
 				protected void onPreExecute() {
 					autoplay1 = new ArrayList<>();
 					for (Unipack.AutoPlay e : unipack.autoPlay) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
+						switch (e.getFunc()) {
+							case Unipack.AutoPlay.Companion.getON():
 								autoplay1.add(e);
 								break;
-							case Unipack.AutoPlay.OFF:
+							case Unipack.AutoPlay.Companion.getOFF():
 								break;
-							case Unipack.AutoPlay.CHAIN:
+							case Unipack.AutoPlay.Companion.getCHAIN():
 								autoplay1.add(e);
 								break;
-							case Unipack.AutoPlay.DELAY:
+							case Unipack.AutoPlay.Companion.getDELAY():
 								autoplay1.add(e);
 								break;
 						}
@@ -544,20 +544,20 @@ public class Main extends BaseActivity {
 					autoplay2 = new ArrayList<>();
 					Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
 					for (Unipack.AutoPlay e : autoplay1) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
+						switch (e.getFunc()) {
+							case Unipack.AutoPlay.Companion.getON():
 								if (prevDelay != null) {
 									autoplay2.add(prevDelay);
 									prevDelay = null;
 								}
 								autoplay2.add(e);
 								break;
-							case Unipack.AutoPlay.CHAIN:
+							case Unipack.AutoPlay.Companion.getCHAIN():
 								autoplay2.add(e);
 								break;
-							case Unipack.AutoPlay.DELAY:
+							case Unipack.AutoPlay.Companion.getDELAY():
 								if (prevDelay != null)
-									prevDelay.d += e.d;
+									prevDelay.setD(prevDelay.getD() + e.getD());
 								else
 									prevDelay = e;
 								break;
@@ -582,17 +582,17 @@ public class Main extends BaseActivity {
 					MediaPlayer mplayer = new MediaPlayer();
 					for (Unipack.AutoPlay e : autoplay2) {
 						try {
-							switch (e.func) {
-								case Unipack.AutoPlay.ON:
-									int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
+							switch (e.getFunc()) {
+								case Unipack.AutoPlay.Companion.getON():
+									int num = e.getNum() % unipack.sound[e.getCurrChain()][e.getX()][e.getY()].size();
+									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.getCurrChain()][e.getX()][e.getY()].get(num).getURL());
 									autoplay3.add(e);
 									break;
-								case Unipack.AutoPlay.CHAIN:
+								case Unipack.AutoPlay.Companion.getCHAIN():
 									autoplay3.add(e);
 									break;
-								case Unipack.AutoPlay.DELAY:
-									e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+								case Unipack.AutoPlay.Companion.getDELAY():
+									e.setD(nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET);
 									autoplay3.add(e);
 									break;
 							}
@@ -605,25 +605,25 @@ public class Main extends BaseActivity {
 					
 					StringBuilder stringBuilder = new StringBuilder();
 					for (Unipack.AutoPlay e : autoplay3) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
+						switch (e.getFunc()) {
+							case Unipack.AutoPlay.Companion.getON():
 								//int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-								stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
+								stringBuilder.append("t ").append(e.getX() + 1).append(" ").append(e.getY() + 1).append("\n");
 								break;
-							case Unipack.AutoPlay.CHAIN:
-								stringBuilder.append("c ").append(e.c + 1).append("\n");
+							case Unipack.AutoPlay.Companion.getCHAIN():
+								stringBuilder.append("c ").append(e.getC() + 1).append("\n");
 								break;
-							case Unipack.AutoPlay.DELAY:
-								stringBuilder.append("d ").append(e.d).append("\n");
+							case Unipack.AutoPlay.Companion.getDELAY():
+								stringBuilder.append("d ").append(e.getD()).append("\n");
 								break;
 						}
 					}
 					try {
-						File filePre = new File(unipack.URL, "autoPlay");
-						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+						File filePre = new File(unipack.getURL(), "autoPlay");
+						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.getURL(), "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
 						
-						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
+						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.getURL() + "/autoPlay")));
 						writer.write(stringBuilder.toString());
 						writer.close();
 					} catch (FileNotFoundException e) {
@@ -712,16 +712,16 @@ public class Main extends BaseActivity {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
 					
-					if (unipack.ErrorDetail == null) {
+					if (unipack.getErrorDetail() == null) {
 						msg1 = lang(R.string.analyzeComplete);
 						msg2 = unipack.getInfoText(Main.this);
-					} else if (unipack.CriticalError) {
+					} else if (unipack.getCriticalError()) {
 						msg1 = lang(R.string.analyzeFailed);
-						msg2 = unipack.ErrorDetail;
+						msg2 = unipack.getErrorDetail();
 						FileManager.deleteFolder(UnipackURL);
 					} else {
 						msg1 = lang(R.string.warning);
-						msg2 = unipack.ErrorDetail;
+						msg2 = unipack.getErrorDetail();
 					}
 					
 				} catch (IOException e) {
