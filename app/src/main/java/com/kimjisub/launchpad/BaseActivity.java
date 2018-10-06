@@ -43,14 +43,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	// ========================================================================================= vungle
 	
-	final VunglePub vunglePub = VunglePub.getInstance();
+	/*final VunglePub vunglePub = VunglePub.getInstance();
 	
 	public void initVungle(){
 		final String app_id = "your Vungle App ID";
 		
 		// Publisher SDK 초기화
 		vunglePub.init(this, app_id);
-	}
+	}*/
 	
 	// ========================================================================================= Admob
 	
