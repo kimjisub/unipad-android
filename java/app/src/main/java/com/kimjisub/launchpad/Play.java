@@ -30,13 +30,13 @@ import android.widget.Toast;
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
-import com.kimjisub.design.SyncCheckBox;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.launchpad.playManager.ColorManager;
+import com.kimjisub.unipad.designkit.SyncCheckBox;
 
 import java.util.ArrayList;
 
@@ -1662,6 +1662,6 @@ public class Play extends BaseActivity {
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded)
-			showAds();
+			showAdmob();
 	}
 }
