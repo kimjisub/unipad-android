@@ -1,0 +1,134 @@
+<resources>
+	<string name="languageCode">fr</string>
+	<string name="language">French</string>
+	<string name="translator">Medhy Fournier (PowerPixel)</string>
+	<string name="translatedBy">Traduit par %1$s</string>
+	
+	<string name="app_name">UniPad</string>
+	
+	<!--Word-->
+	<string name="accept">Accepter</string>
+	<string name="cancel">Annuler</string>
+	<string name="warning">Attention</string>
+	<string name="error">ERREUR</string>
+	<string name="errOccur">Une erreur est survenue.</string>
+	<string name="wait">Veuillez patienter…</string>
+	<string name="analyzing">Analyse</string>
+	<string name="loading">Chargement</string>
+	<string name="downloading">Téléchargement</string>
+	<string name="success">Succés</string>
+	<string name="failed">Échec</string>
+	<string name="delete">Supprimer</string>
+	<string name="edit">Éditer</string>
+	<string name="update">Mettre à jour</string>
+	<string name="ignore">Ignorer</string>
+	<string name="apply">Appliquer</string>
+	<string name="restart">Redémarrer</string>
+	<string name="using">Using</string>
+	<string name="path">Chemin</string>
+	<string name="quit">Quitter</string>
+	<string name="website">Website</string>
+	
+	<!--Menu-->
+	<string name="reconnect_launchpad">Reconnecter le Launchpad</string>
+	<string name="list_refresh">Rafraîchir la liste</string>
+	<string name="import_unipack">Charger le pack</string>
+	<string name="store">Store</string>
+	
+	<!--Setting-->
+	<string name="setting">Paramètres</string>
+	<string name="information">Information</string>
+	<string name="select_theme">Choisir un skin</string>
+	<string name="use_sd_card">Utiliser la carte SD</string>
+	<string name="removeAds">Supprimer les publicités</string>
+	<string name="purchaseComplete">Achat terminé !</string>
+	<string name="openSourceLicense">Licence Open Source</string>
+	<string name="FCMToken">Token FCM</string>
+	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
+	
+	<!--Community-->
+	<string name="community">Communauté</string>
+	<string name="officialHomepage">Site Officiel</string>
+	<string name="officialHomepage_">Site officiel d\'Unipad</string>
+	<string name="officialFacebook">Page Facebok</string>
+	<string name="officialFacebook_">Support Technique</string>
+	<string name="facebookCommunity">Communauté Facebook</string>
+	<string name="facebookCommunity_">anglais</string>
+	<string name="naverCafe">Page Naver Cafe</string>
+	<string name="naverCafe_">coréen</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk to Dev. kimjisub</string>
+	<string name="kakaotalk_">Autre discussion que le support technique</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Autre discussion que le support technique</string>
+	
+	<!--Unipack Info-->
+	<string name="title">Titre</string>
+	<string name="producerName">Producteur</string>
+	<string name="scale">Taille</string>
+	<string name="chainCount">Nombre de pages</string>
+	<string name="capacity">Taille du fichier</string>
+	
+	<!--Unipack Function-->
+	<string name="LED">LED</string>
+	<string name="autoPlay">Autoplay</string>
+	<string name="LED_">LED ●</string>
+	<string name="autoPlay_">AUTOPLAY ●</string>
+	<string name="feedbackLight">Montrer la touche active</string>
+	<string name="traceLog">Log touches</string>
+	<string name="traceLogClear">Le Log des touches à été réinitialisé.</string>
+	<string name="record">Enregistrer</string>
+	<string name="hideUI">Hide UI</string>
+	<string name="watermark">Watermark</string>
+	<string name="proLightMode">Pro Light Mode</string>
+	
+	<!--Version-->
+	<string name="newVersionFound">Nouvelle version détectée.</string>
+	<string name="currentVersion">Version actuelle</string>
+	<string name="newVersion">Dernière version</string>
+	
+	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
+	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
+	<string name="unipackNotFound">Pack introuvable.</string>
+	<string name="clickToAddUnipack">Ajouter un pack.</string>
+	<string name="doYouWantToDeleteProject">Supprimer ce pack ?</string>
+	<string name="doYouWantToRemapProject">Remapper l\'autoplay du pack ?</string>
+	<string name="remapDone">L\'autoPlay a bien été remmappé.</string>
+	<string name="remapFail">L\'AutoPlay n\'existe pas</string>
+	<string name="cantReadFolder">Dossier illisible.</string>
+	<string name="cantReadFile">Fichier illisible.</string>
+	<string name="analyzeComplete">Analyse terminée!</string>
+	<string name="analyzeFailed">Échec de l\'analyse…</string>
+	<string name="isNotAnUniPack">Ce n\'est pas un pack</string>
+	<string name="pressAgainToGoBack">Appuyer de nouveau pour quitter.</string>
+	<string name="copied">Copié dans le presse-papier.</string>
+	<string name="skinMemoryErr">Impossible d\'appliquer le skin.\nRedemarrez l\'appli.</string>
+	<string name="skinErr">Impossible d\'appliquer le skin.\nReinitialisez le skin.</string>
+	
+	<string name="outOfMemory">Dépassement mémoire..\nLibérez de la mémoire puis réessayez.</string>
+	<string name="outOfCPU">Le pack ne peut être chargé\nà cause des specifications du téléphone\nRéessayer.</string>
+	<string name="doNotSee">Do not see anymore</string>
+	
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Connection au launchpad…</string>
+	<string name="midiDevicesNotDetected">Appareil MIDI non detecté</string>
+	<string name="signal_SpeedFirst">Privilégier la vitesse</string>
+	<string name="signal_avoidAfterimage">Éviter l\'afterimage</string>
+	
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Impossible de quitter en plein téléchargement</string>
+	<string name="downloadCount">Nombre de téléchargements</string>
+	<string name="UnableToAccessServer">Serveur inaccessible.</string>
+	
+	<!--Theme-->
+	<string name="themeDownload">Télécharger des thèmes</string>
+	<string name="requireRestart">Veuillez redémarrer l\'appli.</string>
+	<string name="doYouWantToRestartApp">Voulez-vous redémarrer l\'appli ?</string>
+	
+	<!--ThemePack-->
+	<string name="theme_name">Default Skin</string>
+	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_author">UniPad dev.</string>
+
+</resources>
