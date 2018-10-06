@@ -41,30 +41,41 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
 	}
 	
-	//========================================================================================== Ads
+	// ========================================================================================= vungle
+	
+	final VunglePub vunglePub = VunglePub.getInstance();
+	
+	public void initVungle(){
+		final String app_id = "your Vungle App ID";
+		
+		// Publisher SDK 초기화
+		vunglePub.init(this, app_id);
+	}
+	
+	// ========================================================================================= Admob
 	
 	private static InterstitialAd interstitialAd;
 	
-	public void showAds() {
+	public void showAdmob() {
 		if (!Billing.isPremium) {
 			long prevTime = SettingManager.PrevAdsShowTime.load(BaseActivity.this);
 			long currTime = System.currentTimeMillis();
 			
 			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
 				SettingManager.PrevAdsShowTime.save(this, currTime);
-				logAds("showAds");
+				logAds("showAdmob");
 				
 				if (interstitialAd.isLoaded()) {
 					logAds("isLoaded");
 					interstitialAd.show();
-					loadAds();
+					loadAdmob();
 					logAds("show!");
 				} else {
 					logAds("! isLoaded (set listener)");
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
-							loadAds();
+							loadAdmob();
 							logAds("show!");
 						}
 					});
@@ -73,14 +84,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 		}
 	}
 	
-	public void initAds() {
+	public void initAdmob() {
 		if (!Billing.isPremium) {
-			logAds("initAds");
-			loadAds();
+			logAds("initAdmob");
+			loadAdmob();
 		}
 	}
 	
-	void loadAds() {
+	void loadAdmob() {
 		interstitialAd = new InterstitialAd(BaseActivity.this);
 		interstitialAd.setAdUnitId(ADUNITID);
 		interstitialAd.loadAd(new AdRequest.Builder()

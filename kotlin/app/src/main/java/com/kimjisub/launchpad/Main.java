@@ -29,13 +29,13 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.unipad.designkit.PackView;
 
 import org.json.JSONObject;
 
@@ -130,7 +130,7 @@ public class Main extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
-		initAds();
+		initAdmob();
 		
 		startIntro();
 	}
@@ -162,7 +162,7 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					showAds();
+					showAdmob();
 					new Handler().postDelayed(() -> {
 						RL_intro.setVisibility(View.GONE);
 						startMain();
@@ -192,13 +192,13 @@ public class Main extends BaseActivity {
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String fileURL) {
-						Toast.makeText(Main.this, "onFileSelected: "+ fileURL, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onFileSelected: " + fileURL, Toast.LENGTH_SHORT).show();
 						loadUnipack(fileURL);
 					}
 					
 					@Override
 					public void onURLChanged(String folderURL) {
-						Toast.makeText(Main.this, "onURLChanged: "+ folderURL, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onURLChanged: " + folderURL, Toast.LENGTH_SHORT).show();
 						SettingManager.FileExplorerPath.save(Main.this, folderURL);
 					}
 				})
@@ -246,7 +246,7 @@ public class Main extends BaseActivity {
 	String[] URLs;
 	Unipack[] unipacks;
 	
-	void checkThings(){
+	void checkThings() {
 		versionCheck();
 		newPackCheck();
 	}
@@ -352,7 +352,7 @@ public class Main extends BaseActivity {
 								}
 							});
 						
-						if(unipack.websiteURL != null)
+						if (unipack.websiteURL != null)
 							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
 						runOnUiThread(() -> {
@@ -363,7 +363,7 @@ public class Main extends BaseActivity {
 							int bottom = dpToPx(10);
 							lp.setMargins(left, top, right, bottom);
 							LL_list.addView(packView, lp);
-							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
+							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							packView.setAnimation(a);
 						});
@@ -526,16 +526,16 @@ public class Main extends BaseActivity {
 				protected void onPreExecute() {
 					autoplay1 = new ArrayList<>();
 					for (Unipack.AutoPlay e : unipack.autoPlay) {
-						switch (e.getFunc()) {
-							case Unipack.AutoPlay.Companion.getON():
+						switch (e.func) {
+							case Unipack.AutoPlay.ON:
 								autoplay1.add(e);
 								break;
-							case Unipack.AutoPlay.Companion.getOFF():
+							case Unipack.AutoPlay.OFF:
 								break;
-							case Unipack.AutoPlay.Companion.getCHAIN():
+							case Unipack.AutoPlay.CHAIN:
 								autoplay1.add(e);
 								break;
-							case Unipack.AutoPlay.Companion.getDELAY():
+							case Unipack.AutoPlay.DELAY:
 								autoplay1.add(e);
 								break;
 						}
@@ -544,20 +544,20 @@ public class Main extends BaseActivity {
 					autoplay2 = new ArrayList<>();
 					Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
 					for (Unipack.AutoPlay e : autoplay1) {
-						switch (e.getFunc()) {
-							case Unipack.AutoPlay.Companion.getON():
+						switch (e.func) {
+							case Unipack.AutoPlay.ON:
 								if (prevDelay != null) {
 									autoplay2.add(prevDelay);
 									prevDelay = null;
 								}
 								autoplay2.add(e);
 								break;
-							case Unipack.AutoPlay.Companion.getCHAIN():
+							case Unipack.AutoPlay.CHAIN:
 								autoplay2.add(e);
 								break;
-							case Unipack.AutoPlay.Companion.getDELAY():
+							case Unipack.AutoPlay.DELAY:
 								if (prevDelay != null)
-									prevDelay.setD(prevDelay.getD() + e.getD());
+									prevDelay.d += e.d;
 								else
 									prevDelay = e;
 								break;
@@ -582,17 +582,17 @@ public class Main extends BaseActivity {
 					MediaPlayer mplayer = new MediaPlayer();
 					for (Unipack.AutoPlay e : autoplay2) {
 						try {
-							switch (e.getFunc()) {
-								case Unipack.AutoPlay.Companion.getON():
-									int num = e.getNum() % unipack.sound[e.getCurrChain()][e.getX()][e.getY()].size();
-									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.getCurrChain()][e.getX()][e.getY()].get(num).getURL());
+							switch (e.func) {
+								case Unipack.AutoPlay.ON:
+									int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
+									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
 									autoplay3.add(e);
 									break;
-								case Unipack.AutoPlay.Companion.getCHAIN():
+								case Unipack.AutoPlay.CHAIN:
 									autoplay3.add(e);
 									break;
-								case Unipack.AutoPlay.Companion.getDELAY():
-									e.setD(nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET);
+								case Unipack.AutoPlay.DELAY:
+									e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 									autoplay3.add(e);
 									break;
 							}
@@ -605,25 +605,25 @@ public class Main extends BaseActivity {
 					
 					StringBuilder stringBuilder = new StringBuilder();
 					for (Unipack.AutoPlay e : autoplay3) {
-						switch (e.getFunc()) {
-							case Unipack.AutoPlay.Companion.getON():
+						switch (e.func) {
+							case Unipack.AutoPlay.ON:
 								//int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-								stringBuilder.append("t ").append(e.getX() + 1).append(" ").append(e.getY() + 1).append("\n");
+								stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
 								break;
-							case Unipack.AutoPlay.Companion.getCHAIN():
-								stringBuilder.append("c ").append(e.getC() + 1).append("\n");
+							case Unipack.AutoPlay.CHAIN:
+								stringBuilder.append("c ").append(e.c + 1).append("\n");
 								break;
-							case Unipack.AutoPlay.Companion.getDELAY():
-								stringBuilder.append("d ").append(e.getD()).append("\n");
+							case Unipack.AutoPlay.DELAY:
+								stringBuilder.append("d ").append(e.d).append("\n");
 								break;
 						}
 					}
 					try {
-						File filePre = new File(unipack.getURL(), "autoPlay");
-						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.getURL(), "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+						File filePre = new File(unipack.URL, "autoPlay");
+						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
 						
-						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.getURL() + "/autoPlay")));
+						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
 						writer.write(stringBuilder.toString());
 						writer.close();
 					} catch (FileNotFoundException e) {
@@ -712,16 +712,16 @@ public class Main extends BaseActivity {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
 					
-					if (unipack.getErrorDetail() == null) {
+					if (unipack.ErrorDetail == null) {
 						msg1 = lang(R.string.analyzeComplete);
 						msg2 = unipack.getInfoText(Main.this);
-					} else if (unipack.getCriticalError()) {
+					} else if (unipack.CriticalError) {
 						msg1 = lang(R.string.analyzeFailed);
-						msg2 = unipack.getErrorDetail();
+						msg2 = unipack.ErrorDetail;
 						FileManager.deleteFolder(UnipackURL);
 					} else {
 						msg1 = lang(R.string.warning);
-						msg2 = unipack.getErrorDetail();
+						msg2 = unipack.ErrorDetail;
 					}
 					
 				} catch (IOException e) {
