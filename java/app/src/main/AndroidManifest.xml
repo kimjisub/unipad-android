@@ -9,6 +9,7 @@
 	<uses-permission android:name="android.permission.INTERNET"/>
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.STORAGE"/>
 	<uses-permission android:name="android.permission.PERMISSIONS_STORAGE"/>
 	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE"/>
@@ -102,11 +103,6 @@
 			</intent-filter>
 		</activity>
 		
-		<activity
-		    android:name="com.google.android.gms.ads.AdActivity"
-		    android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
-		    android:theme="@android:style/Theme.Translucent"/>
-		
 		<service
 		    android:name=".MyFirebaseMessagingService">
 			<intent-filter>
@@ -120,6 +116,19 @@
 				<action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
 			</intent-filter>
 		</service>
+		
+		<activity
+		    android:name="com.google.android.gms.ads.AdActivity"
+		    android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
+		    android:theme="@android:style/Theme.Translucent"/>
+		
+		<activity android:name="com.vungle.publisher.VideoFullScreenAdActivity"
+		          android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
+		          android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
+		
+		<activity android:name="com.vungle.publisher.MraidFullScreenAdActivity"
+		          android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
+		          android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
 		
 		<meta-data
 		    android:name="com.google.firebase.messaging.default_notification_icon"
