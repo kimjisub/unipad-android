@@ -43,55 +43,11 @@ public class Chain extends RelativeLayout {
 	public Chain(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		initView(context);
-		getAttrs(attrs);
 	}
 	
 	public Chain(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs);
 		initView(context);
-		getAttrs(attrs, defStyle);
-	}
-	
-	private void getAttrs(AttributeSet attrs) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView);
-		setTypeArray(typedArray);
-	}
-	
-	private void getAttrs(AttributeSet attrs, int defStyle) {
-		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView, defStyle, 0);
-		setTypeArray(typedArray);
-	}
-	
-	private void setTypeArray(TypedArray typedArray) {
-		
-		int color = typedArray.getResourceId(R.styleable.PackView_flagColor, R.drawable.border_play_blue);
-		//setFlagColor(color);
-		
-		String title = typedArray.getString(R.styleable.PackView_title);
-		//setTitle(title);
-		
-		String subTitle = typedArray.getString(R.styleable.PackView_subTitle);
-		//setSubTitle(subTitle);
-		
-		Boolean LED = typedArray.getBoolean(R.styleable.PackView_LED, false);
-		//setLED(LED);
-		
-		Boolean autoPlay = typedArray.getBoolean(R.styleable.PackView_AutoPlay, false);
-		//setAutoPlay(autoPlay);
-		
-		String size = typedArray.getString(R.styleable.PackView_size);
-		//setSize(size);
-		
-		String chain = typedArray.getString(R.styleable.PackView_chain);
-		//setChain(chain);
-		
-		int capacity = typedArray.getInteger(R.styleable.PackView_capacity, 0);
-		//setCapacity(capacity);
-		
-		Boolean optionVisibility = typedArray.getBoolean(R.styleable.PackView_optionVisibility, true);
-		//setOptionVisibility(optionVisibility);
-		
-		typedArray.recycle();
 	}
 	
 	public void setOnClickListener(OnClickListener listener) {

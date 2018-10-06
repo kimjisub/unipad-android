@@ -29,13 +29,13 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.unipad.designkit.PackView;
 
 import org.json.JSONObject;
 
@@ -130,7 +130,7 @@ public class Main extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
-		initAds();
+		initAdmob();
 		
 		startIntro();
 	}
@@ -162,7 +162,7 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					showAds();
+					showAdmob();
 					new Handler().postDelayed(() -> {
 						RL_intro.setVisibility(View.GONE);
 						startMain();
@@ -192,13 +192,13 @@ public class Main extends BaseActivity {
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String fileURL) {
-						Toast.makeText(Main.this, "onFileSelected: "+ fileURL, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onFileSelected: " + fileURL, Toast.LENGTH_SHORT).show();
 						loadUnipack(fileURL);
 					}
 					
 					@Override
 					public void onURLChanged(String folderURL) {
-						Toast.makeText(Main.this, "onURLChanged: "+ folderURL, Toast.LENGTH_SHORT).show();
+						Toast.makeText(Main.this, "onURLChanged: " + folderURL, Toast.LENGTH_SHORT).show();
 						SettingManager.FileExplorerPath.save(Main.this, folderURL);
 					}
 				})
@@ -246,7 +246,7 @@ public class Main extends BaseActivity {
 	String[] URLs;
 	Unipack[] unipacks;
 	
-	void checkThings(){
+	void checkThings() {
 		versionCheck();
 		newPackCheck();
 	}
@@ -352,7 +352,7 @@ public class Main extends BaseActivity {
 								}
 							});
 						
-						if(unipack.websiteURL != null)
+						if (unipack.websiteURL != null)
 							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
 						runOnUiThread(() -> {
@@ -363,7 +363,7 @@ public class Main extends BaseActivity {
 							int bottom = dpToPx(10);
 							lp.setMargins(left, top, right, bottom);
 							LL_list.addView(packView, lp);
-							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.btn_fade_in);
+							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							packView.setAnimation(a);
 						});
