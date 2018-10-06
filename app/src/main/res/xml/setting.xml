@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	
+	<PreferenceCategory
+	    android:title="@string/setting">
+		<Preference
+		    android:key="select_theme"
+		    android:title="@string/select_theme"/>
+		<SwitchPreference
+		    android:defaultValue="false"
+		    android:key="use_sd_card"
+		    android:title="@string/use_sd_card"/>
+		<Preference
+		    android:key="removeAds"
+		    android:title="@string/removeAds"/>
+	</PreferenceCategory>
+	
+	<PreferenceCategory
+	    android:title="@string/information">
+		<Preference
+		    android:key="community"
+		    android:title="@string/community"/>
+		<Preference
+		    android:key="OpenSourceLicense"
+		    android:title="@string/openSourceLicense"/>
+		<Preference
+		    android:key="FCMToken"
+		    android:title="@string/FCMToken"/>
+		<Preference
+		    android:key="language"
+		    android:summary="@string/languageCode"
+		    android:title="@string/language"/>
+		<Preference
+		    android:key="copyright"
+		    android:title="@string/copyright"/>
+	</PreferenceCategory>
+</PreferenceScreen>
