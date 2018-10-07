@@ -7,12 +7,12 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -24,7 +24,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -63,6 +62,7 @@ public class Main extends BaseActivity {
 	Billing billing;
 	
 	// Main
+	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
 	ScrollView SV_scrollView;
 	LinearLayout LL_list;
@@ -91,6 +91,7 @@ public class Main extends BaseActivity {
 		TV_version = findViewById(R.id.version);
 		
 		// Main
+		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
 		SV_scrollView = findViewById(R.id.scrollView);
 		LL_list = findViewById(R.id.list);
@@ -154,11 +155,7 @@ public class Main extends BaseActivity {
 			}
 		}).start();
 		
-		try {
-			TV_version.setText(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
-		} catch (PackageManager.NameNotFoundException e) {
-			e.printStackTrace();
-		}
+		TV_version.setText(BuildConfig.VERSION_NAME);
 		
 		TedPermission.with(this)
 			.setPermissionListener(new PermissionListener() {
@@ -902,15 +899,8 @@ public class Main extends BaseActivity {
 			try {
 				String currVersion = BuildConfig.VERSION_NAME;
 				if (version != null && !currVersion.equals(version)) {
-					new AlertDialog.Builder(Main.this)
-						.setTitle(lang(R.string.newVersionFound))
-						.setMessage(lang(R.string.currentVersion) + " : " + currVersion + "\n" +
-							lang(R.string.newVersion) + " : " + version)
-						.setPositiveButton(lang(R.string.update), (dialog, which) -> {
-							startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
-							dialog.dismiss();
-						})
-						.setNegativeButton(lang(R.string.ignore), (dialog, which) -> dialog.dismiss())
+					Snackbar.make(RL_rootView, lang(R.string.newVersionFound) + "\n" + currVersion + " -> " + version, Snackbar.LENGTH_LONG)
+						.setAction(R.string.update, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))))
 						.show();
 				}
 			} catch (Exception ignore) {
