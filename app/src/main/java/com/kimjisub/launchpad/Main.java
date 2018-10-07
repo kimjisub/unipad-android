@@ -49,6 +49,7 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
@@ -170,7 +171,7 @@ public class Main extends BaseActivity {
 				}
 				
 				@Override
-				public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+				public void onPermissionDenied(List<String> deniedPermissions) {
 					finish();
 				}
 			})
