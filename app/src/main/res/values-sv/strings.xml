@@ -85,8 +85,6 @@
 	
 	<!--Version-->
 	<string name="newVersionFound">Ny version hittad.</string>
-	<string name="currentVersion">Denna versionen</string>
-	<string name="newVersion">Senaste versionen</string>
 	
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>

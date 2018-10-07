@@ -85,8 +85,6 @@
 	
 	<!--Version-->
 	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
-	<string name="currentVersion">현재 버전</string>
-	<string name="newVersion">최신 버전</string>
 	
 	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
