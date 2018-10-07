@@ -16,9 +16,8 @@
 		    android:layout_width="match_parent"
 		    android:layout_height="match_parent"
 		    android:orientation="vertical">
-		
-		
 		</LinearLayout>
+	
 	</LinearLayout>
 	
 	<LinearLayout
@@ -28,19 +27,26 @@
 	    android:orientation="vertical"
 	    android:visibility="invisible"/>
 	
-	<ScrollView
-	    android:id="@+id/scrollView"
+	<android.support.v4.widget.SwipeRefreshLayout
+	    android:id="@+id/swipeRefreshLayout"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent">
 		
-		<LinearLayout
-		    android:id="@+id/list"
+		<ScrollView
+		    android:id="@+id/scrollView"
 		    android:layout_width="match_parent"
-		    android:layout_height="wrap_content"
-		    android:orientation="vertical"
-		    android:paddingTop="16dp"/>
+		    android:layout_height="match_parent">
+			
+			<LinearLayout
+			    android:id="@+id/list"
+			    android:layout_width="match_parent"
+			    android:layout_height="wrap_content"
+			    android:orientation="vertical"
+			    android:paddingTop="16dp"/>
+		
+		</ScrollView>
 	
-	</ScrollView>
+	</android.support.v4.widget.SwipeRefreshLayout>
 	
 	<com.github.clans.fab.FloatingActionMenu
 	    android:id="@+id/floatingMenu"
@@ -70,18 +76,6 @@
 	    app:menu_labels_textColor="#f2f1f1"
 	    app:menu_labels_textSize="10dp"
 	    app:menu_openDirection="up">
-		
-		
-		
-		<com.github.clans.fab.FloatingActionButton
-		    android:id="@+id/fab_refreshList"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:src="@drawable/ic_refresh_white_24dp"
-		    app:fab_colorNormal="@color/red"
-		    app:fab_colorPressed="@color/red"
-		    app:fab_label="@string/list_refresh"
-		    app:fab_size="mini"/>
 		
 		<com.github.clans.fab.FloatingActionButton
 		    android:id="@+id/fab_reconnectLaunchpad"
@@ -122,6 +116,7 @@
 		    app:fab_colorPressed="@color/red"
 		    app:fab_label="@string/setting"
 		    app:fab_size="mini"/>
+	
 	</com.github.clans.fab.FloatingActionMenu>
 	
 	<RelativeLayout
