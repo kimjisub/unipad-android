@@ -85,6 +85,8 @@
 	
 	<!--Version-->
 	<string name="newVersionFound">May bagong bersyon na natuklasan.</string>
+	<string name="currentVersion">Kasalukuyang bersyon</string>
+	<string name="newVersion">Ang pinakabagong bersyon</string>
 	
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>

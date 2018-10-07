@@ -85,6 +85,8 @@
 	
 	<!--Version-->
 	<string name="newVersionFound">Bản cập nhật mới. </string>
+	<string name="currentVersion">Bản cập nhật hiện tại</string>
+	<string name="newVersion">Bản cập nhật mới nhất</string>
 	
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
