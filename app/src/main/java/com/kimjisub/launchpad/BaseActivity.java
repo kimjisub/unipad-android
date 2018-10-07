@@ -96,7 +96,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		interstitialAd = new InterstitialAd(this);
 		interstitialAd.setAdUnitId(ADUNITID);
 		interstitialAd.loadAd(new AdRequest.Builder()
-			//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
+			.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 			.build());
 	}
 	

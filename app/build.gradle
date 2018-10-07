@@ -19,7 +19,13 @@ android {
 	buildTypes {
 		release {
 			minifyEnabled true
+			useProguard true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+		debug {
+			minifyEnabled false
+			useProguard true
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
 		}
 	}
 	
@@ -41,7 +47,6 @@ allprojects {
 }
 
 dependencies {
-	testImplementation 'junit:junit:4.12'
 	implementation fileTree(include: ['*.jar'], dir: 'libs')
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 	implementation 'com.android.support:appcompat-v7:27.1.1'
@@ -50,6 +55,7 @@ dependencies {
 	implementation 'com.android.support:design:27.1.1'
 	implementation "com.android.support:customtabs:27.1.1"
 	implementation 'com.android.support:multidex:1.0.3'
+	testImplementation 'junit:junit:4.12'
 	
 	implementation 'com.google.android.gms:play-services-ads:16.0.0'
 	implementation 'com.google.android.gms:play-services-identity:16.0.0'
