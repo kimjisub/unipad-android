@@ -176,7 +176,7 @@ public class Setting extends PreferenceActivity {
 		
 		findPreference("FCMToken").setOnPreferenceClickListener(preference -> {
 			putClipboard(FirebaseInstanceId.getInstance().getToken());
-			Toast.makeText(Setting.this, R.string.copied, Toast.LENGTH_SHORT).show();
+			BaseActivity.showToast(Setting.this, R.string.copied);
 			return false;
 		});
 		

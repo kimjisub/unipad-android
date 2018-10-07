@@ -12,6 +12,7 @@ import android.os.RemoteException;
 import android.widget.Toast;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.kimjisub.launchpad.BaseActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,7 +112,7 @@ public class Billing {
 			activity.startIntentSenderForResult(pendingIntent.getIntentSender(), 1001, new Intent(), 0, 0, 0);
 			
 		} catch (Exception e) {
-			Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+			BaseActivity.showToast(activity, e.getMessage());
 			e.printStackTrace();
 		}
 	}

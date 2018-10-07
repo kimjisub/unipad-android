@@ -311,7 +311,7 @@ public class Play extends BaseActivity {
 							e.printStackTrace();
 						}
 					} else {
-						Toast.makeText(Play.this, lang(R.string.outOfCPU), Toast.LENGTH_LONG).show();
+						showToast(R.string.outOfCPU);
 						finish();
 					}
 					super.onPostExecute(result);
@@ -320,7 +320,7 @@ public class Play extends BaseActivity {
 			
 			
 		} catch (OutOfMemoryError ignore) {
-			Toast.makeText(Play.this, lang(R.string.outOfMemory), Toast.LENGTH_SHORT).show();
+			showToast(R.string.outOfMemory);
 			finish();
 		}
 	}
@@ -345,11 +345,11 @@ public class Play extends BaseActivity {
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 			requestRestart(this);
-			Toast.makeText(Play.this, lang(R.string.skinMemoryErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
+			showToast(lang(R.string.skinMemoryErr) + "\n" + packageName);
 			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			Toast.makeText(Play.this, lang(R.string.skinErr) + "\n" + packageName, Toast.LENGTH_LONG).show();
+			showToast(lang(R.string.skinErr) + "\n" + packageName);
 			SettingManager.SelectedTheme.save(Play.this, getPackageName());
 			return skin_init(num + 1);
 		}
@@ -400,7 +400,7 @@ public class Play extends BaseActivity {
 		SCV_traceLog.setOnCheckedChange((isChecked) -> isTraceLog = isChecked);
 		SCV_traceLog.setOnLongClick(() -> {
 			traceLog_init();
-			Toast.makeText(Play.this, lang(R.string.traceLogClear), Toast.LENGTH_SHORT).show();
+			showToast(R.string.traceLogClear);
 		});
 		SCV_record.setOnCheckedChange((isChecked) -> {
 			isRecord = isChecked;
@@ -409,7 +409,7 @@ public class Play extends BaseActivity {
 				rec_log = "c " + (chain + 1);
 			} else {
 				putClipboard(rec_log);
-				Toast.makeText(Play.this, lang(R.string.copied), Toast.LENGTH_SHORT).show();
+				showToast(R.string.copied);
 				rec_log = "";
 			}
 		});
