@@ -68,6 +68,12 @@ dependencies {
 	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.2'
 	//implementation 'com.airbnb.android:lottie:2.6.0'
 	
+	// Vungle SDK
+	/*implementation 'com.github.vungle:vungle-android-sdk:6.3.17'
+	implementation 'com.google.android.gms:play-services-basement:16.0.1'
+	implementation 'com.google.android.gms:play-services-ads-identifier:16.0.0'
+	implementation 'com.google.android.gms:play-services-location:16.0.0'*/
+	
 	api project(':design')
 }
 
