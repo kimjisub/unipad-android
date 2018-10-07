@@ -193,13 +193,13 @@ public class Main extends BaseActivity {
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String fileURL) {
-						Toast.makeText(Main.this, "onFileSelected: " + fileURL, Toast.LENGTH_SHORT).show();
+						showToast("onFileSelected: " + fileURL);
 						loadUnipack(fileURL);
 					}
 					
 					@Override
 					public void onURLChanged(String folderURL) {
-						Toast.makeText(Main.this, "onURLChanged: " + folderURL, Toast.LENGTH_SHORT).show();
+						showToast("onURLChanged: " + folderURL);
 						SettingManager.FileExplorerPath.save(Main.this, folderURL);
 					}
 				})

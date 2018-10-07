@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -27,7 +28,7 @@ import static com.kimjisub.launchpad.manage.Tools.logAds;
 
 public abstract class BaseActivity extends AppCompatActivity {
 	
-	//========================================================================================== Scale
+	// ========================================================================================= Scale
 	
 	public static int Scale_Width = 0;
 	public static int Scale_Height = 0;
@@ -58,7 +59,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	public void showAdmob() {
 		if (!Billing.isPremium) {
-			long prevTime = SettingManager.PrevAdsShowTime.load(BaseActivity.this);
+			long prevTime = SettingManager.PrevAdsShowTime.load(this);
 			long currTime = System.currentTimeMillis();
 			
 			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
@@ -92,21 +93,33 @@ public abstract class BaseActivity extends AppCompatActivity {
 	}
 	
 	void loadAdmob() {
-		interstitialAd = new InterstitialAd(BaseActivity.this);
+		interstitialAd = new InterstitialAd(this);
 		interstitialAd.setAdUnitId(ADUNITID);
 		interstitialAd.loadAd(new AdRequest.Builder()
 			//.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 			.build());
 	}
 	
-	//========================================================================================== Function
+	// ========================================================================================= Show
+	
+	public void showToast(String msg) {
+		showToast(this, msg);
+	}
+	
+	public void showToast(int resId) {
+		showToast(this, resId);
+	}
 	
 	public void showDialog(String title, String content) {
-		new AlertDialog.Builder(BaseActivity.this)
-			.setTitle(title)
-			.setMessage(content)
-			.setPositiveButton(lang(R.string.accept), null)
-			.show();
+		showDialog(this, title, content);
+	}
+	
+	public static void showToast(Context context, String msg) {
+		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+	}
+	
+	public static void showToast(Context context, int resId) {
+		Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
 	}
 	
 	public static void showDialog(Context context, String title, String content) {
@@ -116,6 +129,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 			.setPositiveButton(lang(context, R.string.accept), null)
 			.show();
 	}
+	
+	// ========================================================================================= Function
 	
 	/*public int pxToDp(int pixel) {
 		float dp = 0;
@@ -133,33 +148,33 @@ public abstract class BaseActivity extends AppCompatActivity {
 		return Math.round(px);
 	}
 	
-	//========================================================================================== Get Resources
+	// ========================================================================================= Get Resources
 	
 	public String lang(int id) {
-		return getResources().getString(id);
+		return lang(this, id);
+	}
+	
+	public int color(int id) {
+		return color(this, id);
+	}
+	
+	public Drawable drawable(int id) {
+		return drawable(this, id);
 	}
 	
 	public static String lang(Context context, int id) {
 		return context.getResources().getString(id);
 	}
 	
-	public int color(int id) {
-		return getResources().getColor(id);
-	}
-	
 	public static int color(Context context, int id) {
 		return context.getResources().getColor(id);
-	}
-	
-	public Drawable drawable(int id) {
-		return getResources().getDrawable(id);
 	}
 	
 	public static Drawable drawable(Context context, int id) {
 		return context.getResources().getDrawable(id);
 	}
 	
-	//========================================================================================== Activity
+	// ========================================================================================= Activity
 	
 	public static ArrayList<Activity> activityList = new ArrayList<>();
 	

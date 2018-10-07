@@ -385,7 +385,7 @@ public class Store extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		if (downloadCount > 0)
-			Toast.makeText(Store.this, lang(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+			showToast(R.string.canNotQuitWhileDownloading);
 		else
 			super.onBackPressed();
 	}

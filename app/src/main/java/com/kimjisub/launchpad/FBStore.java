@@ -330,12 +330,7 @@ public class FBStore extends BaseActivity {
 		super.onResume();
 		initVar();
 		
-		getStoreCount.setOnChangeListener(new Networks.GetStoreCount.onChangeListener() {
-			@Override
-			public void onChange(long data) {
-				SettingManager.PrevStoreCount.save(FBStore.this, data);
-			}
-		});
+		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStore.this, data));
 	}
 	
 	@Override
@@ -348,7 +343,7 @@ public class FBStore extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		if (downloadCount > 0)
-			Toast.makeText(FBStore.this, lang(R.string.canNotQuitWhileDownloading), Toast.LENGTH_SHORT).show();
+			showToast(R.string.canNotQuitWhileDownloading);
 		else
 			super.onBackPressed();
 	}
