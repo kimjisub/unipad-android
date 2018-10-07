@@ -46,9 +46,9 @@
 	    android:id="@+id/floatingMenu"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
-	    android:layout_alignParentBottom="true"
 	    android:layout_alignParentEnd="true"
 	    android:layout_alignParentRight="true"
+	    android:layout_alignParentBottom="true"
 	    android:layout_margin="10dp"
 	    app:menu_animationDelayPerItem="50"
 	    app:menu_backgroundColor="@android:color/transparent"
@@ -70,6 +70,8 @@
 	    app:menu_labels_textColor="#f2f1f1"
 	    app:menu_labels_textSize="10dp"
 	    app:menu_openDirection="up">
+		
+		
 		
 		<com.github.clans.fab.FloatingActionButton
 		    android:id="@+id/fab_refreshList"
