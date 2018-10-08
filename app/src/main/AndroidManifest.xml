@@ -71,7 +71,7 @@
 			    android:resource="@xml/device_filter"/>
 		</activity>
 		<activity
-		    android:name=".ImportPack"
+		    android:name=".ImportPackByFile"
 		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 		    android:screenOrientation="sensorLandscape">
 			<intent-filter>
