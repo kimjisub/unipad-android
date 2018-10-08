@@ -173,8 +173,8 @@ public class Main extends BaseActivity {
 					finish();
 				}
 			})
-			.setRationaleMessage(lang(R.string.permissionRequire))
-			.setDeniedMessage(lang(R.string.permissionDenied))
+			.setRationaleMessage(R.string.permissionRequire)
+			.setDeniedMessage(R.string.permissionDenied)
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
 	}
