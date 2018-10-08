@@ -3,7 +3,6 @@ package com.kimjisub.launchpad;
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
@@ -12,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.kimjisub.launchpad.fb.FsStore;
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -101,7 +101,7 @@ public class Store extends BaseActivity {
 		db.collection("Unipack-Store")
 			.addSnapshotListener((value, e) -> {
 				if (e != null) {
-					Log.e("com.kimjisub.log", "Listen failed.", e);
+					Log.firebase("Listen failed." + e);
 					return;
 				}
 				
@@ -118,15 +118,15 @@ public class Store extends BaseActivity {
 							
 							case ADDED:
 								added(key, item);
-								Log.e("com.kimjisub.log", "New: " + key);
+								Log.firebase("New: " + key);
 								break;
 							case MODIFIED:
 								modified(key, item);
-								Log.e("com.kimjisub.log", "Modified: " + key);
+								Log.firebase("Modified: " + key);
 								break;
 							case REMOVED:
 								removed(key);
-								Log.e("com.kimjisub.log", "Removed: " + key);
+								Log.firebase("Removed: " + key);
 								break;
 						}
 					} catch (Exception e1) {
@@ -235,7 +235,7 @@ public class Store extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final PackView v, final String key) {
-		com.kimjisub.launchpad.manage.Log.log("itemClicked(" + key + ")");
+		Log.log("itemClicked(" + key + ")");
 		
 		v.togglePlay(true);
 		v.updateFlagColor(color(R.color.gray1));
@@ -283,8 +283,8 @@ public class Store extends BaseActivity {
 					connection.setReadTimeout(5000);
 					
 					fileSize = connection.getContentLength();
-					com.kimjisub.launchpad.manage.Log.log(this.url);
-					com.kimjisub.launchpad.manage.Log.log("fileSize : " + fileSize);
+					Log.log(this.url);
+					Log.log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 					
 					InputStream input = new BufferedInputStream(url.openStream());
@@ -315,7 +315,7 @@ public class Store extends BaseActivity {
 						FileManager.unZipFile(UnipackZipURL, UnipackURL);
 						Unipack unipack = new Unipack(UnipackURL, true);
 						if (unipack.CriticalError) {
-							com.kimjisub.launchpad.manage.Log.err(unipack.ErrorDetail);
+							Log.err(unipack.ErrorDetail);
 							publishProgress(-1L);
 							FileManager.deleteFolder(UnipackURL);
 						} else
