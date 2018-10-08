@@ -74,6 +74,11 @@ dependencies {
 	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.3'
 	//implementation 'com.airbnb.android:lottie:2.6.0'
 	
+	implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+	implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+	implementation 'com.squareup.okhttp3:logging-interceptor:3.7.0'
+	implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.6.0'
+	
 	// Vungle SDK
 	/*implementation 'com.github.vungle:vungle-android-sdk:6.3.17'
 	implementation 'com.google.android.gms:play-services-basement:16.0.1'
