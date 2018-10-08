@@ -41,7 +41,7 @@ public class Networks {
 		Call<MakeUrl> makeUrl_make(@Body MakeUrl item);
 		
 		@GET("/makeUrl/{code}")
-		Call<MakeUrl> makeUrl_get(@Path("code") int code);
+		Call<MakeUrl> makeUrl_get(@Path("code") String code);
 		
 	}
 	
