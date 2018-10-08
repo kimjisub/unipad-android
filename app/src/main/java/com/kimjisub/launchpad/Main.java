@@ -968,7 +968,6 @@ public class Main extends BaseActivity {
 			;
 		else
 			updateDriver();
-		
 	}
 	
 	@Override
@@ -988,7 +987,6 @@ public class Main extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		billing.onDestroy();
-		
 		
 		Launchpad.driver.sendClearLED();
 		Launchpad.removeDriverListener(Main.this);

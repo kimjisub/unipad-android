@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.manage.network;
 
-public class makeUrlItem {
+public class MakeUrl {
 	Integer id;
 	String code;
 	String title;

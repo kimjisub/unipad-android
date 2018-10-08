@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.manage;
 
-import android.bluetooth.BluetoothClass;
-
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -9,8 +7,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.launchpad.fb.fbStore;
-import com.kimjisub.launchpad.manage.network.makeUrl;
-import com.kimjisub.launchpad.manage.network.makeUrlItem;
+import com.kimjisub.launchpad.manage.network.MakeUrl;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,18 +16,14 @@ import java.net.URL;
 import java.util.List;
 
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
-import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public class Networks {
 	
@@ -42,13 +35,13 @@ public class Networks {
 		// ================================================================================= /makeUrl
 		
 		@GET("/makeUrl")
-		Call<makeUrl> makeUrl_list();
+		Call<List<MakeUrl>> makeUrl_list();
 		
 		@POST("/makeUrl")
-		Call<makeUrl> makeUrl_make(@Body makeUrlItem item);
+		Call<MakeUrl> makeUrl_make(@Body MakeUrl item);
 		
 		@GET("/makeUrl/{code}")
-		Call<makeUrl> makeUrl_get(@Path("code") int code);
+		Call<MakeUrl> makeUrl_get(@Path("code") int code);
 		
 	}
 	
