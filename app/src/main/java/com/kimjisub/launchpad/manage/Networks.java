@@ -13,7 +13,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -47,9 +53,9 @@ public class Networks {
 	
 	public static UniPadApi getUniPadApi() {
 		if (uniPadApi == null) {
-			HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Log.network(message))
+			HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(Log::network)
 				.setLevel(HttpLoggingInterceptor.Level.BODY);
-			OkHttpClient client = new OkHttpClient.Builder()
+			OkHttpClient client = getUnsafeOkHttpClient()
 				.addInterceptor(interceptor)
 				//.cookieJar(new MyCookieJar())
 				.build();
@@ -63,6 +69,39 @@ public class Networks {
 		}
 		
 		return uniPadApi;
+	}
+	
+	private static OkHttpClient.Builder getUnsafeOkHttpClient() {
+		try {
+			// Create a trust manager that does not validate certificate chains
+			final TrustManager[] trustAllCerts = new TrustManager[]{
+				new X509TrustManager() {
+					@Override
+					public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+					}
+					
+					@Override
+					public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+					}
+					
+					@Override
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+						return new java.security.cert.X509Certificate[]{};
+					}
+				}
+			};
+			
+			final SSLContext sslContext = SSLContext.getInstance("SSL");
+			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+			final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+			
+			OkHttpClient.Builder builder = new OkHttpClient.Builder()
+				.sslSocketFactory(sslSocketFactory)
+				.hostnameVerifier((hostname, session) -> true);
+			return builder;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public static class CheckVersion {
