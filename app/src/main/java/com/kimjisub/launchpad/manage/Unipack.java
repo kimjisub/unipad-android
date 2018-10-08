@@ -30,7 +30,7 @@ public class Unipack {
 	public int buttonY = 0;
 	public int chain = 0;
 	public boolean squareButton = true;
-	public String websiteURL = null;
+	public String website = null;
 	
 	//==========================================================================================
 	
@@ -317,8 +317,8 @@ public class Unipack {
 								case "squareButton":
 									squareButton = value.equals("true");
 									break;
-								case "websiteURL":
-									websiteURL = value;
+								case "website":
+									website = value;
 									break;
 							}
 						} catch (ArrayIndexOutOfBoundsException e) {

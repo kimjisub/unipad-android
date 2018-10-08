@@ -27,12 +27,12 @@ public class FsStore {
 	public String title;
 	public Date uploadAt;
 	public String url;
-	public String websiteURL;
+	public String website;
 	
 	public FsStore() {
 	}
 	
-	public FsStore(long chainCount, String code, String description, long difficulty, long downloadCount, boolean isAutoPlay, boolean isLED, boolean isNew, boolean isProLight, boolean isWormhole, long playTime, String producerName, long rank, String title, Date uploadAt, String url, String websiteURL) {
+	public FsStore(long chainCount, String code, String description, long difficulty, long downloadCount, boolean isAutoPlay, boolean isLED, boolean isNew, boolean isProLight, boolean isWormhole, long playTime, String producerName, long rank, String title, Date uploadAt, String url, String website) {
 		this.chainCount = chainCount;
 		this.code = code;
 		this.description = description;
@@ -49,7 +49,7 @@ public class FsStore {
 		this.title = title;
 		this.uploadAt = uploadAt;
 		this.url = url;
-		this.websiteURL = websiteURL;
+		this.website = website;
 	}
 	
 	public FsStore(QueryDocumentSnapshot document) {
@@ -69,7 +69,7 @@ public class FsStore {
 		title = document.getString("title");
 		uploadAt = document.getDate("uploadAt");
 		url = document.getString("url");
-		websiteURL = document.getString("websiteURL");
+		website = document.getString("website");
 	}
 	
 	public FsStore(Map map) {
@@ -89,7 +89,7 @@ public class FsStore {
 		title = (String)map.get( "title");
 		uploadAt = (Date)map.get( "uploadAt");
 		url = (String)map.get( "url");
-		websiteURL = (String)map.get( "websiteURL");
+		website = (String)map.get( "website");
 	}
 	
 	
@@ -113,7 +113,7 @@ public class FsStore {
 		result.put("title", title);
 		result.put("uploadAt", uploadAt);
 		result.put("url", url);
-		result.put("websiteURL", websiteURL);
+		result.put("website", website);
 		
 		return result;
 	}

@@ -341,14 +341,14 @@ public class Main extends BaseActivity {
 											editUnipack(v, unipack);
 											break;
 										case 2:
-											startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(unipack.websiteURL)));
+											startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(unipack.website)));
 											break;
 									}
 								}
 							});
 						
 						
-						if (unipack.websiteURL != null)
+						if (unipack.website != null)
 							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
 						P_packs.add(new Pack(packView, flagColor, url, unipack));
