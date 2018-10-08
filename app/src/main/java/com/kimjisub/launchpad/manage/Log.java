@@ -5,6 +5,10 @@ public class Log {
 		printLog("com.kimjisub._log", msg);
 	}
 	
+	public static void network(String msg) {
+		printLog("com.kimjisub._network", msg);
+	}
+	
 	public static void activity(String msg) {
 		printLog("com.kimjisub._activity", msg);
 	}
