@@ -13,8 +13,6 @@ import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.launchpad.manage.network.MakeUrl;
 
-import org.json.JSONException;
-
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -73,7 +71,8 @@ public class ImportPackByUrl extends BaseActivity {
 	}
 	
 	enum Status {downloading, analyzing, success, notFound, failed}
-	void setStatus(Status status, String msg){
+	
+	void setStatus(Status status, String msg) {
 		switch (status) {
 			case downloading:
 				TV_title.setText(R.string.downloading);
@@ -126,70 +125,65 @@ public class ImportPackByUrl extends BaseActivity {
 		@Override
 		protected String doInBackground(String[] params) {
 			
+			UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, title, ".zip");
+			UnipackURL = FileManager.makeNextUrl(UnipackRootURL, title, "/");
+			
 			try {
-				UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, title, ".zip");
-				UnipackURL = FileManager.makeNextUrl(UnipackRootURL, title, "/");
+				
+				java.net.URL downloadUrl = new URL(url);
+				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
+				conexion.setConnectTimeout(5000);
+				conexion.setReadTimeout(5000);
+				
+				int fileSize_ = conexion.getContentLength();
+				Log.log(url);
+				fileSize = fileSize_ == -1 ? fileSize : fileSize_;
+				Log.log("fileSize : " + fileSize);
+				
+				InputStream input = new BufferedInputStream(downloadUrl.openStream());
+				OutputStream output = new FileOutputStream(UnipackZipURL);
+				
+				byte data[] = new byte[1024];
+				
+				long total = 0;
+				
+				int count;
+				int skip = 100;
+				while ((count = input.read(data)) != -1) {
+					total += count;
+					skip--;
+					if (skip == 0) {
+						publishProgress("down", (int) ((float) total / fileSize * 100) + "%");
+						skip = 100;
+					}
+					output.write(data, 0, count);
+				}
+				
+				output.flush();
+				output.close();
+				input.close();
+				publishProgress("anal", title);
 				
 				try {
-					
-					java.net.URL downloadUrl = new URL(url);
-					HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
-					conexion.setConnectTimeout(5000);
-					conexion.setReadTimeout(5000);
-					
-					int fileSize_ = conexion.getContentLength();
-					Log.log(url);
-					fileSize = fileSize_ == -1 ? fileSize : fileSize_;
-					Log.log("fileSize : " + fileSize);
-					
-					InputStream input = new BufferedInputStream(downloadUrl.openStream());
-					OutputStream output = new FileOutputStream(UnipackZipURL);
-					
-					byte data[] = new byte[1024];
-					
-					long total = 0;
-					
-					int count;
-					int skip = 100;
-					while ((count = input.read(data)) != -1) {
-						total += count;
-						skip--;
-						if (skip == 0) {
-							publishProgress("down", (int) ((float) total / fileSize * 100) + "%");
-							skip = 100;
-						}
-						output.write(data, 0, count);
-					}
-					
-					output.flush();
-					output.close();
-					input.close();
-					publishProgress("anal", title);
-					
-					try {
-						FileManager.unZipFile(UnipackZipURL, UnipackURL);
-						Unipack unipack = new Unipack(UnipackURL, true);
-						if (unipack.CriticalError) {
-							Log.err(unipack.ErrorDetail);
-							publishProgress("fail", unipack.ErrorDetail);
-							FileManager.deleteFolder(UnipackURL);
-						} else
-							publishProgress("succ", unipack.title);
-						
-					} catch (Exception e) {
-						publishProgress("fail", e.toString());
+					FileManager.unZipFile(UnipackZipURL, UnipackURL);
+					Unipack unipack = new Unipack(UnipackURL, true);
+					if (unipack.CriticalError) {
+						Log.err(unipack.ErrorDetail);
+						publishProgress("fail", unipack.ErrorDetail);
 						FileManager.deleteFolder(UnipackURL);
-						e.printStackTrace();
-					}
-					FileManager.deleteFolder(UnipackZipURL);
-					
+					} else
+						publishProgress("succ", unipack.title);
 					
 				} catch (Exception e) {
 					publishProgress("fail", e.toString());
+					FileManager.deleteFolder(UnipackURL);
 					e.printStackTrace();
 				}
-			} catch (JSONException e) {
-				publishProgress("fail", "Not Exist");
+				FileManager.deleteFolder(UnipackZipURL);
+				
+				
+			} catch (Exception e) {
+				publishProgress("fail", e.toString());
 				e.printStackTrace();
 			}
 			
