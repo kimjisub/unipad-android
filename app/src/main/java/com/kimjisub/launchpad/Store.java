@@ -257,15 +257,8 @@ public class Store extends BaseActivity {
 				
 				url = MAP_packItem.get(key).fsStore.url;
 				
-				for (int i = 1; ; i++) {
-					if (i == 1)
-						UnipackZipURL = UnipackRootURL + "/" + code + ".zip";
-					else
-						UnipackZipURL = UnipackRootURL + "/" + code + " (" + i + ").zip";
-					
-					if (!new File(UnipackZipURL).exists())
-						break;
-				}
+				UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, code, ".zip");
+				
 				UnipackURL = UnipackRootURL + "/" + code + "/";
 				
 				super.onPreExecute();

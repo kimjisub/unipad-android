@@ -200,6 +200,23 @@ public class FileManager {
 		return out;
 	}
 	
+	public static String makeNextUrl(String path, String name, String extension) {
+		String ret;
+		for (int i = 1; ; i++) {
+			if (i == 1)
+				ret = path + "/" + name + extension;
+			else
+				ret = path + "/" + name + " (" + i + ")" + extension;
+			
+			if (!new File(ret).exists())
+				break;
+		}
+		
+		Log.test(path + "/" + name + extension);
+		Log.test(ret);
+		return ret;
+	}
+	
 	public static int wavDuration(MediaPlayer mplayer, String URL) {
 		try {
 			mplayer.reset();

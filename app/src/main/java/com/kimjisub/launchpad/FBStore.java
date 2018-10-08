@@ -216,15 +216,8 @@ public class FBStore extends BaseActivity {
 				downloadCount = DStoreDatas.get(i).downloadCount;
 				URL = DStoreDatas.get(i).URL;
 				
-				for (int i = 1; ; i++) {
-					if (i == 1)
-						UnipackZipURL = UnipackRootURL + "/" + code + ".zip";
-					else
-						UnipackZipURL = UnipackRootURL + "/" + code + " (" + i + ").zip";
-					
-					if (!new File(UnipackZipURL).exists())
-						break;
-				}
+				
+				UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, code, ".zip");
 				UnipackURL = UnipackRootURL + "/" + code + "/";
 				
 				super.onPreExecute();

@@ -33,14 +33,7 @@ public class ImportPackByFile extends BaseActivity {
 		File file = new File(UnipackZipURL);
 		String name = file.getName();
 		String name_ = name.substring(0, name.lastIndexOf("."));
-		for (int i = 1; ; i++) {
-			if (i == 1)
-				UnipackURL = UnipackRootURL + "/" + name_ + "/";
-			else
-				UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
-			if (!new File(UnipackURL).exists())
-				break;
-		}
+		UnipackURL = FileManager.makeNextUrl(UnipackRootURL, name_, "/");
 	}
 	
 	@Override
