@@ -9,6 +9,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.launchpad.fb.fbStore;
+import com.kimjisub.launchpad.manage.network.makeUrl;
+import com.kimjisub.launchpad.manage.network.makeUrlItem;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -32,61 +34,26 @@ import retrofit2.http.Query;
 
 public class Networks {
 	
-	static final String APIURL = "http://ec2-18-223-111-184.us-east-2.compute.amazonaws.com";
-	static PhotoframeApi photoframeApi;
+	static final String APIURL = "https://api.unipad.kr";
+	static UniPadApi uniPadApi;
 	
-	
-	public interface PhotoframeApi {
+	public interface UniPadApi {
 		
-		// ================================================================================= /auth
+		// ================================================================================= /makeUrl
 		
-		/*@POST("/auth/login")
-		Call<Res> auth_login(@Body LoginUser loginUser);
+		@GET("/makeUrl")
+		Call<makeUrl> makeUrl_list();
 		
-		@POST("/auth/logout")
-		Call<Res> auth_logout();
+		@POST("/makeUrl")
+		Call<makeUrl> makeUrl_make(@Body makeUrlItem item);
 		
-		@POST("/auth/signup")
-		Call<Res> auth_signup(@Body RegisterUser registerUser);
-		
-		// ================================================================================= /device
-		
-		@POST("/device/register")
-		Call<Res> device_register(@Body BluetoothClass.Device registerUser);
-		
-		@PATCH("/device/{id}")
-		Call<Res> device_patch(@Path("id") int id, @Body Device registerUser);
-		
-		@DELETE("/device/{id}")
-		Call<Res> device_delete(@Path("id") int id);
-		
-		@GET("/device/")
-		Call<List<Device>> device_list();
-		
-		@GET("/device/{id}")
-		Call<Device> device_getByID(@Path("id") int id);
-		
-		@GET("/device/{id}/imagepreview?")
-		Call<ResponseBody> device_imagepreview(@Path("id") int id, @Query("size") int size);
-		
-		@PATCH("/device/{id}/image/{image_id}")
-		Call<Res> device_setImage(@Path("id") int id, @Path("image_id") int image_id);
-		
-		// ================================================================================= /image_list
-		
-		@GET("/image")
-		Call<List<Integer>> image_list();
-		
-		@GET("/image/{id}")
-		Call<ResponseBody> image_getByID(@Path("id") int id);
-		
-		@GET("/image/{id}?")
-		Call<ResponseBody> image_getByID(@Path("id") int id, @Query("size") int size);*/
+		@GET("/makeUrl/{code}")
+		Call<makeUrl> makeUrl_get(@Path("code") int code);
 		
 	}
 	
-	public static PhotoframeApi getPhotoframeApi() {
-		if (photoframeApi == null) {
+	public static UniPadApi getUniPadApi() {
+		if (uniPadApi == null) {
 			HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Log.network(message))
 				.setLevel(HttpLoggingInterceptor.Level.BODY);
 			OkHttpClient client = new OkHttpClient.Builder()
@@ -99,10 +66,10 @@ public class Networks {
 				.addConverterFactory(GsonConverterFactory.create())
 				.client(client)
 				.build();
-			photoframeApi = retrofit.create(PhotoframeApi.class);
+			uniPadApi = retrofit.create(UniPadApi.class);
 		}
 		
-		return photoframeApi;
+		return uniPadApi;
 	}
 	
 	public static class CheckVersion {
