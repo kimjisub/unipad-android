@@ -32,6 +32,7 @@ import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -236,11 +237,21 @@ public class Main extends BaseActivity {
 		updateDriver();
 	}
 	
-	int projectsCount = 0;
-	PackView[] PV_items;
-	int[] flagColors;
-	String[] URLs;
-	Unipack[] unipacks;
+	ArrayList<Pack> P_packs;
+	
+	class Pack {
+		PackView packView;
+		int flagColors;
+		String url;
+		Unipack unipack;
+		
+		public Pack(PackView packView, int flagColors, String url, Unipack unipack) {
+			this.packView = packView;
+			this.flagColors = flagColors;
+			this.url = url;
+			this.unipack = unipack;
+		}
+	}
 	
 	void checkThings() {
 		versionCheck();
@@ -252,10 +263,10 @@ public class Main extends BaseActivity {
 		if (!updateComplete)
 			return;
 		
-		
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 		
+		P_packs = new ArrayList<>();
 		LL_list.removeAllViews();
 		
 		new Thread(() -> {
@@ -265,31 +276,17 @@ public class Main extends BaseActivity {
 				if (projectFolder.isDirectory()) {
 					
 					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
-					File[] projects = new File[projectFiles.length];
 					
-					
-					projectsCount = 0;
+					int i = 0;
 					for (File project : projectFiles) {
 						if (!project.isDirectory()) continue;
-						projects[projectsCount] = project;
-						projectsCount++;
-					}
-					
-					PV_items = new PackView[projectsCount];
-					flagColors = new int[projectsCount];
-					URLs = new String[projectsCount];
-					unipacks = new Unipack[projectsCount];
-					
-					for (int i = 0; i < projectsCount; i++) {
-						final int I = i;
-						File project = projects[I];
+						int I = i;
 						
 						final String url = UnipackRootURL + "/" + project.getName();
 						final Unipack unipack = new Unipack(url, false);
 						int flagColor;
 						String title = unipack.title;
 						String producerName = unipack.producerName;
-						
 						
 						if (unipack.ErrorDetail == null) {
 							flagColor = color(R.color.skyblue);
@@ -315,14 +312,14 @@ public class Main extends BaseActivity {
 							.setOnEventListener(new PackView.OnEventListener() {
 								@Override
 								public void onViewClick(PackView v) {
-									togglePlay(I);
-									toggleDetail(-1);
+									togglePlay(url);
+									toggleDetail(null);
 								}
 								
 								@Override
 								public void onViewLongClick(PackView v) {
-									togglePlay(-1);
-									toggleDetail(I);
+									togglePlay(null);
+									toggleDetail(url);
 								}
 								
 								@Override
@@ -350,36 +347,40 @@ public class Main extends BaseActivity {
 								}
 							});
 						
+						
 						if (unipack.websiteURL != null)
 							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
-						runOnUiThread(() -> {
+						P_packs.add(new Pack(packView, flagColor, url, unipack));
+						
+						i++;
+					}
+					
+					//TODO 정렬
+					
+					runOnUiThread(() -> {
+						for (Pack pack : P_packs) {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 							int left = dpToPx(16);
 							int top = 0;
 							int right = dpToPx(16);
 							int bottom = dpToPx(10);
 							lp.setMargins(left, top, right, bottom);
-							LL_list.addView(packView, lp);
+							LL_list.addView(pack.packView, lp);
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
-							packView.setAnimation(a);
-						});
-						
-						PV_items[I] = packView;
-						flagColors[I] = flagColor;
-						URLs[I] = url;
-						unipacks[I] = unipack;
-						
-					}
+							pack.packView.setAnimation(a);
+							
+							Log.test(pack.url + "");
+						}
+					});
 					
-					if (projectsCount == 0) {
+					
+					if (P_packs.size() == 0)
 						runOnUiThread(this::addErrorItem);
-					}
 					
 				} else {
 					projectFolder.mkdir();
-					
 					runOnUiThread(this::addErrorItem);
 				}
 				
@@ -750,29 +751,30 @@ public class Main extends BaseActivity {
 	
 	int playIndex = -1;
 	
-	void togglePlay(int n) {
-		playIndex = n;
-		for (int i = 0; i < PV_items.length; i++) {
-			PackView packView = PV_items[i];
-			if (packView != null) {
-				if (n != i)
-					packView.togglePlay(false, color(R.color.red), flagColors[i]);
-				else
-					packView.togglePlay(color(R.color.red), flagColors[i]);
-			}
+	void togglePlay(int i) {
+		togglePlay(P_packs.get(i).url);
+	}
+	
+	void togglePlay(String url) {
+		int i = 0;
+		for (Pack pack : P_packs) {
+			if (pack.url.equals(url)) {
+				pack.packView.togglePlay(color(R.color.red), pack.flagColors);
+				playIndex = i;
+			} else
+				pack.packView.togglePlay(false, color(R.color.red), pack.flagColors);
+			
+			i++;
 		}
 		showSelectLPUI();
 	}
 	
-	void toggleDetail(int n) {
-		for (int i = 0; i < PV_items.length; i++) {
-			PackView packView = PV_items[i];
-			if (packView != null) {
-				if (n != i)
-					packView.toggleDetail(0);
-				else
-					packView.toggleDetail();
-			}
+	void toggleDetail(String url) {
+		for (Pack pack : P_packs) {
+			if (pack.url.equals(url))
+				pack.packView.toggleDetail();
+			else
+				pack.packView.toggleDetail(0);
 		}
 	}
 	
@@ -810,18 +812,18 @@ public class Main extends BaseActivity {
 					if (f == 0 && upDown) {
 						if (havePrev()) {
 							togglePlay(playIndex - 1);
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
+							SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packView.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packView.getHeight() / 2));
 						} else
 							showSelectLPUI();
 					} else if (f == 1 && upDown) {
 						if (haveNext()) {
 							togglePlay(playIndex + 1);
-							SV_scrollView.smoothScrollTo(0, PV_items[playIndex].getTop() + (-Scale_Height / 2) + (PV_items[playIndex].getHeight() / 2));
+							SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packView.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packView.getHeight() / 2));
 						} else
 							showSelectLPUI();
 					} else if (f == 2 && upDown) {
 						if (haveNow())
-							PV_items[playIndex].onPlayClick();
+							P_packs.get(playIndex).packView.onPlayClick();
 					} else if (4 <= f && f <= 7 && upDown)
 						toggleWatermark();
 				}
@@ -838,19 +840,19 @@ public class Main extends BaseActivity {
 	}
 	
 	boolean haveNow() {
-		return PV_items != null && 0 <= playIndex && playIndex <= projectsCount - 1;
+		return P_packs != null && 0 <= playIndex && playIndex <= P_packs.size() - 1;
 	}
 	
 	boolean haveNext() {
-		return PV_items != null && playIndex < projectsCount - 1;
+		return P_packs != null && playIndex < P_packs.size() - 1;
 	}
 	
 	boolean havePrev() {
-		return PV_items != null && 0 < playIndex;
+		return P_packs != null && 0 < playIndex;
 	}
 	
 	void showSelectLPUI() {
-		if (PV_items != null) {
+		if (P_packs != null) {
 			if (havePrev())
 				Launchpad.driver.sendFunctionkeyLED(0, 63);
 			else
@@ -928,17 +930,15 @@ public class Main extends BaseActivity {
 		if (!isDoneIntro)
 			;
 		else {
-			if (PV_items != null) {
+			if (P_packs != null) {
 				boolean clear = true;
-				for (PackView item : PV_items) {
-					if (item != null) {
-						if (item.isPlay() || item.isDetail()) {
-							togglePlay(-1);
-							toggleDetail(-1);
-							
-							clear = false;
-							break;
-						}
+				for (Pack pack : P_packs) {
+					if (pack.packView.isPlay() || pack.packView.isDetail()) {
+						togglePlay(null);
+						toggleDetail(null);
+						
+						clear = false;
+						break;
 					}
 				}
 				
