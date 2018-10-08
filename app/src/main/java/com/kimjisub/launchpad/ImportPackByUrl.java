@@ -49,15 +49,22 @@ public class ImportPackByUrl extends BaseActivity {
 		setContentView(R.layout.activity_importpack);
 		initVar();
 		
-		Networks.getUniPadApi().makeUrl_get(getIntent().getData().getQueryParameter("code")).enqueue(new Callback<MakeUrl>() {
+		String code = getIntent().getData().getQueryParameter("code");
+		log("code: " + code);
+		setStatus(Status.prepare, code);
+		Networks.getUniPadApi().makeUrl_get(code).enqueue(new Callback<MakeUrl>() {
 			@Override
 			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
 				if (response.isSuccessful()) {
+					MakeUrl makeUrl = response.body();
+					log("title: " + makeUrl.title);
+					log("author: " + makeUrl.author);
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} else {
 					switch (response.code()) {
 						case 404:
-							//not found
+							log("404 Not Found");
+							setStatus(Status.notFound, "Not Found");
 							break;
 					}
 				}
@@ -65,36 +72,55 @@ public class ImportPackByUrl extends BaseActivity {
 			
 			@Override
 			public void onFailure(Call<MakeUrl> call, Throwable t) {
-				//server error
+				log("server error");
+				setStatus(Status.failed, "server error\n" + t.getMessage());
 			}
 		});
 	}
 	
-	enum Status {downloading, analyzing, success, notFound, failed}
+	enum Status {prepare, downloading, analyzing, success, notFound, failed}
 	
 	void setStatus(Status status, String msg) {
-		switch (status) {
-			case downloading:
-				TV_title.setText(R.string.downloading);
-				TV_message.setText(msg);
-				break;
-			case analyzing:
-				TV_title.setText(R.string.analyzing);
-				TV_message.setText(msg);
-				break;
-			case success:
-				TV_title.setText(R.string.success);
-				TV_message.setText(msg);
-				break;
-			case notFound:
-				TV_title.setText(R.string.unipackNotFound);
-				TV_message.setText(msg);
-				break;
-			case failed:
-				TV_title.setText(R.string.failed);
-				TV_message.setText(msg);
-				break;
-		}
+		runOnUiThread(() -> {
+			switch (status) {
+				case prepare:
+					TV_title.setText(R.string.wait);
+					TV_message.setText(msg);
+					break;
+				case downloading:
+					TV_title.setText(R.string.downloading);
+					TV_message.setText(msg);
+					break;
+				case analyzing:
+					TV_title.setText(R.string.analyzing);
+					TV_message.setText(msg);
+					break;
+				case success:
+					TV_title.setText(R.string.success);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+				case notFound:
+					TV_title.setText(R.string.unipackNotFound);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+				case failed:
+					TV_title.setText(R.string.failed);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+			}
+		});
+	}
+	
+	void log(String msg) {
+		runOnUiThread(() -> TV_info.append(msg + "\n"));
+	}
+	
+	void delayFinish() {
+		log("delayFinish()");
+		new Handler().postDelayed(() -> finish(), 3000);
 	}
 	
 	class DownloadTask extends AsyncTask<String, String, String> {
@@ -116,17 +142,16 @@ public class ImportPackByUrl extends BaseActivity {
 		
 		@Override
 		protected void onPreExecute() {
-			TV_title.setText(lang(R.string.wait));
-			TV_message.setText(code);
-			
+			log("Download Task onPreExecute()");
 			super.onPreExecute();
 		}
 		
 		@Override
 		protected String doInBackground(String[] params) {
+			log("Download Task doInBackground()");
 			
-			UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, title, ".zip");
-			UnipackURL = FileManager.makeNextUrl(UnipackRootURL, title, "/");
+			UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, title + " #" + code, ".zip");
+			UnipackURL = FileManager.makeNextUrl(UnipackRootURL, title + " #" + code, "/");
 			
 			try {
 				
@@ -144,47 +169,53 @@ public class ImportPackByUrl extends BaseActivity {
 				OutputStream output = new FileOutputStream(UnipackZipURL);
 				
 				byte data[] = new byte[1024];
-				
 				long total = 0;
-				
 				int count;
-				int skip = 100;
+				int progress = 0;
+				log("Download start");
 				while ((count = input.read(data)) != -1) {
 					total += count;
-					skip--;
-					if (skip == 0) {
-						publishProgress("down", (int) ((float) total / fileSize * 100) + "%");
-						skip = 100;
+					progress++;
+					if (progress % 100 == 0) {
+						setStatus(ImportPackByUrl.Status.downloading, (int) ((float) total / fileSize * 100) + "%");
 					}
 					output.write(data, 0, count);
 				}
+				log("Download End");
 				
 				output.flush();
 				output.close();
 				input.close();
-				publishProgress("anal", title);
+				
+				log("Analyzing Start");
+				setStatus(ImportPackByUrl.Status.analyzing, title);
 				
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
-						publishProgress("fail", unipack.ErrorDetail);
+						setStatus(ImportPackByUrl.Status.success, unipack.ErrorDetail);
 						FileManager.deleteFolder(UnipackURL);
 					} else
-						publishProgress("succ", unipack.title);
+						setStatus(ImportPackByUrl.Status.success, unipack.getInfoText(ImportPackByUrl.this));
 					
+					log("Analyzing End");
 				} catch (Exception e) {
-					publishProgress("fail", e.toString());
-					FileManager.deleteFolder(UnipackURL);
 					e.printStackTrace();
+					log("Analyzing Error");
+					setStatus(ImportPackByUrl.Status.failed, e.toString());
+					log("DeleteFolder: UnipackURL " + UnipackURL);
+					FileManager.deleteFolder(UnipackURL);
 				}
+				
+				log("DeleteFolder: UnipackZipURL " + UnipackZipURL);
 				FileManager.deleteFolder(UnipackZipURL);
 				
-				
 			} catch (Exception e) {
-				publishProgress("fail", e.toString());
 				e.printStackTrace();
+				log("Download Task doInBackground() ERROR");
+				setStatus(ImportPackByUrl.Status.failed, e.toString());
 			}
 			
 			
@@ -193,29 +224,11 @@ public class ImportPackByUrl extends BaseActivity {
 		
 		@Override
 		protected void onProgressUpdate(String... progress) {
-			switch (progress[0]) {
-				case "down":
-					TV_title.setText(lang(R.string.downloading));
-					TV_message.setText(progress[1]);
-					break;
-				case "anal":
-					TV_title.setText(lang(R.string.analyzing));
-					TV_message.setText(progress[1]);
-					break;
-				case "fail":
-					TV_title.setText(lang(R.string.failed));
-					TV_message.setText(progress[1]);
-					break;
-				case "succ":
-					TV_title.setText(lang(R.string.success));
-					TV_message.setText(progress[1]);
-					break;
-			}
 		}
 		
 		@Override
 		protected void onPostExecute(String unused) {
-			new Handler().postDelayed(() -> finish(), 3000);
+			log("Download Task onPostExecute()");
 		}
 	}
 	

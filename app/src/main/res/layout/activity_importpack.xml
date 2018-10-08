@@ -9,6 +9,7 @@
 	    android:id="@+id/info"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
+	    android:alpha="0.5"
 	    android:layout_alignParentLeft="true"
 	    android:layout_alignParentStart="true"
 	    android:layout_alignParentTop="true"
@@ -31,7 +32,7 @@
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
 			    android:layout_gravity="center"
-			    android:text="@string/analyzing"
+			    android:text="@string/wait"
 			    android:textColor="@color/gray1"
 			    android:textSize="25dp"/>
 			
@@ -41,7 +42,6 @@
 			    android:layout_height="wrap_content"
 			    android:layout_gravity="center"
 			    android:gravity="center"
-			    android:text="@string/analyzing"
 			    android:textColor="@color/gray1"
 			    android:textSize="18dp"/>
 		
