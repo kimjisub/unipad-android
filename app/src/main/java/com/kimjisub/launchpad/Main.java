@@ -697,16 +697,7 @@ public class Main extends BaseActivity {
 				String name = file.getName();
 				String name_ = name.substring(0, name.lastIndexOf("."));
 				
-				String UnipackURL;
-				for (int i = 1; ; i++) {
-					if (i == 1)
-						UnipackURL = UnipackRootURL + "/" + name_ + "/";
-					else
-						UnipackURL = UnipackRootURL + "/" + name_ + " (" + i + ")/";
-					
-					if (!new File(UnipackURL).exists())
-						break;
-				}
+				String UnipackURL = FileManager.makeNextUrl(UnipackRootURL, name_, "/");
 				
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
