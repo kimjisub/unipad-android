@@ -71,7 +71,7 @@ dependencies {
 	implementation 'com.github.clans:fab:1.6.4'
 	implementation 'gun0912.ted:tedpermission:2.2.2'
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
-	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.2'
+	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.3'
 	//implementation 'com.airbnb.android:lottie:2.6.0'
 	
 	// Vungle SDK

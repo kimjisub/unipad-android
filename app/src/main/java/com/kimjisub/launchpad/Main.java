@@ -35,6 +35,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackView;
 
 import org.json.JSONObject;
@@ -182,27 +183,23 @@ public class Main extends BaseActivity {
 	void startMain() {
 		rescanScale(LL_scale, LL_paddingScale);
 		
-		SRL_scrollView.setOnRefreshListener(() -> update());
+		SRL_scrollView.setOnRefreshListener(this::update);
 		
 		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(Main.this, Launchpad.class)));
 		
-		FAB_loadUniPack.setOnClickListener(v -> {
-			new FileExplorer(Main.this, SettingManager.FileExplorerPath.load(Main.this))
-				.setOnEventListener(new FileExplorer.OnEventListener() {
-					@Override
-					public void onFileSelected(String fileURL) {
-						showToast("onFileSelected: " + fileURL);
-						loadUnipack(fileURL);
-					}
-					
-					@Override
-					public void onURLChanged(String folderURL) {
-						showToast("onURLChanged: " + folderURL);
-						SettingManager.FileExplorerPath.save(Main.this, folderURL);
-					}
-				})
-				.show();
-		});
+		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(Main.this, SettingManager.FileExplorerPath.load(Main.this))
+			.setOnEventListener(new FileExplorer.OnEventListener() {
+				@Override
+				public void onFileSelected(String fileURL) {
+					loadUnipack(fileURL);
+				}
+				
+				@Override
+				public void onURLChanged(String folderURL) {
+					SettingManager.FileExplorerPath.save(Main.this, folderURL);
+				}
+			})
+			.show());
 		
 		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, FBStore.class), 0));
 		
