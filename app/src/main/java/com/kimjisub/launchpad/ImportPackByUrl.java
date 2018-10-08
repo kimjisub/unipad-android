@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -22,9 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class ImportPackByUrl extends BaseActivity {
 	
@@ -112,9 +110,9 @@ public class ImportPackByUrl extends BaseActivity {
 						conexion.setReadTimeout(5000);
 						
 						int fileSize_ = conexion.getContentLength();
-						log(URL);
+						Log.log(URL);
 						fileSize = fileSize_ == -1 ? fileSize : fileSize_;
-						log("fileSize : " + fileSize);
+						Log.log("fileSize : " + fileSize);
 						
 						InputStream input = new BufferedInputStream(url.openStream());
 						OutputStream output = new FileOutputStream(UnipackZipURL);
@@ -144,7 +142,7 @@ public class ImportPackByUrl extends BaseActivity {
 							FileManager.unZipFile(UnipackZipURL, UnipackURL);
 							Unipack unipack = new Unipack(UnipackURL, true);
 							if (unipack.CriticalError) {
-								logErr(unipack.ErrorDetail);
+								Log.err(unipack.ErrorDetail);
 								publishProgress("fail", unipack.ErrorDetail);
 								FileManager.deleteFolder(UnipackURL);
 							} else

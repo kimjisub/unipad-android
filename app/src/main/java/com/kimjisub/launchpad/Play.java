@@ -25,13 +25,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -39,9 +39,6 @@ import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.unipad.designkit.SyncCheckBox;
 
 import java.util.ArrayList;
-
-import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class Play extends BaseActivity {
 	
@@ -175,11 +172,11 @@ public class Play extends BaseActivity {
 		
 		// ================================================================================= URL 불러오기
 		String URL = getIntent().getStringExtra("URL");
-		log("[01] Start Load Unipack " + URL);
+		Log.log("[01] Start Load Unipack " + URL);
 		unipack = new Unipack(URL, true);
 		
 		try {
-			log("[02] Check ErrorDetail");
+			Log.log("[02] Check ErrorDetail");
 			if (unipack.ErrorDetail != null) {
 				new AlertDialog.Builder(Play.this)
 					.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
@@ -189,18 +186,18 @@ public class Play extends BaseActivity {
 					.show();
 			}
 			
-			log("[03] Init Vars");
+			Log.log("[03] Init Vars");
 			U_pads = new Pad[unipack.buttonX][unipack.buttonY];
 			U_chains = new Chain[32];
 			colorManager = new ColorManager(unipack.buttonX, unipack.buttonY);
 			
-			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
+			Log.log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
 			if (unipack.isKeyLED) {
 				ledTask = new LEDTask();
 				ledTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			}
 			
-			log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
+			Log.log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
 			if (unipack.squareButton) {
 				if (!unipack.isKeyLED)
 					SCV_LED.setVisibility(View.GONE);
@@ -218,7 +215,7 @@ public class Play extends BaseActivity {
 				SCV_record.setVisibility(View.GONE);
 			}
 			
-			log("[06] Set CheckBox Checked");
+			Log.log("[06] Set CheckBox Checked");
 			if (unipack.isKeyLED) {
 				SCV_LED.setChecked(true);
 				SCV_feedbackLight.setChecked(false);
@@ -237,7 +234,7 @@ public class Play extends BaseActivity {
 				
 				@Override
 				protected void onPreExecute() {
-					log("[07] onPreExecute");
+					Log.log("[07] onPreExecute");
 					
 					progressDialog = new ProgressDialog(Play.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -262,7 +259,7 @@ public class Play extends BaseActivity {
 				
 				@Override
 				protected String doInBackground(String... params) {
-					log("[08] doInBackground");
+					Log.log("[08] doInBackground");
 					
 					try {
 						
@@ -282,7 +279,7 @@ public class Play extends BaseActivity {
 						}
 						unipackLoaded = true;
 					} catch (Exception e) {
-						logErr("[08] doInBackground");
+						Log.err("[08] doInBackground");
 						e.printStackTrace();
 					}
 					
@@ -296,7 +293,7 @@ public class Play extends BaseActivity {
 				
 				@Override
 				protected void onPostExecute(String result) {
-					log("[09] onPostExecute");
+					Log.log("[09] onPostExecute");
 					if (unipackLoaded) {
 						try {
 							if (progressDialog != null && progressDialog.isShowing())
@@ -326,7 +323,7 @@ public class Play extends BaseActivity {
 	}
 	
 	boolean skin_init(int num) {
-		log("[10] skin_init (" + num + ")");
+		Log.log("[10] skin_init (" + num + ")");
 		String packageName = SettingManager.SelectedTheme.load(Play.this);
 		if (num >= 2) {
 			try {
@@ -357,7 +354,7 @@ public class Play extends BaseActivity {
 	
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
-		log("[11] showUI");
+		Log.log("[11] showUI");
 		int buttonSizeX;
 		int buttonSizeY;
 		
@@ -496,7 +493,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void skin_set() {
-		log("[12] skin_set");
+		Log.log("[12] skin_set");
 		IV_background.setImageDrawable(theme.playbg);
 		if (theme.custom_logo != null)
 			IV_custom_logo.setImageDrawable(theme.custom_logo);
@@ -844,7 +841,7 @@ public class Play extends BaseActivity {
 						
 					} else if (e == null) {
 						LEDEvents.remove(i);
-						log("led 오류 e == null");
+						Log.log("led 오류 e == null");
 					} else if (e.isShutdown) {
 						for (int x = 0; x < unipack.buttonX; x++) {
 							for (int y = 0; y < unipack.buttonY; y++) {
@@ -897,7 +894,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void LEDInit() {
-		log("LEDInit");
+		Log.log("LEDInit");
 		if (unipack.isKeyLED) {
 			try {
 				for (int i = 0; i < unipack.buttonX; i++) {
@@ -966,7 +963,7 @@ public class Play extends BaseActivity {
 				if (isPlaying) {
 					if (beforeStartPlaying) {
 						beforeStartPlaying = false;
-						log("beforeStartPlaying");
+						Log.log("beforeStartPlaying");
 						publishProgress(8);
 					}
 					
@@ -1083,7 +1080,7 @@ public class Play extends BaseActivity {
 							publishProgress(4, e.x, e.y);
 							complete = true;
 							guideItems.add(e);
-							log(e.currChain + " " + e.x + " " + e.y);
+							Log.log(e.currChain + " " + e.x + " " + e.y);
 							break;
 						case Unipack.AutoPlay.DELAY:
 							if (complete)
@@ -1133,7 +1130,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void autoPlay_play() {
-		log("autoPlay_play");
+		Log.log("autoPlay_play");
 		padInit();
 		LEDInit();
 		autoPlayTask.isPlaying = true;
@@ -1150,7 +1147,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void autoPlay_stop() {
-		log("autoPlay_stop");
+		Log.log("autoPlay_stop");
 		autoPlayTask.isPlaying = false;
 		
 		padInit();
@@ -1166,14 +1163,14 @@ public class Play extends BaseActivity {
 	}
 	
 	void autoPlay_prev() {
-		log("autoPlay_prev");
+		Log.log("autoPlay_prev");
 		padInit();
 		LEDInit();
 		int progress = autoPlayTask.progress - 40;
 		if (progress < 0) progress = 0;
 		autoPlayTask.progress = progress;
 		if (!autoPlayTask.isPlaying) {
-			log("!isPlaying");
+			Log.log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
@@ -1181,13 +1178,13 @@ public class Play extends BaseActivity {
 	}
 	
 	void autoPlay_after() {
-		log("autoPlay_after");
+		Log.log("autoPlay_after");
 		padInit();
 		LEDInit();
 		autoPlayTask.progress += 40;
 		autoPlayTask.achieve = -1;
 		if (!autoPlayTask.isPlaying) {
-			log("!isPlaying");
+			Log.log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
@@ -1218,7 +1215,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void autoPlay_removeGuide() {
-		log("autoPlay_removeGuide");
+		Log.log("autoPlay_removeGuide");
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
@@ -1312,7 +1309,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void padInit() {
-		log("padInit");
+		Log.log("padInit");
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++)
 				padTouch(i, j, false);
@@ -1350,7 +1347,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void chainBtnsRefrash() {
-		log("chainBtnsRefrash");
+		Log.log("chainBtnsRefrash");
 		for (int i = 0; i < unipack.chain; i++) {
 			
 			if (i == chain) {
@@ -1440,7 +1437,7 @@ public class Play extends BaseActivity {
 	}
 	
 	void traceLog_init() {
-		log("traceLog_init");
+		Log.log("traceLog_init");
 		traceLog_table = new ArrayList[unipack.chain][unipack.buttonX][unipack.buttonY];
 		traceLog_nextNum = new int[unipack.chain];
 		
@@ -1620,7 +1617,7 @@ public class Play extends BaseActivity {
 			updateDriver();
 		
 		if (Scale_PaddingHeight == 0) {
-			log("padding 크기값들이 잘못되었습니다.");
+			Log.log("padding 크기값들이 잘못되었습니다.");
 			requestRestart(Play.this);
 		}
 	}

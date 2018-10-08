@@ -19,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 
 import java.util.Iterator;
@@ -29,9 +30,6 @@ import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
-import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logRecv;
-import static com.kimjisub.launchpad.manage.Tools.logSig;
 
 public class Launchpad extends BaseActivity {
 	
@@ -98,7 +96,7 @@ public class Launchpad extends BaseActivity {
 							}
 						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					} catch (Exception ignore) {
-						logRecv("런치패드 led 에러");
+						Log.recv("런치패드 led 에러");
 					}
 				} else if (mode == 1)
 					sendBuffer(cmd, sig, note, velo);
@@ -140,22 +138,22 @@ public class Launchpad extends BaseActivity {
 		int interfaceNum = 0;
 		
 		if (device == null) {
-			logRecv("USB 에러 : device == null");
+			Log.recv("USB 에러 : device == null");
 			return;
 		} else {
 			try {
-				logRecv("DeviceName : " + device.getDeviceName());
-				logRecv("DeviceClass : " + device.getDeviceClass());
-				logRecv("DeviceId : " + device.getDeviceId());
-				logRecv("DeviceProtocol : " + device.getDeviceProtocol());
-				logRecv("DeviceSubclass : " + device.getDeviceSubclass());
-				logRecv("InterfaceCount : " + device.getInterfaceCount());
-				logRecv("VendorId : " + device.getVendorId());
+				Log.recv("DeviceName : " + device.getDeviceName());
+				Log.recv("DeviceClass : " + device.getDeviceClass());
+				Log.recv("DeviceId : " + device.getDeviceId());
+				Log.recv("DeviceProtocol : " + device.getDeviceProtocol());
+				Log.recv("DeviceSubclass : " + device.getDeviceSubclass());
+				Log.recv("InterfaceCount : " + device.getInterfaceCount());
+				Log.recv("VendorId : " + device.getVendorId());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			try {
-				logRecv("ProductId : " + device.getProductId());
+				Log.recv("ProductId : " + device.getProductId());
 				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 8:
@@ -215,13 +213,13 @@ public class Launchpad extends BaseActivity {
 		}
 		usbDeviceConnection = usbManager.openDevice(device);
 		if (usbDeviceConnection == null) {
-			logRecv("USB 에러 : usbDeviceConnection == null");
+			Log.recv("USB 에러 : usbDeviceConnection == null");
 			return;
 		}
 		if (usbDeviceConnection.claimInterface(usbInterface, true)) {
 			(new ReceiveTask()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		} else {
-			logRecv("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
+			Log.recv("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
 		}
 	}
 	
@@ -334,7 +332,7 @@ public class Launchpad extends BaseActivity {
 		protected String doInBackground(String... params) {
 			if (!isRun) {
 				isRun = true;
-				logRecv("USB 시작");
+				Log.recv("USB 시작");
 				
 				long prevTime = System.currentTimeMillis();
 				int count = 0;
@@ -350,7 +348,7 @@ public class Launchpad extends BaseActivity {
 								int velocity = byteArray[i + 3];
 								
 								publishProgress(cmd, sig, note, velocity);
-								logSig(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
+								Log.sig(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
 						} else if (length == -1) {
 							long currTime = System.currentTimeMillis();
@@ -369,7 +367,7 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 				
-				logRecv("USB 끝");
+				Log.recv("USB 끝");
 			}
 			isRun = false;
 			return null;
@@ -411,7 +409,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	static void removeDriverListener(Activity activity) {
-		log("driverFrom == activity = " + (driverFrom == activity));
+		Log.log("driverFrom == activity = " + (driverFrom == activity));
 		if (driverFrom == activity)
 			setDriverListener(null, null, null);
 	}
@@ -423,7 +421,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	public static void updateDriver() {
-		logRecv("updateDriver");
+		Log.recv("updateDriver");
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);

@@ -14,13 +14,12 @@ import android.widget.TextView;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.kimjisub.launchpad.manage.Tools.log;
 
 public class Theme extends BaseActivity {
 	
@@ -78,7 +77,7 @@ public class Theme extends BaseActivity {
 		String packageName = SettingManager.SelectedTheme.load(Theme.this);
 		for (int i = 0; i < themeList.size(); i++) {
 			ThemePack theme = themeList.get(i);
-			log(packageName + ", " + theme.package_name);
+			Log.log(packageName + ", " + theme.package_name);
 			if (theme.package_name.equals(packageName)) {
 				ret = i;
 				break;

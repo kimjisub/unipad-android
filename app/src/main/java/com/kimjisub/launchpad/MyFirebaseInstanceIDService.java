@@ -2,14 +2,13 @@ package com.kimjisub.launchpad;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
-
-import static com.kimjisub.launchpad.manage.Tools.logFirebase;
+import com.kimjisub.launchpad.manage.Log;
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 	@Override
 	public void onTokenRefresh() {
 		String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-		logFirebase("Refreshed token: " + refreshedToken);
+		Log.firebase("Refreshed token: " + refreshedToken);
 		sendRegistrationToServer(refreshedToken);
 	}
 	
