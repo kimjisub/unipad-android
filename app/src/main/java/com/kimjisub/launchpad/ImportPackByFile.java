@@ -13,7 +13,7 @@ import com.kimjisub.launchpad.manage.Unipack;
 import java.io.File;
 import java.io.IOException;
 
-public class ImportPack extends BaseActivity {
+public class ImportPackByFile extends BaseActivity {
 	
 	TextView TV_title;
 	TextView TV_message;
@@ -28,7 +28,7 @@ public class ImportPack extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 		
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPack.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByFile.this);
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);
 		String name = file.getName();
@@ -76,7 +76,7 @@ public class ImportPack extends BaseActivity {
 				
 				if (unipack.ErrorDetail == null) {
 					title = lang(R.string.analyzeComplete);
-					message = unipack.getInfoText(ImportPack.this);
+					message = unipack.getInfoText(ImportPackByFile.this);
 				} else if (unipack.CriticalError) {
 					title = lang(R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
