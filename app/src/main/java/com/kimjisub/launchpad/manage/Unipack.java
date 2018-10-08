@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Tools.logErr;
-
 public class Unipack {
 	public String URL;
 	
@@ -70,7 +68,7 @@ public class Unipack {
 			sound[c][x][y].add(tmp);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("Sound_push (" + c + ", " + x + ", " + y + ")");
+			Log.err("Sound_push (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -89,10 +87,10 @@ public class Unipack {
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.err("Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		} catch (ArithmeticException ee) {
-			logErr("ArithmeticException : Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.err("ArithmeticException : Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -104,7 +102,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("Sound_get (" + c + ", " + x + ", " + y + ")");
+			Log.err("Sound_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return new Sound();
 		}
@@ -118,7 +116,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("Sound_get (" + c + ", " + x + ", " + y + ")");
+			Log.err("Sound_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return new Sound();
 		}
@@ -180,7 +178,7 @@ public class Unipack {
 			led[c][x][y].add(e);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("LED_push (" + c + ", " + x + ", " + y + ")");
+			Log.err("LED_push (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -199,7 +197,7 @@ public class Unipack {
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("LED_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.err("LED_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -211,7 +209,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return null;
 		} catch (IndexOutOfBoundsException ee) {
-			logErr("LED_get (" + c + ", " + x + ", " + y + ")");
+			Log.err("LED_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return null;
 		}
@@ -640,7 +638,6 @@ public class Unipack {
 										for (int i = 0; i < buttonX; i++)
 											for (int j = 0; j < buttonY; j++)
 												map[i][j] = 0;
-										logErr("shut the fuck up please");
 									}
 									break;
 								case "off":

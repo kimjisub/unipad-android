@@ -17,14 +17,13 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.manage.Billing;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
-import static com.kimjisub.launchpad.manage.Tools.logActivity;
-import static com.kimjisub.launchpad.manage.Tools.logAds;
 
 public abstract class BaseActivity extends AppCompatActivity {
 	
@@ -64,20 +63,20 @@ public abstract class BaseActivity extends AppCompatActivity {
 			
 			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
 				SettingManager.PrevAdsShowTime.save(this, currTime);
-				logAds("showAdmob");
+				Log.ads("showAdmob");
 				
 				if (interstitialAd.isLoaded()) {
-					logAds("isLoaded");
+					Log.ads("isLoaded");
 					interstitialAd.show();
 					loadAdmob();
-					logAds("show!");
+					Log.ads("show!");
 				} else {
-					logAds("! isLoaded (set listener)");
+					Log.ads("! isLoaded (set listener)");
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
 							loadAdmob();
-							logAds("show!");
+							Log.ads("show!");
 						}
 					});
 				}
@@ -87,7 +86,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	public void initAdmob() {
 		if (!Billing.isPremium) {
-			logAds("initAdmob");
+			Log.ads("initAdmob");
 			loadAdmob();
 		}
 	}
@@ -180,45 +179,45 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		logActivity("onCreate " + this.getLocalClassName());
+		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
 	}
 	
 	@Override
 	public void onStart() {
-		logActivity("onStart " + this.getLocalClassName());
+		Log.activity("onStart " + this.getLocalClassName());
 		super.onStart();
 	}
 	
 	@Override
 	public void onResume() {
-		logActivity("onResume " + this.getLocalClassName());
+		Log.activity("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 	}
 	
 	@Override
 	public void onPause() {
-		logActivity("onPause " + this.getLocalClassName());
+		Log.activity("onPause " + this.getLocalClassName());
 		super.onPause();
 	}
 	
 	@Override
 	public void onStop() {
-		logActivity("onStop " + this.getLocalClassName());
+		Log.activity("onStop " + this.getLocalClassName());
 		super.onStop();
 	}
 	
 	@Override
 	public void onRestart() {
-		logActivity("onRestart " + this.getLocalClassName());
+		Log.activity("onRestart " + this.getLocalClassName());
 		super.onRestart();
 	}
 	
 	@Override
 	public void onDestroy() {
-		logActivity("onDestroy " + this.getLocalClassName());
+		Log.activity("onDestroy " + this.getLocalClassName());
 		super.onDestroy();
 		finishActivity(this);
 	}
@@ -263,7 +262,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 			Activity activity = activityList.get(i);
 			str.append(", ").append(activity.getLocalClassName());
 		}
-		logActivity(str + "]");
+		Log.activity(str + "]");
 	}
 	
 	static void requestRestart(final Context context) {

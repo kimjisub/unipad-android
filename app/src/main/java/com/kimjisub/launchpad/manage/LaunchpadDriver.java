@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.manage;
 
-import static com.kimjisub.launchpad.manage.Tools.logRecv;
-
 public class LaunchpadDriver {
 	
 	public static abstract class DriverRef {
@@ -22,13 +20,13 @@ public class LaunchpadDriver {
 		}
 		
 		public void onConnected() {
-			logRecv("onConnected");
+			Log.recv("onConnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onConnected();
 		}
 		
 		public void onDisconnected() {
-			logRecv("onDisconnected");
+			Log.recv("onDisconnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onDisconnected();
 		}
@@ -53,25 +51,25 @@ public class LaunchpadDriver {
 		}
 		
 		void onPadTouch(int x, int y, boolean upDown, int velo) {
-			logRecv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
+			Log.recv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onPadTouch(x, y, upDown, velo);
 		}
 		
 		void onFunctionkeyTouch(int f, boolean upDown) {
-			logRecv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
+			Log.recv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onFunctionkeyTouch(f, upDown);
 		}
 		
 		void onChainTouch(int c, boolean upDown) {
-			logRecv("onChainTouch(" + c + ", " + upDown + ")");
+			Log.recv("onChainTouch(" + c + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onChainTouch(c, upDown);
 		}
 		
 		void onUnknownEvent(int cmd, int sig, int note, int velo) {
-			logRecv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
+			Log.recv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onUnknownEvent(cmd, sig, note, velo);
 		}
@@ -336,7 +334,7 @@ public class LaunchpadDriver {
 				}
 				
 			} else if (cmd == 7 && sig == 46 && velo == -9)
-				logRecv("PRO >??");
+				Log.recv("PRO >??");
 		}
 		
 		@Override

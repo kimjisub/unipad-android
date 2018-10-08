@@ -2,17 +2,16 @@ package com.kimjisub.launchpad;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import static com.kimjisub.launchpad.manage.Tools.logFirebase;
+import com.kimjisub.launchpad.manage.Log;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 	@Override
 	public void onMessageReceived(RemoteMessage remoteMessage) {
 		// TODO(developer): Handle FCM messages here.
-		logFirebase("From: " + remoteMessage.getFrom());
+		Log.firebase("From: " + remoteMessage.getFrom());
 		
 		if (remoteMessage.getData().size() > 0) {
-			logFirebase("Message data payload: " + remoteMessage.getData());
+			Log.firebase("Message data payload: " + remoteMessage.getData());
 			
 			if (/* Check if data needs to be processed by long running job */ true) {
 				scheduleJob();
@@ -23,7 +22,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 		}
 		
 		if (remoteMessage.getNotification() != null) {
-			logFirebase("Message Notification Body: " + remoteMessage.getNotification().getBody());
+			Log.firebase("Message Notification Body: " + remoteMessage.getNotification().getBody());
 		}
 	}
 	
@@ -37,7 +36,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 	}
 	
 	private void handleNow() {
-		logFirebase("Short lived task is done.");
+		Log.firebase("Short lived task is done.");
 	}
 	
 	/*private void sendNotification(String messageBody) {

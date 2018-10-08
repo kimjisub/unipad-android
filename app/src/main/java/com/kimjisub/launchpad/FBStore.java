@@ -5,10 +5,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -23,9 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-
-import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class FBStore extends BaseActivity {
 	
@@ -186,7 +183,7 @@ public class FBStore extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final PackView v, final int i) {
-		log("itemClicked(" + i + ")");
+		Log.log("itemClicked(" + i + ")");
 		
 		v.togglePlay(true);
 		v.updateFlagColor(color(R.color.gray1));
@@ -245,8 +242,8 @@ public class FBStore extends BaseActivity {
 					connection.setReadTimeout(5000);
 					
 					fileSize = connection.getContentLength();
-					log(URL);
-					log("fileSize : " + fileSize);
+					Log.log(URL);
+					Log.log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 					
 					InputStream input = new BufferedInputStream(url.openStream());
@@ -277,7 +274,7 @@ public class FBStore extends BaseActivity {
 						FileManager.unZipFile(UnipackZipURL, UnipackURL);
 						Unipack unipack = new Unipack(UnipackURL, true);
 						if (unipack.CriticalError) {
-							logErr(unipack.ErrorDetail);
+							Log.err(unipack.ErrorDetail);
 							publishProgress(-1L);
 							FileManager.deleteFolder(UnipackURL);
 						} else

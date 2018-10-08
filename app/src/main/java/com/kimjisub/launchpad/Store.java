@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -29,9 +28,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.kimjisub.launchpad.manage.Tools.log;
-import static com.kimjisub.launchpad.manage.Tools.logErr;
 
 public class Store extends BaseActivity {
 	
@@ -239,7 +235,7 @@ public class Store extends BaseActivity {
 	
 	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final PackView v, final String key) {
-		log("itemClicked(" + key + ")");
+		com.kimjisub.launchpad.manage.Log.log("itemClicked(" + key + ")");
 		
 		v.togglePlay(true);
 		v.updateFlagColor(color(R.color.gray1));
@@ -287,8 +283,8 @@ public class Store extends BaseActivity {
 					connection.setReadTimeout(5000);
 					
 					fileSize = connection.getContentLength();
-					log(this.url);
-					log("fileSize : " + fileSize);
+					com.kimjisub.launchpad.manage.Log.log(this.url);
+					com.kimjisub.launchpad.manage.Log.log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 					
 					InputStream input = new BufferedInputStream(url.openStream());
@@ -319,7 +315,7 @@ public class Store extends BaseActivity {
 						FileManager.unZipFile(UnipackZipURL, UnipackURL);
 						Unipack unipack = new Unipack(UnipackURL, true);
 						if (unipack.CriticalError) {
-							logErr(unipack.ErrorDetail);
+							com.kimjisub.launchpad.manage.Log.err(unipack.ErrorDetail);
 							publishProgress(-1L);
 							FileManager.deleteFolder(UnipackURL);
 						} else

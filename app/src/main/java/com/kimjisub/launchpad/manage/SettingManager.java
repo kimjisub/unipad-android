@@ -6,7 +6,6 @@ import android.os.Environment;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
-import static com.kimjisub.launchpad.manage.Tools.log;
 
 public class SettingManager {
 	
@@ -75,7 +74,7 @@ public class SettingManager {
 					return load(context);
 				}
 			}
-			log("UnipackRootURL : " + URL);
+			Log.log("UnipackRootURL : " + URL);
 			return isSDCard;
 		}
 		
