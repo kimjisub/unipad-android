@@ -242,6 +242,6 @@ public class ImportPackByUrl extends BaseActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		restartApp(this);
+		gotoMainAndUpdateList(this);
 	}
 }
