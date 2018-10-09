@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Store extends BaseActivity {
+public class FSStore extends BaseActivity {
 	
 	// UI
 	LinearLayout LL_list;
@@ -62,7 +62,7 @@ public class Store extends BaseActivity {
 		LL_list = findViewById(R.id.list);
 		
 		// Vars
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Store.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FSStore.this);
 		folder = new File(UnipackRootURL);
 		MAP_packItem = new HashMap<>();
 		AL_packList = new ArrayList<>();
@@ -98,7 +98,7 @@ public class Store extends BaseActivity {
 		
 		db = FirebaseFirestore.getInstance();
 		
-		db.collection("Unipack-Store")
+		db.collection("Unipack-FSStore")
 			.addSnapshotListener((value, e) -> {
 				if (e != null) {
 					Log.firebase("Listen failed." + e);
@@ -151,7 +151,7 @@ public class Store extends BaseActivity {
 		}
 		final boolean isDownloaded = _isDownloaded;
 		
-		final PackView packView = new PackView(Store.this)
+		final PackView packView = new PackView(FSStore.this)
 			.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 			.setTitle(d.title)
 			.setSubTitle(d.producerName)
@@ -219,7 +219,7 @@ public class Store extends BaseActivity {
 		String title = lang(R.string.errOccur);
 		String subTitle = lang(R.string.UnableToAccessServer);
 		
-		PackView packView = PackView.errItem(Store.this, title, subTitle, null);
+		PackView packView = PackView.errItem(FSStore.this, title, subTitle, null);
 		
 		
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -253,7 +253,7 @@ public class Store extends BaseActivity {
 			
 			@Override
 			protected void onPreExecute() {
-				Store.this.downloadCount++;
+				FSStore.this.downloadCount++;
 				
 				url = MAP_packItem.get(key).fsStore.url;
 				
@@ -326,7 +326,7 @@ public class Store extends BaseActivity {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
-				Store.this.downloadCount--;
+				FSStore.this.downloadCount--;
 				
 				return null;
 			}
@@ -334,7 +334,7 @@ public class Store extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					v.setPlayText((int) ((float) progress[1] / fileSize * 100) + "%");
+					v.setPlayText(FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(fileSize) + "MB\n(" + (int)((float) progress[1] / fileSize * 100) + "%)");
 				} else if (progress[0] == 1) {//분석중
 					v.setPlayText(lang(R.string.analyzing));
 					v.updateFlagColor(color(R.color.orange));
@@ -361,7 +361,7 @@ public class Store extends BaseActivity {
 		super.onResume();
 		initVar();
 		
-		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(Store.this, data));
+		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FSStore.this, data));
 	}
 	
 	@Override

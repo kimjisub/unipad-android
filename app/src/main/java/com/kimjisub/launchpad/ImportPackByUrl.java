@@ -177,7 +177,7 @@ public class ImportPackByUrl extends BaseActivity {
 					total += count;
 					progress++;
 					if (progress % 100 == 0) {
-						setStatus(ImportPackByUrl.Status.downloading, (int) ((float) total / fileSize * 100) + "%");
+						setStatus(ImportPackByUrl.Status.downloading, FileManager.byteToMB(total) + " / " + FileManager.byteToMB(fileSize) + "MB\n(" + (int)((float) total / fileSize * 100) + "%)");
 					}
 					output.write(data, 0, count);
 				}
