@@ -49,8 +49,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
@@ -742,25 +744,33 @@ public class Main extends BaseActivity {
 	}
 	
 	void togglePlay(String url) {
-		int i = 0;
-		for (Pack pack : P_packs) {
-			if (pack.url.equals(url)) {
-				pack.packView.togglePlay(color(R.color.red), pack.flagColors);
-				playIndex = i;
-			} else
-				pack.packView.togglePlay(false, color(R.color.red), pack.flagColors);
-			
-			i++;
+		try {
+			int i = 0;
+			for (Pack pack : P_packs) {
+				if (pack.url.equals(url)) {
+					pack.packView.togglePlay(color(R.color.red), pack.flagColors);
+					playIndex = i;
+				} else
+					pack.packView.togglePlay(false, color(R.color.red), pack.flagColors);
+				
+				i++;
+			}
+			showSelectLPUI();
+		} catch (ConcurrentModificationException e) {
+			e.printStackTrace();
 		}
-		showSelectLPUI();
 	}
 	
 	void toggleDetail(String url) {
-		for (Pack pack : P_packs) {
-			if (pack.url.equals(url))
-				pack.packView.toggleDetail();
-			else
-				pack.packView.toggleDetail(0);
+		try {
+			for (Pack pack : P_packs) {
+				if (pack.url.equals(url))
+					pack.packView.toggleDetail();
+				else
+					pack.packView.toggleDetail(0);
+			}
+		} catch (ConcurrentModificationException e) {
+			e.printStackTrace();
 		}
 	}
 	
