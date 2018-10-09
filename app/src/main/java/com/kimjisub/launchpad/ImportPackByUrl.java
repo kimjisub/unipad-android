@@ -107,17 +107,14 @@ public class ImportPackByUrl extends BaseActivity {
 				case success:
 					TV_title.setText(R.string.success);
 					TV_message.setText(msg);
-					delayFinish();
 					break;
 				case notFound:
 					TV_title.setText(R.string.unipackNotFound);
 					TV_message.setText(msg);
-					delayFinish();
 					break;
 				case failed:
 					TV_title.setText(R.string.failed);
 					TV_message.setText(msg);
-					delayFinish();
 					break;
 			}
 		});
@@ -235,6 +232,7 @@ public class ImportPackByUrl extends BaseActivity {
 		@Override
 		protected void onPostExecute(String unused) {
 			log("Download Task onPostExecute()");
+			delayFinish();
 		}
 	}
 	
