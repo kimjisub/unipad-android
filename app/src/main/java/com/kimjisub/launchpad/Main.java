@@ -389,7 +389,7 @@ public class Main extends BaseActivity {
 					}
 				}
 			} finally {
-				SRL_scrollView.setRefreshing(false);
+				runOnUiThread(() -> SRL_scrollView.setRefreshing(false));
 				updateComplete = true;
 			}
 		}).start();
