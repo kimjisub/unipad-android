@@ -57,7 +57,7 @@ public class ImportPackByUrl extends BaseActivity {
 			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
 				if (response.isSuccessful()) {
 					MakeUrl makeUrl = response.body();
-					setStatus(Status.prepare, "title: " + makeUrl.title + "\nproducerName: " + makeUrl.producerName);
+					setStatus(Status.prepare, code + "\n" + makeUrl.title + "\n" + makeUrl.producerName);
 					log("title: " + makeUrl.title);
 					log("producerName: " + makeUrl.producerName);
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -121,7 +121,7 @@ public class ImportPackByUrl extends BaseActivity {
 	
 	void delayFinish() {
 		log("delayFinish()");
-		new Handler().postDelayed(() -> finish(), 3000);
+		new Handler().postDelayed(() -> gotoMainAndUpdateList(this), 3000);
 	}
 	
 	class DownloadTask extends AsyncTask<String, String, String> {
@@ -178,7 +178,7 @@ public class ImportPackByUrl extends BaseActivity {
 					progress++;
 					if (progress % 100 == 0) {
 						
-						setStatus(ImportPackByUrl.Status.downloading, (int)((float) total / fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(fileSize) + "MB");
+						setStatus(ImportPackByUrl.Status.downloading, (int) ((float) total / fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(fileSize) + "MB");
 					}
 					output.write(data, 0, count);
 				}
@@ -189,14 +189,14 @@ public class ImportPackByUrl extends BaseActivity {
 				input.close();
 				
 				log("Analyzing Start");
-				setStatus(ImportPackByUrl.Status.analyzing, title);
+				setStatus(ImportPackByUrl.Status.analyzing, code + "\n" + title + "\n" + producerName);
 				
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
-						setStatus(ImportPackByUrl.Status.success, unipack.ErrorDetail);
+						setStatus(ImportPackByUrl.Status.failed, unipack.ErrorDetail);
 						FileManager.deleteFolder(UnipackURL);
 					} else
 						setStatus(ImportPackByUrl.Status.success, unipack.getInfoText(ImportPackByUrl.this));
@@ -243,6 +243,5 @@ public class ImportPackByUrl extends BaseActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		gotoMainAndUpdateList(this);
 	}
 }
