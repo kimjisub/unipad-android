@@ -242,7 +242,6 @@ public class ImportPackByUrl extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		initVar();
 	}
 	
 	@Override
