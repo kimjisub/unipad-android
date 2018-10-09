@@ -32,7 +32,6 @@ import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -351,15 +350,10 @@ public class Main extends BaseActivity {
 						if (unipack.website != null)
 							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
 						
-						P_packs.add(new Pack(packView, flagColor, url, unipack));
+						Pack pack = new Pack(packView, flagColor, url, unipack);
+						P_packs.add(pack);
 						
-						i++;
-					}
-					
-					//TODO 정렬
-					
-					runOnUiThread(() -> {
-						for (Pack pack : P_packs) {
+						runOnUiThread(() -> {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 							int left = dpToPx(16);
 							int top = 0;
@@ -370,11 +364,12 @@ public class Main extends BaseActivity {
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							pack.packView.setAnimation(a);
-							
-							Log.test(pack.url + "");
-						}
-					});
+						});
+						
+						i++;
+					}
 					
+					//TODO 정렬
 					
 					if (P_packs.size() == 0)
 						runOnUiThread(this::addErrorItem);
