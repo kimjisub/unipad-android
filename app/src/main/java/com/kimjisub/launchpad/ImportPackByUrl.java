@@ -57,8 +57,9 @@ public class ImportPackByUrl extends BaseActivity {
 			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
 				if (response.isSuccessful()) {
 					MakeUrl makeUrl = response.body();
+					setStatus(Status.prepare, "title: " + makeUrl.title + "\nproducerName: " + makeUrl.producerName);
 					log("title: " + makeUrl.title);
-					log("author: " + makeUrl.author);
+					log("producerName: " + makeUrl.producerName);
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} else {
 					switch (response.code()) {
@@ -126,7 +127,7 @@ public class ImportPackByUrl extends BaseActivity {
 	class DownloadTask extends AsyncTask<String, String, String> {
 		String code;
 		String title;
-		String author;
+		String producerName;
 		String url;
 		int fileSize;
 		int downloadCount;
@@ -134,7 +135,7 @@ public class ImportPackByUrl extends BaseActivity {
 		public DownloadTask(MakeUrl makeUrl) {
 			this.code = makeUrl.code;
 			this.title = makeUrl.title;
-			this.author = makeUrl.author;
+			this.producerName = makeUrl.producerName;
 			this.url = makeUrl.url;
 			this.fileSize = makeUrl.fileSize;
 			this.downloadCount = makeUrl.downloadCount;
@@ -161,9 +162,8 @@ public class ImportPackByUrl extends BaseActivity {
 				conexion.setReadTimeout(5000);
 				
 				int fileSize_ = conexion.getContentLength();
-				Log.log(url);
 				fileSize = fileSize_ == -1 ? fileSize : fileSize_;
-				Log.log("fileSize : " + fileSize);
+				log("fileSize : " + fileSize);
 				
 				InputStream input = new BufferedInputStream(downloadUrl.openStream());
 				OutputStream output = new FileOutputStream(UnipackZipURL);
