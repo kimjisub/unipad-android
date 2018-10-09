@@ -222,7 +222,6 @@ public class ImportPackByFile extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		initVar();
 	}
 	
 	@Override
