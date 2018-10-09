@@ -7,11 +7,19 @@ import android.os.Handler;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.manage.FileManager;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.launchpad.manage.network.MakeUrl;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class ImportPackByFile extends BaseActivity {
 	
@@ -34,6 +42,10 @@ public class ImportPackByFile extends BaseActivity {
 		String name = file.getName();
 		String name_ = name.substring(0, name.lastIndexOf("."));
 		UnipackURL = FileManager.makeNextUrl(UnipackRootURL, name_, "/");
+		
+		log("UnipackZipURL: " + UnipackZipURL);
+		log("UnipackURL: " + UnipackURL);
+		setStatus(Status.prepare, UnipackZipURL);
 	}
 	
 	@Override
@@ -42,7 +54,108 @@ public class ImportPackByFile extends BaseActivity {
 		setContentView(R.layout.activity_importpack);
 		initVar();
 		
-		processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		//processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		new UnzipTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+	}
+	
+	enum Status {prepare, downloading, analyzing, success, notFound, failed}
+	
+	void setStatus(Status status, String msg) {
+		runOnUiThread(() -> {
+			switch (status) {
+				case prepare:
+					TV_title.setText(R.string.wait);
+					TV_message.setText(msg);
+					break;
+				case downloading:
+					TV_title.setText(R.string.downloading);
+					TV_message.setText(msg);
+					break;
+				case analyzing:
+					TV_title.setText(R.string.analyzing);
+					TV_message.setText(msg);
+					break;
+				case success:
+					TV_title.setText(R.string.success);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+				case notFound:
+					TV_title.setText(R.string.unipackNotFound);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+				case failed:
+					TV_title.setText(R.string.failed);
+					TV_message.setText(msg);
+					delayFinish();
+					break;
+			}
+		});
+	}
+	
+	void log(String msg) {
+		runOnUiThread(() -> TV_info.append(msg + "\n"));
+	}
+	
+	void delayFinish() {
+		log("delayFinish()");
+		new Handler().postDelayed(() -> finish(), 3000);
+	}
+	
+	class UnzipTask extends AsyncTask<String, String, String> {
+		
+		@Override
+		protected void onPreExecute() {
+			log("Unzip Task onPreExecute()");
+			super.onPreExecute();
+		}
+		
+		@Override
+		protected String doInBackground(String[] params) {
+			log("Unzip Task doInBackground()");
+			
+			try {
+				try {
+					FileManager.unZipFile(UnipackZipURL, UnipackURL);
+					Unipack unipack = new Unipack(UnipackURL, true);
+					if (unipack.CriticalError) {
+						Log.err(unipack.ErrorDetail);
+						setStatus(ImportPackByFile.Status.success, unipack.ErrorDetail);
+						FileManager.deleteFolder(UnipackURL);
+					} else
+						setStatus(ImportPackByFile.Status.success, unipack.getInfoText(ImportPackByFile.this));
+					
+					log("Analyzing End");
+				} catch (Exception e) {
+					e.printStackTrace();
+					log("Analyzing Error");
+					setStatus(ImportPackByFile.Status.failed, e.toString());
+					log("DeleteFolder: UnipackURL " + UnipackURL);
+					FileManager.deleteFolder(UnipackURL);
+				}
+				
+				log("DeleteFolder: UnipackZipURL " + UnipackZipURL);
+				FileManager.deleteFolder(UnipackZipURL);
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				log("Download Task doInBackground() ERROR");
+				setStatus(ImportPackByFile.Status.failed, e.toString());
+			}
+			
+			
+			return null;
+		}
+		
+		@Override
+		protected void onProgressUpdate(String... progress) {
+		}
+		
+		@Override
+		protected void onPostExecute(String unused) {
+			log("Unzip Task onPostExecute()");
+		}
 	}
 	
 	@SuppressLint("StaticFieldLeak")
