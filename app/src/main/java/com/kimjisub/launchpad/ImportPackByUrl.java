@@ -34,12 +34,20 @@ public class ImportPackByUrl extends BaseActivity {
 	String UnipackZipURL;
 	String UnipackURL;
 	
+	String code;
+	
 	void initVar() {
 		TV_title = findViewById(R.id.title);
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 		
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByUrl.this);
+		//UnipackZipURL
+		//UnipackURL
+		
+		code = getIntent().getData().getQueryParameter("code");
+		log("code: " + code);
+		setStatus(Status.prepare, code);
 	}
 	
 	@SuppressLint("StaticFieldLeak")
@@ -49,9 +57,7 @@ public class ImportPackByUrl extends BaseActivity {
 		setContentView(R.layout.activity_importpack);
 		initVar();
 		
-		String code = getIntent().getData().getQueryParameter("code");
-		log("code: " + code);
-		setStatus(Status.prepare, code);
+		
 		Networks.getUniPadApi().makeUrl_get(code).enqueue(new Callback<MakeUrl>() {
 			@Override
 			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
@@ -60,6 +66,8 @@ public class ImportPackByUrl extends BaseActivity {
 					setStatus(Status.prepare, code + "\n" + makeUrl.title + "\n" + makeUrl.producerName);
 					log("title: " + makeUrl.title);
 					log("producerName: " + makeUrl.producerName);
+					UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, makeUrl.title + " #" + code, ".zip");
+					UnipackURL = FileManager.makeNextUrl(UnipackRootURL, makeUrl.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} else {
 					switch (response.code()) {
@@ -150,9 +158,6 @@ public class ImportPackByUrl extends BaseActivity {
 		@Override
 		protected String doInBackground(String[] params) {
 			log("Download Task doInBackground()");
-			
-			UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, title + " #" + code, ".zip");
-			UnipackURL = FileManager.makeNextUrl(UnipackRootURL, title + " #" + code, "/");
 			
 			try {
 				
