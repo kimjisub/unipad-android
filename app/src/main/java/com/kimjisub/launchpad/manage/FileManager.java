@@ -202,19 +202,30 @@ public class FileManager {
 	
 	public static String makeNextUrl(String path, String name, String extension) {
 		String ret;
+		String newName = convertFilename(name);
 		for (int i = 1; ; i++) {
 			if (i == 1)
-				ret = path + "/" + name + extension;
+				ret = path + "/" + newName + extension;
 			else
-				ret = path + "/" + name + " (" + i + ")" + extension;
+				ret = path + "/" + newName + " (" + i + ")" + extension;
 			
 			if (!new File(ret).exists())
 				break;
 		}
 		
-		Log.test(path + "/" + name + extension);
+		Log.test(path + "/" + newName + extension);
 		Log.test(ret);
 		return ret;
+	}
+	
+	public static String convertFilename(String orgnStr) {
+		String regExpr = "[|\\\\?*<\":>/]+";
+		
+		String tmpStr = orgnStr.replaceAll(regExpr, "");
+		
+		return tmpStr;
+		
+		//return tmpStr.replaceAll("[ ]", "_");
 	}
 	
 	public static int wavDuration(MediaPlayer mplayer, String URL) {
