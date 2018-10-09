@@ -39,11 +39,11 @@
 			</intent-filter>
 		</activity>
 		<activity
-		    android:name=".Store"
+		    android:name=".FBStore"
 		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 		    android:screenOrientation="sensorLandscape"/>
 		<activity
-		    android:name=".FBStore"
+		    android:name=".FSStore"
 		    android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 		    android:screenOrientation="sensorLandscape"/>
 		<activity

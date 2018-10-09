@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
@@ -206,7 +205,7 @@ public class Main extends BaseActivity {
 		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, FBStore.class), 0));
 		
 		FAB_store.setOnLongClickListener(view -> {
-			startActivityForResult(new Intent(Main.this, Store.class), 0);
+			//startActivityForResult(new Intent(Main.this, FSStore.class), 0);
 			return false;
 		});
 		
