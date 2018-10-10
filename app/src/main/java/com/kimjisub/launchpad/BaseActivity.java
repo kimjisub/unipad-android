@@ -24,8 +24,8 @@ import com.vungle.warren.Vungle;
 
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Constant.ADMOB;
 import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
-import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -118,7 +118,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	void loadAdmob() {
 		interstitialAd = new InterstitialAd(this);
-		interstitialAd.setAdUnitId(ADUNITID);
+		interstitialAd.setAdUnitId(ADMOB.MAIN_START);
 		interstitialAd.loadAd(new AdRequest.Builder()
 			.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 			.build());
