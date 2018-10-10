@@ -19,11 +19,14 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
+import com.vungle.warren.InitCallback;
+import com.vungle.warren.Vungle;
 
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
+import static com.kimjisub.launchpad.manage.Constant.VUNGLE_APPID;
 
 public abstract class BaseActivity extends AppCompatActivity {
 	
@@ -43,14 +46,28 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	// ========================================================================================= vungle
 	
-	/*final VunglePub vunglePub = VunglePub.getInstance();
-	
 	public void initVungle(){
-		final String app_id = "your Vungle App ID";
 		
-		// Publisher SDK 초기화
-		vunglePub.init(this, app_id);
-	}*/
+		Vungle.init(VUNGLE_APPID, getApplicationContext(), new InitCallback() {
+			@Override
+			public void onSuccess() {
+				// Initialization has succeeded and SDK is ready to load an ad or play one if there
+				// is one pre-cached already
+			}
+			
+			@Override
+			public void onError(Throwable throwable) {
+				// Initialization error occurred - throwable.getLocalizedMessage() contains error message
+			}
+			
+			@Override
+			public void onAutoCacheAdAvailable(String placementId) {
+				// Callback to notify when an ad becomes available for the auto-cached placement
+				// NOTE: This callback works only for the auto-cached placement. Otherwise, please use
+				// LoadAdCallback with loadAd API for loading placements.
+			}
+		};
+	}
 	
 	// ========================================================================================= Admob
 	
