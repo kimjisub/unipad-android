@@ -28,7 +28,6 @@ import android.widget.TextView;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.gun0912.tedpermission.PermissionListener;
@@ -61,7 +60,6 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
 
-import static com.kimjisub.launchpad.manage.Constant.ADMOB;
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 

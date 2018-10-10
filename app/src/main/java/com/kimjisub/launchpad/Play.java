@@ -27,6 +27,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.mmin18.widget.RealtimeBlurView;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
@@ -64,6 +66,7 @@ public class Play extends BaseActivity {
 	RealtimeBlurView RBV_option_blur;
 	RelativeLayout RL_option_window;
 	Button BTN_option_quit;
+	AdView AV_adview;
 	
 	CheckBox CB1_feedbackLight;
 	CheckBox CB1_LED;
@@ -108,6 +111,7 @@ public class Play extends BaseActivity {
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
 		BTN_option_quit = findViewById(R.id.quit);
+		AV_adview = findViewById(R.id.adView);
 		
 		CB1_feedbackLight = findViewById(R.id.CB1_feedbackLight);
 		CB1_LED = findViewById(R.id.CB1_LED);
@@ -1627,6 +1631,9 @@ public class Play extends BaseActivity {
 			Log.log("padding 크기값들이 잘못되었습니다.");
 			requestRestart(Play.this);
 		}
+		
+		AdRequest adRequest = new AdRequest.Builder().build();
+		AV_adview.loadAd(adRequest);
 		
 		if (Vungle.isInitialized()) {
 			Vungle.loadAd(VUNGLE.PLAY_END, new LoadAdCallback() {
