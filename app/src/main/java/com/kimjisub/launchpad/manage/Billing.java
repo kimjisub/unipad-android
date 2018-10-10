@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Constant.DEVELOPERPAYLOAD;
+import static com.kimjisub.launchpad.manage.Constant.ADMOB;
 
 public class Billing {
 	
@@ -105,7 +105,7 @@ public class Billing {
 	
 	public void buyPremium() {
 		try {
-			Bundle bundle = mService.getBuyIntent(3, activity.getPackageName(), "premium", "subs", DEVELOPERPAYLOAD);
+			Bundle bundle = mService.getBuyIntent(3, activity.getPackageName(), "premium", "subs", ADMOB.DEVELOPERPAYLOAD);
 			PendingIntent pendingIntent = bundle.getParcelable("BUY_INTENT");
 			
 			//if (bundle.getInt("RESPONSE_CODE") == BILLING_RESPONSE_RESULT_OK)
