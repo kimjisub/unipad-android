@@ -32,11 +32,17 @@ import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackView;
+import com.vungle.warren.LoadAdCallback;
+import com.vungle.warren.PlayAdCallback;
+import com.vungle.warren.Vungle;
+import com.vungle.warren.VungleNativeAd;
+import com.vungle.warren.error.VungleException;
 
 import org.json.JSONObject;
 
@@ -54,6 +60,7 @@ import java.util.Date;
 import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public class Main extends BaseActivity {
 	
@@ -365,6 +372,33 @@ public class Main extends BaseActivity {
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							pack.packView.setAnimation(a);
+							
+							if (I % 7 == 0) {
+								if (Vungle.canPlayAd(VUNGLE.MAIN_INFEED)) {
+									Log.vungle("MAIN_INFEED : canPlayAd() == true");
+									VungleNativeAd vungleNativeAd = Vungle.getNativeAd(VUNGLE.MAIN_INFEED, new PlayAdCallback() {
+										@Override
+										public void onAdStart(String s) {
+											Log.vungle("MAIN_INFEED : onAdStart()");
+										}
+										
+										@Override
+										public void onAdEnd(String s, boolean b, boolean b1) {
+											Log.vungle("MAIN_INFEED : onAdEnd()");
+										}
+										
+										@Override
+										public void onError(String s, Throwable throwable) {
+											Log.vungle("MAIN_INFEED : onError()");
+										}
+									});
+									View nativeAdView = vungleNativeAd.renderNativeView();
+									RelativeLayout relativeLayout = new RelativeLayout(Main.this);
+									relativeLayout.addView(nativeAdView);
+									LL_list.addView(relativeLayout);
+								} else
+									Log.vungle("MAIN_INFEED : canPlayAd() == false");
+							}
 						});
 						
 						i++;
@@ -963,6 +997,29 @@ public class Main extends BaseActivity {
 			;
 		else
 			updateDriver();
+		
+		if (Vungle.isInitialized()) {
+			Vungle.loadAd(VUNGLE.MAIN_INFEED, new LoadAdCallback() {
+				@Override
+				public void onAdLoad(String placementReferenceId) {
+					Log.vungle("MAIN_INFEED loadAd : placementReferenceId == " + placementReferenceId);
+				}
+				
+				@Override
+				public void onError(String placementReferenceId, Throwable throwable) {
+					Log.vungle("MAIN_INFEED loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
+					try {
+						VungleException ex = (VungleException) throwable;
+						
+						if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+							initVungle();
+					} catch (ClassCastException cex) {
+						Log.vungle(cex.getMessage());
+					}
+				}
+			});
+		} else
+			Log.vungle("MAIN_INFEED loadAd : isInitialized() == false");
 	}
 	
 	@Override

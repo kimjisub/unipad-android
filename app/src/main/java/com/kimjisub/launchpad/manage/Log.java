@@ -21,8 +21,12 @@ public class Log {
 		printLog("com.kimjisub._firebase", msg);
 	}
 	
-	public static void ads(String msg) {
-		printLog("com.kimjisub._ads", msg);
+	public static void vungle(String msg) {
+		printLog("com.kimjisub._vungle", msg);
+	}
+	
+	public static void admob(String msg) {
+		printLog("com.kimjisub._admob", msg);
 	}
 	
 	public static void recv(String msg) {
