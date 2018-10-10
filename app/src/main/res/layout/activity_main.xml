@@ -39,11 +39,26 @@
 		    android:layout_height="match_parent">
 			
 			<LinearLayout
-			    android:id="@+id/list"
 			    android:layout_width="match_parent"
 			    android:layout_height="wrap_content"
-			    android:orientation="vertical"
-			    android:paddingTop="16dp"/>
+			    android:gravity="center"
+			    android:orientation="vertical">
+				
+				<com.google.android.gms.ads.AdView
+				    xmlns:ads="http://schemas.android.com/apk/res-auto"
+				    android:id="@+id/adView"
+				    android:layout_width="match_parent"
+				    android:layout_height="wrap_content"
+				    ads:adSize="SMART_BANNER"
+				    ads:adUnitId="ca-app-pub-1077445788578961/1202909931"/>
+				
+				<LinearLayout
+				    android:id="@+id/list"
+				    android:layout_width="match_parent"
+				    android:layout_height="wrap_content"
+				    android:orientation="vertical"
+				    android:paddingTop="16dp"/>
+			</LinearLayout>
 		
 		</ScrollView>
 	
