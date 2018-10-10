@@ -124,7 +124,7 @@
 		    android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
 		    android:theme="@android:style/Theme.Translucent"/>
 		
-		<!--<activity
+		<activity
 		    android:name="com.vungle.warren.ui.VungleActivity"
 		    android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
 		    android:launchMode="singleTop"
@@ -134,7 +134,7 @@
 		    android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
 		    android:hardwareAccelerated="true"
 		    android:launchMode="singleTop"
-		    android:theme="@android:style/Theme.Translucent.NoTitleBar"/>-->
+		    android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 		
 		<meta-data
 		    android:name="com.google.firebase.messaging.default_notification_icon"

@@ -54,8 +54,8 @@ public class ImportPackByFile extends BaseActivity {
 		setContentView(R.layout.activity_importpack);
 		initVar();
 		
-		//processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		new UnzipTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		//processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 	
 	enum Status {prepare, downloading, analyzing, success, notFound, failed}
