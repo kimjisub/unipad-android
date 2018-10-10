@@ -27,6 +27,10 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.Billing;
@@ -39,9 +43,7 @@ import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackView;
 import com.vungle.warren.LoadAdCallback;
-import com.vungle.warren.PlayAdCallback;
 import com.vungle.warren.Vungle;
-import com.vungle.warren.VungleNativeAd;
 import com.vungle.warren.error.VungleException;
 
 import org.json.JSONObject;
@@ -59,6 +61,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
 
+import static com.kimjisub.launchpad.manage.Constant.ADMOB;
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
@@ -84,6 +87,7 @@ public class Main extends BaseActivity {
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
+	AdView AV_adview;
 	
 	boolean isDoneIntro = false;
 	boolean isShowWatermark = true;
@@ -112,6 +116,7 @@ public class Main extends BaseActivity {
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
+		AV_adview = findViewById(R.id.adView);
 		
 		// animation
 		if (onFirst) {
@@ -372,33 +377,6 @@ public class Main extends BaseActivity {
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							pack.packView.setAnimation(a);
-							
-							if (I % 7 == 0) {
-								if (Vungle.canPlayAd(VUNGLE.MAIN_INFEED)) {
-									Log.vungle("MAIN_INFEED : canPlayAd() == true");
-									VungleNativeAd vungleNativeAd = Vungle.getNativeAd(VUNGLE.MAIN_INFEED, new PlayAdCallback() {
-										@Override
-										public void onAdStart(String s) {
-											Log.vungle("MAIN_INFEED : onAdStart()");
-										}
-										
-										@Override
-										public void onAdEnd(String s, boolean b, boolean b1) {
-											Log.vungle("MAIN_INFEED : onAdEnd()");
-										}
-										
-										@Override
-										public void onError(String s, Throwable throwable) {
-											Log.vungle("MAIN_INFEED : onError()");
-										}
-									});
-									View nativeAdView = vungleNativeAd.renderNativeView();
-									RelativeLayout relativeLayout = new RelativeLayout(Main.this);
-									relativeLayout.addView(nativeAdView);
-									LL_list.addView(relativeLayout);
-								} else
-									Log.vungle("MAIN_INFEED : canPlayAd() == false");
-							}
 						});
 						
 						i++;
@@ -988,6 +966,8 @@ public class Main extends BaseActivity {
 		}
 	}
 	
+	InterstitialAd mInterstitialAd;
+	
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -997,6 +977,9 @@ public class Main extends BaseActivity {
 			;
 		else
 			updateDriver();
+		
+		AdRequest adRequest = new AdRequest.Builder().build();
+		AV_adview.loadAd(adRequest);
 		
 		if (Vungle.isInitialized()) {
 			Vungle.loadAd(VUNGLE.MAIN_INFEED, new LoadAdCallback() {
