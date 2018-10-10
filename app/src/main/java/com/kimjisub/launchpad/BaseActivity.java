@@ -26,7 +26,7 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manage.Constant.ADUNITID;
-import static com.kimjisub.launchpad.manage.Constant.VUNGLE_APPID;
+import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 	
@@ -46,27 +46,35 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	// ========================================================================================= vungle
 	
-	public void initVungle(){
-		
-		Vungle.init(VUNGLE_APPID, getApplicationContext(), new InitCallback() {
-			@Override
-			public void onSuccess() {
-				// Initialization has succeeded and SDK is ready to load an ad or play one if there
-				// is one pre-cached already
-			}
-			
-			@Override
-			public void onError(Throwable throwable) {
-				// Initialization error occurred - throwable.getLocalizedMessage() contains error message
-			}
-			
-			@Override
-			public void onAutoCacheAdAvailable(String placementId) {
-				// Callback to notify when an ad becomes available for the auto-cached placement
-				// NOTE: This callback works only for the auto-cached placement. Otherwise, please use
-				// LoadAdCallback with loadAd API for loading placements.
-			}
-		};
+	public void initVungle() {
+		if (!Vungle.isInitialized()) {
+			Log.vungle("isInitialized() == false");
+			Log.vungle("init start");
+			Vungle.init(VUNGLE.APPID, getApplicationContext(), new InitCallback() {
+				@Override
+				public void onSuccess() {
+					// Initialization has succeeded and SDK is ready to load an ad or play one if there
+					// is one pre-cached already
+					Log.vungle("init onSuccess()");
+				}
+				
+				@Override
+				public void onError(Throwable throwable) {
+					// Initialization error occurred - throwable.getLocalizedMessage() contains error message
+					Log.vungle("init onError() == " + throwable.getLocalizedMessage());
+				}
+				
+				@Override
+				public void onAutoCacheAdAvailable(String placementId) {
+					// Callback to notify when an ad becomes available for the auto-cached placement
+					// NOTE: This callback works only for the auto-cached placement. Otherwise, please use
+					// LoadAdCallback with loadAd API for loading placements.
+					Log.vungle("init onAutoCacheAdAvailable()");
+				}
+			});
+		} else {
+			Log.vungle("isInitialized() == true");
+		}
 	}
 	
 	// ========================================================================================= Admob
@@ -80,20 +88,20 @@ public abstract class BaseActivity extends AppCompatActivity {
 			
 			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
 				SettingManager.PrevAdsShowTime.save(this, currTime);
-				Log.ads("showAdmob");
+				Log.admob("showAdmob");
 				
 				if (interstitialAd.isLoaded()) {
-					Log.ads("isLoaded");
+					Log.admob("isLoaded");
 					interstitialAd.show();
 					loadAdmob();
-					Log.ads("show!");
+					Log.admob("show!");
 				} else {
-					Log.ads("! isLoaded (set listener)");
+					Log.admob("! isLoaded (set listener)");
 					interstitialAd.setAdListener(new AdListener() {
 						public void onAdLoaded() {
 							interstitialAd.show();
 							loadAdmob();
-							Log.ads("show!");
+							Log.admob("show!");
 						}
 					});
 				}
@@ -103,7 +111,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	
 	public void initAdmob() {
 		if (!Billing.isPremium) {
-			Log.ads("initAdmob");
+			Log.admob("initAdmob");
 			loadAdmob();
 		}
 	}
@@ -199,6 +207,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
+		initVungle();
 	}
 	
 	@Override
@@ -212,6 +221,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Log.activity("onResume " + this.getLocalClassName());
 		super.onResume();
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		initVungle();
 	}
 	
 	@Override
