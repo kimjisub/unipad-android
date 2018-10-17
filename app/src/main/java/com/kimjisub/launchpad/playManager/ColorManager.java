@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.playManager;
 
-import java.util.ArrayList;
-
 public class ColorManager {
 	public static final int GUIDE = 0;
 	public static final int PRESSED = 1;
