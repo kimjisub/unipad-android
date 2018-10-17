@@ -85,7 +85,10 @@ public class Main extends BaseActivity {
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
+	
+	//Admob
 	AdView AV_adview;
+	InterstitialAd mInterstitialAd;
 	
 	boolean isDoneIntro = false;
 	boolean isShowWatermark = true;
@@ -964,7 +967,6 @@ public class Main extends BaseActivity {
 		}
 	}
 	
-	InterstitialAd mInterstitialAd;
 	
 	@Override
 	public void onResume() {
