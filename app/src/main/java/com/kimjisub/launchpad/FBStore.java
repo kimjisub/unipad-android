@@ -293,7 +293,7 @@ public class FBStore extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					v.setPlayText((int)((float) progress[1] / fileSize * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(fileSize) + "MB");
+					v.setPlayText((int) ((float) progress[1] / fileSize * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(fileSize) + "MB");
 				} else if (progress[0] == 1) {//분석중
 					v.setPlayText(lang(R.string.analyzing));
 					v.updateFlagColor(color(R.color.orange));
