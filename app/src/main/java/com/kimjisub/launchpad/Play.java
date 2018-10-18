@@ -428,9 +428,7 @@ public class Play extends BaseActivity {
 				RL_option_view.setVisibility(View.VISIBLE);
 		});
 		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
-		SCV_proLightMode.setOnCheckedChange(isChecked -> {
-			proLightMode(isChecked);
-		});
+		SCV_proLightMode.setOnCheckedChange(this::proLightMode);
 		IV_prev.setOnClickListener(v -> autoPlay_prev());
 		IV_play.setOnClickListener(v -> {
 			if (autoPlayTask.isPlaying)
@@ -1408,7 +1406,7 @@ public class Play extends BaseActivity {
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
 					if (4 <= f && f <= 7 && upDown)
-						toggleWatermark();
+						SCV_watermark.toggleChecked();
 				}
 				
 				@Override
@@ -1488,13 +1486,8 @@ public class Play extends BaseActivity {
 	
 	// ========================================================================================= Watermark
 	
-	void toggleWatermark() {
-		toggleWatermark(!isShowWatermark);
-	}
-	
 	void toggleWatermark(boolean bool) {
 		isShowWatermark = bool;
-		SCV_watermark.setChecked(isShowWatermark);
 		
 		if (isShowWatermark) {
 			for (int i = 4; i <= 7; i++) {
