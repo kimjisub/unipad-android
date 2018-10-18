@@ -131,5 +131,4 @@ public class SettingManager {
 			return pref.getLong(TAG, 0);
 		}
 	}
-	
 }
