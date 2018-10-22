@@ -1294,9 +1294,7 @@ public class Play extends BaseActivity {
 				
 				
 				if (e.wormhole != -1)
-					new Handler().postDelayed(() -> {
-						chainChange(e.wormhole);
-					}, 100);
+					new Handler().postDelayed(() -> chainChange(e.wormhole), 100);
 			} else {
 				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
@@ -1377,10 +1375,10 @@ public class Play extends BaseActivity {
 				@Override
 				public void onConnected() {
 					onConnected_();
-					(new Handler()).postDelayed(() -> onConnected_(), 3000);
+					(new Handler()).postDelayed(this::onConnected_, 3000);
 				}
 				
-				public void onConnected_() {
+				void onConnected_() {
 					Launchpad.driver.sendFunctionkeyLED(0, 0);
 					Launchpad.driver.sendFunctionkeyLED(1, 0);
 					Launchpad.driver.sendFunctionkeyLED(2, 0);
