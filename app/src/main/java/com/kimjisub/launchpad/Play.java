@@ -228,9 +228,10 @@ public class Play extends BaseActivity {
 			
 			Log.log("[06] Set CheckBox Checked");
 			if (unipack.isKeyLED) {
-				SCV_LED.setChecked(true);
 				SCV_feedbackLight.setChecked(false);
-			}
+				SCV_LED.setChecked(true);
+			} else
+				SCV_feedbackLight.setChecked(true);
 			
 			isFeedbackLight = SCV_feedbackLight.isChecked();
 			isLEDEvent = SCV_LED.isChecked();

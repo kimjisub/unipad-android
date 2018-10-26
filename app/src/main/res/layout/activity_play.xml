@@ -50,7 +50,6 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:buttonTint="@color/checkbox"
-				    android:checked="true"
 				    android:text="@string/feedbackLight"
 				    android:textColor="@color/checkbox"/>
 				
@@ -59,7 +58,6 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:buttonTint="@color/checkbox"
-				    android:checked="false"
 				    android:text="@string/LED"
 				    android:textColor="@color/checkbox"/>
 				
@@ -69,7 +67,6 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:buttonTint="@color/checkbox"
-				    android:checked="false"
 				    android:text="@string/autoPlay"
 				    android:textColor="@color/checkbox"/>
 				
@@ -134,7 +131,6 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:buttonTint="@color/checkbox"
-				    android:checked="false"
 				    android:text="@string/traceLog"
 				    android:textColor="@color/checkbox"/>
 				
@@ -143,7 +139,6 @@
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
 				    android:buttonTint="@color/checkbox"
-				    android:checked="false"
 				    android:text="@string/record"
 				    android:textColor="@color/checkbox"/>
 			</LinearLayout>
@@ -236,7 +231,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="true"
 						    android:text="@string/feedbackLight"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -245,7 +239,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/LED"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -255,7 +248,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/autoPlay"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -264,7 +256,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/traceLog"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -273,7 +264,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/record"
 						    android:textColor="@color/option_window_checkbox"/>
 					
@@ -291,7 +281,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/hideUI"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -300,7 +289,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="true"
 						    android:text="@string/watermark"
 						    android:textColor="@color/option_window_checkbox"/>
 						
@@ -309,7 +297,6 @@
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
 						    android:buttonTint="@color/option_window_checkbox"
-						    android:checked="false"
 						    android:text="@string/proLightMode"
 						    android:textColor="@color/option_window_checkbox"/>
 					
