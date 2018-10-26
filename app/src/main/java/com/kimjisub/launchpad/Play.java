@@ -1687,32 +1687,35 @@ public class Play extends BaseActivity {
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded) {
-			///showAdmob();
-			if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
-				Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
-					@Override
-					public void onAdStart(String placementReferenceId) {
-						Log.vungle("PLAY_END playAd : onAdStart()");
-					}
-					
-					@Override
-					public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
-						Log.vungle("PLAY_END onAdEnd : onAdEnd()");
-					}
-					
-					@Override
-					public void onError(String placementReferenceId, Throwable throwable) {
-						Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
-						try {
-							VungleException ex = (VungleException) throwable;
-							
-							if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-								initVungle();
-						} catch (ClassCastException cex) {
-							Log.vungle(cex.getMessage());
+			if (Math.random() * 10 > 3)
+				showAdmob();
+			else {
+				if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
+					Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
+						@Override
+						public void onAdStart(String placementReferenceId) {
+							Log.vungle("PLAY_END playAd : onAdStart()");
 						}
-					}
-				});
+						
+						@Override
+						public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
+							Log.vungle("PLAY_END onAdEnd : onAdEnd()");
+						}
+						
+						@Override
+						public void onError(String placementReferenceId, Throwable throwable) {
+							Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
+							try {
+								VungleException ex = (VungleException) throwable;
+								
+								if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+									initVungle();
+							} catch (ClassCastException cex) {
+								Log.vungle(cex.getMessage());
+							}
+						}
+					});
+				}
 			}
 		}
 	}
