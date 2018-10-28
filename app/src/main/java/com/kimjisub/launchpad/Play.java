@@ -31,6 +31,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
+import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Log;
@@ -1624,31 +1625,33 @@ public class Play extends BaseActivity {
 			requestRestart(Play.this);
 		}
 		
-		AdRequest adRequest = new AdRequest.Builder().build();
-		AV_adview.loadAd(adRequest);
-		
-		if (Vungle.isInitialized()) {
-			Vungle.loadAd(VUNGLE.PLAY_END, new LoadAdCallback() {
-				@Override
-				public void onAdLoad(String placementReferenceId) {
-					Log.vungle("PLAY_END loadAd : placementReferenceId == " + placementReferenceId);
-				}
-				
-				@Override
-				public void onError(String placementReferenceId, Throwable throwable) {
-					Log.vungle("PLAY_END loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
-					try {
-						VungleException ex = (VungleException) throwable;
-						
-						if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-							initVungle();
-					} catch (ClassCastException cex) {
-						Log.vungle(cex.getMessage());
+		if (BillingCertification.isShowAds()) {
+			AdRequest adRequest = new AdRequest.Builder().build();
+			AV_adview.loadAd(adRequest);
+			
+			if (Vungle.isInitialized()) {
+				Vungle.loadAd(VUNGLE.PLAY_END, new LoadAdCallback() {
+					@Override
+					public void onAdLoad(String placementReferenceId) {
+						Log.vungle("PLAY_END loadAd : placementReferenceId == " + placementReferenceId);
 					}
-				}
-			});
-		} else
-			Log.vungle("PLAY_END loadAd : isInitialized() == false");
+					
+					@Override
+					public void onError(String placementReferenceId, Throwable throwable) {
+						Log.vungle("PLAY_END loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
+						try {
+							VungleException ex = (VungleException) throwable;
+							
+							if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+								initVungle();
+						} catch (ClassCastException cex) {
+							Log.vungle(cex.getMessage());
+						}
+					}
+				});
+			} else
+				Log.vungle("PLAY_END loadAd : isInitialized() == false");
+		}
 	}
 	
 	@Override
@@ -1688,34 +1691,37 @@ public class Play extends BaseActivity {
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded) {
-			if (Math.random() * 10 > 3)
-				showAdmob();
-			else {
-				if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
-					Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
-						@Override
-						public void onAdStart(String placementReferenceId) {
-							Log.vungle("PLAY_END playAd : onAdStart()");
-						}
-						
-						@Override
-						public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
-							Log.vungle("PLAY_END onAdEnd : onAdEnd()");
-						}
-						
-						@Override
-						public void onError(String placementReferenceId, Throwable throwable) {
-							Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
-							try {
-								VungleException ex = (VungleException) throwable;
-								
-								if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-									initVungle();
-							} catch (ClassCastException cex) {
-								Log.vungle(cex.getMessage());
+			
+			if (BillingCertification.isShowAds()) {
+				if (Math.random() * 10 > 3)
+					showAdmob();
+				else {
+					if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
+						Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
+							@Override
+							public void onAdStart(String placementReferenceId) {
+								Log.vungle("PLAY_END playAd : onAdStart()");
 							}
-						}
-					});
+							
+							@Override
+							public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
+								Log.vungle("PLAY_END onAdEnd : onAdEnd()");
+							}
+							
+							@Override
+							public void onError(String placementReferenceId, Throwable throwable) {
+								Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
+								try {
+									VungleException ex = (VungleException) throwable;
+									
+									if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+										initVungle();
+								} catch (ClassCastException cex) {
+									Log.vungle(cex.getMessage());
+								}
+							}
+						});
+					}
 				}
 			}
 		}
