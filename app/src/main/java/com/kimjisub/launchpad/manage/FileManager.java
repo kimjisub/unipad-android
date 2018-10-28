@@ -69,6 +69,8 @@ public class FileManager {
 				e.printStackTrace();
 			}
 			zin.close();
+			
+			removeDoubleFolder(location);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -78,6 +80,62 @@ public class FileManager {
 		File file = new File(path);
 		file.delete();
 	}*/
+	
+	public static void removeDoubleFolder(String path) {
+		try {
+			File rootFolder = new File(path);
+			
+			if (rootFolder.isDirectory()) {
+				File[] childFileList = rootFolder.listFiles();
+				if (childFileList.length == 1) {
+					File innerFolder = childFileList[0];
+					if (innerFolder.isDirectory()) {
+						copyFolder(innerFolder, rootFolder);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void copyFolder(File sourceF, File targetF) {
+		try {
+			File[] ff = sourceF.listFiles();
+			for (File file : ff) {
+				File temp = new File(targetF.getAbsolutePath() + File.separator + file.getName());
+				if (file.isDirectory()) {
+					temp.mkdir();
+					copyFolder(file, temp);
+				} else {
+					FileInputStream fis = null;
+					FileOutputStream fos = null;
+					try {
+						fis = new FileInputStream(file);
+						fos = new FileOutputStream(temp);
+						byte[] b = new byte[4096];
+						int cnt = 0;
+						while ((cnt = fis.read(b)) != -1) {
+							fos.write(b, 0, cnt);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						try {
+							fis.close();
+							fos.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			deleteFolder(sourceF.getPath());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static void deleteFolder(String path) {
 		
