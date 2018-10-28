@@ -33,6 +33,7 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.Billing;
+import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Log;
@@ -148,12 +149,16 @@ public class Main extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
-		initAdmob();
+		if (BillingCertification.isShowAds())
+			initAdmob();
 		
 		startIntro();
 	}
 	
 	void startIntro() {
+		if (BillingCertification.isPro())
+			isPro();
+		
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
 			public void onServiceDisconnected(Billing v) {
@@ -162,7 +167,7 @@ public class Main extends BaseActivity {
 			@Override
 			public void onServiceConnected(Billing v) {
 				if (Billing.isPremium)
-					TV_version.setTextColor(color(R.color.orange));
+					isPro();
 			}
 			
 			@Override
@@ -176,7 +181,8 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					showAdmob();
+					if (BillingCertification.isShowAds())
+						showAdmob();
 					new Handler().postDelayed(() -> {
 						RL_intro.setVisibility(View.GONE);
 						startMain();
@@ -192,6 +198,11 @@ public class Main extends BaseActivity {
 			.setDeniedMessage(R.string.permissionDenied)
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
+	}
+	
+	void isPro(){
+		TV_version.setTextColor(color(R.color.orange));
+		AV_adview.setVisibility(View.GONE);
 	}
 	
 	void startMain() {
@@ -978,31 +989,34 @@ public class Main extends BaseActivity {
 		else
 			updateDriver();
 		
-		AdRequest adRequest = new AdRequest.Builder().build();
-		AV_adview.loadAd(adRequest);
 		
-		if (Vungle.isInitialized()) {
-			Vungle.loadAd(VUNGLE.MAIN_INFEED, new LoadAdCallback() {
-				@Override
-				public void onAdLoad(String placementReferenceId) {
-					Log.vungle("MAIN_INFEED loadAd : placementReferenceId == " + placementReferenceId);
-				}
-				
-				@Override
-				public void onError(String placementReferenceId, Throwable throwable) {
-					Log.vungle("MAIN_INFEED loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
-					try {
-						VungleException ex = (VungleException) throwable;
-						
-						if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-							initVungle();
-					} catch (ClassCastException cex) {
-						Log.vungle(cex.getMessage());
+		if (BillingCertification.isShowAds()) {
+			AdRequest adRequest = new AdRequest.Builder().build();
+			AV_adview.loadAd(adRequest);
+			
+			if (Vungle.isInitialized()) {
+				Vungle.loadAd(VUNGLE.MAIN_INFEED, new LoadAdCallback() {
+					@Override
+					public void onAdLoad(String placementReferenceId) {
+						Log.vungle("MAIN_INFEED loadAd : placementReferenceId == " + placementReferenceId);
 					}
-				}
-			});
-		} else
-			Log.vungle("MAIN_INFEED loadAd : isInitialized() == false");
+					
+					@Override
+					public void onError(String placementReferenceId, Throwable throwable) {
+						Log.vungle("MAIN_INFEED loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
+						try {
+							VungleException ex = (VungleException) throwable;
+							
+							if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+								initVungle();
+						} catch (ClassCastException cex) {
+							Log.vungle(cex.getMessage());
+						}
+					}
+				});
+			} else
+				Log.vungle("MAIN_INFEED loadAd : isInitialized() == false");
+		}
 	}
 	
 	@Override
