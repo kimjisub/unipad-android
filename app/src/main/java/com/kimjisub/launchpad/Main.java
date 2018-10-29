@@ -140,6 +140,9 @@ public class Main extends BaseActivity {
 		
 		// var
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Main.this);
+		
+		if (BillingCertification.isPro())
+			isPro();
 	}
 	
 	// =========================================================================================
@@ -156,9 +159,6 @@ public class Main extends BaseActivity {
 	}
 	
 	void startIntro() {
-		if (BillingCertification.isPro())
-			isPro();
-		
 		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
 			@Override
 			public void onServiceDisconnected(Billing v) {

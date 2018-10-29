@@ -139,6 +139,9 @@ public class Play extends BaseActivity {
 		SCV_hideUI = new SyncCheckBox(CB2_hideUI);
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
+		
+		if (BillingCertification.isPro())
+			isPro();
 	}
 	
 	// =========================================================================================
@@ -571,6 +574,10 @@ public class Play extends BaseActivity {
 		//BTN_option_quit.setBackgroundColor(theme.option_window_btn);
 		//BTN_option_quit.setTextColor(theme.option_window_btn_text);
 		
+	}
+	
+	void isPro(){
+		AV_adview.setVisibility(View.GONE);
 	}
 	
 	// ========================================================================================= 특성 다른 LED 처리
