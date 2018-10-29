@@ -192,7 +192,7 @@
 		<RelativeLayout
 		    android:id="@+id/option_window"
 		    android:layout_width="0dp"
-		    android:layout_height="250dp"
+		    android:layout_height="wrap_content"
 		    android:layout_weight="0.6"
 		    android:background="@drawable/border_settings"
 		    android:clickable="true"
@@ -202,7 +202,7 @@
 			
 			<LinearLayout
 			    android:layout_width="match_parent"
-			    android:layout_height="match_parent"
+			    android:layout_height="wrap_content"
 			    android:orientation="vertical">
 				
 				<com.google.android.gms.ads.AdView
@@ -215,7 +215,7 @@
 				
 				<LinearLayout
 				    android:layout_width="match_parent"
-				    android:layout_height="match_parent"
+				    android:layout_height="wrap_content"
 				    android:layout_gravity="center"
 				    android:orientation="horizontal"
 				    android:weightSum="2">
@@ -303,16 +303,21 @@
 					</LinearLayout>
 				
 				</LinearLayout>
-			</LinearLayout>
+				
+				<Button
+				    android:id="@+id/quit"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:layout_alignParentRight="true"
+				    android:layout_alignParentBottom="true"
+				    android:layout_gravity="end"
+				    android:layout_marginTop="-40dp"
+				    android:text="@string/quit"
+				    android:textColor="@color/option_window_btn_text"/>
 			
-			<Button
-			    android:id="@+id/quit"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    android:layout_alignParentRight="true"
-			    android:layout_alignParentBottom="true"
-			    android:text="@string/quit"
-			    android:textColor="@color/option_window_btn_text"/>
+			</LinearLayout>
+		
+		
 		</RelativeLayout>
 	
 	
