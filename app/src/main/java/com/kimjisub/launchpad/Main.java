@@ -89,7 +89,6 @@ public class Main extends BaseActivity {
 	
 	//Admob
 	AdView AV_adview;
-	InterstitialAd mInterstitialAd;
 	
 	boolean isDoneIntro = false;
 	boolean isShowWatermark = true;
@@ -995,29 +994,6 @@ public class Main extends BaseActivity {
 		if (BillingCertification.isShowAds()) {
 			AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);
-			
-			if (Vungle.isInitialized()) {
-				Vungle.loadAd(VUNGLE.MAIN_INFEED, new LoadAdCallback() {
-					@Override
-					public void onAdLoad(String placementReferenceId) {
-						Log.vungle("MAIN_INFEED loadAd : placementReferenceId == " + placementReferenceId);
-					}
-					
-					@Override
-					public void onError(String placementReferenceId, Throwable throwable) {
-						Log.vungle("MAIN_INFEED loadAd : getLocalizedMessage() == " + throwable.getLocalizedMessage());
-						try {
-							VungleException ex = (VungleException) throwable;
-							
-							if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-								initVungle();
-						} catch (ClassCastException cex) {
-							Log.vungle(cex.getMessage());
-						}
-					}
-				});
-			} else
-				Log.vungle("MAIN_INFEED loadAd : isInitialized() == false");
 		}
 	}
 	
