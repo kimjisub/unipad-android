@@ -15,7 +15,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manage.Billing;
@@ -144,9 +143,15 @@ public class Setting extends PreferenceActivity {
 				"CarouselLayoutManager",
 				"FloatingActionButton",
 				"TedPermission",
-				"RealtimeBlurView"
+				"RealtimeBlurView",
+				"Android In-App Billing v3 Library",
+				"Retrofit",
+				"UniPad DesignKit"
 			};
 			String[] summaryList = {
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
 				"Apache License 2.0",
 				"Apache License 2.0",
 				"Apache License 2.0",
@@ -156,7 +161,10 @@ public class Setting extends PreferenceActivity {
 				"https://github.com/Azoft/CarouselLayoutManager",
 				"https://github.com/Clans/FloatingActionButton",
 				"https://github.com/ParkSangGwon/TedPermission",
-				"https://github.com/mmin18/RealtimeBlurView"
+				"https://github.com/mmin18/RealtimeBlurView",
+				"https://github.com/anjlab/android-inapp-billing-v3",
+				"https://github.com/square/retrofit",
+				"https://github.com/0226daniel/UniPad-DesignKit"
 			};
 			
 			ListView listView = new ListView(Setting.this);
