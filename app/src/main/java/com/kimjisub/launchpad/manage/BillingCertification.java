@@ -16,7 +16,7 @@ public class BillingCertification {
 	// =========================================================================================
 	
 	//static boolean isPremium;
-	static boolean isPro = true;
+	static boolean isPro = false;
 	
 	/*static public boolean isPremium(){
 		return isPremium;
