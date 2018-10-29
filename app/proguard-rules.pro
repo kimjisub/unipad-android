@@ -25,7 +25,7 @@
   *;
 }
 -keep class android.support.v8.renderscript.** { *; }
-
+-keep class com.android.vending.billing.**
 
 # vungle
 #-dontwarn com.vungle.**
