@@ -200,7 +200,7 @@ public class Main extends BaseActivity {
 			.check();
 	}
 	
-	void isPro(){
+	void isPro() {
 		TV_version.setTextColor(color(R.color.orange));
 		AV_adview.setVisibility(View.GONE);
 	}
@@ -986,8 +986,10 @@ public class Main extends BaseActivity {
 		initVar(false);
 		if (!isDoneIntro)
 			;
-		else
+		else {
 			updateDriver();
+			checkThings();
+		}
 		
 		
 		if (BillingCertification.isShowAds()) {
