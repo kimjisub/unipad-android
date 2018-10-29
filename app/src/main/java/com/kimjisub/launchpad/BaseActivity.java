@@ -207,7 +207,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
-		initVungle();
 	}
 	
 	@Override
