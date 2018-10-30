@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,8 +18,11 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.anjlab.android.iab.v3.BillingProcessor;
+import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manage.Billing;
+import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.SettingManager;
 
 import org.json.JSONObject;
@@ -27,7 +32,7 @@ import java.util.Locale;
 
 public class Setting extends PreferenceActivity {
 	
-	Billing billing;
+	BillingCertification billingCertification;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -35,23 +40,27 @@ public class Setting extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.setting);
 		
-		
-		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
+		billingCertification = new BillingCertification(Setting.this, new BillingProcessor.IBillingHandler() {
 			@Override
-			public void onServiceDisconnected(Billing v) {
+			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			
 			}
 			
 			@Override
-			public void onServiceConnected(Billing v) {
+			public void onPurchaseHistoryRestored() {
 			
 			}
 			
 			@Override
-			public void onPurchaseDone(Billing v, JSONObject jo) {
+			public void onBillingError(int errorCode, @Nullable Throwable error) {
 			
 			}
-		}).start();
+			
+			@Override
+			public void onBillingInitialized() {
+			
+			}
+		});
 		
 		findPreference("select_theme").setOnPreferenceClickListener(preference -> {
 			startActivity(new Intent(Setting.this, Theme.class));
@@ -134,7 +143,7 @@ public class Setting extends PreferenceActivity {
 		});
 		
 		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
-			billing.buyPremium();
+			billingCertification.purchasePremium();
 			return false;
 		});
 		
@@ -301,11 +310,6 @@ public class Setting extends PreferenceActivity {
 	}
 	
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		billing.onActivityResult(requestCode, resultCode, data);
-	}
-	
-	@Override
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(Setting.this));
 		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(Setting.this));
@@ -330,7 +334,7 @@ public class Setting extends PreferenceActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		BaseActivity.finishActivity(this);
-		billing.onDestroy();
+		billingCertification.release();
 	}
 	
 	String lang(int id) {
