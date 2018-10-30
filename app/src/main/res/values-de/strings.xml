@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Einstellungen</string>
 	<string name="information">Information</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Skin Auswählen</string>
 	<string name="use_sd_card">SD Card Benutzen</string>
 	<string name="removeAds">Ads Entfernen</string>

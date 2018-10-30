@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Setting</string>
 	<string name="information">Information</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Select Skin</string>
 	<string name="use_sd_card">Using SD Card</string>
 	<string name="removeAds">Remove Ads</string>

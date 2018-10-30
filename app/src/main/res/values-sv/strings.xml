@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Inställning</string>
 	<string name="information">Information</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Välj tema</string>
 	<string name="use_sd_card">Använder SD-kort</string>
 	<string name="removeAds">Ta bort reklam</string>
