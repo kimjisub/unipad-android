@@ -8,7 +8,7 @@ import android.widget.Toast;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 
-import static com.kimjisub.launchpad.manage.Constant.DEVELOPERPAYLOAD;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.*;
 
 public class BillingCertification {
 	
@@ -30,9 +30,6 @@ public class BillingCertification {
 	
 	// =========================================================================================
 	
-	static String PREMIUM = "premium";
-	static String PRO = "pro";
-	
 	static boolean isPremium = false;
 	static boolean isPro = false;
 	
@@ -43,8 +40,6 @@ public class BillingCertification {
 	public static boolean isPro() {
 		return isPro;
 	}
-	
-	// =========================================================================================
 	
 	public static boolean isShowAds() {
 		return !isPremium();
@@ -69,7 +64,6 @@ public class BillingCertification {
 		
 		void onRefresh();
 	}
-	
 	
 	// =========================================================================================
 	
@@ -105,10 +99,9 @@ public class BillingCertification {
 		billingProcessor.initialize();
 	}
 	
-	void refresh() {
+	public void refresh() {
 		isPremium = billingProcessor.isSubscribed(PREMIUM);
 		isPro = billingProcessor.isSubscribed(PRO);
-		
 		
 		Toast.makeText(activity, "premium : " + isPremium + "\npro : " + isPro, Toast.LENGTH_SHORT).show();
 		
@@ -124,6 +117,7 @@ public class BillingCertification {
 	public void loadOwnedPurchasesFromGoogle() {
 		if (billingProcessor != null && billingProcessor.isInitialized())
 			billingProcessor.loadOwnedPurchasesFromGoogle();
+		refresh();
 	}
 	
 	
