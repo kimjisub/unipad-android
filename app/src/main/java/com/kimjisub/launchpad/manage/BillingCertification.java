@@ -91,11 +91,11 @@ public class BillingCertification {
 	// =========================================================================================
 	
 	public void purchasePremium() {
-		billingProcessor.consumePurchase(PREMIUM);
+		billingProcessor.purchase(activity, PREMIUM);
 	}
 	
 	public void purchasePro() {
-		billingProcessor.consumePurchase(PRO);
+		billingProcessor.purchase(activity, PRO);
 	}
 	
 }
