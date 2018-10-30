@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,15 +18,13 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.SettingManager;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -61,6 +60,8 @@ public class Setting extends PreferenceActivity {
 			
 			}
 		});
+		
+		updateBilling();
 		
 		findPreference("select_theme").setOnPreferenceClickListener(preference -> {
 			startActivity(new Intent(Setting.this, Theme.class));
@@ -142,8 +143,15 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
-		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
+		findPreference("premium").setOnPreferenceClickListener(preference -> {
+			((CheckBoxPreference) preference).setChecked(BillingCertification.isPremium());
 			billingCertification.purchasePremium();
+			return false;
+		});
+		
+		findPreference("pro").setOnPreferenceClickListener(preference -> {
+			((CheckBoxPreference) preference).setChecked(BillingCertification.isPro());
+			billingCertification.purchasePro();
 			return false;
 		});
 		
@@ -197,6 +205,14 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
+	}
+	
+	void updateBilling() {
+		if (BillingCertification.isUpdated()) {
+			((CheckBoxPreference) findPreference("premium")).setChecked(BillingCertification.isPremium());
+			((CheckBoxPreference) findPreference("pro")).setChecked(BillingCertification.isPro());
+		} else
+			Toast.makeText(Setting.this, "isUpdated : false", Toast.LENGTH_SHORT).show();
 	}
 	
 	public class mItem {
@@ -313,8 +329,8 @@ public class Setting extends PreferenceActivity {
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(Setting.this));
 		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(Setting.this));
-		if (Billing.isPremium)
-			findPreference("removeAds").setSummary(lang(R.string.using));
+		
+		updateBilling();
 		
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 		
