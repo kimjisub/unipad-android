@@ -20,14 +20,14 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keepattributes Signature
--keepclassmembers class com.kimjisub.launchpad.fb.** {
-  *;
-}
--keepclassmembers class com.kimjisub.launchpad.manage.network.** {
-   *;
- }
--keep class android.support.v8.renderscript.** { *; }
+#-keepattributes Signature
+#-keepclassmembers class com.kimjisub.launchpad.fb.** {
+#  *;
+#}
+#-keepclassmembers class com.kimjisub.launchpad.manage.network.** {
+#   *;
+# }
+#-keep class android.support.v8.renderscript.** { *; }
 #-keep class com.android.vending.billing.**
 
 # vungle
