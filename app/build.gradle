@@ -8,8 +8,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 16
 		targetSdkVersion 27
-		versionCode 77
-		versionName "3.6.0b1"
+		versionCode 78
+		versionName "3.6.0b2"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 		renderscriptTargetApi 19
@@ -21,6 +21,12 @@ android {
 			minifyEnabled true
 			useProguard true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			proguardFile 'proguard-billing.pro'
+			proguardFile 'proguard-common.pro'
+			proguardFile 'proguard-firebase.pro'
+			proguardFile 'proguard-okhttp3.pro'
+			proguardFile 'proguard-retrofit2.pro'
+			proguardFile 'proguard-vungle.pro'
 		}
 		debug {
 			minifyEnabled false
