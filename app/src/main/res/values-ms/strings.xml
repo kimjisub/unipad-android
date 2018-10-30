@@ -41,7 +41,10 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Pilih kulit</string>
 	<string name="use_sd_card">Guna Kad SD</string>
-	<string name="removeAds">Buang Iklan</string>
+	<string name="plan_premium">Premium</string>
+	<string name="plan_premium_">Buang Iklan</string>
+	<string name="plan_professional">Professional</string>
+	<string name="plan_professional_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Pembelian Selesai</string>
 	<string name="openSourceLicense">Sumber Lesen Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
