@@ -17,4 +17,6 @@
 -keep class com.moat.** { *; }
 -dontwarn com.moat.**
 
+-dontwarn com.vungle.warren.error.VungleError$ErrorCode
+
 # End: Proguard rules for retrofit2
