@@ -41,7 +41,10 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Välj tema</string>
 	<string name="use_sd_card">Använder SD-kort</string>
-	<string name="removeAds">Ta bort reklam</string>
+	<string name="plan_premium">Premium</string>
+	<string name="plan_premium_">Ta bort reklam</string>
+	<string name="plan_professional">Professional</string>
+	<string name="plan_professional_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Köp avslutat</string>
 	<string name="openSourceLicense">Open Source Licens</string>
 	<string name="FCMToken">FCM Token</string>

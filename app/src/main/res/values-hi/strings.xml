@@ -41,7 +41,10 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">skin चुने</string>
 	<string name="use_sd_card">मेमोरी कार्ड का प्रयोग करें</string>
-	<string name="removeAds">विज्ञापन हटाएँ</string>
+	<string name="plan_premium">Premium</string>
+	<string name="plan_premium_">विज्ञापन हटाएँ</string>
+	<string name="plan_professional">Professional</string>
+	<string name="plan_professional_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">खरीद पूर्ण</string>
 	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
 	<string name="FCMToken">एफसीएम टोकन</string>

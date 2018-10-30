@@ -41,7 +41,10 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Skin Auswählen</string>
 	<string name="use_sd_card">SD Card Benutzen</string>
-	<string name="removeAds">Ads Entfernen</string>
+	<string name="plan_premium">Premium</string>
+	<string name="plan_premium_">Ads Entfernen</string>
+	<string name="plan_professional">Professional</string>
+	<string name="plan_professional_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Kauf Erfolgreich</string>
 	<string name="openSourceLicense">Open Source Lizenz</string>
 	<string name="FCMToken">FCM Token</string>
