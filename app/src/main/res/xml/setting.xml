@@ -10,9 +10,22 @@
 		    android:defaultValue="false"
 		    android:key="use_sd_card"
 		    android:title="@string/use_sd_card"/>
-		<Preference
-		    android:key="removeAds"
-		    android:title="@string/removeAds"/>
+	
+	</PreferenceCategory>
+	
+	<PreferenceCategory
+	    android:title="@string/payment">
+		
+		<CheckBoxPreference
+		    android:key="premium"
+		    android:summary="@string/plan_premium_"
+		    android:title="@string/plan_premium"/>
+		
+		<CheckBoxPreference
+		    android:key="pro"
+		    android:summary="@string/plan_professional_"
+		    android:title="@string/plan_professional"/>
+	
 	</PreferenceCategory>
 	
 	<PreferenceCategory

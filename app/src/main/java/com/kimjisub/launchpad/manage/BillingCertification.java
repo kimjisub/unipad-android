@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.manage;
 
 import android.app.Activity;
-import android.content.Context;
 
 import com.anjlab.android.iab.v3.BillingProcessor;
 
@@ -29,25 +28,25 @@ public class BillingCertification {
 	static boolean isPremium = false;
 	static boolean isPro = false;
 	
-	public static boolean isIsUpdated() {
+	public static boolean isUpdated() {
 		return isUpdated;
 	}
 	
-	static public boolean isPremium() {
+	public static boolean isPremium() {
 		return isPremium;
 	}
 	
-	static public boolean isPro() {
+	public static boolean isPro() {
 		return isPro;
 	}
 	
 	// =========================================================================================
 	
-	static public boolean isShowAds() {
+	public static boolean isShowAds() {
 		return !isPremium();
 	}
 	
-	static public boolean isUnlockProTools() {
+	public static boolean isUnlockProTools() {
 		return isPro();
 	}
 	
@@ -71,8 +70,8 @@ public class BillingCertification {
 	
 	// =========================================================================================
 	
-	public boolean isAvailable(Context context) {
-		return BillingProcessor.isIabServiceAvailable(context);
+	public boolean isAvailable() {
+		return BillingProcessor.isIabServiceAvailable(activity);
 	}
 	
 	public boolean isOneTimePurchaseSupported() {
@@ -93,6 +92,9 @@ public class BillingCertification {
 	
 	public void purchasePremium() {
 		billingProcessor.consumePurchase(PREMIUM);
+	}
+	
+	public void purchasePro() {
 		billingProcessor.consumePurchase(PRO);
 	}
 	
