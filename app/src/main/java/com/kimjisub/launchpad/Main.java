@@ -916,7 +916,7 @@ public class Main extends BaseActivity {
 			try {
 				String currVersion = BuildConfig.VERSION_NAME;
 				if (version != null && !currVersion.equals(version)) {
-					Snackbar.make(RL_rootView, lang(R.string.newVersionFound) + "\n" + currVersion + " -> " + version, Snackbar.LENGTH_LONG)
+					Snackbar.make(RL_rootView, lang(R.string.newVersionFound) + "\n" + currVersion + " -> " + version, Snackbar.LENGTH_SHORT)
 						.setAction(R.string.update, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))))
 						.show();
 				}
