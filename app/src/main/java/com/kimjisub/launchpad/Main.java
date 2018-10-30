@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -24,7 +26,10 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.anjlab.android.iab.v3.BillingProcessor;
+import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.ads.AdRequest;
@@ -71,6 +76,7 @@ public class Main extends BaseActivity {
 	TextView TV_version;
 	
 	Billing billing;
+	BillingCertification billingCertification;
 	
 	// Main
 	RelativeLayout RL_rootView;
@@ -139,9 +145,6 @@ public class Main extends BaseActivity {
 		
 		// var
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Main.this);
-		
-		if (BillingCertification.isPro())
-			isPro();
 	}
 	
 	// =========================================================================================
@@ -158,21 +161,33 @@ public class Main extends BaseActivity {
 	}
 	
 	void startIntro() {
-		billing = new Billing(this).setOnEventListener(new Billing.OnEventListener() {
+		billingCertification = new BillingCertification(Main.this, new BillingCertification.BillingEventListener() {
 			@Override
-			public void onServiceDisconnected(Billing v) {
+			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
+			
 			}
 			
 			@Override
-			public void onServiceConnected(Billing v) {
-				if (Billing.isPremium)
+			public void onPurchaseHistoryRestored() {
+			
+			}
+			
+			@Override
+			public void onBillingError(int errorCode, @Nullable Throwable error) {
+			
+			}
+			
+			@Override
+			public void onBillingInitialized() {
+			
+			}
+			
+			@Override
+			public void onRefresh() {
+				if(BillingCertification.isPremium())
 					isPro();
 			}
-			
-			@Override
-			public void onPurchaseDone(Billing v, JSONObject jo) {
-			}
-		}).start();
+		});
 		
 		TV_version.setText(BuildConfig.VERSION_NAME);
 		
@@ -180,9 +195,11 @@ public class Main extends BaseActivity {
 			.setPermissionListener(new PermissionListener() {
 				@Override
 				public void onPermissionGranted() {
-					if (BillingCertification.isShowAds())
-						showAdmob();
+					
 					new Handler().postDelayed(() -> {
+						if (BillingCertification.isShowAds())
+							showAdmob();
+						
 						RL_intro.setVisibility(View.GONE);
 						startMain();
 					}, 3000);
