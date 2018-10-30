@@ -41,6 +41,7 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Select Skin</string>
 	<string name="use_sd_card">Using SD Card</string>
+	<string name="plan_restoringPurchases">Restoring Purchases</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">Remove Ads</string>
 	<string name="plan_professional">Professional</string>
