@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Tetapan</string>
 	<string name="information">Informasi</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Pilih kulit</string>
 	<string name="use_sd_card">Guna Kad SD</string>
 	<string name="removeAds">Buang Iklan</string>

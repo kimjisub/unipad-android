@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Setting</string>
 	<string name="information">Kaalaman</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Pumili ng Skin</string>
 	<string name="use_sd_card">Gamitin ang SD Card</string>
 	<string name="removeAds">Alisin ang Ads</string>

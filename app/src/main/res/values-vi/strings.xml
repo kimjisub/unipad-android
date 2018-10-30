@@ -38,6 +38,7 @@
 	<!--Setting-->
 	<string name="setting">Cài đặt</string>
 	<string name="information">Thông tin</string>
+	<string name="payment">Payment</string>
 	<string name="select_theme">Chọn Skin</string>
 	<string name="use_sd_card">Sử dụng thẻ SD</string>
 	<string name="removeAds">Bỏ quảng cáo</string>
