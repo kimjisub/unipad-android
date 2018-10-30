@@ -24,8 +24,11 @@
 -keepclassmembers class com.kimjisub.launchpad.fb.** {
   *;
 }
+-keepclassmembers class com.kimjisub.launchpad.manage.network.** {
+   *;
+ }
 -keep class android.support.v8.renderscript.** { *; }
--keep class com.android.vending.billing.**
+#-keep class com.android.vending.billing.**
 
 # vungle
 #-dontwarn com.vungle.**
