@@ -15,6 +15,9 @@
 	
 	<PreferenceCategory
 	    android:title="@string/payment">
+		<Preference
+		    android:key="restoreBilling"
+		    android:title="@string/plan_restoringPurchases"/>
 		<CheckBoxPreference
 		    android:key="premium"
 		    android:summary="@string/plan_premium_"
@@ -23,9 +26,6 @@
 		    android:key="pro"
 		    android:summary="@string/plan_professional_"
 		    android:title="@string/plan_professional"/>
-		<Preference
-		    android:key="restoreBilling"
-		    android:title="@string/plan_restoringPurchases"/>
 	</PreferenceCategory>
 	
 	<PreferenceCategory
