@@ -16,7 +16,6 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.vungle.warren.InitCallback;
@@ -82,38 +81,34 @@ public abstract class BaseActivity extends AppCompatActivity {
 	private static InterstitialAd interstitialAd;
 	
 	public void showAdmob() {
-		if (!Billing.isPremium) {
-			long prevTime = SettingManager.PrevAdsShowTime.load(this);
-			long currTime = System.currentTimeMillis();
+		long prevTime = SettingManager.PrevAdsShowTime.load(this);
+		long currTime = System.currentTimeMillis();
+		
+		if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
+			SettingManager.PrevAdsShowTime.save(this, currTime);
+			Log.admob("showAdmob");
 			
-			if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
-				SettingManager.PrevAdsShowTime.save(this, currTime);
-				Log.admob("showAdmob");
-				
-				if (interstitialAd.isLoaded()) {
-					Log.admob("isLoaded");
-					interstitialAd.show();
-					loadAdmob();
-					Log.admob("show!");
-				} else {
-					Log.admob("! isLoaded (set listener)");
-					interstitialAd.setAdListener(new AdListener() {
-						public void onAdLoaded() {
-							interstitialAd.show();
-							loadAdmob();
-							Log.admob("show!");
-						}
-					});
-				}
+			if (interstitialAd.isLoaded()) {
+				Log.admob("isLoaded");
+				interstitialAd.show();
+				loadAdmob();
+				Log.admob("show!");
+			} else {
+				Log.admob("! isLoaded (set listener)");
+				interstitialAd.setAdListener(new AdListener() {
+					public void onAdLoaded() {
+						interstitialAd.show();
+						loadAdmob();
+						Log.admob("show!");
+					}
+				});
 			}
 		}
 	}
 	
 	public void initAdmob() {
-		if (!Billing.isPremium) {
-			Log.admob("initAdmob");
-			loadAdmob();
-		}
+		Log.admob("initAdmob");
+		loadAdmob();
 	}
 	
 	void loadAdmob() {

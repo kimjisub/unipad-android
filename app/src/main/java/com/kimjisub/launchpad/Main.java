@@ -28,30 +28,21 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.launchpad.manage.Billing;
 import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackView;
-import com.vungle.warren.LoadAdCallback;
-import com.vungle.warren.Vungle;
-import com.vungle.warren.error.VungleException;
-
-import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -67,16 +58,13 @@ import java.util.Date;
 import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
-import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public class Main extends BaseActivity {
 	
 	// Intro
+	BillingCertification billingCertification;
 	RelativeLayout RL_intro;
 	TextView TV_version;
-	
-	Billing billing;
-	BillingCertification billingCertification;
 	
 	// Main
 	RelativeLayout RL_rootView;
@@ -164,28 +152,34 @@ public class Main extends BaseActivity {
 		billingCertification = new BillingCertification(Main.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
-			
+				Toast.makeText(Main.this, "MAIN - onProductPurchased", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onPurchaseHistoryRestored() {
-			
+				Toast.makeText(Main.this, "MAIN - onPurchaseHistoryRestored", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingError(int errorCode, @Nullable Throwable error) {
-			
+				Toast.makeText(Main.this, "MAIN - onBillingError", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingInitialized() {
-			
+				Toast.makeText(Main.this, "MAIN - onBillingInitialized", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onRefresh() {
-				if(BillingCertification.isPremium())
-					isPro();
+				Toast.makeText(Main.this, "MAIN - onRefresh", Toast.LENGTH_SHORT).show();
+				if (BillingCertification.isPremium()) {
+					TV_version.setTextColor(color(R.color.orange));
+					AV_adview.setVisibility(View.GONE);
+				}
+				
+				if (BillingCertification.isShowAds())
+					showAdmob();
 			}
 		});
 		
@@ -196,10 +190,8 @@ public class Main extends BaseActivity {
 				@Override
 				public void onPermissionGranted() {
 					
+					
 					new Handler().postDelayed(() -> {
-						if (BillingCertification.isShowAds())
-							showAdmob();
-						
 						RL_intro.setVisibility(View.GONE);
 						startMain();
 					}, 3000);
@@ -217,8 +209,7 @@ public class Main extends BaseActivity {
 	}
 	
 	void isPro() {
-		TV_version.setTextColor(color(R.color.orange));
-		AV_adview.setVisibility(View.GONE);
+	
 	}
 	
 	void startMain() {
@@ -1030,7 +1021,6 @@ public class Main extends BaseActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		billing.onDestroy();
 		
 		Launchpad.driver.sendClearLED();
 		Launchpad.removeDriverListener(Main.this);

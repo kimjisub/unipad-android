@@ -41,26 +41,27 @@ public class Setting extends PreferenceActivity {
 		billingCertification = new BillingCertification(Setting.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
-			
+				Toast.makeText(Setting.this, "SETTING - onProductPurchased", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onPurchaseHistoryRestored() {
-			
+				Toast.makeText(Setting.this, "SETTING - onPurchaseHistoryRestored", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingError(int errorCode, @Nullable Throwable error) {
-			
+				Toast.makeText(Setting.this, "SETTING - onBillingError", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingInitialized() {
-			
+				Toast.makeText(Setting.this, "SETTING - onBillingInitialized", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onRefresh() {
+				Toast.makeText(Setting.this, "SETTING - onRefresh", Toast.LENGTH_SHORT).show();
 				updateBilling();
 			}
 		});
@@ -145,6 +146,11 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
+		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
+			billingCertification.loadOwnedPurchasesFromGoogle();
+			return false;
+		});
+		
 		findPreference("premium").setOnPreferenceClickListener(preference -> {
 			((CheckBoxPreference) preference).setChecked(BillingCertification.isPremium());
 			billingCertification.purchasePremium();
@@ -154,11 +160,6 @@ public class Setting extends PreferenceActivity {
 		findPreference("pro").setOnPreferenceClickListener(preference -> {
 			((CheckBoxPreference) preference).setChecked(BillingCertification.isPro());
 			billingCertification.purchasePro();
-			return false;
-		});
-		
-		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
-			billingCertification.loadOwnedPurchasesFromGoogle();
 			return false;
 		});
 		
@@ -215,8 +216,6 @@ public class Setting extends PreferenceActivity {
 	}
 	
 	void updateBilling() {
-		Toast.makeText(this, "updateBilling", Toast.LENGTH_SHORT).show();
-		
 		((CheckBoxPreference) findPreference("premium")).setChecked(BillingCertification.isPremium());
 		((CheckBoxPreference) findPreference("pro")).setChecked(BillingCertification.isPro());
 	}
@@ -335,9 +334,6 @@ public class Setting extends PreferenceActivity {
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(Setting.this));
 		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(Setting.this));
-		
-		updateBilling();
-		
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 		
 		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
