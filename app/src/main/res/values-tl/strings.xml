@@ -41,6 +41,7 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Pumili ng Skin</string>
 	<string name="use_sd_card">Gamitin ang SD Card</string>
+	<string name="plan_restoringPurchases">Restoring Purchases</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">Alisin ang Ads</string>
 	<string name="plan_professional">Professional</string>

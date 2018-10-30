@@ -41,6 +41,7 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Chọn Skin</string>
 	<string name="use_sd_card">Sử dụng thẻ SD</string>
+	<string name="plan_restoringPurchases">Restoring Purchases</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">Bỏ quảng cáo</string>
 	<string name="plan_professional">Professional</string>

@@ -41,6 +41,7 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Pilih kulit</string>
 	<string name="use_sd_card">Guna Kad SD</string>
+	<string name="plan_restoringPurchases">Restoring Purchases</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">Buang Iklan</string>
 	<string name="plan_professional">Professional</string>
