@@ -25,6 +25,9 @@
 		    android:key="pro"
 		    android:summary="@string/plan_professional_"
 		    android:title="@string/plan_professional"/>
+		<Preference
+		    android:key="restoreBilling"
+		    android:title="Restoreasdfasdf"/>
 	
 	</PreferenceCategory>
 	

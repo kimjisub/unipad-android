@@ -20,7 +20,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manage.BillingCertification;
@@ -39,7 +38,7 @@ public class Setting extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.setting);
 		
-		billingCertification = new BillingCertification(Setting.this, new BillingProcessor.IBillingHandler() {
+		billingCertification = new BillingCertification(Setting.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			
@@ -59,9 +58,12 @@ public class Setting extends PreferenceActivity {
 			public void onBillingInitialized() {
 			
 			}
+			
+			@Override
+			public void onRefresh() {
+				updateBilling();
+			}
 		});
-		
-		updateBilling();
 		
 		findPreference("select_theme").setOnPreferenceClickListener(preference -> {
 			startActivity(new Intent(Setting.this, Theme.class));
@@ -155,6 +157,11 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
+		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
+			billingCertification.loadOwnedPurchasesFromGoogle();
+			return false;
+		});
+		
 		findPreference("OpenSourceLicense").setOnPreferenceClickListener(preference -> {
 			String[] titleList = {
 				"CarouselLayoutManager",
@@ -208,11 +215,10 @@ public class Setting extends PreferenceActivity {
 	}
 	
 	void updateBilling() {
-		if (BillingCertification.isUpdated()) {
-			((CheckBoxPreference) findPreference("premium")).setChecked(BillingCertification.isPremium());
-			((CheckBoxPreference) findPreference("pro")).setChecked(BillingCertification.isPro());
-		} else
-			Toast.makeText(Setting.this, "isUpdated : false", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "updateBilling", Toast.LENGTH_SHORT).show();
+		
+		((CheckBoxPreference) findPreference("premium")).setChecked(BillingCertification.isPremium());
+		((CheckBoxPreference) findPreference("pro")).setChecked(BillingCertification.isPro());
 	}
 	
 	public class mItem {
