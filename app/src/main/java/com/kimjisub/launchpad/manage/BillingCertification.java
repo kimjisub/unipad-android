@@ -100,10 +100,11 @@ public class BillingCertification {
 	}
 	
 	public void refresh() {
+		if (billingProcessor != null && billingProcessor.isInitialized())
+			billingProcessor.loadOwnedPurchasesFromGoogle();
+		
 		isPremium = billingProcessor.isSubscribed(PREMIUM);
 		isPro = billingProcessor.isSubscribed(PRO);
-		
-		Toast.makeText(activity, "premium : " + isPremium + "\npro : " + isPro, Toast.LENGTH_SHORT).show();
 		
 		if (billingEventListener != null)
 			billingEventListener.onRefresh();
@@ -112,12 +113,6 @@ public class BillingCertification {
 	public void release() {
 		if (billingProcessor != null && billingProcessor.isInitialized())
 			billingProcessor.release();
-	}
-	
-	public void loadOwnedPurchasesFromGoogle() {
-		if (billingProcessor != null && billingProcessor.isInitialized())
-			billingProcessor.loadOwnedPurchasesFromGoogle();
-		refresh();
 	}
 	
 	

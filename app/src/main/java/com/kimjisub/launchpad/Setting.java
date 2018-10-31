@@ -41,27 +41,22 @@ public class Setting extends PreferenceActivity {
 		billingCertification = new BillingCertification(Setting.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
-				Toast.makeText(Setting.this, "SETTING - onProductPurchased", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onPurchaseHistoryRestored() {
-				Toast.makeText(Setting.this, "SETTING - onPurchaseHistoryRestored", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingError(int errorCode, @Nullable Throwable error) {
-				Toast.makeText(Setting.this, "SETTING - onBillingError", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingInitialized() {
-				Toast.makeText(Setting.this, "SETTING - onBillingInitialized", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onRefresh() {
-				Toast.makeText(Setting.this, "SETTING - onRefresh", Toast.LENGTH_SHORT).show();
 				updateBilling();
 			}
 		});
@@ -147,7 +142,7 @@ public class Setting extends PreferenceActivity {
 		});
 		
 		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
-			billingCertification.loadOwnedPurchasesFromGoogle();
+			billingCertification.refresh();
 			return false;
 		});
 		
