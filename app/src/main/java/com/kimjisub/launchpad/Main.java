@@ -152,27 +152,22 @@ public class Main extends BaseActivity {
 		billingCertification = new BillingCertification(Main.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
-				Toast.makeText(Main.this, "MAIN - onProductPurchased", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onPurchaseHistoryRestored() {
-				Toast.makeText(Main.this, "MAIN - onPurchaseHistoryRestored", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingError(int errorCode, @Nullable Throwable error) {
-				Toast.makeText(Main.this, "MAIN - onBillingError", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onBillingInitialized() {
-				Toast.makeText(Main.this, "MAIN - onBillingInitialized", Toast.LENGTH_SHORT).show();
 			}
 			
 			@Override
 			public void onRefresh() {
-				Toast.makeText(Main.this, "MAIN - onRefresh", Toast.LENGTH_SHORT).show();
 				if (BillingCertification.isPremium()) {
 					TV_version.setTextColor(color(R.color.orange));
 					AV_adview.setVisibility(View.GONE);
