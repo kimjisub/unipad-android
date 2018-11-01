@@ -43,10 +43,10 @@
 	<string name="use_sd_card">मेमोरी कार्ड का प्रयोग करें</string>
 	<string name="plan_restorePurchases">Restore Purchases</string>
 	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
-	<string name="plan_premium">Premium</string>
-	<string name="plan_premium_">विज्ञापन हटाएँ</string>
-	<string name="plan_professional">Professional</string>
-	<string name="plan_professional_">Unlimited use of Professional features</string>
+	<string name="plan_removeAds">Remove Ads</string>
+	<string name="plan_removeAds_">विज्ञापन हटाएँ</string>
+	<string name="plan_proTools">Professional Tools</string>
+	<string name="plan_proTools_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">खरीद पूर्ण</string>
 	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
 	<string name="FCMToken">एफसीएम टोकन</string>

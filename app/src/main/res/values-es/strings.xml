@@ -43,10 +43,10 @@
 	<string name="use_sd_card">Usar Tarjeta SD</string>
 	<string name="plan_restorePurchases">Restore Purchases</string>
 	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
-	<string name="plan_premium">Premium</string>
-	<string name="plan_premium_">Remover Anuncios</string>
-	<string name="plan_professional">Professional</string>
-	<string name="plan_professional_">Unlimited use of Professional features</string>
+	<string name="plan_removeAds">Remove Ads</string>
+	<string name="plan_removeAds_">Remover Anuncios</string>
+	<string name="plan_proTools">Professional Tools</string>
+	<string name="plan_proTools_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Compra Completada</string>
 	<string name="openSourceLicense">Abrir Licencia Fuente</string>
 	<string name="FCMToken">Token FCM</string>

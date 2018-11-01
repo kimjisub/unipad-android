@@ -18,7 +18,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -146,15 +145,15 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
-		findPreference("premium").setOnPreferenceClickListener(preference -> {
-			((CheckBoxPreference) preference).setChecked(BillingCertification.isPremium());
-			billingCertification.purchasePremium();
+		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
+			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseRemoveAds());
+			billingCertification.purchase_removeAds();
 			return false;
 		});
 		
-		findPreference("pro").setOnPreferenceClickListener(preference -> {
-			((CheckBoxPreference) preference).setChecked(BillingCertification.isPro());
-			billingCertification.purchasePro();
+		findPreference("proTools").setOnPreferenceClickListener(preference -> {
+			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseProTools());
+			billingCertification.purchase_proTools();
 			return false;
 		});
 		
@@ -211,8 +210,8 @@ public class Setting extends PreferenceActivity {
 	}
 	
 	void updateBilling() {
-		((CheckBoxPreference) findPreference("premium")).setChecked(BillingCertification.isPremium());
-		((CheckBoxPreference) findPreference("pro")).setChecked(BillingCertification.isPro());
+		((CheckBoxPreference) findPreference("removeAds")).setChecked(BillingCertification.isPurchaseRemoveAds());
+		((CheckBoxPreference) findPreference("proTools")).setChecked(BillingCertification.isPurchaseProTools());
 	}
 	
 	public class mItem {

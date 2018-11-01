@@ -43,10 +43,10 @@
 	<string name="use_sd_card">Gunakan SD Card</string>
 	<string name="plan_restorePurchases">Restore Purchases</string>
 	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
-	<string name="plan_premium">Premium</string>
-	<string name="plan_premium_">Hilangkan Ads</string>
-	<string name="plan_professional">Professional</string>
-	<string name="plan_professional_">Unlimited use of Professional features</string>
+	<string name="plan_removeAds">Remove Ads</string>
+	<string name="plan_removeAds_">Hilangkan Ads</string>
+	<string name="plan_proTools">Professional Tools</string>
+	<string name="plan_proTools_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Pembelian Selesai</string>
 	<string name="openSourceLicense">Lisensi Sumber Terbuka</string>
 	<string name="FCMToken">FCM Token</string>

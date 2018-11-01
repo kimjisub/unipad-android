@@ -140,7 +140,7 @@ public class Play extends BaseActivity {
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
 		
-		if (BillingCertification.isPro())
+		if (BillingCertification.isUnlockProTools())
 			isPro();
 	}
 	

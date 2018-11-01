@@ -43,10 +43,10 @@
 	<string name="use_sd_card">Gamitin ang SD Card</string>
 	<string name="plan_restorePurchases">Restore Purchases</string>
 	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
-	<string name="plan_premium">Premium</string>
-	<string name="plan_premium_">Alisin ang Ads</string>
-	<string name="plan_professional">Professional</string>
-	<string name="plan_professional_">Unlimited use of Professional features</string>
+	<string name="plan_removeAds">Remove Ads</string>
+	<string name="plan_removeAds_">Alisin ang Ads</string>
+	<string name="plan_proTools">Professional Tools</string>
+	<string name="plan_proTools_">Unlimited use of Professional features</string>
 	<string name="purchaseComplete">Tapos na ang Pagbili</string>
 	<string name="openSourceLicense">Buksan ang Source License</string>
 	<string name="FCMToken">FCM Token</string>
