@@ -172,9 +172,11 @@ public class Main extends BaseActivity {
 				}
 				
 				if (BillingCertification.isShowAds()) {
-					AV_adview.setVisibility(View.GONE);
 					showAdmob();
-				}
+					AdRequest adRequest = new AdRequest.Builder().build();
+					AV_adview.loadAd(adRequest);
+				} else
+					AV_adview.setVisibility(View.GONE);
 			}
 		});
 		
@@ -987,12 +989,6 @@ public class Main extends BaseActivity {
 		else {
 			updateDriver();
 			checkThings();
-		}
-		
-		
-		if (BillingCertification.isShowAds()) {
-			AdRequest adRequest = new AdRequest.Builder().build();
-			AV_adview.loadAd(adRequest);
 		}
 	}
 	
