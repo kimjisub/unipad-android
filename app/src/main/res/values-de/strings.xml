@@ -47,6 +47,7 @@
 	<string name="plan_removeAds_">Ads Entfernen</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Kauf Erfolgreich</string>
 	<string name="openSourceLicense">Open Source Lizenz</string>
 	<string name="FCMToken">FCM Token</string>
