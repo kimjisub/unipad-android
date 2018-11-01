@@ -17,7 +17,8 @@
 	    android:title="@string/payment">
 		<Preference
 		    android:key="restoreBilling"
-		    android:title="@string/plan_restoringPurchases"/>
+		    android:summary="@string/plan_restorePurchases_"
+		    android:title="@string/plan_restorePurchases"/>
 		<CheckBoxPreference
 		    android:key="premium"
 		    android:summary="@string/plan_premium_"
