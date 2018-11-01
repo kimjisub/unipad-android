@@ -41,7 +41,8 @@
 	<string name="payment">결제</string>
 	<string name="select_theme">스킨 선택</string>
 	<string name="use_sd_card">SD 카드 사용</string>
-	<string name="plan_restoringPurchases">구입항목 복원하기</string>
+	<string name="plan_restorePurchases">구입항목 복원하기</string>
+	<string name="plan_restorePurchases_">결제 후에 앱을 재시작해주세요.</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">광고 제거</string>
 	<string name="plan_professional">Professional</string>

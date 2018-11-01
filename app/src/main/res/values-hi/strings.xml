@@ -41,7 +41,8 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">skin चुने</string>
 	<string name="use_sd_card">मेमोरी कार्ड का प्रयोग करें</string>
-	<string name="plan_restoringPurchases">Restoring Purchases</string>
+	<string name="plan_restorePurchases">Restore Purchases</string>
+	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">विज्ञापन हटाएँ</string>
 	<string name="plan_professional">Professional</string>

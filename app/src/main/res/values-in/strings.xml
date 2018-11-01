@@ -41,7 +41,8 @@
 	<string name="payment">Payment</string>
 	<string name="select_theme">Memilih Skin</string>
 	<string name="use_sd_card">Gunakan SD Card</string>
-	<string name="plan_restoringPurchases">Restoring Purchases</string>
+	<string name="plan_restorePurchases">Restore Purchases</string>
+	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
 	<string name="plan_premium">Premium</string>
 	<string name="plan_premium_">Hilangkan Ads</string>
 	<string name="plan_professional">Professional</string>
