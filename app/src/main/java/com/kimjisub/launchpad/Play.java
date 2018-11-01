@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -19,8 +20,9 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -49,7 +51,6 @@ import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
-
 public class Play extends BaseActivity {
 	
 	RelativeLayout RL_rootView;
@@ -66,7 +67,9 @@ public class Play extends BaseActivity {
 	RelativeLayout RL_option_view;
 	RealtimeBlurView RBV_option_blur;
 	RelativeLayout RL_option_window;
-	Button BTN_option_quit;
+	LinearLayout LL_proTools;
+	CheckBox CB_purchase;
+	ImageButton IB_option_quit;
 	AdView AV_adview;
 	
 	CheckBox CB1_feedbackLight;
@@ -109,9 +112,11 @@ public class Play extends BaseActivity {
 		IV_play = findViewById(R.id.play);
 		IV_next = findViewById(R.id.next);
 		RL_option_view = findViewById(R.id.option_view);
+		LL_proTools = findViewById(R.id.proTools);
+		CB_purchase = findViewById(R.id.purchase);
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
-		BTN_option_quit = findViewById(R.id.quit);
+		IB_option_quit = findViewById(R.id.quit);
 		AV_adview = findViewById(R.id.adView);
 		
 		CB1_feedbackLight = findViewById(R.id.CB1_feedbackLight);
@@ -140,8 +145,12 @@ public class Play extends BaseActivity {
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
 		
-		if (BillingCertification.isUnlockProTools())
-			isPro();
+		if (!BillingCertification.isShowAds())
+			AV_adview.setVisibility(View.GONE);
+		
+		
+		SCV_watermark.forceSetChecked(true);
+		
 	}
 	
 	// =========================================================================================
@@ -162,12 +171,6 @@ public class Play extends BaseActivity {
 	int[][][] stopID;
 	
 	int chain = 0;
-	
-	boolean isFeedbackLight;
-	boolean isLEDEvent;
-	boolean isTraceLog;
-	boolean isRecord;
-	boolean isShowWatermark;
 	
 	final long DELAY = 1;
 	
@@ -236,12 +239,6 @@ public class Play extends BaseActivity {
 				SCV_LED.setChecked(true);
 			} else
 				SCV_feedbackLight.setChecked(true);
-			
-			isFeedbackLight = SCV_feedbackLight.isChecked();
-			isLEDEvent = SCV_LED.isChecked();
-			isTraceLog = SCV_traceLog.isChecked();
-			isRecord = SCV_record.isChecked();
-			isShowWatermark = SCV_watermark.isChecked();
 			
 			
 			(new AsyncTask<String, String, String>() {
@@ -382,15 +379,15 @@ public class Play extends BaseActivity {
 			buttonSizeY = Scale_Height / unipack.buttonX;
 		}
 		
-		
-		SCV_feedbackLight.setOnCheckedChange((isChecked) -> {
-			padInit();
-			isFeedbackLight = isChecked;
+		CB_purchase.setOnCheckedChangeListener((compoundButton, b) -> {
+			compoundButton.setChecked(false);
+			startActivity(new Intent(Play.this, Setting.class));
 		});
+		
+		SCV_feedbackLight.setOnCheckedChange((isChecked) -> padInit());
 		SCV_LED.setOnCheckedChange((isChecked) -> {
 			if (unipack.isKeyLED) {
-				isLEDEvent = isChecked;
-				if (!isLEDEvent)
+				if (!isChecked)
 					LEDInit();
 			}
 		});
@@ -410,14 +407,12 @@ public class Play extends BaseActivity {
 				autoPlay_removeGuide();
 			}
 		});
-		SCV_traceLog.setOnCheckedChange((isChecked) -> isTraceLog = isChecked);
 		SCV_traceLog.setOnLongClick(() -> {
 			traceLog_init();
 			showToast(R.string.traceLogClear);
 		});
 		SCV_record.setOnCheckedChange((isChecked) -> {
-			isRecord = isChecked;
-			if (isRecord) {
+			if (SCV_record.isChecked()) {
 				rec_prevEventMS = System.currentTimeMillis();
 				rec_log = "c " + (chain + 1);
 			} else {
@@ -432,7 +427,7 @@ public class Play extends BaseActivity {
 			else
 				RL_option_view.setVisibility(View.VISIBLE);
 		});
-		SCV_watermark.setOnCheckedChange(this::toggleWatermark);
+		SCV_watermark.setOnCheckedChange(isChecked -> refreshWatermark());
 		SCV_proLightMode.setOnCheckedChange(this::proLightMode);
 		IV_prev.setOnClickListener(v -> autoPlay_prev());
 		IV_play.setOnClickListener(v -> {
@@ -445,7 +440,7 @@ public class Play extends BaseActivity {
 		RBV_option_blur.setOnClickListener(v -> {
 			if (bool_toggleOptionWindow) toggleOptionWindow(false);
 		});
-		BTN_option_quit.setOnClickListener(v -> finish());
+		IB_option_quit.setOnClickListener(v -> finish());
 		
 		LL_pads.removeAllViews();
 		LL_chainsRight.removeAllViews();
@@ -499,6 +494,7 @@ public class Play extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		proLightMode(SCV_proLightMode.isChecked());
+		setProMode(BillingCertification.isUnlockProTools());
 		
 		skin_set();
 		
@@ -571,13 +567,9 @@ public class Play extends BaseActivity {
 				cb2.setButtonTintList(ColorStateList.valueOf(theme.option_window_checkbox));
 		}
 		//RL_option_window.setBackgroundColor(theme.option_window);
-		//BTN_option_quit.setBackgroundColor(theme.option_window_btn);
-		//BTN_option_quit.setTextColor(theme.option_window_btn_text);
+		//IB_option_quit.setBackgroundColor(theme.option_window_btn);
+		//IB_option_quit.setTextColor(theme.option_window_btn_text);
 		
-	}
-	
-	void isPro(){
-		AV_adview.setVisibility(View.GONE);
 	}
 	
 	// ========================================================================================= 특성 다른 LED 처리
@@ -1282,21 +1274,21 @@ public class Play extends BaseActivity {
 				
 				unipack.Sound_push(chain, x, y);
 				
-				if (isRecord) {
+				if (SCV_record.isChecked()) {
 					long currTime = System.currentTimeMillis();
 					rec_addLog("d " + (currTime - rec_prevEventMS));
 					rec_addLog("t " + (x + 1) + " " + (y + 1));
 					rec_prevEventMS = currTime;
 				}
-				if (isTraceLog)
+				if (SCV_traceLog.isChecked())
 					traceLog_log(x, y);
 				
-				if (isFeedbackLight) {
+				if (SCV_feedbackLight.isChecked()) {
 					colorManager.add(x, y, ColorManager.PRESSED, LaunchpadColor.ARGB[119] + 0xFF000000, 119);
 					setLED(x, y);
 				}
 				
-				if (isLEDEvent)
+				if (SCV_LED.isChecked())
 					ledTask.addEvent(x, y);
 				
 				autoPlay_checkGuide(x, y);
@@ -1308,12 +1300,12 @@ public class Play extends BaseActivity {
 				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 				
-				if (isFeedbackLight) {
+				if (SCV_feedbackLight.isChecked()) {
 					colorManager.remove(x, y, ColorManager.PRESSED);
 					setLED(x, y);
 				}
 				
-				if (isLEDEvent) {
+				if (SCV_LED.isChecked()) {
 					LEDTask.LEDEvent e = ledTask.searchEvent(x, y);
 					if (e != null && e.loop == 0)
 						ledTask.eventShutdown(x, y);
@@ -1348,7 +1340,7 @@ public class Play extends BaseActivity {
 			
 			
 			// 녹음 chain 추가
-			if (isRecord) {
+			if (SCV_record.isChecked()) {
 				long currTime = System.currentTimeMillis();
 				rec_addLog("d " + (currTime - rec_prevEventMS));
 				rec_addLog("chain " + (chain + 1));
@@ -1398,7 +1390,7 @@ public class Play extends BaseActivity {
 					Launchpad.driver.sendFunctionkeyLED(7, 0);
 					
 					chainChange(chain);
-					toggleWatermark(true);
+					refreshWatermark();
 				}
 				
 				@Override
@@ -1491,12 +1483,22 @@ public class Play extends BaseActivity {
 		clipboardManager.setPrimaryClip(clipData);
 	}
 	
+	
+	// ========================================================================================= setProMode
+	
+	void setProMode(boolean b) {
+		if (!b)
+			SCV_watermark.forceSetChecked(true);
+		LL_proTools.setEnabled(b);
+		SCV_hideUI.setLocked(!b);
+		SCV_watermark.setLocked(!b);
+		SCV_proLightMode.setLocked(!b);
+	}
+	
 	// ========================================================================================= Watermark
 	
-	void toggleWatermark(boolean bool) {
-		isShowWatermark = bool;
-		
-		if (isShowWatermark) {
+	void refreshWatermark() {
+		if (SCV_watermark.isChecked()) {
 			for (int i = 4; i <= 7; i++) {
 				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
 				setLED(-1, i);
@@ -1508,7 +1510,7 @@ public class Play extends BaseActivity {
 			}
 		}
 		
-		colorManager.setCirIgnore(ColorManager.PRESSED, !isShowWatermark);
+		colorManager.setCirIgnore(ColorManager.PRESSED, !SCV_watermark.isChecked());
 		chainBtnsRefrash();
 	}
 	
