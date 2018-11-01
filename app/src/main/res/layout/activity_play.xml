@@ -186,14 +186,12 @@
 	    android:layout_height="match_parent"
 	    android:layout_centerInParent="true"
 	    android:gravity="center"
-	    android:orientation="horizontal"
-	    android:weightSum="1">
+	    android:orientation="horizontal">
 		
 		<RelativeLayout
 		    android:id="@+id/option_window"
-		    android:layout_width="0dp"
+		    android:layout_width="400dp"
 		    android:layout_height="wrap_content"
-		    android:layout_weight="0.6"
 		    android:background="@drawable/border_settings"
 		    android:clickable="true"
 		    android:focusable="true"
@@ -269,57 +267,74 @@
 					
 					</LinearLayout>
 					
-					
-					<LinearLayout
+					<RelativeLayout
 					    android:layout_width="wrap_content"
 					    android:layout_height="wrap_content"
-					    android:layout_weight="1"
-					    android:orientation="vertical">
+					    android:layout_weight="1">
 						
-						<CheckBox
-						    android:id="@+id/CB2_hideUI"
+						<LinearLayout
 						    android:layout_width="wrap_content"
 						    android:layout_height="wrap_content"
-						    android:buttonTint="@color/option_window_checkbox"
-						    android:text="@string/hideUI"
-						    android:textColor="@color/option_window_checkbox"/>
+						    android:orientation="vertical">
+							
+							<LinearLayout
+							    android:id="@+id/proTools"
+							    android:layout_width="wrap_content"
+							    android:layout_height="wrap_content"
+							    android:alpha="0.3"
+							    android:orientation="vertical">
+								
+								<CheckBox
+								    android:id="@+id/CB2_hideUI"
+								    android:layout_width="wrap_content"
+								    android:layout_height="wrap_content"
+								    android:buttonTint="@color/option_window_checkbox"
+								    android:text="@string/hideUI"
+								    android:textColor="@color/option_window_checkbox"/>
+								
+								<CheckBox
+								    android:id="@+id/CB2_watermark"
+								    android:layout_width="wrap_content"
+								    android:layout_height="wrap_content"
+								    android:buttonTint="@color/option_window_checkbox"
+								    android:text="@string/watermark"
+								    android:textColor="@color/option_window_checkbox"/>
+								
+								<CheckBox
+								    android:id="@+id/CB2_proLightMode"
+								    android:layout_width="wrap_content"
+								    android:layout_height="wrap_content"
+								    android:buttonTint="@color/option_window_checkbox"
+								    android:text="@string/proLightMode"
+								    android:textColor="@color/option_window_checkbox"/>
+							
+							</LinearLayout>
+							
+							<CheckBox
+							    android:id="@+id/purchase"
+							    android:layout_width="wrap_content"
+							    android:layout_height="wrap_content"
+							    android:text="@string/purchase"/>
 						
-						<CheckBox
-						    android:id="@+id/CB2_watermark"
-						    android:layout_width="wrap_content"
-						    android:layout_height="wrap_content"
-						    android:buttonTint="@color/option_window_checkbox"
-						    android:text="@string/watermark"
-						    android:textColor="@color/option_window_checkbox"/>
-						
-						<CheckBox
-						    android:id="@+id/CB2_proLightMode"
-						    android:layout_width="wrap_content"
-						    android:layout_height="wrap_content"
-						    android:buttonTint="@color/option_window_checkbox"
-						    android:text="@string/proLightMode"
-						    android:textColor="@color/option_window_checkbox"/>
+						</LinearLayout>
 					
-					</LinearLayout>
+					
+					</RelativeLayout>
 				
 				</LinearLayout>
 				
-				<Button
+				<ImageButton
 				    android:id="@+id/quit"
 				    android:layout_width="wrap_content"
 				    android:layout_height="wrap_content"
-				    android:layout_alignParentRight="true"
-				    android:layout_alignParentBottom="true"
 				    android:layout_gravity="end"
 				    android:layout_marginTop="-40dp"
-				    android:text="@string/quit"
-				    android:textColor="@color/option_window_btn_text"/>
+				    android:padding="20dp"
+				    android:src="@drawable/baseline_exit_to_app_black_24"/>
 			
 			</LinearLayout>
 		
-		
 		</RelativeLayout>
-	
 	
 	</LinearLayout>
 
