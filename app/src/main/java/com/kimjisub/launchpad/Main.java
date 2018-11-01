@@ -26,7 +26,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
@@ -168,13 +167,14 @@ public class Main extends BaseActivity {
 			
 			@Override
 			public void onRefresh() {
-				if (BillingCertification.isPremium()) {
+				if (BillingCertification.isPurchaseRemoveAds() || BillingCertification.isPurchaseProTools()) {
 					TV_version.setTextColor(color(R.color.orange));
-					AV_adview.setVisibility(View.GONE);
 				}
 				
-				if (BillingCertification.isShowAds())
+				if (BillingCertification.isShowAds()) {
+					AV_adview.setVisibility(View.GONE);
 					showAdmob();
+				}
 			}
 		});
 		
@@ -201,10 +201,6 @@ public class Main extends BaseActivity {
 			.setDeniedMessage(R.string.permissionDenied)
 			.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 			.check();
-	}
-	
-	void isPro() {
-	
 	}
 	
 	void startMain() {

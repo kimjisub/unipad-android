@@ -3,12 +3,13 @@ package com.kimjisub.launchpad.manage;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 
-import static com.kimjisub.launchpad.manage.Constant.BILLING.*;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DEVELOPERPAYLOAD;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.REMOVE_ADS;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.PRO_TOOLS;
 
 public class BillingCertification {
 	
@@ -30,23 +31,23 @@ public class BillingCertification {
 	
 	// =========================================================================================
 	
-	static boolean isPremium = false;
-	static boolean isPro = false;
+	static boolean isRemoveAds = false;
+	static boolean isProTools = false;
 	
-	public static boolean isPremium() {
-		return isPremium;
+	public static boolean isPurchaseRemoveAds() {
+		return isRemoveAds;
 	}
 	
-	public static boolean isPro() {
-		return isPro;
+	public static boolean isPurchaseProTools() {
+		return isProTools;
 	}
 	
 	public static boolean isShowAds() {
-		return !isPremium();
+		return !isPurchaseRemoveAds();
 	}
 	
 	public static boolean isUnlockProTools() {
-		return isPro();
+		return isPurchaseProTools();
 	}
 	
 	// =========================================================================================
@@ -78,7 +79,6 @@ public class BillingCertification {
 			
 			@Override
 			public void onPurchaseHistoryRestored() {
-				refresh();
 				if (billingEventListener != null)
 					billingEventListener.onPurchaseHistoryRestored();
 			}
@@ -100,14 +100,13 @@ public class BillingCertification {
 	}
 	
 	public void refresh() {
-		if (billingProcessor != null && billingProcessor.isInitialized())
+		if (billingProcessor != null && billingProcessor.isInitialized()) {
 			billingProcessor.loadOwnedPurchasesFromGoogle();
-		
-		isPremium = billingProcessor.isSubscribed(PREMIUM);
-		isPro = billingProcessor.isSubscribed(PRO);
-		
-		if (billingEventListener != null)
+			
+			isRemoveAds = billingProcessor.isSubscribed(REMOVE_ADS);
+			isProTools = billingProcessor.isSubscribed(PRO_TOOLS);
 			billingEventListener.onRefresh();
+		}
 	}
 	
 	public void release() {
@@ -138,12 +137,12 @@ public class BillingCertification {
 	
 	// =========================================================================================
 	
-	public void purchasePremium() {
-		billingProcessor.subscribe(activity, PREMIUM);
+	public void purchase_removeAds() {
+		billingProcessor.subscribe(activity, REMOVE_ADS);
 	}
 	
-	public void purchasePro() {
-		billingProcessor.subscribe(activity, PRO);
+	public void purchase_proTools() {
+		billingProcessor.subscribe(activity, PRO_TOOLS);
 	}
 	
 }
