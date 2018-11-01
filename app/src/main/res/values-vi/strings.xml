@@ -47,6 +47,7 @@
 	<string name="plan_removeAds_">Bỏ quảng cáo</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Mua thành công</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>

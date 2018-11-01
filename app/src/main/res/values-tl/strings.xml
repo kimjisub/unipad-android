@@ -47,6 +47,7 @@
 	<string name="plan_removeAds_">Alisin ang Ads</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Tapos na ang Pagbili</string>
 	<string name="openSourceLicense">Buksan ang Source License</string>
 	<string name="FCMToken">FCM Token</string>

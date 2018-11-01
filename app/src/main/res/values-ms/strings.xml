@@ -47,6 +47,7 @@
 	<string name="plan_removeAds_">Buang Iklan</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Pembelian Selesai</string>
 	<string name="openSourceLicense">Sumber Lesen Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
