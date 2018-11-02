@@ -145,11 +145,11 @@ public class Play extends BaseActivity {
 		SCV_watermark = new SyncCheckBox(CB2_watermark);
 		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
 		
+		SCV_watermark.forceSetChecked(true);
+		
 		if (!BillingCertification.isShowAds())
 			AV_adview.setVisibility(View.GONE);
 		
-		
-		SCV_watermark.forceSetChecked(true);
 		
 	}
 	
@@ -1487,12 +1487,21 @@ public class Play extends BaseActivity {
 	// ========================================================================================= setProMode
 	
 	void setProMode(boolean b) {
-		if (!b)
-			SCV_watermark.forceSetChecked(true);
-		LL_proTools.setEnabled(b);
-		SCV_hideUI.setLocked(!b);
-		SCV_watermark.setLocked(!b);
-		SCV_proLightMode.setLocked(!b);
+		
+		if (b) {
+			CB_purchase.setVisibility(View.GONE);
+			LL_proTools.setAlpha(1);
+			SCV_hideUI.setLocked(false);
+			SCV_watermark.setLocked(false);
+			SCV_proLightMode.setLocked(false);
+		} else {
+			CB_purchase.setVisibility(View.VISIBLE);
+			LL_proTools.setAlpha(0.3f);
+			SCV_hideUI.setLocked(true);
+			SCV_watermark.setLocked(true);
+			SCV_proLightMode.setLocked(true);
+		}
+		
 	}
 	
 	// ========================================================================================= Watermark
