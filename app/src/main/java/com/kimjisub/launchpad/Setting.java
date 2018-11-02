@@ -207,6 +207,8 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
+		//findPreference("proTools").animation
+		
 	}
 	
 	void updateBilling() {
