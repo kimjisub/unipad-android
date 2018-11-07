@@ -159,18 +159,20 @@ public class FileManager {
 	public static long getFolderSize(String a_path) {
 		long totalMemory = 0;
 		File file = new File(a_path);
-		File[] childFileList = file.listFiles();
 		
-		if (childFileList == null)
-			return 0;
-		
-		for (File childFile : childFileList) {
-			if (childFile.isDirectory())
+		if (file.isFile()) {
+			return file.length();
+		} else if (file.isDirectory()) {
+			File[] childFileList = file.listFiles();
+			if (childFileList == null)
+				return 0;
+			
+			for (File childFile : childFileList)
 				totalMemory += getFolderSize(childFile.getAbsolutePath());
-			else
-				totalMemory += childFile.length();
-		}
-		return totalMemory;
+			
+			return totalMemory;
+		} else
+			return 0;
 	}
 	
 	@SuppressLint("DefaultLocale")
