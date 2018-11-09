@@ -1398,32 +1398,71 @@ public class Play extends BaseActivity {
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
 				public void onPadTouch(int x, int y, boolean upDown, int velo) {
-					padTouch(x, y, upDown);
+					if (!bool_toggleOptionWindow) {
+						padTouch(x, y, upDown);
+					} else {
+					
+					}
 				}
 				
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
-					if(upDown) {
-						switch (f) {
-							case 0:
-								SCV_feedbackLight.toggleChecked();
-								break;
-							case 1:
-								SCV_LED.toggleChecked();
-								break;
-							case 2:
-								SCV_autoPlay.toggleChecked();
-								break;
-							case 3:
-								if (!bool_toggleOptionWindow)
-									toggleOptionWindow(true);
-								else
+					if (upDown) {
+						if (!bool_toggleOptionWindow) {
+							switch (f) {
+								case 0:
+									SCV_feedbackLight.toggleChecked();
+									break;
+								case 1:
+									SCV_LED.toggleChecked();
+									break;
+								case 2:
+									SCV_autoPlay.toggleChecked();
+									break;
+								case 3:
+									toggleOptionWindow();
+									break;
+								case 4:
+									SCV_watermark.toggleChecked();
+									break;
+								case 5:
+									SCV_watermark.toggleChecked();
+									break;
+								case 6:
+									SCV_watermark.toggleChecked();
+									break;
+								case 7:
+									SCV_watermark.toggleChecked();
+									break;
+							}
+						} else {
+							switch (f) {
+								case 0:
+									SCV_feedbackLight.toggleChecked();
+									break;
+								case 1:
+									SCV_LED.toggleChecked();
+									break;
+								case 2:
+									SCV_autoPlay.toggleChecked();
+									break;
+								case 3:
+									toggleOptionWindow();
+									break;
+								case 4:
+									SCV_hideUI.toggleChecked();
+									break;
+								case 5:
+									SCV_watermark.toggleChecked();
+									break;
+								case 6:
+									SCV_proLightMode.toggleChecked();
+									break;
+								case 7:
 									finish();
-								break;
+									break;
+							}
 						}
-						
-						if (4 <= f && f <= 7)
-							SCV_watermark.toggleChecked();
 					}
 				}
 				
@@ -1526,20 +1565,38 @@ public class Play extends BaseActivity {
 	// ========================================================================================= Watermark
 	
 	void refreshWatermark() {
-		if (SCV_watermark.isChecked()) {
-			for (int i = 4; i <= 7; i++) {
-				colorManager.add(-1, i, ColorManager.GUIDE, -1, i % 2 == 0 ? 61 : 40);
-				setLED(-1, i);
-			}
+		int[] colorBar = new int[8];
+		
+		if (!bool_toggleOptionWindow) {
+			colorBar[0] = 0;
+			colorBar[1] = 0;
+			colorBar[2] = 0;
+			colorBar[3] = 0;
+			colorBar[4] = 61;
+			colorBar[5] = 40;
+			colorBar[6] = 61;
+			colorBar[7] = 40;
+			
+			colorManager.setCirIgnore(ColorManager.PRESSED, !SCV_watermark.isChecked());
+			chainBtnsRefrash();
 		} else {
-			for (int i = 4; i <= 7; i++) {
-				colorManager.remove(-1, i, ColorManager.GUIDE);
-				setLED(-1, i);
-			}
+			colorBar[0] = SCV_feedbackLight.isChecked() ? 21 : 0;
+			colorBar[1] = 0;
+			colorBar[2] = 0;
+			colorBar[3] = 0;
+			colorBar[4] = 119;
+			colorBar[5] = 61;
+			colorBar[6] = 40;
+			colorBar[7] = 5;
 		}
 		
-		colorManager.setCirIgnore(ColorManager.PRESSED, !SCV_watermark.isChecked());
-		chainBtnsRefrash();
+		for (int i = 0; i < 8; i++) {
+			if (colorBar[i] != 0)
+				colorManager.add(-1, i, ColorManager.GUIDE, -1, colorBar[i]);
+			else
+				colorManager.remove(-1, i, ColorManager.GUIDE);
+			setLED(-1, i);
+		}
 	}
 	
 	// ========================================================================================= Pro Mode
@@ -1584,6 +1641,7 @@ public class Play extends BaseActivity {
 	
 	void toggleOptionWindow(boolean bool) {
 		bool_toggleOptionWindow = bool;
+		refreshWatermark();
 		if (bool) {
 			Animation a = new Animation() {
 				@Override
