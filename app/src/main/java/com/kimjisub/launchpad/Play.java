@@ -1403,26 +1403,28 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onFunctionkeyTouch(int f, boolean upDown) {
-					switch (f) {
-						case 0:
-							SCV_feedbackLight.toggleChecked();
-							break;
-						case 1:
-							SCV_LED.toggleChecked();
-							break;
-						case 2:
-							SCV_autoPlay.toggleChecked();
-							break;
-						case 3:
-							if (!bool_toggleOptionWindow)
-								toggleOptionWindow(true);
-							else
-								finish();
-							break;
+					if(upDown) {
+						switch (f) {
+							case 0:
+								SCV_feedbackLight.toggleChecked();
+								break;
+							case 1:
+								SCV_LED.toggleChecked();
+								break;
+							case 2:
+								SCV_autoPlay.toggleChecked();
+								break;
+							case 3:
+								if (!bool_toggleOptionWindow)
+									toggleOptionWindow(true);
+								else
+									finish();
+								break;
+						}
+						
+						if (4 <= f && f <= 7)
+							SCV_watermark.toggleChecked();
 					}
-					
-					if (4 <= f && f <= 7 && upDown)
-						SCV_watermark.toggleChecked();
 				}
 				
 				@Override
