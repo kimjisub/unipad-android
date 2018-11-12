@@ -33,7 +33,6 @@ import com.google.android.gms.ads.AdView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
 import com.kimjisub.launchpad.manage.BillingCertification;
-import com.kimjisub.launchpad.manage.LaunchpadColor;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
@@ -1612,9 +1611,9 @@ public class Play extends BaseActivity {
 				colorBar[7] = 0;
 			}
 		} else {
-			colorBar[0] = SCV_feedbackLight.isChecked() ? 3 : 1;
-			colorBar[1] = SCV_LED.isChecked() ? 53 : 55;
-			colorBar[2] = SCV_autoPlay.isChecked() ? 63 : 63;
+			colorBar[0] = SCV_feedbackLight.isLocked() ? 0 : (SCV_feedbackLight.isChecked() ? 3 : 1);
+			colorBar[1] = SCV_LED.isLocked() ? 0 : (SCV_LED.isChecked() ? 53 : 55);
+			colorBar[2] = SCV_autoPlay.isLocked() ? 0 : (SCV_autoPlay.isChecked() ? 63 : 63);
 			colorBar[3] = 0;
 			colorBar[4] = 3;
 			colorBar[5] = 61;
