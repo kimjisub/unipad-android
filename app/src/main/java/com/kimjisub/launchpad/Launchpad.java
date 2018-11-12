@@ -422,6 +422,8 @@ public class Launchpad extends BaseActivity {
 	
 	public static void updateDriver() {
 		Log.recv("updateDriver");
+		if (isRun)
+			driver.onDisconnected();
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);

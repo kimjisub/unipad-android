@@ -1398,6 +1398,7 @@ public class Play extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
+					Log.recv2("Play onConnected()");
 					onConnected_();
 					(new Handler()).postDelayed(this::onConnected_, 3000);
 				}
@@ -1409,6 +1410,7 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onDisconnected() {
+					Log.recv2("Play onDisconnected()");
 					for (int i = 0; i < 8; i++)
 						Launchpad.driver.sendFunctionkeyLED(i, 0);
 					for (int i = 0; i < 8; i++)

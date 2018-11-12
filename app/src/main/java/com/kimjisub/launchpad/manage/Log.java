@@ -33,6 +33,10 @@ public class Log {
 		printLog("com.kimjisub._recv", msg);
 	}
 	
+	public static void recv2(String msg) {
+		printLog("com.kimjisub._recv2", msg);
+	}
+	
 	public static void sig(String msg) {
 		printLog("com.kimjisub._sig", msg);
 	}

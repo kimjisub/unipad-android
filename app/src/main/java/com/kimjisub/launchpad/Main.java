@@ -37,6 +37,7 @@ import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.manage.BillingCertification;
 import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.LaunchpadDriver;
+import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
@@ -804,6 +805,7 @@ public class Main extends BaseActivity {
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
+					Log.recv2("Main onConnected()");
 					onConnected_();
 					(new Handler()).postDelayed(this::onConnected_, 3000);
 					
@@ -816,6 +818,7 @@ public class Main extends BaseActivity {
 				
 				@Override
 				public void onDisconnected() {
+					Log.recv2("Main onDisconnected()");
 					for (int i = 0; i < 8; i++)
 						Launchpad.driver.sendFunctionkeyLED(i, 0);
 					for (int i = 0; i < 8; i++)
