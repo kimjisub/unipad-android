@@ -146,7 +146,7 @@ public class Unipack {
 			public int x;
 			public int y;
 			public int color = -1;
-			public int velo = 119;
+			public int velo = 4;
 			public int delay = -1;
 			
 			Syntax(int x, int y, int color, int velo) {
@@ -463,7 +463,7 @@ public class Unipack {
 									int _x = -1;
 									int _y = -1;
 									int _color = -1;
-									int _velo = 119;
+									int _velo = 4;
 									int _delay = -1;
 									
 									
