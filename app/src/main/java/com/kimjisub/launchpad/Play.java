@@ -216,11 +216,15 @@ public class Play extends BaseActivity {
 			
 			Log.log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
 			if (unipack.squareButton) {
-				if (!unipack.isKeyLED)
+				if (!unipack.isKeyLED) {
 					SCV_LED.setVisibility(View.GONE);
+					SCV_LED.setLocked(true);
+				}
 				
-				if (!unipack.isAutoPlay)
+				if (!unipack.isAutoPlay) {
 					SCV_autoPlay.setVisibility(View.GONE);
+					SCV_autoPlay.setLocked(true);
+				}
 			} else {
 				RL_rootView.setPadding(0, 0, 0, 0);
 				
@@ -230,6 +234,13 @@ public class Play extends BaseActivity {
 				
 				SCV_traceLog.setVisibility(View.GONE);
 				SCV_record.setVisibility(View.GONE);
+				
+				SCV_feedbackLight.setLocked(true);
+				SCV_LED.setLocked(true);
+				SCV_autoPlay.setLocked(true);
+				
+				SCV_traceLog.setLocked(true);
+				SCV_record.setLocked(true);
 			}
 			
 			Log.log("[06] Set CheckBox Checked");
@@ -1217,7 +1228,7 @@ public class Play extends BaseActivity {
 	void autoPlay_guidePad(int x, int y, boolean onOff) {
 		//log("autoPlay_guidePad (" + buttonX + ", " + buttonY + ", " + onOff + ")");
 		if (onOff) {
-			colorManager.add(x, y, ColorManager.GUIDE, LaunchpadColor.ARGB[19] + 0xFF000000, 19);
+			colorManager.add(x, y, ColorManager.GUIDE, -1, 63);
 			setLED(x, y);
 		} else {
 			colorManager.remove(x, y, ColorManager.GUIDE);
@@ -1228,7 +1239,7 @@ public class Play extends BaseActivity {
 	void autoPlay_guideChain(int c, boolean onOff) {
 		//log("autoPlay_guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
-			colorManager.add(-1, 8 + c, ColorManager.GUIDE, 0xFF8bc34a, 19);
+			colorManager.add(-1, 8 + c, ColorManager.GUIDE, -1, 63);
 			setLED(-1, 8 + c);
 		} else {
 			colorManager.remove(-1, 8 + c, ColorManager.GUIDE);
@@ -1297,7 +1308,7 @@ public class Play extends BaseActivity {
 					traceLog_log(x, y);
 				
 				if (SCV_feedbackLight.isChecked()) {
-					colorManager.add(x, y, ColorManager.PRESSED, LaunchpadColor.ARGB[4] + 0xFF000000, 4);
+					colorManager.add(x, y, ColorManager.PRESSED, -1, 3);
 					setLED(x, y);
 				}
 				
@@ -1372,7 +1383,7 @@ public class Play extends BaseActivity {
 		for (int i = 0; i < unipack.chain; i++) {
 			
 			if (i == chain) {
-				colorManager.add(-1, 8 + i, ColorManager.PRESSED, 0xFFdfe5ee, 4);
+				colorManager.add(-1, 8 + i, ColorManager.PRESSED, -1, 3);
 			} else {
 				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
 			}
@@ -1601,11 +1612,11 @@ public class Play extends BaseActivity {
 				colorBar[7] = 0;
 			}
 		} else {
-			colorBar[0] = SCV_feedbackLight.isChecked() ? 4 : 1;
+			colorBar[0] = SCV_feedbackLight.isChecked() ? 3 : 1;
 			colorBar[1] = SCV_LED.isChecked() ? 53 : 55;
-			colorBar[2] = SCV_autoPlay.isChecked() ? 19 : 63;
+			colorBar[2] = SCV_autoPlay.isChecked() ? 63 : 63;
 			colorBar[3] = 0;
-			colorBar[4] = 4;
+			colorBar[4] = 3;
 			colorBar[5] = 61;
 			colorBar[6] = 40;
 			colorBar[7] = 5;

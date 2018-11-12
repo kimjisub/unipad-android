@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.playManager;
 
+import com.kimjisub.launchpad.manage.LaunchpadColor;
+
 public class ColorManager {
 	public static final int GUIDE = 0;
 	public static final int PRESSED = 1;
@@ -64,6 +66,8 @@ public class ColorManager {
 	}
 	
 	public void add(int x, int y, int chanel, int color, int code) {
+		if (color == -1)
+			color = 0xFF000000 + LaunchpadColor.ARGB[code];
 		if (x != -1)
 			btn[x][y][chanel] = new Item(x, y, chanel, color, code);
 		else
