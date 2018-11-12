@@ -1468,8 +1468,11 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onChainTouch(int c, boolean upDown) {
-					if (upDown && unipack.chain > c)
-						chainChange(c);
+					if (!bool_toggleOptionWindow) {
+						if (upDown && unipack.chain > c)
+							chainChange(c);
+					} else {
+					}
 				}
 				
 				@Override
