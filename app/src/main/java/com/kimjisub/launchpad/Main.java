@@ -816,14 +816,21 @@ public class Main extends BaseActivity {
 				
 				@Override
 				public void onDisconnected() {
+					for (int i = 0; i < 8; i++)
+						Launchpad.driver.sendFunctionkeyLED(i, 0);
+					for (int i = 0; i < 8; i++)
+						for (int j = 0; j < 8; j++)
+							Launchpad.driver.sendPadLED(i, j, 0);
 				}
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
 				public void onPadTouch(int x, int y, boolean upDown, int velo) {
-					if (upDown)
-						Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
-					else
-						Launchpad.driver.sendPadLED(x, y, 0);
+					if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
+						if (upDown)
+							Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+						else
+							Launchpad.driver.sendPadLED(x, y, 0);
+					}
 				}
 				
 				@Override
@@ -843,8 +850,7 @@ public class Main extends BaseActivity {
 					} else if (f == 2 && upDown) {
 						if (haveNow())
 							P_packs.get(playIndex).packView.onPlayClick();
-					} else if (4 <= f && f <= 7 && upDown)
-						toggleWatermark();
+					}
 				}
 				
 				@Override
@@ -891,23 +897,12 @@ public class Main extends BaseActivity {
 	
 	// ========================================================================================= Watermark
 	
-	void toggleWatermark() {
-		isShowWatermark = !isShowWatermark;
-		showWatermark();
-	}
 	
 	void showWatermark() {
-		if (isShowWatermark) {
-			Launchpad.driver.sendFunctionkeyLED(4, 61);
-			Launchpad.driver.sendFunctionkeyLED(5, 40);
-			Launchpad.driver.sendFunctionkeyLED(6, 61);
-			Launchpad.driver.sendFunctionkeyLED(7, 40);
-		} else {
-			Launchpad.driver.sendFunctionkeyLED(4, 0);
-			Launchpad.driver.sendFunctionkeyLED(5, 0);
-			Launchpad.driver.sendFunctionkeyLED(6, 0);
-			Launchpad.driver.sendFunctionkeyLED(7, 0);
-		}
+		Launchpad.driver.sendPadLED(3, 3, 61);
+		Launchpad.driver.sendPadLED(3, 4, 40);
+		Launchpad.driver.sendPadLED(4, 3, 40);
+		Launchpad.driver.sendPadLED(4, 4, 61);
 	}
 	
 	// ========================================================================================= Check

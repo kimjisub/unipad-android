@@ -1403,21 +1403,17 @@ public class Play extends BaseActivity {
 				}
 				
 				void onConnected_() {
-					Launchpad.driver.sendFunctionkeyLED(0, 0);
-					Launchpad.driver.sendFunctionkeyLED(1, 0);
-					Launchpad.driver.sendFunctionkeyLED(2, 0);
-					Launchpad.driver.sendFunctionkeyLED(3, 0);
-					Launchpad.driver.sendFunctionkeyLED(4, 0);
-					Launchpad.driver.sendFunctionkeyLED(5, 0);
-					Launchpad.driver.sendFunctionkeyLED(6, 0);
-					Launchpad.driver.sendFunctionkeyLED(7, 0);
-					
 					chainChange(chain);
 					refreshWatermark();
 				}
 				
 				@Override
 				public void onDisconnected() {
+					for (int i = 0; i < 8; i++)
+						Launchpad.driver.sendFunctionkeyLED(i, 0);
+					for (int i = 0; i < 8; i++)
+						for (int j = 0; j < 8; j++)
+							Launchpad.driver.sendPadLED(i, j, 0);
 				}
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
