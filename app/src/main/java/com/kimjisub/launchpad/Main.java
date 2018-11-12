@@ -875,7 +875,7 @@ public class Main extends BaseActivity {
 			if (havePrev())
 				Launchpad.driver.sendFunctionkeyLED(0, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(0, 52);
+				Launchpad.driver.sendFunctionkeyLED(0, 5);
 			
 			if (haveNow())
 				Launchpad.driver.sendFunctionkeyLED(2, 61);
@@ -885,7 +885,7 @@ public class Main extends BaseActivity {
 			if (haveNext())
 				Launchpad.driver.sendFunctionkeyLED(1, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(1, 52);
+				Launchpad.driver.sendFunctionkeyLED(1, 5);
 		}
 	}
 	
