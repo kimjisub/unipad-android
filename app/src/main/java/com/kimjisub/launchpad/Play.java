@@ -548,7 +548,7 @@ public class Play extends BaseActivity {
 			}
 		}
 		
-		chainBtnsRefrash();
+		chainBtnsRefresh();
 		
 		IV_prev.setBackground(theme.xml_prev);
 		IV_play.setBackground(theme.xml_play);
@@ -1119,7 +1119,7 @@ public class Play extends BaseActivity {
 			} else if (progress[0] == 8) {
 				autoPlay_removeGuide();
 			} else if (progress[0] == 9) {
-				chainBtnsRefrash();
+				chainBtnsRefresh();
 			}
 			PB_autoPlayProgressBar.setProgress(this.progress);
 		}
@@ -1219,7 +1219,7 @@ public class Play extends BaseActivity {
 		} else {
 			colorManager.remove(-1, 8 + c, ColorManager.GUIDE);
 			setLED(-1, 8 + c);
-			chainBtnsRefrash();
+			chainBtnsRefresh();
 		}
 	}
 	
@@ -1232,7 +1232,7 @@ public class Play extends BaseActivity {
 			for (int i = 0; i < unipack.chain; i++) {
 				autoPlay_guideChain(i, false);
 			}
-			chainBtnsRefrash();
+			chainBtnsRefresh();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1327,7 +1327,7 @@ public class Play extends BaseActivity {
 		try {
 			if (num >= 0 && num < unipack.chain) {
 				chain = num;
-				chainBtnsRefrash();
+				chainBtnsRefresh();
 			}
 			
 			// 다중매핑 초기화
@@ -1353,8 +1353,8 @@ public class Play extends BaseActivity {
 		}
 	}
 	
-	void chainBtnsRefrash() {
-		Log.log("chainBtnsRefrash");
+	void chainBtnsRefresh() {
+		Log.log("chainBtnsRefresh");
 		for (int i = 0; i < unipack.chain; i++) {
 			
 			if (i == chain) {
@@ -1581,7 +1581,7 @@ public class Play extends BaseActivity {
 			colorBar[7] = 40;
 			
 			colorManager.setCirIgnore(ColorManager.PRESSED, !SCV_watermark.isChecked());
-			chainBtnsRefrash();
+			chainBtnsRefresh();
 		} else {
 			colorBar[0] = SCV_feedbackLight.isChecked() ? 21 : 0;
 			colorBar[1] = 0;
@@ -1631,7 +1631,7 @@ public class Play extends BaseActivity {
 		
 		
 		colorManager.setCirIgnore(ColorManager.LED, !bool);
-		chainBtnsRefrash();
+		chainBtnsRefresh();
 	}
 	
 	// ========================================================================================= Option Window
