@@ -146,7 +146,6 @@ public class LaunchpadColor {
 		0xbeb212,
 		0xf5d01d,//126
 		0xe37829,
-		
 	};
 	
 	public static final int[] SCode = new int[]{
