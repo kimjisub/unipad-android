@@ -325,16 +325,28 @@ public class LaunchpadDriver {
 					onFunctionkeyTouch(c + 8, velo != 0);
 				}
 				if (1 <= note && note <= 8) {
-					onChainTouch(8 - note + 16 -8, velo != 0);
+					onChainTouch(8 - note + 16 - 8, velo != 0);
 					onFunctionkeyTouch(8 - note + 16, velo != 0);
 				}
 				if (10 <= note && note <= 80 && note % 10 == 0) {
-					onChainTouch((note / 10) - 1 + 24-8, velo != 0);
+					onChainTouch((note / 10) - 1 + 24 - 8, velo != 0);
 					onFunctionkeyTouch((note / 10) - 1 + 24, velo != 0);
 				}
 				
-			} else if (cmd == 7 && sig == 46 && velo == -9)
-				Log.recv("PRO >??");
+			} else {
+				onUnknownEvent(cmd, sig, note, velo);
+				
+				if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+					Log.recv("PRO > Live Mode");
+				else if (cmd == 23 && sig == 47 && note == 0 && velo == -9)
+					Log.recv("PRO > Note Mode");
+				else if (cmd == 23 && sig == 47 && note == 1 && velo == -9)
+					Log.recv("PRO > Drum Mode");
+				else if (cmd == 23 && sig == 47 && note == 2 && velo == -9)
+					Log.recv("PRO > Fade Mode");
+				else if (cmd == 23 && sig == 47 && note == 3 && velo == -9)
+					Log.recv("PRO > Programmer Mode");
+			}
 		}
 		
 		@Override
