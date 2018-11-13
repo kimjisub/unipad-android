@@ -20,13 +20,11 @@ public class LaunchpadDriver {
 		}
 		
 		public void onConnected() {
-			Log.recv("onConnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onConnected();
 		}
 		
 		public void onDisconnected() {
-			Log.recv("onDisconnected");
 			if (onConnectionEventListener != null)
 				onConnectionEventListener.onDisconnected();
 		}
@@ -51,25 +49,25 @@ public class LaunchpadDriver {
 		}
 		
 		void onPadTouch(int x, int y, boolean upDown, int velo) {
-			Log.recv("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
+			Log.midiDetail("onPadTouch(" + x + ", " + y + ", " + upDown + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onPadTouch(x, y, upDown, velo);
 		}
 		
 		void onFunctionkeyTouch(int f, boolean upDown) {
-			Log.recv("onFunctionkeyTouch(" + f + ", " + upDown + ")");
+			Log.midiDetail("onFunctionkeyTouch(" + f + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onFunctionkeyTouch(f, upDown);
 		}
 		
 		void onChainTouch(int c, boolean upDown) {
-			Log.recv("onChainTouch(" + c + ", " + upDown + ")");
+			Log.midiDetail("onChainTouch(" + c + ", " + upDown + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onChainTouch(c, upDown);
 		}
 		
 		void onUnknownEvent(int cmd, int sig, int note, int velo) {
-			Log.recv("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
+			Log.midiDetail("onUnknownEvent(" + cmd + ", " + sig + ", " + note + ", " + velo + ")");
 			if (onGetSignalListener != null)
 				onGetSignalListener.onUnknownEvent(cmd, sig, note, velo);
 		}
@@ -337,15 +335,15 @@ public class LaunchpadDriver {
 				onUnknownEvent(cmd, sig, note, velo);
 				
 				if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
-					Log.recv("PRO > Live Mode");
+					Log.midiDetail("PRO > Live Mode");
 				else if (cmd == 23 && sig == 47 && note == 0 && velo == -9)
-					Log.recv("PRO > Note Mode");
+					Log.midiDetail("PRO > Note Mode");
 				else if (cmd == 23 && sig == 47 && note == 1 && velo == -9)
-					Log.recv("PRO > Drum Mode");
+					Log.midiDetail("PRO > Drum Mode");
 				else if (cmd == 23 && sig == 47 && note == 2 && velo == -9)
-					Log.recv("PRO > Fade Mode");
+					Log.midiDetail("PRO > Fade Mode");
 				else if (cmd == 23 && sig == 47 && note == 3 && velo == -9)
-					Log.recv("PRO > Programmer Mode");
+					Log.midiDetail("PRO > Programmer Mode");
 			}
 		}
 		

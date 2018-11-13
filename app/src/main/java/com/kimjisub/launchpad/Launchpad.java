@@ -96,7 +96,7 @@ public class Launchpad extends BaseActivity {
 							}
 						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					} catch (Exception ignore) {
-						Log.recv("런치패드 led 에러");
+						Log.midiDetail("런치패드 led 에러");
 					}
 				} else if (mode == 1)
 					sendBuffer(cmd, sig, note, velo);
@@ -138,22 +138,22 @@ public class Launchpad extends BaseActivity {
 		int interfaceNum = 0;
 		
 		if (device == null) {
-			Log.recv("USB 에러 : device == null");
+			Log.midiDetail("USB 에러 : device == null");
 			return;
 		} else {
 			try {
-				Log.recv("DeviceName : " + device.getDeviceName());
-				Log.recv("DeviceClass : " + device.getDeviceClass());
-				Log.recv("DeviceId : " + device.getDeviceId());
-				Log.recv("DeviceProtocol : " + device.getDeviceProtocol());
-				Log.recv("DeviceSubclass : " + device.getDeviceSubclass());
-				Log.recv("InterfaceCount : " + device.getInterfaceCount());
-				Log.recv("VendorId : " + device.getVendorId());
+				Log.midiDetail("DeviceName : " + device.getDeviceName());
+				Log.midiDetail("DeviceClass : " + device.getDeviceClass());
+				Log.midiDetail("DeviceId : " + device.getDeviceId());
+				Log.midiDetail("DeviceProtocol : " + device.getDeviceProtocol());
+				Log.midiDetail("DeviceSubclass : " + device.getDeviceSubclass());
+				Log.midiDetail("InterfaceCount : " + device.getInterfaceCount());
+				Log.midiDetail("VendorId : " + device.getVendorId());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			try {
-				Log.recv("ProductId : " + device.getProductId());
+				Log.midiDetail("ProductId : " + device.getProductId());
 				TV_info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 8:
@@ -213,13 +213,13 @@ public class Launchpad extends BaseActivity {
 		}
 		usbDeviceConnection = usbManager.openDevice(device);
 		if (usbDeviceConnection == null) {
-			Log.recv("USB 에러 : usbDeviceConnection == null");
+			Log.midiDetail("USB 에러 : usbDeviceConnection == null");
 			return;
 		}
 		if (usbDeviceConnection.claimInterface(usbInterface, true)) {
 			(new ReceiveTask()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		} else {
-			Log.recv("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
+			Log.midiDetail("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
 		}
 	}
 	
@@ -277,7 +277,7 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 		
-		updateDriver();
+		setDriverListener();
 	}
 	
 	
@@ -332,7 +332,7 @@ public class Launchpad extends BaseActivity {
 		protected String doInBackground(String... params) {
 			if (!isRun) {
 				isRun = true;
-				Log.recv("USB 시작");
+				Log.midiDetail("USB 시작");
 				
 				long prevTime = System.currentTimeMillis();
 				int count = 0;
@@ -348,7 +348,7 @@ public class Launchpad extends BaseActivity {
 								int velocity = byteArray[i + 3];
 								
 								publishProgress(cmd, sig, note, velocity);
-								Log.sig(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
+								Log.midi(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
 						} else if (length == -1) {
 							long currTime = System.currentTimeMillis();
@@ -367,7 +367,7 @@ public class Launchpad extends BaseActivity {
 					}
 				}
 				
-				Log.recv("USB 끝");
+				Log.midiDetail("USB 끝");
 			}
 			isRun = false;
 			return null;
@@ -401,34 +401,46 @@ public class Launchpad extends BaseActivity {
 	// ========================================================================================= Driver
 	
 	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
+		Log.driverCycle("1");
+		if(driverFrom != null){
+			Launchpad.driver.sendClearLED();
+			driver.onDisconnected();
+		}
+		
 		driverFrom = activity;
 		onConnectionEventListener = listener1;
 		onGetSignalListener = listener2;
 		
-		updateDriver();
-	}
-	
-	static void removeDriverListener(Activity activity) {
-		Log.log("driverFrom == activity = " + (driverFrom == activity));
-		if (driverFrom == activity)
-			setDriverListener(null, null, null);
+		setDriverListener();
+		driver.onConnected();
 	}
 	
 	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener) {
+		Log.driverCycle("2");
 		onSendSignalListener = listener;
 		
-		updateDriver();
+		setDriverListener();
 	}
 	
-	public static void updateDriver() {
-		Log.recv("updateDriver");
-		if (isRun)
+	public static void removeDriverListener(Activity activity) {
+		Log.driverCycle("3");
+		if (driverFrom == activity) {
+			Launchpad.driver.sendClearLED();
 			driver.onDisconnected();
+			
+			driverFrom = null;
+			onConnectionEventListener = null;
+			onGetSignalListener = null;
+			
+			setDriverListener();
+		}
+	}
+	
+	public static void setDriverListener() {
+		Log.driverCycle("설정");
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);
-		if (isRun)
-			driver.onConnected();
 	}
 	
 	@Override
