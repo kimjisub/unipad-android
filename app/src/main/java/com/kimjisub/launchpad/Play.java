@@ -158,6 +158,7 @@ public class Play extends BaseActivity {
 	Unipack unipack;
 	boolean unipackLoaded = false;
 	boolean UILoaded = false;
+	boolean enable = true;
 	
 	Pad[][] U_pads;
 	Chain[] U_chains;
@@ -598,8 +599,10 @@ public class Play extends BaseActivity {
 	// ========================================================================================= 특성 다른 LED 처리
 	
 	void setLED(int x, int y) {
-		setLEDUI(x, y);
-		setLEDLaunchpad(x, y);
+		if (enable) {
+			setLEDUI(x, y);
+			setLEDLaunchpad(x, y);
+		}
 	}
 	
 	void setLEDUI(int x, int y) {
@@ -1495,7 +1498,6 @@ public class Play extends BaseActivity {
 	}
 	
 	void updateLP() {
-		Log.driverCycle("fuck");
 		chainChange(chain);
 		refreshWatermark();
 	}
@@ -1810,6 +1812,7 @@ public class Play extends BaseActivity {
 		//LEDInit();
 		//padInit();
 		
+		enable = false;
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded) {
