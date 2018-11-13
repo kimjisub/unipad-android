@@ -29,16 +29,20 @@ public class Log {
 		printLog("com.kimjisub._admob", msg);
 	}
 	
-	public static void recv(String msg) {
-		printLog("com.kimjisub._recv", msg);
+	public static void midi(String msg) {
+		printLog("com.kimjisub._midi", msg);
 	}
 	
-	public static void recv2(String msg) {
-		printLog("com.kimjisub._recv2", msg);
+	public static void midiDetail(String msg) {
+		printLog("com.kimjisub._mididetail", msg);
 	}
 	
-	public static void sig(String msg) {
-		printLog("com.kimjisub._sig", msg);
+	public static void driver(String msg) {
+		printLog("com.kimjisub._driver", msg);
+	}
+	
+	public static void driverCycle(String msg) {
+		printLog("com.kimjisub._cycle", msg);
 	}
 	
 	public static void err(String msg) {
