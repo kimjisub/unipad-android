@@ -522,7 +522,7 @@ public class Play extends BaseActivity {
 		skin_set();
 		
 		UILoaded = true;
-		updateDriver();
+		setDriver();
 	}
 	
 	void skin_set() {
@@ -1393,29 +1393,18 @@ public class Play extends BaseActivity {
 	
 	// ========================================================================================= Launchpad Connection
 	
-	void updateDriver() {
+	void setDriver() {
 		Launchpad.setDriverListener(Play.this,
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					Log.recv2("Play onConnected()");
-					onConnected_();
-					(new Handler()).postDelayed(this::onConnected_, 3000);
-				}
-				
-				void onConnected_() {
-					chainChange(chain);
-					refreshWatermark();
+					Log.driverCycle("Play onConnected()");
+					updateLP();
 				}
 				
 				@Override
 				public void onDisconnected() {
-					Log.recv2("Play onDisconnected()");
-					for (int i = 0; i < 8; i++)
-						Launchpad.driver.sendFunctionkeyLED(i, 0);
-					for (int i = 0; i < 8; i++)
-						for (int j = 0; j < 8; j++)
-							Launchpad.driver.sendPadLED(i, j, 0);
+					Log.driverCycle("Play onDisconnected()");
 				}
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
@@ -1499,8 +1488,16 @@ public class Play extends BaseActivity {
 				
 				@Override
 				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+					if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+						updateLP();
 				}
 			});
+	}
+	
+	void updateLP() {
+		Log.driverCycle("fuck");
+		chainChange(chain);
+		refreshWatermark();
 	}
 	
 	// ========================================================================================= Trace Log
@@ -1745,7 +1742,7 @@ public class Play extends BaseActivity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		
 		if (UILoaded)
-			updateDriver();
+			setDriver();
 		
 		if (Scale_PaddingHeight == 0) {
 			Log.log("padding 크기값들이 잘못되었습니다.");
@@ -1810,11 +1807,9 @@ public class Play extends BaseActivity {
 			soundPool.release();
 			soundPool = null;
 		}
-		LEDInit();
-		padInit();
+		//LEDInit();
+		//padInit();
 		
-		
-		Launchpad.driver.sendClearLED();
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded) {

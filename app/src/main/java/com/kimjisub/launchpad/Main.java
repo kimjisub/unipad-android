@@ -259,7 +259,7 @@ public class Main extends BaseActivity {
 		
 		checkThings();
 		update();
-		updateDriver();
+		setDriver();
 	}
 	
 	ArrayList<Pack> P_packs;
@@ -350,6 +350,7 @@ public class Main extends BaseActivity {
 								@Override
 								public void onPlayClick(PackView v) {
 									rescanScale(LL_scale, LL_paddingScale);
+									Launchpad.removeDriverListener(Main.this);
 									
 									Intent intent = new Intent(Main.this, Play.class);
 									intent.putExtra("URL", url);
@@ -800,30 +801,18 @@ public class Main extends BaseActivity {
 	
 	// ========================================================================================= Launchpad
 	
-	void updateDriver() {
+	void setDriver() {
 		Launchpad.setDriverListener(Main.this,
 			new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 				@Override
 				public void onConnected() {
-					Log.recv2("Main onConnected()");
-					onConnected_();
-					(new Handler()).postDelayed(this::onConnected_, 3000);
-					
-				}
-				
-				void onConnected_() {
-					showWatermark();
-					showSelectLPUI();
+					Log.driverCycle("Main onConnected()");
+					updateLP();
 				}
 				
 				@Override
 				public void onDisconnected() {
-					Log.recv2("Main onDisconnected()");
-					for (int i = 0; i < 8; i++)
-						Launchpad.driver.sendFunctionkeyLED(i, 0);
-					for (int i = 0; i < 8; i++)
-						for (int j = 0; j < 8; j++)
-							Launchpad.driver.sendPadLED(i, j, 0);
+					Log.driverCycle("Main onDisconnected()");
 				}
 			}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 				@Override
@@ -862,9 +851,15 @@ public class Main extends BaseActivity {
 				
 				@Override
 				public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-				
+					if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+						updateLP();
 				}
 			});
+	}
+	
+	void updateLP() {
+		showWatermark();
+		showSelectLPUI();
 	}
 	
 	boolean haveNow() {
@@ -987,7 +982,7 @@ public class Main extends BaseActivity {
 		if (!isDoneIntro)
 			;
 		else {
-			updateDriver();
+			setDriver();
 			checkThings();
 		}
 	}
@@ -1000,8 +995,6 @@ public class Main extends BaseActivity {
 			;
 		else {
 			getStoreCount.setOnChangeListener(null);
-			Launchpad.driver.sendClearLED();
-			Launchpad.removeDriverListener(Main.this);
 		}
 	}
 	
@@ -1009,7 +1002,6 @@ public class Main extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		
-		Launchpad.driver.sendClearLED();
 		Launchpad.removeDriverListener(Main.this);
 	}
 }
