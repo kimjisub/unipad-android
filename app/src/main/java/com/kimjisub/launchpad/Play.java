@@ -7,8 +7,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -172,6 +174,8 @@ public class Play extends BaseActivity {
 	int chain = 0;
 	
 	final long DELAY = 1;
+	
+	AudioManager audioManager;
 	
 	
 	// ========================================================================================= Manager
@@ -1326,10 +1330,8 @@ public class Play extends BaseActivity {
 				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 				
-				if (SCV_feedbackLight.isChecked()) {
-					colorManager.remove(x, y, ColorManager.PRESSED);
-					setLED(x, y);
-				}
+				colorManager.remove(x, y, ColorManager.PRESSED);
+				setLED(x, y);
 				
 				if (SCV_LED.isChecked()) {
 					LEDTask.LEDEvent e = ledTask.searchEvent(x, y);
@@ -1382,15 +1384,31 @@ public class Play extends BaseActivity {
 	
 	void chainBtnsRefresh() {
 		Log.log("chainBtnsRefresh");
-		for (int i = 0; i < unipack.chain; i++) {
-			
-			if (i == chain) {
-				colorManager.add(-1, 8 + i, ColorManager.PRESSED, -1, 3);
-			} else {
-				colorManager.remove(-1, 8 + i, ColorManager.PRESSED);
-			}
+		
+		// chain
+		for (int i = 0; i < 8; i++) {
+			if (i == chain)
+				colorManager.add(-1, 8 + i, ColorManager.CHAIN, -1, 3);
+			else
+				colorManager.remove(-1, 8 + i, ColorManager.CHAIN);
 			setLEDUI(-1, 8 + i);
 			setLEDLaunchpad(-1, 8 + i);
+		}
+		
+		// volume
+		float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		float currVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+		float currPercent = currVolume / maxVolume;
+		int currLevel = Math.round(currPercent * 7) + 1;
+		if (currLevel == 1)
+			currLevel = 0;
+		
+		for (int i = 0; i < 8; i++) {
+			if (8 - i <= currLevel)
+				colorManager.add(-1, i + 8, ColorManager.UI, -1, 40);
+			else
+				colorManager.remove(-1, i + 8, ColorManager.UI);
+			setLED(-1, i + 8);
 		}
 	}
 	
@@ -1450,31 +1468,41 @@ public class Play extends BaseActivity {
 									break;
 							}
 						} else {
-							switch (f) {
-								case 0:
-									SCV_feedbackLight.toggleChecked();
-									break;
-								case 1:
-									SCV_LED.toggleChecked();
-									break;
-								case 2:
-									SCV_autoPlay.toggleChecked();
-									break;
-								case 3:
-									toggleOptionWindow();
-									break;
-								case 4:
-									SCV_hideUI.toggleChecked();
-									break;
-								case 5:
-									SCV_watermark.toggleChecked();
-									break;
-								case 6:
-									SCV_proLightMode.toggleChecked();
-									break;
-								case 7:
-									finish();
-									break;
+							if (0 <= f && f <= 7)
+								switch (f) {
+									case 0:
+										SCV_feedbackLight.toggleChecked();
+										break;
+									case 1:
+										SCV_LED.toggleChecked();
+										break;
+									case 2:
+										SCV_autoPlay.toggleChecked();
+										break;
+									case 3:
+										toggleOptionWindow();
+										break;
+									case 4:
+										SCV_hideUI.toggleChecked();
+										break;
+									case 5:
+										SCV_watermark.toggleChecked();
+										break;
+									case 6:
+										SCV_proLightMode.toggleChecked();
+										break;
+									case 7:
+										finish();
+										break;
+								}
+							else if (8 <= f && f <= 15) {
+								
+								float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+								int currLevel = 8 - (f - 8) - 1;
+								float currPercent = (float) currLevel / (float) 7;
+								int currVolume = (int) (maxVolume * currPercent);
+								
+								audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0);
 							}
 						}
 					}
@@ -1589,45 +1617,71 @@ public class Play extends BaseActivity {
 	// ========================================================================================= Watermark
 	
 	void refreshWatermark() {
-		int[] colorBar = new int[8];
+		int[] topBar = new int[8];
 		
-		if (!bool_toggleOptionWindow) {
-			colorBar[0] = 0;
-			colorBar[1] = 0;
-			colorBar[2] = 0;
-			colorBar[3] = 0;
-			if (SCV_watermark.isChecked()) {
-				colorBar[4] = 61;
-				colorBar[5] = 40;
-				colorBar[6] = 61;
-				colorBar[7] = 40;
+		boolean UI;
+		boolean UI_UNIPAD;
+		boolean CHAIN;
+		
+		if (SCV_watermark.isChecked()) {
+			if (!bool_toggleOptionWindow) {
+				UI = false;
+				UI_UNIPAD = true;
+				CHAIN = true;
 			} else {
-				colorBar[4] = 0;
-				colorBar[5] = 0;
-				colorBar[6] = 0;
-				colorBar[7] = 0;
+				UI = true;
+				UI_UNIPAD = false;
+				CHAIN = false;
 			}
 		} else {
-			colorBar[0] = SCV_feedbackLight.isLocked() ? 0 : (SCV_feedbackLight.isChecked() ? 3 : 1);
-			colorBar[1] = SCV_LED.isLocked() ? 0 : (SCV_LED.isChecked() ? 52 : 55);
-			colorBar[2] = SCV_autoPlay.isLocked() ? 0 : (SCV_autoPlay.isChecked() ? 17 : 19);
-			colorBar[3] = 0;
-			colorBar[4] = SCV_hideUI.isLocked() ? 0 : (SCV_hideUI.isChecked() ? 3 : 1);
-			colorBar[5] = SCV_watermark.isLocked() ? 0 : (SCV_watermark.isChecked() ? 61 : 11);
-			colorBar[6] = SCV_proLightMode.isLocked() ? 0 : (SCV_proLightMode.isChecked() ? 40 : 43);
-			colorBar[7] = 5;
+			UI = false;
+			UI_UNIPAD = false;
+			CHAIN = false;
 		}
 		
-		colorManager.setCirIgnore(ColorManager.PRESSED, !SCV_watermark.isChecked());
+		colorManager.setCirIgnore(ColorManager.UI, !UI);
+		colorManager.setCirIgnore(ColorManager.UI_UNIPAD, !UI_UNIPAD);
+		colorManager.setCirIgnore(ColorManager.CHAIN, !CHAIN);
+		
+		if (!bool_toggleOptionWindow) {
+			topBar[0] = 0;
+			topBar[1] = 0;
+			topBar[2] = 0;
+			topBar[3] = 0;
+			topBar[4] = 61;
+			topBar[5] = 40;
+			topBar[6] = 61;
+			topBar[7] = 40;
+			
+			for (int i = 0; i < 8; i++) {
+				if (topBar[i] != 0)
+					colorManager.add(-1, i, ColorManager.UI_UNIPAD, -1, topBar[i]);
+				else
+					colorManager.remove(-1, i, ColorManager.UI_UNIPAD);
+				setLED(-1, i);
+			}
+		} else {
+			topBar[0] = SCV_feedbackLight.isLocked() ? 0 : (SCV_feedbackLight.isChecked() ? 3 : 1);
+			topBar[1] = SCV_LED.isLocked() ? 0 : (SCV_LED.isChecked() ? 52 : 55);
+			topBar[2] = SCV_autoPlay.isLocked() ? 0 : (SCV_autoPlay.isChecked() ? 17 : 19);
+			topBar[3] = 0;
+			topBar[4] = SCV_hideUI.isLocked() ? 0 : (SCV_hideUI.isChecked() ? 3 : 1);
+			topBar[5] = SCV_watermark.isLocked() ? 0 : (SCV_watermark.isChecked() ? 61 : 11);
+			topBar[6] = SCV_proLightMode.isLocked() ? 0 : (SCV_proLightMode.isChecked() ? 40 : 43);
+			topBar[7] = 5;
+			
+			for (int i = 0; i < 8; i++) {
+				if (topBar[i] != 0)
+					colorManager.add(-1, i, ColorManager.UI, -1, topBar[i]);
+				else
+					colorManager.remove(-1, i, ColorManager.UI);
+				setLED(-1, i);
+			}
+		}
+		
 		chainBtnsRefresh();
 		
-		for (int i = 0; i < 8; i++) {
-			if (colorBar[i] != 0)
-				colorManager.add(-1, i, ColorManager.GUIDE, -1, colorBar[i]);
-			else
-				colorManager.remove(-1, i, ColorManager.GUIDE);
-			setLED(-1, i);
-		}
+		
 	}
 	
 	// ========================================================================================= Pro Mode
@@ -1740,6 +1794,25 @@ public class Play extends BaseActivity {
 	public void onResume() {
 		super.onResume();
 		//initVar();
+		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+		getContentResolver().registerContentObserver(android.provider.Settings.System.CONTENT_URI, true, new ContentObserver(new Handler()) {
+			@Override
+			public boolean deliverSelfNotifications() {
+				return super.deliverSelfNotifications();
+			}
+			
+			@Override
+			public void onChange(boolean selfChange) {
+				chainBtnsRefresh();
+				super.onChange(selfChange);
+			}
+			
+			@Override
+			public void onChange(boolean selfChange, Uri uri) {
+				chainBtnsRefresh();
+				super.onChange(selfChange, uri);
+			}
+		});
 		
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		

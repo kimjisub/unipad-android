@@ -3,9 +3,14 @@ package com.kimjisub.launchpad.playManager;
 import com.kimjisub.launchpad.manage.LaunchpadColor;
 
 public class ColorManager {
-	public static final int GUIDE = 0;
-	public static final int PRESSED = 1;
-	public static final int LED = 2;
+	public static final int COUNT = 5;
+	
+	public static final int UI = 0;
+	public static final int UI_UNIPAD = 1;
+	public static final int GUIDE = 2;
+	public static final int PRESSED = 3;
+	public static final int CHAIN = 3;
+	public static final int LED = 4;
 	
 	Item[][][] btn;
 	Item[][] cir;
@@ -30,18 +35,18 @@ public class ColorManager {
 	}
 	
 	public ColorManager(int x, int y) {
-		btn = new Item[x][y][3];
-		cir = new Item[36][3];
+		btn = new Item[x][y][COUNT];
+		cir = new Item[36][COUNT];
 		
-		btnIgnoreList = new boolean[]{false, false, false};
-		cirIgnoreList = new boolean[]{false, false, false};
+		btnIgnoreList = new boolean[COUNT];
+		cirIgnoreList = new boolean[COUNT];
 	}
 	
 	public Item get(int x, int y) {
 		Item ret = null;
 		
 		if (x != -1) {
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < COUNT; i++) {
 				if (btnIgnoreList[i])
 					continue;
 				if (btn[x][y][i] != null) {
@@ -50,7 +55,7 @@ public class ColorManager {
 				}
 			}
 		} else {
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < COUNT; i++) {
 				if (cirIgnoreList[i])
 					continue;
 				
