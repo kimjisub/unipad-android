@@ -1230,7 +1230,7 @@ public class Play extends BaseActivity {
 	void autoPlay_guidePad(int x, int y, boolean onOff) {
 		//log("autoPlay_guidePad (" + buttonX + ", " + buttonY + ", " + onOff + ")");
 		if (onOff) {
-			colorManager.add(x, y, ColorManager.GUIDE, -1, 63);
+			colorManager.add(x, y, ColorManager.GUIDE, -1, 17);
 			setLED(x, y);
 		} else {
 			colorManager.remove(x, y, ColorManager.GUIDE);
@@ -1241,7 +1241,7 @@ public class Play extends BaseActivity {
 	void autoPlay_guideChain(int c, boolean onOff) {
 		//log("autoPlay_guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
-			colorManager.add(-1, 8 + c, ColorManager.GUIDE, -1, 63);
+			colorManager.add(-1, 8 + c, ColorManager.GUIDE, -1, 17);
 			setLED(-1, 8 + c);
 		} else {
 			colorManager.remove(-1, 8 + c, ColorManager.GUIDE);
@@ -1609,12 +1609,12 @@ public class Play extends BaseActivity {
 			}
 		} else {
 			colorBar[0] = SCV_feedbackLight.isLocked() ? 0 : (SCV_feedbackLight.isChecked() ? 3 : 1);
-			colorBar[1] = SCV_LED.isLocked() ? 0 : (SCV_LED.isChecked() ? 53 : 55);
-			colorBar[2] = SCV_autoPlay.isLocked() ? 0 : (SCV_autoPlay.isChecked() ? 63 : 63);
+			colorBar[1] = SCV_LED.isLocked() ? 0 : (SCV_LED.isChecked() ? 52 : 55);
+			colorBar[2] = SCV_autoPlay.isLocked() ? 0 : (SCV_autoPlay.isChecked() ? 17 : 19);
 			colorBar[3] = 0;
-			colorBar[4] = 3;
-			colorBar[5] = 61;
-			colorBar[6] = 40;
+			colorBar[4] = SCV_hideUI.isLocked() ? 0 : (SCV_hideUI.isChecked() ? 3 : 1);
+			colorBar[5] = SCV_watermark.isLocked() ? 0 : (SCV_watermark.isChecked() ? 61 : 11);
+			colorBar[6] = SCV_proLightMode.isLocked() ? 0 : (SCV_proLightMode.isChecked() ? 40 : 43);
 			colorBar[7] = 5;
 		}
 		
