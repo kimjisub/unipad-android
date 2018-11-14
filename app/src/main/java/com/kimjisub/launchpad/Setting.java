@@ -142,6 +142,7 @@ public class Setting extends PreferenceActivity {
 		
 		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
 			billingCertification.refresh();
+			BaseActivity.requestRestart(Setting.this);
 			return false;
 		});
 		
