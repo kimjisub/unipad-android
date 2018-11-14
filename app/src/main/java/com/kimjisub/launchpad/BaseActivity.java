@@ -43,6 +43,20 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
 	}
 	
+	// ========================================================================================= Ads Cooltime
+	
+	public boolean checkAdsCooltime() {
+		long prevTime = SettingManager.PrevAdsShowTime.load(this);
+		long currTime = System.currentTimeMillis();
+		
+		return (currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME;
+	}
+	
+	public void updateAdsCooltime() {
+		long currTime = System.currentTimeMillis();
+		SettingManager.PrevAdsShowTime.save(this, currTime);
+	}
+	
 	// ========================================================================================= vungle
 	
 	public void initVungle() {
@@ -81,28 +95,22 @@ public abstract class BaseActivity extends AppCompatActivity {
 	private static InterstitialAd interstitialAd;
 	
 	public void showAdmob() {
-		long prevTime = SettingManager.PrevAdsShowTime.load(this);
-		long currTime = System.currentTimeMillis();
+		Log.admob("showAdmob");
 		
-		if ((currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME) {
-			SettingManager.PrevAdsShowTime.save(this, currTime);
-			Log.admob("showAdmob");
-			
-			if (interstitialAd.isLoaded()) {
-				Log.admob("isLoaded");
-				interstitialAd.show();
-				loadAdmob();
-				Log.admob("show!");
-			} else {
-				Log.admob("! isLoaded (set listener)");
-				interstitialAd.setAdListener(new AdListener() {
-					public void onAdLoaded() {
-						interstitialAd.show();
-						loadAdmob();
-						Log.admob("show!");
-					}
-				});
-			}
+		if (interstitialAd.isLoaded()) {
+			Log.admob("isLoaded");
+			interstitialAd.show();
+			loadAdmob();
+			Log.admob("show!");
+		} else {
+			Log.admob("! isLoaded (set listener)");
+			interstitialAd.setAdListener(new AdListener() {
+				public void onAdLoaded() {
+					interstitialAd.show();
+					loadAdmob();
+					Log.admob("show!");
+				}
+			});
 		}
 	}
 	

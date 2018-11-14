@@ -49,6 +49,7 @@ import com.vungle.warren.error.VungleException;
 
 import java.util.ArrayList;
 
+import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public class Play extends BaseActivity {
@@ -1623,22 +1624,22 @@ public class Play extends BaseActivity {
 		boolean UI_UNIPAD;
 		boolean CHAIN;
 		
-		if(!bool_toggleOptionWindow){
-			if(SCV_watermark.isChecked()){
+		if (!bool_toggleOptionWindow) {
+			if (SCV_watermark.isChecked()) {
 				UI = false;
 				UI_UNIPAD = true;
 				CHAIN = true;
-			}else{
+			} else {
 				UI = false;
 				UI_UNIPAD = false;
 				CHAIN = false;
 			}
-		}else{
-			if(!SCV_hideUI.isChecked()){
+		} else {
+			if (!SCV_hideUI.isChecked()) {
 				UI = true;
 				UI_UNIPAD = false;
 				CHAIN = false;
-			}else{
+			} else {
 				UI = false;
 				UI_UNIPAD = false;
 				CHAIN = false;
@@ -1896,36 +1897,39 @@ public class Play extends BaseActivity {
 		Launchpad.removeDriverListener(Play.this);
 		
 		if (unipackLoaded) {
-			
 			if (BillingCertification.isShowAds()) {
-				if (Math.random() * 10 > 3)
-					showAdmob();
-				else {
-					if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
-						Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
-							@Override
-							public void onAdStart(String placementReferenceId) {
-								Log.vungle("PLAY_END playAd : onAdStart()");
-							}
-							
-							@Override
-							public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
-								Log.vungle("PLAY_END onAdEnd : onAdEnd()");
-							}
-							
-							@Override
-							public void onError(String placementReferenceId, Throwable throwable) {
-								Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
-								try {
-									VungleException ex = (VungleException) throwable;
-									
-									if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
-										initVungle();
-								} catch (ClassCastException cex) {
-									Log.vungle(cex.getMessage());
+				if (checkAdsCooltime()) {
+					updateAdsCooltime();
+					
+					if (Math.random() * 10 > 3)
+						showAdmob();
+					else {
+						if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
+							Vungle.playAd(VUNGLE.PLAY_END, null, new PlayAdCallback() {
+								@Override
+								public void onAdStart(String placementReferenceId) {
+									Log.vungle("PLAY_END playAd : onAdStart()");
 								}
-							}
-						});
+								
+								@Override
+								public void onAdEnd(String placementReferenceId, boolean completed, boolean isCTAClicked) {
+									Log.vungle("PLAY_END onAdEnd : onAdEnd()");
+								}
+								
+								@Override
+								public void onError(String placementReferenceId, Throwable throwable) {
+									Log.vungle("PLAY_END onError : onError() == " + throwable.getLocalizedMessage());
+									try {
+										VungleException ex = (VungleException) throwable;
+										
+										if (ex.getExceptionCode() == VungleException.VUNGLE_NOT_INTIALIZED)
+											initVungle();
+									} catch (ClassCastException cex) {
+										Log.vungle(cex.getMessage());
+									}
+								}
+							});
+						}
 					}
 				}
 			}
