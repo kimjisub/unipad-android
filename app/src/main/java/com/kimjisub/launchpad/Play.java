@@ -1623,21 +1623,28 @@ public class Play extends BaseActivity {
 		boolean UI_UNIPAD;
 		boolean CHAIN;
 		
-		if (SCV_watermark.isChecked()) {
-			if (!bool_toggleOptionWindow) {
+		if(!bool_toggleOptionWindow){
+			if(SCV_watermark.isChecked()){
 				UI = false;
 				UI_UNIPAD = true;
 				CHAIN = true;
-			} else {
-				UI = true;
+			}else{
+				UI = false;
 				UI_UNIPAD = false;
 				CHAIN = false;
 			}
-		} else {
-			UI = false;
-			UI_UNIPAD = false;
-			CHAIN = false;
+		}else{
+			if(!SCV_hideUI.isChecked()){
+				UI = true;
+				UI_UNIPAD = false;
+				CHAIN = false;
+			}else{
+				UI = false;
+				UI_UNIPAD = false;
+				CHAIN = false;
+			}
 		}
+		
 		
 		colorManager.setCirIgnore(ColorManager.UI, !UI);
 		colorManager.setCirIgnore(ColorManager.UI_UNIPAD, !UI_UNIPAD);
