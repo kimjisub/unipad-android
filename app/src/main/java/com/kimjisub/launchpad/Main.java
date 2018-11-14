@@ -173,7 +173,10 @@ public class Main extends BaseActivity {
 				}
 				
 				if (BillingCertification.isShowAds()) {
-					showAdmob();
+					if(checkAdsCooltime()) {
+						updateAdsCooltime();
+						showAdmob();
+					}
 					AdRequest adRequest = new AdRequest.Builder().build();
 					AV_adview.loadAd(adRequest);
 				} else
