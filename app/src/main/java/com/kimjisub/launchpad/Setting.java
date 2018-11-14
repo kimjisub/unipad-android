@@ -98,7 +98,7 @@ public class Setting extends PreferenceActivity {
 			String[] urls = {
 				"https://unipad.kr",
 				"https://www.facebook.com/playunipad",
-				"https://www.facebook.com/groups/unipadcommunity",
+				"https://www.facebook.com/groups/playunipad",
 				"http://cafe.naver.com/unipad",
 				"https://discord.gg/ESDgyNs",
 				"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
