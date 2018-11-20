@@ -49,7 +49,6 @@ import com.vungle.warren.error.VungleException;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public class Play extends BaseActivity {
@@ -71,7 +70,7 @@ public class Play extends BaseActivity {
 	LinearLayout LL_proTools;
 	CheckBox CB_purchase;
 	ImageButton IB_option_quit;
-	AdView AV_adview;
+	//AdView AV_adview;
 	
 	CheckBox CB1_feedbackLight;
 	CheckBox CB1_LED;
@@ -118,7 +117,7 @@ public class Play extends BaseActivity {
 		RBV_option_blur = findViewById(R.id.option_blur);
 		RL_option_window = findViewById(R.id.option_window);
 		IB_option_quit = findViewById(R.id.quit);
-		AV_adview = findViewById(R.id.adView);
+		//AV_adview = findViewById(R.id.adView);
 		
 		CB1_feedbackLight = findViewById(R.id.CB1_feedbackLight);
 		CB1_LED = findViewById(R.id.CB1_LED);
@@ -148,8 +147,8 @@ public class Play extends BaseActivity {
 		
 		SCV_watermark.forceSetChecked(true);
 		
-		if (!BillingCertification.isShowAds())
-			AV_adview.setVisibility(View.GONE);
+		/*if (!BillingCertification.isShowAds())
+			AV_adview.setVisibility(View.GONE);*/
 		
 		
 	}
@@ -1433,8 +1432,6 @@ public class Play extends BaseActivity {
 				public void onPadTouch(int x, int y, boolean upDown, int velo) {
 					if (!bool_toggleOptionWindow) {
 						padTouch(x, y, upDown);
-					} else {
-					
 					}
 				}
 				
@@ -1610,7 +1607,7 @@ public class Play extends BaseActivity {
 			LL_proTools.setAlpha(0.3f);
 			SCV_hideUI.setLocked(true);
 			SCV_watermark.setLocked(true);
-			SCV_proLightMode.setLocked(true);
+			SCV_proLightMode.setLocked(false);
 		}
 		
 	}
@@ -1833,8 +1830,8 @@ public class Play extends BaseActivity {
 		}
 		
 		if (BillingCertification.isShowAds()) {
-			AdRequest adRequest = new AdRequest.Builder().build();
-			AV_adview.loadAd(adRequest);
+			/*AdRequest adRequest = new AdRequest.Builder().build();
+			AV_adview.loadAd(adRequest);*/
 			
 			if (Vungle.isInitialized()) {
 				Vungle.loadAd(VUNGLE.PLAY_END, new LoadAdCallback() {
