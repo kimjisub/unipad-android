@@ -1385,30 +1385,34 @@ public class Play extends BaseActivity {
 	void chainBtnsRefresh() {
 		Log.log("chainBtnsRefresh");
 		
-		// chain
-		for (int i = 0; i < 8; i++) {
-			if (i == chain)
-				colorManager.add(-1, 8 + i, ColorManager.CHAIN, -1, 3);
-			else
-				colorManager.remove(-1, 8 + i, ColorManager.CHAIN);
-			setLEDUI(-1, 8 + i);
-			setLEDLaunchpad(-1, 8 + i);
-		}
-		
-		// volume
-		float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		float currVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-		float currPercent = currVolume / maxVolume;
-		int currLevel = Math.round(currPercent * 7) + 1;
-		if (currLevel == 1)
-			currLevel = 0;
-		
-		for (int i = 0; i < 8; i++) {
-			if (8 - i <= currLevel)
-				colorManager.add(-1, i + 8, ColorManager.UI, -1, 40);
-			else
-				colorManager.remove(-1, i + 8, ColorManager.UI);
-			setLED(-1, i + 8);
+		try {
+			
+			// chain
+			for (int i = 0; i < 8; i++) {
+				if (i == chain)
+					colorManager.add(-1, 8 + i, ColorManager.CHAIN, -1, 3);
+				else
+					colorManager.remove(-1, 8 + i, ColorManager.CHAIN);
+				setLEDUI(-1, 8 + i);
+				setLEDLaunchpad(-1, 8 + i);
+			}
+			
+			// volume
+			float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+			float currVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+			float currPercent = currVolume / maxVolume;
+			int currLevel = Math.round(currPercent * 7) + 1;
+			if (currLevel == 1)
+				currLevel = 0;
+			
+			for (int i = 0; i < 8; i++) {
+				if (8 - i <= currLevel)
+					colorManager.add(-1, i + 8, ColorManager.UI, -1, 40);
+				else
+					colorManager.remove(-1, i + 8, ColorManager.UI);
+				setLED(-1, i + 8);
+			}
+		} catch (Exception e) {
 		}
 	}
 	
