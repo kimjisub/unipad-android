@@ -54,3 +54,6 @@
 #-keep class rx.schedulers.ImmediateScheduler { public <methods>; }
 #-keep class rx.schedulers.TestScheduler { public <methods>; }
 #-keep class rx.schedulers.Schedulers { public static ** test(); }
+
+# RealtimeBlurView
+-keep class android.support.v8.renderscript.** { *; }
