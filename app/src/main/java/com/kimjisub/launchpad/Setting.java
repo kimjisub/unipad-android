@@ -140,9 +140,48 @@ public class Setting extends PreferenceActivity {
 			return false;
 		});
 		
-		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
-			billingCertification.refresh();
-			BaseActivity.requestRestart(Setting.this);
+		findPreference("donation").setOnPreferenceClickListener(preference -> {
+			String[] titleList = {
+				"CarouselLayoutManager",
+				"FloatingActionButton",
+				"TedPermission",
+				"RealtimeBlurView",
+				"Android In-App Billing v3 Library",
+				"Retrofit",
+				"UniPad DesignKit"
+			};
+			String[] summaryList = {
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0",
+				"Apache License 2.0"
+			};
+			String[] urlList = {
+				"https://github.com/Azoft/CarouselLayoutManager",
+				"https://github.com/Clans/FloatingActionButton",
+				"https://github.com/ParkSangGwon/TedPermission",
+				"https://github.com/mmin18/RealtimeBlurView",
+				"https://github.com/anjlab/android-inapp-billing-v3",
+				"https://github.com/square/retrofit",
+				"https://github.com/0226daniel/UniPad-DesignKit"
+			};
+			
+			ListView listView = new ListView(Setting.this);
+			ArrayList<mItem> data = new ArrayList<>();
+			for (int i = 0; i < titleList.length; i++)
+				data.add(new mItem(titleList[i], summaryList[i]));
+			
+			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
+			
+			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			builder.setTitle(lang(R.string.openSourceLicense));
+			builder.setView(listView);
+			builder.show();
+			
 			return false;
 		});
 		
@@ -155,6 +194,12 @@ public class Setting extends PreferenceActivity {
 		findPreference("proTools").setOnPreferenceClickListener(preference -> {
 			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseProTools());
 			billingCertification.purchase_proTools();
+			return false;
+		});
+		
+		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
+			billingCertification.refresh();
+			BaseActivity.requestRestart(Setting.this);
 			return false;
 		});
 		

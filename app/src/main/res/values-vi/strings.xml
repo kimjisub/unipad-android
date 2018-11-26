@@ -47,6 +47,8 @@
 	<string name="plan_removeAds_">Bỏ quảng cáo</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="donation">Donate to UniPad</string>
+	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Mua thành công</string>
 	<string name="openSourceLicense">Open Source License</string>
