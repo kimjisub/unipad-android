@@ -47,6 +47,8 @@
 	<string name="plan_removeAds_">광고 제거</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">전문가 기능 무제한 사용</string>
+	<string name="donation">Donate to UniPad</string>
+	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">구매하기</string>
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>

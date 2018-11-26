@@ -16,9 +16,9 @@
 	<PreferenceCategory
 	    android:title="@string/payment">
 		<Preference
-		    android:key="restoreBilling"
-		    android:summary="@string/plan_restorePurchases_"
-		    android:title="@string/plan_restorePurchases"/>
+		    android:key="donation"
+		    android:summary="@string/donation_"
+		    android:title="@string/donation"/>
 		<CheckBoxPreference
 		    android:key="removeAds"
 		    android:summary="@string/plan_removeAds_"
@@ -27,6 +27,10 @@
 		    android:key="proTools"
 		    android:summary="@string/plan_proTools_"
 		    android:title="@string/plan_proTools"/>
+		<Preference
+		    android:key="restoreBilling"
+		    android:summary="@string/plan_restorePurchases_"
+		    android:title="@string/plan_restorePurchases"/>
 	</PreferenceCategory>
 	
 	<PreferenceCategory

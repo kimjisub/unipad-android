@@ -47,6 +47,8 @@
 	<string name="plan_removeAds_">विज्ञापन हटाएँ</string>
 	<string name="plan_proTools">Professional Tools</string>
 	<string name="plan_proTools_">Unlimited use of Professional features</string>
+	<string name="donation">Donate to UniPad</string>
+	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">खरीद पूर्ण</string>
 	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
