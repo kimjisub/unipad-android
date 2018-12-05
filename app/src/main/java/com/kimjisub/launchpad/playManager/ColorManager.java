@@ -72,7 +72,7 @@ public class ColorManager {
 	
 	public void add(int x, int y, int chanel, int color, int code) {
 		if (color == -1)
-			color = 0xFF000000 + LaunchpadColor.ARGB[code];
+			color = LaunchpadColor.ARGB[code];
 		if (x != -1)
 			btn[x][y][chanel] = new Item(x, y, chanel, color, code);
 		else
