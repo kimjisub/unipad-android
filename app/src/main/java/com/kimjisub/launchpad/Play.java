@@ -30,8 +30,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.mmin18.widget.RealtimeBlurView;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
 import com.kimjisub.launchpad.manage.BillingCertification;
