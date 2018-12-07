@@ -177,7 +177,7 @@ public class Launchpad extends BaseActivity {
 						TV_info.append("prediction : LX 61 piano\n");
 						break;
 					case 32822:
-						selectDevice(MK2.value);
+						selectDevice(Pro.value);
 						TV_info.append("prediction : Arduino Leonardo midi\n");
 						interfaceNum = 3;
 						break;
