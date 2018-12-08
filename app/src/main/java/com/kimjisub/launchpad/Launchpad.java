@@ -96,7 +96,7 @@ public class Launchpad extends BaseActivity {
 							}
 						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					} catch (Exception ignore) {
-						Log.midiDetail("런치패드 led 에러");
+						//Log.midiDetail("MIDI send thread execute fail");
 					}
 				} else if (mode == 1)
 					sendBuffer(cmd, sig, note, velo);

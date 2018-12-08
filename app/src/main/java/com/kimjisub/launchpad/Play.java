@@ -414,6 +414,7 @@ public class Play extends BaseActivity {
 				try {
 					autoPlayTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} catch (Exception e) {
+					log("autoplay thread execute fail");
 					SCV_autoPlay.setChecked(false);
 					e.printStackTrace();
 				}
@@ -422,6 +423,7 @@ public class Play extends BaseActivity {
 				padInit();
 				LEDInit();
 				autoPlay_removeGuide();
+				LL_autoPlayControlView.setVisibility(View.GONE);
 			}
 			refreshWatermark();
 		});
@@ -1620,6 +1622,7 @@ public class Play extends BaseActivity {
 	// ========================================================================================= Watermark
 	
 	void refreshWatermark() {
+		log("refreshWatermark");
 		int[] topBar = new int[8];
 		
 		boolean UI;
