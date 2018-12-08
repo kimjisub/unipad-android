@@ -437,7 +437,7 @@ public class Launchpad extends BaseActivity {
 	}
 	
 	public static void setDriverListener() {
-		Log.driverCycle("설정");
+		Log.driverCycle("setDriverListener");
 		driver.setOnConnectionEventListener(onConnectionEventListener);
 		driver.setOnGetSignalListener(onGetSignalListener);
 		driver.setOnSendSignalListener(onSendSignalListener);
