@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,6 +70,7 @@ public class ImportPackByUrl extends BaseActivity {
 					UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, makeUrl.title + " #" + code, ".zip");
 					UnipackURL = FileManager.makeNextUrl(UnipackRootURL, makeUrl.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+					addCount(code);
 				} else {
 					switch (response.code()) {
 						case 404:
@@ -83,6 +85,18 @@ public class ImportPackByUrl extends BaseActivity {
 			public void onFailure(Call<MakeUrl> call, Throwable t) {
 				log("server error");
 				setStatus(Status.failed, "server error\n" + t.getMessage());
+			}
+		});
+	}
+	
+	void addCount(String code){
+		Networks.getUniPadApi().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
+			@Override
+			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+			}
+			
+			@Override
+			public void onFailure(Call<ResponseBody> call, Throwable t) {
 			}
 		});
 	}
