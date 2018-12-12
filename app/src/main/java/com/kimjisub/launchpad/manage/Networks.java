@@ -22,6 +22,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -48,6 +49,9 @@ public class Networks {
 		
 		@GET("/makeUrl/{code}")
 		Call<MakeUrl> makeUrl_get(@Path("code") String code);
+		
+		@GET("/makeUrl/{code}/addCount")
+		Call<ResponseBody> makeUrl_addCount(@Path("code") String code);
 		
 	}
 	
