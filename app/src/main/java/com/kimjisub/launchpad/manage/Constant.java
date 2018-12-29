@@ -10,6 +10,12 @@ public class Constant {
 		
 		public static final String REMOVE_ADS = "v1_remove_ads";
 		public static final String PRO_TOOLS = "v1_pro_tools";
+		
+		public static final String DONATE_1 = "donation_1";
+		public static final String DONATE_5 = "donation_5";
+		public static final String DONATE_10 = "donation_10";
+		public static final String DONATE_50 = "donation_50";
+		public static final String DONATE_100 = "donation_100";
 	}
 	
 	public static class ADMOB {
