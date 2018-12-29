@@ -137,12 +137,21 @@ public class BillingCertification {
 	
 	// =========================================================================================
 	
-	public void purchase_removeAds() {
-		billingProcessor.subscribe(activity, REMOVE_ADS);
+	public void subscribe_removeAds() {
+		subscribe(REMOVE_ADS);
 	}
 	
-	public void purchase_proTools() {
-		billingProcessor.subscribe(activity, PRO_TOOLS);
+	public void subscribe_proTools() {
+		subscribe(PRO_TOOLS);
+	}
+	
+	// =========================================================================================
+	
+	public void subscribe(String productId){
+		billingProcessor.subscribe(activity, productId);
+	}
+	public void purchase(String productId){
+		billingProcessor.purchase(activity, productId);
 	}
 	
 }

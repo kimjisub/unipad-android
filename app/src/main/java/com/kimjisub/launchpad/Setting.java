@@ -27,6 +27,13 @@ import com.kimjisub.launchpad.manage.SettingManager;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_1;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_10;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_100;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_5;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_50;
+import static com.kimjisub.launchpad.manage.Constant.BILLING.REMOVE_ADS;
+
 public class Setting extends PreferenceActivity {
 	
 	BillingCertification billingCertification;
@@ -71,14 +78,14 @@ public class Setting extends PreferenceActivity {
 		});
 		
 		findPreference("community").setOnPreferenceClickListener(preference -> {
-			int[] RlistT = {R.string.officialHomepage,
+			int[] titleList = {R.string.officialHomepage,
 				R.string.officialFacebook,
 				R.string.facebookCommunity,
 				R.string.naverCafe,
 				R.string.discord,
 				R.string.kakaotalk,
 				R.string.email};
-			int[] RlistS = {R.string.officialHomepage_,
+			int[] summaryList = {R.string.officialHomepage_,
 				R.string.officialFacebook_,
 				R.string.facebookCommunity_,
 				R.string.naverCafe_,
@@ -86,7 +93,7 @@ public class Setting extends PreferenceActivity {
 				R.string.kakaotalk_,
 				R.string.email_};
 			
-			int[] RlistI = {
+			int[] iconList = {
 				R.drawable.community_web,
 				R.drawable.community_facebook,
 				R.drawable.community_facebook_group,
@@ -95,7 +102,7 @@ public class Setting extends PreferenceActivity {
 				R.drawable.community_kakaotalk,
 				R.drawable.community_mail
 			};
-			String[] urls = {
+			String[] urlList = {
 				"https://unipad.kr",
 				"https://www.facebook.com/playunipad",
 				"https://www.facebook.com/groups/playunipad",
@@ -104,7 +111,7 @@ public class Setting extends PreferenceActivity {
 				"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
 				"mailto:0226unipad@gmail.com"
 			};
-			String[] actions = {
+			String[] actionList = {
 				Intent.ACTION_VIEW,
 				Intent.ACTION_VIEW,
 				Intent.ACTION_VIEW,
@@ -115,13 +122,13 @@ public class Setting extends PreferenceActivity {
 				Intent.ACTION_SENDTO
 			};
 			
-			final String[] listT = new String[RlistT.length];
-			final String[] listS = new String[RlistS.length];
-			final int[] listI = new int[RlistI.length];
+			final String[] listT = new String[titleList.length];
+			final String[] listS = new String[summaryList.length];
+			final int[] listI = new int[iconList.length];
 			for (int i = 0; i < listT.length; i++) {
-				listT[i] = lang(RlistT[i]);
-				listS[i] = lang(RlistS[i]);
-				listI[i] = RlistI[i];
+				listT[i] = lang(titleList[i]);
+				listS[i] = lang(summaryList[i]);
+				listI[i] = iconList[i];
 			}
 			
 			
@@ -131,7 +138,7 @@ public class Setting extends PreferenceActivity {
 				data.add(new mItem(listT[i], listS[i], listI[i]));
 			
 			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
-			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(actions[position], Uri.parse(urls[position]))));
+			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(actionList[position], Uri.parse(urlList[position]))));
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
 			builder.setTitle(lang(R.string.community));
@@ -142,31 +149,25 @@ public class Setting extends PreferenceActivity {
 		
 		findPreference("donation").setOnPreferenceClickListener(preference -> {
 			String[] titleList = {
-				"CarouselLayoutManager",
-				"FloatingActionButton",
-				"TedPermission",
-				"RealtimeBlurView",
-				"Android In-App Billing v3 Library",
-				"Retrofit",
-				"UniPad DesignKit"
+				"Donate $1",
+				"Donate $5",
+				"Donate $10",
+				"Donate $50",
+				"Donate $100"
 			};
 			String[] summaryList = {
-				"Apache License 2.0",
-				"Apache License 2.0",
-				"Apache License 2.0",
-				"Apache License 2.0",
-				"Apache License 2.0",
-				"Apache License 2.0",
-				"Apache License 2.0"
+				DONATE_1,
+				DONATE_5,
+				DONATE_10,
+				DONATE_50,
+				DONATE_100
 			};
 			String[] urlList = {
-				"https://github.com/Azoft/CarouselLayoutManager",
-				"https://github.com/Clans/FloatingActionButton",
-				"https://github.com/ParkSangGwon/TedPermission",
-				"https://github.com/mmin18/RealtimeBlurView",
-				"https://github.com/anjlab/android-inapp-billing-v3",
-				"https://github.com/square/retrofit",
-				"https://github.com/0226daniel/UniPad-DesignKit"
+				DONATE_1,
+				DONATE_5,
+				DONATE_10,
+				DONATE_50,
+				DONATE_100
 			};
 			
 			ListView listView = new ListView(Setting.this);
@@ -175,7 +176,9 @@ public class Setting extends PreferenceActivity {
 				data.add(new mItem(titleList[i], summaryList[i]));
 			
 			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
-			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
+			listView.setOnItemClickListener((parent, view, position, id) -> {
+				billingCertification.purchase(urlList[position]);
+			});
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
 			builder.setTitle(lang(R.string.openSourceLicense));
@@ -187,13 +190,13 @@ public class Setting extends PreferenceActivity {
 		
 		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
 			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseRemoveAds());
-			billingCertification.purchase_removeAds();
+			billingCertification.subscribe_removeAds();
 			return false;
 		});
 		
 		findPreference("proTools").setOnPreferenceClickListener(preference -> {
 			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseProTools());
-			billingCertification.purchase_proTools();
+			billingCertification.subscribe_proTools();
 			return false;
 		});
 		
