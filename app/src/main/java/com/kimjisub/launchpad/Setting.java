@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad;
 
 import android.app.AlertDialog;
+import android.app.Notification;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -18,6 +19,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -153,7 +155,7 @@ public class Setting extends PreferenceActivity {
 				"Donate $5",
 				"Donate $10",
 				"Donate $50",
-				"Donate $100"
+				//"Donate $100"
 			};
 			String[] summaryList = {
 				DONATE_1,
@@ -176,12 +178,10 @@ public class Setting extends PreferenceActivity {
 				data.add(new mItem(titleList[i], summaryList[i]));
 			
 			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
-			listView.setOnItemClickListener((parent, view, position, id) -> {
-				billingCertification.purchase(urlList[position]);
-			});
+			listView.setOnItemClickListener((parent, view, position, id) -> billingCertification.purchase(urlList[position]));
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
-			builder.setTitle(lang(R.string.openSourceLicense));
+			builder.setTitle(lang(R.string.donation));
 			builder.setView(listView);
 			builder.show();
 			
