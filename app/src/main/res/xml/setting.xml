@@ -1,55 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	
-	<PreferenceCategory
-	    android:title="@string/setting">
+
+	<PreferenceCategory android:title="@string/setting">
 		<Preference
-		    android:key="select_theme"
-		    android:title="@string/select_theme"/>
+			android:key="select_theme"
+			android:title="@string/select_theme" />
 		<SwitchPreference
-		    android:defaultValue="false"
-		    android:key="use_sd_card"
-		    android:title="@string/use_sd_card"/>
-	
+			android:defaultValue="false"
+			android:key="use_sd_card"
+			android:title="@string/use_sd_card" />
+
 	</PreferenceCategory>
-	
-	<PreferenceCategory
-	    android:title="@string/payment">
+
+	<PreferenceCategory android:title="@string/payment">
 		<Preference
-		    android:key="donation"
-		    android:summary="@string/donation_"
-		    android:title="@string/donation"/>
+			android:key="donation"
+			android:summary="@string/donation_"
+			android:title="@string/donation" />
 		<CheckBoxPreference
-		    android:key="removeAds"
-		    android:summary="@string/plan_removeAds_"
-		    android:title="@string/plan_removeAds"/>
+			android:key="removeAds"
+			android:summary="@string/plan_removeAds_"
+			android:title="@string/plan_removeAds" />
 		<CheckBoxPreference
-		    android:key="proTools"
-		    android:summary="@string/plan_proTools_"
-		    android:title="@string/plan_proTools"/>
+			android:key="proTools"
+			android:summary="@string/plan_proTools_"
+			android:title="@string/plan_proTools" />
 		<Preference
-		    android:key="restoreBilling"
-		    android:summary="@string/plan_restorePurchases_"
-		    android:title="@string/plan_restorePurchases"/>
+			android:key="restoreBilling"
+			android:summary="@string/plan_restorePurchases_"
+			android:title="@string/plan_restorePurchases" />
 	</PreferenceCategory>
-	
-	<PreferenceCategory
-	    android:title="@string/information">
+
+	<PreferenceCategory android:title="@string/information">
 		<Preference
-		    android:key="community"
-		    android:title="@string/community"/>
+			android:key="community"
+			android:title="@string/community" />
 		<Preference
-		    android:key="OpenSourceLicense"
-		    android:title="@string/openSourceLicense"/>
+			android:key="OpenSourceLicense"
+			android:title="@string/openSourceLicense" />
 		<Preference
-		    android:key="FCMToken"
-		    android:title="@string/FCMToken"/>
+			android:key="FCMToken"
+			android:title="@string/FCMToken" />
 		<Preference
-		    android:key="language"
-		    android:summary="@string/languageCode"
-		    android:title="@string/language"/>
+			android:key="language"
+			android:summary="@string/languageCode"
+			android:title="@string/language" />
 		<Preference
-		    android:key="copyright"
-		    android:title="@string/copyright"/>
+			android:key="copyright"
+			android:title="@string/copyright" />
 	</PreferenceCategory>
 </PreferenceScreen>

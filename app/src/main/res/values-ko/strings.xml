@@ -3,9 +3,9 @@
 	<string name="language">Korean</string>
 	<string name="translator">Kimjisub</string>
 	<string name="translatedBy">Translated by %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">확인</string>
 	<string name="cancel">취소</string>
@@ -28,13 +28,13 @@
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
 	<string name="website">웹사이트</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
 	<string name="list_refresh">목록 새로고침</string>
 	<string name="import_unipack">유니팩 불러오기</string>
 	<string name="store">스토어</string>
-	
+
 	<!--Setting-->
 	<string name="setting">설정</string>
 	<string name="information">정보</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-	
+
 	<!--Community-->
 	<string name="community">커뮤니티</string>
 	<string name="officialHomepage">공식 웹사이트</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">기술 지원 외의 문의</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">기술 지원 외의 문의</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">제목</string>
 	<string name="producerName">제작자</string>
 	<string name="scale">크기</string>
 	<string name="chainCount">체인 개수</string>
 	<string name="capacity">용량</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">자동재생</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">UI 숨기기</string>
 	<string name="watermark">워터마크</string>
 	<string name="proLightMode">프로 라이트 모드</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
 	<string name="currentVersion">현재 버전</string>
 	<string name="newVersion">최신 버전</string>
-	
+
 	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
 	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
@@ -114,27 +114,27 @@
 	<string name="copied">클립보드에 복사되었습니다.</string>
 	<string name="skinMemoryErr">스킨을 불러오는 도중 메모리 문제가 발생하였습니다.\n앱을 재시작합니다.</string>
 	<string name="skinErr">스킨에 문제가 있습니다.\n스킨을 초기화합니다.</string>
-	
+
 	<string name="outOfMemory">메모리 공간이 부족합니다.\n메모리 확보 후 다시 시도해주세요.</string>
 	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
 	<string name="doNotSee">더이상 보지 않기</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">런치패드 연결중…</string>
 	<string name="midiDevicesNotDetected">MIDI 장치가 감지되지 않았습니다.</string>
 	<string name="signal_SpeedFirst">속도 우선</string>
 	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
 	<string name="downloadCount">다운로드 수</string>
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>

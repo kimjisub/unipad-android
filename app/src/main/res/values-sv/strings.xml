@@ -3,9 +3,9 @@
 	<string name="language">English</string>
 	<string name="translator">GeeDee // https://discord.gg/qFMWc3e</string>
 	<string name="translatedBy">Translated by %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">Acceptera</string>
 	<string name="cancel">Avbryt</string>
@@ -28,13 +28,13 @@
 	<string name="path">Sökväg</string>
 	<string name="quit">Avsluta</string>
 	<string name="website">Website</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Återanslut Launchpad</string>
 	<string name="list_refresh">läs om</string>
 	<string name="import_unipack">Ladda Unipack</string>
 	<string name="store">Affär</string>
-	
+
 	<!--Setting-->
 	<string name="setting">Inställning</string>
 	<string name="information">Information</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">Open Source Licens</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) Alla rättigheter förbehållna.</string>
-	
+
 	<!--Community-->
 	<string name="community">samhälle</string>
 	<string name="officialHomepage">Officiel Webbsida</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">Annat än teknisk support</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Annat än teknisk support</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">Titel</string>
 	<string name="producerName">Producent</string>
 	<string name="scale">storlek</string>
 	<string name="chainCount">Kedjemängd </string>
 	<string name="capacity">Filstorlek</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">Göm UI</string>
 	<string name="watermark">Vattenstämpel</string>
 	<string name="proLightMode">Pro Light Mode</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">Ny version hittad.</string>
 	<string name="currentVersion">Denna versionen</string>
 	<string name="newVersion">Senaste versionen</string>
-	
+
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack ej hittad.</string>
@@ -114,27 +114,27 @@
 	<string name="copied">Kopierat!</string>
 	<string name="skinMemoryErr">Kunde inte ladda tema. Starta om appen.</string>
 	<string name="skinErr">Misslyckades att ladda tema.</string>
-	
+
 	<string name="outOfMemory">Inget minne kvar, töm lite och prova igen.</string>
 	<string name="outOfCPU">Kan inte starta paket på grund av låg CPU.</string>
 	<string name="doNotSee">Do not see anymore</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Ansluter Launchpad</string>
 	<string name="midiDevicesNotDetected">MIDI-enheter ej funna.</string>
 	<string name="signal_SpeedFirst">Snabbhet först</string>
 	<string name="signal_avoidAfterimage">Undvik efterbild</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Du kan inte lämna sidan tills allt har laddats ned.</string>
 	<string name="downloadCount">Nedladdningsräkning</string>
 	<string name="UnableToAccessServer">kunde inte ansluta till servern.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">Ladda ned teman</string>
 	<string name="requireRestart">Appen behöver startas om.</string>
 	<string name="doYouWantToRestartApp">Vill du starta om appen?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Standardtema</string>
 	<string name="theme_description">Detta är det nuvarande Unipadtemat.</string>

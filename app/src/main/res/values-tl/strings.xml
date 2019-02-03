@@ -3,9 +3,9 @@
 	<string name="language">Tagalog</string>
 	<string name="translator">Joshtine Nel Tubon (Black Spx)</string>
 	<string name="translatedBy">Translated by %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">Tanggapin</string>
 	<string name="cancel">Kanselahin</string>
@@ -28,13 +28,13 @@
 	<string name="path">Path</string>
 	<string name="quit">Umalis</string>
 	<string name="website">Website</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Ikabit uli ang Launchpad</string>
 	<string name="list_refresh">I-refresh ang Listahan</string>
 	<string name="import_unipack">I-load ang Unipack</string>
 	<string name="store">Store</string>
-	
+
 	<!--Setting-->
 	<string name="setting">Setting</string>
 	<string name="information">Kaalaman</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">Buksan ang Source License</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-	
+
 	<!--Community-->
 	<string name="community">Komunidad</string>
 	<string name="officialHomepage">Opisyal na Website</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">Maliban sa Teknikal na Suporta</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Maliban sa Teknikal na Suporta</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">Pamagat</string>
 	<string name="producerName">Tagagawa</string>
 	<string name="scale">Sukat</string>
 	<string name="chainCount">Bilang ng Chain</string>
 	<string name="capacity">Sukat ng File</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Awtoplay</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">Itago ang UI</string>
 	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">May bagong bersyon na natuklasan.</string>
 	<string name="currentVersion">Kasalukuyang bersyon</string>
 	<string name="newVersion">Ang pinakabagong bersyon</string>
-	
+
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Walang nahanap na Unipack.</string>
@@ -114,27 +114,27 @@
 	<string name="copied">Nakopya na sa clipboard.</string>
 	<string name="skinMemoryErr">Nabigong ilagay ang skin.\nUlitin ang app.</string>
 	<string name="skinErr">Nabigong ilagay ang skin.\nUlitin ang skin.</string>
-	
+
 	<string name="outOfMemory">Wala ng memory..\nMagluwag ng memory at ulitin.</string>
 	<string name="outOfCPU">Hindi masimulan ang pack\ndahil sa phone specifications…\nSubukan uli.</string>
 	<string name="doNotSee">Huwag nang makita</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Kinokonek ang launchpad…</string>
 	<string name="midiDevicesNotDetected">Ang mga MIDI Devices ay hindi matuklasan</string>
 	<string name="signal_SpeedFirst">Mabilis muna</string>
 	<string name="signal_avoidAfterimage">Iwasan ang afterimage</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Hindi makakaalis habang nagda-download ang pack</string>
 	<string name="downloadCount">Bilang ng Download</string>
 	<string name="UnableToAccessServer">Hindi kayang makapasok sa server.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">I-download ang Themes</string>
 	<string name="requireRestart">Kailangan ulitin ang app.</string>
 	<string name="doYouWantToRestartApp">Gusto mo bang ulitin ang app?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>

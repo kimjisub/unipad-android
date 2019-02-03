@@ -9,23 +9,23 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 	public void onMessageReceived(RemoteMessage remoteMessage) {
 		// TODO(developer): Handle FCM messages here.
 		Log.firebase("From: " + remoteMessage.getFrom());
-		
+
 		if (remoteMessage.getData().size() > 0) {
 			Log.firebase("Message data payload: " + remoteMessage.getData());
-			
+
 			if (/* Check if data needs to be processed by long running job */ true) {
 				scheduleJob();
 			} else {
 				handleNow();
 			}
-			
+
 		}
-		
+
 		if (remoteMessage.getNotification() != null) {
 			Log.firebase("Message Notification Body: " + remoteMessage.getNotification().getBody());
 		}
 	}
-	
+
 	private void scheduleJob() {
 		/*FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(this));
 		Job myJob = dispatcher.newJobBuilder()
@@ -34,7 +34,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 			.build();
 		dispatcher.schedule(myJob);*/
 	}
-	
+
 	private void handleNow() {
 		Log.firebase("Short lived task is done.");
 	}
