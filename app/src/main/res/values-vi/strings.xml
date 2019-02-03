@@ -3,9 +3,9 @@
 	<string name="language">Vietnamese</string>
 	<string name="translator">Marty Nam</string>
 	<string name="translatedBy">Translated by %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">Đồng ý</string>
 	<string name="cancel">Hủy</string>
@@ -28,13 +28,13 @@
 	<string name="path">Đường dẫn</string>
 	<string name="quit">Thoát</string>
 	<string name="website">Website</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Kết nối lại với Launchpad</string>
 	<string name="list_refresh">Danh sách</string>
 	<string name="import_unipack">Nhận Unipack</string>
 	<string name="store">Unipacks</string>
-	
+
 	<!--Setting-->
 	<string name="setting">Cài đặt</string>
 	<string name="information">Thông tin</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-	
+
 	<!--Community-->
 	<string name="community">Community</string>
 	<string name="officialHomepage">Official Website</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">Other than Technical Support</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">Tên bài hát</string>
 	<string name="producerName">Người làm</string>
 	<string name="scale">Kích cỡ</string>
 	<string name="chainCount">Số chain</string>
 	<string name="capacity">Kích cỡ file</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">Ẩn giao diện người dùng</string>
 	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">Bản cập nhật mới. </string>
 	<string name="currentVersion">Bản cập nhật hiện tại</string>
 	<string name="newVersion">Bản cập nhật mới nhất</string>
-	
+
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack không tìm thấy được. </string>
@@ -114,27 +114,27 @@
 	<string name="copied">Copy vào clipboard</string>
 	<string name="skinMemoryErr">Không thể cài đặt skin. Khởi động lại ứng dụng</string>
 	<string name="skinErr">Không thể cài đặt skin.Khởi động lại</string>
-	
+
 	<string name="outOfMemory">Hết bộ nhớ.Hãy làm sạch bộ nhớ của bạn</string>
 	<string name="outOfCPU">Không thể mở pack</string>
 	<string name="doNotSee">Không thấy nữa</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Kết nối với Launchpad…</string>
 	<string name="midiDevicesNotDetected">Không xác định được thiết bị MIDI</string>
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Không thể thoát ra khi đang tải</string>
 	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Không thể kích hoạt máy chủ.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">Tải Skins</string>
 	<string name="requireRestart">Cần khởi động lại ứng dụng</string>
 	<string name="doYouWantToRestartApp">Bạn muốn khởi động lại Unipad không?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>

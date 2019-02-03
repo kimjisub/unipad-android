@@ -10,7 +10,7 @@ import java.util.Map;
 
 @IgnoreExtraProperties
 public class FsStore {
-	
+
 	public long chainCount;
 	public String code;
 	public String description;
@@ -28,10 +28,10 @@ public class FsStore {
 	public Date uploadAt;
 	public String url;
 	public String website;
-	
+
 	public FsStore() {
 	}
-	
+
 	public FsStore(long chainCount, String code, String description, long difficulty, long downloadCount, boolean isAutoPlay, boolean isLED, boolean isNew, boolean isProLight, boolean isWormhole, long playTime, String producerName, long rank, String title, Date uploadAt, String url, String website) {
 		this.chainCount = chainCount;
 		this.code = code;
@@ -51,7 +51,7 @@ public class FsStore {
 		this.url = url;
 		this.website = website;
 	}
-	
+
 	public FsStore(QueryDocumentSnapshot document) {
 		chainCount = document.getLong("chainCount");
 		code = document.getString("code");
@@ -71,32 +71,32 @@ public class FsStore {
 		url = document.getString("url");
 		website = document.getString("website");
 	}
-	
+
 	public FsStore(Map map) {
-		chainCount = (long)map.get( "chainCount");
-		code = (String)map.get( "code");
-		description = (String)map.get( "description");
-		difficulty = (long)map.get( "difficulty");
-		downloadCount = (long)map.get( "downloadCount");
-		isAutoPlay = (boolean)map.get( "isAutoPlay");
-		isLED = (boolean)map.get( "isLED");
-		isNew = (boolean)map.get( "isNew");
-		isProLight = (boolean)map.get( "isProLight");
-		isWormhole = (boolean)map.get( "isWormhole");
-		playTime = (long)map.get( "playTime");
-		producerName = (String)map.get( "producerName");
-		rank = (long)map.get( "rank");
-		title = (String)map.get( "title");
-		uploadAt = (Date)map.get( "uploadAt");
-		url = (String)map.get( "url");
-		website = (String)map.get( "website");
+		chainCount = (long) map.get("chainCount");
+		code = (String) map.get("code");
+		description = (String) map.get("description");
+		difficulty = (long) map.get("difficulty");
+		downloadCount = (long) map.get("downloadCount");
+		isAutoPlay = (boolean) map.get("isAutoPlay");
+		isLED = (boolean) map.get("isLED");
+		isNew = (boolean) map.get("isNew");
+		isProLight = (boolean) map.get("isProLight");
+		isWormhole = (boolean) map.get("isWormhole");
+		playTime = (long) map.get("playTime");
+		producerName = (String) map.get("producerName");
+		rank = (long) map.get("rank");
+		title = (String) map.get("title");
+		uploadAt = (Date) map.get("uploadAt");
+		url = (String) map.get("url");
+		website = (String) map.get("website");
 	}
-	
-	
+
+
 	@Exclude
 	public Map<String, Object> toMap() {
 		HashMap<String, Object> result = new HashMap<>();
-		
+
 		result.put("chainCount", chainCount);
 		result.put("code", code);
 		result.put("description", description);
@@ -114,7 +114,7 @@ public class FsStore {
 		result.put("uploadAt", uploadAt);
 		result.put("url", url);
 		result.put("website", website);
-		
+
 		return result;
 	}
 }

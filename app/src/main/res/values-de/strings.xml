@@ -3,9 +3,9 @@
 	<string name="language">Deutsch</string>
 	<string name="translator">[SnBt]Launchpad</string>
 	<string name="translatedBy">Übersetzt von %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">Akzeptieren</string>
 	<string name="cancel">Abbrechen</string>
@@ -28,13 +28,13 @@
 	<string name="path">Pfad</string>
 	<string name="quit">Quit</string>
 	<string name="website">Website</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Launchpad neu abschließen</string>
 	<string name="list_refresh">Liste Aktualisieren</string>
 	<string name="import_unipack">Unipack Laden</string>
 	<string name="store">Store</string>
-	
+
 	<!--Setting-->
 	<string name="setting">Einstellungen</string>
 	<string name="information">Information</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">Open Source Lizenz</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-	
+
 	<!--Community-->
 	<string name="community">Community</string>
 	<string name="officialHomepage">Offizielle Website</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">anderes als Technischer Support</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">anderes als Technischer Support</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">Titel</string>
 	<string name="producerName">Produzent</string>
 	<string name="scale">Größe</string>
 	<string name="chainCount">Seiten Anzahl</string>
 	<string name="capacity">Datei Größe</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">UI Verstecken</string>
 	<string name="watermark">Wasserzeichen</string>
 	<string name="proLightMode">Pro Light Mode</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">Neue Version Gefunden.</string>
 	<string name="currentVersion">Aktuelle Version</string>
 	<string name="newVersion">Neuste Version</string>
-	
+
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack nicht gefunden.</string>
@@ -114,27 +114,27 @@
 	<string name="copied">Kopiert.</string>
 	<string name="skinMemoryErr">Skin Übernehmen Fehlgeschlagen.\nApp Neustarten.</string>
 	<string name="skinErr">Skin Übernehmen Fehlgeschlagen. Skin Zurücksetzen.</string>
-	
+
 	<string name="outOfMemory">Kein Speicherplatz…\nLöschen sie sachen und versuchen sie es nochmal.</string>
 	<string name="outOfCPU">konnte Unipack nicht Starten\nWegen Handy Spec\'s\nApp Neustarten und nochmal Versuchen.</string>
 	<string name="doNotSee">Kann nicht sehen</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Verbinde Launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI Geräte nicht Gefunden</string>
 	<string name="signal_SpeedFirst">Speed First</string>
 	<string name="signal_avoidAfterimage">Umgehe Afterimage</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Du kannst wärend dem Download Nicht verlassen</string>
 	<string name="downloadCount">So oft Heruntergeladen</string>
 	<string name="UnableToAccessServer">Konnte Server nicht erreichen.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">Themes Runterladen</string>
 	<string name="requireRestart">Benötigt app Neustart.</string>
 	<string name="doYouWantToRestartApp">Willst du die App Neustarten?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>

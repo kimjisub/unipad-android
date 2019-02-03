@@ -6,11 +6,11 @@
 	<color name="background2">#414F66</color>
 	<color name="gray2">#808A99</color>
 	<color name="white">#FFFFFF</color>
-	
+
 	<!--text-->
 	<color name="title">#767d89</color>
 	<color name="subTitle">#a1a6ae</color>
-	
+
 	<!--skin-->
 	<color name="checkbox">#a6b4c9</color>
 	<color name="trace_log">#161e2b</color>
@@ -18,14 +18,14 @@
 	<color name="option_window_checkbox">#414F66</color>
 	<color name="option_window_btn">#d6d8d7</color>
 	<color name="option_window_btn_text">#0f0f0f</color>
-	
+
 	<!--color-->
 	<color name="skyblue">#00bcda</color>
 	<color name="green">#66bb6a</color>
 	<color name="orange">#ffa726</color>
 	<color name="red">#ff6b4e</color>
 	<color name="pink">#ffa5a5</color>
-	
+
 	<!--app color-->
 	<color name="app_orange">#ff8f00</color>
 	<color name="app_blue">#00b8d4</color>

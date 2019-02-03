@@ -8,9 +8,9 @@ import java.util.Map;
 
 @IgnoreExtraProperties
 public class fbStore {
-	
+
 	public int index = 0;
-	
+
 	public String code;
 	public String title;
 	public String producerName;
@@ -18,10 +18,10 @@ public class fbStore {
 	public boolean isLED;
 	public int downloadCount;
 	public String URL;
-	
+
 	public fbStore() {
 	}
-	
+
 	public fbStore(String code, String title, String producerName, boolean isAutoPlay, boolean isLED, int downloadCount, String URL) {
 		this.code = code;
 		this.title = title;
@@ -31,7 +31,7 @@ public class fbStore {
 		this.downloadCount = downloadCount;
 		this.URL = URL;
 	}
-	
+
 	@Exclude
 	public Map<String, Object> toMap() {
 		HashMap<String, Object> result = new HashMap<>();
@@ -42,7 +42,7 @@ public class fbStore {
 		result.put("isLED", isLED);
 		result.put("downloadCount", downloadCount);
 		result.put("URL", URL);
-		
+
 		return result;
 	}
 }

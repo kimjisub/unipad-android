@@ -1,11 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="com.kimjisub.design">
 
-          package="com.kimjisub.design">
-	
 	<application
-	    android:allowBackup="true"
-	    android:supportsRtl="true">
-	
+		android:allowBackup="true"
+		android:supportsRtl="true">
+
 	</application>
 
 </manifest>
