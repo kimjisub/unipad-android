@@ -29,6 +29,14 @@
 	<string name="quit">Umalis</string>
 	<string name="website">Website</string>
 
+	<!--Main-->
+	<string name="unipack_count">Number of UniPacks</string>
+	<string name="unipack_capacity">Capacity of All UniPacks</string>
+	<string name="open_count">Count of Opened</string>
+	<string name="padtouch_count">Count of Pad Touch</string>
+	<string name="LED_count">Count of LED Event</string>
+	<string name="sound_count">Count of Sound</string>
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Ikabit uli ang Launchpad</string>
 	<string name="list_refresh">I-refresh ang Listahan</string>
