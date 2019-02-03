@@ -63,22 +63,22 @@ dependencies {
 	implementation 'com.android.support:multidex:1.0.3'
 	testImplementation 'junit:junit:4.12'
 	
-	implementation 'com.google.android.gms:play-services-ads:17.0.0'
+	implementation 'com.google.android.gms:play-services-ads:17.1.2'
 	implementation 'com.google.android.gms:play-services-identity:16.0.0'
 	implementation 'com.google.android.gms:play-services-gcm:16.0.0'
 	
-	implementation 'com.google.firebase:firebase-core:16.0.4'
-	implementation 'com.google.firebase:firebase-firestore:17.1.1'
-	implementation 'com.google.firebase:firebase-database:16.0.3'
+	implementation 'com.google.firebase:firebase-core:16.0.6'
+	implementation 'com.google.firebase:firebase-firestore:18.0.0'
+	implementation 'com.google.firebase:firebase-database:16.0.6'
 	implementation 'com.google.firebase:firebase-messaging:17.3.4'
-	implementation 'com.google.firebase:firebase-ads:17.0.0'
+	implementation 'com.google.firebase:firebase-ads:17.1.2'
 	
 	implementation 'com.azoft.carousellayoutmanager:carousel:1.2.1'
 	implementation 'com.github.clans:fab:1.6.4'
 	implementation 'gun0912.ted:tedpermission:2.2.2'
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
 	implementation 'com.anjlab.android.iab.v3:library:1.0.44'
-	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.5'
+	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.6'
 	//implementation 'com.airbnb.android:lottie:2.6.0'
 	
 	implementation 'com.squareup.retrofit2:retrofit:2.4.0'
@@ -88,7 +88,7 @@ dependencies {
 	
 	// Vungle SDK
 	implementation 'com.github.vungle:vungle-android-sdk:6.3.17'
-	implementation 'com.google.android.gms:play-services-basement:16.1.0'
+	implementation 'com.google.android.gms:play-services-basement:16.2.0'
 	implementation 'com.google.android.gms:play-services-ads-identifier:16.0.0'
 	implementation 'com.google.android.gms:play-services-location:16.0.0'
 	
