@@ -29,6 +29,14 @@
 	<string name="quit">나가기</string>
 	<string name="website">웹사이트</string>
 
+	<!--Main-->
+	<string name="unipack_count">유니팩 개수</string>
+	<string name="unipack_capacity">유니팩 용량</string>
+	<string name="open_count">오픈 횟수</string>
+	<string name="padtouch_count">패드 터치 횟수</string>
+	<string name="LED_count">LED 이벤트 개수</string>
+	<string name="sound_count">사운드 개수</string>
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
 	<string name="list_refresh">목록 새로고침</string>
