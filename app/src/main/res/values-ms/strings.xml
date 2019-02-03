@@ -3,9 +3,9 @@
 	<string name="language">Bahasa melayu</string>
 	<string name="translator">Villager</string>
 	<string name="translatedBy">Translated by %1$s</string>
-	
+
 	<string name="app_name">UniPad</string>
-	
+
 	<!--Word-->
 	<string name="accept">Terima</string>
 	<string name="cancel">Batal</string>
@@ -28,13 +28,13 @@
 	<string name="path">Jalan</string>
 	<string name="quit">Keluar</string>
 	<string name="website">Website</string>
-	
+
 	<!--Menu-->
 	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>
 	<string name="list_refresh">Memuat semula senarai</string>
 	<string name="import_unipack">Memuat Unipack</string>
 	<string name="store">Kedai</string>
-	
+
 	<!--Setting-->
 	<string name="setting">Tetapan</string>
 	<string name="information">Informasi</string>
@@ -54,7 +54,7 @@
 	<string name="openSourceLicense">Sumber Lesen Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2018. (UniPad) All rights reserved.</string>
-	
+
 	<!--Community-->
 	<string name="community">Komuniti</string>
 	<string name="officialHomepage">Laman Web Rasmi</string>
@@ -71,14 +71,14 @@
 	<string name="kakaotalk_">Lain Daripada Bantuan Sokongan</string>
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Lain Daripada Bantuan Sokongan</string>
-	
+
 	<!--Unipack Info-->
 	<string name="title">Tajuk</string>
 	<string name="producerName">Pemilik</string>
 	<string name="scale">Saiz</string>
 	<string name="chainCount">Bilangan Chain</string>
 	<string name="capacity">Saiz Fail</string>
-	
+
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Auto Main</string>
@@ -91,12 +91,12 @@
 	<string name="hideUI">Hide UI</string>
 	<string name="watermark">Tanda Tempat</string>
 	<string name="proLightMode">Pro Light Mode</string>
-	
+
 	<!--Version-->
 	<string name="newVersionFound">Versi Baharu Dikesan.</string>
 	<string name="currentVersion">Versi Terkini</string>
 	<string name="newVersion">Versi Terbaharu</string>
-	
+
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack Tidak Dijumpai.</string>
@@ -114,27 +114,27 @@
 	<string name="copied">Telah di salin.</string>
 	<string name="skinMemoryErr">Gagal Untuk Menggunakan Kulit.\nMula semula?.</string>
 	<string name="skinErr">Gagal untuk memilih kulit.\nReset Kulit.</string>
-	
+
 	<string name="outOfMemory">Melebihi had Memori…\nPadamkan fail yang tidak digunakan lagi dan Cuba sekali lagi.</string>
 	<string name="outOfCPU">Tidak boleh membuka unipack\nKerana spesifikasi telifon anda…\nCuba lagi.</string>
 	<string name="doNotSee">Jangan lihat lagi</string>
-	
+
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Menyambung ke Launchpad…</string>
 	<string name="midiDevicesNotDetected">Peralatan MIDI tidak disambung</string>
 	<string name="signal_SpeedFirst">Kelajuan Dahulu</string>
 	<string name="signal_avoidAfterimage">Halang afterimage</string>
-	
+
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Tidak boleh keluar semasa memuat turun unipack</string>
 	<string name="downloadCount">Bilangan muat turun</string>
 	<string name="UnableToAccessServer">Tidak boleh mengakses Pelayar.</string>
-	
+
 	<!--Theme-->
 	<string name="themeDownload">Muat turun Tema</string>
 	<string name="requireRestart">Muat semula aplikasi!</string>
 	<string name="doYouWantToRestartApp">Adakah anda mahu memuat semuat aplikasai?</string>
-	
+
 	<!--ThemePack-->
 	<string name="theme_name">Kulit Lalai</string>
 	<string name="theme_description">Ini adalah kulit lalai Unipad</string>

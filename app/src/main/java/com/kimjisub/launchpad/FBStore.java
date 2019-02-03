@@ -25,47 +25,46 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class FBStore extends BaseActivity {
-	
+
 	LinearLayout LL_list;
-	
+
 	String UnipackRootURL;
-	
+
 	int downloadCount = 0;
-	
+
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-	
+	ArrayList<PackView> PV_items;
+
+	// =========================================================================================
+	ArrayList<fbStore> DStoreDatas;
+
 	void initVar() {
 		LL_list = findViewById(R.id.list);
-		
+
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStore.this);
 	}
-	
-	// =========================================================================================
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_fbstore);
 		initVar();
-		
+
 		initUI();
 		getStoreCount.run();
 	}
-	
-	ArrayList<PackView> PV_items;
-	ArrayList<fbStore> DStoreDatas;
-	
+
 	void initUI() {
 		LL_list.removeAllViews();
 		PV_items = new ArrayList<>();
 		DStoreDatas = new ArrayList<>();
-		
+
 		addErrorItem();
-		
+
 		final String[] downloadedProjectList;
-		
+
 		File folder = new File(UnipackRootURL);
-		
+
 		if (folder.isDirectory()) {
 			downloadedProjectList = new String[folder.listFiles().length];
 			File[] files = folder.listFiles();
@@ -75,7 +74,7 @@ public class FBStore extends BaseActivity {
 			downloadedProjectList = new String[0];
 			folder.mkdir();
 		}
-		
+
 		new Networks.GetStoreList().setDataListener(new Networks.GetStoreList.onDataListener() {
 			@Override
 			public void onAdd(final fbStore d) {
@@ -84,8 +83,8 @@ public class FBStore extends BaseActivity {
 						LL_list.removeAllViews();
 					DStoreDatas.add(d);
 					d.index = DStoreDatas.size() - 1;
-					
-					
+
+
 					boolean _isDownloaded = false;
 					for (String downloadedProject : downloadedProjectList) {
 						if (d.code.equals(downloadedProject)) {
@@ -94,38 +93,38 @@ public class FBStore extends BaseActivity {
 						}
 					}
 					final boolean isDownloaded = _isDownloaded;
-					
+
 					final PackView packView = new PackView(FBStore.this)
-						.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
-						.setTitle(d.title)
-						.setSubTitle(d.producerName)
-						.addInfo(lang(R.string.downloadCount), (new DecimalFormat("#,##0")).format(d.downloadCount))
-						.setOption1(lang(R.string.LED_), d.isLED)
-						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
-						.setPlayImageShow(false)
-						.setOnEventListener(new PackView.OnEventListener() {
-							@Override
-							public void onViewClick(PackView v) {
-								if (v.getStatus())
-									itemClicked(v, d.index);
-							}
-							
-							@Override
-							public void onViewLongClick(PackView v) {
-								v.toggleDetail();
-							}
-							
-							@Override
-							public void onPlayClick(PackView v) {
-							}
-							
-							@Override
-							public void onFunctionBtnClick(PackView v, int index) {
-							}
-						})
-						.setStatus(!isDownloaded);
-					
-					
+							.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
+							.setTitle(d.title)
+							.setSubTitle(d.producerName)
+							.addInfo(lang(R.string.downloadCount), (new DecimalFormat("#,##0")).format(d.downloadCount))
+							.setOption1(lang(R.string.LED_), d.isLED)
+							.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
+							.setPlayImageShow(false)
+							.setOnEventListener(new PackView.OnEventListener() {
+								@Override
+								public void onViewClick(PackView v) {
+									if (v.getStatus())
+										itemClicked(v, d.index);
+								}
+
+								@Override
+								public void onViewLongClick(PackView v) {
+									v.toggleDetail();
+								}
+
+								@Override
+								public void onPlayClick(PackView v) {
+								}
+
+								@Override
+								public void onFunctionBtnClick(PackView v, int index) {
+								}
+							})
+							.setStatus(!isDownloaded);
+
+
 					final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 					int left = dpToPx(16);
 					int top = 0;
@@ -138,38 +137,38 @@ public class FBStore extends BaseActivity {
 					e.printStackTrace();
 				}
 			}
-			
+
 			@Override
 			public void onChange(final fbStore d) {
 				try {
-					
+
 					int i;
 					for (i = 0; i < DStoreDatas.size(); i++) {
 						fbStore item = DStoreDatas.get(i);
 						if (item.code.equals(d.code))
 							break;
 					}
-					
+
 					PackView itemStore = PV_items.get(i);
 					itemStore.setTitle(d.title)
-						.setSubTitle(d.producerName)
-						.setOption1(lang(R.string.LED_), d.isLED)
-						.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
-						.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
+							.setSubTitle(d.producerName)
+							.setOption1(lang(R.string.LED_), d.isLED)
+							.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
+							.updateInfo(0, (new DecimalFormat("#,##0")).format(d.downloadCount));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}).run();
 	}
-	
+
 	void addErrorItem() {
 		String title = lang(R.string.errOccur);
 		String subTitle = lang(R.string.UnableToAccessServer);
-		
+
 		PackView packView = PackView.errItem(FBStore.this, title, subTitle, null);
-		
-		
+
+
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		int left = dpToPx(16);
 		int top = 0;
@@ -178,24 +177,24 @@ public class FBStore extends BaseActivity {
 		lp.setMargins(left, top, right, bottom);
 		LL_list.addView(packView, lp);
 	}
-	
+
 	// ========================================================================================= Activity
-	
+
 	@SuppressLint("StaticFieldLeak")
 	void itemClicked(final PackView v, final int i) {
 		Log.log("itemClicked(" + i + ")");
-		
+
 		v.togglePlay(true);
 		v.updateFlagColor(color(R.color.gray1));
 		v.setStatus(false);
 		v.setPlayText("0%");
-		
+
 		(new AsyncTask<String, Long, String>() {
-			
+
 			int fileSize;
 			String UnipackZipURL;
 			String UnipackURL;
-			
+
 			String code;
 			String title;
 			String producerName;
@@ -203,11 +202,11 @@ public class FBStore extends BaseActivity {
 			boolean isLED;
 			int downloadCount;
 			String URL;
-			
+
 			@Override
 			protected void onPreExecute() {
 				FBStore.this.downloadCount++;
-				
+
 				code = DStoreDatas.get(i).code;
 				title = DStoreDatas.get(i).title;
 				producerName = DStoreDatas.get(i).producerName;
@@ -215,37 +214,37 @@ public class FBStore extends BaseActivity {
 				isLED = DStoreDatas.get(i).isLED;
 				downloadCount = DStoreDatas.get(i).downloadCount;
 				URL = DStoreDatas.get(i).URL;
-				
-				
+
+
 				UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, code, ".zip");
 				UnipackURL = UnipackRootURL + "/" + code + "/";
-				
+
 				super.onPreExecute();
 			}
-			
+
 			@Override
 			protected String doInBackground(String[] params) {
-				
+
 				Networks.sendGet("https://us-central1-unipad-e41ab.cloudfunctions.net/increaseDownloadCount/" + code);
 				try {
-					
+
 					URL url = new URL(URL);
 					HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 					connection.setConnectTimeout(5000);
 					connection.setReadTimeout(5000);
-					
+
 					fileSize = connection.getContentLength();
 					Log.log(URL);
 					Log.log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
-					
+
 					InputStream input = new BufferedInputStream(url.openStream());
 					OutputStream output = new FileOutputStream(UnipackZipURL);
-					
+
 					byte data[] = new byte[1024];
-					
+
 					long total = 0;
-					
+
 					int count;
 					int skip = 100;
 					while ((count = input.read(data)) != -1) {
@@ -257,12 +256,12 @@ public class FBStore extends BaseActivity {
 						}
 						output.write(data, 0, count);
 					}
-					
+
 					output.flush();
 					output.close();
 					input.close();
 					publishProgress(1L);
-					
+
 					try {
 						FileManager.unZipFile(UnipackZipURL, UnipackURL);
 						Unipack unipack = new Unipack(UnipackURL, true);
@@ -272,24 +271,24 @@ public class FBStore extends BaseActivity {
 							FileManager.deleteFolder(UnipackURL);
 						} else
 							publishProgress(2L);
-						
+
 					} catch (Exception e) {
 						publishProgress(-1L);
 						FileManager.deleteFolder(UnipackURL);
 						e.printStackTrace();
 					}
 					FileManager.deleteFolder(UnipackZipURL);
-					
-					
+
+
 				} catch (Exception e) {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
 				FBStore.this.downloadCount--;
-				
+
 				return null;
 			}
-			
+
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
@@ -307,29 +306,29 @@ public class FBStore extends BaseActivity {
 					v.togglePlay(false);
 				}
 			}
-			
+
 			@Override
 			protected void onPostExecute(String unused) {
-			
+
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 		initVar();
-		
+
 		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStore.this, data));
 	}
-	
+
 	@Override
 	public void onPause() {
 		super.onPause();
-		
+
 		getStoreCount.setOnChangeListener(null);
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		if (downloadCount > 0)
