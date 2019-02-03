@@ -10,56 +10,107 @@ import com.kimjisub.launchpad.manage.FileManager;
 import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
-import com.kimjisub.launchpad.manage.network.MakeUrl;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class ImportPackByFile extends BaseActivity {
-	
+
 	TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
-	
+
 	String UnipackRootURL;
 	String UnipackZipURL;
 	String UnipackURL;
-	
+	@SuppressLint("StaticFieldLeak")
+	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
+
+
+		String title = null;
+		String message = null;
+
+		@Override
+		protected void onPreExecute() {
+			TV_title.setText(lang(R.string.analyzing));
+			TV_message.setText(UnipackZipURL);
+			TV_info.setText("URL : " + UnipackZipURL);
+			super.onPreExecute();
+		}
+
+		@SuppressLint("DefaultLocale")
+		@Override
+		protected String doInBackground(String... params) {
+			try {
+				FileManager.unZipFile(UnipackZipURL, UnipackURL);
+				Unipack unipack = new Unipack(UnipackURL, true);
+
+				if (unipack.ErrorDetail == null) {
+					title = lang(R.string.analyzeComplete);
+					message = unipack.getInfoText(ImportPackByFile.this);
+				} else if (unipack.CriticalError) {
+					title = lang(R.string.analyzeFailed);
+					message = unipack.ErrorDetail;
+					FileManager.deleteFolder(UnipackURL);
+				} else {
+					title = lang(R.string.warning);
+					message = unipack.ErrorDetail;
+				}
+
+			} catch (IOException e) {
+				title = lang(R.string.analyzeFailed);
+				message = e.getMessage();
+				FileManager.deleteFolder(UnipackURL);
+			}
+
+			return null;
+		}
+
+		@Override
+		protected void onProgressUpdate(String... progress) {
+		}
+
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			TV_title.setText(title);
+			TV_message.setText(message);
+			new Handler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					finish();
+				}
+			}, 3000);
+		}
+	};
+
 	void initVar() {
 		TV_title = findViewById(R.id.title);
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
-		
+
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByFile.this);
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);
 		String name = file.getName();
 		String name_ = name.substring(0, name.lastIndexOf("."));
 		UnipackURL = FileManager.makeNextUrl(UnipackRootURL, name_, "/");
-		
+
 		log("UnipackZipURL: " + UnipackZipURL);
 		log("UnipackURL: " + UnipackURL);
 		setStatus(Status.prepare, UnipackZipURL);
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		initVar();
-		
+
 		new UnzipTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		//processTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
-	
-	enum Status {prepare, downloading, analyzing, success, notFound, failed}
-	
+
 	void setStatus(Status status, String msg) {
 		runOnUiThread(() -> {
 			switch (status) {
@@ -90,28 +141,41 @@ public class ImportPackByFile extends BaseActivity {
 			}
 		});
 	}
-	
+
 	void log(String msg) {
 		runOnUiThread(() -> TV_info.append(msg + "\n"));
 	}
-	
+
 	void delayFinish() {
 		log("delayFinish()");
 		new Handler().postDelayed(() -> finish(), 3000);
 	}
-	
+
+	@Override
+	public void onResume() {
+		super.onResume();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		restartApp(this);
+	}
+
+	enum Status {prepare, downloading, analyzing, success, notFound, failed}
+
 	class UnzipTask extends AsyncTask<String, String, String> {
-		
+
 		@Override
 		protected void onPreExecute() {
 			log("Unzip Task onPreExecute()");
 			super.onPreExecute();
 		}
-		
+
 		@Override
 		protected String doInBackground(String[] params) {
 			log("Unzip Task doInBackground()");
-			
+
 			try {
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
@@ -122,7 +186,7 @@ public class ImportPackByFile extends BaseActivity {
 						FileManager.deleteFolder(UnipackURL);
 					} else
 						setStatus(ImportPackByFile.Status.success, unipack.getInfoText(ImportPackByFile.this));
-					
+
 					log("Analyzing End");
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -131,100 +195,28 @@ public class ImportPackByFile extends BaseActivity {
 					log("DeleteFolder: UnipackURL " + UnipackURL);
 					FileManager.deleteFolder(UnipackURL);
 				}
-				
+
 				log("DeleteFolder: UnipackZipURL " + UnipackZipURL);
 				FileManager.deleteFolder(UnipackZipURL);
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				log("Download Task doInBackground() ERROR");
 				setStatus(ImportPackByFile.Status.failed, e.toString());
 			}
-			
-			
+
+
 			return null;
 		}
-		
+
 		@Override
 		protected void onProgressUpdate(String... progress) {
 		}
-		
+
 		@Override
 		protected void onPostExecute(String unused) {
 			log("Unzip Task onPostExecute()");
 			delayFinish();
 		}
-	}
-	
-	@SuppressLint("StaticFieldLeak")
-	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
-		
-		
-		String title = null;
-		String message = null;
-		
-		@Override
-		protected void onPreExecute() {
-			TV_title.setText(lang(R.string.analyzing));
-			TV_message.setText(UnipackZipURL);
-			TV_info.setText("URL : " + UnipackZipURL);
-			super.onPreExecute();
-		}
-		
-		@SuppressLint("DefaultLocale")
-		@Override
-		protected String doInBackground(String... params) {
-			try {
-				FileManager.unZipFile(UnipackZipURL, UnipackURL);
-				Unipack unipack = new Unipack(UnipackURL, true);
-				
-				if (unipack.ErrorDetail == null) {
-					title = lang(R.string.analyzeComplete);
-					message = unipack.getInfoText(ImportPackByFile.this);
-				} else if (unipack.CriticalError) {
-					title = lang(R.string.analyzeFailed);
-					message = unipack.ErrorDetail;
-					FileManager.deleteFolder(UnipackURL);
-				} else {
-					title = lang(R.string.warning);
-					message = unipack.ErrorDetail;
-				}
-				
-			} catch (IOException e) {
-				title = lang(R.string.analyzeFailed);
-				message = e.getMessage();
-				FileManager.deleteFolder(UnipackURL);
-			}
-			
-			return null;
-		}
-		
-		@Override
-		protected void onProgressUpdate(String... progress) {
-		}
-		
-		@Override
-		protected void onPostExecute(String result) {
-			super.onPostExecute(result);
-			TV_title.setText(title);
-			TV_message.setText(message);
-			new Handler().postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					finish();
-				}
-			}, 3000);
-		}
-	};
-	
-	@Override
-	public void onResume() {
-		super.onResume();
-	}
-	
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		restartApp(this);
 	}
 }

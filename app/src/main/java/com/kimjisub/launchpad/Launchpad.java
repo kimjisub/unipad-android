@@ -32,32 +32,14 @@ import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
 import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
 
 public class Launchpad extends BaseActivity {
-	
-	RelativeLayout RL_err;
-	TextView TV_info;
-	LinearLayout[] LL_Launchpad;
-	LinearLayout[] LL_mode;
-	
-	
+
 	static UsbManager usbManager;
-	
 	static UsbDevice usbDevice;
 	static UsbInterface usbInterface;
 	static UsbEndpoint usbEndpoint_in;
 	static UsbEndpoint usbEndpoint_out;
 	static UsbDeviceConnection usbDeviceConnection;
 	static boolean isRun = false;
-	
-	public enum MidiDevice {
-		S(0), MK2(1), Pro(2), MidiFighter(3), Piano(4);
-		
-		private final int value;
-		
-		MidiDevice(int value) {
-			this.value = value;
-		}
-	}
-	
 	static MidiDevice device = null;
 	static int mode = 0;
 	static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
@@ -66,24 +48,80 @@ public class Launchpad extends BaseActivity {
 	private static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
 	private static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
 	private static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
-	
-	
+	RelativeLayout RL_err;
+	TextView TV_info;
+	LinearLayout[] LL_Launchpad;
+	LinearLayout[] LL_mode;
+
+	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
+		try {
+			byte[] buffer = {cmd, sig, note, velocity};
+			usbDeviceConnection.bulkTransfer(usbEndpoint_out, buffer, buffer.length, 1000);
+		} catch (Exception ignored) {
+		}
+	}
+
+	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
+		Log.driverCycle("1");
+		if (driverFrom != null) {
+			Launchpad.driver.sendClearLED();
+			driver.onDisconnected();
+		}
+
+		driverFrom = activity;
+		onConnectionEventListener = listener1;
+		onGetSignalListener = listener2;
+
+		setDriverListener();
+		driver.onConnected();
+	}
+
+	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener) {
+		Log.driverCycle("2");
+		onSendSignalListener = listener;
+
+		setDriverListener();
+	}
+
+	public static void removeDriverListener(Activity activity) {
+		Log.driverCycle("3");
+		if (driverFrom == activity) {
+			Launchpad.driver.sendClearLED();
+			driver.onDisconnected();
+
+			driverFrom = null;
+			onConnectionEventListener = null;
+			onGetSignalListener = null;
+
+			setDriverListener();
+		}
+	}
+
+	// ========================================================================================= 설정 선택
+
+	public static void setDriverListener() {
+		Log.driverCycle("setDriverListener");
+		driver.setOnConnectionEventListener(onConnectionEventListener);
+		driver.setOnGetSignalListener(onGetSignalListener);
+		driver.setOnSendSignalListener(onSendSignalListener);
+	}
+
 	@SuppressLint({"CutPasteId", "StaticFieldLeak"})
 	void initVar() {
 		RL_err = findViewById(R.id.err);
 		TV_info = findViewById(R.id.info);
 		LL_Launchpad = new LinearLayout[]{
-			findViewById(R.id.s),
-			findViewById(R.id.mk2),
-			findViewById(R.id.pro),
-			findViewById(R.id.midifighter),
-			findViewById(R.id.piano)
+				findViewById(R.id.s),
+				findViewById(R.id.mk2),
+				findViewById(R.id.pro),
+				findViewById(R.id.midifighter),
+				findViewById(R.id.piano)
 		};
 		LL_mode = new LinearLayout[]{
-			findViewById(R.id.speedFirst),
-			findViewById(R.id.avoidAfterimage)
+				findViewById(R.id.speedFirst),
+				findViewById(R.id.avoidAfterimage)
 		};
-		
+
 		setDriverListener((cmd, sig, note, velo) -> {
 			if (usbDeviceConnection != null) {
 				if (mode == 0) {
@@ -103,18 +141,17 @@ public class Launchpad extends BaseActivity {
 			}
 		});
 	}
-	
-	
+
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
-		
+
 		mode = SettingManager.LaunchpadConnectMethod.load(Launchpad.this);
-		
+
 		selectDevice(device);
 		selectMode(mode);
-		
+
 		Intent intent = getIntent();
 		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
@@ -125,18 +162,17 @@ public class Launchpad extends BaseActivity {
 			if (deviceIterator.hasNext())
 				initDevice(deviceIterator.next());
 		}
-		
-		
+
+
 		(new Handler()).postDelayed(this::finish, 2000);
 	}
-	
-	
+
 	private void initDevice(UsbDevice device) {
-		
+
 		RL_err.setVisibility(View.GONE);
-		
+
 		int interfaceNum = 0;
-		
+
 		if (device == null) {
 			Log.midiDetail("USB 에러 : device == null");
 			return;
@@ -190,7 +226,7 @@ public class Launchpad extends BaseActivity {
 				e.printStackTrace();
 			}
 		}
-		
+
 		for (int i = interfaceNum; i < device.getInterfaceCount(); i++) {
 			UsbInterface ui = device.getInterface(i);
 			if (ui.getEndpointCount() > 0) {
@@ -222,20 +258,20 @@ public class Launchpad extends BaseActivity {
 			Log.midiDetail("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
 		}
 	}
-	
-	// ========================================================================================= 설정 선택
-	
+
 	public void selectDeviceXml(View v) {
 		selectDevice(Integer.parseInt((String) v.getTag()));
 	}
-	
+
+	// ========================================================================================= ReceiveTask
+
 	public void selectDevice(MidiDevice m) {
 		if (m != null)
 			selectDevice(m.value);
 	}
-	
+
 	public void selectDevice(int num) {
-		
+
 		switch (LL_Launchpad[num].getId()) {
 			case R.id.s:
 				device = S;
@@ -258,7 +294,7 @@ public class Launchpad extends BaseActivity {
 				driver = new LaunchpadDriver.Piano();
 				break;
 		}
-		
+
 		for (int i = 0; i < LL_Launchpad.length; i++) {
 			if (device.value == i) {
 				LL_Launchpad[i].setBackgroundColor(color(R.color.gray1));
@@ -276,17 +312,19 @@ public class Launchpad extends BaseActivity {
 				}
 			}
 		}
-		
+
 		setDriverListener();
 	}
-	
-	
+
+
+	// ========================================================================================= Driver
+
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
 	}
-	
+
 	public void selectMode(int num) {
-		
+
 		switch (LL_mode[num].getId()) {
 			case R.id.speedFirst:
 				mode = 0;
@@ -295,7 +333,7 @@ public class Launchpad extends BaseActivity {
 				mode = 1;
 				break;
 		}
-		
+
 		for (int i = 0; i < LL_mode.length; i++) {
 			if (mode == i) {
 				LL_mode[i].setBackgroundColor(color(R.color.gray1));
@@ -313,27 +351,47 @@ public class Launchpad extends BaseActivity {
 				}
 			}
 		}
-		
+
 		SettingManager.LaunchpadConnectMethod.save(Launchpad.this, mode);
 	}
-	
-	// ========================================================================================= ReceiveTask
-	
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		initVar();
+	}
+
+	@SuppressLint("StaticFieldLeak")
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+	}
+
+	public enum MidiDevice {
+		S(0), MK2(1), Pro(2), MidiFighter(3), Piano(4);
+
+		private final int value;
+
+		MidiDevice(int value) {
+			this.value = value;
+		}
+	}
+
 	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
-		
+
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
 			driver.onConnected();
 		}
-		
+
 		@SuppressLint("DefaultLocale")
 		@Override
 		protected String doInBackground(String... params) {
 			if (!isRun) {
 				isRun = true;
 				Log.midiDetail("USB 시작");
-				
+
 				long prevTime = System.currentTimeMillis();
 				int count = 0;
 				byte[] byteArray = new byte[usbEndpoint_in.getMaxPacketSize()];
@@ -346,7 +404,7 @@ public class Launchpad extends BaseActivity {
 								int sig = byteArray[i + 1];
 								int note = byteArray[i + 2];
 								int velocity = byteArray[i + 3];
-								
+
 								publishProgress(cmd, sig, note, velocity);
 								Log.midi(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
 							}
@@ -366,13 +424,13 @@ public class Launchpad extends BaseActivity {
 						break;
 					}
 				}
-				
+
 				Log.midiDetail("USB 끝");
 			}
 			isRun = false;
 			return null;
 		}
-		
+
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
 //			try {
@@ -381,78 +439,10 @@ public class Launchpad extends BaseActivity {
 //				e.printStackTrace();
 //			}
 		}
-		
+
 		@Override
 		protected void onPostExecute(String result) {
 			driver.onDisconnected();
 		}
-	}
-	
-	
-	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
-		try {
-			byte[] buffer = {cmd, sig, note, velocity};
-			usbDeviceConnection.bulkTransfer(usbEndpoint_out, buffer, buffer.length, 1000);
-		} catch (Exception ignored) {
-		}
-	}
-	
-	
-	// ========================================================================================= Driver
-	
-	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
-		Log.driverCycle("1");
-		if(driverFrom != null){
-			Launchpad.driver.sendClearLED();
-			driver.onDisconnected();
-		}
-		
-		driverFrom = activity;
-		onConnectionEventListener = listener1;
-		onGetSignalListener = listener2;
-		
-		setDriverListener();
-		driver.onConnected();
-	}
-	
-	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener) {
-		Log.driverCycle("2");
-		onSendSignalListener = listener;
-		
-		setDriverListener();
-	}
-	
-	public static void removeDriverListener(Activity activity) {
-		Log.driverCycle("3");
-		if (driverFrom == activity) {
-			Launchpad.driver.sendClearLED();
-			driver.onDisconnected();
-			
-			driverFrom = null;
-			onConnectionEventListener = null;
-			onGetSignalListener = null;
-			
-			setDriverListener();
-		}
-	}
-	
-	public static void setDriverListener() {
-		Log.driverCycle("setDriverListener");
-		driver.setOnConnectionEventListener(onConnectionEventListener);
-		driver.setOnGetSignalListener(onGetSignalListener);
-		driver.setOnSendSignalListener(onSendSignalListener);
-	}
-	
-	@Override
-	public void onResume() {
-		super.onResume();
-		initVar();
-	}
-	
-	
-	@SuppressLint("StaticFieldLeak")
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
 	}
 }

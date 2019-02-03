@@ -26,39 +26,39 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ImportPackByUrl extends BaseActivity {
-	
+
 	TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
-	
+
 	String UnipackRootURL;
 	String UnipackZipURL;
 	String UnipackURL;
-	
+
 	String code;
-	
+
 	void initVar() {
 		TV_title = findViewById(R.id.title);
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
-		
+
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByUrl.this);
 		//UnipackZipURL
 		//UnipackURL
-		
+
 		code = getIntent().getData().getQueryParameter("code");
 		log("code: " + code);
 		setStatus(Status.prepare, code);
 	}
-	
+
 	@SuppressLint("StaticFieldLeak")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_importpack);
 		initVar();
-		
-		
+
+
 		Networks.getUniPadApi().makeUrl_get(code).enqueue(new Callback<MakeUrl>() {
 			@Override
 			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
@@ -80,7 +80,7 @@ public class ImportPackByUrl extends BaseActivity {
 					}
 				}
 			}
-			
+
 			@Override
 			public void onFailure(Call<MakeUrl> call, Throwable t) {
 				log("server error");
@@ -88,21 +88,19 @@ public class ImportPackByUrl extends BaseActivity {
 			}
 		});
 	}
-	
-	void addCount(String code){
+
+	void addCount(String code) {
 		Networks.getUniPadApi().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
 			@Override
 			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 			}
-			
+
 			@Override
 			public void onFailure(Call<ResponseBody> call, Throwable t) {
 			}
 		});
 	}
-	
-	enum Status {prepare, downloading, analyzing, success, notFound, failed}
-	
+
 	void setStatus(Status status, String msg) {
 		runOnUiThread(() -> {
 			switch (status) {
@@ -133,16 +131,29 @@ public class ImportPackByUrl extends BaseActivity {
 			}
 		});
 	}
-	
+
 	void log(String msg) {
 		runOnUiThread(() -> TV_info.append(msg + "\n"));
 	}
-	
+
 	void delayFinish() {
 		log("delayFinish()");
 		new Handler().postDelayed(() -> gotoMainAndUpdateList(this), 3000);
 	}
-	
+
+	@Override
+	public void onResume() {
+		super.onResume();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+	}
+
+
+	enum Status {prepare, downloading, analyzing, success, notFound, failed}
+
 	class DownloadTask extends AsyncTask<String, String, String> {
 		String code;
 		String title;
@@ -150,7 +161,7 @@ public class ImportPackByUrl extends BaseActivity {
 		String url;
 		int fileSize;
 		int downloadCount;
-		
+
 		public DownloadTask(MakeUrl makeUrl) {
 			this.code = makeUrl.code;
 			this.title = makeUrl.title;
@@ -159,31 +170,31 @@ public class ImportPackByUrl extends BaseActivity {
 			this.fileSize = makeUrl.fileSize;
 			this.downloadCount = makeUrl.downloadCount;
 		}
-		
+
 		@Override
 		protected void onPreExecute() {
 			log("Download Task onPreExecute()");
 			super.onPreExecute();
 		}
-		
+
 		@Override
 		protected String doInBackground(String[] params) {
 			log("Download Task doInBackground()");
-			
+
 			try {
-				
+
 				java.net.URL downloadUrl = new URL(url);
 				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
 				conexion.setConnectTimeout(5000);
 				conexion.setReadTimeout(5000);
-				
+
 				int fileSize_ = conexion.getContentLength();
 				fileSize = fileSize_ == -1 ? fileSize : fileSize_;
 				log("fileSize : " + fileSize);
-				
+
 				InputStream input = new BufferedInputStream(downloadUrl.openStream());
 				OutputStream output = new FileOutputStream(UnipackZipURL);
-				
+
 				byte data[] = new byte[1024];
 				long total = 0;
 				int count;
@@ -193,20 +204,20 @@ public class ImportPackByUrl extends BaseActivity {
 					total += count;
 					progress++;
 					if (progress % 100 == 0) {
-						
+
 						setStatus(ImportPackByUrl.Status.downloading, (int) ((float) total / fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(fileSize) + "MB");
 					}
 					output.write(data, 0, count);
 				}
 				log("Download End");
-				
+
 				output.flush();
 				output.close();
 				input.close();
-				
+
 				log("Analyzing Start");
 				setStatus(ImportPackByUrl.Status.analyzing, code + "\n" + title + "\n" + producerName);
-				
+
 				try {
 					FileManager.unZipFile(UnipackZipURL, UnipackURL);
 					Unipack unipack = new Unipack(UnipackURL, true);
@@ -216,7 +227,7 @@ public class ImportPackByUrl extends BaseActivity {
 						FileManager.deleteFolder(UnipackURL);
 					} else
 						setStatus(ImportPackByUrl.Status.success, unipack.getInfoText(ImportPackByUrl.this));
-					
+
 					log("Analyzing End");
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -225,39 +236,28 @@ public class ImportPackByUrl extends BaseActivity {
 					log("DeleteFolder: UnipackURL " + UnipackURL);
 					FileManager.deleteFolder(UnipackURL);
 				}
-				
+
 				log("DeleteFolder: UnipackZipURL " + UnipackZipURL);
 				FileManager.deleteFolder(UnipackZipURL);
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				log("Download Task doInBackground() ERROR");
 				setStatus(ImportPackByUrl.Status.failed, e.toString());
 			}
-			
-			
+
+
 			return null;
 		}
-		
+
 		@Override
 		protected void onProgressUpdate(String... progress) {
 		}
-		
+
 		@Override
 		protected void onPostExecute(String unused) {
 			log("Download Task onPostExecute()");
 			delayFinish();
 		}
-	}
-	
-	
-	@Override
-	public void onResume() {
-		super.onResume();
-	}
-	
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
 	}
 }
