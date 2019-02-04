@@ -67,6 +67,7 @@ public class MainActivity extends BaseActivity {
 	TextView TV_version;
 
 	// MainActivity
+	AdView AV_adview;
 	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
 	ScrollView SV_scrollView;
@@ -90,22 +91,14 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
 
-	//Admob
-	AdView AV_adview;
+	String UnipackRootURL;
+	int lastPlayIndex = -1;
+	ArrayList<PackItem> P_list;
+	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
 	boolean isDoneIntro = false;
 	boolean isShowWatermark = true;
 	boolean updateComplete = true;
-
-	String UnipackRootURL;
-	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-
-	// initVar
-	ArrayList<PackItem> P_list;
-
-	// =============================================================================================
-
-	int lastPlayIndex = -1;
 
 	void initVar(boolean onFirst) {
 		// Intro
@@ -113,6 +106,7 @@ public class MainActivity extends BaseActivity {
 		TV_version = findViewById(R.id.version);
 
 		// MainActivity
+		AV_adview = findViewById(R.id.adView);
 		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
 		SV_scrollView = findViewById(R.id.scrollView);
@@ -125,7 +119,6 @@ public class MainActivity extends BaseActivity {
 		LL_scale = findViewById(R.id.scale);
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
-		AV_adview = findViewById(R.id.adView);
 		RL_panel_total = findViewById(R.id.panel_total);
 		TV_panel_total_version = findViewById(R.id.panel_total_version);
 		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
@@ -156,7 +149,10 @@ public class MainActivity extends BaseActivity {
 
 		// var
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(MainActivity.this);
+		P_list = new ArrayList<>();
 	}
+
+	// =============================================================================================
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -292,8 +288,6 @@ public class MainActivity extends BaseActivity {
 		newPackCheck();
 	}
 
-	// =============================================================================================
-
 	void update() {
 		lastPlayIndex = -1;
 		if (!updateComplete)
@@ -302,8 +296,8 @@ public class MainActivity extends BaseActivity {
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 
-		P_list = new ArrayList<>();
 		LL_list.removeAllViews();
+		P_list.clear();
 		togglePlay(null);
 
 		updatePanel();
@@ -956,34 +950,32 @@ public class MainActivity extends BaseActivity {
 	}
 
 	boolean haveNow() {
-		return P_list != null && 0 <= lastPlayIndex && lastPlayIndex <= P_list.size() - 1;
+		return 0 <= lastPlayIndex && lastPlayIndex <= P_list.size() - 1;
 	}
 
 	boolean haveNext() {
-		return P_list != null && lastPlayIndex < P_list.size() - 1;
+		return lastPlayIndex < P_list.size() - 1;
 	}
 
 	boolean havePrev() {
-		return P_list != null && 0 < lastPlayIndex;
+		return 0 < lastPlayIndex;
 	}
 
 	void showSelectLPUI() {
-		if (P_list != null) {
-			if (havePrev())
-				LaunchpadActivity.driver.sendFunctionkeyLED(0, 63);
-			else
-				LaunchpadActivity.driver.sendFunctionkeyLED(0, 5);
+		if (havePrev())
+			LaunchpadActivity.driver.sendFunctionkeyLED(0, 63);
+		else
+			LaunchpadActivity.driver.sendFunctionkeyLED(0, 5);
 
-			if (haveNow())
-				LaunchpadActivity.driver.sendFunctionkeyLED(2, 61);
-			else
-				LaunchpadActivity.driver.sendFunctionkeyLED(2, 0);
+		if (haveNow())
+			LaunchpadActivity.driver.sendFunctionkeyLED(2, 61);
+		else
+			LaunchpadActivity.driver.sendFunctionkeyLED(2, 0);
 
-			if (haveNext())
-				LaunchpadActivity.driver.sendFunctionkeyLED(1, 63);
-			else
-				LaunchpadActivity.driver.sendFunctionkeyLED(1, 5);
-		}
+		if (haveNext())
+			LaunchpadActivity.driver.sendFunctionkeyLED(1, 63);
+		else
+			LaunchpadActivity.driver.sendFunctionkeyLED(1, 5);
 	}
 
 	void showWatermark() {
@@ -1034,12 +1026,9 @@ public class MainActivity extends BaseActivity {
 		if (!isDoneIntro)
 			super.onBackPressed();
 		else {
-			if (P_list != null) {
-				if (getPlayIndex() != -1)
-					togglePlay(null);
-				else
-					super.onBackPressed();
-			} else
+			if (getPlayIndex() != -1)
+				togglePlay(null);
+			else
 				super.onBackPressed();
 		}
 	}
