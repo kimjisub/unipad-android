@@ -85,7 +85,7 @@
 	<string name="producerName">Tagagawa</string>
 	<string name="scale">Sukat</string>
 	<string name="chainCount">Bilang ng Chain</string>
-	<string name="capacity">Sukat ng File</string>
+	<string name="fileSize">Sukat ng File</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
