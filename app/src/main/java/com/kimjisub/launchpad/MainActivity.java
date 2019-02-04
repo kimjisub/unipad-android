@@ -853,6 +853,41 @@ public class MainActivity extends BaseActivity {
 		return index;
 	}
 
+	// ============================================================================================= panel
+
+	void updatePanel() {
+		updatePanelInfo();
+		updatePanelStat();
+	}
+
+	void updatePanelInfo() {
+		updatePanelInfo_unipackCount(0);
+		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
+	}
+
+	void updatePanelInfo_unipackCount(int i) {
+		TV_panel_total_unipackCount.setText(i + "");
+	}
+
+	void updatePanelInfo_unipackCapacity(long i) {
+		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+	}
+
+	void updatePanelStat() {
+		updatePanelStat_openCount(0);
+		updatePanelStat_padTouchCount(0);
+	}
+
+	void updatePanelStat_openCount(int i) {
+		TV_panel_total_openCount.setText(i + "");
+	}
+
+	void updatePanelStat_padTouchCount(int i) {
+		TV_panel_total_padtouchCount.setText(i + "");
+	}
+
+	// ============================================================================================= Launchpad
+
 	void setDriver() {
 		LaunchpadActivity.setDriverListener(MainActivity.this,
 				new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
@@ -908,41 +943,6 @@ public class MainActivity extends BaseActivity {
 					}
 				});
 	}
-
-	// ============================================================================================= panel
-
-	void updatePanel() {
-		updatePanelInfo();
-		updatePanelStat();
-	}
-
-	void updatePanelInfo() {
-		updatePanelInfo_unipackCount(0);
-		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
-	}
-
-	void updatePanelInfo_unipackCount(int i) {
-		TV_panel_total_unipackCount.setText(i + "");
-	}
-
-	void updatePanelInfo_unipackCapacity(long i) {
-		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
-	}
-
-	void updatePanelStat() {
-		updatePanelStat_openCount(0);
-		updatePanelStat_padTouchCount(0);
-	}
-
-	void updatePanelStat_openCount(int i) {
-		TV_panel_total_openCount.setText(i + "");
-	}
-
-	void updatePanelStat_padTouchCount(int i) {
-		TV_panel_total_padtouchCount.setText(i + "");
-	}
-
-	// ============================================================================================= Launchpad
 
 	void updateLP() {
 		showWatermark();
