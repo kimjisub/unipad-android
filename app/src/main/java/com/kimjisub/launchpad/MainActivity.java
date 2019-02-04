@@ -19,7 +19,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -826,6 +825,7 @@ public class MainActivity extends BaseActivity {
 				TV_panel_pack_scale.setText(packItem.unipack.buttonX + " × " + packItem.unipack.buttonY);
 				TV_panel_pack_chainCount.setText(packItem.unipack.chain + "");
 				TV_panel_pack_fileSize.setText(FileManager.byteToMB(FileManager.getFolderSize(packItem.url)) + " MB");
+				IV_panel_pack_website.setVisibility(packItem.unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 			}
 
 			int visibility = RL_panel_pack.getVisibility();
