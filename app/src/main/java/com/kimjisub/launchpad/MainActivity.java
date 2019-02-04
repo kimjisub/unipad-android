@@ -26,7 +26,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
@@ -92,6 +91,9 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
 	TextView TV_panel_pack_path;
+	TextView TV_panel_pack_scale;
+	TextView TV_panel_pack_chainCount;
+	TextView TV_panel_pack_fileSize;
 
 	String UnipackRootURL;
 	int lastPlayIndex = -1;
@@ -130,6 +132,9 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
+		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
+		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
+		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
 		TV_panel_pack_title.setSelected(true);
 		TV_panel_pack_subTitle.setSelected(true);
 		TV_panel_pack_path.setSelected(true);
@@ -389,7 +394,11 @@ public class MainActivity extends BaseActivity {
 
 						PackItem packItem = new PackItem(packViewSimple, flagColor, url, unipack);
 						P_list.add(packItem);
-
+						try{
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 						runOnUiThread(() -> {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 							int left = dpToPx(16);
@@ -787,6 +796,7 @@ public class MainActivity extends BaseActivity {
 		togglePlay(P_list.get(i).url);
 	}
 
+	@SuppressLint("SetTextI18n")
 	void togglePlay(String url) {
 		try {
 			int i = 0;
@@ -828,6 +838,9 @@ public class MainActivity extends BaseActivity {
 				TV_panel_pack_title.setText(packItem.unipack.title);
 				TV_panel_pack_subTitle.setText(packItem.unipack.producerName);
 				TV_panel_pack_path.setText(packItem.url);
+				TV_panel_pack_scale.setText(packItem.unipack.buttonX + " × " + packItem.unipack.buttonY);
+				TV_panel_pack_chainCount.setText(packItem.unipack.chain + "");
+				TV_panel_pack_fileSize.setText(FileManager.byteToMB(FileManager.getFolderSize(packItem.url)) + " MB");
 			}
 
 			int visibility = RL_panel_pack.getVisibility();
@@ -866,15 +879,15 @@ public class MainActivity extends BaseActivity {
 
 	void updatePanelInfo() {
 		updatePanelInfo_unipackCount(0);
-		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
+		updatePanelInfo_unipackCapacity(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootURL)) + " MB");
 	}
 
 	void updatePanelInfo_unipackCount(int i) {
 		TV_panel_total_unipackCount.setText(i + "");
 	}
 
-	void updatePanelInfo_unipackCapacity(long i) {
-		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+	void updatePanelInfo_unipackCapacity(String msg) {
+		TV_panel_total_unipackCapacity.setText(msg);
 	}
 
 	void updatePanelStat() {

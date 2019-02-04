@@ -86,7 +86,7 @@
 						android:text="0" />
 
 					<TextView
-						android:id="@+id/panel_pack_openCount"
+						android:id="@+id/panel_pack_fileSize"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:text="0" />
@@ -106,6 +106,7 @@
 			android:focusable="true"
 			android:marqueeRepeatLimit="marquee_forever"
 			android:singleLine="true"
+			android:textSize="10dp"
 			android:text="/storage/0/Unipad/" />
 
 	</RelativeLayout>
