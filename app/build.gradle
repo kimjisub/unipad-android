@@ -78,7 +78,7 @@ dependencies {
 	implementation 'gun0912.ted:tedpermission:2.2.2'
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
 	implementation 'com.anjlab.android.iab.v3:library:1.0.44'
-	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.7'
+	implementation 'com.github.0226daniel:UniPad-DesignKit:0.0.8'
 	//implementation 'com.airbnb.android:lottie:2.6.0'
 
 	implementation 'com.squareup.retrofit2:retrofit:2.4.0'
