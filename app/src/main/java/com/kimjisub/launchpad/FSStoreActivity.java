@@ -77,7 +77,7 @@ public class FSStoreActivity extends BaseActivity {
 		getStoreCount.run();
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	void initList() {
 		LL_list.removeAllViews();
@@ -341,7 +341,7 @@ public class FSStoreActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	// ========================================================================================= Activity
+	// ============================================================================================= Activity
 
 	@Override
 	public void onResume() {
