@@ -64,7 +64,7 @@ public class Main extends BaseActivity {
 	// Intro
 	BillingCertification billingCertification;
 	RelativeLayout RL_intro;
-	TextView TV_version1;
+	TextView TV_version;
 
 	// Main
 	RelativeLayout RL_rootView;
@@ -81,12 +81,14 @@ public class Main extends BaseActivity {
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
 	RelativeLayout RL_panel_total;
-	TextView TV_version2;
-	TextView TV_unipackCount;
-	TextView TV_unipackCapacity;
-	TextView TV_openCount;
-	TextView TV_padtouchCount;
+	TextView TV_panel_total_version;
+	TextView TV_panel_total_unipackCount;
+	TextView TV_panel_total_unipackCapacity;
+	TextView TV_panel_total_openCount;
+	TextView TV_panel_total_padtouchCount;
 	RelativeLayout RL_panel_pack;
+	TextView TV_panel_pack_title;
+	TextView TV_panel_pack_subTitle;
 
 	//Admob
 	AdView AV_adview;
@@ -107,7 +109,7 @@ public class Main extends BaseActivity {
 	void initVar(boolean onFirst) {
 		// Intro
 		RL_intro = findViewById(R.id.intro);
-		TV_version1 = findViewById(R.id.version1);
+		TV_version = findViewById(R.id.version);
 
 		// Main
 		RL_rootView = findViewById(R.id.rootView);
@@ -124,12 +126,14 @@ public class Main extends BaseActivity {
 		LL_testView = findViewById(R.id.testView);
 		AV_adview = findViewById(R.id.adView);
 		RL_panel_total = findViewById(R.id.panel_total);
-		TV_version2 = findViewById(R.id.version2);
-		TV_unipackCount = findViewById(R.id.unipackCount);
-		TV_unipackCapacity = findViewById(R.id.unipackCapacity);
-		TV_openCount = findViewById(R.id.openCount);
-		TV_padtouchCount = findViewById(R.id.padtouchCount);
+		TV_panel_total_version = findViewById(R.id.panel_total_version);
+		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
+		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
+		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
+		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padtouchCount);
 		RL_panel_pack = findViewById(R.id.panel_pack);
+		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
+		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 
 		// animation
 		if (onFirst) {
@@ -185,7 +189,7 @@ public class Main extends BaseActivity {
 			@Override
 			public void onRefresh() {
 				if (BillingCertification.isPurchaseRemoveAds() || BillingCertification.isPurchaseProTools()) {
-					TV_version1.setTextColor(color(R.color.orange));
+					TV_version.setTextColor(color(R.color.orange));
 				}
 
 				if (BillingCertification.isShowAds()) {
@@ -200,8 +204,8 @@ public class Main extends BaseActivity {
 			}
 		});
 
-		TV_version1.setText(BuildConfig.VERSION_NAME);
-		TV_version2.setText(BuildConfig.VERSION_NAME);
+		TV_version.setText(BuildConfig.VERSION_NAME);
+		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
 
 		TedPermission.with(this)
 				.setPermissionListener(new PermissionListener() {
@@ -305,19 +309,19 @@ public class Main extends BaseActivity {
 	}
 
 	void updatePanelInfo_unipackCount(int i) {
-		TV_unipackCount.setText(i + "");
+		TV_panel_total_unipackCount.setText(i + "");
 	}
 
 	void updatePanelInfo_unipackCapacity(long i) {
-		TV_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
 	}
 
 	void updatePanelStat_openCount(int i) {
-		TV_openCount.setText(i + "");
+		TV_panel_total_openCount.setText(i + "");
 	}
 
 	void updatePanelStat_padTouchCount(int i) {
-		TV_padtouchCount.setText(i + "");
+		TV_panel_total_padtouchCount.setText(i + "");
 	}
 
 	// =========================================================================================
@@ -818,12 +822,6 @@ public class Main extends BaseActivity {
 			}
 			showSelectLPUI();
 
-
-			float fromAlpha, toAlpha;
-			float fromXDelta, toXDelta, fromYDelta, toYDelta;
-			int visibility;
-
-
 			int playIndex = getPlayIndex();
 			Animation animation = AnimationUtils.loadAnimation(Main.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 
@@ -846,7 +844,14 @@ public class Main extends BaseActivity {
 				}
 			});
 
-			RL_panel_pack.startAnimation(animation);
+			if(playIndex != -1){
+				Pack pack = P_packs.get(playIndex);
+				TV_panel_pack_title.setText(pack.unipack.title);
+				TV_panel_pack_subTitle.setText(pack.unipack.producerName);
+			}
+
+			if (!(RL_panel_pack.getVisibility() == View.VISIBLE && playIndex != -1))
+				RL_panel_pack.startAnimation(animation);
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
