@@ -329,7 +329,7 @@
 					android:layout_gravity="end"
 					android:layout_marginTop="-40dp"
 					android:padding="20dp"
-					android:src="@drawable/baseline_exit_to_app_black_24" />
+					app:srcCompat="@drawable/ic_exit_to_app_black_24dp" />
 
 			</LinearLayout>
 
