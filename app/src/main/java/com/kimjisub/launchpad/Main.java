@@ -336,6 +336,7 @@ public class Main extends BaseActivity {
 
 		P_packs = new ArrayList<>();
 		LL_list.removeAllViews();
+		togglePlay(null);
 
 		updatePanel();
 
