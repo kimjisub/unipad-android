@@ -29,7 +29,7 @@ import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
-	// ========================================================================================= Scale
+	// ============================================================================================= Scale
 
 	public static int Scale_Width = 0;
 	public static int Scale_Height = 0;
@@ -37,20 +37,20 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public static int Scale_PaddingHeight = 0;
 	public static ArrayList<Activity> activityList = new ArrayList<>();
 
-	// ========================================================================================= Ads Cooltime
+	// ============================================================================================= Ads Cooltime
 	private static InterstitialAd interstitialAd;
 
 	public static void showToast(Context context, String msg) {
 		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 	}
 
-	// ========================================================================================= vungle
+	// ============================================================================================= vungle
 
 	public static void showToast(Context context, int resId) {
 		Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
 	}
 
-	// ========================================================================================= Admob
+	// ============================================================================================= Admob
 
 	public static void showDialog(Context context, String title, String content) {
 		new AlertDialog.Builder(context)
@@ -72,7 +72,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		return context.getResources().getDrawable(id);
 	}
 
-	// ========================================================================================= Show
+	// ============================================================================================= Show
 
 	static void startActivity(Activity activity) {
 		activityList.add(activity);
@@ -148,7 +148,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 				.show();
 	}
 
-	// ========================================================================================= Function
+	// ============================================================================================= Function
 	
 	/*public int pxToDp(int pixel) {
 		float dp = 0;
@@ -167,7 +167,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
 	}
 
-	// ========================================================================================= Get Resources
+	// ============================================================================================= Get Resources
 
 	public boolean checkAdsCooltime() {
 		long prevTime = SettingManager.PrevAdsShowTime.load(this);
@@ -245,7 +245,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 				.build());
 	}
 
-	// ========================================================================================= Activity
+	// ============================================================================================= Activity
 
 	public void showToast(String msg) {
 		showToast(this, msg);

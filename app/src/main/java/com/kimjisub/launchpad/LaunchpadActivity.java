@@ -97,7 +97,7 @@ public class LaunchpadActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= 설정 선택
+	// ============================================================================================= 설정 선택
 
 	public static void setDriverListener() {
 		Log.driverCycle("setDriverListener");
@@ -263,7 +263,7 @@ public class LaunchpadActivity extends BaseActivity {
 		selectDevice(Integer.parseInt((String) v.getTag()));
 	}
 
-	// ========================================================================================= ReceiveTask
+	// ============================================================================================= ReceiveTask
 
 	public void selectDevice(MidiDevice m) {
 		if (m != null)
@@ -317,7 +317,7 @@ public class LaunchpadActivity extends BaseActivity {
 	}
 
 
-	// ========================================================================================= Driver
+	// ============================================================================================= Driver
 
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
