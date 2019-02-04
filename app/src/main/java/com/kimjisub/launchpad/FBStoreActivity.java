@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.kimjisub.launchpad.fb.fbStore;
 import com.kimjisub.launchpad.manage.FileManager;
@@ -25,23 +27,41 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 
 public class FBStoreActivity extends BaseActivity {
 
 	LinearLayout LL_list;
+	RelativeLayout RL_panel_total;
+	TextView TV_panel_total_version;
+	TextView TV_panel_total_unipackCount;
+	TextView TV_panel_total_unipackCapacity;
+	TextView TV_panel_total_openCount;
+	TextView TV_panel_total_padtouchCount;
+	RelativeLayout RL_panel_pack;
+	TextView TV_panel_pack_title;
+	TextView TV_panel_pack_subTitle;
 
 	String UnipackRootURL;
-
+	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
-	ArrayList<PackViewSimple> PV_items;
-	ArrayList<fbStore> DStoreDatas;
-	ArrayList<Pack> P_packs;
 
 	void initVar() {
 		LL_list = findViewById(R.id.list);
+		RL_panel_total = findViewById(R.id.panel_total);
+		TV_panel_total_version = findViewById(R.id.panel_total_version);
+		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
+		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
+		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
+		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padtouchCount);
+		RL_panel_pack = findViewById(R.id.panel_pack);
+		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
+		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStoreActivity.this);
 	}
+
+	// =============================================================================================
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,7 +74,7 @@ public class FBStoreActivity extends BaseActivity {
 	}
 
 	void update() {
-		P_packs = new ArrayList<>();
+		P_list = new ArrayList<>();
 		LL_list.removeAllViews();
 		togglePlay(null);
 
@@ -78,10 +98,9 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			public void onAdd(final fbStore d) {
 				try {
-					if (DStoreDatas.size() == 0)
+					if (P_list.size() == 0)
 						LL_list.removeAllViews();
-					DStoreDatas.add(d);
-					d.index = DStoreDatas.size() - 1;
+					d.index = P_list.size();
 
 
 					boolean _isDownloaded = false;
@@ -103,7 +122,7 @@ public class FBStoreActivity extends BaseActivity {
 							.setOnEventListener(new PackViewSimple.OnEventListener() {
 								@Override
 								public void onViewClick(PackViewSimple v) {
-									v.togglePlay();
+									togglePlay(d.code);
 								}
 
 								@Override
@@ -112,11 +131,11 @@ public class FBStoreActivity extends BaseActivity {
 
 								@Override
 								public void onPlayClick(PackViewSimple v) {
-									if (v.getStatus())
-										itemClicked(v, d.index);
+									PackItem item = getPackItemByCode(d.code);
+									if (!item.isDownloaded && !item.isDownloading)
+										itemClicked(d.code);
 								}
-							})
-							.setStatus(!isDownloaded);
+							});
 
 
 					final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -125,7 +144,8 @@ public class FBStoreActivity extends BaseActivity {
 					int right = dpToPx(16);
 					int bottom = dpToPx(10);
 					lp.setMargins(left, top, right, bottom);
-					PV_items.add(packViewSimple);
+
+					P_list.add(new PackItem(packViewSimple, d, isDownloaded, false));
 					LL_list.addView(packViewSimple, 0, lp);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -135,19 +155,17 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			public void onChange(final fbStore d) {
 				try {
+					for (PackItem item : P_list) {
+						fbStore fbStore = item.fbStore;
+						PackViewSimple packViewSimple = item.packViewSimple;
 
-					int i;
-					for (i = 0; i < DStoreDatas.size(); i++) {
-						fbStore item = DStoreDatas.get(i);
-						if (item.code.equals(d.code))
-							break;
+						if (fbStore.code.equals(d.code)) {
+							packViewSimple.setTitle(d.title)
+									.setSubTitle(d.producerName)
+									.setOption1(lang(R.string.LED_), d.isLED)
+									.setOption2(lang(R.string.autoPlay_), d.isAutoPlay);
+						}
 					}
-
-					PackViewSimple packViewSimple = PV_items.get(i);
-					packViewSimple.setTitle(d.title)
-							.setSubTitle(d.producerName)
-							.setOption1(lang(R.string.LED_), d.isLED)
-							.setOption2(lang(R.string.autoPlay_), d.isAutoPlay);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -171,21 +189,32 @@ public class FBStoreActivity extends BaseActivity {
 		LL_list.addView(packViewSimple, lp);
 	}
 
-	// ============================================================================================= Activity
+	// ============================================================================================= List Manage
+
+	class PackItem {
+		PackViewSimple packViewSimple;
+		fbStore fbStore;
+		boolean isDownloaded;
+		boolean isDownloading;
+
+		public PackItem(PackViewSimple packViewSimple, fbStore fbStore, boolean isDownloaded, boolean isDownloading) {
+			this.packViewSimple = packViewSimple;
+			this.fbStore = fbStore;
+			this.isDownloaded = isDownloaded;
+			this.isDownloading = isDownloading;
+		}
+	}
 
 	void togglePlay(String code) {
 		try {
-			int i = 0;
-			for (Pack pack : P_packs) {
-				fbStore fbStore = pack.fbStore;
-				PackViewSimple packViewSimple = pack.packViewSimple;
+			for (PackItem item : P_list) {
+				fbStore fbStore = item.fbStore;
+				PackViewSimple packViewSimple = item.packViewSimple;
 
 				if (fbStore.code.equals(code))
-					packViewSimple.togglePlay(true);
+					packViewSimple.togglePlay();
 				else
 					packViewSimple.togglePlay(false);
-
-				i++;
 			}
 
 			int playIndex = getPlayIndex();
@@ -210,10 +239,10 @@ public class FBStoreActivity extends BaseActivity {
 				}
 			});
 
-			if(playIndex != -1){
-				Pack pack = P_packs.get(playIndex);
-				TV_panel_pack_title.setText(pack.unipack.title);
-				TV_panel_pack_subTitle.setText(pack.unipack.producerName);
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				TV_panel_pack_title.setText(item.fbStore.title);
+				TV_panel_pack_subTitle.setText(item.fbStore.producerName);
 			}
 
 			if (!(RL_panel_pack.getVisibility() == View.VISIBLE && playIndex != -1))
@@ -228,8 +257,8 @@ public class FBStoreActivity extends BaseActivity {
 		int index = -1;
 
 		int i = 0;
-		for (Pack pack : P_packs) {
-			if (pack.packViewSimple.isPlay()) {
+		for (PackItem item : P_list) {
+			if (item.packViewSimple.isPlay()) {
 				index = i;
 				break;
 			}
@@ -239,22 +268,44 @@ public class FBStoreActivity extends BaseActivity {
 		return index;
 	}
 
-	void itemClicked(final PackViewSimple v, final int i) {
-		Log.log("itemClicked(" + i + ")");
+	PackItem getPackItemByCode(String code) {
+		PackItem ret = null;
+		for (PackItem item : P_list)
+			if (item.fbStore.code.equals(code)) {
+				ret = item;
+				break;
+			}
+		return ret;
+	}
 
-		v.togglePlay(true);
-		v.updateFlagColor(color(R.color.gray1));
-		v.setStatus(false);
-		v.setPlayText("0%");
+	void itemClicked(String code) {
+		PackItem item = getPackItemByCode(code);
+		fbStore fbStore = item.fbStore;
+		PackViewSimple packViewSimple = item.packViewSimple;
 
-		startDownload();
+		packViewSimple.togglePlay(true);
+		packViewSimple.updateFlagColor(color(R.color.gray1));
+		packViewSimple.setStatus(false);
+		packViewSimple.setPlayText("0%");
+
+		startDownload(item);
+	}
+
+	int getDownloadingCount() {
+		int count = 0;
+		for (PackItem item : P_list) {
+			if (item.isDownloading)
+				count++;
+		}
+
+		return count;
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void startDownload(Pack pack){
+	void startDownload(PackItem item) {
 
-		fbStore fbStore = pack.fbStore;
-		PackViewSimple packViewSimple = pack.packViewSimple;
+		fbStore fbStore = item.fbStore;
+		PackViewSimple packViewSimple = item.packViewSimple;
 
 		String code = fbStore.code;
 		String title = fbStore.title;
@@ -264,7 +315,6 @@ public class FBStoreActivity extends BaseActivity {
 		int downloadCount = fbStore.downloadCount;
 		String URL = fbStore.URL;
 
-		int fileSize;
 		String UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, code, ".zip");
 		String UnipackURL = UnipackRootURL + "/" + code + "/";
 
@@ -272,10 +322,9 @@ public class FBStoreActivity extends BaseActivity {
 		(new AsyncTask<String, Long, String>() {
 
 
-
 			@Override
 			protected void onPreExecute() {
-				FBStoreActivity.this.downloadCount++;
+				item.isDownloading = true;
 
 				super.onPreExecute();
 			}
@@ -291,7 +340,7 @@ public class FBStoreActivity extends BaseActivity {
 					connection.setConnectTimeout(5000);
 					connection.setReadTimeout(5000);
 
-					fileSize = connection.getContentLength();
+					int fileSize = connection.getContentLength();
 					Log.log(URL);
 					Log.log("fileSize : " + fileSize);
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
@@ -309,7 +358,7 @@ public class FBStoreActivity extends BaseActivity {
 						total += count;
 						skip--;
 						if (skip == 0) {
-							publishProgress(0L, total);
+							publishProgress(0L, total, (long) fileSize);
 							skip = 100;
 						}
 						output.write(data, 0, count);
@@ -342,7 +391,8 @@ public class FBStoreActivity extends BaseActivity {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
-				FBStoreActivity.this.downloadCount--;
+
+				item.isDownloading = false;
 
 				return null;
 			}
@@ -350,18 +400,18 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					v.setPlayText((int) ((float) progress[1] / fileSize * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(fileSize) + "MB");
+					packViewSimple.setPlayText((int) ((float) progress[1] / progress[2] * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(progress[2]) + "MB");
 				} else if (progress[0] == 1) {//분석중
-					v.setPlayText(lang(R.string.analyzing));
-					v.updateFlagColor(color(R.color.orange));
+					packViewSimple.setPlayText(lang(R.string.analyzing));
+					packViewSimple.updateFlagColor(color(R.color.orange));
 				} else if (progress[0] == -1) {//실패
-					v.setPlayText(lang(R.string.failed));
-					v.updateFlagColor(color(R.color.red));
-					v.setStatus(true);
+					packViewSimple.setPlayText(lang(R.string.failed));
+					packViewSimple.updateFlagColor(color(R.color.red));
+					packViewSimple.setStatus(true);
 				} else if (progress[0] == 2) {//완료
-					v.setPlayText("");
-					v.updateFlagColor(color(R.color.green));
-					v.togglePlay(false);
+					packViewSimple.setPlayText("");
+					packViewSimple.updateFlagColor(color(R.color.green));
+					packViewSimple.togglePlay(false);
 				}
 			}
 
@@ -370,6 +420,20 @@ public class FBStoreActivity extends BaseActivity {
 
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+	}
+
+	// ============================================================================================= Activity
+
+	@Override
+	public void onBackPressed() {
+		if (getPlayIndex() != -1)
+			togglePlay(null);
+		else {
+			if (getDownloadingCount() > 0)
+				showToast(R.string.canNotQuitWhileDownloading);
+			else
+				super.onBackPressed();
+		}
 	}
 
 	@Override
@@ -385,26 +449,5 @@ public class FBStoreActivity extends BaseActivity {
 		super.onPause();
 
 		getStoreCount.setOnChangeListener(null);
-	}
-
-	@Override
-	public void onBackPressed() {
-		if (downloadCount > 0)
-			showToast(R.string.canNotQuitWhileDownloading);
-		else
-			super.onBackPressed();
-	}
-
-	class Pack {
-		PackViewSimple packViewSimple;
-		fbStore fbStore;
-		int flagColors;
-		boolean isDownloaded;
-		boolean isDownloading;
-
-		public Pack(PackViewSimple packViewSimple, com.kimjisub.launchpad.fb.fbStore fbStore) {
-			this.packViewSimple = packViewSimple;
-			this.fbStore = fbStore;
-		}
 	}
 }

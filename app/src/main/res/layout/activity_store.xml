@@ -10,8 +10,8 @@
 		android:orientation="horizontal"
 		android:weightSum="5">
 
+
 		<RelativeLayout
-			android:id="@+id/panel"
 			android:layout_width="0dp"
 			android:layout_height="match_parent"
 			android:layout_marginStart="16dp"
@@ -20,7 +20,23 @@
 			android:layout_marginBottom="16dp"
 			android:layout_weight="2">
 
-			<include layout="@layout/activity_main_panel_total" />
+			<RelativeLayout
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:id="@+id/panel_total">
+
+				<include layout="@layout/activity_store_panel_total" />
+			</RelativeLayout>
+
+			<RelativeLayout
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:visibility="invisible"
+				android:alpha="0"
+				android:id="@+id/panel_pack">
+
+				<include layout="@layout/activity_store_panel_pack" />
+			</RelativeLayout>
 
 		</RelativeLayout>
 
