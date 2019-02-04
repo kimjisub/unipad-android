@@ -80,11 +80,13 @@ public class Main extends BaseActivity {
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
+	RelativeLayout RL_panel_total;
 	TextView TV_version2;
 	TextView TV_unipackCount;
 	TextView TV_unipackCapacity;
 	TextView TV_openCount;
 	TextView TV_padtouchCount;
+	RelativeLayout RL_panel_pack;
 
 	//Admob
 	AdView AV_adview;
@@ -100,7 +102,7 @@ public class Main extends BaseActivity {
 	ArrayList<Pack> P_packs;
 
 	// =========================================================================================
-	int playIndex = -1;
+	int lastPlayIndex = -1;
 
 	void initVar(boolean onFirst) {
 		// Intro
@@ -121,11 +123,13 @@ public class Main extends BaseActivity {
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
 		AV_adview = findViewById(R.id.adView);
+		RL_panel_total = findViewById(R.id.panel_total);
 		TV_version2 = findViewById(R.id.version2);
 		TV_unipackCount = findViewById(R.id.unipackCount);
 		TV_unipackCapacity = findViewById(R.id.unipackCapacity);
 		TV_openCount = findViewById(R.id.openCount);
 		TV_padtouchCount = findViewById(R.id.padtouchCount);
+		RL_panel_pack = findViewById(R.id.panel_pack);
 
 		// animation
 		if (onFirst) {
@@ -303,20 +307,23 @@ public class Main extends BaseActivity {
 	void updatePanelInfo_unipackCount(int i) {
 		TV_unipackCount.setText(i + "");
 	}
+
 	void updatePanelInfo_unipackCapacity(long i) {
 		TV_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
 	}
-	void updatePanelStat_openCount(int i){
+
+	void updatePanelStat_openCount(int i) {
 		TV_openCount.setText(i + "");
 	}
-	void updatePanelStat_padTouchCount(int i){
+
+	void updatePanelStat_padTouchCount(int i) {
 		TV_padtouchCount.setText(i + "");
 	}
 
 	// =========================================================================================
 
 	void update() {
-		playIndex = -1;
+		lastPlayIndex = -1;
 		if (!updateComplete)
 			return;
 
@@ -376,7 +383,6 @@ public class Main extends BaseActivity {
 
 									@Override
 									public void onViewLongClick(PackViewSimple v) {
-										togglePlay(null);
 									}
 
 									@Override
@@ -482,6 +488,9 @@ public class Main extends BaseActivity {
 		lp.setMargins(left, top, right, bottom);
 		LL_list.addView(packViewSimple, lp);
 	}
+
+
+	// ========================================================================================= UniPack Work
 
 	void deleteUnipack(final PackViewSimple v, final Unipack unipack) {
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
@@ -789,7 +798,7 @@ public class Main extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	// ========================================================================================= toggle Play, Detail
+	// =========================================================================================
 
 	void togglePlay(int i) {
 		togglePlay(P_packs.get(i).url);
@@ -801,16 +810,62 @@ public class Main extends BaseActivity {
 			for (Pack pack : P_packs) {
 				if (pack.url.equals(url)) {
 					pack.packViewSimple.togglePlay(color(R.color.red), pack.flagColors);
-					playIndex = i;
+					lastPlayIndex = i;
 				} else
 					pack.packViewSimple.togglePlay(false, color(R.color.red), pack.flagColors);
 
 				i++;
 			}
 			showSelectLPUI();
+
+
+			float fromAlpha, toAlpha;
+			float fromXDelta, toXDelta, fromYDelta, toYDelta;
+			int visibility;
+
+
+			int playIndex = getPlayIndex();
+			Animation animation = AnimationUtils.loadAnimation(Main.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+
+			animation.setAnimationListener(new Animation.AnimationListener() {
+				@Override
+				public void onAnimationStart(Animation animation) {
+					RL_panel_pack.setVisibility(View.VISIBLE);
+					RL_panel_pack.setAlpha(1);
+				}
+
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+					RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
+				}
+
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+
+				}
+			});
+
+			RL_panel_pack.startAnimation(animation);
+
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
 		}
+	}
+
+	int getPlayIndex() {
+		int index = -1;
+
+		int i = 0;
+		for (Pack pack : P_packs) {
+			if (pack.packViewSimple.isPlay()) {
+				index = i;
+				break;
+			}
+			i++;
+		}
+
+		return index;
 	}
 
 	void setDriver() {
@@ -841,19 +896,19 @@ public class Main extends BaseActivity {
 					public void onFunctionkeyTouch(int f, boolean upDown) {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
-								togglePlay(playIndex - 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packViewSimple.getHeight() / 2));
+								togglePlay(lastPlayIndex - 1);
+								SV_scrollView.smoothScrollTo(0, P_packs.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
-								togglePlay(playIndex + 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packViewSimple.getHeight() / 2));
+								togglePlay(lastPlayIndex + 1);
+								SV_scrollView.smoothScrollTo(0, P_packs.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
 							if (haveNow())
-								P_packs.get(playIndex).packViewSimple.onPlayClick();
+								P_packs.get(lastPlayIndex).packViewSimple.onPlayClick();
 						}
 					}
 
@@ -877,15 +932,15 @@ public class Main extends BaseActivity {
 	}
 
 	boolean haveNow() {
-		return P_packs != null && 0 <= playIndex && playIndex <= P_packs.size() - 1;
+		return P_packs != null && 0 <= lastPlayIndex && lastPlayIndex <= P_packs.size() - 1;
 	}
 
 	boolean haveNext() {
-		return P_packs != null && playIndex < P_packs.size() - 1;
+		return P_packs != null && lastPlayIndex < P_packs.size() - 1;
 	}
 
 	boolean havePrev() {
-		return P_packs != null && 0 < playIndex;
+		return P_packs != null && 0 < lastPlayIndex;
 	}
 
 	void showSelectLPUI() {
