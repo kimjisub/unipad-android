@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
@@ -90,6 +91,7 @@ public class MainActivity extends BaseActivity {
 	RelativeLayout RL_panel_pack;
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
+	TextView TV_panel_pack_path;
 
 	String UnipackRootURL;
 	int lastPlayIndex = -1;
@@ -97,7 +99,6 @@ public class MainActivity extends BaseActivity {
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
 	boolean isDoneIntro = false;
-	boolean isShowWatermark = true;
 	boolean updateComplete = true;
 
 	void initVar(boolean onFirst) {
@@ -128,6 +129,10 @@ public class MainActivity extends BaseActivity {
 		RL_panel_pack = findViewById(R.id.panel_pack);
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
+		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
+		TV_panel_pack_title.setSelected(true);
+		TV_panel_pack_subTitle.setSelected(true);
+		TV_panel_pack_path.setSelected(true);
 
 		// animation
 		if (onFirst) {
@@ -149,7 +154,9 @@ public class MainActivity extends BaseActivity {
 
 		// var
 		UnipackRootURL = SettingManager.IsUsingSDCard.URL(MainActivity.this);
-		P_list = new ArrayList<>();
+		if (onFirst) {
+			P_list = new ArrayList<>();
+		}
 	}
 
 	// =============================================================================================
@@ -310,10 +317,8 @@ public class MainActivity extends BaseActivity {
 
 					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
 
-					int i = 0;
 					for (File project : projectFiles) {
 						if (!project.isDirectory()) continue;
-						int I = i;
 
 						final String url = UnipackRootURL + "/" + project.getName();
 						final Unipack unipack = new Unipack(url, false);
@@ -398,8 +403,6 @@ public class MainActivity extends BaseActivity {
 							packItem.packViewSimple.setAnimation(a);
 							updatePanelInfo_unipackCount(P_list.size());
 						});
-
-						i++;
 					}
 
 					//TODO 정렬
@@ -824,6 +827,7 @@ public class MainActivity extends BaseActivity {
 				PackItem packItem = P_list.get(playIndex);
 				TV_panel_pack_title.setText(packItem.unipack.title);
 				TV_panel_pack_subTitle.setText(packItem.unipack.producerName);
+				TV_panel_pack_path.setText(packItem.url);
 			}
 
 			int visibility = RL_panel_pack.getVisibility();
