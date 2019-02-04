@@ -589,7 +589,7 @@ public class Unipack {
 				BaseActivity.lang(context, R.string.producerName) + " : " + this.producerName + "\n" +
 				BaseActivity.lang(context, R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
 				BaseActivity.lang(context, R.string.chainCount) + " : " + this.chain + "\n" +
-				BaseActivity.lang(context, R.string.capacity) + " : " + FileManager.byteToMB(FileManager.getFolderSize(URL)) + " MB";
+				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(URL)) + " MB";
 	}
 
 	public static class Sound {
