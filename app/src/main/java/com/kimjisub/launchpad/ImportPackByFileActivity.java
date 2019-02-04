@@ -14,7 +14,7 @@ import com.kimjisub.launchpad.manage.Unipack;
 import java.io.File;
 import java.io.IOException;
 
-public class ImportPackByFile extends BaseActivity {
+public class ImportPackByFileActivity extends BaseActivity {
 
 	TextView TV_title;
 	TextView TV_message;
@@ -47,7 +47,7 @@ public class ImportPackByFile extends BaseActivity {
 
 				if (unipack.ErrorDetail == null) {
 					title = lang(R.string.analyzeComplete);
-					message = unipack.getInfoText(ImportPackByFile.this);
+					message = unipack.getInfoText(ImportPackByFileActivity.this);
 				} else if (unipack.CriticalError) {
 					title = lang(R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
@@ -89,7 +89,7 @@ public class ImportPackByFile extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByFile.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(ImportPackByFileActivity.this);
 		UnipackZipURL = getIntent().getData().getPath();
 		File file = new File(UnipackZipURL);
 		String name = file.getName();
@@ -182,16 +182,16 @@ public class ImportPackByFile extends BaseActivity {
 					Unipack unipack = new Unipack(UnipackURL, true);
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
-						setStatus(ImportPackByFile.Status.success, unipack.ErrorDetail);
+						setStatus(ImportPackByFileActivity.Status.success, unipack.ErrorDetail);
 						FileManager.deleteFolder(UnipackURL);
 					} else
-						setStatus(ImportPackByFile.Status.success, unipack.getInfoText(ImportPackByFile.this));
+						setStatus(ImportPackByFileActivity.Status.success, unipack.getInfoText(ImportPackByFileActivity.this));
 
 					log("Analyzing End");
 				} catch (Exception e) {
 					e.printStackTrace();
 					log("Analyzing Error");
-					setStatus(ImportPackByFile.Status.failed, e.toString());
+					setStatus(ImportPackByFileActivity.Status.failed, e.toString());
 					log("DeleteFolder: UnipackURL " + UnipackURL);
 					FileManager.deleteFolder(UnipackURL);
 				}
@@ -202,7 +202,7 @@ public class ImportPackByFile extends BaseActivity {
 			} catch (Exception e) {
 				e.printStackTrace();
 				log("Download Task doInBackground() ERROR");
-				setStatus(ImportPackByFile.Status.failed, e.toString());
+				setStatus(ImportPackByFileActivity.Status.failed, e.toString());
 			}
 
 

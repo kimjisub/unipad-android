@@ -24,10 +24,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-public class FBStore extends BaseActivity {
+public class FBStoreActivity extends BaseActivity {
 
 	LinearLayout LL_list;
 
@@ -41,7 +40,7 @@ public class FBStore extends BaseActivity {
 	void initVar() {
 		LL_list = findViewById(R.id.list);
 
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStore.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStoreActivity.this);
 	}
 
 	@Override
@@ -94,7 +93,7 @@ public class FBStore extends BaseActivity {
 					}
 					final boolean isDownloaded = _isDownloaded;
 
-					final PackViewSimple packViewSimple = new PackViewSimple(FBStore.this)
+					final PackViewSimple packViewSimple = new PackViewSimple(FBStoreActivity.this)
 							.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 							.setTitle(d.title)
 							.setSubTitle(d.producerName)
@@ -160,7 +159,7 @@ public class FBStore extends BaseActivity {
 		String title = lang(R.string.errOccur);
 		String subTitle = lang(R.string.UnableToAccessServer);
 
-		PackViewSimple packViewSimple = PackViewSimple.errItem(FBStore.this, title, subTitle, null);
+		PackViewSimple packViewSimple = PackViewSimple.errItem(FBStoreActivity.this, title, subTitle, null);
 
 
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -190,7 +189,7 @@ public class FBStore extends BaseActivity {
 			}
 
 			int playIndex = getPlayIndex();
-			Animation animation = AnimationUtils.loadAnimation(FBStore.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+			Animation animation = AnimationUtils.loadAnimation(FBStoreActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 
 			animation.setAnimationListener(new Animation.AnimationListener() {
 				@Override
@@ -276,7 +275,7 @@ public class FBStore extends BaseActivity {
 
 			@Override
 			protected void onPreExecute() {
-				FBStore.this.downloadCount++;
+				FBStoreActivity.this.downloadCount++;
 
 				super.onPreExecute();
 			}
@@ -343,7 +342,7 @@ public class FBStore extends BaseActivity {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
-				FBStore.this.downloadCount--;
+				FBStoreActivity.this.downloadCount--;
 
 				return null;
 			}
@@ -378,7 +377,7 @@ public class FBStore extends BaseActivity {
 		super.onResume();
 		initVar();
 
-		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStore.this, data));
+		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStoreActivity.this, data));
 	}
 
 	@Override

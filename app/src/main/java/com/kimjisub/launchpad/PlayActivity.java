@@ -50,7 +50,7 @@ import java.util.ArrayList;
 import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
 import static com.kimjisub.launchpad.manage.Log.log;
 
-public class Play extends BaseActivity {
+public class PlayActivity extends BaseActivity {
 
 	final long DELAY = 1;
 	RelativeLayout RL_rootView;
@@ -197,7 +197,7 @@ public class Play extends BaseActivity {
 		try {
 			log("[02] Check ErrorDetail");
 			if (unipack.ErrorDetail != null) {
-				new AlertDialog.Builder(Play.this)
+				new AlertDialog.Builder(PlayActivity.this)
 						.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
 						.setMessage(unipack.ErrorDetail)
 						.setPositiveButton(unipack.CriticalError ? lang(R.string.quit) : lang(R.string.accept), unipack.CriticalError ? (dialogInterface, i) -> finish() : null)
@@ -261,7 +261,7 @@ public class Play extends BaseActivity {
 				protected void onPreExecute() {
 					log("[07] onPreExecute");
 
-					progressDialog = new ProgressDialog(Play.this);
+					progressDialog = new ProgressDialog(PlayActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setTitle(lang(R.string.loading));
 					progressDialog.setMessage(lang(R.string.wait));
@@ -349,10 +349,10 @@ public class Play extends BaseActivity {
 
 	boolean skin_init(int num) {
 		log("[10] skin_init (" + num + ")");
-		String packageName = SettingManager.SelectedTheme.load(Play.this);
+		String packageName = SettingManager.SelectedTheme.load(PlayActivity.this);
 		if (num >= 2) {
 			try {
-				ThemePack mTheme = new ThemePack(Play.this, packageName);
+				ThemePack mTheme = new ThemePack(PlayActivity.this, packageName);
 				mTheme.loadDefaultThemeResources();
 				theme = mTheme.resources;
 			} catch (Exception ignore) {
@@ -360,7 +360,7 @@ public class Play extends BaseActivity {
 			return true;
 		}
 		try {
-			ThemePack mTheme = new ThemePack(Play.this, packageName);
+			ThemePack mTheme = new ThemePack(PlayActivity.this, packageName);
 			mTheme.loadThemeResources();
 			theme = mTheme.resources;
 			return true;
@@ -372,7 +372,7 @@ public class Play extends BaseActivity {
 		} catch (Exception e) {
 			e.printStackTrace();
 			showToast(lang(R.string.skinErr) + "\n" + packageName);
-			SettingManager.SelectedTheme.save(Play.this, getPackageName());
+			SettingManager.SelectedTheme.save(PlayActivity.this, getPackageName());
 			return skin_init(num + 1);
 		}
 	}
@@ -395,7 +395,7 @@ public class Play extends BaseActivity {
 
 		CB_purchase.setOnCheckedChangeListener((compoundButton, b) -> {
 			compoundButton.setChecked(false);
-			startActivity(new Intent(Play.this, Setting.class));
+			startActivity(new Intent(PlayActivity.this, SettingActivity.class));
 		});
 
 		SCV_feedbackLight.setOnCheckedChange((isChecked) -> {
@@ -672,14 +672,14 @@ public class Play extends BaseActivity {
 
 		if (x != -1) {
 			if (Item != null)
-				Launchpad.driver.sendPadLED(x, y, Item.code);
+				LaunchpadActivity.driver.sendPadLED(x, y, Item.code);
 			else
-				Launchpad.driver.sendPadLED(x, y, 0);
+				LaunchpadActivity.driver.sendPadLED(x, y, 0);
 		} else {
 			if (Item != null)
-				Launchpad.driver.sendFunctionkeyLED(y, Item.code);
+				LaunchpadActivity.driver.sendFunctionkeyLED(y, Item.code);
 			else
-				Launchpad.driver.sendFunctionkeyLED(y, 0);
+				LaunchpadActivity.driver.sendFunctionkeyLED(y, 0);
 
 		}
 
@@ -890,7 +890,7 @@ public class Play extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= Launchpad Connection
+	// ========================================================================================= LaunchpadActivity Connection
 
 	void padInit() {
 		log("padInit");
@@ -966,17 +966,17 @@ public class Play extends BaseActivity {
 	}
 
 	void setDriver() {
-		Launchpad.setDriverListener(Play.this,
+		LaunchpadActivity.setDriverListener(PlayActivity.this,
 				new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 					@Override
 					public void onConnected() {
-						Log.driverCycle("Play onConnected()");
+						Log.driverCycle("PlayActivity onConnected()");
 						updateLP();
 					}
 
 					@Override
 					public void onDisconnected() {
-						Log.driverCycle("Play onDisconnected()");
+						Log.driverCycle("PlayActivity onDisconnected()");
 					}
 				}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 					@Override
@@ -1128,7 +1128,7 @@ public class Play extends BaseActivity {
 	}
 
 	void putClipboard(String msg) {
-		ClipboardManager clipboardManager = (ClipboardManager) Play.this.getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipboardManager clipboardManager = (ClipboardManager) PlayActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
 		ClipData clipData = ClipData.newPlainText("LABEL", msg);
 		assert clipboardManager != null;
 		clipboardManager.setPrimaryClip(clipData);
@@ -1366,7 +1366,7 @@ public class Play extends BaseActivity {
 
 		if (Scale_PaddingHeight == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
-			requestRestart(Play.this);
+			requestRestart(PlayActivity.this);
 		}
 
 		if (BillingCertification.isShowAds()) {
@@ -1433,7 +1433,7 @@ public class Play extends BaseActivity {
 		//padInit();
 
 		enable = false;
-		Launchpad.removeDriverListener(Play.this);
+		LaunchpadActivity.removeDriverListener(PlayActivity.this);
 
 		if (unipackLoaded) {
 			if (BillingCertification.isShowAds()) {
