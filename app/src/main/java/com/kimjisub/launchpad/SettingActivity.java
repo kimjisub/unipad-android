@@ -33,7 +33,7 @@ import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_100;
 import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_5;
 import static com.kimjisub.launchpad.manage.Constant.BILLING.DONATE_50;
 
-public class Setting extends PreferenceActivity {
+public class SettingActivity extends PreferenceActivity {
 
 	BillingCertification billingCertification;
 
@@ -43,7 +43,7 @@ public class Setting extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.setting);
 
-		billingCertification = new BillingCertification(Setting.this, new BillingCertification.BillingEventListener() {
+		billingCertification = new BillingCertification(SettingActivity.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			}
@@ -67,12 +67,12 @@ public class Setting extends PreferenceActivity {
 		});
 
 		findPreference("select_theme").setOnPreferenceClickListener(preference -> {
-			startActivity(new Intent(Setting.this, Theme.class));
+			startActivity(new Intent(SettingActivity.this, ThemeActivity.class));
 			return false;
 		});
 
 		findPreference("use_sd_card").setOnPreferenceChangeListener((preference, newValue) -> {
-			BaseActivity.requestRestart(Setting.this);
+			BaseActivity.requestRestart(SettingActivity.this);
 			return true;
 		});
 
@@ -131,15 +131,15 @@ public class Setting extends PreferenceActivity {
 			}
 
 
-			ListView listView = new ListView(Setting.this);
+			ListView listView = new ListView(SettingActivity.this);
 			ArrayList<mItem> data = new ArrayList<>();
 			for (int i = 0; i < listT.length; i++)
 				data.add(new mItem(listT[i], listS[i], listI[i]));
 
-			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(actionList[position], Uri.parse(urlList[position]))));
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
 			builder.setTitle(lang(R.string.community));
 			builder.setView(listView);
 			builder.show();
@@ -169,15 +169,15 @@ public class Setting extends PreferenceActivity {
 					DONATE_100
 			};
 
-			ListView listView = new ListView(Setting.this);
+			ListView listView = new ListView(SettingActivity.this);
 			ArrayList<mItem> data = new ArrayList<>();
 			for (int i = 0; i < titleList.length; i++)
 				data.add(new mItem(titleList[i], summaryList[i]));
 
-			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> billingCertification.purchase(urlList[position]));
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
 			builder.setTitle(lang(R.string.donation));
 			builder.setView(listView);
 			builder.show();
@@ -199,7 +199,7 @@ public class Setting extends PreferenceActivity {
 
 		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
 			billingCertification.refresh();
-			BaseActivity.requestRestart(Setting.this);
+			BaseActivity.requestRestart(SettingActivity.this);
 			return false;
 		});
 
@@ -232,15 +232,15 @@ public class Setting extends PreferenceActivity {
 					"https://github.com/0226daniel/UniPad-DesignKit"
 			};
 
-			ListView listView = new ListView(Setting.this);
+			ListView listView = new ListView(SettingActivity.this);
 			ArrayList<mItem> data = new ArrayList<>();
 			for (int i = 0; i < titleList.length; i++)
 				data.add(new mItem(titleList[i], summaryList[i]));
 
-			listView.setAdapter(new mAdapter(Setting.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
 
-			AlertDialog.Builder builder = new AlertDialog.Builder(Setting.this);
+			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
 			builder.setTitle(lang(R.string.openSourceLicense));
 			builder.setView(listView);
 			builder.show();
@@ -249,7 +249,7 @@ public class Setting extends PreferenceActivity {
 
 		findPreference("FCMToken").setOnPreferenceClickListener(preference -> {
 			putClipboard(FirebaseInstanceId.getInstance().getToken());
-			BaseActivity.showToast(Setting.this, R.string.copied);
+			BaseActivity.showToast(SettingActivity.this, R.string.copied);
 			return false;
 		});
 
@@ -263,7 +263,7 @@ public class Setting extends PreferenceActivity {
 	}
 
 	void putClipboard(String msg) {
-		ClipboardManager clipboardManager = (ClipboardManager) Setting.this.getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipboardManager clipboardManager = (ClipboardManager) SettingActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
 		ClipData clipData = ClipData.newPlainText("LABEL", msg);
 		assert clipboardManager != null;
 		clipboardManager.setPrimaryClip(clipData);
@@ -271,8 +271,8 @@ public class Setting extends PreferenceActivity {
 
 	@Override
 	protected void onResume() {
-		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(Setting.this));
-		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(Setting.this));
+		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(SettingActivity.this));
+		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(SettingActivity.this));
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 
 		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
@@ -295,7 +295,7 @@ public class Setting extends PreferenceActivity {
 	}
 
 	String lang(int id) {
-		return BaseActivity.lang(Setting.this, id);
+		return BaseActivity.lang(SettingActivity.this, id);
 	}
 
 	public class mItem {

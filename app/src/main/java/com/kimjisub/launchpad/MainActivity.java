@@ -59,14 +59,14 @@ import java.util.List;
 
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
-public class Main extends BaseActivity {
+public class MainActivity extends BaseActivity {
 
 	// Intro
 	BillingCertification billingCertification;
 	RelativeLayout RL_intro;
 	TextView TV_version;
 
-	// Main
+	// MainActivity
 	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
 	ScrollView SV_scrollView;
@@ -111,7 +111,7 @@ public class Main extends BaseActivity {
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
 
-		// Main
+		// MainActivity
 		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
 		SV_scrollView = findViewById(R.id.scrollView);
@@ -154,7 +154,7 @@ public class Main extends BaseActivity {
 
 
 		// var
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(Main.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(MainActivity.this);
 	}
 
 	@Override
@@ -169,7 +169,7 @@ public class Main extends BaseActivity {
 	}
 
 	void startIntro() {
-		billingCertification = new BillingCertification(Main.this, new BillingCertification.BillingEventListener() {
+		billingCertification = new BillingCertification(MainActivity.this, new BillingCertification.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			}
@@ -235,9 +235,9 @@ public class Main extends BaseActivity {
 
 		SRL_scrollView.setOnRefreshListener(this::update);
 
-		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(Main.this, Launchpad.class)));
+		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
 
-		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(Main.this, SettingManager.FileExplorerPath.load(Main.this))
+		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, SettingManager.FileExplorerPath.load(MainActivity.this))
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String fileURL) {
@@ -246,19 +246,19 @@ public class Main extends BaseActivity {
 
 					@Override
 					public void onURLChanged(String folderURL) {
-						SettingManager.FileExplorerPath.save(Main.this, folderURL);
+						SettingManager.FileExplorerPath.save(MainActivity.this, folderURL);
 					}
 				})
 				.show());
 
-		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(Main.this, FBStore.class), 0));
+		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this, FBStoreActivity.class), 0));
 
 		FAB_store.setOnLongClickListener(view -> {
-			//startActivityForResult(new Intent(Main.this, FSStore.class), 0);
+			//startActivityForResult(new Intent(MainActivity.this, FSStoreActivity.class), 0);
 			return false;
 		});
 
-		FAB_setting.setOnClickListener(v -> startActivity(new Intent(Main.this, Setting.class)));
+		FAB_setting.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, SettingActivity.class)));
 
 		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
@@ -369,7 +369,7 @@ public class Main extends BaseActivity {
 							flagColor = color(R.color.orange);
 						}
 
-						final PackViewSimple packViewSimple = new PackViewSimple(Main.this)
+						final PackViewSimple packViewSimple = new PackViewSimple(MainActivity.this)
 								.setFlagColor(flagColor)
 								.setTitle(title)
 								.setSubTitle(producerName)
@@ -393,9 +393,9 @@ public class Main extends BaseActivity {
 									@Override
 									public void onPlayClick(PackViewSimple v) {
 										rescanScale(LL_scale, LL_paddingScale);
-										Launchpad.removeDriverListener(Main.this);
+										LaunchpadActivity.removeDriverListener(MainActivity.this);
 
-										Intent intent = new Intent(Main.this, Play.class);
+										Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 										intent.putExtra("URL", url);
 										startActivity(intent);
 									}
@@ -432,7 +432,7 @@ public class Main extends BaseActivity {
 							lp.setMargins(left, top, right, bottom);
 							LL_list.addView(pack.packViewSimple, lp);
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
+							a.setInterpolator(AnimationUtils.loadInterpolator(MainActivity.this, android.R.anim.accelerate_decelerate_interpolator));
 							pack.packViewSimple.setAnimation(a);
 							updatePanelInfo_unipackCount(P_packs.size());
 						});
@@ -469,10 +469,10 @@ public class Main extends BaseActivity {
 		String title = lang(R.string.unipackNotFound);
 		String subTitle = lang(R.string.clickToAddUnipack);
 
-		PackViewSimple packViewSimple = PackViewSimple.errItem(Main.this, title, subTitle, new PackViewSimple.OnEventListener() {
+		PackViewSimple packViewSimple = PackViewSimple.errItem(MainActivity.this, title, subTitle, new PackViewSimple.OnEventListener() {
 			@Override
 			public void onViewClick(PackViewSimple v) {
-				startActivity(new Intent(Main.this, FBStore.class));
+				startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
 			}
 
 			@Override
@@ -498,7 +498,7 @@ public class Main extends BaseActivity {
 	// ========================================================================================= UniPack Work
 
 	void deleteUnipack(final PackViewSimple v, final Unipack unipack) {
-		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
+		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(MainActivity.this, R.layout.extend_delete, null);
 		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
 
 		LL_testView.removeAllViews();
@@ -537,7 +537,7 @@ public class Main extends BaseActivity {
 
 	void editUnipack(final PackViewSimple v, final Unipack unipack) {
 
-		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_automapping, null);
+		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(MainActivity.this, R.layout.extend_automapping, null);
 		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
 
 		LL_testView.removeAllViews();
@@ -629,7 +629,7 @@ public class Main extends BaseActivity {
 						}
 					}
 
-					progressDialog = new ProgressDialog(Main.this);
+					progressDialog = new ProgressDialog(MainActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setTitle(lang(R.string.analyzing));
 					progressDialog.setMessage(lang(R.string.wait));
@@ -713,7 +713,7 @@ public class Main extends BaseActivity {
 					try {
 						if (progressDialog != null && progressDialog.isShowing())
 							progressDialog.dismiss();
-						new AlertDialog.Builder(Main.this)
+						new AlertDialog.Builder(MainActivity.this)
 								.setTitle(lang(R.string.success))
 								.setMessage(lang(R.string.remapDone))
 								.setPositiveButton(lang(R.string.accept), null)//(dialogInterface, i) -> v.toggleDetail(0)//TODO
@@ -726,7 +726,7 @@ public class Main extends BaseActivity {
 
 
 		} else {
-			new AlertDialog.Builder(Main.this)
+			new AlertDialog.Builder(MainActivity.this)
 					.setTitle(lang(R.string.failed))
 					.setMessage(lang(R.string.remapFail))
 					.setPositiveButton(lang(R.string.accept), null)
@@ -739,7 +739,7 @@ public class Main extends BaseActivity {
 
 		(new AsyncTask<String, String, String>() {
 
-			ProgressDialog progressDialog = new ProgressDialog(Main.this);
+			ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
 
 			String msg1;
 			String msg2;
@@ -770,7 +770,7 @@ public class Main extends BaseActivity {
 
 					if (unipack.ErrorDetail == null) {
 						msg1 = lang(R.string.analyzeComplete);
-						msg2 = unipack.getInfoText(Main.this);
+						msg2 = unipack.getInfoText(MainActivity.this);
 					} else if (unipack.CriticalError) {
 						msg1 = lang(R.string.analyzeFailed);
 						msg2 = unipack.ErrorDetail;
@@ -824,7 +824,7 @@ public class Main extends BaseActivity {
 			showSelectLPUI();
 
 			int playIndex = getPlayIndex();
-			Animation animation = AnimationUtils.loadAnimation(Main.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+			Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 
 			animation.setAnimationListener(new Animation.AnimationListener() {
 				@Override
@@ -875,26 +875,26 @@ public class Main extends BaseActivity {
 	}
 
 	void setDriver() {
-		Launchpad.setDriverListener(Main.this,
+		LaunchpadActivity.setDriverListener(MainActivity.this,
 				new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
 					@Override
 					public void onConnected() {
-						Log.driverCycle("Main onConnected()");
+						Log.driverCycle("MainActivity onConnected()");
 						updateLP();
 					}
 
 					@Override
 					public void onDisconnected() {
-						Log.driverCycle("Main onDisconnected()");
+						Log.driverCycle("MainActivity onDisconnected()");
 					}
 				}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
 					@Override
 					public void onPadTouch(int x, int y, boolean upDown, int velo) {
 						if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
 							if (upDown)
-								Launchpad.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+								LaunchpadActivity.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
 							else
-								Launchpad.driver.sendPadLED(x, y, 0);
+								LaunchpadActivity.driver.sendPadLED(x, y, 0);
 						}
 					}
 
@@ -930,7 +930,7 @@ public class Main extends BaseActivity {
 				});
 	}
 
-	// ========================================================================================= Launchpad
+	// ========================================================================================= LaunchpadActivity
 
 	void updateLP() {
 		showWatermark();
@@ -952,27 +952,27 @@ public class Main extends BaseActivity {
 	void showSelectLPUI() {
 		if (P_packs != null) {
 			if (havePrev())
-				Launchpad.driver.sendFunctionkeyLED(0, 63);
+				LaunchpadActivity.driver.sendFunctionkeyLED(0, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(0, 5);
+				LaunchpadActivity.driver.sendFunctionkeyLED(0, 5);
 
 			if (haveNow())
-				Launchpad.driver.sendFunctionkeyLED(2, 61);
+				LaunchpadActivity.driver.sendFunctionkeyLED(2, 61);
 			else
-				Launchpad.driver.sendFunctionkeyLED(2, 0);
+				LaunchpadActivity.driver.sendFunctionkeyLED(2, 0);
 
 			if (haveNext())
-				Launchpad.driver.sendFunctionkeyLED(1, 63);
+				LaunchpadActivity.driver.sendFunctionkeyLED(1, 63);
 			else
-				Launchpad.driver.sendFunctionkeyLED(1, 5);
+				LaunchpadActivity.driver.sendFunctionkeyLED(1, 5);
 		}
 	}
 
 	void showWatermark() {
-		Launchpad.driver.sendPadLED(3, 3, 61);
-		Launchpad.driver.sendPadLED(3, 4, 40);
-		Launchpad.driver.sendPadLED(4, 3, 40);
-		Launchpad.driver.sendPadLED(4, 4, 61);
+		LaunchpadActivity.driver.sendPadLED(3, 3, 61);
+		LaunchpadActivity.driver.sendPadLED(3, 4, 40);
+		LaunchpadActivity.driver.sendPadLED(4, 3, 40);
+		LaunchpadActivity.driver.sendPadLED(4, 4, 61);
 	}
 
 	// ========================================================================================= Watermark
@@ -997,7 +997,7 @@ public class Main extends BaseActivity {
 
 	void newPackCheck() {
 		getStoreCount.setOnChangeListener(count -> {
-			if (SettingManager.PrevStoreCount.load(Main.this) == count)
+			if (SettingManager.PrevStoreCount.load(MainActivity.this) == count)
 				runOnUiThread(() -> blink(false));
 			else
 				runOnUiThread(() -> blink(true));
@@ -1074,7 +1074,7 @@ public class Main extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 
-		Launchpad.removeDriverListener(Main.this);
+		LaunchpadActivity.removeDriverListener(MainActivity.this);
 	}
 
 	class Pack {

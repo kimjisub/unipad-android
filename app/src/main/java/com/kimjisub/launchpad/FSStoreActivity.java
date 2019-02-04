@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FSStore extends BaseActivity {
+public class FSStoreActivity extends BaseActivity {
 
 	// UI
 	LinearLayout LL_list;
@@ -51,7 +51,7 @@ public class FSStore extends BaseActivity {
 		LL_list = findViewById(R.id.list);
 
 		// Vars
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FSStore.this);
+		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FSStoreActivity.this);
 		folder = new File(UnipackRootURL);
 		MAP_packItem = new HashMap<>();
 		AL_packList = new ArrayList<>();
@@ -86,7 +86,7 @@ public class FSStore extends BaseActivity {
 
 		db = FirebaseFirestore.getInstance();
 
-		db.collection("Unipack-FSStore")
+		db.collection("Unipack-FSStoreActivity")
 				.addSnapshotListener((value, e) -> {
 					if (e != null) {
 						Log.firebase("Listen failed." + e);
@@ -139,7 +139,7 @@ public class FSStore extends BaseActivity {
 		}
 		final boolean isDownloaded = _isDownloaded;
 
-		final PackView packView = new PackView(FSStore.this)
+		final PackView packView = new PackView(FSStoreActivity.this)
 				.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
 				.setTitle(d.title)
 				.setSubTitle(d.producerName)
@@ -206,7 +206,7 @@ public class FSStore extends BaseActivity {
 		String title = lang(R.string.errOccur);
 		String subTitle = lang(R.string.UnableToAccessServer);
 
-		PackView packView = PackView.errItem(FSStore.this, title, subTitle, null);
+		PackView packView = PackView.errItem(FSStoreActivity.this, title, subTitle, null);
 
 
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -238,7 +238,7 @@ public class FSStore extends BaseActivity {
 
 			@Override
 			protected void onPreExecute() {
-				FSStore.this.downloadCount++;
+				FSStoreActivity.this.downloadCount++;
 
 				url = MAP_packItem.get(key).fsStore.url;
 
@@ -311,7 +311,7 @@ public class FSStore extends BaseActivity {
 					publishProgress(-1L);
 					e.printStackTrace();
 				}
-				FSStore.this.downloadCount--;
+				FSStoreActivity.this.downloadCount--;
 
 				return null;
 			}
@@ -348,7 +348,7 @@ public class FSStore extends BaseActivity {
 		super.onResume();
 		initVar();
 
-		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FSStore.this, data));
+		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FSStoreActivity.this, data));
 	}
 
 	@Override

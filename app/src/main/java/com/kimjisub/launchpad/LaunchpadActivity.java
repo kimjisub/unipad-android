@@ -25,13 +25,13 @@ import com.kimjisub.launchpad.manage.SettingManager;
 import java.util.Iterator;
 import java.util.Objects;
 
-import static com.kimjisub.launchpad.Launchpad.MidiDevice.MK2;
-import static com.kimjisub.launchpad.Launchpad.MidiDevice.MidiFighter;
-import static com.kimjisub.launchpad.Launchpad.MidiDevice.Piano;
-import static com.kimjisub.launchpad.Launchpad.MidiDevice.Pro;
-import static com.kimjisub.launchpad.Launchpad.MidiDevice.S;
+import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.MK2;
+import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.MidiFighter;
+import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.Piano;
+import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.Pro;
+import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.S;
 
-public class Launchpad extends BaseActivity {
+public class LaunchpadActivity extends BaseActivity {
 
 	static UsbManager usbManager;
 	static UsbDevice usbDevice;
@@ -64,7 +64,7 @@ public class Launchpad extends BaseActivity {
 	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
 		Log.driverCycle("1");
 		if (driverFrom != null) {
-			Launchpad.driver.sendClearLED();
+			LaunchpadActivity.driver.sendClearLED();
 			driver.onDisconnected();
 		}
 
@@ -86,7 +86,7 @@ public class Launchpad extends BaseActivity {
 	public static void removeDriverListener(Activity activity) {
 		Log.driverCycle("3");
 		if (driverFrom == activity) {
-			Launchpad.driver.sendClearLED();
+			LaunchpadActivity.driver.sendClearLED();
 			driver.onDisconnected();
 
 			driverFrom = null;
@@ -147,7 +147,7 @@ public class Launchpad extends BaseActivity {
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
 
-		mode = SettingManager.LaunchpadConnectMethod.load(Launchpad.this);
+		mode = SettingManager.LaunchpadConnectMethod.load(LaunchpadActivity.this);
 
 		selectDevice(device);
 		selectMode(mode);
@@ -352,7 +352,7 @@ public class Launchpad extends BaseActivity {
 			}
 		}
 
-		SettingManager.LaunchpadConnectMethod.save(Launchpad.this, mode);
+		SettingManager.LaunchpadConnectMethod.save(LaunchpadActivity.this, mode);
 	}
 
 	@Override
