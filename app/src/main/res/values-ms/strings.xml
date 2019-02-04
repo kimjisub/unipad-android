@@ -85,7 +85,7 @@
 	<string name="producerName">Pemilik</string>
 	<string name="scale">Saiz</string>
 	<string name="chainCount">Bilangan Chain</string>
-	<string name="capacity">Saiz Fail</string>
+	<string name="fileSize">Saiz Fail</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>

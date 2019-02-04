@@ -85,7 +85,7 @@
 	<string name="producerName">Autor</string>
 	<string name="scale">tamaño</string>
 	<string name="chainCount">Número de Cadenas</string>
-	<string name="capacity">Tamaño del Archivo</string>
+	<string name="fileSize">Tamaño del Archivo</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
