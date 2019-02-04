@@ -182,8 +182,7 @@
 		android:id="@+id/intro"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@color/background1"
-		android:visibility="gone">
+		android:background="@color/background1">
 
 		<ImageView
 			android:layout_width="wrap_content"
@@ -200,7 +199,7 @@
 			android:orientation="vertical">
 
 			<TextView
-				android:id="@+id/version1"
+				android:id="@+id/version"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:layout_gravity="center_horizontal"
