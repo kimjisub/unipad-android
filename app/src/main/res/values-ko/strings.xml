@@ -32,7 +32,7 @@
 	<!--Main-->
 	<string name="unipack_count">유니팩 개수</string>
 	<string name="unipack_capacity">유니팩 용량</string>
-	<string name="open_count">오픈 횟수</string>
+	<string name="open_count">유니팩 실행 횟수</string>
 	<string name="padtouch_count">패드 터치 횟수</string>
 	<string name="LED_count">LED 이벤트 개수</string>
 	<string name="sound_count">사운드 개수</string>
@@ -85,7 +85,7 @@
 	<string name="producerName">제작자</string>
 	<string name="scale">크기</string>
 	<string name="chainCount">체인 개수</string>
-	<string name="capacity">용량</string>
+	<string name="fileSize">용량</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>

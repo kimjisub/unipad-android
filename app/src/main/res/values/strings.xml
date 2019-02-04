@@ -83,9 +83,9 @@
 	<!--Unipack Info-->
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
-	<string name="scale">size</string>
+	<string name="scale">scale</string>
 	<string name="chainCount">Chain count</string>
-	<string name="capacity">File size</string>
+	<string name="fileSize">File size</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>

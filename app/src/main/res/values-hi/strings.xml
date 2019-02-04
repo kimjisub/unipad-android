@@ -85,7 +85,7 @@
 	<string name="producerName">उत्पादक</string>
 	<string name="scale">साइज़</string>
 	<string name="chainCount">चैन संख्या</string>
-	<string name="capacity">फ़ाइल साइज़</string>
+	<string name="fileSize">फ़ाइल साइज़</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
