@@ -33,7 +33,7 @@
 					android:textSize="20dp" />
 
 				<TextView
-					android:id="@+id/version2"
+					android:id="@+id/panel_total_version"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="0.0.0"
@@ -57,7 +57,7 @@
 					android:text=" : " />
 
 				<TextView
-					android:id="@+id/unipackCount"
+					android:id="@+id/panel_total_unipackCount"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="0.0.0" />
@@ -80,7 +80,7 @@
 					android:text=" : " />
 
 				<TextView
-					android:id="@+id/unipackCapacity"
+					android:id="@+id/panel_total_unipackCapacity"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="123" />
@@ -102,7 +102,7 @@
 					android:text=" : " />
 
 				<TextView
-					android:id="@+id/openCount"
+					android:id="@+id/panel_total_openCount"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="123" />
@@ -125,7 +125,7 @@
 					android:text=" : " />
 
 				<TextView
-					android:id="@+id/padtouchCount"
+					android:id="@+id/panel_total_padtouchCount"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="123" />

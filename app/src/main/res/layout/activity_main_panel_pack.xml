@@ -18,12 +18,14 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text="UniPack Title"
+				android:id="@+id/panel_pack_title"
 				android:textSize="20dp" />
 
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text="UniPack subTitle"
+				android:id="@+id/panel_pack_subTitle"
 				android:textSize="15dp" />
 
 		</LinearLayout>
