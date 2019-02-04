@@ -21,6 +21,7 @@
 
 	<!--color-->
 	<color name="skyblue">#00bcda</color>
+	<color name="blue">#4283e6</color>
 	<color name="green">#66bb6a</color>
 	<color name="orange">#ffa726</color>
 	<color name="red">#ff6b4e</color>

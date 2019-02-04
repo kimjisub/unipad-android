@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -94,6 +95,10 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_pack_scale;
 	TextView TV_panel_pack_chainCount;
 	TextView TV_panel_pack_fileSize;
+	ImageView IV_panel_pack_youtube;
+	ImageView IV_panel_pack_website;
+	ImageView IV_panel_pack_func;
+	ImageView IV_panel_pack_delete;
 
 	String UnipackRootURL;
 	int lastPlayIndex = -1;
@@ -135,6 +140,10 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
 		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
 		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
+		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
+		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
+		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
+		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
 		TV_panel_pack_title.setSelected(true);
 		TV_panel_pack_subTitle.setSelected(true);
 		TV_panel_pack_path.setSelected(true);
@@ -288,6 +297,53 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
+		IV_panel_pack_youtube.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
+				if (website != null)
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+			}
+		});
+		IV_panel_pack_website.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				String website = item.unipack.website;
+				if (website != null)
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+			}
+		});
+		IV_panel_pack_func.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				new AlertDialog.Builder(MainActivity.this)
+						.setTitle(lang(R.string.warning))
+						.setMessage(lang(R.string.doYouWantToRemapProject))
+						.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
+							autoMapping(item.unipack);
+						}).setNegativeButton(lang(R.string.cancel), null)
+						.show();
+
+			}
+		});
+		IV_panel_pack_delete.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+
+				new AlertDialog.Builder(MainActivity.this)
+						.setTitle(lang(R.string.warning))
+						.setMessage(lang(R.string.doYouWantToDeleteProject))
+						.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
+							deleteUnipack(item.unipack);
+						}).setNegativeButton(lang(R.string.cancel), null)
+						.show();
+			}
+		});
+
 		isDoneIntro = true;
 
 		checkThings();
@@ -394,7 +450,7 @@ public class MainActivity extends BaseActivity {
 
 						PackItem packItem = new PackItem(packViewSimple, flagColor, url, unipack);
 						P_list.add(packItem);
-						try{
+						try {
 							Thread.sleep(10);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -470,84 +526,13 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= UniPack Work
 
-	void deleteUnipack(final PackViewSimple v, final Unipack unipack) {
-		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(MainActivity.this, R.layout.extend_delete, null);
-		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
-
-		LL_testView.removeAllViews();
-		LL_testView.addView(RL_delete);
-		LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-			@Override
-			public void onGlobalLayout() {
-				LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-				int height = LL_testView.getHeight();
-				LL_testView.removeAllViews();
-
-				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-						lang(R.string.delete),
-						lang(R.string.cancel)
-				};
-				int[] btnColors = new int[]{
-						color(R.color.red),
-						color(R.color.gray2)
-				};
-
-				/*v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
-					switch (index) {
-						case 0:
-							FileManager.deleteFolder(unipack.URL);
-							update();
-							break;
-						case 1:
-							v1.toggleDetail(1);
-							break;
-					}
-				}).toggleDetail(2);*///TODO
-			}
-		});
-	}
-
-	void editUnipack(final PackViewSimple v, final Unipack unipack) {
-
-		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(MainActivity.this, R.layout.extend_automapping, null);
-		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
-
-		LL_testView.removeAllViews();
-		LL_testView.addView(RL_delete);
-		LL_testView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-			@Override
-			public void onGlobalLayout() {
-				LL_testView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-				int height = LL_testView.getHeight();
-				LL_testView.removeAllViews();
-
-				@SuppressLint("ResourceType") String[] btnTitles = new String[]{
-						lang(R.string.edit),
-						lang(R.string.cancel)
-				};
-				int[] btnColors = new int[]{
-						color(R.color.orange),
-						color(R.color.gray2)
-				};
-
-				/*v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
-					switch (index) {
-						case 0:
-							autoMapping(v1, unipack);
-							break;
-						case 1:
-							v1.toggleDetail(1);
-							break;
-					}
-				}).toggleDetail(2);*///TODO
-			}
-		});
+	void deleteUnipack(final Unipack unipack) {
+		FileManager.deleteFolder(unipack.URL);
+		update();
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void autoMapping(final PackViewSimple v, Unipack uni) {
+	void autoMapping(Unipack uni) {
 		final Unipack unipack = new Unipack(uni.URL, true);
 
 
