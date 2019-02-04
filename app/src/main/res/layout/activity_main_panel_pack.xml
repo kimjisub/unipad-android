@@ -16,6 +16,34 @@
 			android:layout_height="match_parent"
 			android:orientation="vertical">
 
+			<RelativeLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content">
+
+				<ImageView
+					android:id="@+id/panel_pack_star"
+					android:layout_width="25dp"
+					android:layout_height="25dp"
+					app:srcCompat="@drawable/ic_star_border_24dp"/>
+
+				<ImageView
+					android:id="@+id/panel_pack_bookmark"
+					android:layout_width="25dp"
+					android:layout_toRightOf="@id/panel_pack_star"
+					android:layout_height="25dp"
+					app:srcCompat="@drawable/ic_bookmark_border_24dp"/>
+
+				<ImageView
+					android:id="@+id/panel_pack_edit"
+					android:layout_width="25dp"
+					android:layout_height="25dp"
+					android:layout_alignParentRight="true"
+					app:srcCompat="@drawable/ic_edit_24dp"/>
+
+
+
+			</RelativeLayout>
+
 			<TextView
 				android:id="@+id/panel_pack_title"
 				android:layout_width="wrap_content"
