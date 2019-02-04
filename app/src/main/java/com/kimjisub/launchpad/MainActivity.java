@@ -101,7 +101,9 @@ public class MainActivity extends BaseActivity {
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
 	// initVar
-	ArrayList<Pack> P_packs;
+	ArrayList<PackItem> P_list;
+
+	// =============================================================================================
 
 	int lastPlayIndex = -1;
 
@@ -302,17 +304,17 @@ public class MainActivity extends BaseActivity {
 		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
 	}
 
-	void updatePanelStat() {
-		updatePanelStat_openCount(0);
-		updatePanelStat_padTouchCount(0);
-	}
-
 	void updatePanelInfo_unipackCount(int i) {
 		TV_panel_total_unipackCount.setText(i + "");
 	}
 
 	void updatePanelInfo_unipackCapacity(long i) {
 		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+	}
+
+	void updatePanelStat() {
+		updatePanelStat_openCount(0);
+		updatePanelStat_padTouchCount(0);
 	}
 
 	void updatePanelStat_openCount(int i) {
@@ -333,7 +335,7 @@ public class MainActivity extends BaseActivity {
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 
-		P_packs = new ArrayList<>();
+		P_list = new ArrayList<>();
 		LL_list.removeAllViews();
 		togglePlay(null);
 
@@ -419,8 +421,8 @@ public class MainActivity extends BaseActivity {
 						if (unipack.website != null)
 							;//packViewSimple.addBtn(lang(R.string.website), color(R.color.skyblue));//TODO
 
-						Pack pack = new Pack(packViewSimple, flagColor, url, unipack);
-						P_packs.add(pack);
+						PackItem packItem = new PackItem(packViewSimple, flagColor, url, unipack);
+						P_list.add(packItem);
 
 						runOnUiThread(() -> {
 							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -429,11 +431,11 @@ public class MainActivity extends BaseActivity {
 							int right = dpToPx(16);
 							int bottom = dpToPx(10);
 							lp.setMargins(left, top, right, bottom);
-							LL_list.addView(pack.packViewSimple, lp);
+							LL_list.addView(packItem.packViewSimple, lp);
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(MainActivity.this, android.R.anim.accelerate_decelerate_interpolator));
-							pack.packViewSimple.setAnimation(a);
-							updatePanelInfo_unipackCount(P_packs.size());
+							packItem.packViewSimple.setAnimation(a);
+							updatePanelInfo_unipackCount(P_list.size());
 						});
 
 						i++;
@@ -441,7 +443,7 @@ public class MainActivity extends BaseActivity {
 
 					//TODO 정렬
 
-					if (P_packs.size() == 0)
+					if (P_list.size() == 0)
 						runOnUiThread(this::addErrorItem);
 
 				} else {
@@ -803,19 +805,33 @@ public class MainActivity extends BaseActivity {
 
 	// =============================================================================================
 
+	class PackItem {
+		PackViewSimple packViewSimple;
+		int flagColors;
+		String url;
+		Unipack unipack;
+
+		public PackItem(PackViewSimple packViewSimple, int flagColors, String url, Unipack unipack) {
+			this.packViewSimple = packViewSimple;
+			this.flagColors = flagColors;
+			this.url = url;
+			this.unipack = unipack;
+		}
+	}
+
 	void togglePlay(int i) {
-		togglePlay(P_packs.get(i).url);
+		togglePlay(P_list.get(i).url);
 	}
 
 	void togglePlay(String url) {
 		try {
 			int i = 0;
-			for (Pack pack : P_packs) {
-				if (pack.url.equals(url)) {
-					pack.packViewSimple.togglePlay(color(R.color.red), pack.flagColors);
+			for (PackItem packItem : P_list) {
+				if (packItem.url.equals(url)) {
+					packItem.packViewSimple.togglePlay(color(R.color.red), packItem.flagColors);
 					lastPlayIndex = i;
 				} else
-					pack.packViewSimple.togglePlay(false, color(R.color.red), pack.flagColors);
+					packItem.packViewSimple.togglePlay(false, color(R.color.red), packItem.flagColors);
 
 				i++;
 			}
@@ -843,14 +859,18 @@ public class MainActivity extends BaseActivity {
 				}
 			});
 
-			if(playIndex != -1){
-				Pack pack = P_packs.get(playIndex);
-				TV_panel_pack_title.setText(pack.unipack.title);
-				TV_panel_pack_subTitle.setText(pack.unipack.producerName);
+			if (playIndex != -1) {
+				PackItem packItem = P_list.get(playIndex);
+				TV_panel_pack_title.setText(packItem.unipack.title);
+				TV_panel_pack_subTitle.setText(packItem.unipack.producerName);
 			}
 
-			if (!(RL_panel_pack.getVisibility() == View.VISIBLE && playIndex != -1))
+			int visibility = RL_panel_pack.getVisibility();
+			if ((visibility == View.VISIBLE && playIndex == -1)
+					|| (visibility == View.INVISIBLE && playIndex != -1)) {
 				RL_panel_pack.startAnimation(animation);
+			}
+
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -861,8 +881,8 @@ public class MainActivity extends BaseActivity {
 		int index = -1;
 
 		int i = 0;
-		for (Pack pack : P_packs) {
-			if (pack.packViewSimple.isPlay()) {
+		for (PackItem packItem : P_list) {
+			if (packItem.packViewSimple.isPlay()) {
 				index = i;
 				break;
 			}
@@ -901,18 +921,18 @@ public class MainActivity extends BaseActivity {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, P_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
 								togglePlay(lastPlayIndex + 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, P_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
 							if (haveNow())
-								P_packs.get(lastPlayIndex).packViewSimple.onPlayClick();
+								P_list.get(lastPlayIndex).packViewSimple.onPlayClick();
 						}
 					}
 
@@ -936,19 +956,19 @@ public class MainActivity extends BaseActivity {
 	}
 
 	boolean haveNow() {
-		return P_packs != null && 0 <= lastPlayIndex && lastPlayIndex <= P_packs.size() - 1;
+		return P_list != null && 0 <= lastPlayIndex && lastPlayIndex <= P_list.size() - 1;
 	}
 
 	boolean haveNext() {
-		return P_packs != null && lastPlayIndex < P_packs.size() - 1;
+		return P_list != null && lastPlayIndex < P_list.size() - 1;
 	}
 
 	boolean havePrev() {
-		return P_packs != null && 0 < lastPlayIndex;
+		return P_list != null && 0 < lastPlayIndex;
 	}
 
 	void showSelectLPUI() {
-		if (P_packs != null) {
+		if (P_list != null) {
 			if (havePrev())
 				LaunchpadActivity.driver.sendFunctionkeyLED(0, 63);
 			else
@@ -1012,20 +1032,12 @@ public class MainActivity extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		if (!isDoneIntro)
-			;
+			super.onBackPressed();
 		else {
-			if (P_packs != null) {
-				boolean clear = true;
-				for (Pack pack : P_packs) {
-					if (pack.packViewSimple.isPlay()) {
-						togglePlay(null);
-
-						clear = false;
-						break;
-					}
-				}
-
-				if (clear)
+			if (P_list != null) {
+				if (getPlayIndex() != -1)
+					togglePlay(null);
+				else
 					super.onBackPressed();
 			} else
 				super.onBackPressed();
@@ -1071,19 +1083,5 @@ public class MainActivity extends BaseActivity {
 		super.onDestroy();
 
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
-	}
-
-	class Pack {
-		PackViewSimple packViewSimple;
-		int flagColors;
-		String url;
-		Unipack unipack;
-
-		public Pack(PackViewSimple packViewSimple, int flagColors, String url, Unipack unipack) {
-			this.packViewSimple = packViewSimple;
-			this.flagColors = flagColors;
-			this.url = url;
-			this.unipack = unipack;
-		}
 	}
 }
