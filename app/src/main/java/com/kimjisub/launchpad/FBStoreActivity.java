@@ -285,7 +285,6 @@ public class FBStoreActivity extends BaseActivity {
 
 		packViewSimple.togglePlay(true);
 		packViewSimple.updateFlagColor(color(R.color.gray1));
-		packViewSimple.setStatus(false);
 		packViewSimple.setPlayText("0%");
 
 		startDownload(item);
@@ -407,7 +406,6 @@ public class FBStoreActivity extends BaseActivity {
 				} else if (progress[0] == -1) {//실패
 					packViewSimple.setPlayText(lang(R.string.failed));
 					packViewSimple.updateFlagColor(color(R.color.red));
-					packViewSimple.setStatus(true);
 				} else if (progress[0] == 2) {//완료
 					packViewSimple.setPlayText("");
 					packViewSimple.updateFlagColor(color(R.color.green));
