@@ -85,7 +85,7 @@
 	<string name="producerName">Producteur</string>
 	<string name="scale">Taille</string>
 	<string name="chainCount">Nombre de pages</string>
-	<string name="capacity">Taille du fichier</string>
+	<string name="fileSize">Taille du fichier</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
