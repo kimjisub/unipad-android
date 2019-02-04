@@ -4,17 +4,40 @@
 	android:layout_height="match_parent"
 	android:background="@color/background1">
 
-	<ScrollView
+	<LinearLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+		android:layout_height="match_parent"
+		android:orientation="horizontal"
+		android:weightSum="5">
 
-		<LinearLayout
-			android:id="@+id/list"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:orientation="vertical"
-			android:paddingTop="16dp" />
+		<RelativeLayout
+			android:id="@+id/panel"
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_marginStart="16dp"
+			android:layout_marginLeft="16dp"
+			android:layout_marginTop="16dp"
+			android:layout_marginBottom="16dp"
+			android:layout_weight="2">
 
-	</ScrollView>
+			<include layout="@layout/activity_main_panel_total" />
+
+		</RelativeLayout>
+
+		<ScrollView
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_weight="3">
+
+			<LinearLayout
+				android:id="@+id/list"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				android:paddingTop="16dp" />
+
+		</ScrollView>
+
+	</LinearLayout>
 
 </RelativeLayout>
