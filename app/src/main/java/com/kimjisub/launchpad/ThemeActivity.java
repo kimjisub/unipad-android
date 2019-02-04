@@ -21,7 +21,7 @@ import com.kimjisub.launchpad.manage.ThemePack;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Theme extends BaseActivity {
+public class ThemeActivity extends BaseActivity {
 
 	static ArrayList<ThemePack> themeList;
 	RecyclerView RV_list;
@@ -57,7 +57,7 @@ public class Theme extends BaseActivity {
 
 		TV_apply.setOnClickListener(v -> {
 			mSetTheme(layoutManager.getCenterItemPosition());
-			requestRestart(Theme.this);
+			requestRestart(ThemeActivity.this);
 		});
 	}
 
@@ -66,13 +66,13 @@ public class Theme extends BaseActivity {
 			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")));
 		} else {
 			ThemePack theme = themeList.get(i);
-			SettingManager.SelectedTheme.save(Theme.this, theme.package_name);
+			SettingManager.SelectedTheme.save(ThemeActivity.this, theme.package_name);
 		}
 	}
 
 	public int mGetTheme() {
 		int ret = 0;
-		String packageName = SettingManager.SelectedTheme.load(Theme.this);
+		String packageName = SettingManager.SelectedTheme.load(ThemeActivity.this);
 		for (int i = 0; i < themeList.size(); i++) {
 			ThemePack theme = themeList.get(i);
 			Log.log(packageName + ", " + theme.package_name);
@@ -100,7 +100,7 @@ public class Theme extends BaseActivity {
 
 	void addThemeInList(String packageName) {
 		try {
-			ThemePack theme = new ThemePack(Theme.this, packageName);
+			ThemePack theme = new ThemePack(ThemeActivity.this, packageName);
 			themeList.add(theme);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -109,7 +109,7 @@ public class Theme extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		requestRestart(Theme.this);
+		requestRestart(ThemeActivity.this);
 	}
 
 	final static class ViewHolder extends RecyclerView.ViewHolder {

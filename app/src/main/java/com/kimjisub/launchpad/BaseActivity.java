@@ -100,7 +100,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 			activityList.get(i).finish();
 			activityList.remove(i);
 		}
-		activity.startActivity(new Intent(activity, Main.class));
+		activity.startActivity(new Intent(activity, MainActivity.class));
 		printActivityLog(activity.getLocalClassName() + " requestRestart");
 
 		Process.killProcess(Process.myPid());
@@ -110,16 +110,16 @@ public abstract class BaseActivity extends AppCompatActivity {
 		boolean isMainOnline = false;
 		for (Activity a : activityList) {
 
-			if (a.getClass() != Main.class) {
+			if (a.getClass() != MainActivity.class) {
 				a.finish();
 				activityList.remove(a);
 			} else {
-				((Main) a).update();
+				((MainActivity) a).update();
 				isMainOnline = true;
 			}
 		}
 		if (!isMainOnline)
-			activity.startActivity(new Intent(activity, Main.class));
+			activity.startActivity(new Intent(activity, MainActivity.class));
 
 	}
 
