@@ -171,7 +171,7 @@ public class FBStoreActivity extends BaseActivity {
 		LL_list.addView(packViewSimple, lp);
 	}
 
-	// ========================================================================================= Activity
+	// ============================================================================================= Activity
 
 	void togglePlay(String code) {
 		try {

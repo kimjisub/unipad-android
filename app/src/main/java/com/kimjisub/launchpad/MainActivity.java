@@ -103,7 +103,6 @@ public class MainActivity extends BaseActivity {
 	// initVar
 	ArrayList<Pack> P_packs;
 
-	// =========================================================================================
 	int lastPlayIndex = -1;
 
 	void initVar(boolean onFirst) {
@@ -291,7 +290,7 @@ public class MainActivity extends BaseActivity {
 		newPackCheck();
 	}
 
-	// ========================================================================================= panel
+	// ============================================================================================= panel
 
 	void updatePanel() {
 		updatePanelInfo();
@@ -324,7 +323,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_padtouchCount.setText(i + "");
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	void update() {
 		lastPlayIndex = -1;
@@ -494,8 +493,7 @@ public class MainActivity extends BaseActivity {
 		LL_list.addView(packViewSimple, lp);
 	}
 
-
-	// ========================================================================================= UniPack Work
+	// ============================================================================================= UniPack Work
 
 	void deleteUnipack(final PackViewSimple v, final Unipack unipack) {
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(MainActivity.this, R.layout.extend_delete, null);
@@ -803,7 +801,7 @@ public class MainActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	void togglePlay(int i) {
 		togglePlay(P_packs.get(i).url);
@@ -930,7 +928,7 @@ public class MainActivity extends BaseActivity {
 				});
 	}
 
-	// ========================================================================================= LaunchpadActivity
+	// ============================================================================================= Launchpad
 
 	void updateLP() {
 		showWatermark();
@@ -975,7 +973,7 @@ public class MainActivity extends BaseActivity {
 		LaunchpadActivity.driver.sendPadLED(4, 4, 61);
 	}
 
-	// ========================================================================================= Watermark
+	// ============================================================================================= Check
 
 	void versionCheck() {
 		if (!BuildConfig.VERSION_NAME.contains("b")) {
@@ -993,8 +991,6 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= Check
-
 	void newPackCheck() {
 		getStoreCount.setOnChangeListener(count -> {
 			if (SettingManager.PrevStoreCount.load(MainActivity.this) == count)
@@ -1010,6 +1006,8 @@ public class MainActivity extends BaseActivity {
 		else
 			VA_floatingAnimation.end();
 	}
+
+	// ============================================================================================= Activity
 
 	@Override
 	public void onBackPressed() {
@@ -1033,8 +1031,6 @@ public class MainActivity extends BaseActivity {
 				super.onBackPressed();
 		}
 	}
-
-	// ========================================================================================= Activity
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {

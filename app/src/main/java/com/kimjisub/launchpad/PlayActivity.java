@@ -95,7 +95,7 @@ public class PlayActivity extends BaseActivity {
 	SyncCheckBox SCV_watermark;
 	SyncCheckBox SCV_proLightMode;
 
-	// =========================================================================================
+	// =============================================================================================
 	ThemePack.Resources theme;
 
 	Unipack unipack;
@@ -117,16 +117,16 @@ public class PlayActivity extends BaseActivity {
 	ColorManager colorManager;
 
 
-	// ========================================================================================= Manager
+	// ============================================================================================= Manager
 	ArrayList[][][] traceLog_table;
 
-	// ========================================================================================= 앱 시작
+	// ============================================================================================= 앱 시작
 	int[] traceLog_nextNum;
 	long rec_prevEventMS;
 	String rec_log = "";
 	boolean bool_toggleOptionWindow = false;
 
-	// ========================================================================================= 특성 다른 LED 처리
+	// ============================================================================================= 특성 다른 LED 처리
 
 	void initVar() {
 		RL_rootView = findViewById(R.id.rootView);
@@ -189,7 +189,6 @@ public class PlayActivity extends BaseActivity {
 		setContentView(R.layout.activity_play);
 		initVar();
 
-		// ================================================================================= URL 불러오기
 		String URL = getIntent().getStringExtra("URL");
 		log("[01] Start Load Unipack " + URL);
 		unipack = new Unipack(URL, true);
@@ -377,7 +376,7 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= LEDTask
+	// ============================================================================================= LEDTask
 
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
@@ -602,7 +601,7 @@ public class PlayActivity extends BaseActivity {
 
 	}
 
-	// ========================================================================================= AutoPlayTask
+	// ============================================================================================= AutoPlayTask
 
 	void setLED(int x, int y) {
 		if (enable) {
@@ -785,7 +784,7 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= pad, chain Event
+	// ============================================================================================= pad, chain Event
 
 	void autoPlay_guideChain(int c, boolean onOff) {
 		log("autoPlay_guideChain (" + c + ", " + onOff + ")");
@@ -890,7 +889,7 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= LaunchpadActivity Connection
+	// ============================================================================================= Launchpad Connection
 
 	void padInit() {
 		log("padInit");
@@ -930,7 +929,7 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= Trace Log
+	// ============================================================================================= Trace Log
 
 	void chainBtnsRefresh() {
 		log("chainBtnsRefresh");
@@ -1098,7 +1097,7 @@ public class PlayActivity extends BaseActivity {
 			U_pads[x][y].appendTraceLog(traceLog_table[chain][x][y].get(i) + " ");
 	}
 
-	// ========================================================================================= Trace Log
+	// ============================================================================================= Trace Log
 
 	void traceLog_init() {
 		log("traceLog_init");
@@ -1153,7 +1152,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 
-	// ========================================================================================= setProMode
+	// ============================================================================================= setProMode
 
 	void refreshWatermark() {
 		log("refreshWatermark");
@@ -1229,7 +1228,7 @@ public class PlayActivity extends BaseActivity {
 		chainBtnsRefresh();
 	}
 
-	// ========================================================================================= Watermark
+	// ============================================================================================= Watermark
 
 	void proLightMode(boolean bool) {
 		if (bool) {
@@ -1261,13 +1260,13 @@ public class PlayActivity extends BaseActivity {
 		chainBtnsRefresh();
 	}
 
-	// ========================================================================================= Pro Mode
+	// ============================================================================================= Pro Mode
 
 	void toggleOptionWindow() {
 		toggleOptionWindow(!bool_toggleOptionWindow);
 	}
 
-	// ========================================================================================= Option Window
+	// ============================================================================================= Option Window
 
 	void toggleOptionWindow(boolean bool) {
 		bool_toggleOptionWindow = bool;
@@ -1398,7 +1397,7 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ========================================================================================= Activity
+	// ============================================================================================= Activity
 
 	@Override
 	public void onDestroy() {

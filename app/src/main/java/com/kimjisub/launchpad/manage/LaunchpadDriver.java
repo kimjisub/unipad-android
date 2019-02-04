@@ -4,7 +4,7 @@ public class LaunchpadDriver {
 
 	public static abstract class DriverRef {
 
-		// ================================================================================= OnConnectionEventListener
+		// ============================================================================================= OnConnectionEventListener
 
 		private OnConnectionEventListener onConnectionEventListener = null;
 		private OnGetSignalListener onGetSignalListener = null;
@@ -20,7 +20,7 @@ public class LaunchpadDriver {
 				onConnectionEventListener.onConnected();
 		}
 
-		// ================================================================================= OnGetSignalListener
+		// ============================================================================================= OnGetSignalListener
 
 		public void onDisconnected() {
 			if (onConnectionEventListener != null)
@@ -64,7 +64,7 @@ public class LaunchpadDriver {
 		}
 
 
-		// ================================================================================= OnSendSignalListener
+		// ============================================================================================= OnSendSignalListener
 
 		void onSend(final byte cmd, final byte sig, final byte note, final byte velo) {
 			if (onSendSignalListener != null)

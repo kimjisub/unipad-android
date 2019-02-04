@@ -18,7 +18,7 @@ public class BillingCertification {
 	Activity activity;
 	BillingProcessor billingProcessor;
 
-	// =========================================================================================
+	// =============================================================================================
 	BillingEventListener billingEventListener;
 	public BillingCertification(Activity activity) {
 		this.activity = activity;
@@ -45,7 +45,7 @@ public class BillingCertification {
 		return !isPurchaseRemoveAds();
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public static boolean isUnlockProTools() {
 		return isPurchaseProTools();
@@ -82,7 +82,7 @@ public class BillingCertification {
 		billingProcessor.initialize();
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public void refresh() {
 		if (billingProcessor != null && billingProcessor.isInitialized()) {
@@ -104,7 +104,7 @@ public class BillingCertification {
 	}
 
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public boolean isOneTimePurchaseSupported() {
 		return billingProcessor.isOneTimePurchaseSupported();
@@ -118,13 +118,13 @@ public class BillingCertification {
 		billingProcessor.loadOwnedPurchasesFromGoogle();
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public void subscribe_removeAds() {
 		subscribe(REMOVE_ADS);
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public void subscribe_proTools() {
 		subscribe(PRO_TOOLS);
@@ -134,7 +134,7 @@ public class BillingCertification {
 		billingProcessor.subscribe(activity, productId);
 	}
 
-	// =========================================================================================
+	// =============================================================================================
 
 	public void purchase(String productId) {
 		billingProcessor.purchase(activity, productId);
