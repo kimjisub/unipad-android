@@ -64,7 +64,7 @@ public class Main extends BaseActivity {
 	// Intro
 	BillingCertification billingCertification;
 	RelativeLayout RL_intro;
-	TextView TV_version;
+	TextView TV_version1;
 
 	// Main
 	RelativeLayout RL_rootView;
@@ -80,6 +80,11 @@ public class Main extends BaseActivity {
 	LinearLayout LL_paddingScale;
 	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
+	TextView TV_version2;
+	TextView TV_unipackCount;
+	TextView TV_unipackCapacity;
+	TextView TV_openCount;
+	TextView TV_padtouchCount;
 
 	//Admob
 	AdView AV_adview;
@@ -100,7 +105,7 @@ public class Main extends BaseActivity {
 	void initVar(boolean onFirst) {
 		// Intro
 		RL_intro = findViewById(R.id.intro);
-		TV_version = findViewById(R.id.version);
+		TV_version1 = findViewById(R.id.version1);
 
 		// Main
 		RL_rootView = findViewById(R.id.rootView);
@@ -116,6 +121,11 @@ public class Main extends BaseActivity {
 		LL_paddingScale = findViewById(R.id.paddingScale);
 		LL_testView = findViewById(R.id.testView);
 		AV_adview = findViewById(R.id.adView);
+		TV_version2 = findViewById(R.id.version2);
+		TV_unipackCount = findViewById(R.id.unipackCount);
+		TV_unipackCapacity = findViewById(R.id.unipackCapacity);
+		TV_openCount = findViewById(R.id.openCount);
+		TV_padtouchCount = findViewById(R.id.padtouchCount);
 
 		// animation
 		if (onFirst) {
@@ -171,7 +181,7 @@ public class Main extends BaseActivity {
 			@Override
 			public void onRefresh() {
 				if (BillingCertification.isPurchaseRemoveAds() || BillingCertification.isPurchaseProTools()) {
-					TV_version.setTextColor(color(R.color.orange));
+					TV_version1.setTextColor(color(R.color.orange));
 				}
 
 				if (BillingCertification.isShowAds()) {
@@ -186,7 +196,8 @@ public class Main extends BaseActivity {
 			}
 		});
 
-		TV_version.setText(BuildConfig.VERSION_NAME);
+		TV_version1.setText(BuildConfig.VERSION_NAME);
+		TV_version2.setText(BuildConfig.VERSION_NAME);
 
 		TedPermission.with(this)
 				.setPermissionListener(new PermissionListener() {
@@ -272,6 +283,38 @@ public class Main extends BaseActivity {
 		newPackCheck();
 	}
 
+	// ========================================================================================= panel
+
+	void updatePanel() {
+		updatePanelInfo();
+		updatePanelStat();
+	}
+
+	void updatePanelInfo() {
+		updatePanelInfo_unipackCount(0);
+		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
+	}
+
+	void updatePanelStat() {
+		updatePanelStat_openCount(0);
+		updatePanelStat_padTouchCount(0);
+	}
+
+	void updatePanelInfo_unipackCount(int i) {
+		TV_unipackCount.setText(i + "");
+	}
+	void updatePanelInfo_unipackCapacity(long i) {
+		TV_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+	}
+	void updatePanelStat_openCount(int i){
+		TV_openCount.setText(i + "");
+	}
+	void updatePanelStat_padTouchCount(int i){
+		TV_padtouchCount.setText(i + "");
+	}
+
+	// =========================================================================================
+
 	void update() {
 		playIndex = -1;
 		if (!updateComplete)
@@ -282,6 +325,8 @@ public class Main extends BaseActivity {
 
 		P_packs = new ArrayList<>();
 		LL_list.removeAllViews();
+
+		updatePanel();
 
 		new Thread(() -> {
 			try {
@@ -380,6 +425,7 @@ public class Main extends BaseActivity {
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
 							pack.packView.setAnimation(a);
+							updatePanelInfo_unipackCount(P_packs.size());
 						});
 
 						i++;
