@@ -292,39 +292,6 @@ public class MainActivity extends BaseActivity {
 		newPackCheck();
 	}
 
-	// ============================================================================================= panel
-
-	void updatePanel() {
-		updatePanelInfo();
-		updatePanelStat();
-	}
-
-	void updatePanelInfo() {
-		updatePanelInfo_unipackCount(0);
-		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
-	}
-
-	void updatePanelInfo_unipackCount(int i) {
-		TV_panel_total_unipackCount.setText(i + "");
-	}
-
-	void updatePanelInfo_unipackCapacity(long i) {
-		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
-	}
-
-	void updatePanelStat() {
-		updatePanelStat_openCount(0);
-		updatePanelStat_padTouchCount(0);
-	}
-
-	void updatePanelStat_openCount(int i) {
-		TV_panel_total_openCount.setText(i + "");
-	}
-
-	void updatePanelStat_padTouchCount(int i) {
-		TV_panel_total_padtouchCount.setText(i + "");
-	}
-
 	// =============================================================================================
 
 	void update() {
@@ -803,7 +770,7 @@ public class MainActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	// =============================================================================================
+	// ============================================================================================= List Manage
 
 	class PackItem {
 		PackViewSimple packViewSimple;
@@ -946,6 +913,39 @@ public class MainActivity extends BaseActivity {
 							updateLP();
 					}
 				});
+	}
+
+	// ============================================================================================= panel
+
+	void updatePanel() {
+		updatePanelInfo();
+		updatePanelStat();
+	}
+
+	void updatePanelInfo() {
+		updatePanelInfo_unipackCount(0);
+		updatePanelInfo_unipackCapacity(FileManager.getFolderSize(UnipackRootURL));
+	}
+
+	void updatePanelInfo_unipackCount(int i) {
+		TV_panel_total_unipackCount.setText(i + "");
+	}
+
+	void updatePanelInfo_unipackCapacity(long i) {
+		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(i) + "MB");
+	}
+
+	void updatePanelStat() {
+		updatePanelStat_openCount(0);
+		updatePanelStat_padTouchCount(0);
+	}
+
+	void updatePanelStat_openCount(int i) {
+		TV_panel_total_openCount.setText(i + "");
+	}
+
+	void updatePanelStat_padTouchCount(int i) {
+		TV_panel_total_padtouchCount.setText(i + "");
 	}
 
 	// ============================================================================================= Launchpad
