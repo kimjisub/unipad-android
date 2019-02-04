@@ -42,7 +42,7 @@ import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
-import com.kimjisub.unipad.designkit.PackView;
+import com.kimjisub.unipad.designkit.PackViewSimple;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -357,32 +357,30 @@ public class Main extends BaseActivity {
 							flagColor = color(R.color.orange);
 						}
 
-						final PackView packView = new PackView(Main.this)
+						final PackViewSimple packViewSimple = new PackViewSimple(Main.this)
 								.setFlagColor(flagColor)
 								.setTitle(title)
 								.setSubTitle(producerName)
-								.addInfo(lang(R.string.scale), unipack.buttonX + " x " + unipack.buttonY)
-								.addInfo(lang(R.string.chainCount), unipack.chain + "")
-								.addInfo(lang(R.string.capacity), FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB")
-								.addBtn(lang(R.string.delete), color(R.color.red))
-								.addBtn(lang(R.string.edit), color(R.color.orange))
+								//.addInfo(lang(R.string.scale), unipack.buttonX + " x " + unipack.buttonY)
+								//.addInfo(lang(R.string.chainCount), unipack.chain + "")
+								//.addInfo(lang(R.string.capacity), FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB")
+								//.addBtn(lang(R.string.delete), color(R.color.red))
+								//.addBtn(lang(R.string.edit), color(R.color.orange))//TODO
 								.setOption1(lang(R.string.LED_), unipack.isKeyLED)
 								.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
-								.setOnEventListener(new PackView.OnEventListener() {
+								.setOnEventListener(new PackViewSimple.OnEventListener() {
 									@Override
-									public void onViewClick(PackView v) {
+									public void onViewClick(PackViewSimple v) {
 										togglePlay(url);
-										toggleDetail(null);
 									}
 
 									@Override
-									public void onViewLongClick(PackView v) {
+									public void onViewLongClick(PackViewSimple v) {
 										togglePlay(null);
-										toggleDetail(url);
 									}
 
 									@Override
-									public void onPlayClick(PackView v) {
+									public void onPlayClick(PackViewSimple v) {
 										rescanScale(LL_scale, LL_paddingScale);
 										Launchpad.removeDriverListener(Main.this);
 
@@ -391,8 +389,8 @@ public class Main extends BaseActivity {
 										startActivity(intent);
 									}
 
-									@Override
-									public void onFunctionBtnClick(final PackView v, int index) {
+									/*@Override
+									public void onFunctionBtnClick(final PackViewSimple v, int index) {
 										switch (index) {
 											case 0:
 												deleteUnipack(v, unipack);
@@ -404,14 +402,14 @@ public class Main extends BaseActivity {
 												startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(unipack.website)));
 												break;
 										}
-									}
+									}*///TODO
 								});
 
 
 						if (unipack.website != null)
-							packView.addBtn(lang(R.string.website), color(R.color.skyblue));
+							;//packViewSimple.addBtn(lang(R.string.website), color(R.color.skyblue));//TODO
 
-						Pack pack = new Pack(packView, flagColor, url, unipack);
+						Pack pack = new Pack(packViewSimple, flagColor, url, unipack);
 						P_packs.add(pack);
 
 						runOnUiThread(() -> {
@@ -421,10 +419,10 @@ public class Main extends BaseActivity {
 							int right = dpToPx(16);
 							int bottom = dpToPx(10);
 							lp.setMargins(left, top, right, bottom);
-							LL_list.addView(pack.packView, lp);
+							LL_list.addView(pack.packViewSimple, lp);
 							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
 							a.setInterpolator(AnimationUtils.loadInterpolator(Main.this, android.R.anim.accelerate_decelerate_interpolator));
-							pack.packView.setAnimation(a);
+							pack.packViewSimple.setAnimation(a);
 							updatePanelInfo_unipackCount(P_packs.size());
 						});
 
@@ -460,22 +458,18 @@ public class Main extends BaseActivity {
 		String title = lang(R.string.unipackNotFound);
 		String subTitle = lang(R.string.clickToAddUnipack);
 
-		PackView packView = PackView.errItem(Main.this, title, subTitle, new PackView.OnEventListener() {
+		PackViewSimple packViewSimple = PackViewSimple.errItem(Main.this, title, subTitle, new PackViewSimple.OnEventListener() {
 			@Override
-			public void onViewClick(PackView v) {
+			public void onViewClick(PackViewSimple v) {
 				startActivity(new Intent(Main.this, FBStore.class));
 			}
 
 			@Override
-			public void onViewLongClick(PackView v) {
+			public void onViewLongClick(PackViewSimple v) {
 			}
 
 			@Override
-			public void onPlayClick(PackView v) {
-			}
-
-			@Override
-			public void onFunctionBtnClick(PackView v, int index) {
+			public void onPlayClick(PackViewSimple v) {
 			}
 		});
 
@@ -486,10 +480,10 @@ public class Main extends BaseActivity {
 		int right = dpToPx(16);
 		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
-		LL_list.addView(packView, lp);
+		LL_list.addView(packViewSimple, lp);
 	}
 
-	void deleteUnipack(final PackView v, final Unipack unipack) {
+	void deleteUnipack(final PackViewSimple v, final Unipack unipack) {
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_delete, null);
 		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
 
@@ -512,7 +506,7 @@ public class Main extends BaseActivity {
 						color(R.color.gray2)
 				};
 
-				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
+				/*v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
 					switch (index) {
 						case 0:
 							FileManager.deleteFolder(unipack.URL);
@@ -522,12 +516,12 @@ public class Main extends BaseActivity {
 							v1.toggleDetail(1);
 							break;
 					}
-				}).toggleDetail(2);
+				}).toggleDetail(2);*///TODO
 			}
 		});
 	}
 
-	void editUnipack(final PackView v, final Unipack unipack) {
+	void editUnipack(final PackViewSimple v, final Unipack unipack) {
 
 		final RelativeLayout RL_delete = (RelativeLayout) View.inflate(Main.this, R.layout.extend_automapping, null);
 		((TextView) RL_delete.findViewById(R.id.path)).setText(unipack.URL);
@@ -551,7 +545,7 @@ public class Main extends BaseActivity {
 						color(R.color.gray2)
 				};
 
-				v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
+				/*v.setExtendView(RL_delete, height, btnTitles, btnColors, (v1, index) -> {
 					switch (index) {
 						case 0:
 							autoMapping(v1, unipack);
@@ -560,13 +554,13 @@ public class Main extends BaseActivity {
 							v1.toggleDetail(1);
 							break;
 					}
-				}).toggleDetail(2);
+				}).toggleDetail(2);*///TODO
 			}
 		});
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void autoMapping(final PackView v, Unipack uni) {
+	void autoMapping(final PackViewSimple v, Unipack uni) {
 		final Unipack unipack = new Unipack(uni.URL, true);
 
 
@@ -708,7 +702,7 @@ public class Main extends BaseActivity {
 						new AlertDialog.Builder(Main.this)
 								.setTitle(lang(R.string.success))
 								.setMessage(lang(R.string.remapDone))
-								.setPositiveButton(lang(R.string.accept), (dialogInterface, i) -> v.toggleDetail(0))
+								.setPositiveButton(lang(R.string.accept), null)//(dialogInterface, i) -> v.toggleDetail(0)//TODO
 								.show();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -806,27 +800,14 @@ public class Main extends BaseActivity {
 			int i = 0;
 			for (Pack pack : P_packs) {
 				if (pack.url.equals(url)) {
-					pack.packView.togglePlay(color(R.color.red), pack.flagColors);
+					pack.packViewSimple.togglePlay(color(R.color.red), pack.flagColors);
 					playIndex = i;
 				} else
-					pack.packView.togglePlay(false, color(R.color.red), pack.flagColors);
+					pack.packViewSimple.togglePlay(false, color(R.color.red), pack.flagColors);
 
 				i++;
 			}
 			showSelectLPUI();
-		} catch (ConcurrentModificationException e) {
-			e.printStackTrace();
-		}
-	}
-
-	void toggleDetail(String url) {
-		try {
-			for (Pack pack : P_packs) {
-				if (pack.url.equals(url))
-					pack.packView.toggleDetail();
-				else
-					pack.packView.toggleDetail(0);
-			}
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
 		}
@@ -861,18 +842,18 @@ public class Main extends BaseActivity {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
 								togglePlay(playIndex - 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packView.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packView.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
 								togglePlay(playIndex + 1);
-								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packView.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packView.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, P_packs.get(playIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_packs.get(playIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
 							if (haveNow())
-								P_packs.get(playIndex).packView.onPlayClick();
+								P_packs.get(playIndex).packViewSimple.onPlayClick();
 						}
 					}
 
@@ -977,9 +958,8 @@ public class Main extends BaseActivity {
 			if (P_packs != null) {
 				boolean clear = true;
 				for (Pack pack : P_packs) {
-					if (pack.packView.isPlay() || pack.packView.isDetail()) {
+					if (pack.packViewSimple.isPlay()) {
 						togglePlay(null);
-						toggleDetail(null);
 
 						clear = false;
 						break;
@@ -1037,13 +1017,13 @@ public class Main extends BaseActivity {
 	}
 
 	class Pack {
-		PackView packView;
+		PackViewSimple packViewSimple;
 		int flagColors;
 		String url;
 		Unipack unipack;
 
-		public Pack(PackView packView, int flagColors, String url, Unipack unipack) {
-			this.packView = packView;
+		public Pack(PackViewSimple packViewSimple, int flagColors, String url, Unipack unipack) {
+			this.packViewSimple = packViewSimple;
 			this.flagColors = flagColors;
 			this.url = url;
 			this.unipack = unipack;
