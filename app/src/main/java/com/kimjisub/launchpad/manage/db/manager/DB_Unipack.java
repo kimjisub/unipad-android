@@ -74,7 +74,7 @@ public class DB_Unipack extends SQLiteOpenHelper {
 	}
 
 	@SuppressLint("SimpleDateFormat")
-	public void update(String path, UnipackVO data){
+	public void update(String path, UnipackVO data) {
 		ContentValues values = new ContentValues();
 		//values.put(KEY_ID, data.id);
 		values.put(KEY_PATH, data.path);
@@ -83,7 +83,7 @@ public class DB_Unipack extends SQLiteOpenHelper {
 		values.put(KEY_PIN, data.pin);
 		values.put(KEY_CREATEDAT, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(data.created_at));
 
-		db.update(TABLE_NAME, values,"path=?", new String[]{path});
+		db.update(TABLE_NAME, values, KEY_PATH + "=?", new String[]{path});
 	}
 
 	public UnipackVO getOrCreateByPath(String path) {
@@ -97,7 +97,7 @@ public class DB_Unipack extends SQLiteOpenHelper {
 	}
 
 	public UnipackVO getByPath(String path) {
-		String sql = "SELECT * FROM " + TABLE_NAME + " WHERE path = ?";
+		String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + KEY_PATH + " = ?";
 		Cursor cursor = db.rawQuery(sql, new String[]{path});
 
 		UnipackVO data = null;
