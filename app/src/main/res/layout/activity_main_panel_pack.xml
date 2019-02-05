@@ -24,6 +24,7 @@
 					android:id="@+id/panel_pack_star"
 					android:layout_width="25dp"
 					android:layout_height="25dp"
+					android:visibility="gone"
 					app:srcCompat="@drawable/ic_star_border_24dp"/>
 
 				<ImageView
