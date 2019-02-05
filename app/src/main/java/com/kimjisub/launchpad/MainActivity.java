@@ -330,7 +330,7 @@ public class MainActivity extends BaseActivity {
 				unipackVO.pin = !unipackVO.pin;
 				DB_unipack.update(item.path, unipackVO);
 
-				updatePanelPackOption(item);
+				updatePanelPackOption();
 			}
 		});
 		IV_panel_pack_bookmark.setOnClickListener(v -> {
@@ -341,7 +341,7 @@ public class MainActivity extends BaseActivity {
 				unipackVO.bookmark = !unipackVO.bookmark;
 				DB_unipack.update(item.path, unipackVO);
 
-				updatePanelPackOption(item);
+				updatePanelPackOption();
 			}
 		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
@@ -413,7 +413,8 @@ public class MainActivity extends BaseActivity {
 		LL_list.removeAllViews();
 		P_list.clear();
 
-		initPanelMain();
+		togglePlay(null);
+		updatePanel();
 
 		new Thread(() -> {
 			try {
@@ -830,36 +831,7 @@ public class MainActivity extends BaseActivity {
 			}
 			showSelectLPUI();
 
-			int playIndex = getPlayIndex();
-			Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
-			animation.setAnimationListener(new Animation.AnimationListener() {
-				@Override
-				public void onAnimationStart(Animation animation) {
-					RL_panel_pack.setVisibility(View.VISIBLE);
-					RL_panel_pack.setAlpha(1);
-				}
-
-				@Override
-				public void onAnimationEnd(Animation animation) {
-					RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-					RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
-				}
-
-				@Override
-				public void onAnimationRepeat(Animation animation) {
-
-				}
-			});
-
-			if (playIndex != -1)
-				updatePanelPack(P_list.get(playIndex));
-
-			int visibility = RL_panel_pack.getVisibility();
-			if ((visibility == View.VISIBLE && playIndex == -1)
-					|| (visibility == View.INVISIBLE && playIndex != -1)) {
-				RL_panel_pack.startAnimation(animation);
-			}
-
+			updatePanel();
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -883,16 +855,52 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= panel
 
+	void updatePanel() {
+		Log.test("updatePanel");
+		int playIndex = getPlayIndex();
+		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+		animation.setAnimationListener(new Animation.AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {
+				RL_panel_pack.setVisibility(View.VISIBLE);
+				RL_panel_pack.setAlpha(1);
+			}
 
-	void initPanelMain() {
-		togglePlay(null);
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+
+			}
+		});
+
+		if (playIndex == -1)
+			updatePanelMain();
+		else
+			updatePanelPack();
+
+		int visibility = RL_panel_pack.getVisibility();
+		if ((visibility == View.VISIBLE && playIndex == -1)
+				|| (visibility == View.INVISIBLE && playIndex != -1))
+			RL_panel_pack.startAnimation(animation);
+	}
+
+	void updatePanelMain() {
+		Log.test("main");
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
-		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
+		if (TV_panel_total_unipackCapacity.getText().toString().length() == 0)
+			TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 	}
 
-	void updatePanelPack(PackItem item) {
+	void updatePanelPack() {
+		Log.test("pack");
+		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -938,7 +946,8 @@ public class MainActivity extends BaseActivity {
 		}).start();
 	}
 
-	void updatePanelPackOption(PackItem item) {
+	void updatePanelPackOption() {
+		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -1127,7 +1136,7 @@ public class MainActivity extends BaseActivity {
 		else {
 			setDriver();
 			checkThings();
-			initPanelMain();
+			updatePanel();
 		}
 	}
 
