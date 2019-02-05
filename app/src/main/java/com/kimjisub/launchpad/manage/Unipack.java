@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class Unipack {
 	public String URL;
 
+	public boolean loadDetail;
 	public String ErrorDetail = null;
 	public boolean CriticalError = false;
 
@@ -41,6 +42,7 @@ public class Unipack {
 	public Unipack(String url, boolean loadDetail) {
 
 		this.URL = url;
+		this.loadDetail = loadDetail;
 
 		try {
 			isInfo = (new File(URL + "/info")).isFile();
