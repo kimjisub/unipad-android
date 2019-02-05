@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
@@ -794,14 +795,22 @@ public class MainActivity extends BaseActivity {
 			});
 
 			if (playIndex != -1) {
-				PackItem packItem = P_list.get(playIndex);
-				TV_panel_pack_title.setText(packItem.unipack.title);
-				TV_panel_pack_subTitle.setText(packItem.unipack.producerName);
-				TV_panel_pack_path.setText(packItem.url);
-				TV_panel_pack_scale.setText(packItem.unipack.buttonX + " × " + packItem.unipack.buttonY);
-				TV_panel_pack_chainCount.setText(packItem.unipack.chain + "");
-				TV_panel_pack_fileSize.setText(FileManager.byteToMB(FileManager.getFolderSize(packItem.url)) + " MB");
-				IV_panel_pack_website.setVisibility(packItem.unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+				PackItem item = P_list.get(playIndex);
+				Toast.makeText(MainActivity.this, item.unipack.loadDetail +"", Toast.LENGTH_SHORT).show();
+				if (!item.unipack.loadDetail)
+					item.unipack = new Unipack(item.url, true);
+
+				Unipack unipack = item.unipack;
+
+				TV_panel_pack_title.setText(unipack.title);
+				TV_panel_pack_subTitle.setText(unipack.producerName);
+				TV_panel_pack_path.setText(item.url);
+				TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
+				TV_panel_pack_chainCount.setText(unipack.chain + "");
+				TV_panel_pack_fileSize.setText(FileManager.byteToMB(FileManager.getFolderSize(unipack.URL)) + " MB");
+				IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+
+				//Toast.makeText(MainActivity.this, unipack.led"", Toast.LENGTH_SHORT).show();
 			}
 
 			int visibility = RL_panel_pack.getVisibility();
