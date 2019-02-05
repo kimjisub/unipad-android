@@ -514,7 +514,7 @@ public class MainActivity extends BaseActivity {
 		final Unipack unipack = new Unipack(uni.path, true);
 
 
-		if (unipack.isAutoPlay && unipack.autoPlay != null) {
+		if (unipack.isAutoPlay && unipack.autoPlayTable != null) {
 			(new AsyncTask<String, String, String>() {
 
 				ProgressDialog progressDialog;
@@ -526,7 +526,7 @@ public class MainActivity extends BaseActivity {
 				@Override
 				protected void onPreExecute() {
 					autoplay1 = new ArrayList<>();
-					for (Unipack.AutoPlay e : unipack.autoPlay) {
+					for (Unipack.AutoPlay e : unipack.autoPlayTable) {
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
 								autoplay1.add(e);
@@ -585,8 +585,8 @@ public class MainActivity extends BaseActivity {
 						try {
 							switch (e.func) {
 								case Unipack.AutoPlay.ON:
-									int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).path);
+									int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
+									nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable[e.currChain][e.x][e.y].get(num).path);
 									autoplay3.add(e);
 									break;
 								case Unipack.AutoPlay.CHAIN:
@@ -608,7 +608,7 @@ public class MainActivity extends BaseActivity {
 					for (Unipack.AutoPlay e : autoplay3) {
 						switch (e.func) {
 							case Unipack.AutoPlay.ON:
-								//int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
+								//int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
 								stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
 								break;
 							case Unipack.AutoPlay.CHAIN:

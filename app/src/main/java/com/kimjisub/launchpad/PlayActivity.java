@@ -270,8 +270,8 @@ public class PlayActivity extends BaseActivity {
 					for (int i = 0; i < unipack.chain; i++)
 						for (int j = 0; j < unipack.buttonX; j++)
 							for (int k = 0; k < unipack.buttonY; k++)
-								if (unipack.sound[i][j][k] != null)
-									soundNum += unipack.sound[i][j][k].size();
+								if (unipack.soundTable[i][j][k] != null)
+									soundNum += unipack.soundTable[i][j][k].size();
 
 					soundPool = new SoundPool(soundNum, AudioManager.STREAM_MUSIC, 0);
 					stopID = new int[unipack.chain][unipack.buttonX][unipack.buttonY];
@@ -290,10 +290,10 @@ public class PlayActivity extends BaseActivity {
 						for (int i = 0; i < unipack.chain; i++) {
 							for (int j = 0; j < unipack.buttonX; j++) {
 								for (int k = 0; k < unipack.buttonY; k++) {
-									ArrayList arrayList = unipack.sound[i][j][k];
+									ArrayList arrayList = unipack.soundTable[i][j][k];
 									if (arrayList != null) {
 										for (int l = 0; l < arrayList.size(); l++) {
-											Unipack.Sound e = unipack.sound[i][j][k].get(l);
+											Unipack.Sound e = unipack.soundTable[i][j][k].get(l);
 											e.id = soundPool.load(e.path, 1);
 											publishProgress();
 										}
@@ -827,8 +827,8 @@ public class PlayActivity extends BaseActivity {
 					int currChain = autoPlay.currChain;
 					int x_ = autoPlay.x;
 					int y_ = autoPlay.y;
-					//int c = autoPlay.c;
-					//int d = autoPlay.d;
+					//int c = autoPlayTable.c;
+					//int d = autoPlayTable.d;
 
 					if (func == Unipack.AutoPlay.ON && x == x_ && y == y_ && currChain == chain) {
 						autoPlayTask.achieve++;
@@ -1410,12 +1410,12 @@ public class PlayActivity extends BaseActivity {
 			for (int i = 0; i < unipack.chain; i++) {
 				for (int j = 0; j < unipack.buttonX; j++) {
 					for (int k = 0; k < unipack.buttonY; k++) {
-						ArrayList arrayList = unipack.sound[i][j][k];
+						ArrayList arrayList = unipack.soundTable[i][j][k];
 						if (arrayList != null) {
 							for (int l = 0; l < arrayList.size(); l++) {
-								if (unipack.sound[i][j][k].get(l) != null) {
+								if (unipack.soundTable[i][j][k].get(l) != null) {
 									try {
-										soundPool.unload(unipack.sound[i][j][k].get(l).id);
+										soundPool.unload(unipack.soundTable[i][j][k].get(l).id);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -1745,7 +1745,7 @@ public class PlayActivity extends BaseActivity {
 			super.onPreExecute();
 			if (unipack.squareButton)
 				LL_autoPlayControlView.setVisibility(View.VISIBLE);
-			PB_autoPlayProgressBar.setMax(unipack.autoPlay.size());
+			PB_autoPlayProgressBar.setMax(unipack.autoPlayTable.size());
 			PB_autoPlayProgressBar.setProgress(0);
 			autoPlay_play();
 		}
@@ -1757,7 +1757,7 @@ public class PlayActivity extends BaseActivity {
 			long startTime = System.currentTimeMillis();
 
 
-			while (progress < unipack.autoPlay.size() && loop) {
+			while (progress < unipack.autoPlayTable.size() && loop) {
 				long currTime = System.currentTimeMillis();
 
 				if (isPlaying) {
@@ -1768,7 +1768,7 @@ public class PlayActivity extends BaseActivity {
 					}
 
 					if (delay <= currTime - startTime) {
-						Unipack.AutoPlay e = unipack.autoPlay.get(progress);
+						Unipack.AutoPlay e = unipack.autoPlayTable.get(progress);
 
 
 						int func = e.func;
@@ -1870,8 +1870,8 @@ public class PlayActivity extends BaseActivity {
 				int addedDelay = 0;
 				boolean complete = false;
 
-				for (; progress < unipack.autoPlay.size() && (addedDelay <= 20 || !complete); progress++) {
-					Unipack.AutoPlay e = unipack.autoPlay.get(progress);
+				for (; progress < unipack.autoPlayTable.size() && (addedDelay <= 20 || !complete); progress++) {
+					Unipack.AutoPlay e = unipack.autoPlayTable.get(progress);
 
 					switch (e.func) {
 						case Unipack.AutoPlay.ON:
