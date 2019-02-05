@@ -260,7 +260,7 @@ public class FileManager {
 		return out;
 	}
 
-	public static String makeNextUrl(String path, String name, String extension) {
+	public static String makeNextPath(String path, String name, String extension) {
 		String ret;
 		String newName = convertFilename(name);
 		for (int i = 1; ; i++) {

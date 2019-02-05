@@ -52,7 +52,7 @@ public class SettingManager {
 	public static class IsUsingSDCard {
 		final static String TAG = "IsUsingSDCard";
 
-		private static String URL;
+		private static String path;
 
 		public static void save(Context context, boolean value) {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
@@ -65,22 +65,22 @@ public class SettingManager {
 			SharedPreferences pref = getDefaultSharedPreferences(context);
 			Boolean isSDCard = pref.getBoolean(TAG, false);
 
-			URL = Environment.getExternalStorageDirectory().getPath() + "/Unipad";
+			path = Environment.getExternalStorageDirectory().getPath() + "/Unipad";
 			if (isSDCard) {
 				if (FileManager.isSDCardAvalable())
-					URL = FileManager.getExternalSDCardPath() + "/Unipad";
+					path = FileManager.getExternalSDCardPath() + "/Unipad";
 				else {
 					save(context, false);
 					return load(context);
 				}
 			}
-			Log.log("UnipackRootURL : " + URL);
+			Log.log("UnipackRootPath : " + path);
 			return isSDCard;
 		}
 
-		public static String URL(Context context) {
+		public static String getPath(Context context) {
 			load(context);
-			return URL;
+			return path;
 		}
 	}
 

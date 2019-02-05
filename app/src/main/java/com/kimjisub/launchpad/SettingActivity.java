@@ -272,7 +272,7 @@ public class SettingActivity extends PreferenceActivity {
 	@Override
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(SettingActivity.this));
-		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.URL(SettingActivity.this));
+		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.getPath(SettingActivity.this));
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 
 		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;

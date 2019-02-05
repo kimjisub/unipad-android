@@ -100,7 +100,7 @@ public class MainActivity extends BaseActivity {
 	ImageView IV_panel_pack_func;
 	ImageView IV_panel_pack_delete;
 
-	String UnipackRootURL;
+	String UnipackRootPath;
 	int lastPlayIndex = -1;
 	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
@@ -167,7 +167,7 @@ public class MainActivity extends BaseActivity {
 
 
 		// var
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(MainActivity.this);
+		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(MainActivity.this);
 		if (onFirst) {
 			P_list = new ArrayList<>();
 		}
@@ -258,13 +258,13 @@ public class MainActivity extends BaseActivity {
 		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, SettingManager.FileExplorerPath.load(MainActivity.this))
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
-					public void onFileSelected(String fileURL) {
-						loadUnipack(fileURL);
+					public void onFileSelected(String filePath) {
+						loadUnipack(filePath);
 					}
 
 					@Override
-					public void onURLChanged(String folderURL) {
-						SettingManager.FileExplorerPath.save(MainActivity.this, folderURL);
+					public void onPathChanged(String folderPath) {
+						SettingManager.FileExplorerPath.save(MainActivity.this, folderPath);
 					}
 				})
 				.show());
@@ -372,7 +372,7 @@ public class MainActivity extends BaseActivity {
 
 		new Thread(() -> {
 			try {
-				File projectFolder = new File(UnipackRootURL);
+				File projectFolder = new File(UnipackRootPath);
 
 				if (projectFolder.isDirectory()) {
 
@@ -381,8 +381,8 @@ public class MainActivity extends BaseActivity {
 					for (File project : projectFiles) {
 						if (!project.isDirectory()) continue;
 
-						final String url = UnipackRootURL + "/" + project.getName();
-						final Unipack unipack = new Unipack(url, false);
+						final String path = UnipackRootPath + "/" + project.getName();
+						final Unipack unipack = new Unipack(path, false);
 						int flagColor;
 						String title = unipack.title;
 						String producerName = unipack.producerName;
@@ -392,7 +392,7 @@ public class MainActivity extends BaseActivity {
 						} else if (unipack.CriticalError) {
 							flagColor = color(R.color.red);
 							title = lang(R.string.errOccur);
-							producerName = unipack.URL;
+							producerName = unipack.path;
 						} else {
 							flagColor = color(R.color.orange);
 						}
@@ -406,7 +406,7 @@ public class MainActivity extends BaseActivity {
 								.setOnEventListener(new PackViewSimple.OnEventListener() {
 									@Override
 									public void onViewClick(PackViewSimple v) {
-										togglePlay(url);
+										togglePlay(path);
 									}
 
 									@Override
@@ -419,12 +419,12 @@ public class MainActivity extends BaseActivity {
 										LaunchpadActivity.removeDriverListener(MainActivity.this);
 
 										Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-										intent.putExtra("URL", url);
+										intent.putExtra("getPath", path);
 										startActivity(intent);
 									}
 								});
 
-						PackItem packItem = new PackItem(packViewSimple, flagColor, url, unipack);
+						PackItem packItem = new PackItem(packViewSimple, flagColor, path, unipack);
 						P_list.add(packItem);
 						try {
 							Thread.sleep(10);
@@ -456,7 +456,7 @@ public class MainActivity extends BaseActivity {
 					runOnUiThread(this::addErrorItem);
 				}
 
-				File nomedia = new File(UnipackRootURL + "/.nomedia");
+				File nomedia = new File(UnipackRootPath + "/.nomedia");
 				if (!nomedia.isFile()) {
 					try {
 						(new FileWriter(nomedia)).close();
@@ -503,13 +503,13 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= UniPack Work
 
 	void deleteUnipack(final Unipack unipack) {
-		FileManager.deleteFolder(unipack.URL);
+		FileManager.deleteFolder(unipack.path);
 		update();
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	void autoMapping(Unipack uni) {
-		final Unipack unipack = new Unipack(uni.URL, true);
+		final Unipack unipack = new Unipack(uni.path, true);
 
 
 		if (unipack.isAutoPlay && unipack.autoPlay != null) {
@@ -584,7 +584,7 @@ public class MainActivity extends BaseActivity {
 							switch (e.func) {
 								case Unipack.AutoPlay.ON:
 									int num = e.num % unipack.sound[e.currChain][e.x][e.y].size();
-									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).URL);
+									nextDuration = FileManager.wavDuration(mplayer, unipack.sound[e.currChain][e.x][e.y].get(num).path);
 									autoplay3.add(e);
 									break;
 								case Unipack.AutoPlay.CHAIN:
@@ -618,11 +618,11 @@ public class MainActivity extends BaseActivity {
 						}
 					}
 					try {
-						File filePre = new File(unipack.URL, "autoPlay");
-						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.URL, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+						File filePre = new File(unipack.path, "autoPlay");
+						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.path, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
 
-						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.URL + "/autoPlay")));
+						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.path + "/autoPlay")));
 						writer.write(stringBuilder.toString());
 						writer.close();
 					} catch (FileNotFoundException e) {
@@ -669,7 +669,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void loadUnipack(final String UnipackZipURL) {
+	void loadUnipack(final String UnipackZipPath) {
 
 		(new AsyncTask<String, String, String>() {
 
@@ -692,15 +692,15 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 
 
-				File file = new File(UnipackZipURL);
+				File file = new File(UnipackZipPath);
 				String name = file.getName();
 				String name_ = name.substring(0, name.lastIndexOf("."));
 
-				String UnipackURL = FileManager.makeNextUrl(UnipackRootURL, name_, "/");
+				String UnipackPath = FileManager.makeNextPath(UnipackRootPath, name_, "/");
 
 				try {
-					FileManager.unZipFile(UnipackZipURL, UnipackURL);
-					Unipack unipack = new Unipack(UnipackURL, true);
+					FileManager.unZipFile(UnipackZipPath, UnipackPath);
+					Unipack unipack = new Unipack(UnipackPath, true);
 
 					if (unipack.ErrorDetail == null) {
 						msg1 = lang(R.string.analyzeComplete);
@@ -708,7 +708,7 @@ public class MainActivity extends BaseActivity {
 					} else if (unipack.CriticalError) {
 						msg1 = lang(R.string.analyzeFailed);
 						msg2 = unipack.ErrorDetail;
-						FileManager.deleteFolder(UnipackURL);
+						FileManager.deleteFolder(UnipackPath);
 					} else {
 						msg1 = lang(R.string.warning);
 						msg2 = unipack.ErrorDetail;
@@ -717,7 +717,7 @@ public class MainActivity extends BaseActivity {
 				} catch (IOException e) {
 					msg1 = lang(R.string.analyzeFailed);
 					msg2 = e.toString();
-					FileManager.deleteFolder(UnipackURL);
+					FileManager.deleteFolder(UnipackPath);
 				}
 
 				return null;
@@ -742,27 +742,27 @@ public class MainActivity extends BaseActivity {
 	class PackItem {
 		PackViewSimple packViewSimple;
 		int flagColors;
-		String url;
+		String path;
 		Unipack unipack;
 
-		public PackItem(PackViewSimple packViewSimple, int flagColors, String url, Unipack unipack) {
+		public PackItem(PackViewSimple packViewSimple, int flagColors, String path, Unipack unipack) {
 			this.packViewSimple = packViewSimple;
 			this.flagColors = flagColors;
-			this.url = url;
+			this.path = path;
 			this.unipack = unipack;
 		}
 	}
 
 	void togglePlay(int i) {
-		togglePlay(P_list.get(i).url);
+		togglePlay(P_list.get(i).path);
 	}
 
 	@SuppressLint("SetTextI18n")
-	void togglePlay(String url) {
+	void togglePlay(String path) {
 		try {
 			int i = 0;
 			for (PackItem packItem : P_list) {
-				if (packItem.url.equals(url)) {
+				if (packItem.path.equals(path)) {
 					packItem.packViewSimple.togglePlay(color(R.color.red), packItem.flagColors);
 					lastPlayIndex = i;
 				} else
@@ -774,7 +774,6 @@ public class MainActivity extends BaseActivity {
 
 			int playIndex = getPlayIndex();
 			Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
-
 			animation.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
@@ -849,7 +848,7 @@ public class MainActivity extends BaseActivity {
 
 	void updatePanelInfo() {
 		updatePanelInfo_unipackCount(0);
-		updatePanelInfo_unipackCapacity(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootURL)) + " MB");
+		updatePanelInfo_unipackCapacity(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
 	}
 
 	void updatePanelInfo_unipackCount(int i) {

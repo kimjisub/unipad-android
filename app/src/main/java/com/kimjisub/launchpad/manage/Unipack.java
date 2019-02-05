@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class Unipack {
-	public String URL;
+	public String path;
 
 	public boolean loadDetail;
 	public String ErrorDetail = null;
@@ -39,17 +39,17 @@ public class Unipack {
 	public ArrayList<LED>[][][] led = null;
 	public ArrayList<AutoPlay> autoPlay = null;
 
-	public Unipack(String url, boolean loadDetail) {
+	public Unipack(String path, boolean loadDetail) {
 
-		this.URL = url;
+		this.path = path;
 		this.loadDetail = loadDetail;
 
 		try {
-			isInfo = (new File(URL + "/info")).isFile();
-			isSounds = (new File(URL + "/sounds")).isDirectory();
-			isKeySound = (new File(URL + "/keySound")).isFile();
-			isKeyLED = (new File(URL + "/keyLED")).isDirectory();
-			isAutoPlay = (new File(URL + "/autoPlay")).isFile();
+			isInfo = (new File(path + "/info")).isFile();
+			isSounds = (new File(path + "/sounds")).isDirectory();
+			isKeySound = (new File(path + "/keySound")).isFile();
+			isKeyLED = (new File(path + "/keyLED")).isDirectory();
+			isAutoPlay = (new File(path + "/autoPlay")).isFile();
 
 			if (!isInfo) addErr("info doesn't exist");
 			if (!isKeySound) addErr("keySound doesn't exist");
@@ -59,7 +59,7 @@ public class Unipack {
 			else {
 
 				if (isInfo) {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(URL + "/info")));
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/info")));
 					String s;
 					while ((s = reader.readLine()) != null) {
 
@@ -123,7 +123,7 @@ public class Unipack {
 				if (loadDetail) {
 					if (isKeySound) {
 						sound = new ArrayList[chain][buttonX][buttonY];
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(URL + "/keySound")));
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/keySound")));
 						String s;
 						while ((s = reader.readLine()) != null) {
 							String[] split = s.split(" ");
@@ -165,9 +165,9 @@ public class Unipack {
 								addErr("keySound : [" + s + "]" + " y is incorrect");
 							else {
 
-								Sound tmp = new Sound(URL + "/sounds/" + soundURL, loop, wormhole);
+								Sound tmp = new Sound(path + "/sounds/" + soundURL, loop, wormhole);
 
-								if (!new File(tmp.URL).isFile()) {
+								if (!new File(tmp.path).isFile()) {
 									addErr("keySound : [" + s + "]" + " sound was not found");
 									continue;
 								}
@@ -185,7 +185,7 @@ public class Unipack {
 
 					if (isKeyLED) {
 						led = new ArrayList[chain][buttonX][buttonY];
-						File[] fileList = FileManager.sortByName(new File(URL + "/keyLED").listFiles());
+						File[] fileList = FileManager.sortByName(new File(path + "/keyLED").listFiles());
 						for (File file : fileList) {
 							if (file.isFile()) {
 								String fileName = file.getName();
@@ -558,7 +558,7 @@ public class Unipack {
 	// =============================================================================================
 
 	String getMainAutoplay() {
-		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
+		File[] fileList = FileManager.sortByName(new File(path).listFiles());
 		for (File f : fileList) {
 			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
 				return f.getPath();
@@ -567,7 +567,7 @@ public class Unipack {
 	}
 
 	public String[] getAutoplays() {
-		File[] fileList = FileManager.sortByName(new File(URL).listFiles());
+		File[] fileList = FileManager.sortByName(new File(path).listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
 			if (f.isFile() && (f.getName().toLowerCase().startsWith("autoplay") || f.getName().toLowerCase().startsWith("_autoplay")))
@@ -591,11 +591,11 @@ public class Unipack {
 				BaseActivity.lang(context, R.string.producerName) + " : " + this.producerName + "\n" +
 				BaseActivity.lang(context, R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
 				BaseActivity.lang(context, R.string.chainCount) + " : " + this.chain + "\n" +
-				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(URL)) + " MB";
+				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(path)) + " MB";
 	}
 
 	public static class Sound {
-		public String URL = null;
+		public String path = null;
 		public int loop = -1;
 		public int wormhole = -1;
 
@@ -603,13 +603,13 @@ public class Unipack {
 		public int id = -1;
 
 
-		Sound(String URL, int loop) {
-			this.URL = URL;
+		Sound(String path, int loop) {
+			this.path = path;
 			this.loop = loop;
 		}
 
-		Sound(String URL, int loop, int wormhole) {
-			this.URL = URL;
+		Sound(String path, int loop, int wormhole) {
+			this.path = path;
 			this.loop = loop;
 			this.wormhole = wormhole;
 		}
