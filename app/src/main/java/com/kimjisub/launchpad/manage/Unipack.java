@@ -35,9 +35,9 @@ public class Unipack {
 
 	// =============================================================================================
 
-	public ArrayList<Sound>[][][] sound = null;
-	public ArrayList<LED>[][][] led = null;
-	public ArrayList<AutoPlay> autoPlay = null;
+	public ArrayList<Sound>[][][] soundTable = null;
+	public ArrayList<LED>[][][] ledTable = null;
+	public ArrayList<AutoPlay> autoPlayTable = null;
 
 	public Unipack(String path, boolean loadDetail) {
 
@@ -122,7 +122,7 @@ public class Unipack {
 
 				if (loadDetail) {
 					if (isKeySound) {
-						sound = new ArrayList[chain][buttonX][buttonY];
+						soundTable = new ArrayList[chain][buttonX][buttonY];
 						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/keySound")));
 						String s;
 						while ((s = reader.readLine()) != null) {
@@ -172,10 +172,10 @@ public class Unipack {
 									continue;
 								}
 
-								if (sound[c][x][y] == null)
-									sound[c][x][y] = new ArrayList();
-								tmp.num = sound[c][x][y].size();
-								sound[c][x][y].add(tmp);
+								if (soundTable[c][x][y] == null)
+									soundTable[c][x][y] = new ArrayList();
+								tmp.num = soundTable[c][x][y].size();
+								soundTable[c][x][y].add(tmp);
 
 							}
 						}
@@ -184,7 +184,7 @@ public class Unipack {
 
 
 					if (isKeyLED) {
-						led = new ArrayList[chain][buttonX][buttonY];
+						ledTable = new ArrayList[chain][buttonX][buttonY];
 						File[] fileList = FileManager.sortByName(new File(path + "/keyLED").listFiles());
 						for (File file : fileList) {
 							if (file.isFile()) {
@@ -309,9 +309,9 @@ public class Unipack {
 											break;
 									}
 								}
-								if (led[c][x][y] == null)
-									led[c][x][y] = new ArrayList<>();
-								led[c][x][y].add(new LED(LEDs, loop, led[c][x][y].size()));
+								if (ledTable[c][x][y] == null)
+									ledTable[c][x][y] = new ArrayList<>();
+								ledTable[c][x][y].add(new LED(LEDs, loop, ledTable[c][x][y].size()));
 								reader.close();
 							} else
 								addErr("keyLED : " + file.getName() + " is not file");
@@ -319,7 +319,7 @@ public class Unipack {
 					}
 
 					if (isAutoPlay) {
-						autoPlay = new ArrayList<>();
+						autoPlayTable = new ArrayList<>();
 						int[][] map = new int[buttonX][buttonY];
 
 						int currChain = 0;
@@ -404,11 +404,11 @@ public class Unipack {
 							switch (option) {
 								case "on":
 								case "o":
-									autoPlay.add(new AutoPlay(x, y, currChain, map[x][y]));
+									autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
 									Sound sound = Sound_get(currChain, x, y, map[x][y]);
 									map[x][y]++;
 									if (sound.wormhole != -1) {
-										autoPlay.add(new AutoPlay(currChain = sound.wormhole));
+										autoPlayTable.add(new AutoPlay(currChain = sound.wormhole));
 										for (int i = 0; i < buttonX; i++)
 											for (int j = 0; j < buttonY; j++)
 												map[i][j] = 0;
@@ -416,24 +416,24 @@ public class Unipack {
 									break;
 								case "off":
 								case "f":
-									autoPlay.add(new AutoPlay(x, y, currChain));
+									autoPlayTable.add(new AutoPlay(x, y, currChain));
 									break;
 								case "touch":
 								case "t":
-									autoPlay.add(new AutoPlay(x, y, currChain, map[x][y]));
-									autoPlay.add(new AutoPlay(x, y, currChain));
+									autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
+									autoPlayTable.add(new AutoPlay(x, y, currChain));
 									map[x][y]++;
 									break;
 								case "chain":
 								case "c":
-									autoPlay.add(new AutoPlay(currChain = chain));
+									autoPlayTable.add(new AutoPlay(currChain = chain));
 									for (int i = 0; i < buttonX; i++)
 										for (int j = 0; j < buttonY; j++)
 											map[i][j] = 0;
 									break;
 								case "delay":
 								case "d":
-									autoPlay.add(new AutoPlay(delay, currChain));
+									autoPlayTable.add(new AutoPlay(delay, currChain));
 									break;
 							}
 						}
@@ -449,9 +449,9 @@ public class Unipack {
 	public void Sound_push(int c, int x, int y) {
 		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ")");
 		try {
-			Sound tmp = sound[c][x][y].get(0);
-			sound[c][x][y].remove(0);
-			sound[c][x][y].add(tmp);
+			Sound tmp = soundTable[c][x][y].get(0);
+			soundTable[c][x][y].remove(0);
+			soundTable[c][x][y].add(tmp);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
 			Log.err("Sound_push (" + c + ", " + x + ", " + y + ")");
@@ -462,8 +462,8 @@ public class Unipack {
 	public void Sound_push(int c, int x, int y, int num) {
 		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
 		try {
-			ArrayList<Sound> e = sound[c][x][y];
-			if (sound[c][x][y].get(0).num != num)
+			ArrayList<Sound> e = soundTable[c][x][y];
+			if (soundTable[c][x][y].get(0).num != num)
 				while (true) {
 					Sound tmp = e.get(0);
 					e.remove(0);
@@ -486,7 +486,7 @@ public class Unipack {
 	public Sound Sound_get(int c, int x, int y) {
 		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
 		try {
-			return sound[c][x][y].get(0);
+			return soundTable[c][x][y].get(0);
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
@@ -499,8 +499,8 @@ public class Unipack {
 	public Sound Sound_get(int c, int x, int y, int num) {
 		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
 		try {
-			ArrayList<Sound> e = sound[c][x][y];
-			return sound[c][x][y].get(num % e.size());
+			ArrayList<Sound> e = soundTable[c][x][y];
+			return soundTable[c][x][y].get(num % e.size());
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
@@ -513,9 +513,9 @@ public class Unipack {
 	public void LED_push(int c, int x, int y) {
 		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ")");
 		try {
-			LED e = led[c][x][y].get(0);
-			led[c][x][y].remove(0);
-			led[c][x][y].add(e);
+			LED e = ledTable[c][x][y].get(0);
+			ledTable[c][x][y].remove(0);
+			ledTable[c][x][y].add(e);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
 			Log.err("LED_push (" + c + ", " + x + ", " + y + ")");
@@ -526,7 +526,7 @@ public class Unipack {
 	public void LED_push(int c, int x, int y, int num) {
 		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
 		try {
-			ArrayList<LED> e = led[c][x][y];
+			ArrayList<LED> e = ledTable[c][x][y];
 			if (e.get(0).num != num)
 				while (true) {
 					LED tmp = e.get(0);
@@ -545,7 +545,7 @@ public class Unipack {
 	public LED LED_get(int c, int x, int y) {
 		//log("LED_get (" + c + ", " + buttonX + ", " + buttonY + ")");
 		try {
-			return led[c][x][y].get(0);
+			return ledTable[c][x][y].get(0);
 		} catch (NullPointerException ignored) {
 			return null;
 		} catch (IndexOutOfBoundsException ee) {
