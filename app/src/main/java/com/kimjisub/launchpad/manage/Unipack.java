@@ -35,6 +35,9 @@ public class Unipack {
 
 	// =============================================================================================
 
+	public int soundTableCount = 0;
+	public int ledTableCount = 0;
+
 	public ArrayList<Sound>[][][] soundTable = null;
 	public ArrayList<LED>[][][] ledTable = null;
 	public ArrayList<AutoPlay> autoPlayTable = null;
@@ -123,6 +126,7 @@ public class Unipack {
 				if (loadDetail) {
 					if (isKeySound) {
 						soundTable = new ArrayList[chain][buttonX][buttonY];
+						soundTableCount = 0;
 						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/keySound")));
 						String s;
 						while ((s = reader.readLine()) != null) {
@@ -176,6 +180,7 @@ public class Unipack {
 									soundTable[c][x][y] = new ArrayList();
 								tmp.num = soundTable[c][x][y].size();
 								soundTable[c][x][y].add(tmp);
+								soundTableCount++;
 
 							}
 						}
@@ -185,6 +190,7 @@ public class Unipack {
 
 					if (isKeyLED) {
 						ledTable = new ArrayList[chain][buttonX][buttonY];
+						ledTableCount = 0;
 						File[] fileList = FileManager.sortByName(new File(path + "/keyLED").listFiles());
 						for (File file : fileList) {
 							if (file.isFile()) {
@@ -312,6 +318,7 @@ public class Unipack {
 								if (ledTable[c][x][y] == null)
 									ledTable[c][x][y] = new ArrayList<>();
 								ledTable[c][x][y].add(new LED(LEDs, loop, ledTable[c][x][y].size()));
+								ledTableCount++;
 								reader.close();
 							} else
 								addErr("keyLED : " + file.getName() + " is not file");

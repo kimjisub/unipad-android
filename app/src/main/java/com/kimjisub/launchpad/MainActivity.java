@@ -829,6 +829,8 @@ public class MainActivity extends BaseActivity {
 						TV_panel_pack_path.setText(item.path);
 						TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
 						TV_panel_pack_chainCount.setText(unipack.chain + "");
+						TV_panel_pack_soundCount.setText(unipack.soundTableCount + "");
+						TV_panel_pack_ledCount.setText(unipack.ledTableCount + "");
 						IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 					});
 				}).start();
