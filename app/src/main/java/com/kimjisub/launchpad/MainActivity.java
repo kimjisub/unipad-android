@@ -400,11 +400,6 @@ public class MainActivity extends BaseActivity {
 								.setFlagColor(flagColor)
 								.setTitle(title)
 								.setSubTitle(producerName)
-								//.addInfo(lang(R.string.scale), unipack.buttonX + " x " + unipack.buttonY)
-								//.addInfo(lang(R.string.chainCount), unipack.chain + "")
-								//.addInfo(lang(R.string.capacity), FileManager.byteToMB(FileManager.getFolderSize(url)) + " MB")
-								//.addBtn(lang(R.string.delete), color(R.color.red))
-								//.addBtn(lang(R.string.edit), color(R.color.orange))//TODO
 								.setOption1(lang(R.string.LED_), unipack.isKeyLED)
 								.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
 								.setOnEventListener(new PackViewSimple.OnEventListener() {
@@ -426,26 +421,7 @@ public class MainActivity extends BaseActivity {
 										intent.putExtra("URL", url);
 										startActivity(intent);
 									}
-
-									/*@Override
-									public void onFunctionBtnClick(final PackViewSimple v, int index) {
-										switch (index) {
-											case 0:
-												deleteUnipack(v, unipack);
-												break;
-											case 1:
-												editUnipack(v, unipack);
-												break;
-											case 2:
-												startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(unipack.website)));
-												break;
-										}
-									}*///TODO
 								});
-
-
-						if (unipack.website != null)
-							;//packViewSimple.addBtn(lang(R.string.website), color(R.color.skyblue));//TODO
 
 						PackItem packItem = new PackItem(packViewSimple, flagColor, url, unipack);
 						P_list.add(packItem);
@@ -673,7 +649,7 @@ public class MainActivity extends BaseActivity {
 						new AlertDialog.Builder(MainActivity.this)
 								.setTitle(lang(R.string.success))
 								.setMessage(lang(R.string.remapDone))
-								.setPositiveButton(lang(R.string.accept), null)//(dialogInterface, i) -> v.toggleDetail(0)//TODO
+								.setPositiveButton(lang(R.string.accept), null)
 								.show();
 					} catch (Exception e) {
 						e.printStackTrace();
