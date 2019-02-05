@@ -26,7 +26,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionButton;
@@ -94,6 +93,8 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_pack_path;
 	TextView TV_panel_pack_scale;
 	TextView TV_panel_pack_chainCount;
+	TextView TV_panel_pack_soundCount;
+	TextView TV_panel_pack_ledCount;
 	TextView TV_panel_pack_fileSize;
 	ImageView IV_panel_pack_youtube;
 	ImageView IV_panel_pack_website;
@@ -139,6 +140,8 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
 		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
 		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
+		TV_panel_pack_soundCount =findViewById(R.id.panel_pack_soundCount);
+		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
 		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
 		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
 		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
@@ -302,8 +305,7 @@ public class MainActivity extends BaseActivity {
 			if (playIndex != -1) {
 				PackItem item = P_list.get(playIndex);
 				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
-				if (website != null)
-					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
 		IV_panel_pack_website.setOnClickListener(v -> {
@@ -795,21 +797,43 @@ public class MainActivity extends BaseActivity {
 
 			if (playIndex != -1) {
 				PackItem item = P_list.get(playIndex);
-				Toast.makeText(MainActivity.this, item.unipack.loadDetail +"", Toast.LENGTH_SHORT).show();
-				if (!item.unipack.loadDetail)
-					item.unipack = new Unipack(item.url, true);
 
+				PackViewSimple packViewSimple = item.packViewSimple;
 				Unipack unipack = item.unipack;
 
 				TV_panel_pack_title.setText(unipack.title);
 				TV_panel_pack_subTitle.setText(unipack.producerName);
-				TV_panel_pack_path.setText(item.url);
+				TV_panel_pack_path.setText(item.path);
 				TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
 				TV_panel_pack_chainCount.setText(unipack.chain + "");
-				TV_panel_pack_fileSize.setText(FileManager.byteToMB(FileManager.getFolderSize(unipack.URL)) + " MB");
+				TV_panel_pack_soundCount.setText(lang(R.string.measuring));
+				TV_panel_pack_ledCount.setText(lang(R.string.measuring));
+				TV_panel_pack_fileSize.setText(lang(R.string.measuring));
 				IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
-				//Toast.makeText(MainActivity.this, unipack.led"", Toast.LENGTH_SHORT).show();
+				new Thread(() -> {
+					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
+					runOnUiThread(() -> TV_panel_pack_fileSize.setText(fileSize));
+
+					item.unipack = new Unipack(item.path, true);
+
+					runOnUiThread(() -> {
+						packViewSimple
+								.setTitle(unipack.title)
+								.setSubTitle(unipack.producerName)
+								.setOption1(lang(R.string.LED_), unipack.isKeyLED)
+								.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay);
+
+						TV_panel_pack_title.setText(unipack.title);
+						TV_panel_pack_subTitle.setText(unipack.producerName);
+						TV_panel_pack_path.setText(item.path);
+						TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
+						TV_panel_pack_chainCount.setText(unipack.chain + "");
+						IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+					});
+				}).start();
+
+
 			}
 
 			int visibility = RL_panel_pack.getVisibility();
