@@ -42,7 +42,7 @@ public class FBStoreActivity extends BaseActivity {
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
 
-	String UnipackRootURL;
+	String UnipackRootPath;
 	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
@@ -58,7 +58,7 @@ public class FBStoreActivity extends BaseActivity {
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 
-		UnipackRootURL = SettingManager.IsUsingSDCard.URL(FBStoreActivity.this);
+		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(FBStoreActivity.this);
 	}
 
 	// =============================================================================================
@@ -82,7 +82,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		final String[] downloadedProjectList;
 
-		File folder = new File(UnipackRootURL);
+		File folder = new File(UnipackRootPath);
 
 		if (folder.isDirectory()) {
 			downloadedProjectList = new String[folder.listFiles().length];
@@ -314,8 +314,8 @@ public class FBStoreActivity extends BaseActivity {
 		int downloadCount = fbStore.downloadCount;
 		String URL = fbStore.URL;
 
-		String UnipackZipURL = FileManager.makeNextUrl(UnipackRootURL, code, ".zip");
-		String UnipackURL = UnipackRootURL + "/" + code + "/";
+		String UnipackZipPath = FileManager.makeNextPath(UnipackRootPath, code, ".zip");
+		String UnipackPath = UnipackRootPath + "/" + code + "/";
 
 
 		(new AsyncTask<String, Long, String>() {
@@ -345,7 +345,7 @@ public class FBStoreActivity extends BaseActivity {
 					fileSize = fileSize == -1 ? 104857600 : fileSize;
 
 					InputStream input = new BufferedInputStream(url.openStream());
-					OutputStream output = new FileOutputStream(UnipackZipURL);
+					OutputStream output = new FileOutputStream(UnipackZipPath);
 
 					byte data[] = new byte[1024];
 
@@ -369,21 +369,21 @@ public class FBStoreActivity extends BaseActivity {
 					publishProgress(1L);
 
 					try {
-						FileManager.unZipFile(UnipackZipURL, UnipackURL);
-						Unipack unipack = new Unipack(UnipackURL, true);
+						FileManager.unZipFile(UnipackZipPath, UnipackPath);
+						Unipack unipack = new Unipack(UnipackPath, true);
 						if (unipack.CriticalError) {
 							Log.err(unipack.ErrorDetail);
 							publishProgress(-1L);
-							FileManager.deleteFolder(UnipackURL);
+							FileManager.deleteFolder(UnipackPath);
 						} else
 							publishProgress(2L);
 
 					} catch (Exception e) {
 						publishProgress(-1L);
-						FileManager.deleteFolder(UnipackURL);
+						FileManager.deleteFolder(UnipackPath);
 						e.printStackTrace();
 					}
-					FileManager.deleteFolder(UnipackZipURL);
+					FileManager.deleteFolder(UnipackZipPath);
 
 
 				} catch (Exception e) {

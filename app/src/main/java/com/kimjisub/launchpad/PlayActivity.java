@@ -189,9 +189,9 @@ public class PlayActivity extends BaseActivity {
 		setContentView(R.layout.activity_play);
 		initVar();
 
-		String URL = getIntent().getStringExtra("URL");
-		log("[01] Start Load Unipack " + URL);
-		unipack = new Unipack(URL, true);
+		String path = getIntent().getStringExtra("getPath");
+		log("[01] Start Load Unipack " + path);
+		unipack = new Unipack(path, true);
 
 		try {
 			log("[02] Check ErrorDetail");
@@ -294,7 +294,7 @@ public class PlayActivity extends BaseActivity {
 									if (arrayList != null) {
 										for (int l = 0; l < arrayList.size(); l++) {
 											Unipack.Sound e = unipack.sound[i][j][k].get(l);
-											e.id = soundPool.load(e.URL, 1);
+											e.id = soundPool.load(e.path, 1);
 											publishProgress();
 										}
 									}
