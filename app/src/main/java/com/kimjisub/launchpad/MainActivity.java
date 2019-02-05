@@ -43,6 +43,7 @@ import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.launchpad.manage.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.manage.db.manager.DB_UnipackOpen;
+import com.kimjisub.launchpad.manage.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.manage.db.vo.UnipackVO;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackViewSimple;
@@ -106,6 +107,8 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_pack_soundCount;
 	TextView TV_panel_pack_ledCount;
 	TextView TV_panel_pack_fileSize;
+	TextView TV_panel_pack_openCount;
+	TextView TV_panel_pack_padTouchCount;
 	ImageView IV_panel_pack_youtube;
 	ImageView IV_panel_pack_website;
 	ImageView IV_panel_pack_func;
@@ -122,7 +125,7 @@ public class MainActivity extends BaseActivity {
 	void initVar(boolean onFirst) {
 		// DB
 		DB_unipack = new DB_Unipack(MainActivity.this);
-		//DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);TODO
+		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
 
 		// Intro
 		RL_intro = findViewById(R.id.intro);
@@ -147,7 +150,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
 		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
 		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
-		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padtouchCount);
+		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padTouchCount);
 		RL_panel_pack = findViewById(R.id.panel_pack);
 		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
 		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
@@ -160,6 +163,8 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_soundCount = findViewById(R.id.panel_pack_soundCount);
 		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
 		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
+		TV_panel_pack_openCount = findViewById(R.id.panel_pack_openCount);
+		TV_panel_pack_padTouchCount = findViewById(R.id.panel_pack_padTouchCount);
 		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
 		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
 		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
@@ -488,6 +493,8 @@ public class MainActivity extends BaseActivity {
 					public void onPlayClick(PackViewSimple v) {
 						rescanScale(LL_scale, LL_paddingScale);
 						LaunchpadActivity.removeDriverListener(MainActivity.this);
+
+						DB_unipackOpen.add(new UnipackOpenVO(path, new Date()));
 
 						Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 						intent.putExtra("getPath", path);
@@ -879,9 +886,9 @@ public class MainActivity extends BaseActivity {
 
 	void initPanelMain() {
 		togglePlay(null);
-		TV_panel_total_unipackCount.setText(lang(R.string.measuring));
+		TV_panel_total_unipackCount.setText(P_list.size() + "");
 		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
-		TV_panel_total_openCount.setText(lang(R.string.measuring));
+		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 	}
 
@@ -900,6 +907,8 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_soundCount.setText(lang(R.string.measuring));
 		TV_panel_pack_ledCount.setText(lang(R.string.measuring));
 		TV_panel_pack_fileSize.setText(lang(R.string.measuring));
+		TV_panel_pack_openCount.setText(DB_unipackOpen.getCountByPath(item.path) + "");
+		TV_panel_pack_padTouchCount.setText(lang(R.string.measuring));
 		IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
 		new Thread(() -> {
@@ -929,7 +938,7 @@ public class MainActivity extends BaseActivity {
 		}).start();
 	}
 
-	void updatePanelPackOption(PackItem item){
+	void updatePanelPackOption(PackItem item) {
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -1118,6 +1127,7 @@ public class MainActivity extends BaseActivity {
 		else {
 			setDriver();
 			checkThings();
+			initPanelMain();
 		}
 	}
 

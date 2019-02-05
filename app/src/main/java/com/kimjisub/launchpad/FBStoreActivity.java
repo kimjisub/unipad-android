@@ -53,7 +53,7 @@ public class FBStoreActivity extends BaseActivity {
 		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
 		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
 		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
-		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padtouchCount);
+		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padTouchCount);
 		RL_panel_pack = findViewById(R.id.panel_pack);
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
