@@ -28,6 +28,7 @@
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
 	<string name="website">웹사이트</string>
+	<string name="measuring">측정중…</string>
 
 	<!--Main-->
 	<string name="unipack_count">유니팩 개수</string>

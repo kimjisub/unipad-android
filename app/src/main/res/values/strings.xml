@@ -28,6 +28,7 @@
 	<string name="path">Path</string>
 	<string name="quit">Quit</string>
 	<string name="website">Website</string>
+	<string name="measuring">Measuring…</string>
 
 	<!--Main-->
 	<string name="unipack_count">Number of UniPacks</string>
@@ -83,9 +84,9 @@
 	<!--Unipack Info-->
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
-	<string name="scale">scale</string>
-	<string name="chainCount">Chain count</string>
-	<string name="fileSize">File size</string>
+	<string name="scale">Scale</string>
+	<string name="chainCount">Chain Count</string>
+	<string name="fileSize">File Size</string>
 
 	<!--Unipack Function-->
 	<string name="LED">LED</string>
