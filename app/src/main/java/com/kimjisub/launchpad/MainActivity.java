@@ -41,6 +41,9 @@ import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.launchpad.manage.db.manager.DB_Unipack;
+import com.kimjisub.launchpad.manage.db.manager.DB_UnipackOpen;
+import com.kimjisub.launchpad.manage.db.vo.UnipackVO;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
@@ -60,6 +63,10 @@ import java.util.List;
 import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
+
+	// DB
+	DB_Unipack DB_unipack;
+	DB_UnipackOpen DB_unipackOpen;
 
 	// Intro
 	BillingCertification billingCertification;
@@ -88,6 +95,9 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_total_openCount;
 	TextView TV_panel_total_padtouchCount;
 	RelativeLayout RL_panel_pack;
+	ImageView IV_panel_pack_star;
+	ImageView IV_panel_pack_bookmark;
+	ImageView IV_panel_pack_edit;
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
 	TextView TV_panel_pack_path;
@@ -110,6 +120,10 @@ public class MainActivity extends BaseActivity {
 	boolean updateComplete = true;
 
 	void initVar(boolean onFirst) {
+		// DB
+		DB_unipack = new DB_Unipack(MainActivity.this);
+		//DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);TODO
+
 		// Intro
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
@@ -135,6 +149,9 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
 		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padtouchCount);
 		RL_panel_pack = findViewById(R.id.panel_pack);
+		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
+		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
+		IV_panel_pack_edit = findViewById(R.id.panel_pack_edit);
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
@@ -300,6 +317,28 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
+		IV_panel_pack_star.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+				unipackVO.pin = !unipackVO.pin;
+				DB_unipack.update(item.path, unipackVO);
+
+				updatePanelPackOption(item);
+			}
+		});
+		IV_panel_pack_bookmark.setOnClickListener(v -> {
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+				unipackVO.bookmark = !unipackVO.bookmark;
+				DB_unipack.update(item.path, unipackVO);
+
+				updatePanelPackOption(item);
+			}
+		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
 			int playIndex = getPlayIndex();
 			if (playIndex != -1) {
@@ -368,9 +407,8 @@ public class MainActivity extends BaseActivity {
 
 		LL_list.removeAllViews();
 		P_list.clear();
-		togglePlay(null);
 
-		updatePanel();
+		initPanelMain();
 
 		new Thread(() -> {
 			try {
@@ -380,75 +418,8 @@ public class MainActivity extends BaseActivity {
 
 					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
 
-					for (File project : projectFiles) {
-						if (!project.isDirectory()) continue;
-
-						final String path = UnipackRootPath + "/" + project.getName();
-						final Unipack unipack = new Unipack(path, false);
-						int flagColor;
-						String title = unipack.title;
-						String producerName = unipack.producerName;
-
-						if (unipack.ErrorDetail == null) {
-							flagColor = color(R.color.skyblue);
-						} else if (unipack.CriticalError) {
-							flagColor = color(R.color.red);
-							title = lang(R.string.errOccur);
-							producerName = unipack.path;
-						} else {
-							flagColor = color(R.color.orange);
-						}
-
-						final PackViewSimple packViewSimple = new PackViewSimple(MainActivity.this)
-								.setFlagColor(flagColor)
-								.setTitle(title)
-								.setSubTitle(producerName)
-								.setOption1(lang(R.string.LED_), unipack.isKeyLED)
-								.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
-								.setOnEventListener(new PackViewSimple.OnEventListener() {
-									@Override
-									public void onViewClick(PackViewSimple v) {
-										togglePlay(path);
-									}
-
-									@Override
-									public void onViewLongClick(PackViewSimple v) {
-									}
-
-									@Override
-									public void onPlayClick(PackViewSimple v) {
-										rescanScale(LL_scale, LL_paddingScale);
-										LaunchpadActivity.removeDriverListener(MainActivity.this);
-
-										Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-										intent.putExtra("getPath", path);
-										startActivity(intent);
-									}
-								});
-
-						PackItem packItem = new PackItem(packViewSimple, flagColor, path, unipack);
-						P_list.add(packItem);
-						try {
-							Thread.sleep(10);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						runOnUiThread(() -> {
-							final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-							int left = dpToPx(16);
-							int top = 0;
-							int right = dpToPx(16);
-							int bottom = dpToPx(10);
-							lp.setMargins(left, top, right, bottom);
-							LL_list.addView(packItem.packViewSimple, lp);
-							Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-							a.setInterpolator(AnimationUtils.loadInterpolator(MainActivity.this, android.R.anim.accelerate_decelerate_interpolator));
-							packItem.packViewSimple.setAnimation(a);
-							updatePanelInfo_unipackCount(P_list.size());
-						});
-					}
-
-					//TODO 정렬
+					for (File project : projectFiles)
+						addItemByFile(project);
 
 					if (P_list.size() == 0)
 						runOnUiThread(this::addErrorItem);
@@ -471,6 +442,84 @@ public class MainActivity extends BaseActivity {
 				updateComplete = true;
 			}
 		}).start();
+	}
+
+	void addItemByFile(File file) {
+		if (!file.isDirectory()) return;
+
+		String path = UnipackRootPath + "/" + file.getName();
+		Unipack unipack = new Unipack(path, false);
+		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(path);
+		int flagColor;
+
+		String title = unipack.title;
+		String subTitle = unipack.producerName;
+
+		if (unipack.ErrorDetail == null)
+			flagColor = color(R.color.skyblue);
+		else if (unipack.CriticalError) {
+			flagColor = color(R.color.red);
+			title = lang(R.string.errOccur);
+			subTitle = unipack.path;
+		} else
+			flagColor = color(R.color.red);
+
+		if (unipackVO.bookmark)
+			flagColor = color(R.color.orange);
+
+
+		final PackViewSimple packViewSimple = new PackViewSimple(MainActivity.this)
+				.setFlagColor(flagColor)
+				.setTitle(title)
+				.setSubTitle(subTitle)
+				.setOption1(lang(R.string.LED_), unipack.isKeyLED)
+				.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
+				.setOnEventListener(new PackViewSimple.OnEventListener() {
+					@Override
+					public void onViewClick(PackViewSimple v) {
+						togglePlay(path);
+					}
+
+					@Override
+					public void onViewLongClick(PackViewSimple v) {
+					}
+
+					@Override
+					public void onPlayClick(PackViewSimple v) {
+						rescanScale(LL_scale, LL_paddingScale);
+						LaunchpadActivity.removeDriverListener(MainActivity.this);
+
+						Intent intent = new Intent(MainActivity.this, PlayActivity.class);
+						intent.putExtra("getPath", path);
+						startActivity(intent);
+					}
+				});
+
+		PackItem packItem = new PackItem(packViewSimple, unipack, path, flagColor);
+		P_list.add(packItem);
+
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+		int left = dpToPx(16);
+		int top = 0;
+		int right = dpToPx(16);
+		int bottom = dpToPx(10);
+		lp.setMargins(left, top, right, bottom);
+		runOnUiThread(() -> {
+			LL_list.addView(packItem.packViewSimple, lp);
+			Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
+			a.setInterpolator(AnimationUtils.loadInterpolator(MainActivity.this, android.R.anim.accelerate_decelerate_interpolator));
+			packItem.packViewSimple.setAnimation(a);
+			TV_panel_total_unipackCount.setText(P_list.size() + "");
+		});
+
+
+		//TODO 정렬
 	}
 
 	void addErrorItem() {
@@ -743,15 +792,15 @@ public class MainActivity extends BaseActivity {
 
 	class PackItem {
 		PackViewSimple packViewSimple;
-		int flagColors;
-		String path;
 		Unipack unipack;
+		String path;
+		int flagColors;
 
-		public PackItem(PackViewSimple packViewSimple, int flagColors, String path, Unipack unipack) {
+		public PackItem(PackViewSimple packViewSimple, Unipack unipack, String path, int flagColors) {
 			this.packViewSimple = packViewSimple;
-			this.flagColors = flagColors;
-			this.path = path;
 			this.unipack = unipack;
+			this.path = path;
+			this.flagColors = flagColors;
 		}
 	}
 
@@ -795,49 +844,8 @@ public class MainActivity extends BaseActivity {
 				}
 			});
 
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
-
-				PackViewSimple packViewSimple = item.packViewSimple;
-				Unipack unipack = item.unipack;
-
-				TV_panel_pack_title.setText(unipack.title);
-				TV_panel_pack_subTitle.setText(unipack.producerName);
-				TV_panel_pack_path.setText(item.path);
-				TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
-				TV_panel_pack_chainCount.setText(unipack.chain + "");
-				TV_panel_pack_soundCount.setText(lang(R.string.measuring));
-				TV_panel_pack_ledCount.setText(lang(R.string.measuring));
-				TV_panel_pack_fileSize.setText(lang(R.string.measuring));
-				IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
-
-				new Thread(() -> {
-					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
-					runOnUiThread(() -> TV_panel_pack_fileSize.setText(fileSize));
-
-					Unipack unipackDetail = new Unipack(item.path, true);
-					item.unipack = unipackDetail;
-
-					runOnUiThread(() -> {
-						packViewSimple
-								.setTitle(unipackDetail.title)
-								.setSubTitle(unipackDetail.producerName)
-								.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
-								.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
-
-						TV_panel_pack_title.setText(unipackDetail.title);
-						TV_panel_pack_subTitle.setText(unipackDetail.producerName);
-						TV_panel_pack_path.setText(item.path);
-						TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
-						TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
-						TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
-						TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
-						IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
-					});
-				}).start();
-
-
-			}
+			if (playIndex != -1)
+				updatePanelPack(P_list.get(playIndex));
 
 			int visibility = RL_panel_pack.getVisibility();
 			if ((visibility == View.VISIBLE && playIndex == -1)
@@ -868,35 +876,79 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= panel
 
-	void updatePanel() {
-		updatePanelInfo();
-		updatePanelStat();
+
+	void initPanelMain() {
+		togglePlay(null);
+		TV_panel_total_unipackCount.setText(lang(R.string.measuring));
+		TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
+		TV_panel_total_openCount.setText(lang(R.string.measuring));
+		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 	}
 
-	void updatePanelInfo() {
-		updatePanelInfo_unipackCount(0);
-		updatePanelInfo_unipackCapacity(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
+	void updatePanelPack(PackItem item) {
+		PackViewSimple packViewSimple = item.packViewSimple;
+		Unipack unipack = item.unipack;
+		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+
+		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
+		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
+		TV_panel_pack_title.setText(unipack.title);
+		TV_panel_pack_subTitle.setText(unipack.producerName);
+		TV_panel_pack_path.setText(item.path);
+		TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
+		TV_panel_pack_chainCount.setText(unipack.chain + "");
+		TV_panel_pack_soundCount.setText(lang(R.string.measuring));
+		TV_panel_pack_ledCount.setText(lang(R.string.measuring));
+		TV_panel_pack_fileSize.setText(lang(R.string.measuring));
+		IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+
+		new Thread(() -> {
+			String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
+			runOnUiThread(() -> TV_panel_pack_fileSize.setText(fileSize));
+
+			Unipack unipackDetail = new Unipack(item.path, true);
+			item.unipack = unipackDetail;
+
+			runOnUiThread(() -> {
+				packViewSimple
+						.setTitle(unipackDetail.title)
+						.setSubTitle(unipackDetail.producerName)
+						.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
+						.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
+
+				TV_panel_pack_title.setText(unipackDetail.title);
+				TV_panel_pack_subTitle.setText(unipackDetail.producerName);
+				TV_panel_pack_path.setText(item.path);
+				TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
+				TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
+				TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
+				TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+				IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
+
+			});
+		}).start();
 	}
 
-	void updatePanelInfo_unipackCount(int i) {
-		TV_panel_total_unipackCount.setText(i + "");
-	}
+	void updatePanelPackOption(PackItem item){
+		PackViewSimple packViewSimple = item.packViewSimple;
+		Unipack unipack = item.unipack;
+		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 
-	void updatePanelInfo_unipackCapacity(String msg) {
-		TV_panel_total_unipackCapacity.setText(msg);
-	}
+		int flagColor;
+		if (unipack.ErrorDetail == null)
+			flagColor = color(R.color.skyblue);
+		else if (unipack.CriticalError) {
+			flagColor = color(R.color.red);
+		} else
+			flagColor = color(R.color.red);
 
-	void updatePanelStat() {
-		updatePanelStat_openCount(0);
-		updatePanelStat_padTouchCount(0);
-	}
+		if (unipackVO.bookmark)
+			flagColor = color(R.color.orange);
 
-	void updatePanelStat_openCount(int i) {
-		TV_panel_total_openCount.setText(i + "");
-	}
+		item.flagColors = flagColor;
 
-	void updatePanelStat_padTouchCount(int i) {
-		TV_panel_total_padtouchCount.setText(i + "");
+		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
+		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
 	}
 
 	// ============================================================================================= Launchpad

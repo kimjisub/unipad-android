@@ -43,6 +43,10 @@ public class Log {
 		printLog("com.kimjisub._driver", msg);
 	}
 
+	public static void sqlite(String msg) {
+		printLog("com.kimjisub._sqlite", msg);
+	}
+
 	public static void driverCycle(String msg) {
 		printLog("com.kimjisub._cycle", msg);
 	}
