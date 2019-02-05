@@ -140,7 +140,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
 		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
 		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
-		TV_panel_pack_soundCount =findViewById(R.id.panel_pack_soundCount);
+		TV_panel_pack_soundCount = findViewById(R.id.panel_pack_soundCount);
 		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
 		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
 		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
@@ -815,23 +815,24 @@ public class MainActivity extends BaseActivity {
 					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
 					runOnUiThread(() -> TV_panel_pack_fileSize.setText(fileSize));
 
-					item.unipack = new Unipack(item.path, true);
+					Unipack unipackDetail = new Unipack(item.path, true);
+					item.unipack = unipackDetail;
 
 					runOnUiThread(() -> {
 						packViewSimple
-								.setTitle(unipack.title)
-								.setSubTitle(unipack.producerName)
-								.setOption1(lang(R.string.LED_), unipack.isKeyLED)
-								.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay);
+								.setTitle(unipackDetail.title)
+								.setSubTitle(unipackDetail.producerName)
+								.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
+								.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
 
-						TV_panel_pack_title.setText(unipack.title);
-						TV_panel_pack_subTitle.setText(unipack.producerName);
+						TV_panel_pack_title.setText(unipackDetail.title);
+						TV_panel_pack_subTitle.setText(unipackDetail.producerName);
 						TV_panel_pack_path.setText(item.path);
-						TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
-						TV_panel_pack_chainCount.setText(unipack.chain + "");
-						TV_panel_pack_soundCount.setText(unipack.soundTableCount + "");
-						TV_panel_pack_ledCount.setText(unipack.ledTableCount + "");
-						IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+						TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
+						TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
+						TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
+						TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+						IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
 					});
 				}).start();
 
