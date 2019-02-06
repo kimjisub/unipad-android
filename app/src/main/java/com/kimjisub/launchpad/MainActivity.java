@@ -344,6 +344,9 @@ public class MainActivity extends BaseActivity {
 				updatePanelPackOption();
 			}
 		});
+		IV_panel_pack_edit.setOnClickListener(v ->{
+
+		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
 			int playIndex = getPlayIndex();
 			if (playIndex != -1) {

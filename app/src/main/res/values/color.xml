@@ -27,6 +27,9 @@
 	<color name="red">#ff6b4e</color>
 	<color name="pink">#ffa5a5</color>
 
+	<!--ect-->
+	<color name="border_icon_on_background">#ccc</color>
+
 	<!--app color-->
 	<color name="app_orange">#ff8f00</color>
 	<color name="app_blue">#00b8d4</color>
