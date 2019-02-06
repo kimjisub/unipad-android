@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.manage;
 
 import android.annotation.SuppressLint;
 import android.media.MediaPlayer;
+import android.os.Environment;
 
 import net.sf.jazzlib.ZipEntry;
 import net.sf.jazzlib.ZipInputStream;
@@ -207,13 +208,8 @@ public class FileManager {
 		return files;
 	}
 
-
-	public static boolean isSDCardAvalable() {
-		String SDCard = getExternalSDCardPath();
-
-		if ((SDCard == null) || (SDCard.length() == 0))
-			return false;
-		return true;
+	public static String getInternalStoragePath(){
+		return Environment.getExternalStorageDirectory().getPath();
 	}
 
 	public static String getExternalSDCardPath() {
