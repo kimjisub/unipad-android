@@ -30,12 +30,13 @@
 				android:id="@+id/panel_pack_bookmark"
 				android:layout_width="40dp"
 				android:layout_height="40dp"
+				android:padding="4dp"
 				android:layout_toRightOf="@id/panel_pack_star"
 				android:background="@drawable/border_icon"
-				android:padding="4dp"
 				app:srcCompat="@drawable/ic_bookmark_border_24dp" />
 
 			<ImageView
+				android:visibility="gone"
 				android:id="@+id/panel_pack_edit"
 				android:layout_width="40dp"
 				android:layout_height="40dp"
@@ -215,6 +216,7 @@
 							android:id="@+id/panel_pack_youtube"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
+							android:padding="4dp"
 							android:background="@drawable/border_icon"
 							app:srcCompat="@drawable/ic_youtube_24dp" />
 
@@ -222,6 +224,7 @@
 							android:id="@+id/panel_pack_website"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
+							android:padding="4dp"
 							android:background="@drawable/border_icon"
 							app:srcCompat="@drawable/ic_web_24dp" />
 					</LinearLayout>
@@ -236,13 +239,15 @@
 							android:id="@+id/panel_pack_func"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
+							android:padding="4dp"
 							android:background="@drawable/border_icon"
-							app:srcCompat="@drawable/ic_functions_24dp" />
+							app:srcCompat="@drawable/ic_edit_24dp" />
 
 						<ImageView
 							android:id="@+id/panel_pack_delete"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
+							android:padding="4dp"
 							android:background="@drawable/border_icon"
 							app:srcCompat="@drawable/ic_delete_24dp" />
 					</LinearLayout>
