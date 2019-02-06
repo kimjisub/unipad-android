@@ -427,8 +427,14 @@ public class MainActivity extends BaseActivity {
 
 					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
 
-					for (File project : projectFiles)
+					for (File project : projectFiles) {
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 						addItemByFile(project);
+					}
 
 					if (P_list.size() == 0)
 						runOnUiThread(this::addErrorItem);
@@ -506,12 +512,6 @@ public class MainActivity extends BaseActivity {
 
 		PackItem packItem = new PackItem(packViewSimple, unipack, path, flagColor);
 		P_list.add(packItem);
-
-		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		int left = dpToPx(16);
