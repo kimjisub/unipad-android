@@ -464,14 +464,12 @@ public class MainActivity extends BaseActivity {
 		String title = unipack.title;
 		String subTitle = unipack.producerName;
 
-		if (unipack.ErrorDetail == null)
-			flagColor = color(R.color.skyblue);
-		else if (unipack.CriticalError) {
+		if (unipack.CriticalError) {
 			flagColor = color(R.color.red);
 			title = lang(R.string.errOccur);
 			subTitle = unipack.path;
 		} else
-			flagColor = color(R.color.red);
+			flagColor = color(R.color.skyblue);
 
 		if (unipackVO.bookmark)
 			flagColor = color(R.color.orange);
@@ -956,12 +954,10 @@ public class MainActivity extends BaseActivity {
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 
 		int flagColor;
-		if (unipack.ErrorDetail == null)
+		if (unipack.CriticalError)
+			flagColor = color(R.color.red);
+		else
 			flagColor = color(R.color.skyblue);
-		else if (unipack.CriticalError) {
-			flagColor = color(R.color.red);
-		} else
-			flagColor = color(R.color.red);
 
 		if (unipackVO.bookmark)
 			flagColor = color(R.color.orange);
