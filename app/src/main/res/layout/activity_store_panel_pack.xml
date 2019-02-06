@@ -7,7 +7,7 @@
 	<RelativeLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@drawable/border_settings">
+		android:background="@drawable/border_panel_pack">
 
 		<LinearLayout
 			android:layout_width="match_parent"
