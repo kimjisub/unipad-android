@@ -106,23 +106,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Process.killProcess(Process.myPid());
 	}
 
-	static void gotoMainAndUpdateList(Activity activity) {
-		boolean isMainOnline = false;
-		for (Activity a : activityList) {
-
-			if (a.getClass() != MainActivity.class) {
-				a.finish();
-				activityList.remove(a);
-			} else {
-				((MainActivity) a).update();
-				isMainOnline = true;
-			}
-		}
-		if (!isMainOnline)
-			activity.startActivity(new Intent(activity, MainActivity.class));
-
-	}
-
 	static void printActivityLog(String log) {
 		StringBuilder str = new StringBuilder("ACTIVITY STACK - " + log + "[");
 		int size = activityList.size();

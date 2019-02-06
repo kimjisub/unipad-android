@@ -138,7 +138,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 	void delayFinish() {
 		log("delayFinish()");
-		new Handler().postDelayed(() -> gotoMainAndUpdateList(this), 3000);
+		new Handler().postDelayed(() -> restartApp(this), 3000);
 	}
 
 	@Override
