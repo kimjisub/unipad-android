@@ -190,12 +190,10 @@ public class MainActivity extends BaseActivity {
 			});
 		}
 
-
 		// var
 		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(MainActivity.this);
-		if (onFirst) {
+		if (onFirst)
 			P_list = new ArrayList<>();
-		}
 	}
 
 	// =============================================================================================
@@ -254,8 +252,7 @@ public class MainActivity extends BaseActivity {
 				.setPermissionListener(new PermissionListener() {
 					@Override
 					public void onPermissionGranted() {
-
-
+						updatePanel(true);
 						new Handler().postDelayed(() -> {
 							RL_intro.setVisibility(View.GONE);
 							startMain();
@@ -895,12 +892,11 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
-		if (hardWork){
+		if (hardWork)
 			new Thread(() -> {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
 				runOnUiThread(() -> TV_panel_total_unipackCapacity.setText(fileSize));
-			}).start();
-		}
+			}).run();
 	}
 
 	void updatePanelPack(boolean hardWork) {

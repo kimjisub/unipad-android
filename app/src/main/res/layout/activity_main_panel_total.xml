@@ -93,7 +93,7 @@
 						android:id="@+id/panel_total_unipackCapacity"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:text="" />
+						android:text="0" />
 
 					<TextView
 						android:id="@+id/panel_total_openCount"
