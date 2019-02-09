@@ -1,9 +1,14 @@
 package com.kimjisub.launchpad.manage;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 
 import com.kimjisub.launchpad.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ThemePack {
 	public Context context;
@@ -140,5 +145,29 @@ public class ThemePack {
 		private int getColor(String id) throws Exception {
 			return res.getColor(res.getIdentifier(package_name + ":color/" + id, null, null));
 		}
+	}
+
+	public final static ArrayList<ThemePack> getThemePackList(Context context) {
+		ArrayList<ThemePack> ret = new ArrayList<>();
+
+		try {
+			ret.add(new ThemePack(context, context.getPackageName()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		List<ApplicationInfo> packages = context.getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
+		for (ApplicationInfo applicationInfo : packages) {
+			String packageName = applicationInfo.packageName;
+			if (packageName.startsWith("com.kimjisub.launchpad.theme.")) {
+				try {
+					ret.add(new ThemePack(context, packageName));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return ret;
 	}
 }
