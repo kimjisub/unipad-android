@@ -46,7 +46,7 @@ public class FBStoreActivity extends BaseActivity {
 	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
-	void initVar() {
+	void initVar(boolean onFirst) {
 		LL_list = findViewById(R.id.list);
 		RL_panel_total = findViewById(R.id.panel_total);
 		TV_panel_total_version = findViewById(R.id.panel_total_version);
@@ -58,7 +58,10 @@ public class FBStoreActivity extends BaseActivity {
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 
+		// var
 		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(FBStoreActivity.this);
+		if(onFirst)
+			P_list = new ArrayList<>();
 	}
 
 	// =============================================================================================
@@ -67,16 +70,18 @@ public class FBStoreActivity extends BaseActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_store);
-		initVar();
+		initVar(true);
 
 		update();
 		getStoreCount.run();
 	}
 
 	void update() {
-		P_list = new ArrayList<>();
 		LL_list.removeAllViews();
+		P_list.clear();
+
 		togglePlay(null);
+		updatePanel(true);
 
 		addErrorItem();
 
@@ -133,7 +138,7 @@ public class FBStoreActivity extends BaseActivity {
 								public void onPlayClick(PackViewSimple v) {
 									PackItem item = getPackItemByCode(d.code);
 									if (!item.isDownloaded && !item.isDownloading)
-										itemClicked(d.code);
+										startDownload(getPackItemByCode(d.code));
 								}
 							});
 
@@ -217,36 +222,7 @@ public class FBStoreActivity extends BaseActivity {
 					packViewSimple.togglePlay(false);
 			}
 
-			int playIndex = getPlayIndex();
-			Animation animation = AnimationUtils.loadAnimation(FBStoreActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
-
-			animation.setAnimationListener(new Animation.AnimationListener() {
-				@Override
-				public void onAnimationStart(Animation animation) {
-					RL_panel_pack.setVisibility(View.VISIBLE);
-					RL_panel_pack.setAlpha(1);
-				}
-
-				@Override
-				public void onAnimationEnd(Animation animation) {
-					RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-					RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
-				}
-
-				@Override
-				public void onAnimationRepeat(Animation animation) {
-
-				}
-			});
-
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
-				TV_panel_pack_title.setText(item.fbStore.title);
-				TV_panel_pack_subTitle.setText(item.fbStore.producerName);
-			}
-
-			if (!(RL_panel_pack.getVisibility() == View.VISIBLE && playIndex != -1))
-				RL_panel_pack.startAnimation(animation);
+			updatePanel(false);
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -278,18 +254,6 @@ public class FBStoreActivity extends BaseActivity {
 		return ret;
 	}
 
-	void itemClicked(String code) {
-		PackItem item = getPackItemByCode(code);
-		fbStore fbStore = item.fbStore;
-		PackViewSimple packViewSimple = item.packViewSimple;
-
-		packViewSimple.togglePlay(true);
-		packViewSimple.updateFlagColor(color(R.color.gray1));
-		packViewSimple.setPlayText("0%");
-
-		startDownload(item);
-	}
-
 	int getDownloadingCount() {
 		int count = 0;
 		for (PackItem item : P_list) {
@@ -302,7 +266,6 @@ public class FBStoreActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void startDownload(PackItem item) {
-
 		fbStore fbStore = item.fbStore;
 		PackViewSimple packViewSimple = item.packViewSimple;
 
@@ -317,6 +280,8 @@ public class FBStoreActivity extends BaseActivity {
 		String UnipackZipPath = FileManager.makeNextPath(UnipackRootPath, code, ".zip");
 		String UnipackPath = UnipackRootPath + "/" + code + "/";
 
+		packViewSimple.updateFlagColor(color(R.color.gray1));
+		packViewSimple.setPlayText("0%");
 
 		(new AsyncTask<String, Long, String>() {
 
@@ -420,6 +385,56 @@ public class FBStoreActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
+	// ============================================================================================= panel
+
+	void updatePanel(boolean hardWork) {
+		Log.test("updatePanel");
+		int playIndex = getPlayIndex();
+		Animation animation = AnimationUtils.loadAnimation(FBStoreActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+		animation.setAnimationListener(new Animation.AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {
+				RL_panel_pack.setVisibility(View.VISIBLE);
+				RL_panel_pack.setAlpha(1);
+			}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+
+			}
+		});
+
+		if (playIndex == -1)
+			updatePanelMain(hardWork);
+		else
+			updatePanelPack(hardWork);
+
+		int visibility = RL_panel_pack.getVisibility();
+		if ((visibility == View.VISIBLE && playIndex == -1)
+				|| (visibility == View.INVISIBLE && playIndex != -1))
+			RL_panel_pack.startAnimation(animation);
+	}
+
+	void updatePanelMain(boolean hardWork) {
+		Log.test("main");
+		TV_panel_total_unipackCount.setText(P_list.size() + "");
+	}
+
+	void updatePanelPack(boolean hardWork) {
+		Log.test("pack");
+		PackItem item = P_list.get(getPlayIndex());
+		PackViewSimple packViewSimple = item.packViewSimple;
+		fbStore fbStore = item.fbStore;
+		TV_panel_pack_title.setText(fbStore.title);
+		TV_panel_pack_subTitle.setText(fbStore.producerName);
+	}
+
 	// ============================================================================================= Activity
 
 	@Override
@@ -437,7 +452,7 @@ public class FBStoreActivity extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		initVar();
+		initVar(false);
 
 		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStoreActivity.this, data));
 	}
