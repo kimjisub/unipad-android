@@ -3,132 +3,88 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
 
-
 	<RelativeLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@drawable/border_panel_total">
+		android:background="@drawable/border_panel_total"
+		android:padding="16dp">
 
 		<LinearLayout
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
 			android:orientation="vertical">
 
-			<LinearLayout
+			<RelativeLayout
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:orientation="horizontal">
+				android:layout_gravity="center"
+				android:orientation="horizontal"
+				android:paddingTop="8dp">
 
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/app_name"
-					android:textSize="20dp" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text=" "
-					android:textSize="20dp" />
+				<ImageView
+					android:layout_width="130dp"
+					android:layout_height="50dp"
+					android:scaleType="centerInside"
+					android:src="@drawable/custom_logo" />
 
 				<TextView
 					android:id="@+id/panel_total_version"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
+					android:layout_width="130dp"
+					android:layout_height="50dp"
+					android:gravity="bottom|right"
+					android:paddingLeft="8dp"
 					android:text="0.0.0"
-					android:textSize="20dp" />
+					android:textSize="10dp" />
 
-			</LinearLayout>
-
-			<LinearLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/unipack_count" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text=" : " />
-
-				<TextView
-					android:id="@+id/panel_total_unipackCount"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="0.0.0" />
-
-			</LinearLayout>
+			</RelativeLayout>
 
 			<LinearLayout
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:orientation="horizontal">
+				android:layout_gravity="center"
+				android:orientation="horizontal"
+				android:paddingTop="64dp"
+				android:paddingBottom="64dp">
 
-				<TextView
+				<LinearLayout
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/unipack_capacity" />
+					android:gravity="right"
+					android:orientation="vertical">
 
-				<TextView
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/unipack_store_count" />
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/unipack_downloaded_count" />
+
+				</LinearLayout>
+
+				<LinearLayout
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text=" : " />
+					android:gravity="left"
+					android:orientation="vertical"
+					android:paddingLeft="32dp">
 
-				<TextView
-					android:id="@+id/panel_total_unipackCapacity"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="123" />
+					<TextView
+						android:id="@+id/panel_total_unipackStoreCount"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="0" />
 
-			</LinearLayout>
+					<TextView
+						android:id="@+id/panel_total_unipackDownloadedCount"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="0" />
 
-			<LinearLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/open_count" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text=" : " />
-
-				<TextView
-					android:id="@+id/panel_total_openCount"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="123" />
-
-			</LinearLayout>
-
-			<LinearLayout
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/padtouch_count" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text=" : " />
-
-				<TextView
-					android:id="@+id/panel_total_padTouchCount"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="123" />
+				</LinearLayout>
 
 			</LinearLayout>
 
