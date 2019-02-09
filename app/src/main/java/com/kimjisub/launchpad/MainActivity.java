@@ -893,10 +893,14 @@ public class MainActivity extends BaseActivity {
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
-		if (hardWork)
-			TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
+		if (hardWork){
+			new Thread(() -> {
+				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
+				runOnUiThread(() -> TV_panel_total_unipackCapacity.setText(fileSize));
+			}).start();
+		}
 	}
 
 	void updatePanelPack(boolean hardWork) {
