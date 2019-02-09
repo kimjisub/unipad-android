@@ -93,6 +93,7 @@
 					<LinearLayout
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
+						android:gravity="right"
 						android:orientation="vertical">
 
 
@@ -141,7 +142,8 @@
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:orientation="vertical"
-						android:paddingLeft="64dp">
+						android:gravity="left"
+						android:paddingLeft="32dp">
 
 						<TextView
 							android:id="@+id/panel_pack_scale"
