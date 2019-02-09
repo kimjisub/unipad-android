@@ -51,6 +51,7 @@
 				<LinearLayout
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:gravity="right"
 					android:orientation="vertical">
 
 					<TextView
@@ -78,6 +79,7 @@
 				<LinearLayout
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:gravity="left"
 					android:paddingLeft="32dp"
 					android:orientation="vertical">
 
