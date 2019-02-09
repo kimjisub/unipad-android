@@ -60,7 +60,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		// var
 		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(FBStoreActivity.this);
-		if(onFirst)
+		if (onFirst)
 			P_list = new ArrayList<>();
 	}
 
@@ -118,12 +118,13 @@ public class FBStoreActivity extends BaseActivity {
 					final boolean isDownloaded = _isDownloaded;
 
 					final PackViewSimple packViewSimple = new PackViewSimple(FBStoreActivity.this)
-							.setFlagColor(isDownloaded ? color(R.color.green) : color(R.color.red))
+							.setFlagColor(color(isDownloaded ? R.color.green : R.color.red))
 							.setTitle(d.title)
 							.setSubTitle(d.producerName)
 							.setOption1(lang(R.string.LED_), d.isLED)
 							.setOption2(lang(R.string.autoPlay_), d.isAutoPlay)
 							.setPlayImageShow(false)
+							.setPlayText(lang(isDownloaded ? R.string.downloaded : R.string.download))
 							.setOnEventListener(new PackViewSimple.OnEventListener() {
 								@Override
 								public void onViewClick(PackViewSimple v) {
@@ -160,16 +161,15 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			public void onChange(final fbStore d) {
 				try {
-					for (PackItem item : P_list) {
-						fbStore fbStore = item.fbStore;
-						PackViewSimple packViewSimple = item.packViewSimple;
+					PackItem item = getPackItemByCode(d.code);
+					fbStore fbStore = item.fbStore;
+					PackViewSimple packViewSimple = item.packViewSimple;
 
-						if (fbStore.code.equals(d.code)) {
-							packViewSimple.setTitle(d.title)
-									.setSubTitle(d.producerName)
-									.setOption1(lang(R.string.LED_), d.isLED)
-									.setOption2(lang(R.string.autoPlay_), d.isAutoPlay);
-						}
+					if (fbStore.code.equals(d.code)) {
+						packViewSimple.setTitle(d.title)
+								.setSubTitle(d.producerName)
+								.setOption1(lang(R.string.LED_), d.isLED)
+								.setOption2(lang(R.string.autoPlay_), d.isAutoPlay);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -372,9 +372,8 @@ public class FBStoreActivity extends BaseActivity {
 					packViewSimple.setPlayText(lang(R.string.failed));
 					packViewSimple.updateFlagColor(color(R.color.red));
 				} else if (progress[0] == 2) {//완료
-					packViewSimple.setPlayText("");
+					packViewSimple.setPlayText(lang(R.string.downloaded));
 					packViewSimple.updateFlagColor(color(R.color.green));
-					packViewSimple.togglePlay(false);
 				}
 			}
 
