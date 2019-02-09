@@ -35,8 +35,8 @@ public class Unipack {
 
 	// =============================================================================================
 
-	public int soundTableCount = -1;
-	public int ledTableCount = -1;
+	public int soundTableCount = 0;
+	public int ledTableCount = 0;
 
 	public ArrayList<Sound>[][][] soundTable = null;
 	public ArrayList<LED>[][][] ledTable = null;
