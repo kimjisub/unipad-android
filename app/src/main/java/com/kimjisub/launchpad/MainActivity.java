@@ -417,7 +417,7 @@ public class MainActivity extends BaseActivity {
 		P_list.clear();
 
 		togglePlay(null);
-		updatePanel();
+		updatePanel(true);
 
 		new Thread(() -> {
 			try {
@@ -832,7 +832,7 @@ public class MainActivity extends BaseActivity {
 			}
 			showSelectLPUI();
 
-			updatePanel();
+			updatePanel(false);
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -856,7 +856,7 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= panel
 
-	void updatePanel() {
+	void updatePanel(boolean hardWork) {
 		Log.test("updatePanel");
 		int playIndex = getPlayIndex();
 		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
@@ -880,9 +880,9 @@ public class MainActivity extends BaseActivity {
 		});
 
 		if (playIndex == -1)
-			updatePanelMain();
+			updatePanelMain(hardWork);
 		else
-			updatePanelPack();
+			updatePanelPack(hardWork);
 
 		int visibility = RL_panel_pack.getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
@@ -890,16 +890,16 @@ public class MainActivity extends BaseActivity {
 			RL_panel_pack.startAnimation(animation);
 	}
 
-	void updatePanelMain() {
+	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
-		if (TV_panel_total_unipackCapacity.getText().toString().length() == 0)
+		if (hardWork)
 			TV_panel_total_unipackCapacity.setText(FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 	}
 
-	void updatePanelPack() {
+	void updatePanelPack(boolean hardWork) {
 		Log.test("pack");
 		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
@@ -1135,7 +1135,7 @@ public class MainActivity extends BaseActivity {
 		else {
 			setDriver();
 			checkThings();
-			updatePanel();
+			updatePanel(false);
 		}
 	}
 
