@@ -84,6 +84,7 @@ public class FBStoreActivity extends BaseActivity {
 		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
 		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
 		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
+		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
 		TV_panel_pack_title.setSelected(true);
 		TV_panel_pack_subTitle.setSelected(true);
 		TV_panel_pack_path.setSelected(true);
@@ -183,6 +184,8 @@ public class FBStoreActivity extends BaseActivity {
 
 					P_list.add(new PackItem(packViewSimple, d, isDownloaded, false));
 					LL_list.addView(packViewSimple, 0, lp);
+
+					updatePanelMain(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -204,6 +207,7 @@ public class FBStoreActivity extends BaseActivity {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				updatePanel(false);
 			}
 		}).run();
 	}

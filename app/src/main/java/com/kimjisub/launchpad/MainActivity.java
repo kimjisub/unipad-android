@@ -130,6 +130,7 @@ public class MainActivity extends BaseActivity {
 		// Intro
 		RL_intro = findViewById(R.id.intro);
 		TV_version = findViewById(R.id.version);
+		TV_version.setText(BuildConfig.VERSION_NAME);
 
 		// MainActivity
 		AV_adview = findViewById(R.id.adView);
@@ -169,6 +170,7 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
 		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
 		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
+		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
 		TV_panel_pack_title.setSelected(true);
 		TV_panel_pack_subTitle.setSelected(true);
 		TV_panel_pack_path.setSelected(true);
@@ -244,9 +246,6 @@ public class MainActivity extends BaseActivity {
 					AV_adview.setVisibility(View.GONE);
 			}
 		});
-
-		TV_version.setText(BuildConfig.VERSION_NAME);
-		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
 
 		TedPermission.with(this)
 				.setPermissionListener(new PermissionListener() {
