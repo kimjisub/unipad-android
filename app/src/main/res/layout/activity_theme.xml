@@ -12,7 +12,7 @@
 		android:layout_marginTop="12dp"
 		android:fontFamily="@font/quicksand_bold"
 		android:gravity="center"
-		android:text="UNISKIN"
+		android:text="@string/theme"
 		android:textColor="@color/white"
 		android:textSize="32dp" />
 

@@ -73,6 +73,15 @@
 						android:layout_height="wrap_content"
 						android:text="@string/padtouch_count" />
 
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"/>
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/selected_theme" />
+
 				</LinearLayout>
 
 				<LinearLayout
@@ -102,6 +111,16 @@
 
 					<TextView
 						android:id="@+id/panel_total_padTouchCount"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="0" />
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"/>
+
+					<TextView
+						android:id="@+id/panel_total_selectedTheme"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:text="0" />

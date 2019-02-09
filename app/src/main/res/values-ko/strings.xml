@@ -41,6 +41,7 @@
 	<string name="padtouch_count">패드 터치 횟수</string>
 	<string name="LED_count">LED 이벤트 개수</string>
 	<string name="sound_count">사운드 개수</string>
+	<string name="selected_theme">선택된 테마</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
@@ -52,7 +53,7 @@
 	<string name="setting">설정</string>
 	<string name="information">정보</string>
 	<string name="payment">결제</string>
-	<string name="select_theme">스킨 선택</string>
+	<string name="select_theme">테마 선택</string>
 	<string name="use_sd_card">SD 카드 사용</string>
 	<string name="plan_restorePurchases">구입항목 복원하기</string>
 	<string name="plan_restorePurchases_">결제 후에 앱을 재시작해주세요.</string>
@@ -144,13 +145,14 @@
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
 
 	<!--Theme-->
+	<string name="theme">Theme</string>
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
 
 	<!--ThemePack-->
-	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 
 </resources>

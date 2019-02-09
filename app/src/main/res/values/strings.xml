@@ -41,6 +41,7 @@
 	<string name="padtouch_count">Count of Pad Touch</string>
 	<string name="LED_count">Count of LED Event</string>
 	<string name="sound_count">Count of Sound</string>
+	<string name="selected_theme">Selected Theme</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
@@ -52,7 +53,7 @@
 	<string name="setting">Setting</string>
 	<string name="information">Information</string>
 	<string name="payment">Payment</string>
-	<string name="select_theme">Select Skin</string>
+	<string name="select_theme">Select Theme</string>
 	<string name="use_sd_card">Using SD Card</string>
 	<string name="plan_restorePurchases">Restore Purchases</string>
 	<string name="plan_restorePurchases_">After purchase, please restart app.</string>
@@ -144,13 +145,14 @@
 	<string name="UnableToAccessServer">Unable to access server.</string>
 
 	<!--Theme-->
+	<string name="theme">Theme</string>
 	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
 	<string name="doYouWantToRestartApp">Do you want to restart the app?</string>
 
 	<!--ThemePack-->
-	<string name="theme_name">Default Skin</string>
-	<string name="theme_description">This is Default UniPad Skin</string>
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 
 </resources>

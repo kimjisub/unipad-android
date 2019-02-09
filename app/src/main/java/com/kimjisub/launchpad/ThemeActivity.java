@@ -1,8 +1,6 @@
 package com.kimjisub.launchpad;
 
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -19,31 +17,31 @@ import com.kimjisub.launchpad.manage.SettingManager;
 import com.kimjisub.launchpad.manage.ThemePack;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ThemeActivity extends BaseActivity {
 
-	static ArrayList<ThemePack> themeList;
 	RecyclerView RV_list;
 	TextView TV_apply;
+
+	static ArrayList<ThemePack> L_theme;
 
 	void initVar() {
 		RV_list = findViewById(R.id.list);
 		TV_apply = findViewById(R.id.apply);
+
+		L_theme = ThemePack.getThemePackList(getApplicationContext());
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_theme);
-		initVar();
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		initVar();
-		getThemeList();
 
 		final CarouselLayoutManager layoutManager = new CarouselLayoutManager(CarouselLayoutManager.HORIZONTAL, false);
 		layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
@@ -57,59 +55,30 @@ public class ThemeActivity extends BaseActivity {
 
 		TV_apply.setOnClickListener(v -> {
 			mSetTheme(layoutManager.getCenterItemPosition());
-			requestRestart(ThemeActivity.this);
+			finish();
 		});
 	}
 
 	public void mSetTheme(int i) {
-		if (themeList.size() == i) {
+		if (L_theme.size() != i)
+			SettingManager.SelectedTheme.save(ThemeActivity.this, L_theme.get(i).package_name);
+		else
 			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")));
-		} else {
-			ThemePack theme = themeList.get(i);
-			SettingManager.SelectedTheme.save(ThemeActivity.this, theme.package_name);
-		}
 	}
 
 	public int mGetTheme() {
 		int ret = 0;
-		String packageName = SettingManager.SelectedTheme.load(ThemeActivity.this);
-		for (int i = 0; i < themeList.size(); i++) {
-			ThemePack theme = themeList.get(i);
-			Log.log(packageName + ", " + theme.package_name);
-			if (theme.package_name.equals(packageName)) {
+		String selectedThemePackageName = SettingManager.SelectedTheme.load(ThemeActivity.this);
+		int i = 0;
+		for (ThemePack themePack : L_theme) {
+			Log.log(selectedThemePackageName + ", " + themePack.package_name);
+			if (themePack.package_name.equals(selectedThemePackageName)) {
 				ret = i;
 				break;
 			}
+			i++;
 		}
 		return ret;
-	}
-
-	public void getThemeList() {
-		themeList = new ArrayList<>();
-
-		List<ApplicationInfo> packages = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-
-		addThemeInList(getPackageName());
-
-		for (ApplicationInfo applicationInfo : packages) {
-			String packageName = applicationInfo.packageName;
-			if (packageName.startsWith("com.kimjisub.launchpad.theme."))
-				addThemeInList(packageName);
-		}
-	}
-
-	void addThemeInList(String packageName) {
-		try {
-			ThemePack theme = new ThemePack(ThemeActivity.this, packageName);
-			themeList.add(theme);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void onBackPressed() {
-		requestRestart(ThemeActivity.this);
 	}
 
 	final static class ViewHolder extends RecyclerView.ViewHolder {
@@ -130,7 +99,7 @@ public class ThemeActivity extends BaseActivity {
 		private int itemsCount = 0;
 
 		Adapter() {
-			itemsCount = themeList.size() + 1;
+			itemsCount = L_theme.size() + 1;
 		}
 
 		@Override
@@ -141,7 +110,7 @@ public class ThemeActivity extends BaseActivity {
 		@Override
 		public void onBindViewHolder(ViewHolder holder, int position) {
 			try {
-				ThemePack theme = themeList.get(position);
+				ThemePack theme = L_theme.get(position);
 				holder.theme_icon.setBackground(theme.icon);
 				holder.theme_version.setText(theme.version);
 				holder.theme_author.setText(theme.author);

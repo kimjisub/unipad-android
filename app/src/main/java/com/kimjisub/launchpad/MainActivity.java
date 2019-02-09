@@ -40,6 +40,7 @@ import com.kimjisub.launchpad.manage.LaunchpadDriver;
 import com.kimjisub.launchpad.manage.Log;
 import com.kimjisub.launchpad.manage.Networks;
 import com.kimjisub.launchpad.manage.SettingManager;
+import com.kimjisub.launchpad.manage.ThemePack;
 import com.kimjisub.launchpad.manage.Unipack;
 import com.kimjisub.launchpad.manage.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.manage.db.manager.DB_UnipackOpen;
@@ -95,6 +96,7 @@ public class MainActivity extends BaseActivity {
 	TextView TV_panel_total_unipackCapacity;
 	TextView TV_panel_total_openCount;
 	TextView TV_panel_total_padtouchCount;
+	TextView TV_panel_total_selectedTheme;
 	RelativeLayout RL_panel_pack;
 	ImageView IV_panel_pack_star;
 	ImageView IV_panel_pack_bookmark;
@@ -152,6 +154,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
 		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
 		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padTouchCount);
+		TV_panel_total_selectedTheme = findViewById(R.id.panel_total_selectedTheme);
 		RL_panel_pack = findViewById(R.id.panel_pack);
 		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
 		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
@@ -251,11 +254,11 @@ public class MainActivity extends BaseActivity {
 				.setPermissionListener(new PermissionListener() {
 					@Override
 					public void onPermissionGranted() {
-						updatePanel(true);
 						new Handler().postDelayed(() -> {
 							RL_intro.setVisibility(View.GONE);
 							startMain();
 						}, 3000);
+						updatePanel(true);
 					}
 
 					@Override
@@ -891,6 +894,12 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
+		try {
+			String name = new ThemePack(MainActivity.this, SettingManager.SelectedTheme.load(MainActivity.this)).name;
+			TV_panel_total_selectedTheme.setText(name);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if (hardWork)
 			new Thread(() -> {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
