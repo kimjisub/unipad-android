@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -34,13 +35,26 @@ public class FBStoreActivity extends BaseActivity {
 	LinearLayout LL_list;
 	RelativeLayout RL_panel_total;
 	TextView TV_panel_total_version;
-	TextView TV_panel_total_unipackCount;
-	TextView TV_panel_total_unipackCapacity;
-	TextView TV_panel_total_openCount;
-	TextView TV_panel_total_padtouchCount;
+	TextView TV_panel_total_unipackStoreCount;
+	TextView TV_panel_total_unipackDownloadedCount;
 	RelativeLayout RL_panel_pack;
+	ImageView IV_panel_pack_star;
+	ImageView IV_panel_pack_bookmark;
+	ImageView IV_panel_pack_edit;
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
+	TextView TV_panel_pack_path;
+	TextView TV_panel_pack_scale;
+	TextView TV_panel_pack_chainCount;
+	TextView TV_panel_pack_soundCount;
+	TextView TV_panel_pack_ledCount;
+	TextView TV_panel_pack_fileSize;
+	TextView TV_panel_pack_openCount;
+	TextView TV_panel_pack_padTouchCount;
+	ImageView IV_panel_pack_youtube;
+	ImageView IV_panel_pack_website;
+	ImageView IV_panel_pack_func;
+	ImageView IV_panel_pack_delete;
 
 	String UnipackRootPath;
 	ArrayList<PackItem> P_list;
@@ -50,13 +64,29 @@ public class FBStoreActivity extends BaseActivity {
 		LL_list = findViewById(R.id.list);
 		RL_panel_total = findViewById(R.id.panel_total);
 		TV_panel_total_version = findViewById(R.id.panel_total_version);
-		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
-		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
-		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
-		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padTouchCount);
+		TV_panel_total_unipackStoreCount = findViewById(R.id.panel_total_unipackStoreCount);
+		TV_panel_total_unipackDownloadedCount = findViewById(R.id.panel_total_unipackDownloadedCount);
 		RL_panel_pack = findViewById(R.id.panel_pack);
+		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
+		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
+		IV_panel_pack_edit = findViewById(R.id.panel_pack_edit);
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
+		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
+		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
+		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
+		TV_panel_pack_soundCount = findViewById(R.id.panel_pack_soundCount);
+		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
+		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
+		TV_panel_pack_openCount = findViewById(R.id.panel_pack_openCount);
+		TV_panel_pack_padTouchCount = findViewById(R.id.panel_pack_padTouchCount);
+		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
+		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
+		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
+		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
+		TV_panel_pack_title.setSelected(true);
+		TV_panel_pack_subTitle.setSelected(true);
+		TV_panel_pack_path.setSelected(true);
 
 		// var
 		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(FBStoreActivity.this);
@@ -264,6 +294,16 @@ public class FBStoreActivity extends BaseActivity {
 		return count;
 	}
 
+	int getDownloadedCount() {
+		int count = 0;
+		for (PackItem item : P_list) {
+			if (item.isDownloaded)
+				count++;
+		}
+
+		return count;
+	}
+
 	@SuppressLint("StaticFieldLeak")
 	void startDownload(PackItem item) {
 		fbStore fbStore = item.fbStore;
@@ -374,6 +414,8 @@ public class FBStoreActivity extends BaseActivity {
 				} else if (progress[0] == 2) {//완료
 					packViewSimple.setPlayText(lang(R.string.downloaded));
 					packViewSimple.updateFlagColor(color(R.color.green));
+					item.isDownloaded = true;
+					updatePanel(false);
 				}
 			}
 
@@ -422,7 +464,8 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
-		TV_panel_total_unipackCount.setText(P_list.size() + "");
+		TV_panel_total_unipackStoreCount.setText(P_list.size() + "");
+		TV_panel_total_unipackDownloadedCount.setText(getDownloadedCount() + "");
 	}
 
 	void updatePanelPack(boolean hardWork) {
