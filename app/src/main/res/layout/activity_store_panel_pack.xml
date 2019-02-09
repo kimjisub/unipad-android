@@ -13,8 +13,8 @@
 		<RelativeLayout
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:paddingTop="8dp"
 			android:paddingLeft="8dp"
+			android:paddingTop="8dp"
 			android:paddingRight="8dp">
 
 			<ImageView
@@ -30,19 +30,19 @@
 				android:id="@+id/panel_pack_bookmark"
 				android:layout_width="40dp"
 				android:layout_height="40dp"
-				android:padding="4dp"
 				android:layout_toRightOf="@id/panel_pack_star"
 				android:background="@drawable/border_icon"
+				android:padding="4dp"
 				app:srcCompat="@drawable/ic_bookmark_border_24dp" />
 
 			<ImageView
-				android:visibility="gone"
 				android:id="@+id/panel_pack_edit"
 				android:layout_width="40dp"
 				android:layout_height="40dp"
 				android:layout_alignParentRight="true"
 				android:background="@drawable/border_icon"
 				android:padding="4dp"
+				android:visibility="gone"
 				app:srcCompat="@drawable/ic_edit_24dp" />
 
 
@@ -134,15 +134,16 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/padtouch_count" />
+							android:text="@string/padtouch_count"
+							android:visibility="gone" />
 
 					</LinearLayout>
 
 					<LinearLayout
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:orientation="vertical"
 						android:gravity="left"
+						android:orientation="vertical"
 						android:paddingLeft="32dp">
 
 						<TextView
@@ -178,9 +179,9 @@
 
 						<TextView
 							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
 							android:text="88.88 MB"
-							android:visibility="invisible"
-							android:layout_height="wrap_content" />
+							android:visibility="invisible" />
 
 						<TextView
 							android:id="@+id/panel_pack_openCount"
@@ -192,7 +193,8 @@
 							android:id="@+id/panel_pack_padTouchCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="0" />
+							android:text="0"
+							android:visibility="gone" />
 
 					</LinearLayout>
 
@@ -220,16 +222,16 @@
 							android:id="@+id/panel_pack_youtube"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
-							android:padding="4dp"
 							android:background="@drawable/border_icon"
+							android:padding="4dp"
 							app:srcCompat="@drawable/ic_youtube_24dp" />
 
 						<ImageView
 							android:id="@+id/panel_pack_website"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
-							android:padding="4dp"
 							android:background="@drawable/border_icon"
+							android:padding="4dp"
 							app:srcCompat="@drawable/ic_web_24dp" />
 					</LinearLayout>
 
@@ -243,16 +245,16 @@
 							android:id="@+id/panel_pack_func"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
-							android:padding="4dp"
 							android:background="@drawable/border_icon"
+							android:padding="4dp"
 							app:srcCompat="@drawable/ic_edit_24dp" />
 
 						<ImageView
 							android:id="@+id/panel_pack_delete"
 							android:layout_width="40dp"
 							android:layout_height="40dp"
-							android:padding="4dp"
 							android:background="@drawable/border_icon"
+							android:padding="4dp"
 							app:srcCompat="@drawable/ic_delete_24dp" />
 					</LinearLayout>
 
