@@ -1116,16 +1116,6 @@ public class MainActivity extends BaseActivity {
 	}
 
 	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		switch (requestCode) {
-			case 0:
-				checkThings();
-				update();
-				break;
-		}
-	}
-
-	@Override
 	public void onResume() {
 		super.onResume();
 
@@ -1136,6 +1126,18 @@ public class MainActivity extends BaseActivity {
 			setDriver();
 			checkThings();
 			updatePanel(false);
+		}
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		switch (requestCode) {
+			case 0:
+				new Handler().postDelayed(() -> {
+					checkThings();
+					update();
+				}, 500);
+				break;
 		}
 	}
 
