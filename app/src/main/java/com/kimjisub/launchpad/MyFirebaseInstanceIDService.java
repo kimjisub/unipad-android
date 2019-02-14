@@ -2,7 +2,7 @@ package com.kimjisub.launchpad;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
-import com.kimjisub.launchpad.manage.Log;
+import com.kimjisub.launchpad.utils.Log;
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 	@Override

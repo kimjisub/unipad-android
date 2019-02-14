@@ -34,18 +34,18 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.launchpad.manage.BillingCertification;
-import com.kimjisub.launchpad.manage.FileManager;
-import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SettingManager;
-import com.kimjisub.launchpad.manage.ThemePack;
-import com.kimjisub.launchpad.manage.Unipack;
-import com.kimjisub.launchpad.manage.db.manager.DB_Unipack;
-import com.kimjisub.launchpad.manage.db.manager.DB_UnipackOpen;
-import com.kimjisub.launchpad.manage.db.vo.UnipackOpenVO;
-import com.kimjisub.launchpad.manage.db.vo.UnipackVO;
+import com.kimjisub.launchpad.utils.BillingCertification;
+import com.kimjisub.launchpad.utils.FileManager;
+import com.kimjisub.launchpad.utils.LaunchpadDriver;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.Networks;
+import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.ThemePack;
+import com.kimjisub.launchpad.utils.Unipack;
+import com.kimjisub.launchpad.utils.db.manager.DB_Unipack;
+import com.kimjisub.launchpad.utils.db.manager.DB_UnipackOpen;
+import com.kimjisub.launchpad.utils.db.vo.UnipackOpenVO;
+import com.kimjisub.launchpad.utils.db.vo.UnipackVO;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
@@ -62,7 +62,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
 
-import static com.kimjisub.launchpad.manage.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+import static com.kimjisub.launchpad.utils.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
 

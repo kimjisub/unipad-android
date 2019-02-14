@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage;
+package com.kimjisub.launchpad.utils;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -7,7 +7,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.launchpad.fb.fbStore;
-import com.kimjisub.launchpad.manage.network.MakeUrl;
+import com.kimjisub.launchpad.utils.network.MakeUrl;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

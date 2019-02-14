@@ -2,7 +2,7 @@ package com.kimjisub.launchpad;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import com.kimjisub.launchpad.manage.Log;
+import com.kimjisub.launchpad.utils.Log;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 	@Override

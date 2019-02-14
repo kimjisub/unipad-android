@@ -13,11 +13,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.fb.fbStore;
-import com.kimjisub.launchpad.manage.FileManager;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SettingManager;
-import com.kimjisub.launchpad.manage.Unipack;
+import com.kimjisub.launchpad.utils.FileManager;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.Networks;
+import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
 import java.io.BufferedInputStream;

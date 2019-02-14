@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage;
+package com.kimjisub.launchpad.utils;
 
 import android.content.Context;
 
