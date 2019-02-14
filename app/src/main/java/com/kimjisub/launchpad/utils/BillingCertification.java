@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage;
+package com.kimjisub.launchpad.utils;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
@@ -7,9 +7,9 @@ import android.support.annotation.Nullable;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 
-import static com.kimjisub.launchpad.manage.Constant.BILLING.DEVELOPERPAYLOAD;
-import static com.kimjisub.launchpad.manage.Constant.BILLING.PRO_TOOLS;
-import static com.kimjisub.launchpad.manage.Constant.BILLING.REMOVE_ADS;
+import static com.kimjisub.launchpad.utils.Constant.BILLING.DEVELOPERPAYLOAD;
+import static com.kimjisub.launchpad.utils.Constant.BILLING.PRO_TOOLS;
+import static com.kimjisub.launchpad.utils.Constant.BILLING.REMOVE_ADS;
 
 public class BillingCertification {
 

@@ -16,16 +16,16 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.SettingManager;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.SettingManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manage.Constant.ADMOB;
-import static com.kimjisub.launchpad.manage.Constant.ADSCOOLTIME;
-import static com.kimjisub.launchpad.manage.Constant.VUNGLE;
+import static com.kimjisub.launchpad.utils.Constant.ADMOB;
+import static com.kimjisub.launchpad.utils.Constant.ADSCOOLTIME;
+import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 

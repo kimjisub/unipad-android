@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage.db.manager;
+package com.kimjisub.launchpad.utils.db.manager;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -7,8 +7,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.db.vo.UnipackVO;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.db.vo.UnipackVO;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

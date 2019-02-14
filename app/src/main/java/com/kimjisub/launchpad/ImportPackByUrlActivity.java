@@ -6,12 +6,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.manage.FileManager;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.Networks;
-import com.kimjisub.launchpad.manage.SettingManager;
-import com.kimjisub.launchpad.manage.Unipack;
-import com.kimjisub.launchpad.manage.network.MakeUrl;
+import com.kimjisub.launchpad.utils.FileManager;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.Networks;
+import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.Unipack;
+import com.kimjisub.launchpad.utils.network.MakeUrl;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;

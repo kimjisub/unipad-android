@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage.network;
+package com.kimjisub.launchpad.utils.network;
 
 public class MakeUrl {
 	public Integer id;

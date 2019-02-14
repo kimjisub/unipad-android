@@ -12,9 +12,9 @@ import android.widget.TextView;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.SettingManager;
-import com.kimjisub.launchpad.manage.ThemePack;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.ThemePack;
 
 import java.util.ArrayList;
 

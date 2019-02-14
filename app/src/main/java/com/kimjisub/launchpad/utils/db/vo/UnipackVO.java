@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.manage.db.vo;
+package com.kimjisub.launchpad.utils.db.vo;
 
 import android.database.Cursor;
 

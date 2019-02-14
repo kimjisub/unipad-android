@@ -18,9 +18,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.manage.LaunchpadDriver;
-import com.kimjisub.launchpad.manage.Log;
-import com.kimjisub.launchpad.manage.SettingManager;
+import com.kimjisub.launchpad.utils.LaunchpadDriver;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.SettingManager;
 
 import java.util.Iterator;
 import java.util.Objects;
