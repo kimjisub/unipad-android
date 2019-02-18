@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.utils;
+package com.kimjisub.launchpad.networks;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -6,8 +6,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.launchpad.networks.dto.MakeUrlDTO;
 import com.kimjisub.launchpad.fb.fbStore;
-import com.kimjisub.launchpad.utils.network.MakeUrl;
+import com.kimjisub.launchpad.utils.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -33,62 +34,6 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 public class Networks {
-
-	static final String APIURL = "https://api.unipad.kr";
-	static UniPadApi uniPadApi;
-
-	public static UniPadApi getUniPadApi() {
-		if (uniPadApi == null) {
-			HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(Log::network)
-					.setLevel(HttpLoggingInterceptor.Level.BODY);
-			OkHttpClient client = getUnsafeOkHttpClient()
-					.addInterceptor(interceptor)
-					//.cookieJar(new MyCookieJar())
-					.build();
-
-			Retrofit retrofit = new Retrofit.Builder()
-					.baseUrl(APIURL)
-					.addConverterFactory(GsonConverterFactory.create())
-					.client(client)
-					.build();
-			uniPadApi = retrofit.create(UniPadApi.class);
-		}
-
-		return uniPadApi;
-	}
-
-	private static OkHttpClient.Builder getUnsafeOkHttpClient() {
-		try {
-			// Create a trust manager that does not validate certificate chains
-			final TrustManager[] trustAllCerts = new TrustManager[]{
-					new X509TrustManager() {
-						@Override
-						public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-						}
-
-						@Override
-						public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-						}
-
-						@Override
-						public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-							return new java.security.cert.X509Certificate[]{};
-						}
-					}
-			};
-
-			final SSLContext sslContext = SSLContext.getInstance("SSL");
-			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-			final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-			OkHttpClient.Builder builder = new OkHttpClient.Builder()
-					.sslSocketFactory(sslSocketFactory)
-					.hostnameVerifier((hostname, session) -> true);
-			return builder;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 	public static String sendGet(String str) {
 
@@ -117,24 +62,6 @@ public class Networks {
 		}
 
 		return html.toString();
-	}
-
-	public interface UniPadApi {
-
-		// ============================================================================================= /makeUrl
-
-		@GET("/makeUrl")
-		Call<List<MakeUrl>> makeUrl_list();
-
-		@POST("/makeUrl")
-		Call<MakeUrl> makeUrl_make(@Body MakeUrl item);
-
-		@GET("/makeUrl/{code}")
-		Call<MakeUrl> makeUrl_get(@Path("code") String code);
-
-		@GET("/makeUrl/{code}/addCount")
-		Call<ResponseBody> makeUrl_addCount(@Path("code") String code);
-
 	}
 
 	public static class CheckVersion {

@@ -1,6 +1,6 @@
-package com.kimjisub.launchpad.utils.network;
+package com.kimjisub.launchpad.networks.dto;
 
-public class MakeUrl {
+public class MakeUrlDTO {
 	public Integer id;
 	public String code;
 	public String title;
