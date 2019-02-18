@@ -6,12 +6,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
 
+import com.kimjisub.launchpad.networks.UniPadApiBuilder;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.Networks;
+import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.launchpad.utils.network.MakeUrl;
+import com.kimjisub.launchpad.networks.dto.MakeUrlDTO;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
@@ -59,16 +60,16 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		initVar();
 
 
-		Networks.getUniPadApi().makeUrl_get(code).enqueue(new Callback<MakeUrl>() {
+		UniPadApiBuilder.getService().makeUrl_get(code).enqueue(new Callback<MakeUrlDTO>() {
 			@Override
-			public void onResponse(Call<MakeUrl> call, Response<MakeUrl> response) {
+			public void onResponse(Call<MakeUrlDTO> call, Response<MakeUrlDTO> response) {
 				if (response.isSuccessful()) {
-					MakeUrl makeUrl = response.body();
-					setStatus(Status.prepare, code + "\n" + makeUrl.title + "\n" + makeUrl.producerName);
-					log("title: " + makeUrl.title);
-					log("producerName: " + makeUrl.producerName);
-					UnipackZipPath = FileManager.makeNextPath(UnipackRootPath, makeUrl.title + " #" + code, ".zip");
-					UnipackPath = FileManager.makeNextPath(UnipackRootPath, makeUrl.title + " #" + code, "/");
+					MakeUrlDTO makeUrlDTO = response.body();
+					setStatus(Status.prepare, code + "\n" + makeUrlDTO.title + "\n" + makeUrlDTO.producerName);
+					log("title: " + makeUrlDTO.title);
+					log("producerName: " + makeUrlDTO.producerName);
+					UnipackZipPath = FileManager.makeNextPath(UnipackRootPath, makeUrlDTO.title + " #" + code, ".zip");
+					UnipackPath = FileManager.makeNextPath(UnipackRootPath, makeUrlDTO.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					addCount(code);
 				} else {
@@ -82,7 +83,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			}
 
 			@Override
-			public void onFailure(Call<MakeUrl> call, Throwable t) {
+			public void onFailure(Call<MakeUrlDTO> call, Throwable t) {
 				log("server error");
 				setStatus(Status.failed, "server error\n" + t.getMessage());
 			}
@@ -90,7 +91,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	}
 
 	void addCount(String code) {
-		Networks.getUniPadApi().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
+		UniPadApiBuilder.getService().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
 			@Override
 			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 			}
@@ -162,13 +163,13 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		int fileSize;
 		int downloadCount;
 
-		public DownloadTask(MakeUrl makeUrl) {
-			this.code = makeUrl.code;
-			this.title = makeUrl.title;
-			this.producerName = makeUrl.producerName;
-			this.url = makeUrl.url;
-			this.fileSize = makeUrl.fileSize;
-			this.downloadCount = makeUrl.downloadCount;
+		public DownloadTask(MakeUrlDTO makeUrlDTO) {
+			this.code = makeUrlDTO.code;
+			this.title = makeUrlDTO.title;
+			this.producerName = makeUrlDTO.producerName;
+			this.url = makeUrlDTO.url;
+			this.fileSize = makeUrlDTO.fileSize;
+			this.downloadCount = makeUrlDTO.downloadCount;
 		}
 
 		@Override

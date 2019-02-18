@@ -38,7 +38,7 @@ import com.kimjisub.launchpad.utils.BillingCertification;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.Networks;
+import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.kimjisub.launchpad.utils.ThemePack;
 import com.kimjisub.launchpad.utils.Unipack;
