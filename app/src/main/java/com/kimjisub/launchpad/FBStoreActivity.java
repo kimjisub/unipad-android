@@ -12,7 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.kimjisub.launchpad.fb.fbStore;
+import com.kimjisub.launchpad.networks.fb.fbStore;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.networks.Networks;
