@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.fb;
+package com.kimjisub.launchpad.networks.fb;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
