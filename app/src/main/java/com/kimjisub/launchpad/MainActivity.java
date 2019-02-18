@@ -34,18 +34,18 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.kimjisub.launchpad.utils.BillingCertification;
-import com.kimjisub.launchpad.utils.FileManager;
-import com.kimjisub.launchpad.utils.LaunchpadDriver;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.networks.Networks;
-import com.kimjisub.launchpad.utils.SettingManager;
-import com.kimjisub.launchpad.utils.ThemePack;
-import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
+import com.kimjisub.launchpad.networks.Networks;
+import com.kimjisub.launchpad.utils.BillingCertification;
+import com.kimjisub.launchpad.utils.FileManager;
+import com.kimjisub.launchpad.utils.LaunchpadDriver;
+import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.ThemePack;
+import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
@@ -856,7 +856,6 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= panel
 
 	void updatePanel(boolean hardWork) {
-		Log.test("updatePanel");
 		int playIndex = getPlayIndex();
 		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 		animation.setAnimationListener(new Animation.AnimationListener() {
@@ -890,7 +889,6 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelMain(boolean hardWork) {
-		Log.test("main");
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
@@ -908,8 +906,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPack(boolean hardWork) {
-		Log.test("pack");
-		PackItem item = P_list.get(getPlayIndex());
+ 		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
