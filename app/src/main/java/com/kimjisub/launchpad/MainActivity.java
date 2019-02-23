@@ -50,7 +50,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -109,7 +108,8 @@ public class MainActivity extends BaseActivity {
 	ImageView IV_panel_pack_func;
 	ImageView IV_panel_pack_delete;
 
-	String UnipackRootPath;
+	String UnipackRootPath1;
+	String UnipackRootPath2;
 	int lastPlayIndex = -1;
 	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
@@ -185,7 +185,8 @@ public class MainActivity extends BaseActivity {
 		}
 
 		// var
-		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(MainActivity.this);
+		UnipackRootPath1 = SettingManager.IsUsingSDCard.getPath(MainActivity.this);
+		UnipackRootPath2 = FileManager.getAppUniPackStoragePath(MainActivity.this);
 		if (onFirst)
 			P_list = new ArrayList<>();
 	}
@@ -237,6 +238,7 @@ public class MainActivity extends BaseActivity {
 		updatePanel(true);
 	}
 
+	@SuppressLint("StaticFieldLeak")
 	void startMain() {
 		rescanScale(LL_scale, LL_paddingScale);
 
@@ -312,7 +314,29 @@ public class MainActivity extends BaseActivity {
 
 		});
 		IV_panel_pack_storage.setOnClickListener(v -> {
-			//todo
+			int playIndex = getPlayIndex();
+			if (playIndex != -1) {
+				PackItem item = P_list.get(playIndex);
+
+				File source = new File(item.path);
+				String sourceName = source.getName();
+				File target = new File(UnipackRootPath2 + "/" + sourceName);
+
+				(new AsyncTask<String, String, String>() {
+					@Override
+					protected String doInBackground(String... params) {
+						FileManager.moveDirectory(source, target);
+						return null;
+					}
+
+					@Override
+					protected void onProgressUpdate(String... strings) {
+					}
+				}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+				updatePanelPackOption();
+			}
+
 		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
 			int playIndex = getPlayIndex();
@@ -387,37 +411,45 @@ public class MainActivity extends BaseActivity {
 
 		new Thread(() -> {
 			try {
-				File projectFolder = new File(UnipackRootPath);
+				File projectFolder1 = new File(UnipackRootPath1);
+				File projectFolder2 = new File(UnipackRootPath2);
+				ArrayList<File> AL_projectFiles = new ArrayList<>();
+				File[] projectFiles;
+				File[] projectFilesSort;
 
-				if (projectFolder.isDirectory()) {
+				// Get ProjectFile from multi Path
+				if (projectFolder1.isDirectory())
+					for (File file : projectFolder1.listFiles())
+						AL_projectFiles.add(file);
+				else
+					projectFolder1.mkdir();
 
-					File[] projectFiles = FileManager.sortByTime(projectFolder.listFiles());
+				if (projectFolder2.isDirectory())
+					for (File file : projectFolder2.listFiles())
+						AL_projectFiles.add(file);
 
-					for (File project : projectFiles) {
-						try {
-							Thread.sleep(10);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						addItemByFile(project);
-					}
+				// Sort
+				projectFiles = new File[AL_projectFiles.size()];
+				int i = 0;
+				for (File file : AL_projectFiles)
+					projectFiles[i++] = file;
+				projectFilesSort = FileManager.sortByTime(projectFiles);
 
-					if (P_list.size() == 0)
-						runOnUiThread(this::addErrorItem);
-
-				} else {
-					projectFolder.mkdir();
-					runOnUiThread(this::addErrorItem);
-				}
-
-				File nomedia = new File(UnipackRootPath + "/.nomedia");
-				if (!nomedia.isFile()) {
+				// Add Each ProjectFile
+				for (File project : projectFilesSort) {
 					try {
-						(new FileWriter(nomedia)).close();
-					} catch (IOException e) {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					addItemByFile(project);
 				}
+
+				if (P_list.size() == 0)
+					runOnUiThread(this::addErrorItem);
+
+				// Check nomedia
+				FileManager.makeNomedia(UnipackRootPath1);
 			} finally {
 				runOnUiThread(() -> SRL_scrollView.setRefreshing(false));
 				updateComplete = true;
@@ -428,7 +460,7 @@ public class MainActivity extends BaseActivity {
 	void addItemByFile(File file) {
 		if (!file.isDirectory()) return;
 
-		String path = UnipackRootPath + "/" + file.getName();
+		String path = file.getPath();
 		Unipack unipack = new Unipack(path, false);
 		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(path);
 		int flagColor;
@@ -529,7 +561,7 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= UniPack Work
 
 	void deleteUnipack(final Unipack unipack) {
-		FileManager.deleteFolder(unipack.path);
+		FileManager.deleteDirectory(unipack.path);
 		update();
 	}
 
@@ -722,7 +754,7 @@ public class MainActivity extends BaseActivity {
 				String name = file.getName();
 				String name_ = name.substring(0, name.lastIndexOf("."));
 
-				String UnipackPath = FileManager.makeNextPath(UnipackRootPath, name_, "/");
+				String UnipackPath = FileManager.makeNextPath(UnipackRootPath1, name_, "/");
 
 				try {
 					FileManager.unZipFile(UnipackZipPath, UnipackPath);
@@ -734,7 +766,7 @@ public class MainActivity extends BaseActivity {
 					} else if (unipack.CriticalError) {
 						msg1 = lang(R.string.analyzeFailed);
 						msg2 = unipack.ErrorDetail;
-						FileManager.deleteFolder(UnipackPath);
+						FileManager.deleteDirectory(UnipackPath);
 					} else {
 						msg1 = lang(R.string.warning);
 						msg2 = unipack.ErrorDetail;
@@ -743,7 +775,7 @@ public class MainActivity extends BaseActivity {
 				} catch (IOException e) {
 					msg1 = lang(R.string.analyzeFailed);
 					msg2 = e.toString();
-					FileManager.deleteFolder(UnipackPath);
+					FileManager.deleteDirectory(UnipackPath);
 				}
 
 				return null;
@@ -870,7 +902,7 @@ public class MainActivity extends BaseActivity {
 			(new AsyncTask<String, String, String>() {
 				@Override
 				protected String doInBackground(String... params) {
-					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
+					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath1)) + " MB";
 					publishProgress(fileSize);
 					return null;
 				}

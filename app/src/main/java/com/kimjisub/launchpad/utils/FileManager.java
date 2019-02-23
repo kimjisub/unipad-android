@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.utils;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Environment;
 
@@ -12,6 +13,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -19,7 +21,11 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Locale;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class FileManager {
+
+	// ============================================================================================= Zip
 
 	public static void unZipFile(String zipFileURL, String location) throws IOException {
 		InputStream zipFile = new FileInputStream(zipFileURL);
@@ -76,11 +82,6 @@ public class FileManager {
 			e.printStackTrace();
 		}
 	}
-	
-	/*public static void deleteFile(String path) {
-		File file = new File(path);
-		file.delete();
-	}*/
 
 	public static void removeDoubleFolder(String path) {
 		try {
@@ -91,7 +92,7 @@ public class FileManager {
 				if (childFileList.length == 1) {
 					File innerFolder = childFileList[0];
 					if (innerFolder.isDirectory()) {
-						copyFolder(innerFolder, rootFolder);
+						moveDirectory(innerFolder, rootFolder);
 					}
 				}
 			}
@@ -100,86 +101,7 @@ public class FileManager {
 		}
 	}
 
-	public static void copyFolder(File sourceF, File targetF) {
-		try {
-			File[] ff = sourceF.listFiles();
-			for (File file : ff) {
-				File temp = new File(targetF.getAbsolutePath() + File.separator + file.getName());
-				if (file.isDirectory()) {
-					temp.mkdir();
-					copyFolder(file, temp);
-				} else {
-					FileInputStream fis = null;
-					FileOutputStream fos = null;
-					try {
-						fis = new FileInputStream(file);
-						fos = new FileOutputStream(temp);
-						byte[] b = new byte[4096];
-						int cnt = 0;
-						while ((cnt = fis.read(b)) != -1) {
-							fos.write(b, 0, cnt);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						try {
-							fis.close();
-							fos.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-
-			deleteFolder(sourceF.getPath());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void deleteFolder(String path) {
-
-		try {
-			File file = new File(path);
-
-			if (file.isDirectory()) {
-				File[] childFileList = file.listFiles();
-				for (File childFile : childFileList)
-					deleteFolder(childFile.getPath());
-				file.delete();
-			} else
-				file.delete();
-
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static long getFolderSize(String a_path) {
-		long totalMemory = 0;
-		File file = new File(a_path);
-
-		if (file.isFile()) {
-			return file.length();
-		} else if (file.isDirectory()) {
-			File[] childFileList = file.listFiles();
-			if (childFileList == null)
-				return 0;
-
-			for (File childFile : childFileList)
-				totalMemory += getFolderSize(childFile.getAbsolutePath());
-
-			return totalMemory;
-		} else
-			return 0;
-	}
-
-	@SuppressLint("DefaultLocale")
-	public static String byteToMB(float Byte) {
-		return String.format("%.2f", Byte / 1024L / 1024L);
-	}
+	// ============================================================================================= Tools
 
 	public static File[] sortByTime(File[] files) {
 
@@ -208,7 +130,141 @@ public class FileManager {
 		return files;
 	}
 
-	public static String getInternalStoragePath(){
+	public static String makeNextPath(String path, String name, String extension) {
+		String ret;
+		String newName = convertFilename(name);
+		for (int i = 1; ; i++) {
+			if (i == 1)
+				ret = path + "/" + newName + extension;
+			else
+				ret = path + "/" + newName + " (" + i + ")" + extension;
+
+			if (!new File(ret).exists())
+				break;
+		}
+
+		Log.test(path + "/" + newName + extension);
+		Log.test(ret);
+		return ret;
+	}
+
+	public static String convertFilename(String orgnStr) {
+		String regExpr = "[|\\\\?*<\":>/]+";
+
+		String tmpStr = orgnStr.replaceAll(regExpr, "");
+
+		return tmpStr;
+
+		//return tmpStr.replaceAll("[ ]", "_");
+	}
+
+	// ============================================================================================= Make, Move, Copy, Delete
+
+	public static void moveDirectory(File F_source, File F_target) {
+		Log.test(F_source.getPath() + " -> " + F_target.getPath());
+		try {
+			if(!F_target.isDirectory())
+				F_target.mkdir();
+
+			File[] sourceList = F_source.listFiles();
+			for (File source : sourceList) {
+				File target = new File(F_target.getAbsolutePath() + "/" + source.getName());
+				if (source.isDirectory()) {
+					Log.test("Dir  " + target.getPath());
+					target.mkdir();
+					moveDirectory(source, target);
+				} else {
+					Log.test("File " + target.getPath());
+					FileInputStream fis = null;
+					FileOutputStream fos = null;
+					try {
+						fis = new FileInputStream(source);
+						fos = new FileOutputStream(target);
+						byte[] b = new byte[4096];
+						int cnt = 0;
+						while ((cnt = fis.read(b)) != -1) {
+							fos.write(b, 0, cnt);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						try {
+							fis.close();
+							fos.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+
+			deleteDirectory(F_source.getPath());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void deleteDirectory(String path) {
+
+		try {
+			File file = new File(path);
+
+			if (file.isDirectory()) {
+				File[] childFileList = file.listFiles();
+				for (File childFile : childFileList)
+					deleteDirectory(childFile.getPath());
+				file.delete();
+			} else
+				file.delete();
+
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// ============================================================================================= Get Info
+
+	public static void makeNomedia(String path) {
+		File nomedia = new File(path + "/.nomedia");
+		if (!nomedia.isFile()) {
+			try {
+				(new FileWriter(nomedia)).close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@SuppressLint("DefaultLocale")
+	public static String byteToMB(float Byte) {
+		return String.format("%.2f", Byte / 1024L / 1024L);
+	}
+
+	public static long getFolderSize(String a_path) {
+		long totalMemory = 0;
+		File file = new File(a_path);
+
+		if (file.isFile()) {
+			return file.length();
+		} else if (file.isDirectory()) {
+			File[] childFileList = file.listFiles();
+			if (childFileList == null)
+				return 0;
+
+			for (File childFile : childFileList)
+				totalMemory += getFolderSize(childFile.getAbsolutePath());
+
+			return totalMemory;
+		} else
+			return 0;
+	}
+
+	public static String getAppUniPackStoragePath(Context context) {
+		return context.getDir("UniPack", MODE_PRIVATE).getPath();
+	}
+
+	public static String getInternalStoragePath() {
 		return Environment.getExternalStorageDirectory().getPath();
 	}
 
@@ -256,33 +312,7 @@ public class FileManager {
 		return out;
 	}
 
-	public static String makeNextPath(String path, String name, String extension) {
-		String ret;
-		String newName = convertFilename(name);
-		for (int i = 1; ; i++) {
-			if (i == 1)
-				ret = path + "/" + newName + extension;
-			else
-				ret = path + "/" + newName + " (" + i + ")" + extension;
-
-			if (!new File(ret).exists())
-				break;
-		}
-
-		Log.test(path + "/" + newName + extension);
-		Log.test(ret);
-		return ret;
-	}
-
-	public static String convertFilename(String orgnStr) {
-		String regExpr = "[|\\\\?*<\":>/]+";
-
-		String tmpStr = orgnStr.replaceAll(regExpr, "");
-
-		return tmpStr;
-
-		//return tmpStr.replaceAll("[ ]", "_");
-	}
+	// ============================================================================================= Etc
 
 	public static int wavDuration(MediaPlayer mplayer, String URL) {
 		try {
@@ -297,4 +327,5 @@ public class FileManager {
 			return 10000;
 		}
 	}
+
 }

@@ -66,7 +66,7 @@ public class Log {
 
 		String trace1 = trace(Thread.currentThread().getStackTrace(), 5);
 		String trace2 = trace(Thread.currentThread().getStackTrace(), 4);
-		String detailMsg = String.format("%s%-50s%-40s%-40s", space, msg, trace1, trace2);
+		String detailMsg = String.format("%s%-50s  %-40s  %-40s", space, msg, trace1, trace2);
 
 		android.util.Log.e(tag, DEBUG ? detailMsg : msg);
 	}

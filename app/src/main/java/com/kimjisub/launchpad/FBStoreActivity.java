@@ -383,16 +383,16 @@ public class FBStoreActivity extends BaseActivity {
 						if (unipack.CriticalError) {
 							Log.err(unipack.ErrorDetail);
 							publishProgress(-1L);
-							FileManager.deleteFolder(UnipackPath);
+							FileManager.deleteDirectory(UnipackPath);
 						} else
 							publishProgress(2L);
 
 					} catch (Exception e) {
 						publishProgress(-1L);
-						FileManager.deleteFolder(UnipackPath);
+						FileManager.deleteDirectory(UnipackPath);
 						e.printStackTrace();
 					}
-					FileManager.deleteFolder(UnipackZipPath);
+					FileManager.deleteDirectory(UnipackZipPath);
 
 
 				} catch (Exception e) {
