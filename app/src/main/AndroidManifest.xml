@@ -55,6 +55,7 @@
 			android:screenOrientation="sensorLandscape" />
 		<activity
 			android:name=".SettingActivity"
+			android:theme="@style/SettingTheme"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="portrait" />
 		<activity
