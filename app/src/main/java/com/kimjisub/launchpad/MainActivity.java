@@ -1138,6 +1138,10 @@ public class MainActivity extends BaseActivity {
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
+				LL_list.removeAllViews();
+				P_list.clear();
+				updatePanel(true);
+
 				new Handler().postDelayed(() -> {
 					checkThings();
 					update();
