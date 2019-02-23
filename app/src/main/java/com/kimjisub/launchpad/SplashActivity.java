@@ -90,8 +90,8 @@ public class SplashActivity extends BaseActivity {
 	}
 
 	@Override
-	public void onPause() {
-		super.onPause();
+	public void onStop() {
+		super.onStop();
 
 		handler.removeCallbacks(runnable);
 		finish();
