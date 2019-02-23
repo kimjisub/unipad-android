@@ -10,4 +10,15 @@
 		<item name="android:windowFullscreen">true</item>
 		<item name="android:windowBackground">@color/background1</item>
 	</style>
+
+	<style name="SettingTheme" parent="Theme.AppCompat.Light.NoActionBar">
+		<item name="colorPrimary">@color/gray1</item>
+		<item name="colorPrimaryDark">@color/gray1</item>
+		<item name="colorAccent">@color/gray1</item>
+
+		<item name="android:fontFamily">@font/montserrat_regular</item>
+
+		<item name="android:windowFullscreen">true</item>
+		<item name="android:windowBackground">@color/white</item>
+	</style>
 </resources>
