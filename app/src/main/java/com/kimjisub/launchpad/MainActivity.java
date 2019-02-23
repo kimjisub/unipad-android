@@ -93,6 +93,7 @@ public class MainActivity extends BaseActivity {
 	ImageView IV_panel_pack_star;
 	ImageView IV_panel_pack_bookmark;
 	ImageView IV_panel_pack_edit;
+	ImageView IV_panel_pack_storage;
 	TextView TV_panel_pack_title;
 	TextView TV_panel_pack_subTitle;
 	TextView TV_panel_pack_path;
@@ -145,6 +146,7 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
 		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
 		IV_panel_pack_edit = findViewById(R.id.panel_pack_edit);
+		IV_panel_pack_storage = findViewById(R.id.panel_pack_storage);
 		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
 		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
 		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
@@ -309,6 +311,9 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_edit.setOnClickListener(v -> {
 
 		});
+		IV_panel_pack_storage.setOnClickListener(v -> {
+			//todo
+		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
 			int playIndex = getPlayIndex();
 			if (playIndex != -1) {
@@ -362,7 +367,6 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void checkThings() {
-		purchaseCheck();
 		versionCheck();
 		newPackCheck();
 	}
@@ -1054,10 +1058,6 @@ public class MainActivity extends BaseActivity {
 	}
 
 	// ============================================================================================= Check
-
-	void purchaseCheck() {
-		// todo
-	}
 
 	void versionCheck() {
 		if (!BuildConfig.VERSION_NAME.contains("b")) {
