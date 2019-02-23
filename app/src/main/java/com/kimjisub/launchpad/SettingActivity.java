@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.kimjisub.launchpad.utils.BillingCertification;
+import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.SettingManager;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_50;
 
 public class SettingActivity extends PreferenceActivity {
 
-	BillingCertification billingCertification;
+	BillingManager billingManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -43,7 +43,7 @@ public class SettingActivity extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.setting);
 
-		billingCertification = new BillingCertification(SettingActivity.this, new BillingCertification.BillingEventListener() {
+		billingManager = new BillingManager(SettingActivity.this, new BillingManager.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			}
@@ -175,7 +175,7 @@ public class SettingActivity extends PreferenceActivity {
 				data.add(new mItem(titleList[i], summaryList[i]));
 
 			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
-			listView.setOnItemClickListener((parent, view, position, id) -> billingCertification.purchase(urlList[position]));
+			listView.setOnItemClickListener((parent, view, position, id) -> billingManager.purchase(urlList[position]));
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
 			builder.setTitle(lang(R.string.donation));
@@ -186,19 +186,19 @@ public class SettingActivity extends PreferenceActivity {
 		});
 
 		findPreference("removeAds").setOnPreferenceClickListener(preference -> {
-			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseRemoveAds());
-			billingCertification.subscribe_removeAds();
+			((CheckBoxPreference) preference).setChecked(billingManager.isPurchaseRemoveAds());
+			billingManager.subscribe_removeAds();
 			return false;
 		});
 
 		findPreference("proTools").setOnPreferenceClickListener(preference -> {
-			((CheckBoxPreference) preference).setChecked(BillingCertification.isPurchaseProTools());
-			billingCertification.subscribe_proTools();
+			((CheckBoxPreference) preference).setChecked(billingManager.isPurchaseProTools());
+			billingManager.subscribe_proTools();
 			return false;
 		});
 
 		findPreference("restoreBilling").setOnPreferenceClickListener(preference -> {
-			billingCertification.refresh();
+			billingManager.refresh();
 			BaseActivity.requestRestart(SettingActivity.this);
 			return false;
 		});
@@ -258,8 +258,8 @@ public class SettingActivity extends PreferenceActivity {
 	}
 
 	void updateBilling() {
-		((CheckBoxPreference) findPreference("removeAds")).setChecked(BillingCertification.isPurchaseRemoveAds());
-		((CheckBoxPreference) findPreference("proTools")).setChecked(BillingCertification.isPurchaseProTools());
+		((CheckBoxPreference) findPreference("removeAds")).setChecked(billingManager.isPurchaseRemoveAds());
+		((CheckBoxPreference) findPreference("proTools")).setChecked(billingManager.isPurchaseProTools());
 	}
 
 	void putClipboard(String msg) {
@@ -291,7 +291,7 @@ public class SettingActivity extends PreferenceActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		BaseActivity.finishActivity(this);
-		billingCertification.release();
+		billingManager.release();
 	}
 
 	String lang(int id) {

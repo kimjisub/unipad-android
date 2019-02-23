@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad;
 
-import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -32,14 +31,12 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.launchpad.networks.Networks;
-import com.kimjisub.launchpad.utils.BillingCertification;
+import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
@@ -60,22 +57,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
-import java.util.List;
 
 import static com.kimjisub.launchpad.utils.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
+	BillingManager billingManager;
 
 	// DB
 	DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
-	// Intro
-	BillingCertification billingCertification;
-	RelativeLayout RL_intro;
-	TextView TV_version;
-
-	// MainActivity
+	// View
 	AdView AV_adview;
 	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
@@ -121,7 +113,6 @@ public class MainActivity extends BaseActivity {
 	ArrayList<PackItem> P_list;
 	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
 
-	boolean isDoneIntro = false;
 	boolean updateComplete = true;
 
 	void initVar(boolean onFirst) {
@@ -129,12 +120,7 @@ public class MainActivity extends BaseActivity {
 		DB_unipack = new DB_Unipack(MainActivity.this);
 		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
 
-		// Intro
-		RL_intro = findViewById(R.id.intro);
-		TV_version = findViewById(R.id.version);
-		TV_version.setText(BuildConfig.VERSION_NAME);
-
-		// MainActivity
+		// View
 		AV_adview = findViewById(R.id.adView);
 		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
@@ -173,6 +159,7 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
 		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
 		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
+
 		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
 		TV_panel_pack_title.setSelected(true);
 		TV_panel_pack_subTitle.setSelected(true);
@@ -208,14 +195,9 @@ public class MainActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initVar(true);
-		if (BillingCertification.isShowAds())
-			initAdmob();
 
-		startIntro();
-	}
-
-	void startIntro() {
-		billingCertification = new BillingCertification(MainActivity.this, new BillingCertification.BillingEventListener() {
+		loadAdmob();
+		billingManager = new BillingManager(MainActivity.this, new BillingManager.BillingEventListener() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 			}
@@ -234,11 +216,11 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onRefresh() {
-				if (BillingCertification.isPurchaseRemoveAds() || BillingCertification.isPurchaseProTools()) {
-					TV_version.setTextColor(color(R.color.orange));
+				if (billingManager.isPurchaseRemoveAds() || billingManager.isPurchaseProTools()) {
+					TV_panel_total_version.setTextColor(color(R.color.orange));
 				}
 
-				if (BillingCertification.isShowAds()) {
+				if (billingManager.isShowAds()) {
 					if (checkAdsCooltime()) {
 						updateAdsCooltime();
 						showAdmob();
@@ -249,27 +231,8 @@ public class MainActivity extends BaseActivity {
 					AV_adview.setVisibility(View.GONE);
 			}
 		});
-
-		TedPermission.with(this)
-				.setPermissionListener(new PermissionListener() {
-					@Override
-					public void onPermissionGranted() {
-						new Handler().postDelayed(() -> {
-							RL_intro.setVisibility(View.GONE);
-							startMain();
-						}, 3000);
-						updatePanel(true);
-					}
-
-					@Override
-					public void onPermissionDenied(List<String> deniedPermissions) {
-						finish();
-					}
-				})
-				.setRationaleMessage(R.string.permissionRequire)
-				.setDeniedMessage(R.string.permissionDenied)
-				.setPermissions(android.Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-				.check();
+		startMain();
+		updatePanel(true);
 	}
 
 	void startMain() {
@@ -392,7 +355,6 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-		isDoneIntro = true;
 
 		checkThings();
 		update();
@@ -400,6 +362,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void checkThings() {
+		purchaseCheck();
 		versionCheck();
 		newPackCheck();
 	}
@@ -906,7 +869,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPack(boolean hardWork) {
- 		PackItem item = P_list.get(getPlayIndex());
+		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -1074,6 +1037,10 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= Check
 
+	void purchaseCheck() {
+		// todo
+	}
+
 	void versionCheck() {
 		if (!BuildConfig.VERSION_NAME.contains("b")) {
 			new Networks.CheckVersion().setOnChangeListener(version -> {
@@ -1110,14 +1077,10 @@ public class MainActivity extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (!isDoneIntro)
+		if (getPlayIndex() != -1)
+			togglePlay(null);
+		else
 			super.onBackPressed();
-		else {
-			if (getPlayIndex() != -1)
-				togglePlay(null);
-			else
-				super.onBackPressed();
-		}
 	}
 
 	@Override
@@ -1125,13 +1088,9 @@ public class MainActivity extends BaseActivity {
 		super.onResume();
 
 		initVar(false);
-		if (!isDoneIntro)
-			;
-		else {
-			setDriver();
-			checkThings();
-			updatePanel(false);
-		}
+		setDriver();
+		checkThings();
+		updatePanel(false);
 	}
 
 	@Override
@@ -1154,11 +1113,7 @@ public class MainActivity extends BaseActivity {
 	public void onPause() {
 		super.onPause();
 
-		if (!isDoneIntro)
-			;
-		else {
-			getStoreCount.setOnChangeListener(null);
-		}
+		getStoreCount.setOnChangeListener(null);
 	}
 
 	@Override

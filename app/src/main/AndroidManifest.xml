@@ -15,11 +15,6 @@
 	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="com.android.vending.BILLING" />
-	<!--<uses-permission android:name="android.permission.VIBRATE"/>-->
-
-	<!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>-->
-
 
 	<application
 		android:name="android.support.multidex.MultiDexApplication"
@@ -29,7 +24,7 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme">
 		<activity
-			android:name=".MainActivity"
+			android:name=".SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape">
 			<intent-filter>
@@ -38,6 +33,10 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity
+			android:name=".MainActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:screenOrientation="sensorLandscape"></activity>
 		<activity
 			android:name=".FBStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
@@ -110,7 +109,6 @@
 				<action android:name="com.google.firebase.MESSAGING_EVENT" />
 			</intent-filter>
 		</service>
-
 		<service android:name=".MyFirebaseInstanceIDService">
 			<intent-filter>
 				<action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
@@ -121,7 +119,6 @@
 			android:name="com.google.android.gms.ads.AdActivity"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
 			android:theme="@android:style/Theme.Translucent" />
-
 		<activity
 			android:name="com.vungle.warren.ui.VungleActivity"
 			android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
@@ -140,11 +137,9 @@
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_color"
 			android:resource="@color/app_orange" />
-
 		<meta-data
 			android:name="com.google.android.gms.version"
 			android:value="@integer/google_play_services_version" />
-
 		<meta-data
 			android:name="com.google.android.gms.ads.AD_MANAGER_APP"
 			android:value="true" />
