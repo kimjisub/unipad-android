@@ -9,7 +9,6 @@ import android.widget.TextView;
 import com.kimjisub.launchpad.networks.UniPadApiBuilder;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.launchpad.networks.dto.MakeUrlDTO;
@@ -225,7 +224,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
 						setStatus(ImportPackByUrlActivity.Status.failed, unipack.ErrorDetail);
-						FileManager.deleteFolder(UnipackPath);
+						FileManager.deleteDirectory(UnipackPath);
 					} else
 						setStatus(ImportPackByUrlActivity.Status.success, unipack.getInfoText(ImportPackByUrlActivity.this));
 
@@ -235,11 +234,11 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					log("Analyzing Error");
 					setStatus(ImportPackByUrlActivity.Status.failed, e.toString());
 					log("DeleteFolder: UnipackPath " + UnipackPath);
-					FileManager.deleteFolder(UnipackPath);
+					FileManager.deleteDirectory(UnipackPath);
 				}
 
 				log("DeleteFolder: UnipackZipPath " + UnipackZipPath);
-				FileManager.deleteFolder(UnipackZipPath);
+				FileManager.deleteDirectory(UnipackZipPath);
 
 			} catch (Exception e) {
 				e.printStackTrace();

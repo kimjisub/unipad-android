@@ -35,13 +35,13 @@ import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
+import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.kimjisub.launchpad.utils.ThemePack;
 import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.unipad.designkit.SyncCheckBox;
 import com.vungle.warren.LoadAdCallback;
 import com.vungle.warren.PlayAdCallback;
@@ -183,6 +183,32 @@ public class PlayActivity extends BaseActivity {
 		/*if (!BillingManager.isShowAds())
 			AV_adview.setVisibility(View.GONE);*/
 
+		billingManager = new BillingManager(PlayActivity.this, new BillingManager.BillingEventListener() {
+			@Override
+			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
+
+			}
+
+			@Override
+			public void onPurchaseHistoryRestored() {
+
+			}
+
+			@Override
+			public void onBillingError(int errorCode, @Nullable Throwable error) {
+
+			}
+
+			@Override
+			public void onBillingInitialized() {
+
+			}
+
+			@Override
+			public void onRefresh() {
+				setProMode(billingManager.isUnlockProTools());
+			}
+		});
 
 	}
 
@@ -532,33 +558,6 @@ public class PlayActivity extends BaseActivity {
 
 		UILoaded = true;
 		setDriver();
-
-		billingManager=new BillingManager(PlayActivity.this, new BillingManager.BillingEventListener() {
-			@Override
-			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
-
-			}
-
-			@Override
-			public void onPurchaseHistoryRestored() {
-
-			}
-
-			@Override
-			public void onBillingError(int errorCode, @Nullable Throwable error) {
-
-			}
-
-			@Override
-			public void onBillingInitialized() {
-
-			}
-
-			@Override
-			public void onRefresh() {
-				setProMode(billingManager.isUnlockProTools());
-			}
-		});
 	}
 
 	void skin_set() {

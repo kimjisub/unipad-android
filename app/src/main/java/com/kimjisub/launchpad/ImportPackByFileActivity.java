@@ -50,7 +50,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 				} else if (unipack.CriticalError) {
 					title = lang(R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
-					FileManager.deleteFolder(UnipackPath);
+					FileManager.deleteDirectory(UnipackPath);
 				} else {
 					title = lang(R.string.warning);
 					message = unipack.ErrorDetail;
@@ -59,7 +59,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 			} catch (IOException e) {
 				title = lang(R.string.analyzeFailed);
 				message = e.getMessage();
-				FileManager.deleteFolder(UnipackPath);
+				FileManager.deleteDirectory(UnipackPath);
 			}
 
 			return null;
@@ -177,7 +177,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
 						setStatus(ImportPackByFileActivity.Status.success, unipack.ErrorDetail);
-						FileManager.deleteFolder(UnipackPath);
+						FileManager.deleteDirectory(UnipackPath);
 					} else
 						setStatus(ImportPackByFileActivity.Status.success, unipack.getInfoText(ImportPackByFileActivity.this));
 
@@ -187,11 +187,11 @@ public class ImportPackByFileActivity extends BaseActivity {
 					log("Analyzing Error");
 					setStatus(ImportPackByFileActivity.Status.failed, e.toString());
 					log("DeleteFolder: UnipackPath " + UnipackPath);
-					FileManager.deleteFolder(UnipackPath);
+					FileManager.deleteDirectory(UnipackPath);
 				}
 
 				log("DeleteFolder: UnipackZipPath " + UnipackZipPath);
-				FileManager.deleteFolder(UnipackZipPath);
+				FileManager.deleteDirectory(UnipackZipPath);
 
 			} catch (Exception e) {
 				e.printStackTrace();
