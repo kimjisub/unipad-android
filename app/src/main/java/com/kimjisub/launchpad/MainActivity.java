@@ -851,6 +851,7 @@ public class MainActivity extends BaseActivity {
 			RL_panel_pack.startAnimation(animation);
 	}
 
+	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
 		TV_panel_total_unipackCount.setText(P_list.size() + "");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
@@ -862,12 +863,22 @@ public class MainActivity extends BaseActivity {
 			e.printStackTrace();
 		}
 		if (hardWork)
-			new Thread(() -> {
-				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
-				runOnUiThread(() -> TV_panel_total_unipackCapacity.setText(fileSize));
-			}).run();
+			(new AsyncTask<String, String, String>() {
+				@Override
+				protected String doInBackground(String... params) {
+					String fileSize = FileManager.byteToMB(FileManager.getFolderSize(UnipackRootPath)) + " MB";
+					publishProgress(fileSize);
+					return null;
+				}
+
+				@Override
+				protected void onProgressUpdate(String... strings) {
+					TV_panel_total_unipackCapacity.setText(strings[0]);
+				}
+			}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
+	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
 		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
@@ -888,31 +899,38 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_padTouchCount.setText(lang(R.string.measuring));
 		IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
-		new Thread(() -> {
-			String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
-			runOnUiThread(() -> TV_panel_pack_fileSize.setText(fileSize));
+		(new AsyncTask<String, String, String>() {
+			Handler handler = new Handler();
 
-			Unipack unipackDetail = new Unipack(item.path, true);
-			item.unipack = unipackDetail;
+			@Override
+			protected String doInBackground(String... params) {
+				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.path)) + " MB";
+				handler.post(() -> TV_panel_pack_fileSize.setText(fileSize));
 
-			runOnUiThread(() -> {
-				packViewSimple
-						.setTitle(unipackDetail.title)
-						.setSubTitle(unipackDetail.producerName)
-						.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
-						.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
+				Unipack unipackDetail = new Unipack(item.path, true);
+				item.unipack = unipackDetail;
+				publishProgress(fileSize);
+				handler.post(() -> {
+					packViewSimple
+							.setTitle(unipackDetail.title)
+							.setSubTitle(unipackDetail.producerName)
+							.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
+							.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
 
-				TV_panel_pack_title.setText(unipackDetail.title);
-				TV_panel_pack_subTitle.setText(unipackDetail.producerName);
-				TV_panel_pack_path.setText(item.path);
-				TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
-				TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
-				TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
-				TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
-				IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
+					TV_panel_pack_title.setText(unipackDetail.title);
+					TV_panel_pack_subTitle.setText(unipackDetail.producerName);
+					TV_panel_pack_path.setText(item.path);
+					TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
+					TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
+					TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
+					TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+					IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
 
-			});
-		}).start();
+				});
+				return null;
+			}
+
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	void updatePanelPackOption() {
