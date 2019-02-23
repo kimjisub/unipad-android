@@ -196,15 +196,16 @@ public abstract class BaseActivity extends AppCompatActivity {
 	}
 
 	public void showAdmob() {
-		Log.admob("showAdmob");
+		Log.admob("showAdmob ================================");
 
-		if (interstitialAd.isLoaded()) {
-			Log.admob("isLoaded");
+		boolean isLoaded = interstitialAd.isLoaded();
+		Log.admob("isLoaded: " + isLoaded);
+
+		if (isLoaded) {
 			interstitialAd.show();
 			loadAdmob();
 			Log.admob("show!");
 		} else {
-			Log.admob("! isLoaded (set listener)");
 			interstitialAd.setAdListener(new AdListener() {
 				public void onAdLoaded() {
 					interstitialAd.show();
@@ -215,12 +216,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 		}
 	}
 
-	public void initAdmob() {
-		Log.admob("initAdmob");
-		loadAdmob();
-	}
-
 	void loadAdmob() {
+		Log.admob("loadAdmob ================================");
 		interstitialAd = new InterstitialAd(this);
 		interstitialAd.setAdUnitId(ADMOB.MAIN_START);
 		interstitialAd.loadAd(new AdRequest.Builder()

@@ -15,6 +15,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,10 +31,11 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
+import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
-import com.kimjisub.launchpad.utils.BillingCertification;
+import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.SettingManager;
@@ -51,6 +54,7 @@ import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
 import static com.kimjisub.launchpad.utils.Log.log;
 
 public class PlayActivity extends BaseActivity {
+	BillingManager billingManager;
 
 	final long DELAY = 1;
 	RelativeLayout RL_rootView;
@@ -176,7 +180,7 @@ public class PlayActivity extends BaseActivity {
 
 		SCV_watermark.forceSetChecked(true);
 
-		/*if (!BillingCertification.isShowAds())
+		/*if (!BillingManager.isShowAds())
 			AV_adview.setVisibility(View.GONE);*/
 
 
@@ -523,12 +527,38 @@ public class PlayActivity extends BaseActivity {
 		traceLog_init();
 		chainChange(chain);
 		proLightMode(SCV_proLightMode.isChecked());
-		setProMode(BillingCertification.isUnlockProTools());
 
 		skin_set();
 
 		UILoaded = true;
 		setDriver();
+
+		billingManager=new BillingManager(PlayActivity.this, new BillingManager.BillingEventListener() {
+			@Override
+			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
+
+			}
+
+			@Override
+			public void onPurchaseHistoryRestored() {
+
+			}
+
+			@Override
+			public void onBillingError(int errorCode, @Nullable Throwable error) {
+
+			}
+
+			@Override
+			public void onBillingInitialized() {
+
+			}
+
+			@Override
+			public void onRefresh() {
+				setProMode(billingManager.isUnlockProTools());
+			}
+		});
 	}
 
 	void skin_set() {
@@ -1368,7 +1398,7 @@ public class PlayActivity extends BaseActivity {
 			requestRestart(PlayActivity.this);
 		}
 
-		if (BillingCertification.isShowAds()) {
+		if (billingManager.isShowAds()) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/
 
@@ -1435,7 +1465,7 @@ public class PlayActivity extends BaseActivity {
 		LaunchpadActivity.removeDriverListener(PlayActivity.this);
 
 		if (unipackLoaded) {
-			if (BillingCertification.isShowAds()) {
+			if (billingManager.isShowAds()) {
 				if (checkAdsCooltime()) {
 					updateAdsCooltime();
 
