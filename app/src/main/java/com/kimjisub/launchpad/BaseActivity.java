@@ -16,11 +16,13 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.utils.Constant.ADMOB;
@@ -29,47 +31,21 @@ import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
-	// ============================================================================================= Scale
+	public static ArrayList<Activity> activityList = new ArrayList<>();
+
+	private static InterstitialAd interstitialAd;
+
+	public File F_UniPackRootExt;
+	public File F_UniPackRootInt;
 
 	public static int Scale_Width = 0;
 	public static int Scale_Height = 0;
 	public static int Scale_PaddingWidth = 0;
 	public static int Scale_PaddingHeight = 0;
-	public static ArrayList<Activity> activityList = new ArrayList<>();
 
-	// ============================================================================================= Ads Cooltime
-	private static InterstitialAd interstitialAd;
-
-	public static void showToast(Context context, String msg) {
-		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-	}
-
-	// ============================================================================================= vungle
-
-	public static void showToast(Context context, int resId) {
-		Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
-	}
-
-	// ============================================================================================= Admob
-
-	public static void showDialog(Context context, String title, String content) {
-		new AlertDialog.Builder(context)
-				.setTitle(title)
-				.setMessage(content)
-				.setPositiveButton(lang(context, R.string.accept), null)
-				.show();
-	}
-
-	public static String lang(Context context, int id) {
-		return context.getResources().getString(id);
-	}
-
-	public static int color(Context context, int id) {
-		return context.getResources().getColor(id);
-	}
-
-	public static Drawable drawable(Context context, int id) {
-		return context.getResources().getDrawable(id);
+	private void initVar(){
+		F_UniPackRootExt = FileManager.getExternalUniPackRoot();
+		F_UniPackRootInt = FileManager.getInternalUniPackRoot(getApplicationContext());
 	}
 
 	// ============================================================================================= Show
@@ -132,16 +108,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 	}
 
 	// ============================================================================================= Function
-	
-	/*public int pxToDp(int pixel) {
-		float dp = 0;
-		try {
-			DisplayMetrics metrics = getResources().getDisplayMetrics();
-			dp = pixel / (metrics.densityDpi / 160f);
-		} catch (Exception ignored) {
-		}
-		return (int) dp;
-	}*/
 
 	void rescanScale(LinearLayout LL_scale, LinearLayout LL_paddingScale) {
 		Scale_Width = LL_scale.getWidth();
@@ -150,7 +116,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
 	}
 
-	// ============================================================================================= Get Resources
+	// ============================================================================================= Ads
 
 	public boolean checkAdsCooltime() {
 		long prevTime = SettingManager.PrevAdsShowTime.load(this);
@@ -225,7 +191,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 				.build());
 	}
 
-	// ============================================================================================= Activity
+	// ============================================================================================= Show Things, Get Resources
+
 
 	public void showToast(String msg) {
 		showToast(this, msg);
@@ -235,8 +202,48 @@ public abstract class BaseActivity extends AppCompatActivity {
 		showToast(this, resId);
 	}
 
+	public static void showToast(Context context, String msg) {
+		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+	}
+
+	public static void showToast(Context context, int resId) {
+		Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
+	}
+
 	public void showDialog(String title, String content) {
 		showDialog(this, title, content);
+	}
+
+	public static void showDialog(Context context, String title, String content) {
+		new AlertDialog.Builder(context)
+				.setTitle(title)
+				.setMessage(content)
+				.setPositiveButton(lang(context, R.string.accept), null)
+				.show();
+	}
+
+	public String lang(int id) {
+		return lang(this, id);
+	}
+
+	public static String lang(Context context, int id) {
+		return context.getResources().getString(id);
+	}
+
+	public int color(int id) {
+		return color(this, id);
+	}
+
+	public static int color(Context context, int id) {
+		return context.getResources().getColor(id);
+	}
+
+	public Drawable drawable(int id) {
+		return drawable(this, id);
+	}
+
+	public static Drawable drawable(Context context, int id) {
+		return context.getResources().getDrawable(id);
 	}
 
 	public int dpToPx(float dp) {
@@ -245,23 +252,24 @@ public abstract class BaseActivity extends AppCompatActivity {
 		return Math.round(px);
 	}
 
-	public String lang(int id) {
-		return lang(this, id);
+	public int pxToDp(int pixel) {
+		float dp = 0;
+		try {
+			DisplayMetrics metrics = getResources().getDisplayMetrics();
+			dp = pixel / (metrics.densityDpi / 160f);
+		} catch (Exception ignored) {
+		}
+		return (int) dp;
 	}
 
-	public int color(int id) {
-		return color(this, id);
-	}
-
-	public Drawable drawable(int id) {
-		return drawable(this, id);
-	}
+	// ============================================================================================= Activity
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
 		startActivity(this);
+		initVar();
 	}
 
 	@Override

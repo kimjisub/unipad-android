@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 
+import java.io.File;
+
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
@@ -46,42 +48,6 @@ public class SettingManager {
 				url = "/";
 
 			return url;
-		}
-	}
-
-	public static class IsUsingSDCard {
-		final static String TAG = "use_sd_card";
-
-		private static String path;
-
-		public static void save(Context context, boolean value) {
-			SharedPreferences pref = getDefaultSharedPreferences(context);
-			SharedPreferences.Editor editor = pref.edit();
-			editor.putBoolean(TAG, value);
-			editor.apply();
-		}
-
-		public static boolean load(Context context) {
-			SharedPreferences pref = getDefaultSharedPreferences(context);
-			Boolean isSDCard = pref.getBoolean(TAG, false);
-
-			String internal = FileManager.getInternalStoragePath();
-			String external = FileManager.getExternalSDCardPath();
-			boolean isExternalAvailable = isSDCard && external != null;
-
-			path = (isExternalAvailable ? external : internal) + "/Unipad";
-			save(context, isExternalAvailable);
-
-			Log.log("internal : " + internal);
-			Log.log("external : " + external);
-			Log.log("isExternalAvailable : " + isExternalAvailable);
-			Log.log("UnipackRootPath : " + path);
-			return isExternalAvailable;
-		}
-
-		public static String getPath(Context context) {
-			load(context);
-			return path;
 		}
 	}
 

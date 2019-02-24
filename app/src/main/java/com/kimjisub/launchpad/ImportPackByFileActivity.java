@@ -15,14 +15,18 @@ import java.io.File;
 import java.io.IOException;
 
 public class ImportPackByFileActivity extends BaseActivity {
-
-	TextView TV_title;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_importpack);
+	}
+	/*TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
 
-	String UnipackRootPath;
-	String UnipackZipPath;
-	String UnipackPath;
+	File F_UniPackRoot;
+	File F_UniPackZip;
+	File F_UniPackFile;
 	@SuppressLint("StaticFieldLeak")
 	AsyncTask<String, String, String> processTask = new AsyncTask<String, String, String>() {
 
@@ -32,7 +36,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 		@Override
 		protected void onPreExecute() {
 			TV_title.setText(lang(R.string.analyzing));
-			TV_message.setText(UnipackZipPath);
+			TV_message.setText(F_UniPackZip.getPath());
 			TV_info.setText("getPath : " + UnipackZipPath);
 			super.onPreExecute();
 		}
@@ -42,7 +46,8 @@ public class ImportPackByFileActivity extends BaseActivity {
 		protected String doInBackground(String... params) {
 			try {
 				FileManager.unZipFile(UnipackZipPath, UnipackPath);
-				Unipack unipack = new Unipack(UnipackPath, true);
+				File UniPackFile = new File(UnipackPath);
+				Unipack unipack = new Unipack(UniPackFile, true);
 
 				if (unipack.ErrorDetail == null) {
 					title = lang(R.string.analyzeComplete);
@@ -50,7 +55,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 				} else if (unipack.CriticalError) {
 					title = lang(R.string.analyzeFailed);
 					message = unipack.ErrorDetail;
-					FileManager.deleteDirectory(UnipackPath);
+					FileManager.deleteDirectory(UniPackFile);
 				} else {
 					title = lang(R.string.warning);
 					message = unipack.ErrorDetail;
@@ -59,7 +64,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 			} catch (IOException e) {
 				title = lang(R.string.analyzeFailed);
 				message = e.getMessage();
-				FileManager.deleteDirectory(UnipackPath);
+				FileManager.deleteDirectory(new File(UnipackPath));
 			}
 
 			return null;
@@ -83,12 +88,13 @@ public class ImportPackByFileActivity extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(ImportPackByFileActivity.this);
+		F_UniPackRoot = SettingManager.IsUsingSDCard.getPath(ImportPackByFileActivity.this);
 		UnipackZipPath = getIntent().getData().getPath();
 		File file = new File(UnipackZipPath);
 		String name = file.getName();
 		String name_ = name.substring(0, name.lastIndexOf("."));
-		UnipackPath = FileManager.makeNextPath(UnipackRootPath, name_, "/");
+		UnipackPath = FileManager.makeNextPath(F_UniPackRoot, name_, "/");
+		UniPackFile = new File(UnipackPath);
 
 		log("UnipackZipPath: " + UnipackZipPath);
 		log("UnipackPath: " + UnipackPath);
@@ -170,14 +176,15 @@ public class ImportPackByFileActivity extends BaseActivity {
 		protected String doInBackground(String[] params) {
 			log("Unzip Task doInBackground()");
 
+
 			try {
 				try {
 					FileManager.unZipFile(UnipackZipPath, UnipackPath);
-					Unipack unipack = new Unipack(UnipackPath, true);
+					Unipack unipack = new Unipack(UniPackFile, true);
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
 						setStatus(ImportPackByFileActivity.Status.success, unipack.ErrorDetail);
-						FileManager.deleteDirectory(UnipackPath);
+						FileManager.deleteDirectory(UniPackFile);
 					} else
 						setStatus(ImportPackByFileActivity.Status.success, unipack.getInfoText(ImportPackByFileActivity.this));
 
@@ -187,11 +194,11 @@ public class ImportPackByFileActivity extends BaseActivity {
 					log("Analyzing Error");
 					setStatus(ImportPackByFileActivity.Status.failed, e.toString());
 					log("DeleteFolder: UnipackPath " + UnipackPath);
-					FileManager.deleteDirectory(UnipackPath);
+					FileManager.deleteDirectory(UniPackFile);
 				}
 
 				log("DeleteFolder: UnipackZipPath " + UnipackZipPath);
-				FileManager.deleteDirectory(UnipackZipPath);
+				FileManager.deleteDirectory(new File(UnipackZipPath));
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -212,5 +219,5 @@ public class ImportPackByFileActivity extends BaseActivity {
 			log("Unzip Task onPostExecute()");
 			delayFinish();
 		}
-	}
+	}*/
 }

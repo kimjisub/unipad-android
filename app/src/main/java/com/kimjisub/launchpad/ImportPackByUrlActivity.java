@@ -14,6 +14,7 @@ import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.launchpad.networks.dto.MakeUrlDTO;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,14 +27,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ImportPackByUrlActivity extends BaseActivity {
-
-	TextView TV_title;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_importpack);
+	}
+	/*TextView TV_title;
 	TextView TV_message;
 	TextView TV_info;
 
-	String UnipackRootPath;
-	String UnipackZipPath;
-	String UnipackPath;
+	File F_UniPackRoot;
+	File F_UniPackZip;
+	File F_UniPack;
 
 	String code;
 
@@ -42,7 +47,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		UnipackRootPath = SettingManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this);
+		F_UniPackRoot = new File(SettingManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this));
 		//UnipackZipPath
 		//UnipackPath
 
@@ -67,8 +72,8 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					setStatus(Status.prepare, code + "\n" + makeUrlDTO.title + "\n" + makeUrlDTO.producerName);
 					log("title: " + makeUrlDTO.title);
 					log("producerName: " + makeUrlDTO.producerName);
-					UnipackZipPath = FileManager.makeNextPath(UnipackRootPath, makeUrlDTO.title + " #" + code, ".zip");
-					UnipackPath = FileManager.makeNextPath(UnipackRootPath, makeUrlDTO.title + " #" + code, "/");
+					F_UniPackZip = FileManager.makeNextPath(F_UniPackRoot, makeUrlDTO.title + " #" + code, ".zip");
+					F_UniPack = FileManager.makeNextPath(F_UniPackRoot, makeUrlDTO.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					addCount(code);
 				} else {
@@ -193,7 +198,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 				log("fileSize : " + fileSize);
 
 				InputStream input = new BufferedInputStream(downloadUrl.openStream());
-				OutputStream output = new FileOutputStream(UnipackZipPath);
+				OutputStream output = new FileOutputStream(F_UniPackZip);
 
 				byte data[] = new byte[1024];
 				long total = 0;
@@ -219,12 +224,12 @@ public class ImportPackByUrlActivity extends BaseActivity {
 				setStatus(ImportPackByUrlActivity.Status.analyzing, code + "\n" + title + "\n" + producerName);
 
 				try {
-					FileManager.unZipFile(UnipackZipPath, UnipackPath);
-					Unipack unipack = new Unipack(UnipackPath, true);
+					FileManager.unZipFile(F_UniPackZip.getPath(), F_UniPack.getPath());
+					Unipack unipack = new Unipack(F_UniPack, true);
 					if (unipack.CriticalError) {
 						Log.err(unipack.ErrorDetail);
 						setStatus(ImportPackByUrlActivity.Status.failed, unipack.ErrorDetail);
-						FileManager.deleteDirectory(UnipackPath);
+						FileManager.deleteDirectory(F_UniPack);
 					} else
 						setStatus(ImportPackByUrlActivity.Status.success, unipack.getInfoText(ImportPackByUrlActivity.this));
 
@@ -233,12 +238,12 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					e.printStackTrace();
 					log("Analyzing Error");
 					setStatus(ImportPackByUrlActivity.Status.failed, e.toString());
-					log("DeleteFolder: UnipackPath " + UnipackPath);
-					FileManager.deleteDirectory(UnipackPath);
+					log("DeleteFolder: UnipackPath " + F_UniPack.getPath());
+					FileManager.deleteDirectory(F_UniPack);
 				}
 
-				log("DeleteFolder: UnipackZipPath " + UnipackZipPath);
-				FileManager.deleteDirectory(UnipackZipPath);
+				log("DeleteFolder: UnipackZipPath " + F_UniPackZip.getPath());
+				FileManager.deleteDirectory(F_UniPackZip);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -259,5 +264,5 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			log("Download Task onPostExecute()");
 			delayFinish();
 		}
-	}
+	}*/
 }
