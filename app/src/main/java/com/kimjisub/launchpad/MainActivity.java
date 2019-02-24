@@ -934,7 +934,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_pack_soundCount.setText(lang(R.string.measuring));
 		TV_panel_pack_ledCount.setText(lang(R.string.measuring));
 		TV_panel_pack_fileSize.setText(lang(R.string.measuring));
-		TV_panel_pack_openCount.setText(DB_unipackOpen.getCountByPath(item.path) + "");
+		TV_panel_pack_openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
 		TV_panel_pack_padTouchCount.setText(lang(R.string.measuring));
 		IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
