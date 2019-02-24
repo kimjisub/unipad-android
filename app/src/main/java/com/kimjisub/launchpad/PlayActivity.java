@@ -48,6 +48,7 @@ import com.vungle.warren.PlayAdCallback;
 import com.vungle.warren.Vungle;
 import com.vungle.warren.error.VungleException;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
@@ -219,9 +220,10 @@ public class PlayActivity extends BaseActivity {
 		setContentView(R.layout.activity_play);
 		initVar();
 
-		String path = getIntent().getStringExtra("getPath");
+		String path = getIntent().getStringExtra("path");
+		File file = new File(path);
 		log("[01] Start Load Unipack " + path);
-		unipack = new Unipack(path, true);
+		unipack = new Unipack(file, true);
 
 		try {
 			log("[02] Check ErrorDetail");
@@ -324,7 +326,7 @@ public class PlayActivity extends BaseActivity {
 									if (arrayList != null) {
 										for (int l = 0; l < arrayList.size(); l++) {
 											Unipack.Sound e = unipack.soundTable[i][j][k].get(l);
-											e.id = soundPool.load(e.path, 1);
+											e.id = soundPool.load(e.file.getPath(), 1);
 											publishProgress();
 										}
 									}

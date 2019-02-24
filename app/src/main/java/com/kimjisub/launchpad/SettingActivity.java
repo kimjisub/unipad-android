@@ -71,11 +71,6 @@ public class SettingActivity extends PreferenceActivity {
 			return false;
 		});
 
-		findPreference("use_sd_card").setOnPreferenceChangeListener((preference, newValue) -> {
-			BaseActivity.requestRestart(SettingActivity.this);
-			return true;
-		});
-
 		findPreference("community").setOnPreferenceClickListener(preference -> {
 			int[] titleList = {R.string.officialHomepage,
 					R.string.officialFacebook,
@@ -272,7 +267,6 @@ public class SettingActivity extends PreferenceActivity {
 	@Override
 	protected void onResume() {
 		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(SettingActivity.this));
-		findPreference("use_sd_card").setSummary(SettingManager.IsUsingSDCard.getPath(SettingActivity.this));
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 
 		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;

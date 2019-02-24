@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -130,25 +128,23 @@ public class FileManager {
 		return files;
 	}
 
-	public static String makeNextPath(String path, String name, String extension) {
-		String ret;
-		String newName = convertFilename(name);
+	public static File makeNextPath(File dir, String name, String extension) {
+		File ret;
+		String newName = filterFilename(name);
 		for (int i = 1; ; i++) {
 			if (i == 1)
-				ret = path + "/" + newName + extension;
+				ret = getChild(dir, newName + extension);
 			else
-				ret = path + "/" + newName + " (" + i + ")" + extension;
+				ret = getChild(dir, newName + " (" + i + ")" + extension);
 
-			if (!new File(ret).exists())
+			if (!ret.exists())
 				break;
 		}
 
-		Log.test(path + "/" + newName + extension);
-		Log.test(ret);
 		return ret;
 	}
 
-	public static String convertFilename(String orgnStr) {
+	public static String filterFilename(String orgnStr) {
 		String regExpr = "[|\\\\?*<\":>/]+";
 
 		String tmpStr = orgnStr.replaceAll(regExpr, "");
@@ -163,7 +159,7 @@ public class FileManager {
 	public static void moveDirectory(File F_source, File F_target) {
 		Log.test(F_source.getPath() + " -> " + F_target.getPath());
 		try {
-			if(!F_target.isDirectory())
+			if (!F_target.isDirectory())
 				F_target.mkdir();
 
 			File[] sourceList = F_source.listFiles();
@@ -198,21 +194,19 @@ public class FileManager {
 				}
 			}
 
-			deleteDirectory(F_source.getPath());
+			deleteDirectory(F_source);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void deleteDirectory(String path) {
+	public static void deleteDirectory(File file) {
 
 		try {
-			File file = new File(path);
-
 			if (file.isDirectory()) {
 				File[] childFileList = file.listFiles();
 				for (File childFile : childFileList)
-					deleteDirectory(childFile.getPath());
+					deleteDirectory(childFile);
 				file.delete();
 			} else
 				file.delete();
@@ -223,10 +217,14 @@ public class FileManager {
 		}
 	}
 
+	public static File getChild(File parent, String childName) {
+		return new File(parent.getPath() + "/" + childName);
+	}
+
 	// ============================================================================================= Get Info
 
-	public static void makeNomedia(String path) {
-		File nomedia = new File(path + "/.nomedia");
+	public static void makeNomedia(File parent) {
+		File nomedia = getChild(parent, ".nomedia");
 		if (!nomedia.isFile()) {
 			try {
 				(new FileWriter(nomedia)).close();
@@ -241,9 +239,8 @@ public class FileManager {
 		return String.format("%.2f", Byte / 1024L / 1024L);
 	}
 
-	public static long getFolderSize(String a_path) {
+	public static long getFolderSize(File file) {
 		long totalMemory = 0;
-		File file = new File(a_path);
 
 		if (file.isFile()) {
 			return file.length();
@@ -253,18 +250,22 @@ public class FileManager {
 				return 0;
 
 			for (File childFile : childFileList)
-				totalMemory += getFolderSize(childFile.getAbsolutePath());
+				totalMemory += getFolderSize(childFile);
 
 			return totalMemory;
 		} else
 			return 0;
 	}
 
-	public static String getAppUniPackStoragePath(Context context) {
-		return context.getDir("UniPack", MODE_PRIVATE).getPath();
+	public static File getExternalUniPackRoot() {
+		return getChild(Environment.getExternalStorageDirectory(), "Unipad");
 	}
 
-	public static String getInternalStoragePath() {
+	public static File getInternalUniPackRoot(Context context) {
+		return context.getDir("UniPack", MODE_PRIVATE);
+	}
+
+	/*public static String getInternalStoragePath() {
 		return Environment.getExternalStorageDirectory().getPath();
 	}
 
@@ -310,7 +311,7 @@ public class FileManager {
 		}
 
 		return out;
-	}
+	}*/
 
 	// ============================================================================================= Etc
 

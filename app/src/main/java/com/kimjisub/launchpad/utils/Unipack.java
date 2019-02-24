@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class Unipack {
-	public String path;
+	public File projectFile;
 
 	public boolean loadDetail;
 	public String ErrorDetail = null;
@@ -24,6 +24,12 @@ public class Unipack {
 	public boolean isKeySound = false;
 	public boolean isKeyLED = false;
 	public boolean isAutoPlay = false;
+
+	public File F_info;
+	public File F_sounds;
+	public File F_keySound;
+	public File F_keyLED;
+	public File F_autoPlay;
 
 	public String title = null;
 	public String producerName = null;
@@ -42,17 +48,38 @@ public class Unipack {
 	public ArrayList<LED>[][][] ledTable = null;
 	public ArrayList<AutoPlay> autoPlayTable = null;
 
-	public Unipack(String path, boolean loadDetail) {
+	public Unipack(File projectFile, boolean loadDetail) {
 
-		this.path = path;
+		this.projectFile = projectFile;
 		this.loadDetail = loadDetail;
 
 		try {
-			isInfo = (new File(path + "/info")).isFile();
-			isSounds = (new File(path + "/sounds")).isDirectory();
-			isKeySound = (new File(path + "/keySound")).isFile();
-			isKeyLED = (new File(path + "/keyLED")).isDirectory();
-			isAutoPlay = (new File(path + "/autoPlay")).isFile();
+			for (File item : projectFile.listFiles()) {
+				switch (item.getName().toLowerCase()) {
+					case "info":
+						F_info = item;
+						break;
+					case "sounds":
+						F_sounds = item;
+						break;
+					case "keysound":
+						F_keySound = item;
+						break;
+					case "keyled":
+						F_keyLED = item;
+						break;
+					case "autoplay":
+						F_autoPlay = item;
+						break;
+				}
+			}
+
+
+			isInfo = F_info != null && F_info.isFile();
+			isSounds = F_sounds != null && F_sounds.isDirectory();
+			isKeySound = F_keySound != null && F_keySound.isFile();
+			isKeyLED = F_keyLED != null && F_keyLED.isDirectory();
+			isAutoPlay = F_autoPlay != null && F_autoPlay.isFile();
 
 			if (!isInfo) addErr("info doesn't exist");
 			if (!isKeySound) addErr("keySound doesn't exist");
@@ -62,7 +89,7 @@ public class Unipack {
 			else {
 
 				if (isInfo) {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/info")));
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_info)));
 					String s;
 					while ((s = reader.readLine()) != null) {
 
@@ -127,7 +154,7 @@ public class Unipack {
 					if (isKeySound) {
 						soundTable = new ArrayList[chain][buttonX][buttonY];
 						soundTableCount = 0;
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path + "/keySound")));
+						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_keySound)));
 						String s;
 						while ((s = reader.readLine()) != null) {
 							String[] split = s.split(" ");
@@ -169,17 +196,17 @@ public class Unipack {
 								addErr("keySound : [" + s + "]" + " y is incorrect");
 							else {
 
-								Sound tmp = new Sound(path + "/sounds/" + soundURL, loop, wormhole);
+								Sound sound = new Sound(new File(F_sounds.getAbsolutePath() + "/" + soundURL), loop, wormhole);
 
-								if (!new File(tmp.path).isFile()) {
+								if (!sound.file.isFile()) {
 									addErr("keySound : [" + s + "]" + " sound was not found");
 									continue;
 								}
 
 								if (soundTable[c][x][y] == null)
 									soundTable[c][x][y] = new ArrayList();
-								tmp.num = soundTable[c][x][y].size();
-								soundTable[c][x][y].add(tmp);
+								sound.num = soundTable[c][x][y].size();
+								soundTable[c][x][y].add(sound);
 								soundTableCount++;
 
 							}
@@ -191,7 +218,7 @@ public class Unipack {
 					if (isKeyLED) {
 						ledTable = new ArrayList[chain][buttonX][buttonY];
 						ledTableCount = 0;
-						File[] fileList = FileManager.sortByName(new File(path + "/keyLED").listFiles());
+						File[] fileList = FileManager.sortByName(F_keyLED.listFiles());
 						for (File file : fileList) {
 							if (file.isFile()) {
 								String fileName = file.getName();
@@ -565,7 +592,7 @@ public class Unipack {
 	// =============================================================================================
 
 	String getMainAutoplay() {
-		File[] fileList = FileManager.sortByName(new File(path).listFiles());
+		File[] fileList = FileManager.sortByName(projectFile.listFiles());
 		for (File f : fileList) {
 			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
 				return f.getPath();
@@ -574,7 +601,7 @@ public class Unipack {
 	}
 
 	public String[] getAutoplays() {
-		File[] fileList = FileManager.sortByName(new File(path).listFiles());
+		File[] fileList = FileManager.sortByName(projectFile.listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
 			if (f.isFile() && (f.getName().toLowerCase().startsWith("autoplay") || f.getName().toLowerCase().startsWith("_autoplay")))
@@ -598,11 +625,11 @@ public class Unipack {
 				BaseActivity.lang(context, R.string.producerName) + " : " + this.producerName + "\n" +
 				BaseActivity.lang(context, R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
 				BaseActivity.lang(context, R.string.chainCount) + " : " + this.chain + "\n" +
-				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(path)) + " MB";
+				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(projectFile)) + " MB";
 	}
 
 	public static class Sound {
-		public String path = null;
+		public File file = null;
 		public int loop = -1;
 		public int wormhole = -1;
 
@@ -610,13 +637,13 @@ public class Unipack {
 		public int id = -1;
 
 
-		Sound(String path, int loop) {
-			this.path = path;
+		Sound(File file, int loop) {
+			this.file = file;
 			this.loop = loop;
 		}
 
-		Sound(String path, int loop, int wormhole) {
-			this.path = path;
+		Sound(File file, int loop, int wormhole) {
+			this.file = file;
 			this.loop = loop;
 			this.wormhole = wormhole;
 		}
