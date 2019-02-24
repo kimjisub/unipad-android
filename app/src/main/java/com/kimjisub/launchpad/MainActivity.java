@@ -16,6 +16,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -38,6 +40,8 @@ import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
+import com.kimjisub.launchpad.listManager.MainAdapter;
+import com.kimjisub.launchpad.listManager.MainItem;
 import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.FileManager;
@@ -74,7 +78,8 @@ public class MainActivity extends BaseActivity {
 	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
 	ScrollView SV_scrollView;
-	LinearLayout LL_list;
+	//LinearLayout LL_list;
+	RecyclerView RV_view;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_reconnectLaunchpad;
 	FloatingActionButton FAB_loadUniPack;
@@ -112,7 +117,10 @@ public class MainActivity extends BaseActivity {
 	ImageView IV_panel_pack_delete;
 
 	int lastPlayIndex = -1;
-	ArrayList<PackItem> P_list;
+	ArrayList<MainItem> I_list;
+	RecyclerView.Adapter RV_adapter;
+	RecyclerView.LayoutManager RV_layoutManager;
+
 	Networks.FirebaseManager firebase_storeCount;
 
 	boolean updateComplete = true;
@@ -127,7 +135,8 @@ public class MainActivity extends BaseActivity {
 		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
 		SV_scrollView = findViewById(R.id.scrollView);
-		LL_list = findViewById(R.id.list);
+		//LL_list = findViewById(R.id.list);
+		RV_view = findViewById(R.id.RV_view);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_reconnectLaunchpad = findViewById(R.id.fab_reconnectLaunchpad);
 		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
@@ -187,7 +196,14 @@ public class MainActivity extends BaseActivity {
 
 		// var
 		if (onFirst) {
-			P_list = new ArrayList<>();
+			I_list = new ArrayList<>();
+			RV_adapter = new MainAdapter(I_list, DB_unipack, MainActivity.this);
+			RV_layoutManager = new LinearLayoutManager(MainActivity.this);
+
+			RV_view.setHasFixedSize(false);
+			RV_view.setAdapter(RV_adapter);
+			RV_view.setLayoutManager(RV_layoutManager);
+
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			firebase_storeCount.setEventListener(new ValueEventListener() {
 				@Override
@@ -304,9 +320,8 @@ public class MainActivity extends BaseActivity {
 		});
 
 		IV_panel_pack_star.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null) {
 				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 				unipackVO.pin = !unipackVO.pin;
 				DB_unipack.update(item.path, unipackVO);
@@ -315,9 +330,8 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 		IV_panel_pack_bookmark.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null) {
 				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 				unipackVO.bookmark = !unipackVO.bookmark;
 				DB_unipack.update(item.path, unipackVO);
@@ -329,10 +343,8 @@ public class MainActivity extends BaseActivity {
 
 		});
 		IV_panel_pack_storage.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
-
+			MainItem item = getCurrPlay();
+			if (item != null) {
 				File source = new File(item.path);
 				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
 				File target = FileManager.getChild(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
@@ -365,29 +377,25 @@ public class MainActivity extends BaseActivity {
 
 				updatePanelPackOption();
 			}
-
 		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null){
 				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
 		IV_panel_pack_website.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null){
 				String website = item.unipack.website;
 				if (website != null)
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
 		IV_panel_pack_func.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null)
 				new AlertDialog.Builder(MainActivity.this)
 						.setTitle(lang(R.string.warning))
 						.setMessage(lang(R.string.doYouWantToRemapProject))
@@ -395,13 +403,10 @@ public class MainActivity extends BaseActivity {
 							autoMapping(item.unipack);
 						}).setNegativeButton(lang(R.string.cancel), null)
 						.show();
-
-			}
 		});
 		IV_panel_pack_delete.setOnClickListener(v -> {
-			int playIndex = getPlayIndex();
-			if (playIndex != -1) {
-				PackItem item = P_list.get(playIndex);
+			MainItem item = getCurrPlay();
+			if (item != null)
 
 				new AlertDialog.Builder(MainActivity.this)
 						.setTitle(lang(R.string.warning))
@@ -410,7 +415,6 @@ public class MainActivity extends BaseActivity {
 							deleteUnipack(item.unipack);
 						}).setNegativeButton(lang(R.string.cancel), null)
 						.show();
-			}
 		});
 
 
@@ -431,8 +435,8 @@ public class MainActivity extends BaseActivity {
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 
-		LL_list.removeAllViews();
-		P_list.clear();
+		//LL_list.removeAllViews();
+		I_list.clear();
 
 		togglePlay(null);
 		updatePanel(true);
@@ -449,7 +453,7 @@ public class MainActivity extends BaseActivity {
 					addItemByFile(project);
 				}
 
-				if (P_list.size() == 0)
+				if (I_list.size() == 0)
 					runOnUiThread(this::addErrorItem);
 			} finally {
 				runOnUiThread(() -> SRL_scrollView.setRefreshing(false));
@@ -463,54 +467,9 @@ public class MainActivity extends BaseActivity {
 
 		String path = file.getAbsolutePath();
 		Unipack unipack = new Unipack(new File(path), false);
-		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(path);
-		int flagColor;
 
-		String title = unipack.title;
-		String subTitle = unipack.producerName;
-
-		if (unipack.CriticalError) {
-			flagColor = color(R.color.red);
-			title = lang(R.string.errOccur);
-			subTitle = path;
-		} else
-			flagColor = color(R.color.skyblue);
-
-		if (unipackVO.bookmark)
-			flagColor = color(R.color.orange);
-
-
-		final PackViewSimple packViewSimple = new PackViewSimple(MainActivity.this)
-				.setFlagColor(flagColor)
-				.setTitle(title)
-				.setSubTitle(subTitle)
-				.setOption1(lang(R.string.LED_), unipack.isKeyLED)
-				.setOption2(lang(R.string.autoPlay_), unipack.isAutoPlay)
-				.setOnEventListener(new PackViewSimple.OnEventListener() {
-					@Override
-					public void onViewClick(PackViewSimple v) {
-						togglePlay(path);
-					}
-
-					@Override
-					public void onViewLongClick(PackViewSimple v) {
-					}
-
-					@Override
-					public void onPlayClick(PackViewSimple v) {
-						rescanScale(LL_scale, LL_paddingScale);
-						LaunchpadActivity.removeDriverListener(MainActivity.this);
-
-						DB_unipackOpen.add(new UnipackOpenVO(path, new Date()));
-
-						Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-						intent.putExtra("path", path);
-						startActivity(intent);
-					}
-				});
-
-		PackItem packItem = new PackItem(packViewSimple, unipack, path, flagColor);
-		P_list.add(packItem);
+		MainItem packItem = new MainItem(unipack, path, 0);
+		I_list.add(packItem);
 
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		int left = dpToPx(16);
@@ -519,11 +478,8 @@ public class MainActivity extends BaseActivity {
 		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
 		runOnUiThread(() -> {
-			LL_list.addView(packItem.packViewSimple, lp);
-			Animation a = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-			a.setInterpolator(AnimationUtils.loadInterpolator(MainActivity.this, android.R.anim.accelerate_decelerate_interpolator));
-			packItem.packViewSimple.setAnimation(a);
-			TV_panel_total_unipackCount.setText(P_list.size() + "");
+			RV_adapter.notifyDataSetChanged();
+			TV_panel_total_unipackCount.setText(I_list.size() + "");
 		});
 
 
@@ -556,7 +512,7 @@ public class MainActivity extends BaseActivity {
 		int right = dpToPx(16);
 		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
-		LL_list.addView(packViewSimple, lp);
+		//LL_list.addView(packViewSimple, lp); // todo
 	}
 
 	// ============================================================================================= UniPack Work
@@ -794,34 +750,21 @@ public class MainActivity extends BaseActivity {
 
 	// ============================================================================================= List Manage
 
-	class PackItem {
-		PackViewSimple packViewSimple;
-		Unipack unipack;
-		String path;
-		int flagColors;
-
-		public PackItem(PackViewSimple packViewSimple, Unipack unipack, String path, int flagColors) {
-			this.packViewSimple = packViewSimple;
-			this.unipack = unipack;
-			this.path = path;
-			this.flagColors = flagColors;
-		}
-	}
 
 	void togglePlay(int i) {
-		togglePlay(P_list.get(i).path);
+		togglePlay(I_list.get(i).path);
 	}
 
 	@SuppressLint("SetTextI18n")
-	void togglePlay(String path) {
+	public void togglePlay(String path) {
 		try {
 			int i = 0;
-			for (PackItem packItem : P_list) {
-				if (packItem.path.equals(path)) {
-					packItem.packViewSimple.togglePlay(color(R.color.red), packItem.flagColors);
+			for (MainItem mainItem : I_list) {
+				if (mainItem.path.equals(path)) {
+					mainItem.packViewSimple.togglePlay(color(R.color.red), mainItem.flagColor);
 					lastPlayIndex = i;
 				} else
-					packItem.packViewSimple.togglePlay(false, color(R.color.red), packItem.flagColors);
+					mainItem.packViewSimple.togglePlay(false, color(R.color.red), mainItem.flagColor);
 
 				i++;
 			}
@@ -834,12 +777,23 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
+	public void pressPlay(String path) {
+		rescanScale(LL_scale, LL_paddingScale);
+		LaunchpadActivity.removeDriverListener(MainActivity.this);
+
+		DB_unipackOpen.add(new UnipackOpenVO(path, new Date()));
+
+		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
+		intent.putExtra("path", path);
+		startActivity(intent);
+	}
+
 	int getPlayIndex() {
 		int index = -1;
 
 		int i = 0;
-		for (PackItem packItem : P_list) {
-			if (packItem.packViewSimple.isPlay()) {
+		for (MainItem mainItem : I_list) {
+			if (mainItem.packViewSimple.isPlay()) {
 				index = i;
 				break;
 			}
@@ -847,6 +801,16 @@ public class MainActivity extends BaseActivity {
 		}
 
 		return index;
+	}
+
+	MainItem getCurrPlay() {
+		MainItem ret = null;
+
+		int playIndex = getPlayIndex();
+		if (playIndex != -1)
+			ret = I_list.get(playIndex);
+
+		return ret;
 	}
 
 	// ============================================================================================= panel
@@ -886,7 +850,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
-		TV_panel_total_unipackCount.setText(P_list.size() + "");
+		TV_panel_total_unipackCount.setText(I_list.size() + "");
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 		try {
@@ -913,7 +877,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
-		PackItem item = P_list.get(getPlayIndex());
+		MainItem item = I_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -941,27 +905,6 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> TV_panel_pack_fileSize.setText(fileSize));
-
-				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
-				item.unipack = unipackDetail;
-				publishProgress(fileSize);
-				handler.post(() -> {
-					packViewSimple
-							.setTitle(unipackDetail.title)
-							.setSubTitle(unipackDetail.producerName)
-							.setOption1(lang(R.string.LED_), unipackDetail.isKeyLED)
-							.setOption2(lang(R.string.autoPlay_), unipackDetail.isAutoPlay);
-
-					TV_panel_pack_title.setText(unipackDetail.title);
-					TV_panel_pack_subTitle.setText(unipackDetail.producerName);
-					TV_panel_pack_path.setText(item.path);
-					TV_panel_pack_scale.setText(unipackDetail.buttonX + " × " + unipack.buttonY);
-					TV_panel_pack_chainCount.setText(unipackDetail.chain + "");
-					TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
-					TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
-					IV_panel_pack_website.setVisibility(unipackDetail.website != null ? View.VISIBLE : View.INVISIBLE);
-
-				});
 				return null;
 			}
 
@@ -969,7 +912,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPackOption() {
-		PackItem item = P_list.get(getPlayIndex());
+		MainItem item = I_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
@@ -983,7 +926,7 @@ public class MainActivity extends BaseActivity {
 		if (unipackVO.bookmark)
 			flagColor = color(R.color.orange);
 
-		item.flagColors = flagColor;
+		item.flagColor = flagColor;
 
 		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
 		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
@@ -1020,18 +963,18 @@ public class MainActivity extends BaseActivity {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
-								SV_scrollView.smoothScrollTo(0, P_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
 								togglePlay(lastPlayIndex + 1);
-								SV_scrollView.smoothScrollTo(0, P_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (P_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								SV_scrollView.smoothScrollTo(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
 							if (haveNow())
-								P_list.get(lastPlayIndex).packViewSimple.onPlayClick();
+								I_list.get(lastPlayIndex).packViewSimple.onPlayClick();
 						}
 					}
 
@@ -1053,11 +996,11 @@ public class MainActivity extends BaseActivity {
 	}
 
 	boolean haveNow() {
-		return 0 <= lastPlayIndex && lastPlayIndex <= P_list.size() - 1;
+		return 0 <= lastPlayIndex && lastPlayIndex <= I_list.size() - 1;
 	}
 
 	boolean haveNext() {
-		return lastPlayIndex < P_list.size() - 1;
+		return lastPlayIndex < I_list.size() - 1;
 	}
 
 	boolean havePrev() {
@@ -1139,8 +1082,8 @@ public class MainActivity extends BaseActivity {
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
-				LL_list.removeAllViews();
-				P_list.clear();
+				//LL_list.removeAllViews(); //todo
+				I_list.clear();
 				updatePanel(true);
 
 				new Handler().postDelayed(() -> {
