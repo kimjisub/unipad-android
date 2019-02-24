@@ -48,7 +48,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 		item.packViewSimple = packViewSimple;
 		uniPackHolder.position = position;
 
-		UnipackVO unipackVO = context.DB_unipack.getOrCreateByPath(item.path);
+		UnipackVO unipackVO = context.DB_unipack.getOrCreateByPath(item.unipack.F_project.getName());
 
 		String title = item.unipack.title;
 		String subTitle = item.unipack.producerName;
@@ -74,7 +74,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
-						context.togglePlay(item.path);
+						context.togglePlay(item);
 					}
 
 					@Override
@@ -83,7 +83,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 
 					@Override
 					public void onPlayClick(PackViewSimple v) {
-						context.pressPlay(item.path);
+						context.pressPlay(item);
 					}
 				})
 				.setToggle(item.toggle, context.color(R.color.red), item.flagColor);

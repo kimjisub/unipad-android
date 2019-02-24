@@ -316,9 +316,9 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_star.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
-				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 				unipackVO.pin = !unipackVO.pin;
-				DB_unipack.update(item.path, unipackVO);
+				DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
 
 				updatePanelPackOption();
 			}
@@ -326,9 +326,9 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_bookmark.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
-				UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 				unipackVO.bookmark = !unipackVO.bookmark;
-				DB_unipack.update(item.path, unipackVO);
+				DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
 
 				updatePanelPackOption();
 			}
@@ -494,14 +494,14 @@ public class MainActivity extends BaseActivity {
 					long targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project);
 					for (MainItem item : I_list) {
 						long testTime = FileManager.getInnerFileLastModified(item.unipack.F_project);
-						if(targetTime > testTime)
+						if (targetTime > testTime)
 							break;
 						i++;
 					}
 					I_list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
 					TV_panel_total_unipackCount.setText(I_list.size() + "");
-					Log.test("add:    " + i + " : " + targetTime + "    " +F_added.path);
+					Log.test("add:    " + i + " : " + targetTime + "    " + F_added.path);
 				}
 
 				for (MainItem F_removed : I_removed) {
@@ -788,17 +788,17 @@ public class MainActivity extends BaseActivity {
 
 
 	void togglePlay(int i) {
-		togglePlay(I_list.get(i).path);
+		togglePlay(I_list.get(i));
 	}
 
 	@SuppressLint("SetTextI18n")
-	public void togglePlay(String path) {
+	public void togglePlay(MainItem item) {
 		try {
 			int i = 0;
 			for (MainItem mainItem : I_list) {
 				PackViewSimple packViewSimple = mainItem.packViewSimple;
 
-				if (mainItem.path.equals(path)) {
+				if (item != null && mainItem.path.equals(item.path)) {
 					mainItem.toggle = !mainItem.toggle;
 					lastPlayIndex = i;
 				} else
@@ -818,14 +818,14 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
-	public void pressPlay(String path) {
+	public void pressPlay(MainItem item) {
 		rescanScale(LL_scale, LL_paddingScale);
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
-		DB_unipackOpen.add(new UnipackOpenVO(path, new Date()));
+		DB_unipackOpen.add(new UnipackOpenVO(item.unipack.F_project.getName(), new Date()));
 
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-		intent.putExtra("path", path);
+		intent.putExtra("path", item.path);
 		startActivity(intent);
 	}
 
@@ -920,7 +920,7 @@ public class MainActivity extends BaseActivity {
 	void updatePanelPack(boolean hardWork) {
 		MainItem item = I_list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
-		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
 		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
 		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
@@ -967,7 +967,7 @@ public class MainActivity extends BaseActivity {
 	void updatePanelPackOption() {
 		MainItem item = I_list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
-		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
+		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
 		int flagColor;
 		if (unipack.CriticalError)
