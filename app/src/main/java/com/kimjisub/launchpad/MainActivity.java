@@ -334,10 +334,17 @@ public class MainActivity extends BaseActivity {
 				PackItem item = P_list.get(playIndex);
 
 				File source = new File(item.path);
-				String sourceName = source.getName();
-				File target = FileManager.getChild(F_UniPackRootInt, sourceName);
+				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
+				File target = FileManager.getChild(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
 
 				(new AsyncTask<String, String, String>() {
+					@Override
+					protected void onPreExecute() {
+						super.onPreExecute();
+						IV_panel_pack_storage.setImageResource(R.drawable.ic_copy_24dp);
+						IV_panel_pack_storage.setClickable(false);
+					}
+
 					@Override
 					protected String doInBackground(String... params) {
 						FileManager.moveDirectory(source, target);
@@ -347,6 +354,13 @@ public class MainActivity extends BaseActivity {
 					@Override
 					protected void onProgressUpdate(String... strings) {
 					}
+
+					@Override
+					protected void onPostExecute(String result) {
+						super.onPostExecute(result);
+						update();
+					}
+
 				}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
 				updatePanelPackOption();
@@ -906,7 +920,8 @@ public class MainActivity extends BaseActivity {
 
 		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
 		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
-		IV_panel_pack_storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_closed_24dp);
+		IV_panel_pack_storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
+		IV_panel_pack_storage.setClickable(true);
 		TV_panel_pack_title.setText(unipack.title);
 		TV_panel_pack_subTitle.setText(unipack.producerName);
 		TV_panel_pack_path.setText(item.path);
