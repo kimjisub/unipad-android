@@ -61,7 +61,7 @@
 					android:layout_height="40dp"
 					android:background="@drawable/border_icon"
 					android:padding="4dp"
-					app:srcCompat="@drawable/ic_folder_24dp" />
+					app:srcCompat="@drawable/ic_lock_open_24dp" />
 
 			</LinearLayout>
 

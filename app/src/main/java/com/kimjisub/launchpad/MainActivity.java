@@ -548,13 +548,13 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= UniPack Work
 
 	void deleteUnipack(final Unipack unipack) {
-		FileManager.deleteDirectory(unipack.projectFile);
+		FileManager.deleteDirectory(unipack.F_project);
 		update();
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	void autoMapping(Unipack uni) {
-		final Unipack unipack = new Unipack(uni.projectFile, true);
+		final Unipack unipack = new Unipack(uni.F_project, true);
 
 		if (unipack.isAutoPlay && unipack.autoPlayTable != null) {
 			(new AsyncTask<String, String, String>() {
@@ -662,8 +662,8 @@ public class MainActivity extends BaseActivity {
 						}
 					}
 					try {
-						File filePre = new File(unipack.projectFile, "autoPlay");
-						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.projectFile, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+						File filePre = new File(unipack.F_project, "autoPlay");
+						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.F_project, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
 						filePre.renameTo(fileNow);
 
 						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.F_autoPlay)));
@@ -906,6 +906,7 @@ public class MainActivity extends BaseActivity {
 
 		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
 		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
+		IV_panel_pack_storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_closed_24dp);
 		TV_panel_pack_title.setText(unipack.title);
 		TV_panel_pack_subTitle.setText(unipack.producerName);
 		TV_panel_pack_path.setText(item.path);
@@ -923,10 +924,10 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			protected String doInBackground(String... params) {
-				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.projectFile)) + " MB";
+				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> TV_panel_pack_fileSize.setText(fileSize));
 
-				Unipack unipackDetail = new Unipack(item.unipack.projectFile, true);
+				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
 				item.unipack = unipackDetail;
 				publishProgress(fileSize);
 				handler.post(() -> {

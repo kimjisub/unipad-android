@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class Unipack {
-	public File projectFile;
+	public File F_project;
 
 	public boolean loadDetail;
 	public String ErrorDetail = null;
@@ -48,13 +48,13 @@ public class Unipack {
 	public ArrayList<LED>[][][] ledTable = null;
 	public ArrayList<AutoPlay> autoPlayTable = null;
 
-	public Unipack(File projectFile, boolean loadDetail) {
+	public Unipack(File F_project, boolean loadDetail) {
 
-		this.projectFile = projectFile;
+		this.F_project = F_project;
 		this.loadDetail = loadDetail;
 
 		try {
-			for (File item : projectFile.listFiles()) {
+			for (File item : F_project.listFiles()) {
 				switch (item.getName().toLowerCase()) {
 					case "info":
 						F_info = item;
@@ -592,7 +592,7 @@ public class Unipack {
 	// =============================================================================================
 
 	String getMainAutoplay() {
-		File[] fileList = FileManager.sortByName(projectFile.listFiles());
+		File[] fileList = FileManager.sortByName(F_project.listFiles());
 		for (File f : fileList) {
 			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
 				return f.getPath();
@@ -601,7 +601,7 @@ public class Unipack {
 	}
 
 	public String[] getAutoplays() {
-		File[] fileList = FileManager.sortByName(projectFile.listFiles());
+		File[] fileList = FileManager.sortByName(F_project.listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
 			if (f.isFile() && (f.getName().toLowerCase().startsWith("autoplay") || f.getName().toLowerCase().startsWith("_autoplay")))
@@ -625,7 +625,7 @@ public class Unipack {
 				BaseActivity.lang(context, R.string.producerName) + " : " + this.producerName + "\n" +
 				BaseActivity.lang(context, R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
 				BaseActivity.lang(context, R.string.chainCount) + " : " + this.chain + "\n" +
-				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(projectFile)) + " MB";
+				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
 	}
 
 	public static class Sound {
