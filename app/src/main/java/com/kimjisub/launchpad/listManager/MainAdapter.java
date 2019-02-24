@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.listManager;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 
 import com.kimjisub.launchpad.MainActivity;
@@ -85,6 +87,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 					}
 				})
 				.setToggle(item.toggle, context.color(R.color.red), item.flagColor);
+
+
+		Animation a = AnimationUtils.loadAnimation(context, R.anim.fade_in);
+		packViewSimple.setAnimation(a);
 	}
 
 	@Override
