@@ -46,6 +46,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 	private void initVar(){
 		F_UniPackRootExt = FileManager.getExternalUniPackRoot();
 		F_UniPackRootInt = FileManager.getInternalUniPackRoot(getApplicationContext());
+
+		FileManager.makeDirWhenNotExist(F_UniPackRootExt);
+		FileManager.makeNomedia(F_UniPackRootExt);
 	}
 
 	// ============================================================================================= Show
@@ -114,6 +117,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 		Scale_Height = LL_scale.getHeight();
 		Scale_PaddingWidth = LL_paddingScale.getWidth();
 		Scale_PaddingHeight = LL_paddingScale.getHeight();
+	}
+
+
+	File[] getUniPackDirList(){
+		File[] projectFiles = FileManager.addFileArray(F_UniPackRootExt.listFiles(), F_UniPackRootInt.listFiles());
+		File[] projectFilesSort = FileManager.sortByTime(projectFiles);
+
+		return projectFilesSort;
 	}
 
 	// ============================================================================================= Ads

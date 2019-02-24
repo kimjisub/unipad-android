@@ -6,7 +6,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.kimjisub.launchpad.networks.fb.fbStore;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -84,115 +83,41 @@ public class Networks {
 		}
 	}
 
-	public static class GetStoreList {
+	public static class FirebaseManager {
 		FirebaseDatabase database;
 		DatabaseReference myRef;
 
-		private onDataListener dataListener = null;
+		private ChildEventListener childEventListener = null;
+		private ValueEventListener valueEventListener = null;
 
-		public GetStoreList setDataListener(onDataListener listener) {
-			this.dataListener = listener;
+		public FirebaseManager(String key) {
+			database = FirebaseDatabase.getInstance();
+			myRef = database.getReference(key);
+		}
+
+		public FirebaseManager setEventListener(ChildEventListener childEventListener) {
+			this.childEventListener = childEventListener;
 			return this;
 		}
 
-		void onAdd(fbStore data) {
-			if (dataListener != null)
-				dataListener.onAdd(data);
-		}
-
-		void onChange(fbStore data) {
-			if (dataListener != null)
-				dataListener.onChange(data);
-		}
-
-		public void run() {
-			database = FirebaseDatabase.getInstance();
-			myRef = database.getReference("store");
-
-			myRef.addChildEventListener(new ChildEventListener() {
-				@Override
-				public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-					try {
-						fbStore data = dataSnapshot.getValue(fbStore.class);
-						onAdd(data);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-
-				@Override
-				public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-					try {
-						fbStore data = dataSnapshot.getValue(fbStore.class);
-						onChange(data);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-
-				@Override
-				public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-				}
-
-				@Override
-				public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-				}
-
-				@Override
-				public void onCancelled(DatabaseError databaseError) {
-
-				}
-			});
-		}
-
-
-		public interface onDataListener {
-			void onAdd(fbStore data);
-
-			void onChange(fbStore data);
-		}
-
-	}
-
-	public static class GetStoreCount {
-		FirebaseDatabase database;
-		DatabaseReference myRef;
-
-		private onChangeListener dataListener = null;
-
-		public GetStoreCount setOnChangeListener(onChangeListener listener) {
-			this.dataListener = listener;
+		public FirebaseManager setEventListener(ValueEventListener valueEventListener) {
+			this.valueEventListener = valueEventListener;
 			return this;
 		}
 
-		void onChange(long count) {
-			if (dataListener != null)
-				dataListener.onChange(count);
-		}
+		public FirebaseManager attachEventListener(boolean b) {
+			if (childEventListener != null)
+				if (b)
+					myRef.addChildEventListener(childEventListener);
+				else
+					myRef.removeEventListener(childEventListener);
 
-		public void run() {
-			database = FirebaseDatabase.getInstance();
-			myRef = database.getReference("storeCount");
-
-			myRef.addValueEventListener(new ValueEventListener() {
-				@Override
-				public void onDataChange(DataSnapshot dataSnapshot) {
-					onChange(dataSnapshot.getValue(Long.class));
-				}
-
-				@Override
-				public void onCancelled(DatabaseError databaseError) {
-
-				}
-			});
-
-		}
-
-
-		public interface onChangeListener {
-			void onChange(long count);
+			if (valueEventListener != null)
+				if (b)
+					myRef.addValueEventListener(valueEventListener);
+				else
+					myRef.removeEventListener(valueEventListener);
+			return this;
 		}
 	}
 }

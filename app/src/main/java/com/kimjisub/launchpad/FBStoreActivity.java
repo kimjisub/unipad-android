@@ -3,6 +3,8 @@ package com.kimjisub.launchpad;
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -12,10 +14,14 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.networks.fb.fbStore;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.SettingManager;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.PackViewSimple;
@@ -56,8 +62,10 @@ public class FBStoreActivity extends BaseActivity {
 	ImageView IV_panel_pack_func;
 	ImageView IV_panel_pack_delete;
 
+	Networks.FirebaseManager firebase_store;
+	Networks.FirebaseManager firebase_storeCount;
 	ArrayList<PackItem> P_list;
-	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+	File[] F_UniPackList;
 
 	void initVar(boolean onFirst) {
 		LL_list = findViewById(R.id.list);
@@ -88,8 +96,12 @@ public class FBStoreActivity extends BaseActivity {
 		TV_panel_pack_subTitle.setSelected(true);
 		TV_panel_pack_path.setSelected(true);
 
-		if (onFirst)
+		if (onFirst) {
+			firebase_store = new Networks.FirebaseManager("store");
+			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			P_list = new ArrayList<>();
+		}
+		F_UniPackList = getUniPackDirList();
 	}
 
 	// =============================================================================================
@@ -100,45 +112,19 @@ public class FBStoreActivity extends BaseActivity {
 		setContentView(R.layout.activity_store);
 		initVar(true);
 
-		update();
-		getStoreCount.run();
-	}
-
-	void update() {
-		LL_list.removeAllViews();
-		P_list.clear();
-
-		togglePlay(null);
-		updatePanel(true);
-
-		addErrorItem();
-
-		final String[] downloadedProjectList;
-
-		File folder = F_UniPackRootExt;
-
-		if (folder.isDirectory()) {
-			downloadedProjectList = new String[folder.listFiles().length];
-			File[] files = folder.listFiles();
-			for (int i = 0; i < files.length; i++)
-				downloadedProjectList[i] = files[i].getName();
-		} else {
-			downloadedProjectList = new String[0];
-			folder.mkdir();
-		}
-
-		new Networks.GetStoreList().setDataListener(new Networks.GetStoreList.onDataListener() {
+		firebase_store.setEventListener(new ChildEventListener() {
 			@Override
-			public void onAdd(final fbStore d) {
+			public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 				try {
+					fbStore d = dataSnapshot.getValue(fbStore.class);
 					if (P_list.size() == 0)
 						LL_list.removeAllViews();
 					d.index = P_list.size();
 
 
 					boolean _isDownloaded = false;
-					for (String downloadedProject : downloadedProjectList) {
-						if (d.code.equals(downloadedProject)) {
+					for (File dir : F_UniPackList) {
+						if (d.code.equals(dir.getName())) {
 							_isDownloaded = true;
 							break;
 						}
@@ -189,8 +175,9 @@ public class FBStoreActivity extends BaseActivity {
 			}
 
 			@Override
-			public void onChange(final fbStore d) {
+			public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 				try {
+					fbStore d = dataSnapshot.getValue(fbStore.class);
 					PackItem item = getPackItemByCode(d.code);
 					fbStore fbStore = item.fbStore;
 					PackViewSimple packViewSimple = item.packViewSimple;
@@ -206,7 +193,32 @@ public class FBStoreActivity extends BaseActivity {
 				}
 				updatePanel(false);
 			}
-		}).run();
+
+			@Override
+			public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+			}
+
+			@Override
+			public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+			}
+		});
+
+		firebase_storeCount.setEventListener(new ValueEventListener() {
+			@Override
+			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+				Long data = dataSnapshot.getValue(Long.class);
+				SettingManager.PrevStoreCount.save(FBStoreActivity.this, data);
+			}
+
+			@Override
+			public void onCancelled(@NonNull DatabaseError databaseError) {
+
+			}
+		});
 	}
 
 	void addErrorItem() {
@@ -497,13 +509,22 @@ public class FBStoreActivity extends BaseActivity {
 		super.onResume();
 		initVar(false);
 
-		getStoreCount.setOnChangeListener(data -> SettingManager.PrevStoreCount.save(FBStoreActivity.this, data));
+		LL_list.removeAllViews();
+		P_list.clear();
+		addErrorItem();
+
+		togglePlay(null);
+		updatePanel(true);
+
+		firebase_store.attachEventListener(true);
+		firebase_storeCount.attachEventListener(true);
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
 
-		getStoreCount.setOnChangeListener(null);
+		firebase_store.attachEventListener(false);
+		firebase_storeCount.attachEventListener(false);
 	}
 }
