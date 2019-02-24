@@ -57,6 +57,14 @@
 				android:id="@+id/panel_pack">
 
 				<include layout="@layout/activity_main_panel_pack" />
+
+				<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+					android:id="@+id/adView"
+					android:layout_width="320dp"
+					android:layout_alignParentBottom="true"
+					android:layout_height="wrap_content"
+					ads:adSize="BANNER"
+					ads:adUnitId="ca-app-pub-1077445788578961/6318023505" />
 			</RelativeLayout>
 
 		</RelativeLayout>
@@ -78,38 +86,6 @@
 					android:scrollbarThumbVertical="@color/gray2"
 					android:orientation="vertical"
 					android:paddingTop="16dp" />
-
-				<ScrollView
-					android:id="@+id/scrollView"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:scrollbarThumbVertical="@color/gray2">
-
-					<LinearLayout
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:gravity="center"
-						android:orientation="vertical">
-
-						<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-							android:id="@+id/adView"
-							android:layout_width="320dp"
-							android:layout_height="wrap_content"
-							ads:adSize="BANNER"
-							ads:adUnitId="ca-app-pub-1077445788578961/6318023505" />
-
-						<!--<LinearLayout
-							android:id="@+id/list"
-							android:layout_width="match_parent"
-							android:layout_height="wrap_content"
-							android:orientation="vertical"
-							android:paddingTop="16dp" />-->
-
-
-
-					</LinearLayout>
-
-				</ScrollView>
 
 			</android.support.v4.widget.SwipeRefreshLayout>
 

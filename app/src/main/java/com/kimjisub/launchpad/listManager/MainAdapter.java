@@ -7,21 +7,14 @@ import android.widget.LinearLayout;
 
 import com.kimjisub.launchpad.MainActivity;
 import com.kimjisub.launchpad.R;
-import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
-import java.util.ArrayList;
-
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder> {
 
-	private ArrayList<MainItem> list;
-	private DB_Unipack DB_unipack;
 	private MainActivity context;
 
-	public MainAdapter(ArrayList list, DB_Unipack DB_unipack, MainActivity context) {
-		this.list = list;
-		this.DB_unipack = DB_unipack;
+	public MainAdapter(MainActivity context) {
 		this.context = context;
 	}
 
@@ -42,10 +35,18 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 
 	@Override
 	public void onBindViewHolder(@NonNull UniPackHolder uniPackHolder, int position) {
-		MainItem item = list.get(position);
+		MainItem item = context.I_list.get(position);
 		PackViewSimple packViewSimple = uniPackHolder.packViewSimple;
 
-		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(item.path);
+		if (uniPackHolder.position != -1)
+			try {
+				context.I_list.get(uniPackHolder.position).packViewSimple = null;
+			} catch (Exception e) {
+			}
+		item.packViewSimple = packViewSimple;
+		uniPackHolder.position = position;
+
+		UnipackVO unipackVO = context.DB_unipack.getOrCreateByPath(item.path);
 
 		String title = item.unipack.title;
 		String subTitle = item.unipack.producerName;
@@ -62,6 +63,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 
 
 		packViewSimple
+				.cancelAllAnimation()
 				.setFlagColor(item.flagColor)
 				.setTitle(title)
 				.setSubTitle(subTitle)
@@ -81,17 +83,18 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 					public void onPlayClick(PackViewSimple v) {
 						context.pressPlay(item.path);
 					}
-				});
-		item.packViewSimple = packViewSimple;
+				})
+				.setToggle(item.toggle, context.color(R.color.red), item.flagColor);
 	}
 
 	@Override
 	public int getItemCount() {
-		return list.size();
+		return context.I_list.size();
 	}
 
 	public static class UniPackHolder extends RecyclerView.ViewHolder {
 		PackViewSimple packViewSimple;
+		int position = -1;
 
 		UniPackHolder(PackViewSimple view) {
 			super(view);

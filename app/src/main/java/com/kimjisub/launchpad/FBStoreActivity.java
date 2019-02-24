@@ -260,9 +260,9 @@ public class FBStoreActivity extends BaseActivity {
 				PackViewSimple packViewSimple = item.packViewSimple;
 
 				if (fbStore.code.equals(code))
-					packViewSimple.togglePlay();
+					packViewSimple.toggle();
 				else
-					packViewSimple.togglePlay(false);
+					packViewSimple.toggle(false);
 			}
 
 			updatePanel(false);
@@ -277,7 +277,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		int i = 0;
 		for (PackItem item : P_list) {
-			if (item.packViewSimple.isPlay()) {
+			if (item.packViewSimple.isToggle()) {
 				index = i;
 				break;
 			}
@@ -333,7 +333,7 @@ public class FBStoreActivity extends BaseActivity {
 		File F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, code, ".zip");
 		File F_UniPack = new File(F_UniPackRootExt, code);
 
-		packViewSimple.updateFlagColor(color(R.color.gray1));
+		packViewSimple.animateFlagColor(color(R.color.gray1));
 		packViewSimple.setPlayText("0%");
 
 		(new AsyncTask<String, Long, String>() {
@@ -420,13 +420,13 @@ public class FBStoreActivity extends BaseActivity {
 					packViewSimple.setPlayText((int) ((float) progress[1] / progress[2] * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(progress[2]) + "MB");
 				} else if (progress[0] == 1) {//분석중
 					packViewSimple.setPlayText(lang(R.string.analyzing));
-					packViewSimple.updateFlagColor(color(R.color.orange));
+					packViewSimple.animateFlagColor(color(R.color.orange));
 				} else if (progress[0] == -1) {//실패
 					packViewSimple.setPlayText(lang(R.string.failed));
-					packViewSimple.updateFlagColor(color(R.color.red));
+					packViewSimple.animateFlagColor(color(R.color.red));
 				} else if (progress[0] == 2) {//완료
 					packViewSimple.setPlayText(lang(R.string.downloaded));
-					packViewSimple.updateFlagColor(color(R.color.green));
+					packViewSimple.animateFlagColor(color(R.color.green));
 					item.isDownloaded = true;
 					updatePanel(false);
 				}
