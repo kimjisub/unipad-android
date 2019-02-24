@@ -488,19 +488,28 @@ public class MainActivity extends BaseActivity {
 			protected void onPostExecute(String result) {
 				super.onPostExecute(result);
 
-				for (MainItem item : I_added) {
-					I_list.add(0, item);
-					RV_adapter.notifyItemInserted(0);
+				for (MainItem F_added : I_added) {
+
+					int i = 0;
+					long targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project);
+					for (MainItem item : I_list) {
+						long testTime = FileManager.getInnerFileLastModified(item.unipack.F_project);
+						if(targetTime > testTime)
+							break;
+						i++;
+					}
+					I_list.add(i, F_added);
+					RV_adapter.notifyItemInserted(i);
 					TV_panel_total_unipackCount.setText(I_list.size() + "");
-					Log.test("add:    " + 0 + " : " + item.path);
+					Log.test("add:    " + i + " : " + targetTime + "    " +F_added.path);
 				}
 
-				for (MainItem item : I_removed) {
+				for (MainItem F_removed : I_removed) {
 					int i = 0;
-					for (MainItem item2 : I_list) {
-						if (item2.path.equals(item.path)) {
+					for (MainItem item : I_list) {
+						if (item.path.equals(F_removed.path)) {
 							int I = i;
-							Log.test("remove: " + I + " : " + item.path);
+							Log.test("remove: " + I + " : " + F_removed.path);
 							I_list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
 							TV_panel_total_unipackCount.setText(I_list.size() + "");
