@@ -8,6 +8,7 @@ public class MainItem {
 	public String path;
 	public int flagColor;
 	public PackViewSimple packViewSimple;
+	public boolean toggle = false;
 
 	public MainItem(Unipack unipack, String path, int flagColor) {
 		this.unipack = unipack;

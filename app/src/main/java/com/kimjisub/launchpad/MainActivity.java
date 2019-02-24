@@ -19,13 +19,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
@@ -70,15 +68,13 @@ public class MainActivity extends BaseActivity {
 	BillingManager billingManager;
 
 	// DB
-	DB_Unipack DB_unipack;
+	public DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
 	// View
 	AdView AV_adview;
 	RelativeLayout RL_rootView;
 	SwipeRefreshLayout SRL_scrollView;
-	ScrollView SV_scrollView;
-	//LinearLayout LL_list;
 	RecyclerView RV_view;
 	FloatingActionMenu FAM_floatingMenu;
 	FloatingActionButton FAB_reconnectLaunchpad;
@@ -117,7 +113,7 @@ public class MainActivity extends BaseActivity {
 	ImageView IV_panel_pack_delete;
 
 	int lastPlayIndex = -1;
-	ArrayList<MainItem> I_list;
+	public ArrayList<MainItem> I_list;
 	RecyclerView.Adapter RV_adapter;
 	RecyclerView.LayoutManager RV_layoutManager;
 
@@ -134,8 +130,6 @@ public class MainActivity extends BaseActivity {
 		AV_adview = findViewById(R.id.adView);
 		RL_rootView = findViewById(R.id.rootView);
 		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
-		SV_scrollView = findViewById(R.id.scrollView);
-		//LL_list = findViewById(R.id.list);
 		RV_view = findViewById(R.id.RV_view);
 		FAM_floatingMenu = findViewById(R.id.floatingMenu);
 		FAB_reconnectLaunchpad = findViewById(R.id.fab_reconnectLaunchpad);
@@ -197,7 +191,7 @@ public class MainActivity extends BaseActivity {
 		// var
 		if (onFirst) {
 			I_list = new ArrayList<>();
-			RV_adapter = new MainAdapter(I_list, DB_unipack, MainActivity.this);
+			RV_adapter = new MainAdapter(MainActivity.this);
 			RV_layoutManager = new LinearLayoutManager(MainActivity.this);
 
 			RV_view.setHasFixedSize(false);
@@ -380,14 +374,14 @@ public class MainActivity extends BaseActivity {
 		});
 		IV_panel_pack_youtube.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
-			if (item != null){
+			if (item != null) {
 				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
 		IV_panel_pack_website.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
-			if (item != null){
+			if (item != null) {
 				String website = item.unipack.website;
 				if (website != null)
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
@@ -435,7 +429,6 @@ public class MainActivity extends BaseActivity {
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 
-		//LL_list.removeAllViews();
 		I_list.clear();
 
 		togglePlay(null);
@@ -471,12 +464,6 @@ public class MainActivity extends BaseActivity {
 		MainItem packItem = new MainItem(unipack, path, 0);
 		I_list.add(packItem);
 
-		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = dpToPx(16);
-		int top = 0;
-		int right = dpToPx(16);
-		int bottom = dpToPx(10);
-		lp.setMargins(left, top, right, bottom);
 		runOnUiThread(() -> {
 			RV_adapter.notifyDataSetChanged();
 			TV_panel_total_unipackCount.setText(I_list.size() + "");
@@ -505,14 +492,7 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-
-		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = dpToPx(16);
-		int top = 0;
-		int right = dpToPx(16);
-		int bottom = dpToPx(10);
-		lp.setMargins(left, top, right, bottom);
-		//LL_list.addView(packViewSimple, lp); // todo
+		// TODO
 	}
 
 	// ============================================================================================= UniPack Work
@@ -760,11 +740,18 @@ public class MainActivity extends BaseActivity {
 		try {
 			int i = 0;
 			for (MainItem mainItem : I_list) {
+				Log.test(mainItem.path);
+
+				PackViewSimple packViewSimple = mainItem.packViewSimple;
+
 				if (mainItem.path.equals(path)) {
-					mainItem.packViewSimple.togglePlay(color(R.color.red), mainItem.flagColor);
+					mainItem.toggle = !mainItem.toggle;
 					lastPlayIndex = i;
 				} else
-					mainItem.packViewSimple.togglePlay(false, color(R.color.red), mainItem.flagColor);
+					mainItem.toggle = false;
+
+				if (packViewSimple != null)
+					packViewSimple.toggle(mainItem.toggle, color(R.color.red), mainItem.flagColor);
 
 				i++;
 			}
@@ -793,7 +780,7 @@ public class MainActivity extends BaseActivity {
 
 		int i = 0;
 		for (MainItem mainItem : I_list) {
-			if (mainItem.packViewSimple.isPlay()) {
+			if (mainItem.toggle) {
 				index = i;
 				break;
 			}
@@ -878,7 +865,6 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
 		MainItem item = I_list.get(getPlayIndex());
-		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 
@@ -905,6 +891,14 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> TV_panel_pack_fileSize.setText(fileSize));
+
+				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
+				item.unipack = unipackDetail;
+				publishProgress(fileSize);
+				handler.post(() -> {
+					TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
+					TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+				});
 				return null;
 			}
 
@@ -913,7 +907,6 @@ public class MainActivity extends BaseActivity {
 
 	void updatePanelPackOption() {
 		MainItem item = I_list.get(getPlayIndex());
-		PackViewSimple packViewSimple = item.packViewSimple;
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.path);
 
@@ -963,13 +956,14 @@ public class MainActivity extends BaseActivity {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
-								SV_scrollView.smoothScrollTo(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								RV_view.smoothScrollToPosition(lastPlayIndex);
+								//RV_view.smoothScrollToPosition(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
 								togglePlay(lastPlayIndex + 1);
-								SV_scrollView.smoothScrollTo(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								RV_view.smoothScrollToPosition(lastPlayIndex);
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
@@ -1082,7 +1076,6 @@ public class MainActivity extends BaseActivity {
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
-				//LL_list.removeAllViews(); //todo
 				I_list.clear();
 				updatePanel(true);
 
