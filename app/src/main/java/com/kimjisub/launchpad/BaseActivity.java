@@ -279,8 +279,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
-		startActivity(this);
 		initVar();
+
+		startActivity(this);
 	}
 
 	@Override
@@ -293,6 +294,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public void onResume() {
 		Log.activity("onResume " + this.getLocalClassName());
 		super.onResume();
+		initVar();
+
 		this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		initVungle();
 	}
