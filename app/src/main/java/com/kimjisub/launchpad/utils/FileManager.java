@@ -154,6 +154,20 @@ public class FileManager {
 		//return tmpStr.replaceAll("[ ]", "_");
 	}
 
+	public static File[] addFileArray(File[]... FilesList) {
+		int count = 0;
+		for (File[] files : FilesList)
+			count += files.length;
+
+		int i = 0;
+		File[] ret = new File[count];
+		for (File[] files : FilesList)
+			for (File file : files)
+				ret[i++] = file;
+
+		return ret;
+	}
+
 	// ============================================================================================= Make, Move, Copy, Delete
 
 	public static void moveDirectory(File F_source, File F_target) {
@@ -219,6 +233,14 @@ public class FileManager {
 
 	public static File getChild(File parent, String childName) {
 		return new File(parent.getPath() + "/" + childName);
+	}
+
+	public static void makeDirWhenNotExist(File dir){
+		if (!dir.isDirectory()) {
+			if (dir.isFile())
+				dir.delete();
+			dir.mkdir();
+		}
 	}
 
 	// ============================================================================================= Get Info

@@ -31,6 +31,9 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
@@ -110,7 +113,7 @@ public class MainActivity extends BaseActivity {
 
 	int lastPlayIndex = -1;
 	ArrayList<PackItem> P_list;
-	Networks.GetStoreCount getStoreCount = new Networks.GetStoreCount();
+	Networks.FirebaseManager firebase_storeCount;
 
 	boolean updateComplete = true;
 
@@ -183,8 +186,24 @@ public class MainActivity extends BaseActivity {
 		}
 
 		// var
-		if (onFirst)
+		if (onFirst) {
 			P_list = new ArrayList<>();
+			firebase_storeCount = new Networks.FirebaseManager("storeCount");
+			firebase_storeCount.setEventListener(new ValueEventListener() {
+				@Override
+				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+					Long data = dataSnapshot.getValue(Long.class);
+					if (SettingManager.PrevStoreCount.load(MainActivity.this) == data)
+						runOnUiThread(() -> blink(false));
+					else
+						runOnUiThread(() -> blink(true));
+				}
+
+				@Override
+				public void onCancelled(@NonNull DatabaseError databaseError) {
+				}
+			});
+		}
 	}
 
 	// =============================================================================================
@@ -388,7 +407,6 @@ public class MainActivity extends BaseActivity {
 
 	void checkThings() {
 		versionCheck();
-		newPackCheck();
 	}
 
 	void update() {
@@ -407,30 +425,8 @@ public class MainActivity extends BaseActivity {
 
 		new Thread(() -> {
 			try {
-				ArrayList<File> AL_projectFiles = new ArrayList<>();
-				File[] projectFiles;
-				File[] projectFilesSort;
-
-				// Get ProjectFile from multi Path
-				if (F_UniPackRootExt.isDirectory())
-					for (File file : F_UniPackRootExt.listFiles())
-						AL_projectFiles.add(file);
-				else
-					F_UniPackRootExt.mkdir();
-
-				if (F_UniPackRootInt.isDirectory())
-					for (File file : F_UniPackRootInt.listFiles())
-						AL_projectFiles.add(file);
-
-				// Sort
-				projectFiles = new File[AL_projectFiles.size()];
-				int i = 0;
-				for (File file : AL_projectFiles)
-					projectFiles[i++] = file;
-				projectFilesSort = FileManager.sortByTime(projectFiles);
-
 				// Add Each ProjectFile
-				for (File project : projectFilesSort) {
+				for (File project : getUniPackDirList()) {
 					try {
 						Thread.sleep(10);
 					} catch (InterruptedException e) {
@@ -441,9 +437,6 @@ public class MainActivity extends BaseActivity {
 
 				if (P_list.size() == 0)
 					runOnUiThread(this::addErrorItem);
-
-				// Check nomedia
-				FileManager.makeNomedia(F_UniPackRootExt);
 			} finally {
 				runOnUiThread(() -> SRL_scrollView.setRefreshing(false));
 				updateComplete = true;
@@ -1097,15 +1090,6 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
-	void newPackCheck() {
-		getStoreCount.setOnChangeListener(count -> {
-			if (SettingManager.PrevStoreCount.load(MainActivity.this) == count)
-				runOnUiThread(() -> blink(false));
-			else
-				runOnUiThread(() -> blink(true));
-		}).run();
-	}
-
 	void blink(final boolean bool) {
 		if (bool)
 			VA_floatingAnimation.start();
@@ -1131,6 +1115,8 @@ public class MainActivity extends BaseActivity {
 		setDriver();
 		checkThings();
 		updatePanel(false);
+
+		firebase_storeCount.attachEventListener(true);
 	}
 
 	@Override
@@ -1153,7 +1139,7 @@ public class MainActivity extends BaseActivity {
 	public void onPause() {
 		super.onPause();
 
-		getStoreCount.setOnChangeListener(null);
+		firebase_storeCount.attachEventListener(false);
 	}
 
 	@Override
