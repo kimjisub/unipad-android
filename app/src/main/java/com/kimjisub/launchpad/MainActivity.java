@@ -421,6 +421,7 @@ public class MainActivity extends BaseActivity {
 		versionCheck();
 	}
 
+	@SuppressLint("StaticFieldLeak")
 	void update() {
 		lastPlayIndex = -1;
 		if (!updateComplete)
@@ -429,48 +430,94 @@ public class MainActivity extends BaseActivity {
 		SRL_scrollView.setRefreshing(true);
 		updateComplete = false;
 
-		I_list.clear();
-
 		togglePlay(null);
 		updatePanel(true);
 
-		new Thread(() -> {
-			try {
-				// Add Each ProjectFile
-				for (File project : getUniPackDirList()) {
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+		(new AsyncTask<String, String, String>() {
+
+			ArrayList<MainItem> I_curr = new ArrayList<>();
+			ArrayList<MainItem> I_added = new ArrayList<>();
+			ArrayList<MainItem> I_removed = new ArrayList<>(I_list);
+
+			@Override
+			protected void onPreExecute() {
+				super.onPreExecute();
+			}
+
+			@Override
+			protected String doInBackground(String... params) {
+				try {
+
+					for (File file : getUniPackDirList()) {
+
+						if (!file.isDirectory()) continue;
+
+						String path = file.getPath();
+						Unipack unipack = new Unipack(file, false);
+						MainItem packItem = new MainItem(unipack, path, 0);
+
+						I_curr.add(packItem);
 					}
-					addItemByFile(project);
+
+					for (MainItem item : I_curr) {
+						int index = -1;
+						int i = 0;
+						for (MainItem item2 : I_removed) {
+							if (item2.path.equals(item.path)) {
+								index = i;
+								break;
+							}
+							i++;
+						}
+
+						if (index != -1)
+							I_removed.remove(index);
+						else
+							I_added.add(0, item);
+					}
+				} catch (Exception e) {
+				}
+				return null;
+			}
+
+			@Override
+			protected void onProgressUpdate(String... strings) {
+			}
+
+			@Override
+			protected void onPostExecute(String result) {
+				super.onPostExecute(result);
+
+				for (MainItem item : I_added) {
+					I_list.add(0, item);
+					RV_adapter.notifyItemInserted(0);
+					TV_panel_total_unipackCount.setText(I_list.size() + "");
+					Log.test("add:    " + 0 + " : " + item.path);
+				}
+
+				for (MainItem item : I_removed) {
+					int i = 0;
+					for (MainItem item2 : I_list) {
+						if (item2.path.equals(item.path)) {
+							int I = i;
+							Log.test("remove: " + I + " : " + item.path);
+							I_list.remove(I);
+							RV_adapter.notifyItemRemoved(I);
+							TV_panel_total_unipackCount.setText(I_list.size() + "");
+							break;
+						}
+						i++;
+					}
 				}
 
 				if (I_list.size() == 0)
-					runOnUiThread(this::addErrorItem);
-			} finally {
-				runOnUiThread(() -> SRL_scrollView.setRefreshing(false));
+					addErrorItem();
+
+				SRL_scrollView.setRefreshing(false);
 				updateComplete = true;
 			}
-		}).start();
-	}
 
-	void addItemByFile(File file) {
-		if (!file.isDirectory()) return;
-
-		String path = file.getAbsolutePath();
-		Unipack unipack = new Unipack(new File(path), false);
-
-		MainItem packItem = new MainItem(unipack, path, 0);
-		I_list.add(packItem);
-
-		runOnUiThread(() -> {
-			RV_adapter.notifyDataSetChanged();
-			TV_panel_total_unipackCount.setText(I_list.size() + "");
-		});
-
-
-		//TODO 정렬
+		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
 	void addErrorItem() {
@@ -740,8 +787,6 @@ public class MainActivity extends BaseActivity {
 		try {
 			int i = 0;
 			for (MainItem mainItem : I_list) {
-				Log.test(mainItem.path);
-
 				PackViewSimple packViewSimple = mainItem.packViewSimple;
 
 				if (mainItem.path.equals(path)) {
@@ -890,14 +935,19 @@ public class MainActivity extends BaseActivity {
 			@Override
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
-				handler.post(() -> TV_panel_pack_fileSize.setText(fileSize));
+				handler.post(() -> {
+					if (TV_panel_pack_path.getText().toString().equals(item.path))
+						TV_panel_pack_fileSize.setText(fileSize);
+				});
 
 				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
 				item.unipack = unipackDetail;
 				publishProgress(fileSize);
 				handler.post(() -> {
-					TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
-					TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+					if (TV_panel_pack_path.getText().toString().equals(item.path)) {
+						TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
+						TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+					}
 				});
 				return null;
 			}
@@ -1067,7 +1117,7 @@ public class MainActivity extends BaseActivity {
 		initVar(false);
 		setDriver();
 		checkThings();
-		updatePanel(false);
+		update();
 
 		firebase_storeCount.attachEventListener(true);
 	}
@@ -1076,13 +1126,8 @@ public class MainActivity extends BaseActivity {
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		switch (requestCode) {
 			case 0:
-				I_list.clear();
-				updatePanel(true);
-
-				new Handler().postDelayed(() -> {
-					checkThings();
-					update();
-				}, 500);
+				checkThings();
+				new Handler().postDelayed(() -> RV_view.smoothScrollToPosition(0), 1000);
 				break;
 		}
 	}

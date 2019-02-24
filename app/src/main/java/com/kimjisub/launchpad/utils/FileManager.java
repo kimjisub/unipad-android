@@ -105,7 +105,7 @@ public class FileManager {
 
 		for (int i = 0; i < files.length - 1; i++) {
 			for (int j = 0; j < files.length - (i + 1); j++) {
-				if (files[j].lastModified() < files[j + 1].lastModified()) {
+				if (getInnerFileLastModified(files[j]) < getInnerFileLastModified(files[j + 1])) {
 					File tmp = files[j + 1];
 					files[j + 1] = files[j];
 					files[j] = tmp;
@@ -114,6 +114,19 @@ public class FileManager {
 		}
 
 		return files;
+	}
+
+	public static long getInnerFileLastModified(File target) {
+		long time = 0;
+		if (target.isDirectory())
+			for (File file : target.listFiles()) {
+				if (file.isFile()) {
+					time = file.lastModified();
+					break;
+				}
+			}
+
+		return time;
 	}
 
 	public static File[] sortByName(File[] files) {
@@ -178,7 +191,6 @@ public class FileManager {
 	// ============================================================================================= Make, Move, Copy, Delete
 
 	public static void moveDirectory(File F_source, File F_target) {
-		Log.test(F_source.getPath() + " -> " + F_target.getPath());
 		try {
 			if (!F_target.isDirectory())
 				F_target.mkdir();
@@ -187,11 +199,9 @@ public class FileManager {
 			for (File source : sourceList) {
 				File target = new File(F_target.getAbsolutePath() + "/" + source.getName());
 				if (source.isDirectory()) {
-					Log.test("Dir  " + target.getPath());
 					target.mkdir();
 					moveDirectory(source, target);
 				} else {
-					Log.test("File " + target.getPath());
 					FileInputStream fis = null;
 					FileOutputStream fos = null;
 					try {
@@ -213,7 +223,9 @@ public class FileManager {
 						}
 					}
 				}
+				target.setLastModified(source.lastModified());
 			}
+			F_target.setLastModified(F_source.lastModified());
 
 			deleteDirectory(F_source);
 		} catch (Exception e) {
