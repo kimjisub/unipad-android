@@ -168,6 +168,13 @@ public class FileManager {
 		return ret;
 	}
 
+	public static boolean isInternalFile(Context context, File file) {
+		String target = getInternalUniPackRoot(context).getPath();
+		String source = file.getPath();
+
+		return source.contains(target);
+	}
+
 	// ============================================================================================= Make, Move, Copy, Delete
 
 	public static void moveDirectory(File F_source, File F_target) {
@@ -235,7 +242,7 @@ public class FileManager {
 		return new File(parent.getPath() + "/" + childName);
 	}
 
-	public static void makeDirWhenNotExist(File dir){
+	public static void makeDirWhenNotExist(File dir) {
 		if (!dir.isDirectory()) {
 			if (dir.isFile())
 				dir.delete();
