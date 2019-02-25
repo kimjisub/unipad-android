@@ -74,7 +74,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
-						if (!item.moving)
+						if (!item.isMoving)
 							context.togglePlay(item);
 					}
 
@@ -84,11 +84,11 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 
 					@Override
 					public void onPlayClick(PackViewSimple v) {
-						if (!item.moving)
+						if (!item.isMoving)
 							context.pressPlay(item);
 					}
 				})
-				.setToggle(item.toggle, context.color(R.color.red), item.flagColor);
+				.setToggle(item.isToggle, context.color(R.color.red), item.flagColor);
 
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.fade_in);
