@@ -74,7 +74,8 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
-						context.togglePlay(item);
+						if (!item.moving)
+							context.togglePlay(item);
 					}
 
 					@Override
@@ -83,7 +84,8 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 
 					@Override
 					public void onPlayClick(PackViewSimple v) {
-						context.pressPlay(item);
+						if (!item.moving)
+							context.pressPlay(item);
 					}
 				})
 				.setToggle(item.toggle, context.color(R.color.red), item.flagColor);

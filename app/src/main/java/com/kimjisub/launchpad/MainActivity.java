@@ -339,6 +339,7 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_storage.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
+				item.moving = true;
 				File source = new File(item.path);
 				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
 				File target = FileManager.getChild(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
@@ -501,7 +502,6 @@ public class MainActivity extends BaseActivity {
 					I_list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
 					TV_panel_total_unipackCount.setText(I_list.size() + "");
-					Log.test("add:    " + i + " : " + targetTime + "    " + F_added.path);
 				}
 
 				for (MainItem F_removed : I_removed) {
@@ -509,7 +509,6 @@ public class MainActivity extends BaseActivity {
 					for (MainItem item : I_list) {
 						if (item.path.equals(F_removed.path)) {
 							int I = i;
-							Log.test("remove: " + I + " : " + F_removed.path);
 							I_list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
 							TV_panel_total_unipackCount.setText(I_list.size() + "");
@@ -518,6 +517,9 @@ public class MainActivity extends BaseActivity {
 						i++;
 					}
 				}
+
+				if (I_added.size() > 0)
+					new Handler().postDelayed(() -> RV_view.smoothScrollToPosition(0), 1000);
 
 				if (I_list.size() == 0)
 					addErrorItem();
@@ -1136,7 +1138,6 @@ public class MainActivity extends BaseActivity {
 		switch (requestCode) {
 			case 0:
 				checkThings();
-				new Handler().postDelayed(() -> RV_view.smoothScrollToPosition(0), 1000);
 				break;
 		}
 	}
