@@ -91,7 +91,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 				.setToggle(item.isToggle, context.color(R.color.red), item.flagColor);
 
 
-		Animation a = AnimationUtils.loadAnimation(context, R.anim.fade_in);
+		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
+		if(item.isNew)
+			a = AnimationUtils.loadAnimation(context, R.anim.pack_new_in);
+		item.isNew = false;
 		packViewSimple.setAnimation(a);
 	}
 
