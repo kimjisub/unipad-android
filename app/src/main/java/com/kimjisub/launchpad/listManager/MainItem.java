@@ -8,12 +8,13 @@ public class MainItem {
 	public String path;
 	public int flagColor;
 	public PackViewSimple packViewSimple;
-	public boolean toggle = false;
-	public boolean moving = false;
+	public boolean isToggle = false;
+	public boolean isMoving = false;
+	public boolean isNew = false;
 
-	public MainItem(Unipack unipack, String path, int flagColor) {
+	public MainItem(Unipack unipack, String path, boolean isNew) {
 		this.unipack = unipack;
 		this.path = path;
-		this.flagColor = flagColor;
+		this.isNew = isNew;
 	}
 }

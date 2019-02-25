@@ -339,7 +339,7 @@ public class MainActivity extends BaseActivity {
 		IV_panel_pack_storage.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
-				item.moving = true;
+				item.isMoving = true;
 				File source = new File(item.path);
 				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
 				File target = FileManager.getChild(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
@@ -414,7 +414,7 @@ public class MainActivity extends BaseActivity {
 
 
 		checkThings();
-		update();
+		update(false);
 		setDriver();
 	}
 
@@ -422,8 +422,12 @@ public class MainActivity extends BaseActivity {
 		versionCheck();
 	}
 
+	void update(){
+		update(true);
+	}
+
 	@SuppressLint("StaticFieldLeak")
-	void update() {
+	void update(boolean animateNew) {
 		lastPlayIndex = -1;
 		if (!updateComplete)
 			return;
@@ -455,7 +459,7 @@ public class MainActivity extends BaseActivity {
 
 						String path = file.getPath();
 						Unipack unipack = new Unipack(file, false);
-						MainItem packItem = new MainItem(unipack, path, 0);
+						MainItem packItem = new MainItem(unipack, path, animateNew);
 
 						I_curr.add(packItem);
 					}
@@ -518,8 +522,7 @@ public class MainActivity extends BaseActivity {
 					}
 				}
 
-				if (I_added.size() > 0)
-					new Handler().postDelayed(() -> RV_view.smoothScrollToPosition(0), 1000);
+				if (I_added.size() > 0)RV_view.smoothScrollToPosition(0);
 
 				if (I_list.size() == 0)
 					addErrorItem();
@@ -801,13 +804,13 @@ public class MainActivity extends BaseActivity {
 				PackViewSimple packViewSimple = mainItem.packViewSimple;
 
 				if (item != null && mainItem.path.equals(item.path)) {
-					mainItem.toggle = !mainItem.toggle;
+					mainItem.isToggle = !mainItem.isToggle;
 					lastPlayIndex = i;
 				} else
-					mainItem.toggle = false;
+					mainItem.isToggle = false;
 
 				if (packViewSimple != null)
-					packViewSimple.toggle(mainItem.toggle, color(R.color.red), mainItem.flagColor);
+					packViewSimple.toggle(mainItem.isToggle, color(R.color.red), mainItem.flagColor);
 
 				i++;
 			}
@@ -836,7 +839,7 @@ public class MainActivity extends BaseActivity {
 
 		int i = 0;
 		for (MainItem mainItem : I_list) {
-			if (mainItem.toggle) {
+			if (mainItem.isToggle) {
 				index = i;
 				break;
 			}
@@ -1128,7 +1131,9 @@ public class MainActivity extends BaseActivity {
 		initVar(false);
 		setDriver();
 		checkThings();
-		update();
+
+		new Handler().postDelayed(() -> update(), 1000);
+
 
 		firebase_storeCount.attachEventListener(true);
 	}
