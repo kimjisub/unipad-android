@@ -13,7 +13,7 @@ import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.kimjisub.launchpad.utils.ThemePack;
 
 import java.util.ArrayList;
@@ -61,14 +61,14 @@ public class ThemeActivity extends BaseActivity {
 
 	public void mSetTheme(int i) {
 		if (L_theme.size() != i)
-			SettingManager.SelectedTheme.save(ThemeActivity.this, L_theme.get(i).package_name);
+			PreferenceManager.SelectedTheme.save(ThemeActivity.this, L_theme.get(i).package_name);
 		else
 			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")));
 	}
 
 	public int mGetTheme() {
 		int ret = 0;
-		String selectedThemePackageName = SettingManager.SelectedTheme.load(ThemeActivity.this);
+		String selectedThemePackageName = PreferenceManager.SelectedTheme.load(ThemeActivity.this);
 		int i = 0;
 		for (ThemePack themePack : L_theme) {
 			Log.log(selectedThemePackageName + ", " + themePack.package_name);

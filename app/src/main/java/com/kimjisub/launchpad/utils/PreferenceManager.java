@@ -9,7 +9,7 @@ import java.io.File;
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
-public class SettingManager {
+public class PreferenceManager {
 
 	final static String DATA = "data";
 

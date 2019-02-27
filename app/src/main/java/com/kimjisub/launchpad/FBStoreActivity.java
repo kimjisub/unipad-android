@@ -22,7 +22,7 @@ import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.networks.fb.fbStore;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
@@ -211,7 +211,7 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 				Long data = dataSnapshot.getValue(Long.class);
-				SettingManager.PrevStoreCount.save(FBStoreActivity.this, data);
+				PreferenceManager.PrevStoreCount.save(FBStoreActivity.this, data);
 			}
 
 			@Override

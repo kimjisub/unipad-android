@@ -18,7 +18,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
@@ -130,7 +130,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	// ============================================================================================= Ads
 
 	public boolean checkAdsCooltime() {
-		long prevTime = SettingManager.PrevAdsShowTime.load(this);
+		long prevTime = PreferenceManager.PrevAdsShowTime.load(this);
 		long currTime = System.currentTimeMillis();
 
 		return (currTime < prevTime) || currTime - prevTime >= ADSCOOLTIME;
@@ -138,7 +138,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 	public void updateAdsCooltime() {
 		long currTime = System.currentTimeMillis();
-		SettingManager.PrevAdsShowTime.save(this, currTime);
+		PreferenceManager.PrevAdsShowTime.save(this, currTime);
 	}
 
 	public void initVungle() {

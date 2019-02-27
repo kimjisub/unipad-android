@@ -1,30 +1,6 @@
 package com.kimjisub.launchpad;
 
-import android.annotation.SuppressLint;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.widget.TextView;
-
-import com.kimjisub.launchpad.networks.UniPadApiBuilder;
-import com.kimjisub.launchpad.utils.FileManager;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
-import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.launchpad.networks.dto.MakeUrlDTO;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class ImportPackByUrlActivity extends BaseActivity {
 	@Override
@@ -47,7 +23,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		F_UniPackRoot = new File(SettingManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this));
+		F_UniPackRoot = new File(PreferenceManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this));
 		//UnipackZipPath
 		//UnipackPath
 

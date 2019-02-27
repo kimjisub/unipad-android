@@ -45,7 +45,7 @@ import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.kimjisub.launchpad.utils.ThemePack;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
@@ -203,7 +203,7 @@ public class MainActivity extends BaseActivity {
 				@Override
 				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					Long data = dataSnapshot.getValue(Long.class);
-					if (SettingManager.PrevStoreCount.load(MainActivity.this) == data)
+					if (PreferenceManager.PrevStoreCount.load(MainActivity.this) == data)
 						runOnUiThread(() -> blink(false));
 					else
 						runOnUiThread(() -> blink(true));
@@ -271,7 +271,7 @@ public class MainActivity extends BaseActivity {
 
 		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
 
-		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, SettingManager.FileExplorerPath.load(MainActivity.this))
+		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String filePath) {
@@ -280,7 +280,7 @@ public class MainActivity extends BaseActivity {
 
 					@Override
 					public void onPathChanged(String folderPath) {
-						SettingManager.FileExplorerPath.save(MainActivity.this, folderPath);
+						PreferenceManager.FileExplorerPath.save(MainActivity.this, folderPath);
 					}
 				})
 				.show());
@@ -900,7 +900,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 		try {
-			String name = new ThemePack(MainActivity.this, SettingManager.SelectedTheme.load(MainActivity.this)).name;
+			String name = new ThemePack(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
 			TV_panel_total_selectedTheme.setText(name);
 		} catch (Exception e) {
 			e.printStackTrace();
