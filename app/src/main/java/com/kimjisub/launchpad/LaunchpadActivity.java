@@ -20,7 +20,7 @@ import android.widget.TextView;
 
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -147,7 +147,7 @@ public class LaunchpadActivity extends BaseActivity {
 		setContentView(R.layout.activity_usbmidi);
 		initVar();
 
-		mode = SettingManager.LaunchpadConnectMethod.load(LaunchpadActivity.this);
+		mode = PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this);
 
 		selectDevice(device);
 		selectMode(mode);
@@ -352,7 +352,7 @@ public class LaunchpadActivity extends BaseActivity {
 			}
 		}
 
-		SettingManager.LaunchpadConnectMethod.save(LaunchpadActivity.this, mode);
+		PreferenceManager.LaunchpadConnectMethod.save(LaunchpadActivity.this, mode);
 	}
 
 	@Override

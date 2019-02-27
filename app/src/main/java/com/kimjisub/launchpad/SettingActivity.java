@@ -22,7 +22,7 @@ import android.widget.TextView;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.utils.BillingManager;
-import com.kimjisub.launchpad.utils.SettingManager;
+import com.kimjisub.launchpad.utils.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -266,7 +266,7 @@ public class SettingActivity extends PreferenceActivity {
 
 	@Override
 	protected void onResume() {
-		findPreference("select_theme").setSummary(SettingManager.SelectedTheme.load(SettingActivity.this));
+		findPreference("select_theme").setSummary(PreferenceManager.SelectedTheme.load(SettingActivity.this));
 		findPreference("FCMToken").setSummary(FirebaseInstanceId.getInstance().getToken());
 
 		Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;

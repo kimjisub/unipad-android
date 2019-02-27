@@ -1,18 +1,6 @@
 package com.kimjisub.launchpad;
 
-import android.annotation.SuppressLint;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.widget.TextView;
-
-import com.kimjisub.launchpad.utils.FileManager;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.SettingManager;
-import com.kimjisub.launchpad.utils.Unipack;
-
-import java.io.File;
-import java.io.IOException;
 
 public class ImportPackByFileActivity extends BaseActivity {
 	@Override
@@ -88,7 +76,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 		TV_message = findViewById(R.id.message);
 		TV_info = findViewById(R.id.info);
 
-		F_UniPackRoot = SettingManager.IsUsingSDCard.getPath(ImportPackByFileActivity.this);
+		F_UniPackRoot = PreferenceManager.IsUsingSDCard.getPath(ImportPackByFileActivity.this);
 		UnipackZipPath = getIntent().getData().getPath();
 		File file = new File(UnipackZipPath);
 		String name = file.getName();
