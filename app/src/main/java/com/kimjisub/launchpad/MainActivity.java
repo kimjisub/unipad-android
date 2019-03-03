@@ -40,13 +40,13 @@ import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.launchpad.listManager.MainAdapter;
 import com.kimjisub.launchpad.listManager.MainItem;
+import com.kimjisub.launchpad.listManager.ThemeItem;
 import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
-import com.kimjisub.launchpad.utils.ThemePack;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.FileExplorer;
 import com.kimjisub.unipad.designkit.PackViewSimple;
@@ -900,7 +900,7 @@ public class MainActivity extends BaseActivity {
 		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
 		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
 		try {
-			String name = new ThemePack(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
+			String name = new ThemeItem(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
 			TV_panel_total_selectedTheme.setText(name);
 		} catch (Exception e) {
 			e.printStackTrace();

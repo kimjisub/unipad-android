@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.utils;
+package com.kimjisub.launchpad.listManager;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -10,7 +10,7 @@ import com.kimjisub.launchpad.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ThemePack {
+public class ThemeItem {
 	public Context context;
 	public String package_name;
 	public Drawable icon;
@@ -20,7 +20,7 @@ public class ThemePack {
 	public String version;
 	public Resources resources;
 
-	public ThemePack(Context context, String package_name) throws Exception {
+	public ThemeItem(Context context, String package_name) throws Exception {
 		this.context = context;
 		this.package_name = package_name;
 
@@ -147,11 +147,11 @@ public class ThemePack {
 		}
 	}
 
-	public final static ArrayList<ThemePack> getThemePackList(Context context) {
-		ArrayList<ThemePack> ret = new ArrayList<>();
+	public final static ArrayList<ThemeItem> getThemePackList(Context context) {
+		ArrayList<ThemeItem> ret = new ArrayList<>();
 
 		try {
-			ret.add(new ThemePack(context, context.getPackageName()));
+			ret.add(new ThemeItem(context, context.getPackageName()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -161,7 +161,7 @@ public class ThemePack {
 			String packageName = applicationInfo.packageName;
 			if (packageName.startsWith("com.kimjisub.launchpad.theme.")) {
 				try {
-					ret.add(new ThemePack(context, packageName));
+					ret.add(new ThemeItem(context, packageName));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
