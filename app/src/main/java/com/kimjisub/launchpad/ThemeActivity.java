@@ -4,17 +4,15 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.kimjisub.launchpad.listManager.ThemeAdapter;
+import com.kimjisub.launchpad.listManager.ThemeItem;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
-import com.kimjisub.launchpad.utils.ThemePack;
 
 import java.util.ArrayList;
 
@@ -23,13 +21,13 @@ public class ThemeActivity extends BaseActivity {
 	RecyclerView RV_list;
 	TextView TV_apply;
 
-	static ArrayList<ThemePack> L_theme;
+	public ArrayList<ThemeItem> L_theme;
 
 	void initVar() {
 		RV_list = findViewById(R.id.list);
 		TV_apply = findViewById(R.id.apply);
 
-		L_theme = ThemePack.getThemePackList(getApplicationContext());
+		L_theme = ThemeItem.getThemePackList(getApplicationContext());
 	}
 
 	@Override
@@ -48,7 +46,7 @@ public class ThemeActivity extends BaseActivity {
 
 		RV_list.setLayoutManager(layoutManager);
 		RV_list.setHasFixedSize(true);
-		RV_list.setAdapter(new Adapter());
+		RV_list.setAdapter(new ThemeAdapter(ThemeActivity.this));
 		RV_list.addOnScrollListener(new CenterScrollListener());
 
 		layoutManager.scrollToPosition(mGetTheme());
@@ -70,59 +68,14 @@ public class ThemeActivity extends BaseActivity {
 		int ret = 0;
 		String selectedThemePackageName = PreferenceManager.SelectedTheme.load(ThemeActivity.this);
 		int i = 0;
-		for (ThemePack themePack : L_theme) {
-			Log.log(selectedThemePackageName + ", " + themePack.package_name);
-			if (themePack.package_name.equals(selectedThemePackageName)) {
+		for (ThemeItem themeItem : L_theme) {
+			Log.log(selectedThemePackageName + ", " + themeItem.package_name);
+			if (themeItem.package_name.equals(selectedThemePackageName)) {
 				ret = i;
 				break;
 			}
 			i++;
 		}
 		return ret;
-	}
-
-	final static class ViewHolder extends RecyclerView.ViewHolder {
-		ImageView theme_icon;
-		TextView theme_version;
-		TextView theme_author;
-
-		ViewHolder(View itemView) {
-			super(itemView);
-			theme_icon = itemView.findViewById(R.id.theme_icon);
-			theme_version = itemView.findViewById(R.id.theme_version);
-			theme_author = itemView.findViewById(R.id.theme_author);
-		}
-	}
-
-	private final class Adapter extends RecyclerView.Adapter<ViewHolder> {
-
-		private int itemsCount = 0;
-
-		Adapter() {
-			itemsCount = L_theme.size() + 1;
-		}
-
-		@Override
-		public ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
-			return new ViewHolder(View.inflate(parent.getContext(), R.layout.theme_list, null));
-		}
-
-		@Override
-		public void onBindViewHolder(ViewHolder holder, int position) {
-			try {
-				ThemePack theme = L_theme.get(position);
-				holder.theme_icon.setBackground(theme.icon);
-				holder.theme_version.setText(theme.version);
-				holder.theme_author.setText(theme.author);
-			} catch (Exception ignore) {
-				holder.theme_icon.setBackground(drawable(R.drawable.theme_add));
-				holder.theme_version.setText(lang(R.string.themeDownload));
-			}
-		}
-
-		@Override
-		public int getItemCount() {
-			return itemsCount;
-		}
 	}
 }

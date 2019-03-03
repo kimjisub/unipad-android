@@ -12,7 +12,7 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.unipad.designkit.PackViewSimple;
 
-public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder> {
+public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 
 	private MainActivity context;
 
@@ -21,7 +21,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 	}
 
 	@Override
-	public UniPackHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public MainHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		int left = context.dpToPx(16);
@@ -30,23 +30,23 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 		int bottom = context.dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
 		packViewSimple.setLayoutParams(lp);
-		UniPackHolder uniPackHolder = new UniPackHolder(packViewSimple);
+		MainHolder mainHolder = new MainHolder(packViewSimple);
 
-		return uniPackHolder;
+		return mainHolder;
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull UniPackHolder uniPackHolder, int position) {
+	public void onBindViewHolder(@NonNull MainHolder mainHolder, int position) {
 		MainItem item = context.I_list.get(position);
-		PackViewSimple packViewSimple = uniPackHolder.packViewSimple;
+		PackViewSimple packViewSimple = mainHolder.packViewSimple;
 
-		if (uniPackHolder.position != -1)
+		if (mainHolder.position != -1)
 			try {
-				context.I_list.get(uniPackHolder.position).packViewSimple = null;
+				context.I_list.get(mainHolder.position).packViewSimple = null;
 			} catch (Exception e) {
 			}
 		item.packViewSimple = packViewSimple;
-		uniPackHolder.position = position;
+		mainHolder.position = position;
 
 		UnipackVO unipackVO = context.DB_unipack.getOrCreateByPath(item.unipack.F_project.getName());
 
@@ -103,13 +103,5 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.UniPackHolder>
 		return context.I_list.size();
 	}
 
-	public static class UniPackHolder extends RecyclerView.ViewHolder {
-		PackViewSimple packViewSimple;
-		int position = -1;
 
-		UniPackHolder(PackViewSimple view) {
-			super(view);
-			packViewSimple = view;
-		}
-	}
 }

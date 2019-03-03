@@ -35,12 +35,12 @@ import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
+import com.kimjisub.launchpad.listManager.ThemeItem;
 import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
-import com.kimjisub.launchpad.utils.ThemePack;
 import com.kimjisub.launchpad.utils.Unipack;
 import com.kimjisub.unipad.designkit.SyncCheckBox;
 import com.vungle.warren.LoadAdCallback;
@@ -101,7 +101,7 @@ public class PlayActivity extends BaseActivity {
 	SyncCheckBox SCV_proLightMode;
 
 	// =============================================================================================
-	ThemePack.Resources theme;
+	ThemeItem.Resources theme;
 
 	Unipack unipack;
 	boolean unipackLoaded = false;
@@ -383,7 +383,7 @@ public class PlayActivity extends BaseActivity {
 		String packageName = PreferenceManager.SelectedTheme.load(PlayActivity.this);
 		if (num >= 2) {
 			try {
-				ThemePack mTheme = new ThemePack(PlayActivity.this, packageName);
+				ThemeItem mTheme = new ThemeItem(PlayActivity.this, packageName);
 				mTheme.loadDefaultThemeResources();
 				theme = mTheme.resources;
 			} catch (Exception ignore) {
@@ -391,7 +391,7 @@ public class PlayActivity extends BaseActivity {
 			return true;
 		}
 		try {
-			ThemePack mTheme = new ThemePack(PlayActivity.this, packageName);
+			ThemeItem mTheme = new ThemeItem(PlayActivity.this, packageName);
 			mTheme.loadThemeResources();
 			theme = mTheme.resources;
 			return true;
