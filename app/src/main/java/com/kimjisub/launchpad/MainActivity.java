@@ -115,7 +115,6 @@ public class MainActivity extends BaseActivity {
 	int lastPlayIndex = -1;
 	public ArrayList<MainItem> I_list;
 	RecyclerView.Adapter RV_adapter;
-	RecyclerView.LayoutManager RV_layoutManager;
 
 	Networks.FirebaseManager firebase_storeCount;
 
@@ -192,11 +191,10 @@ public class MainActivity extends BaseActivity {
 		if (onFirst) {
 			I_list = new ArrayList<>();
 			RV_adapter = new MainAdapter(MainActivity.this);
-			RV_layoutManager = new LinearLayoutManager(MainActivity.this);
 
 			RV_view.setHasFixedSize(false);
 			RV_view.setAdapter(RV_adapter);
-			RV_view.setLayoutManager(RV_layoutManager);
+			RV_view.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			firebase_storeCount.setEventListener(new ValueEventListener() {
@@ -422,7 +420,7 @@ public class MainActivity extends BaseActivity {
 		versionCheck();
 	}
 
-	void update(){
+	void update() {
 		update(true);
 	}
 
@@ -522,7 +520,7 @@ public class MainActivity extends BaseActivity {
 					}
 				}
 
-				if (I_added.size() > 0)RV_view.smoothScrollToPosition(0);
+				if (I_added.size() > 0) RV_view.smoothScrollToPosition(0);
 
 				if (I_list.size() == 0)
 					addErrorItem();
