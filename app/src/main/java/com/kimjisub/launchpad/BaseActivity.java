@@ -31,8 +31,6 @@ import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 
-	public static ArrayList<Activity> activityList = new ArrayList<>();
-
 	private static InterstitialAd interstitialAd;
 
 	public File F_UniPackRootExt;
@@ -43,7 +41,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	public static int Scale_PaddingWidth = 0;
 	public static int Scale_PaddingHeight = 0;
 
-	private void initVar(){
+	private void initVar() {
 		F_UniPackRootExt = FileManager.getExternalUniPackRoot();
 		F_UniPackRootInt = FileManager.getInternalUniPackRoot(getApplicationContext());
 
@@ -51,7 +49,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 		FileManager.makeNomedia(F_UniPackRootExt);
 	}
 
-	// ============================================================================================= Show
+	// ============================================================================================= Activity
+
+	public static ArrayList<Activity> activityList = new ArrayList<>();
 
 	static void startActivity(Activity activity) {
 		activityList.add(activity);
@@ -120,7 +120,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 	}
 
 
-	File[] getUniPackDirList(){
+	File[] getUniPackDirList() {
 		File[] projectFiles = FileManager.addFileArray(F_UniPackRootExt.listFiles(), F_UniPackRootInt.listFiles());
 		File[] projectFilesSort = FileManager.sortByTime(projectFiles);
 
@@ -273,7 +273,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 		return (int) dp;
 	}
 
-	// ============================================================================================= Activity
+	// ============================================================================================= Activity Cycle
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
