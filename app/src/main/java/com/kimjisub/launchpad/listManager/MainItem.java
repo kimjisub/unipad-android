@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.listManager;
 
 import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.unipad.designkit.PackViewSimple;
+import com.kimjisub.design.PackViewSimple;
 
 public class MainItem {
 	public Unipack unipack;

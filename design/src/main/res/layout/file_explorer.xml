@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:lineSpacingExtra="3.5sp"
+		android:text="이메일"
+		android:textColor="#e54948"
+		android:textSize="12.5sp" />
+
+	<TextView
+		android:id="@+id/path"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:paddingLeft="20dp"
+		android:paddingTop="20dp"
+		android:paddingRight="20dp"
+		android:paddingBottom="15dp"
+		android:text="path/path/path"
+		android:textColor="#DD000000"
+		android:textSize="15dp" />
+
+	<ListView
+		android:id="@+id/list"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:choiceMode="singleChoice"
+		android:divider="#55000000"
+		android:dividerHeight="1dp" />
+
+</LinearLayout>
