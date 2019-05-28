@@ -9,15 +9,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
 import com.kimjisub.launchpad.networks.Networks;
 import com.kimjisub.launchpad.networks.fb.fbStore;
 import com.kimjisub.launchpad.utils.FileManager;
@@ -38,29 +36,7 @@ import java.util.ConcurrentModificationException;
 
 public class FBStoreActivity extends BaseActivity {
 
-	LinearLayout LL_list;
-	RelativeLayout RL_panel_total;
-	TextView TV_panel_total_version;
-	TextView TV_panel_total_unipackStoreCount;
-	TextView TV_panel_total_unipackDownloadedCount;
-	RelativeLayout RL_panel_pack;
-	ImageView IV_panel_pack_star;
-	ImageView IV_panel_pack_bookmark;
-	ImageView IV_panel_pack_edit;
-	TextView TV_panel_pack_title;
-	TextView TV_panel_pack_subTitle;
-	TextView TV_panel_pack_path;
-	TextView TV_panel_pack_scale;
-	TextView TV_panel_pack_chainCount;
-	TextView TV_panel_pack_soundCount;
-	TextView TV_panel_pack_ledCount;
-	TextView TV_panel_pack_fileSize;
-	TextView TV_panel_pack_openCount;
-	TextView TV_panel_pack_padTouchCount;
-	ImageView IV_panel_pack_youtube;
-	ImageView IV_panel_pack_website;
-	ImageView IV_panel_pack_func;
-	ImageView IV_panel_pack_delete;
+	ActivityStoreBinding b;
 
 	Networks.FirebaseManager firebase_store;
 	Networks.FirebaseManager firebase_storeCount;
@@ -68,33 +44,10 @@ public class FBStoreActivity extends BaseActivity {
 	File[] F_UniPackList;
 
 	void initVar(boolean onFirst) {
-		LL_list = findViewById(R.id.list);
-		RL_panel_total = findViewById(R.id.panel_total);
-		TV_panel_total_version = findViewById(R.id.panel_total_version);
-		TV_panel_total_unipackStoreCount = findViewById(R.id.panel_total_unipackStoreCount);
-		TV_panel_total_unipackDownloadedCount = findViewById(R.id.panel_total_unipackDownloadedCount);
-		RL_panel_pack = findViewById(R.id.panel_pack);
-		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
-		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
-		IV_panel_pack_edit = findViewById(R.id.panel_pack_edit);
-		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
-		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
-		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
-		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
-		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
-		TV_panel_pack_soundCount = findViewById(R.id.panel_pack_soundCount);
-		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
-		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
-		TV_panel_pack_openCount = findViewById(R.id.panel_pack_openCount);
-		TV_panel_pack_padTouchCount = findViewById(R.id.panel_pack_padTouchCount);
-		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
-		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
-		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
-		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
-		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
-		TV_panel_pack_title.setSelected(true);
-		TV_panel_pack_subTitle.setSelected(true);
-		TV_panel_pack_path.setSelected(true);
+		b.panelTotal.version.setText(BuildConfig.VERSION_NAME);
+		b.panelPack.title.setSelected(true);
+		b.panelPack.subTitle.setSelected(true);
+		b.panelPack.path.setSelected(true);
 
 		if (onFirst) {
 			firebase_store = new Networks.FirebaseManager("store");
@@ -109,7 +62,7 @@ public class FBStoreActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_store);
+		b = setContentViewBind(R.layout.activity_store);
 		initVar(true);
 
 		firebase_store.setEventListener(new ChildEventListener() {
@@ -118,7 +71,7 @@ public class FBStoreActivity extends BaseActivity {
 				try {
 					fbStore d = dataSnapshot.getValue(fbStore.class);
 					if (P_list.size() == 0)
-						LL_list.removeAllViews();
+						b.list.removeAllViews();
 					d.index = P_list.size();
 
 
@@ -166,7 +119,7 @@ public class FBStoreActivity extends BaseActivity {
 					lp.setMargins(left, top, right, bottom);
 
 					P_list.add(new PackItem(packViewSimple, d, isDownloaded, false));
-					LL_list.addView(packViewSimple, 0, lp);
+					b.list.addView(packViewSimple, 0, lp);
 
 					updatePanelMain(false);
 				} catch (Exception e) {
@@ -234,7 +187,7 @@ public class FBStoreActivity extends BaseActivity {
 		int right = dpToPx(16);
 		int bottom = dpToPx(10);
 		lp.setMargins(left, top, right, bottom);
-		LL_list.addView(packViewSimple, lp);
+		b.list.addView(packViewSimple, lp);
 	}
 
 	// ============================================================================================= List Manage
@@ -448,14 +401,14 @@ public class FBStoreActivity extends BaseActivity {
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
-				RL_panel_pack.setVisibility(View.VISIBLE);
-				RL_panel_pack.setAlpha(1);
+				b.panelPack.getRoot().setVisibility(View.VISIBLE);
+				b.panelPack.getRoot().setAlpha(1);
 			}
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-				RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
+				b.panelPack.getRoot().setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				b.panelPack.getRoot().setAlpha(playIndex != -1 ? 1 : 0);
 			}
 
 			@Override
@@ -469,16 +422,16 @@ public class FBStoreActivity extends BaseActivity {
 		else
 			updatePanelPack(hardWork);
 
-		int visibility = RL_panel_pack.getVisibility();
+		int visibility = b.panelPack.getRoot().getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
 				|| (visibility == View.INVISIBLE && playIndex != -1))
-			RL_panel_pack.startAnimation(animation);
+			b.panelPack.getRoot().startAnimation(animation);
 	}
 
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
-		TV_panel_total_unipackStoreCount.setText(P_list.size() + "");
-		TV_panel_total_unipackDownloadedCount.setText(getDownloadedCount() + "");
+		b.panelTotal.unipackStoreCount.setText(P_list.size() + "");
+		b.panelTotal.unipackDownloadedCount.setText(getDownloadedCount() + "");
 	}
 
 	void updatePanelPack(boolean hardWork) {
@@ -486,8 +439,8 @@ public class FBStoreActivity extends BaseActivity {
 		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		fbStore fbStore = item.fbStore;
-		TV_panel_pack_title.setText(fbStore.title);
-		TV_panel_pack_subTitle.setText(fbStore.producerName);
+		b.panelPack.title.setText(fbStore.title);
+		b.panelPack.subTitle.setText(fbStore.producerName);
 	}
 
 	// ============================================================================================= Activity
@@ -509,7 +462,7 @@ public class FBStoreActivity extends BaseActivity {
 		super.onResume();
 		initVar(false);
 
-		LL_list.removeAllViews();
+		b.list.removeAllViews();
 		P_list.clear();
 		addErrorItem();
 

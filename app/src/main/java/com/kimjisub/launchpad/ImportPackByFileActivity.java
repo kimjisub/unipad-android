@@ -2,11 +2,15 @@ package com.kimjisub.launchpad;
 
 import android.os.Bundle;
 
+import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
+
 public class ImportPackByFileActivity extends BaseActivity {
+	ActivityImportpackBinding b;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_importpack);
+		b = setContentViewBind(R.layout.activity_importpack);
 	}
 	/*TextView TV_title;
 	TextView TV_message;
@@ -92,7 +96,7 @@ public class ImportPackByFileActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_importpack);
+		b = setContentViewBind(R.layout.activity_importpack);
 		initVar();
 
 		new UnzipTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);

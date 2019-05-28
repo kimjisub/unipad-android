@@ -105,15 +105,15 @@ public class Networks {
 			return this;
 		}
 
-		public FirebaseManager attachEventListener(boolean b) {
+		public FirebaseManager attachEventListener(boolean bool) {
 			if (childEventListener != null)
-				if (b)
+				if (bool)
 					myRef.addChildEventListener(childEventListener);
 				else
 					myRef.removeEventListener(childEventListener);
 
 			if (valueEventListener != null)
-				if (b)
+				if (bool)
 					myRef.addValueEventListener(valueEventListener);
 				else
 					myRef.removeEventListener(valueEventListener);

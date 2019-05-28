@@ -14,26 +14,19 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
-import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.launchpad.databinding.ActivityMainBinding;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
@@ -65,52 +58,15 @@ import java.util.Date;
 import static com.kimjisub.launchpad.utils.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
+	ActivityMainBinding b;
+
 	BillingManager billingManager;
 
 	// DB
 	public DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
-	// View
-	AdView AV_adview;
-	RelativeLayout RL_rootView;
-	SwipeRefreshLayout SRL_scrollView;
-	RecyclerView RV_view;
-	FloatingActionMenu FAM_floatingMenu;
-	FloatingActionButton FAB_reconnectLaunchpad;
-	FloatingActionButton FAB_loadUniPack;
-	FloatingActionButton FAB_store;
-	FloatingActionButton FAB_setting;
-	LinearLayout LL_scale;
-	LinearLayout LL_paddingScale;
-	LinearLayout LL_testView;
 	ValueAnimator VA_floatingAnimation;
-	RelativeLayout RL_panel_total;
-	TextView TV_panel_total_version;
-	TextView TV_panel_total_unipackCount;
-	TextView TV_panel_total_unipackCapacity;
-	TextView TV_panel_total_openCount;
-	TextView TV_panel_total_padtouchCount;
-	TextView TV_panel_total_selectedTheme;
-	RelativeLayout RL_panel_pack;
-	ImageView IV_panel_pack_star;
-	ImageView IV_panel_pack_bookmark;
-	ImageView IV_panel_pack_edit;
-	ImageView IV_panel_pack_storage;
-	TextView TV_panel_pack_title;
-	TextView TV_panel_pack_subTitle;
-	TextView TV_panel_pack_path;
-	TextView TV_panel_pack_scale;
-	TextView TV_panel_pack_chainCount;
-	TextView TV_panel_pack_soundCount;
-	TextView TV_panel_pack_ledCount;
-	TextView TV_panel_pack_fileSize;
-	TextView TV_panel_pack_openCount;
-	TextView TV_panel_pack_padTouchCount;
-	ImageView IV_panel_pack_youtube;
-	ImageView IV_panel_pack_website;
-	ImageView IV_panel_pack_func;
-	ImageView IV_panel_pack_delete;
 
 	int lastPlayIndex = -1;
 	public ArrayList<MainItem> I_list;
@@ -126,49 +82,10 @@ public class MainActivity extends BaseActivity {
 		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
 
 		// View
-		AV_adview = findViewById(R.id.adView);
-		RL_rootView = findViewById(R.id.rootView);
-		SRL_scrollView = findViewById(R.id.swipeRefreshLayout);
-		RV_view = findViewById(R.id.RV_view);
-		FAM_floatingMenu = findViewById(R.id.floatingMenu);
-		FAB_reconnectLaunchpad = findViewById(R.id.fab_reconnectLaunchpad);
-		FAB_loadUniPack = findViewById(R.id.fab_loadUniPack);
-		FAB_store = findViewById(R.id.fab_store);
-		FAB_setting = findViewById(R.id.fab_setting);
-		LL_scale = findViewById(R.id.scale);
-		LL_paddingScale = findViewById(R.id.paddingScale);
-		LL_testView = findViewById(R.id.testView);
-		RL_panel_total = findViewById(R.id.panel_total);
-		TV_panel_total_version = findViewById(R.id.panel_total_version);
-		TV_panel_total_unipackCount = findViewById(R.id.panel_total_unipackCount);
-		TV_panel_total_unipackCapacity = findViewById(R.id.panel_total_unipackCapacity);
-		TV_panel_total_openCount = findViewById(R.id.panel_total_openCount);
-		TV_panel_total_padtouchCount = findViewById(R.id.panel_total_padTouchCount);
-		TV_panel_total_selectedTheme = findViewById(R.id.panel_total_selectedTheme);
-		RL_panel_pack = findViewById(R.id.panel_pack);
-		IV_panel_pack_star = findViewById(R.id.panel_pack_star);
-		IV_panel_pack_bookmark = findViewById(R.id.panel_pack_bookmark);
-		IV_panel_pack_edit = findViewById(R.id.panel_pack_edit);
-		IV_panel_pack_storage = findViewById(R.id.panel_pack_storage);
-		TV_panel_pack_title = findViewById(R.id.panel_pack_title);
-		TV_panel_pack_subTitle = findViewById(R.id.panel_pack_subTitle);
-		TV_panel_pack_path = findViewById(R.id.panel_pack_path);
-		TV_panel_pack_scale = findViewById(R.id.panel_pack_scale);
-		TV_panel_pack_chainCount = findViewById(R.id.panel_pack_chainCount);
-		TV_panel_pack_soundCount = findViewById(R.id.panel_pack_soundCount);
-		TV_panel_pack_ledCount = findViewById(R.id.panel_pack_ledCount);
-		TV_panel_pack_fileSize = findViewById(R.id.panel_pack_fileSize);
-		TV_panel_pack_openCount = findViewById(R.id.panel_pack_openCount);
-		TV_panel_pack_padTouchCount = findViewById(R.id.panel_pack_padTouchCount);
-		IV_panel_pack_youtube = findViewById(R.id.panel_pack_youtube);
-		IV_panel_pack_website = findViewById(R.id.panel_pack_website);
-		IV_panel_pack_func = findViewById(R.id.panel_pack_func);
-		IV_panel_pack_delete = findViewById(R.id.panel_pack_delete);
-
-		TV_panel_total_version.setText(BuildConfig.VERSION_NAME);
-		TV_panel_pack_title.setSelected(true);
-		TV_panel_pack_subTitle.setSelected(true);
-		TV_panel_pack_path.setSelected(true);
+		b.panelTotal.version.setText(BuildConfig.VERSION_NAME);
+		b.panelPack.title.setSelected(true);
+		b.panelPack.subTitle.setSelected(true);
+		b.panelPack.path.setSelected(true);
 
 		// animation
 		if (onFirst) {
@@ -180,10 +97,10 @@ public class MainActivity extends BaseActivity {
 			VA_floatingAnimation.setRepeatMode(ValueAnimator.REVERSE);
 			VA_floatingAnimation.addUpdateListener(valueAnimator -> {
 				int color = (int) valueAnimator.getAnimatedValue();
-				FAM_floatingMenu.setMenuButtonColorNormal(color);
-				FAM_floatingMenu.setMenuButtonColorPressed(color);
-				FAB_store.setColorNormal(color);
-				FAB_store.setColorPressed(color);
+				b.floatingMenu.setMenuButtonColorNormal(color);
+				b.floatingMenu.setMenuButtonColorPressed(color);
+				b.fabStore.setColorNormal(color);
+				b.fabStore.setColorPressed(color);
 			});
 		}
 
@@ -192,9 +109,9 @@ public class MainActivity extends BaseActivity {
 			I_list = new ArrayList<>();
 			RV_adapter = new MainAdapter(MainActivity.this);
 
-			RV_view.setHasFixedSize(false);
-			RV_view.setAdapter(RV_adapter);
-			RV_view.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+			b.recyclerView.setHasFixedSize(false);
+			b.recyclerView.setAdapter(RV_adapter);
+			b.recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			firebase_storeCount.setEventListener(new ValueEventListener() {
@@ -219,7 +136,7 @@ public class MainActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		b = setContentViewBind(R.layout.activity_main);
 		initVar(true);
 
 		loadAdmob();
@@ -243,7 +160,7 @@ public class MainActivity extends BaseActivity {
 			@Override
 			public void onRefresh() {
 				if (billingManager.isPurchaseRemoveAds() || billingManager.isPurchaseProTools()) {
-					TV_panel_total_version.setTextColor(color(R.color.orange));
+					b.panelTotal.version.setTextColor(color(R.color.orange));
 				}
 
 				if (billingManager.isShowAds()) {
@@ -251,10 +168,12 @@ public class MainActivity extends BaseActivity {
 						updateAdsCooltime();
 						showAdmob();
 					}
+					/*todo ad
 					AdRequest adRequest = new AdRequest.Builder().build();
-					AV_adview.loadAd(adRequest);
-				} else
-					AV_adview.setVisibility(View.GONE);
+					b.adView.loadAd(adRequest);*/
+				} else ;
+					/*todo ad
+					b.adView.setVisibility(View.GONE);*/
 			}
 		});
 		startMain();
@@ -263,13 +182,13 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void startMain() {
-		rescanScale(LL_scale, LL_paddingScale);
+		rescanScale(b.scale, b.paddingScale);
 
-		SRL_scrollView.setOnRefreshListener(this::update);
+		b.swipeRefreshLayout.setOnRefreshListener(this::update);
 
-		FAB_reconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
+		b.fabReconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
 
-		FAB_loadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
+		b.fabLoadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
 				.setOnEventListener(new FileExplorer.OnEventListener() {
 					@Override
 					public void onFileSelected(String filePath) {
@@ -283,22 +202,22 @@ public class MainActivity extends BaseActivity {
 				})
 				.show());
 
-		FAB_store.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this, FBStoreActivity.class), 0));
+		b.fabStore.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this, FBStoreActivity.class), 0));
 
-		FAB_store.setOnLongClickListener(view -> {
+		b.fabStore.setOnLongClickListener(view -> {
 			//startActivityForResult(new Intent(MainActivity.this, FSStoreActivity.class), 0);
 			return false;
 		});
 
-		FAB_setting.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, SettingActivity.class)));
+		b.fabSetting.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, SettingActivity.class)));
 
-		FAM_floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+		b.floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
 			Handler handler = new Handler();
 
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
-					FAM_floatingMenu.close(true);
+					b.floatingMenu.close(true);
 				}
 			};
 
@@ -311,7 +230,7 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-		IV_panel_pack_star.setOnClickListener(v -> {
+		b.panelPack.star.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
 				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
@@ -321,7 +240,7 @@ public class MainActivity extends BaseActivity {
 				updatePanelPackOption();
 			}
 		});
-		IV_panel_pack_bookmark.setOnClickListener(v -> {
+		b.panelPack.bookmark.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
 				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
@@ -331,10 +250,10 @@ public class MainActivity extends BaseActivity {
 				updatePanelPackOption();
 			}
 		});
-		IV_panel_pack_edit.setOnClickListener(v -> {
+		b.panelPack.edit.setOnClickListener(v -> {
 
 		});
-		IV_panel_pack_storage.setOnClickListener(v -> {
+		b.panelPack.storage.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
 				item.isMoving = true;
@@ -346,8 +265,8 @@ public class MainActivity extends BaseActivity {
 					@Override
 					protected void onPreExecute() {
 						super.onPreExecute();
-						IV_panel_pack_storage.setImageResource(R.drawable.ic_copy_24dp);
-						IV_panel_pack_storage.setClickable(false);
+						b.panelPack.storage.setImageResource(R.drawable.ic_copy_24dp);
+						b.panelPack.storage.setClickable(false);
 					}
 
 					@Override
@@ -371,14 +290,14 @@ public class MainActivity extends BaseActivity {
 				updatePanelPackOption();
 			}
 		});
-		IV_panel_pack_youtube.setOnClickListener(v -> {
+		b.panelPack.youtube.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
 				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
-		IV_panel_pack_website.setOnClickListener(v -> {
+		b.panelPack.website.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null) {
 				String website = item.unipack.website;
@@ -386,7 +305,7 @@ public class MainActivity extends BaseActivity {
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 			}
 		});
-		IV_panel_pack_func.setOnClickListener(v -> {
+		b.panelPack.func.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null)
 				new AlertDialog.Builder(MainActivity.this)
@@ -397,7 +316,7 @@ public class MainActivity extends BaseActivity {
 						}).setNegativeButton(lang(R.string.cancel), null)
 						.show();
 		});
-		IV_panel_pack_delete.setOnClickListener(v -> {
+		b.panelPack.delete.setOnClickListener(v -> {
 			MainItem item = getCurrPlay();
 			if (item != null)
 
@@ -430,7 +349,7 @@ public class MainActivity extends BaseActivity {
 		if (!updateComplete)
 			return;
 
-		SRL_scrollView.setRefreshing(true);
+		b.swipeRefreshLayout.setRefreshing(true);
 		updateComplete = false;
 
 		togglePlay(null);
@@ -503,7 +422,7 @@ public class MainActivity extends BaseActivity {
 					}
 					I_list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
-					TV_panel_total_unipackCount.setText(I_list.size() + "");
+					b.panelTotal.unipackCount.setText(I_list.size() + "");
 				}
 
 				for (MainItem F_removed : I_removed) {
@@ -513,19 +432,19 @@ public class MainActivity extends BaseActivity {
 							int I = i;
 							I_list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
-							TV_panel_total_unipackCount.setText(I_list.size() + "");
+							b.panelTotal.unipackCount.setText(I_list.size() + "");
 							break;
 						}
 						i++;
 					}
 				}
 
-				if (I_added.size() > 0) RV_view.smoothScrollToPosition(0);
+				if (I_added.size() > 0) b.recyclerView.smoothScrollToPosition(0);
 
 				if (I_list.size() == 0)
 					addErrorItem();
 
-				SRL_scrollView.setRefreshing(false);
+				b.swipeRefreshLayout.setRefreshing(false);
 				updateComplete = true;
 			}
 
@@ -822,7 +741,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	public void pressPlay(MainItem item) {
-		rescanScale(LL_scale, LL_paddingScale);
+		rescanScale(b.scale, b.paddingScale);
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
 		DB_unipackOpen.add(new UnipackOpenVO(item.unipack.F_project.getName(), new Date()));
@@ -865,14 +784,14 @@ public class MainActivity extends BaseActivity {
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
-				RL_panel_pack.setVisibility(View.VISIBLE);
-				RL_panel_pack.setAlpha(1);
+				b.panelPack.getRoot().setVisibility(View.VISIBLE);
+				b.panelPack.getRoot().setAlpha(1);
 			}
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				RL_panel_pack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-				RL_panel_pack.setAlpha(playIndex != -1 ? 1 : 0);
+				b.panelPack.getRoot().setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				b.panelPack.getRoot().setAlpha(playIndex != -1 ? 1 : 0);
 			}
 
 			@Override
@@ -886,20 +805,20 @@ public class MainActivity extends BaseActivity {
 		else
 			updatePanelPack(hardWork);
 
-		int visibility = RL_panel_pack.getVisibility();
+		int visibility = b.panelPack.getRoot().getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
 				|| (visibility == View.INVISIBLE && playIndex != -1))
-			RL_panel_pack.startAnimation(animation);
+			b.panelPack.getRoot().startAnimation(animation);
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
-		TV_panel_total_unipackCount.setText(I_list.size() + "");
-		TV_panel_total_openCount.setText(DB_unipackOpen.getAllCount() + "");
-		TV_panel_total_padtouchCount.setText(lang(R.string.measuring));
+		b.panelTotal.unipackCount.setText(I_list.size() + "");
+		b.panelTotal.openCount.setText(DB_unipackOpen.getAllCount() + "");
+		b.panelTotal.padTouchCount.setText(lang(R.string.measuring));
 		try {
 			String name = new ThemeItem(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
-			TV_panel_total_selectedTheme.setText(name);
+			b.panelTotal.selectedTheme.setText(name);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -914,7 +833,7 @@ public class MainActivity extends BaseActivity {
 
 				@Override
 				protected void onProgressUpdate(String... strings) {
-					TV_panel_total_unipackCapacity.setText(strings[0]);
+					b.panelTotal.unipackCapacity.setText(strings[0]);
 				}
 			}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
@@ -925,21 +844,21 @@ public class MainActivity extends BaseActivity {
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
-		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
-		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
-		IV_panel_pack_storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
-		IV_panel_pack_storage.setClickable(true);
-		TV_panel_pack_title.setText(unipack.title);
-		TV_panel_pack_subTitle.setText(unipack.producerName);
-		TV_panel_pack_path.setText(item.path);
-		TV_panel_pack_scale.setText(unipack.buttonX + " × " + unipack.buttonY);
-		TV_panel_pack_chainCount.setText(unipack.chain + "");
-		TV_panel_pack_soundCount.setText(lang(R.string.measuring));
-		TV_panel_pack_ledCount.setText(lang(R.string.measuring));
-		TV_panel_pack_fileSize.setText(lang(R.string.measuring));
-		TV_panel_pack_openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
-		TV_panel_pack_padTouchCount.setText(lang(R.string.measuring));
-		IV_panel_pack_website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+		b.panelPack.star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
+		b.panelPack.bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
+		b.panelPack.storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
+		b.panelPack.storage.setClickable(true);
+		b.panelPack.title.setText(unipack.title);
+		b.panelPack.subTitle.setText(unipack.producerName);
+		b.panelPack.path.setText(item.path);
+		b.panelPack.scale.setText(unipack.buttonX + " × " + unipack.buttonY);
+		b.panelPack.chainCount.setText(unipack.chain + "");
+		b.panelPack.soundCount.setText(lang(R.string.measuring));
+		b.panelPack.ledCount.setText(lang(R.string.measuring));
+		b.panelPack.fileSize.setText(lang(R.string.measuring));
+		b.panelPack.openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
+		b.panelPack.padTouchCount.setText(lang(R.string.measuring));
+		b.panelPack.website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
 		(new AsyncTask<String, String, String>() {
 			Handler handler = new Handler();
@@ -948,17 +867,17 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> {
-					if (TV_panel_pack_path.getText().toString().equals(item.path))
-						TV_panel_pack_fileSize.setText(fileSize);
+					if (b.panelPack.path.getText().toString().equals(item.path))
+						b.panelPack.fileSize.setText(fileSize);
 				});
 
 				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
 				item.unipack = unipackDetail;
 				publishProgress(fileSize);
 				handler.post(() -> {
-					if (TV_panel_pack_path.getText().toString().equals(item.path)) {
-						TV_panel_pack_soundCount.setText(unipackDetail.soundTableCount + "");
-						TV_panel_pack_ledCount.setText(unipackDetail.ledTableCount + "");
+					if (b.panelPack.path.getText().toString().equals(item.path)) {
+						b.panelPack.soundCount.setText(unipackDetail.soundTableCount + "");
+						b.panelPack.ledCount.setText(unipackDetail.ledTableCount + "");
 					}
 				});
 				return null;
@@ -983,8 +902,8 @@ public class MainActivity extends BaseActivity {
 
 		item.flagColor = flagColor;
 
-		IV_panel_pack_star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
-		IV_panel_pack_bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
+		b.panelPack.star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
+		b.panelPack.bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
 	}
 
 	// ============================================================================================= Launchpad
@@ -1018,14 +937,14 @@ public class MainActivity extends BaseActivity {
 						if (f == 0 && upDown) {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
-								RV_view.smoothScrollToPosition(lastPlayIndex);
-								//RV_view.smoothScrollToPosition(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
+								//b.recyclerView.smoothScrollToPosition(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
 							if (haveNext()) {
 								togglePlay(lastPlayIndex + 1);
-								RV_view.smoothScrollToPosition(lastPlayIndex);
+								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
 							} else
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
@@ -1095,7 +1014,7 @@ public class MainActivity extends BaseActivity {
 				try {
 					String currVersion = BuildConfig.VERSION_NAME;
 					if (version != null && !currVersion.equals(version)) {
-						Snackbar.make(RL_rootView, lang(R.string.newVersionFound) + "\n" + currVersion + " → " + version, Snackbar.LENGTH_SHORT)
+						Snackbar.make(b.getRoot(), lang(R.string.newVersionFound) + "\n" + currVersion + " → " + version, Snackbar.LENGTH_SHORT)
 								.setAction(R.string.update, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))))
 								.show();
 					}

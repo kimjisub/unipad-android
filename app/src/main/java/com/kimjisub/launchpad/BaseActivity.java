@@ -3,6 +3,8 @@ package com.kimjisub.launchpad;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -47,6 +49,12 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 		FileManager.makeDirWhenNotExist(F_UniPackRootExt);
 		FileManager.makeNomedia(F_UniPackRootExt);
+	}
+
+	// ============================================================================================= Data binding
+
+	<T extends ViewDataBinding> T setContentViewBind(int layoutId) {
+		return DataBindingUtil.setContentView(this, layoutId);
 	}
 
 	// ============================================================================================= Activity
