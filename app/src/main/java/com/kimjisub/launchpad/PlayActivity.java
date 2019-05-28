@@ -25,16 +25,13 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.CheckBox;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
-import com.github.mmin18.widget.RealtimeBlurView;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
+import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.listManager.ThemeItem;
 import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.launchpad.utils.BillingManager;
@@ -55,41 +52,8 @@ import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
 import static com.kimjisub.launchpad.utils.Log.log;
 
 public class PlayActivity extends BaseActivity {
-	BillingManager billingManager;
-
-	final long DELAY = 1;
-	RelativeLayout RL_rootView;
-	ImageView IV_background;
-	ImageView IV_custom_logo;
-	LinearLayout LL_pads;
-	LinearLayout LL_chainsRight;
-	LinearLayout LL_chainsLeft;
-	LinearLayout LL_autoPlayControlView;
-	ProgressBar PB_autoPlayProgressBar;
-	ImageView IV_prev;
-	ImageView IV_play;
-	ImageView IV_next;
-	RelativeLayout RL_option_view;
-	RealtimeBlurView RBV_option_blur;
-	RelativeLayout RL_option_window;
-	LinearLayout LL_proTools;
-	CheckBox CB_purchase;
-	//AdView AV_adview;
-	ImageButton IB_option_quit;
-	CheckBox CB1_feedbackLight;
-	CheckBox CB1_LED;
-	CheckBox CB1_autoPlay;
-	CheckBox CB1_traceLog;
-	CheckBox CB1_record;
+	ActivityPlayBinding b;
 	CheckBox[] CB1s;
-	CheckBox CB2_feedbackLight;
-	CheckBox CB2_LED;
-	CheckBox CB2_autoPlay;
-	CheckBox CB2_traceLog;
-	CheckBox CB2_record;
-	CheckBox CB2_hideUI;
-	CheckBox CB2_watermark;
-	CheckBox CB2_proLightMode;
 	CheckBox[] CB2s;
 	SyncCheckBox SCV_feedbackLight;
 	SyncCheckBox SCV_LED;
@@ -99,6 +63,10 @@ public class PlayActivity extends BaseActivity {
 	SyncCheckBox SCV_hideUI;
 	SyncCheckBox SCV_watermark;
 	SyncCheckBox SCV_proLightMode;
+
+	BillingManager billingManager;
+
+	final long DELAY = 1;
 
 	// =============================================================================================
 	ThemeItem.Resources theme;
@@ -134,50 +102,18 @@ public class PlayActivity extends BaseActivity {
 	// ============================================================================================= 특성 다른 LED 처리
 
 	void initVar() {
-		RL_rootView = findViewById(R.id.rootView);
-		IV_custom_logo = findViewById(R.id.custom_logo);
-		IV_background = findViewById(R.id.background);
-		LL_pads = findViewById(R.id.pads);
-		LL_chainsRight = findViewById(R.id.chainsRight);
-		LL_chainsLeft = findViewById(R.id.chainsLeft);
-		LL_autoPlayControlView = findViewById(R.id.autoPlayControlView);
-		PB_autoPlayProgressBar = findViewById(R.id.autoPlayProgressBar);
-		IV_prev = findViewById(R.id.prev);
-		IV_play = findViewById(R.id.play);
-		IV_next = findViewById(R.id.next);
-		RL_option_view = findViewById(R.id.option_view);
-		LL_proTools = findViewById(R.id.proTools);
-		CB_purchase = findViewById(R.id.purchase);
-		RBV_option_blur = findViewById(R.id.option_blur);
-		RL_option_window = findViewById(R.id.option_window);
-		IB_option_quit = findViewById(R.id.quit);
-		//AV_adview = findViewById(R.id.adView);
 
-		CB1_feedbackLight = findViewById(R.id.CB1_feedbackLight);
-		CB1_LED = findViewById(R.id.CB1_LED);
-		CB1_autoPlay = findViewById(R.id.CB1_autoPlay);
-		CB1_traceLog = findViewById(R.id.CB1_traceLog);
-		CB1_record = findViewById(R.id.CB1_record);
-		CB1s = new CheckBox[]{CB1_feedbackLight, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record};
+		CB1s = new CheckBox[]{b.CB1FeedbackLight, b.CB1LED, b.CB1AutoPlay, b.CB1TraceLog, b.CB1Record};
+		CB2s = new CheckBox[]{b.CB2FeedbackLight, b.CB2LED, b.CB2AutoPlay, b.CB2TraceLog, b.CB2Record, b.CB2HideUI, b.CB2Watermark, b.CB2ProLightMode};
 
-		CB2_feedbackLight = findViewById(R.id.CB2_feedbackLight);
-		CB2_LED = findViewById(R.id.CB2_LED);
-		CB2_autoPlay = findViewById(R.id.CB2_autoPlay);
-		CB2_traceLog = findViewById(R.id.CB2_traceLog);
-		CB2_record = findViewById(R.id.CB2_record);
-		CB2_hideUI = findViewById(R.id.CB2_hideUI);
-		CB2_watermark = findViewById(R.id.CB2_watermark);
-		CB2_proLightMode = findViewById(R.id.CB2_proLightMode);
-		CB2s = new CheckBox[]{CB2_feedbackLight, CB2_LED, CB2_autoPlay, CB2_traceLog, CB2_record, CB2_hideUI, CB2_watermark, CB2_proLightMode};
-
-		SCV_feedbackLight = new SyncCheckBox(CB1_feedbackLight, CB2_feedbackLight);
-		SCV_LED = new SyncCheckBox(CB1_LED, CB2_LED);
-		SCV_autoPlay = new SyncCheckBox(CB1_autoPlay, CB2_autoPlay);
-		SCV_traceLog = new SyncCheckBox(CB1_traceLog, CB2_traceLog);
-		SCV_record = new SyncCheckBox(CB1_record, CB2_record);
-		SCV_hideUI = new SyncCheckBox(CB2_hideUI);
-		SCV_watermark = new SyncCheckBox(CB2_watermark);
-		SCV_proLightMode = new SyncCheckBox(CB2_proLightMode);
+		SCV_feedbackLight = new SyncCheckBox(b.CB1FeedbackLight, b.CB2FeedbackLight);
+		SCV_LED = new SyncCheckBox(b.CB1LED, b.CB1LED);
+		SCV_autoPlay = new SyncCheckBox(b.CB1AutoPlay, b.CB1AutoPlay);
+		SCV_traceLog = new SyncCheckBox(b.CB1TraceLog, b.CB1TraceLog);
+		SCV_record = new SyncCheckBox(b.CB1Record, b.CB1Record);
+		SCV_hideUI = new SyncCheckBox(b.CB2HideUI);
+		SCV_watermark = new SyncCheckBox(b.CB2Watermark);
+		SCV_proLightMode = new SyncCheckBox(b.CB2ProLightMode);
 
 		SCV_watermark.forceSetChecked(true);
 
@@ -217,7 +153,7 @@ public class PlayActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_play);
+		b = setContentViewBind(R.layout.activity_play);
 		initVar();
 
 		String path = getIntent().getStringExtra("path");
@@ -259,7 +195,7 @@ public class PlayActivity extends BaseActivity {
 					SCV_autoPlay.setLocked(true);
 				}
 			} else {
-				RL_rootView.setPadding(0, 0, 0, 0);
+				b.getRoot().setPadding(0, 0, 0, 0);
 
 				SCV_feedbackLight.setVisibility(View.GONE);
 				SCV_LED.setVisibility(View.GONE);
@@ -424,7 +360,7 @@ public class PlayActivity extends BaseActivity {
 			buttonSizeY = Scale_Height / unipack.buttonX;
 		}
 
-		CB_purchase.setOnCheckedChangeListener((compoundButton, b) -> {
+		b.purchase.setOnCheckedChangeListener((compoundButton, b) -> {
 			compoundButton.setChecked(false);
 			startActivity(new Intent(PlayActivity.this, SettingActivity.class));
 		});
@@ -455,7 +391,7 @@ public class PlayActivity extends BaseActivity {
 				padInit();
 				LEDInit();
 				autoPlay_removeGuide();
-				LL_autoPlayControlView.setVisibility(View.GONE);
+				b.autoPlayControlView.setVisibility(View.GONE);
 			}
 			refreshWatermark();
 		});
@@ -476,10 +412,7 @@ public class PlayActivity extends BaseActivity {
 			refreshWatermark();
 		});
 		SCV_hideUI.setOnCheckedChange(isChecked -> {
-			if (isChecked)
-				RL_option_view.setVisibility(View.GONE);
-			else
-				RL_option_view.setVisibility(View.VISIBLE);
+			b.optionView.setVisibility(isChecked ? View.GONE : View.VISIBLE);
 			refreshWatermark();
 		});
 		SCV_watermark.setOnCheckedChange(isChecked -> {
@@ -490,22 +423,22 @@ public class PlayActivity extends BaseActivity {
 			proLightMode(isChecked);
 			refreshWatermark();
 		});
-		IV_prev.setOnClickListener(v -> autoPlay_prev());
-		IV_play.setOnClickListener(v -> {
+		b.prev.setOnClickListener(v -> autoPlay_prev());
+		b.play.setOnClickListener(v -> {
 			if (autoPlayTask.isPlaying)
 				autoPlay_stop();
 			else
 				autoPlay_play();
 		});
-		IV_next.setOnClickListener(v -> autoPlay_after());
-		RBV_option_blur.setOnClickListener(v -> {
+		b.next.setOnClickListener(v -> autoPlay_after());
+		b.optionBlur.setOnClickListener(v -> {
 			if (bool_toggleOptionWindow) toggleOptionWindow(false);
 		});
-		IB_option_quit.setOnClickListener(v -> finish());
+		b.quit.setOnClickListener(v -> finish());
 
-		LL_pads.removeAllViews();
-		LL_chainsRight.removeAllViews();
-		LL_chainsLeft.removeAllViews();
+		b.pads.removeAllViews();
+		b.chainsRight.removeAllViews();
+		b.chainsLeft.removeAllViews();
 
 
 		for (int i = 0; i < unipack.buttonX; i++) {
@@ -533,7 +466,7 @@ public class PlayActivity extends BaseActivity {
 				U_pads[i][j] = pad;
 				row.addView(pad);
 			}
-			LL_pads.addView(row);
+			b.pads.addView(row);
 		}
 
 		for (int i = 0; i < 32; i++) {
@@ -544,11 +477,11 @@ public class PlayActivity extends BaseActivity {
 
 			if (0 <= i && i <= 7) {
 				U_chains[i].setOnClickListener(v -> chainChange(finalI));
-				LL_chainsRight.addView(U_chains[i]);
+				b.chainsRight.addView(U_chains[i]);
 			}
 			if (16 <= i && i <= 23) {
 				U_chains[i].setOnClickListener(v -> chainChange(finalI));
-				LL_chainsLeft.addView(U_chains[i], 0);
+				b.chainsLeft.addView(U_chains[i], 0);
 			}
 		}
 
@@ -564,11 +497,11 @@ public class PlayActivity extends BaseActivity {
 
 	void skin_set() {
 		log("[12] skin_set");
-		IV_background.setImageDrawable(theme.playbg);
+		b.background.setImageDrawable(theme.playbg);
 		if (theme.custom_logo != null)
-			IV_custom_logo.setImageDrawable(theme.custom_logo);
+			b.customLogo.setImageDrawable(theme.custom_logo);
 		else
-			IV_custom_logo.setImageDrawable(null);
+			b.customLogo.setImageDrawable(null);
 
 
 		for (int i = 0; i < unipack.buttonX; i++)
@@ -611,9 +544,9 @@ public class PlayActivity extends BaseActivity {
 
 		chainBtnsRefresh();
 
-		IV_prev.setBackground(theme.xml_prev);
-		IV_play.setBackground(theme.xml_play);
-		IV_next.setBackground(theme.xml_next);
+		b.prev.setBackground(theme.xml_prev);
+		b.play.setBackground(theme.xml_play);
+		b.next.setBackground(theme.xml_next);
 
 
 		for (CheckBox cb1 : CB1s) {
@@ -748,7 +681,7 @@ public class PlayActivity extends BaseActivity {
 		LEDInit();
 		autoPlayTask.isPlaying = true;
 
-		IV_play.setBackground(theme.xml_pause);
+		b.play.setBackground(theme.xml_pause);
 
 		if (unipack.isKeyLED) {
 			SCV_LED.setChecked(true);
@@ -766,7 +699,7 @@ public class PlayActivity extends BaseActivity {
 		padInit();
 		LEDInit();
 
-		IV_play.setBackground(theme.xml_play);
+		b.play.setBackground(theme.xml_play);
 
 
 		autoPlayTask.achieve = -1;
@@ -787,7 +720,7 @@ public class PlayActivity extends BaseActivity {
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
-		PB_autoPlayProgressBar.setProgress(autoPlayTask.progress);
+		b.autoPlayProgressBar.setProgress(autoPlayTask.progress);
 	}
 
 	void autoPlay_after() {
@@ -801,7 +734,7 @@ public class PlayActivity extends BaseActivity {
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
-		PB_autoPlayProgressBar.setProgress(autoPlayTask.progress);
+		b.autoPlayProgressBar.setProgress(autoPlayTask.progress);
 	}
 
 	void autoPlay_guidePad(int x, int y, boolean onOff) {
@@ -1164,22 +1097,12 @@ public class PlayActivity extends BaseActivity {
 		clipboardManager.setPrimaryClip(clipData);
 	}
 
-	void setProMode(boolean b) {
-
-		if (b) {
-			CB_purchase.setVisibility(View.GONE);
-			LL_proTools.setAlpha(1);
-			SCV_hideUI.setLocked(false);
-			SCV_watermark.setLocked(false);
-			SCV_proLightMode.setLocked(false);
-		} else {
-			CB_purchase.setVisibility(View.VISIBLE);
-			LL_proTools.setAlpha(0.3f);
-			SCV_hideUI.setLocked(true);
-			SCV_watermark.setLocked(true);
-			SCV_proLightMode.setLocked(false);
-		}
-
+	void setProMode(boolean bool) {
+		b.purchase.setVisibility(bool ? View.GONE : View.VISIBLE);
+		b.proTools.setAlpha(bool ? 1 : 0.3f);
+		SCV_hideUI.setLocked(!bool);
+		SCV_watermark.setLocked(!bool);
+		SCV_proLightMode.setLocked(!bool);
 	}
 
 
@@ -1306,16 +1229,16 @@ public class PlayActivity extends BaseActivity {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RBV_option_blur.setAlpha(interpolatedTime);
-					RL_option_window.setAlpha(interpolatedTime);
+					b.optionBlur.setAlpha(interpolatedTime);
+					b.optionWindow.setAlpha(interpolatedTime);
 				}
 			};
 			a.setDuration(200);
 			a.setAnimationListener(new Animation.AnimationListener() {
 				@Override
 				public void onAnimationStart(Animation animation) {
-					RBV_option_blur.setVisibility(View.VISIBLE);
-					RL_option_window.setVisibility(View.VISIBLE);
+					b.optionBlur.setVisibility(View.VISIBLE);
+					b.optionWindow.setVisibility(View.VISIBLE);
 				}
 
 				@Override
@@ -1327,13 +1250,13 @@ public class PlayActivity extends BaseActivity {
 
 				}
 			});
-			RBV_option_blur.startAnimation(a);
+			b.optionBlur.startAnimation(a);
 		} else {
 			Animation a = new Animation() {
 				@Override
 				protected void applyTransformation(float interpolatedTime, Transformation t) {
-					RBV_option_blur.setAlpha(1 - interpolatedTime);
-					RL_option_window.setAlpha(1 - interpolatedTime);
+					b.optionBlur.setAlpha(1 - interpolatedTime);
+					b.optionWindow.setAlpha(1 - interpolatedTime);
 				}
 			};
 			a.setDuration(500);
@@ -1345,8 +1268,8 @@ public class PlayActivity extends BaseActivity {
 
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					RBV_option_blur.setVisibility(View.INVISIBLE);
-					RL_option_window.setVisibility(View.INVISIBLE);
+					b.optionBlur.setVisibility(View.INVISIBLE);
+					b.optionWindow.setVisibility(View.INVISIBLE);
 				}
 
 				@Override
@@ -1354,7 +1277,7 @@ public class PlayActivity extends BaseActivity {
 
 				}
 			});
-			RBV_option_blur.startAnimation(a);
+			b.optionBlur.startAnimation(a);
 		}
 	}
 
@@ -1775,9 +1698,9 @@ public class PlayActivity extends BaseActivity {
 		protected void onPreExecute() {
 			super.onPreExecute();
 			if (unipack.squareButton)
-				LL_autoPlayControlView.setVisibility(View.VISIBLE);
-			PB_autoPlayProgressBar.setMax(unipack.autoPlayTable.size());
-			PB_autoPlayProgressBar.setProgress(0);
+				b.autoPlayControlView.setVisibility(View.VISIBLE);
+			b.autoPlayProgressBar.setMax(unipack.autoPlayTable.size());
+			b.autoPlayProgressBar.setProgress(0);
 			autoPlay_play();
 		}
 
@@ -1943,7 +1866,7 @@ public class PlayActivity extends BaseActivity {
 			} else if (progress[0] == 9) {
 				chainBtnsRefresh();
 			}
-			PB_autoPlayProgressBar.setProgress(this.progress);
+			b.autoPlayProgressBar.setProgress(this.progress);
 		}
 
 		@Override
@@ -1955,7 +1878,7 @@ public class PlayActivity extends BaseActivity {
 			} else {
 				SCV_feedbackLight.setChecked(true);
 			}
-			LL_autoPlayControlView.setVisibility(View.GONE);
+			b.autoPlayControlView.setVisibility(View.GONE);
 		}
 
 	}

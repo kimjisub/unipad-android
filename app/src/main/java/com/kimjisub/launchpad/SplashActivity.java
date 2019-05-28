@@ -11,17 +11,16 @@ import android.widget.TextView;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.kimjisub.launchpad.databinding.ActivitySplashBinding;
 import com.kimjisub.launchpad.utils.BillingManager;
 import com.kimjisub.launchpad.utils.Log;
 
 import java.util.List;
 
 public class SplashActivity extends BaseActivity {
+	ActivitySplashBinding b;
 
 	BillingManager billingManager;
-
-	// View
-	TextView TV_version;
 
 	// Timer
 	Handler handler;
@@ -29,8 +28,7 @@ public class SplashActivity extends BaseActivity {
 
 	void initVar() {
 		// View
-		TV_version = findViewById(R.id.version);
-		TV_version.setText(BuildConfig.VERSION_NAME);
+		b.version.setText(BuildConfig.VERSION_NAME);
 
 		// Timer
 		handler = new Handler();
@@ -43,7 +41,7 @@ public class SplashActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_splash);
+		b = setContentViewBind(R.layout.activity_splash);
 		initVar();
 
 		billingManager = new BillingManager(SplashActivity.this, new BillingManager.BillingEventListener() {
@@ -66,7 +64,7 @@ public class SplashActivity extends BaseActivity {
 			@Override
 			public void onRefresh() {
 				if (billingManager.isPurchaseRemoveAds() || billingManager.isPurchaseProTools())
-					TV_version.setTextColor(color(R.color.orange));
+					b.version.setTextColor(color(R.color.orange));
 			}
 		});
 

@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
 import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
@@ -32,6 +33,10 @@ import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.Pro;
 import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.S;
 
 public class LaunchpadActivity extends BaseActivity {
+
+	ActivityUsbmidiBinding b;
+	LinearLayout[] LL_Launchpad;
+	LinearLayout[] LL_mode;
 
 	static UsbManager usbManager;
 	static UsbDevice usbDevice;
@@ -48,10 +53,7 @@ public class LaunchpadActivity extends BaseActivity {
 	private static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
 	private static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
 	private static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
-	RelativeLayout RL_err;
-	TextView TV_info;
-	LinearLayout[] LL_Launchpad;
-	LinearLayout[] LL_mode;
+
 
 	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
 		try {
@@ -108,8 +110,6 @@ public class LaunchpadActivity extends BaseActivity {
 
 	@SuppressLint({"CutPasteId", "StaticFieldLeak"})
 	void initVar() {
-		RL_err = findViewById(R.id.err);
-		TV_info = findViewById(R.id.info);
 		LL_Launchpad = new LinearLayout[]{
 				findViewById(R.id.s),
 				findViewById(R.id.mk2),
@@ -144,7 +144,7 @@ public class LaunchpadActivity extends BaseActivity {
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_usbmidi);
+		b = setContentViewBind(R.layout.activity_usbmidi);
 		initVar();
 
 		mode = PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this);
@@ -169,7 +169,7 @@ public class LaunchpadActivity extends BaseActivity {
 
 	private void initDevice(UsbDevice device) {
 
-		RL_err.setVisibility(View.GONE);
+		b.err.setVisibility(View.GONE);
 
 		int interfaceNum = 0;
 
@@ -190,36 +190,36 @@ public class LaunchpadActivity extends BaseActivity {
 			}
 			try {
 				Log.midiDetail("ProductId : " + device.getProductId());
-				TV_info.append("ProductId : " + device.getProductId() + "\n");
+				b.info.append("ProductId : " + device.getProductId() + "\n");
 				switch (device.getProductId()) {
 					case 8:
 						selectDevice(MidiFighter.value);
-						TV_info.append("prediction : MidiFighter\n");
+						b.info.append("prediction : MidiFighter\n");
 						break;
 					case 105:
 						selectDevice(MK2.value);
-						TV_info.append("prediction : MK2\n");
+						b.info.append("prediction : MK2\n");
 						break;
 					case 81:
 						selectDevice(Pro.value);
-						TV_info.append("prediction : Pro\n");
+						b.info.append("prediction : Pro\n");
 						break;
 					case 54:
 						selectDevice(S.value);
-						TV_info.append("prediction : mk2 mini\n");
+						b.info.append("prediction : mk2 mini\n");
 						break;
 					case 8211:
 						selectDevice(Piano.value);
-						TV_info.append("prediction : LX 61 piano\n");
+						b.info.append("prediction : LX 61 piano\n");
 						break;
 					case 32822:
 						selectDevice(Pro.value);
-						TV_info.append("prediction : Arduino Leonardo midi\n");
+						b.info.append("prediction : Arduino Leonardo midi\n");
 						interfaceNum = 3;
 						break;
 					default:
 						selectDevice(Piano.value);
-						TV_info.append("prediction : unknown\n");
+						b.info.append("prediction : unknown\n");
 						break;
 				}
 			} catch (Exception e) {
@@ -231,20 +231,20 @@ public class LaunchpadActivity extends BaseActivity {
 			UsbInterface ui = device.getInterface(i);
 			if (ui.getEndpointCount() > 0) {
 				usbInterface = ui;
-				TV_info.append("Interface : (" + (i + 1) + "/" + device.getInterfaceCount() + ")\n");
+				b.info.append("Interface : (" + (i + 1) + "/" + device.getInterfaceCount() + ")\n");
 				break;
 			}
 		}
 		for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
 			UsbEndpoint ep = usbInterface.getEndpoint(i);
 			if (ep.getDirection() == UsbConstants.USB_DIR_IN) {
-				TV_info.append("Endpoint_In : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				b.info.append("Endpoint_In : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 				usbEndpoint_in = ep;
 			} else if (ep.getDirection() == UsbConstants.USB_DIR_OUT) {
-				TV_info.append("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				b.info.append("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 				usbEndpoint_out = ep;
 			} else {
-				TV_info.append("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
+				b.info.append("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
 			}
 		}
 		usbDeviceConnection = usbManager.openDevice(device);

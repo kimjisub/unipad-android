@@ -2,11 +2,14 @@ package com.kimjisub.launchpad;
 
 import android.os.Bundle;
 
+import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
+
 public class ImportPackByUrlActivity extends BaseActivity {
+	ActivityImportpackBinding b;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_importpack);
+		b = setContentViewBind(R.layout.activity_importpack);
 	}
 	/*TextView TV_title;
 	TextView TV_message;
@@ -36,7 +39,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_importpack);
+		b = setContentViewBind(R.layout.activity_importpack);
 		initVar();
 
 

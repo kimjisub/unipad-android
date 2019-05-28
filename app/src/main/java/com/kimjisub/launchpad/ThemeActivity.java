@@ -3,12 +3,11 @@ package com.kimjisub.launchpad;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
-import android.widget.TextView;
 
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.kimjisub.launchpad.databinding.ActivityThemeBinding;
 import com.kimjisub.launchpad.listManager.ThemeAdapter;
 import com.kimjisub.launchpad.listManager.ThemeItem;
 import com.kimjisub.launchpad.utils.Log;
@@ -17,23 +16,18 @@ import com.kimjisub.launchpad.utils.PreferenceManager;
 import java.util.ArrayList;
 
 public class ThemeActivity extends BaseActivity {
-
-	RecyclerView RV_list;
-	TextView TV_apply;
+	ActivityThemeBinding b;
 
 	public ArrayList<ThemeItem> L_theme;
 
 	void initVar() {
-		RV_list = findViewById(R.id.list);
-		TV_apply = findViewById(R.id.apply);
-
 		L_theme = ThemeItem.getThemePackList(getApplicationContext());
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_theme);
+		b = setContentViewBind(R.layout.activity_theme);
 	}
 
 	@Override
@@ -44,14 +38,14 @@ public class ThemeActivity extends BaseActivity {
 		final CarouselLayoutManager layoutManager = new CarouselLayoutManager(CarouselLayoutManager.HORIZONTAL, false);
 		layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
 
-		RV_list.setLayoutManager(layoutManager);
-		RV_list.setHasFixedSize(true);
-		RV_list.setAdapter(new ThemeAdapter(ThemeActivity.this));
-		RV_list.addOnScrollListener(new CenterScrollListener());
+		b.list.setLayoutManager(layoutManager);
+		b.list.setHasFixedSize(true);
+		b.list.setAdapter(new ThemeAdapter(ThemeActivity.this));
+		b.list.addOnScrollListener(new CenterScrollListener());
 
 		layoutManager.scrollToPosition(mGetTheme());
 
-		TV_apply.setOnClickListener(v -> {
+		b.apply.setOnClickListener(v -> {
 			mSetTheme(layoutManager.getCenterItemPosition());
 			finish();
 		});
