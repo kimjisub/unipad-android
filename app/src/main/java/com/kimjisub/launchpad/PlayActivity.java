@@ -39,7 +39,7 @@ import com.kimjisub.launchpad.utils.LaunchpadDriver;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.unipad.designkit.SyncCheckBox;
+import com.kimjisub.design.SyncCheckBox;
 import com.vungle.warren.LoadAdCallback;
 import com.vungle.warren.PlayAdCallback;
 import com.vungle.warren.Vungle;

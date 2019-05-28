@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	
+	
+	<declare-styleable name="PackView">
+		<attr name="flagColor" format="reference|integer"/>
+		
+		<attr name="title" format="string"/>
+		<attr name="subTitle" format="string"/>
+		
+		<attr name="LED" format="boolean"/>
+		<attr name="AutoPlay" format="boolean"/>
+		
+		<attr name="size" format="string"/>
+		<attr name="chain" format="string"/>
+		<attr name="capacity" format="integer"/>
+		
+		<attr name="optionVisibility" format="boolean"/>
+	</declare-styleable>
+</resources>

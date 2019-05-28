@@ -22,7 +22,7 @@ import com.kimjisub.launchpad.utils.FileManager;
 import com.kimjisub.launchpad.utils.Log;
 import com.kimjisub.launchpad.utils.PreferenceManager;
 import com.kimjisub.launchpad.utils.Unipack;
-import com.kimjisub.unipad.designkit.PackViewSimple;
+import com.kimjisub.design.PackViewSimple;
 
 import java.io.BufferedInputStream;
 import java.io.File;

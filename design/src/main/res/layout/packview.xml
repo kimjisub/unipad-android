@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/root"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:gravity="center">
+
+
+	<RelativeLayout
+		android:id="@+id/detail"
+		android:layout_width="match_parent"
+		android:layout_height="40dp"
+		android:layout_marginLeft="5dp"
+		android:layout_marginTop="20dp"
+		android:layout_marginRight="5dp"
+		android:background="@drawable/border_bottom_round">
+
+		<LinearLayout
+			android:id="@+id/extendView"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_above="@+id/bottomView"
+			android:orientation="vertical" />
+
+		<RelativeLayout
+			android:id="@+id/bottomView"
+			android:layout_width="match_parent"
+			android:layout_height="28dp"
+			android:layout_alignParentBottom="true"
+			android:paddingLeft="7dp"
+			android:paddingRight="7dp"
+			android:paddingBottom="7dp">
+
+
+			<RelativeLayout
+				android:layout_width="match_parent"
+				android:layout_height="match_parent">
+
+				<LinearLayout
+					android:id="@+id/btns"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent"
+					android:layout_alignParentStart="true"
+					android:layout_alignParentLeft="true"
+					android:orientation="horizontal"
+					android:visibility="visible" />
+
+				<LinearLayout
+					android:id="@+id/extendBtns"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent"
+					android:layout_alignParentStart="true"
+					android:layout_alignParentLeft="true"
+					android:orientation="horizontal"
+					android:visibility="gone" />
+
+
+				<LinearLayout
+					android:id="@+id/infos"
+					android:layout_width="wrap_content"
+					android:layout_height="match_parent"
+					android:layout_alignParentEnd="true"
+					android:layout_alignParentRight="true"
+					android:orientation="horizontal" />
+
+			</RelativeLayout>
+
+		</RelativeLayout>
+	</RelativeLayout>
+
+	<RelativeLayout
+		android:id="@+id/touchView"
+		android:layout_width="match_parent"
+		android:layout_height="60dp"
+		android:layout_alignParentStart="true"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentTop="true"
+		android:clickable="true">
+
+		<RelativeLayout
+			android:id="@+id/flag"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_alignParentStart="true"
+			android:layout_alignParentLeft="true"
+			android:background="@drawable/border_all_round" />
+
+		<ImageView
+			android:id="@+id/playImg"
+			android:layout_width="100dp"
+			android:layout_height="15dp"
+			android:layout_centerVertical="true"
+			android:layout_gravity="center"
+			android:scaleType="centerInside"
+			android:src="@drawable/playbtn" />
+
+		<TextView
+			android:id="@+id/playText"
+			android:layout_width="100dp"
+			android:layout_height="wrap_content"
+			android:layout_centerVertical="true"
+			android:layout_gravity="center"
+			android:ellipsize="end"
+			android:gravity="center"
+			android:maxLines="1"
+			android:textSize="10dp" />
+
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_alignParentStart="true"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentTop="true">
+
+
+			<LinearLayout
+				android:id="@+id/leftView"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:layout_alignParentStart="true"
+				android:layout_alignParentLeft="true"
+				android:layout_toLeftOf="@+id/rightView"
+				android:background="@drawable/border_no_round">
+
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_gravity="center"
+					android:layout_marginLeft="15dp"
+					android:orientation="vertical">
+
+					<TextView
+						android:id="@+id/title"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:ellipsize="end"
+						android:maxLines="1"
+						android:text="Title"
+						android:textColor="@color/title"
+						android:textSize="15dp" />
+
+					<TextView
+						android:id="@+id/subTitle"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="3dp"
+						android:ellipsize="end"
+						android:maxLines="1"
+						android:text="Producer"
+						android:textColor="@color/subTitle"
+						android:textSize="10dp" />
+
+				</LinearLayout>
+			</LinearLayout>
+
+			<RelativeLayout
+				android:id="@+id/rightView"
+				android:layout_width="150dp"
+				android:layout_height="match_parent"
+				android:layout_alignParentTop="true"
+				android:layout_alignParentEnd="true"
+				android:layout_alignParentRight="true"
+				android:background="@drawable/border_right_round">
+
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignParentEnd="true"
+					android:layout_alignParentRight="true"
+					android:layout_centerVertical="true"
+					android:layout_gravity="center|right"
+					android:orientation="vertical"
+					android:paddingRight="15dp">
+
+					<TextView
+						android:id="@+id/option1"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_gravity="end"
+						android:ellipsize="end"
+						android:maxLines="1"
+						android:textColor="@color/pink"
+						android:textSize="10dp" />
+
+					<TextView
+						android:id="@+id/option2"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_gravity="end"
+						android:layout_marginTop="1dp"
+						android:ellipsize="end"
+						android:maxLines="1"
+						android:textColor="@color/pink"
+						android:textSize="10dp" />
+
+				</LinearLayout>
+			</RelativeLayout>
+
+
+			<RelativeLayout
+				android:id="@+id/playBtn"
+				android:layout_width="100dp"
+				android:layout_height="match_parent"
+				android:layout_alignParentStart="true"
+				android:layout_alignParentLeft="true" />
+
+		</RelativeLayout>
+	</RelativeLayout>
+</RelativeLayout>

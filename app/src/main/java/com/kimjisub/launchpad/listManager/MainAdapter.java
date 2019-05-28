@@ -10,7 +10,7 @@ import android.widget.LinearLayout;
 import com.kimjisub.launchpad.MainActivity;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
-import com.kimjisub.unipad.designkit.PackViewSimple;
+import com.kimjisub.design.PackViewSimple;
 
 public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 
