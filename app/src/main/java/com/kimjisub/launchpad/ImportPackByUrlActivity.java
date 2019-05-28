@@ -43,7 +43,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		initVar();
 
 
-		UniPadApiBuilder.getService().makeUrl_get(code).enqueue(new Callback<MakeUrlDTO>() {
+		UniPadApi.getService().makeUrl_get(code).enqueue(new Callback<MakeUrlDTO>() {
 			@Override
 			public void onResponse(Call<MakeUrlDTO> call, Response<MakeUrlDTO> response) {
 				if (response.isSuccessful()) {
@@ -74,7 +74,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	}
 
 	void addCount(String code) {
-		UniPadApiBuilder.getService().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
+		UniPadApi.getService().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
 			@Override
 			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 			}

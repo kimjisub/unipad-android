@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.networks;
 
-import com.kimjisub.launchpad.utils.Log;
-
 import java.security.cert.CertificateException;
 
 import javax.net.ssl.SSLContext;
@@ -10,36 +8,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-public class UniPadApiBuilder {
-
-	static final String APIURL = "https://api.unipad.kr";
-	static UniPadApiService uniPadApiService;
-
-	public static UniPadApiService getService() {
-		if (uniPadApiService == null) {
-			HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(Log::network)
-					.setLevel(HttpLoggingInterceptor.Level.BODY);
-			OkHttpClient client = getUnsafeOkHttpClient()
-					.addInterceptor(interceptor)
-					//.cookieJar(new MyCookieJar())
-					.build();
-
-			Retrofit retrofit = new Retrofit.Builder()
-					.baseUrl(APIURL)
-					.addConverterFactory(GsonConverterFactory.create())
-					.client(client)
-					.build();
-			uniPadApiService = retrofit.create(UniPadApiService.class);
-		}
-
-		return uniPadApiService;
-	}
-
-	private static OkHttpClient.Builder getUnsafeOkHttpClient() {
+public class BaseApiService {
+	protected static OkHttpClient.Builder getUnsafeOkHttpClient() {
 		try {
 			// Create a trust manager that does not validate certificate chains
 			final TrustManager[] trustAllCerts = new TrustManager[]{

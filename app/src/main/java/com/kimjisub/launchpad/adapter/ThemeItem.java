@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.listManager;
+package com.kimjisub.launchpad.adapter;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

@@ -15,13 +15,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
-import com.kimjisub.launchpad.utils.LaunchpadDriver;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.PreferenceManager;
+import com.kimjisub.launchpad.manager.LaunchpadDriver;
+import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 
 import java.util.Iterator;
 import java.util.Objects;

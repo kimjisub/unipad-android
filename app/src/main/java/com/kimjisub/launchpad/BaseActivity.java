@@ -18,18 +18,18 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.kimjisub.launchpad.utils.FileManager;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.PreferenceManager;
+import com.kimjisub.launchpad.manager.FileManager;
+import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.utils.Constant.ADMOB;
-import static com.kimjisub.launchpad.utils.Constant.ADSCOOLTIME;
-import static com.kimjisub.launchpad.utils.Constant.VUNGLE;
+import static com.kimjisub.launchpad.manager.Constant.ADMOB;
+import static com.kimjisub.launchpad.manager.Constant.ADSCOOLTIME;
+import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 
 public abstract class BaseActivity extends AppCompatActivity {
 

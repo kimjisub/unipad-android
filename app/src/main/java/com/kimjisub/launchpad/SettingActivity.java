@@ -21,17 +21,17 @@ import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.kimjisub.launchpad.utils.BillingManager;
-import com.kimjisub.launchpad.utils.PreferenceManager;
+import com.kimjisub.launchpad.manager.BillingManager;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_1;
-import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_10;
-import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_100;
-import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_5;
-import static com.kimjisub.launchpad.utils.Constant.BILLING.DONATE_50;
+import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_1;
+import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_10;
+import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_100;
+import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_5;
+import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_50;
 
 public class SettingActivity extends PreferenceActivity {
 
