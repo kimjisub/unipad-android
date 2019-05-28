@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 
 import java.text.ParseException;

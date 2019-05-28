@@ -1,6 +1,6 @@
-package com.kimjisub.launchpad.listManager;
+package com.kimjisub.launchpad.adapter;
 
-import com.kimjisub.launchpad.utils.Unipack;
+import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.design.PackViewSimple;
 
 public class MainItem {

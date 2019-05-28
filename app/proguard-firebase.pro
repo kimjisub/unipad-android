@@ -7,7 +7,7 @@
 -keepattributes Signature
 
 -keepattributes Signature
--keepclassmembers class com.kimjisub.launchpad.networks.fb.** {
+-keepclassmembers class com.kimjisub.launchpad.networks.api.fb.** {
   *;
 }
 

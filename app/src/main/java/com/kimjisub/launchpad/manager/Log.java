@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.utils;
+package com.kimjisub.launchpad.manager;
 
 public class Log {
 	public static final boolean DEBUG = true;

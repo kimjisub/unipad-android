@@ -1,13 +1,10 @@
-package com.kimjisub.launchpad.utils;
+package com.kimjisub.launchpad.manager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 
-import java.io.File;
-
 import static android.content.Context.MODE_PRIVATE;
-import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class PreferenceManager {
 

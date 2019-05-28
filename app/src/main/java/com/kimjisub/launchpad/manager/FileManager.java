@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.utils;
+package com.kimjisub.launchpad.manager;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

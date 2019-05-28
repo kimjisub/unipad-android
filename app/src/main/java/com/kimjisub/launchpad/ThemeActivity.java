@@ -8,10 +8,10 @@ import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
 import com.kimjisub.launchpad.databinding.ActivityThemeBinding;
-import com.kimjisub.launchpad.listManager.ThemeAdapter;
-import com.kimjisub.launchpad.listManager.ThemeItem;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.PreferenceManager;
+import com.kimjisub.launchpad.adapter.ThemeAdapter;
+import com.kimjisub.launchpad.adapter.ThemeItem;
+import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 
 import java.util.ArrayList;
 

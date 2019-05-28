@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.networks.dto;
+package com.kimjisub.launchpad.networks.api.dto;
 
 public class MakeUrlDTO {
 	public Integer id;

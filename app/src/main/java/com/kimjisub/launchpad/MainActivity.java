@@ -33,16 +33,16 @@ import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
-import com.kimjisub.launchpad.listManager.MainAdapter;
-import com.kimjisub.launchpad.listManager.MainItem;
-import com.kimjisub.launchpad.listManager.ThemeItem;
+import com.kimjisub.launchpad.adapter.MainAdapter;
+import com.kimjisub.launchpad.adapter.MainItem;
+import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.networks.Networks;
-import com.kimjisub.launchpad.utils.BillingManager;
-import com.kimjisub.launchpad.utils.FileManager;
-import com.kimjisub.launchpad.utils.LaunchpadDriver;
-import com.kimjisub.launchpad.utils.Log;
-import com.kimjisub.launchpad.utils.PreferenceManager;
-import com.kimjisub.launchpad.utils.Unipack;
+import com.kimjisub.launchpad.manager.BillingManager;
+import com.kimjisub.launchpad.manager.FileManager;
+import com.kimjisub.launchpad.manager.LaunchpadDriver;
+import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.Unipack;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 
-import static com.kimjisub.launchpad.utils.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+import static com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
 	ActivityMainBinding b;

@@ -1,8 +1,8 @@
-package com.kimjisub.launchpad.Service;
+package com.kimjisub.launchpad.service;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.manager.Log;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 	@Override

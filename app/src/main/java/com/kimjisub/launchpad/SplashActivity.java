@@ -6,14 +6,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding;
-import com.kimjisub.launchpad.utils.BillingManager;
-import com.kimjisub.launchpad.utils.Log;
+import com.kimjisub.launchpad.manager.BillingManager;
 
 import java.util.List;
 
