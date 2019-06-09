@@ -63,7 +63,7 @@ public class MainActivity extends BaseActivity {
 	BillingManager billingManager;
 
 	// DB
-	DB_Unipack DB_unipack;
+	public DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
 	ValueAnimator VA_floatingAnimation;
