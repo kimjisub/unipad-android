@@ -17,7 +17,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
 import com.kimjisub.launchpad.networks.Networks;
-import com.kimjisub.launchpad.networks.api.fb.fbStore;
+import com.kimjisub.launchpad.networks.fb.fbStore;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
