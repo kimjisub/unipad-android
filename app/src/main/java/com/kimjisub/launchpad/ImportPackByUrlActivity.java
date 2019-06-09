@@ -1,13 +1,23 @@
 package com.kimjisub.launchpad;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
-import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.FileManager;
+import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.networks.api.UniPadApi;
 import com.kimjisub.launchpad.networks.api.vo.UnishareVO;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -16,17 +26,12 @@ import retrofit2.Response;
 public class ImportPackByUrlActivity extends BaseActivity {
 	ActivityImportpackBinding b;
 
-	File F_UniPackRoot;
 	File F_UniPackZip;
 	File F_UniPack;
 
 	String code;
 
 	void initVar() {
-		F_UniPackRoot = new File(PreferenceManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this));
-		//UnipackZipPath
-		//UnipackPath
-
 		code = getIntent().getData().getQueryParameter("code");
 		log("code: " + code);
 		setStatus(Status.prepare, code);
@@ -44,13 +49,12 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			public void onResponse(Call<UnishareVO> call, Response<UnishareVO> response) {
 				if (response.isSuccessful()) {
 					UnishareVO unishareVO = response.body();
-					setStatus(Status.prepare, code + "\n" + unishareVO.title + "\n" + unishareVO.producerName);
+					setStatus(Status.prepare, code + "\n" + unishareVO.title + "\n" + unishareVO.producer);
 					log("title: " + unishareVO.title);
-					log("producerName: " + unishareVO.producerName);
-					F_UniPackZip = FileManager.makeNextPath(F_UniPackRoot, unishareVO.title + " #" + code, ".zip");
-					F_UniPack = FileManager.makeNextPath(F_UniPackRoot, unishareVO.title + " #" + code, "/");
+					log("producerName: " + unishareVO.producer);
+					F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, ".zip");
+					F_UniPack = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-					addCount(code);
 				} else {
 					switch (response.code()) {
 						case 404:
@@ -69,51 +73,39 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		});
 	}
 
-	void addCount(String code) {
-		UniPadApi.getService().makeUrl_addCount(code).enqueue(new Callback<ResponseBody>() {
-			@Override
-			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-			}
-
-			@Override
-			public void onFailure(Call<ResponseBody> call, Throwable t) {
-			}
-		});
-	}
-
 	void setStatus(Status status, String msg) {
 		runOnUiThread(() -> {
 			switch (status) {
 				case prepare:
-					TV_title.setText(R.string.wait);
-					TV_message.setText(msg);
+					b.title.setText(R.string.wait);
+					b.message.setText(msg);
 					break;
 				case downloading:
-					TV_title.setText(R.string.downloading);
-					TV_message.setText(msg);
+					b.title.setText(R.string.downloading);
+					b.message.setText(msg);
 					break;
 				case analyzing:
-					TV_title.setText(R.string.analyzing);
-					TV_message.setText(msg);
+					b.title.setText(R.string.analyzing);
+					b.message.setText(msg);
 					break;
 				case success:
-					TV_title.setText(R.string.success);
-					TV_message.setText(msg);
+					b.title.setText(R.string.success);
+					b.message.setText(msg);
 					break;
 				case notFound:
-					TV_title.setText(R.string.unipackNotFound);
-					TV_message.setText(msg);
+					b.title.setText(R.string.unipackNotFound);
+					b.message.setText(msg);
 					break;
 				case failed:
-					TV_title.setText(R.string.failed);
-					TV_message.setText(msg);
+					b.title.setText(R.string.failed);
+					b.message.setText(msg);
 					break;
 			}
 		});
 	}
 
 	void log(String msg) {
-		runOnUiThread(() -> TV_info.append(msg + "\n"));
+		runOnUiThread(() -> b.info.append(msg + "\n"));
 	}
 
 	void delayFinish() {
@@ -135,20 +127,10 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	enum Status {prepare, downloading, analyzing, success, notFound, failed}
 
 	class DownloadTask extends AsyncTask<String, String, String> {
-		String code;
-		String title;
-		String producerName;
-		String url;
-		int fileSize;
-		int downloadCount;
+		UnishareVO u;
 
-		public DownloadTask(UnishareVO unishareVO) {
-			this.code = unishareVO.code;
-			this.title = unishareVO.title;
-			this.producerName = unishareVO.producerName;
-			this.url = unishareVO.url;
-			this.fileSize = unishareVO.fileSize;
-			this.downloadCount = unishareVO.downloadCount;
+		public DownloadTask(UnishareVO u) {
+			this.u = u;
 		}
 
 		@Override
@@ -163,14 +145,14 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 			try {
 
-				java.net.URL downloadUrl = new URL(url);
+				java.net.URL downloadUrl = new URL("http://api.unipad.kr/unishare/");
 				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
 				conexion.setConnectTimeout(5000);
 				conexion.setReadTimeout(5000);
 
 				int fileSize_ = conexion.getContentLength();
-				fileSize = fileSize_ == -1 ? fileSize : fileSize_;
-				log("fileSize : " + fileSize);
+				u.fileSize = fileSize_ == -1 ? u.fileSize : fileSize_;
+				log("fileSize : " + u.fileSize);
 
 				InputStream input = new BufferedInputStream(downloadUrl.openStream());
 				OutputStream output = new FileOutputStream(F_UniPackZip);
@@ -185,7 +167,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					progress++;
 					if (progress % 100 == 0) {
 
-						setStatus(ImportPackByUrlActivity.Status.downloading, (int) ((float) total / fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(fileSize) + "MB");
+						setStatus(ImportPackByUrlActivity.Status.downloading, (int) ((float) total / u.fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(u.fileSize) + "MB");
 					}
 					output.write(data, 0, count);
 				}
@@ -196,7 +178,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 				input.close();
 
 				log("Analyzing Start");
-				setStatus(ImportPackByUrlActivity.Status.analyzing, code + "\n" + title + "\n" + producerName);
+				setStatus(ImportPackByUrlActivity.Status.analyzing, code + "\n" + u.title + "\n" + u.producer);
 
 				try {
 					FileManager.unZipFile(F_UniPackZip.getPath(), F_UniPack.getPath());
