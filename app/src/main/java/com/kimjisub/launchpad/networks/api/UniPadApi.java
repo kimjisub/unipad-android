@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.networks.api;
 
 import com.kimjisub.launchpad.networks.BaseApiService;
-import com.kimjisub.launchpad.networks.api.dto.MakeUrlDTO;
+import com.kimjisub.launchpad.networks.api.vo.UnishareVO;
 import com.kimjisub.launchpad.manager.Log;
 
 import java.util.List;
@@ -47,13 +47,13 @@ public class UniPadApi extends BaseApiService {
 		// ============================================================================================= /makeUrl
 
 		@GET("/makeUrl")
-		Call<List<MakeUrlDTO>> makeUrl_list();
+		Call<List<UnishareVO>> makeUrl_list();
 
 		@POST("/makeUrl")
-		Call<MakeUrlDTO> makeUrl_make(@Body MakeUrlDTO item);
+		Call<UnishareVO> makeUrl_make(@Body UnishareVO item);
 
 		@GET("/makeUrl/{code}")
-		Call<MakeUrlDTO> makeUrl_get(@Path("code") String code);
+		Call<UnishareVO> makeUrl_get(@Path("code") String code);
 
 		@GET("/makeUrl/{code}/addCount")
 		Call<ResponseBody> makeUrl_addCount(@Path("code") String code);

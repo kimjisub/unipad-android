@@ -3,17 +3,18 @@ package com.kimjisub.launchpad;
 import android.os.Bundle;
 
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
+import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.networks.api.UniPadApi;
+import com.kimjisub.launchpad.networks.api.vo.UnishareVO;
+
+import java.io.File;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ImportPackByUrlActivity extends BaseActivity {
 	ActivityImportpackBinding b;
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		b = setContentViewBind(R.layout.activity_importpack);
-	}
-	/*TextView TV_title;
-	TextView TV_message;
-	TextView TV_info;
 
 	File F_UniPackRoot;
 	File F_UniPackZip;
@@ -22,10 +23,6 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	String code;
 
 	void initVar() {
-		TV_title = findViewById(R.id.title);
-		TV_message = findViewById(R.id.message);
-		TV_info = findViewById(R.id.info);
-
 		F_UniPackRoot = new File(PreferenceManager.IsUsingSDCard.getPath(ImportPackByUrlActivity.this));
 		//UnipackZipPath
 		//UnipackPath
@@ -35,7 +32,6 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		setStatus(Status.prepare, code);
 	}
 
-	@SuppressLint("StaticFieldLeak")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -43,16 +39,16 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		initVar();
 
 
-		UniPadApi.getService().makeUrl_get(code).enqueue(new Callback<MakeUrlDTO>() {
+		UniPadApi.getService().makeUrl_get(code).enqueue(new Callback<UnishareVO>() {
 			@Override
-			public void onResponse(Call<MakeUrlDTO> call, Response<MakeUrlDTO> response) {
+			public void onResponse(Call<UnishareVO> call, Response<UnishareVO> response) {
 				if (response.isSuccessful()) {
-					MakeUrlDTO makeUrlDTO = response.body();
-					setStatus(Status.prepare, code + "\n" + makeUrlDTO.title + "\n" + makeUrlDTO.producerName);
-					log("title: " + makeUrlDTO.title);
-					log("producerName: " + makeUrlDTO.producerName);
-					F_UniPackZip = FileManager.makeNextPath(F_UniPackRoot, makeUrlDTO.title + " #" + code, ".zip");
-					F_UniPack = FileManager.makeNextPath(F_UniPackRoot, makeUrlDTO.title + " #" + code, "/");
+					UnishareVO unishareVO = response.body();
+					setStatus(Status.prepare, code + "\n" + unishareVO.title + "\n" + unishareVO.producerName);
+					log("title: " + unishareVO.title);
+					log("producerName: " + unishareVO.producerName);
+					F_UniPackZip = FileManager.makeNextPath(F_UniPackRoot, unishareVO.title + " #" + code, ".zip");
+					F_UniPack = FileManager.makeNextPath(F_UniPackRoot, unishareVO.title + " #" + code, "/");
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 					addCount(code);
 				} else {
@@ -66,7 +62,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			}
 
 			@Override
-			public void onFailure(Call<MakeUrlDTO> call, Throwable t) {
+			public void onFailure(Call<UnishareVO> call, Throwable t) {
 				log("server error");
 				setStatus(Status.failed, "server error\n" + t.getMessage());
 			}
@@ -146,13 +142,13 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		int fileSize;
 		int downloadCount;
 
-		public DownloadTask(MakeUrlDTO makeUrlDTO) {
-			this.code = makeUrlDTO.code;
-			this.title = makeUrlDTO.title;
-			this.producerName = makeUrlDTO.producerName;
-			this.url = makeUrlDTO.url;
-			this.fileSize = makeUrlDTO.fileSize;
-			this.downloadCount = makeUrlDTO.downloadCount;
+		public DownloadTask(UnishareVO unishareVO) {
+			this.code = unishareVO.code;
+			this.title = unishareVO.title;
+			this.producerName = unishareVO.producerName;
+			this.url = unishareVO.url;
+			this.fileSize = unishareVO.fileSize;
+			this.downloadCount = unishareVO.downloadCount;
 		}
 
 		@Override
@@ -243,5 +239,5 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			log("Download Task onPostExecute()");
 			delayFinish();
 		}
-	}*/
+	}
 }
