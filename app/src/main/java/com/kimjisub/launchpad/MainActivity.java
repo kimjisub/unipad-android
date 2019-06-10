@@ -36,7 +36,7 @@ import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.launchpad.adapter.MainAdapter;
 import com.kimjisub.launchpad.adapter.MainItem;
 import com.kimjisub.launchpad.adapter.ThemeItem;
-import com.kimjisub.launchpad.networks.Networks;
+import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;

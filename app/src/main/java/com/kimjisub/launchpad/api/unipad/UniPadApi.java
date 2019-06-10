@@ -1,13 +1,12 @@
-package com.kimjisub.launchpad.networks.api;
+package com.kimjisub.launchpad.api.unipad;
 
-import com.kimjisub.launchpad.networks.BaseApiService;
-import com.kimjisub.launchpad.networks.api.vo.UnishareVO;
+import com.kimjisub.launchpad.api.BaseApiService;
+import com.kimjisub.launchpad.api.unipad.vo.UnishareVO;
 import com.kimjisub.launchpad.manager.Log;
 
 import java.util.List;
 
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;

@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.networks.api.vo;
+package com.kimjisub.launchpad.api.unipad.vo;
 
 public class UnishareVO {
 	public String _id;
