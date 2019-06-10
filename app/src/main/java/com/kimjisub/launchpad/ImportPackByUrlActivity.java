@@ -44,7 +44,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		initVar();
 
 
-		UniPadApi.getService().makeUrl_get(code).enqueue(new Callback<UnishareVO>() {
+		UniPadApi.getService().unishare_get(code).enqueue(new Callback<UnishareVO>() {
 			@Override
 			public void onResponse(Call<UnishareVO> call, Response<UnishareVO> response) {
 				if (response.isSuccessful()) {
@@ -145,7 +145,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 			try {
 
-				java.net.URL downloadUrl = new URL("http://api.unipad.kr/unishare/"+u._id+"/download");
+				java.net.URL downloadUrl = new URL("https://api.unipad.kr/unishare/"+u._id+"/download");
 				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
 				conexion.setConnectTimeout(5000);
 				conexion.setReadTimeout(5000);

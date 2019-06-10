@@ -11,6 +11,6 @@ public class UnishareVO {
 	public long fileSize;
 	public boolean isPublic;
 	public String password;
-	public boolean downloadCount;
+	public int downloadCount;
 	public boolean deleted;
 }
