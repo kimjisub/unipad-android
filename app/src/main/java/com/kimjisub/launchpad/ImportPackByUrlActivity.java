@@ -145,7 +145,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 			try {
 
-				java.net.URL downloadUrl = new URL("http://api.unipad.kr/unishare/");
+				java.net.URL downloadUrl = new URL("http://api.unipad.kr/unishare/"+u._id+"/download");
 				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
 				conexion.setConnectTimeout(5000);
 				conexion.setReadTimeout(5000);
