@@ -8,16 +8,17 @@ import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.Unipack;
-import com.kimjisub.launchpad.networks.api.UniPadApi;
-import com.kimjisub.launchpad.networks.api.vo.UnishareVO;
+import com.kimjisub.launchpad.api.unipad.UniPadApi;
+import com.kimjisub.launchpad.api.unipad.vo.UnishareVO;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,6 +55,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					log("producerName: " + unishareVO.producer);
 					F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, ".zip");
 					F_UniPack = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, "/");
+
 					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} else {
 					switch (response.code()) {
@@ -146,9 +148,10 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			try {
 
 				java.net.URL downloadUrl = new URL("https://api.unipad.kr/unishare/"+u._id+"/download");
-				HttpURLConnection conexion = (HttpURLConnection) downloadUrl.openConnection();
+				HttpsURLConnection conexion = (HttpsURLConnection) downloadUrl.openConnection();
 				conexion.setConnectTimeout(5000);
 				conexion.setReadTimeout(5000);
+				conexion.setSSLSocketFactory(null);
 
 				int fileSize_ = conexion.getContentLength();
 				u.fileSize = fileSize_ == -1 ? u.fileSize : fileSize_;

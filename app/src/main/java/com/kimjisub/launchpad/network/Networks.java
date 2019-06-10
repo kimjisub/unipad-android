@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.networks;
+package com.kimjisub.launchpad.network;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;

@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.networks;
+package com.kimjisub.launchpad.api;
 
 import java.security.cert.CertificateException;
 
