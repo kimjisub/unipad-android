@@ -44,18 +44,15 @@ public class UniPadApi extends BaseApiService {
 
 	public interface UniPadApiService {
 
-		// ============================================================================================= /makeUrl
+		// ============================================================================================= /unishare
 
-		@GET("/makeUrl")
-		Call<List<UnishareVO>> makeUrl_list();
+		@GET("/unishare")
+		Call<List<UnishareVO>> unishare_list();
 
-		@POST("/makeUrl")
-		Call<UnishareVO> makeUrl_make(@Body UnishareVO item);
+		@POST("/unishare")
+		Call<UnishareVO> unishare_make(@Body UnishareVO item);
 
-		@GET("/makeUrl/{code}")
-		Call<UnishareVO> makeUrl_get(@Path("code") String code);
-
-		@GET("/makeUrl/{code}/addCount")
-		Call<ResponseBody> makeUrl_addCount(@Path("code") String code);
+		@GET("/unishare/{code}")
+		Call<UnishareVO> unishare_get(@Path("code") String code);
 	}
 }

@@ -22,7 +22,8 @@
 		android:icon="@mipmap/ic_launcher"
 		android:label="@string/app_name"
 		android:supportsRtl="true"
-		android:theme="@style/AppTheme">
+		android:theme="@style/AppTheme"
+		android:usesCleartextTraffic="true">
 		<activity
 			android:name=".SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
@@ -55,9 +56,9 @@
 			android:screenOrientation="sensorLandscape" />
 		<activity
 			android:name=".SettingActivity"
-			android:theme="@style/SettingTheme"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="portrait" />
+			android:screenOrientation="portrait"
+			android:theme="@style/SettingTheme" />
 		<activity
 			android:name=".LaunchpadActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
