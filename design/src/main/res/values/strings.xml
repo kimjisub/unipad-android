@@ -12,7 +12,7 @@
 	<string name="warning">Warning</string>
 	<string name="error">ERROR</string>
 	<string name="errOccur">An error has occurred.</string>
-	<string name="wait">Just wait a sec…</string>
+	<string name="wait_a_sec">Just wait a sec…</string>
 	<string name="analyzing">Analyzing</string>
 	<string name="loading">Loading</string>
 	<string name="downloading">Downloading</string>

@@ -538,7 +538,7 @@ public class MainActivity extends BaseActivity {
 					progressDialog = new ProgressDialog(MainActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setTitle(lang(R.string.analyzing));
-					progressDialog.setMessage(lang(R.string.wait));
+					progressDialog.setMessage(lang(R.string.wait_a_sec));
 					progressDialog.setCancelable(false);
 					progressDialog.setMax(autoplay2.size());
 					progressDialog.show();
@@ -654,7 +654,7 @@ public class MainActivity extends BaseActivity {
 			protected void onPreExecute() {
 
 				progressDialog.setTitle(lang(R.string.analyzing));
-				progressDialog.setMessage(lang(R.string.wait));
+				progressDialog.setMessage(lang(R.string.wait_a_sec));
 				progressDialog.setCancelable(false);
 				progressDialog.show();
 				super.onPreExecute();

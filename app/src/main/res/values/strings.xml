@@ -12,10 +12,11 @@
 	<string name="warning">Warning</string>
 	<string name="error">ERROR</string>
 	<string name="errOccur">An error has occurred.</string>
-	<string name="wait">Just wait a sec…</string>
+	<string name="wait_a_sec">Just wait a sec…</string>
 	<string name="analyzing">Analyzing</string>
 	<string name="loading">Loading</string>
 	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
 	<string name="downloading">Downloading</string>
 	<string name="downloaded">Downloaded</string>
 	<string name="success">Success</string>
@@ -31,6 +32,10 @@
 	<string name="quit">Quit</string>
 	<string name="website">Website</string>
 	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUnipack">New UniPack</string>
+	<string name="notFound">Not Found</string>
 
 	<!--Panel-->
 	<string name="unipack_count">Number of UniPacks</string>
