@@ -32,7 +32,7 @@ public class UniPadApi extends BaseApiService {
 
 			Retrofit retrofit = new Retrofit.Builder()
 					.baseUrl(APIURL)
-					.addConverterFactory(GsonConverterFactory.create())
+					.addConverterFactory(GsonConverterFactory.create(getGson()))
 					.client(client)
 					.build();
 			uniPadApiService = retrofit.create(UniPadApiService.class);

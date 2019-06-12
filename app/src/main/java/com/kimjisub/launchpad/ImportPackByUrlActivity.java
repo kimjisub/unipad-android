@@ -1,24 +1,15 @@
 package com.kimjisub.launchpad;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 
+import com.kimjisub.launchpad.api.unipad.UniPadApi;
+import com.kimjisub.launchpad.api.unipad.vo.UnishareVO;
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.Unipack;
-import com.kimjisub.launchpad.api.unipad.UniPadApi;
-import com.kimjisub.launchpad.api.unipad.vo.UnishareVO;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-
-import javax.net.ssl.HttpsURLConnection;
+import com.kimjisub.launchpad.network.UnishareDownloader;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,9 +17,6 @@ import retrofit2.Response;
 
 public class ImportPackByUrlActivity extends BaseActivity {
 	ActivityImportpackBinding b;
-
-	File F_UniPackZip;
-	File F_UniPack;
 
 	String code;
 
@@ -49,14 +37,67 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			@Override
 			public void onResponse(Call<UnishareVO> call, Response<UnishareVO> response) {
 				if (response.isSuccessful()) {
-					UnishareVO unishareVO = response.body();
-					setStatus(Status.prepare, code + "\n" + unishareVO.title + "\n" + unishareVO.producer);
-					log("title: " + unishareVO.title);
-					log("producerName: " + unishareVO.producer);
-					F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, ".zip");
-					F_UniPack = FileManager.makeNextPath(F_UniPackRootExt, unishareVO.title + " #" + code, "/");
+					UnishareVO unishare = response.body();
+					setStatus(Status.prepare, code + "\n" + unishare.title + "\n" + unishare.producer);
+					log("title: " + unishare.title);
+					log("producerName: " + unishare.producer);
 
-					new DownloadTask(response.body()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+					new UnishareDownloader(unishare, F_UniPackRootExt, new UnishareDownloader.UnishareDownloadListener() {
+						long fileSize;
+
+						@Override
+						public void onDownloadStart() {
+							log("Download start");
+						}
+
+						@Override
+						public void onGetFileSize(long fileSize) {
+							this.fileSize = fileSize > 0 ? fileSize : unishare.fileSize;
+							log("fileSize : " + this.fileSize);
+						}
+
+						@Override
+						public void onDownloading(long downloadedSize) {
+							setStatus(Status.downloading, (int) ((float) downloadedSize / fileSize * 100) + "%\n" + FileManager.byteToMB(downloadedSize) + " / " + FileManager.byteToMB(fileSize) + "MB");
+						}
+
+						@Override
+						public void onDownloadEnd() {
+							log("Download End");
+						}
+
+						@Override
+						public void onAnalyzeStart() {
+							log("Analyzing Start");
+							setStatus(Status.analyzing, code + "\n" + unishare.title + "\n" + unishare.producer);
+						}
+
+						@Override
+						public void onAnalyzeSuccess(Unipack unipack) {
+							log("Analyzing Success");
+							setStatus(Status.success, unipack.getInfoText(ImportPackByUrlActivity.this));
+						}
+
+						@Override
+						public void onAnalyzeFail(Unipack unipack) {
+							log("Analyzing Fail");
+							Log.err(unipack.ErrorDetail);
+							setStatus(Status.failed, unipack.ErrorDetail);
+						}
+
+						@Override
+						public void onAnalyzeEnd() {
+							log("Analyzing End");
+							delayFinish();
+						}
+
+						@Override
+						public void onException(Throwable e) {
+							e.printStackTrace();
+							setStatus(Status.failed, e.toString());
+							log("Exception: " + e.getMessage());
+						}
+					});
 				} else {
 					switch (response.code()) {
 						case 404:
@@ -74,6 +115,8 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			}
 		});
 	}
+
+	enum Status {prepare, downloading, analyzing, success, notFound, failed}
 
 	void setStatus(Status status, String msg) {
 		runOnUiThread(() -> {
@@ -112,7 +155,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 	void delayFinish() {
 		log("delayFinish()");
-		new Handler().postDelayed(() -> restartApp(this), 3000);
+		runOnUiThread(() -> new Handler().postDelayed(() -> restartApp(this), 3000));
 	}
 
 	@Override
@@ -126,103 +169,4 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	}
 
 
-	enum Status {prepare, downloading, analyzing, success, notFound, failed}
-
-	class DownloadTask extends AsyncTask<String, String, String> {
-		UnishareVO u;
-
-		public DownloadTask(UnishareVO u) {
-			this.u = u;
-		}
-
-		@Override
-		protected void onPreExecute() {
-			log("Download Task onPreExecute()");
-			super.onPreExecute();
-		}
-
-		@Override
-		protected String doInBackground(String[] params) {
-			log("Download Task doInBackground()");
-
-			try {
-
-				java.net.URL downloadUrl = new URL("https://api.unipad.kr/unishare/"+u._id+"/download");
-				HttpsURLConnection conexion = (HttpsURLConnection) downloadUrl.openConnection();
-				conexion.setConnectTimeout(5000);
-				conexion.setReadTimeout(5000);
-				conexion.setSSLSocketFactory(null);
-
-				int fileSize_ = conexion.getContentLength();
-				u.fileSize = fileSize_ == -1 ? u.fileSize : fileSize_;
-				log("fileSize : " + u.fileSize);
-
-				InputStream input = new BufferedInputStream(downloadUrl.openStream());
-				OutputStream output = new FileOutputStream(F_UniPackZip);
-
-				byte data[] = new byte[1024];
-				long total = 0;
-				int count;
-				int progress = 0;
-				log("Download start");
-				while ((count = input.read(data)) != -1) {
-					total += count;
-					progress++;
-					if (progress % 100 == 0) {
-
-						setStatus(ImportPackByUrlActivity.Status.downloading, (int) ((float) total / u.fileSize * 100) + "%\n" + FileManager.byteToMB(total) + " / " + FileManager.byteToMB(u.fileSize) + "MB");
-					}
-					output.write(data, 0, count);
-				}
-				log("Download End");
-
-				output.flush();
-				output.close();
-				input.close();
-
-				log("Analyzing Start");
-				setStatus(ImportPackByUrlActivity.Status.analyzing, code + "\n" + u.title + "\n" + u.producer);
-
-				try {
-					FileManager.unZipFile(F_UniPackZip.getPath(), F_UniPack.getPath());
-					Unipack unipack = new Unipack(F_UniPack, true);
-					if (unipack.CriticalError) {
-						Log.err(unipack.ErrorDetail);
-						setStatus(ImportPackByUrlActivity.Status.failed, unipack.ErrorDetail);
-						FileManager.deleteDirectory(F_UniPack);
-					} else
-						setStatus(ImportPackByUrlActivity.Status.success, unipack.getInfoText(ImportPackByUrlActivity.this));
-
-					log("Analyzing End");
-				} catch (Exception e) {
-					e.printStackTrace();
-					log("Analyzing Error");
-					setStatus(ImportPackByUrlActivity.Status.failed, e.toString());
-					log("DeleteFolder: UnipackPath " + F_UniPack.getPath());
-					FileManager.deleteDirectory(F_UniPack);
-				}
-
-				log("DeleteFolder: UnipackZipPath " + F_UniPackZip.getPath());
-				FileManager.deleteDirectory(F_UniPackZip);
-
-			} catch (Exception e) {
-				e.printStackTrace();
-				log("Download Task doInBackground() ERROR");
-				setStatus(ImportPackByUrlActivity.Status.failed, e.toString());
-			}
-
-
-			return null;
-		}
-
-		@Override
-		protected void onProgressUpdate(String... progress) {
-		}
-
-		@Override
-		protected void onPostExecute(String unused) {
-			log("Download Task onPostExecute()");
-			delayFinish();
-		}
-	}
 }
