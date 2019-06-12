@@ -28,21 +28,21 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.design.FileExplorer;
 import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.launchpad.adapter.MainAdapter;
+import com.kimjisub.launchpad.adapter.MainItem;
+import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityMainBinding;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
-import com.kimjisub.launchpad.adapter.MainAdapter;
-import com.kimjisub.launchpad.adapter.MainItem;
-import com.kimjisub.launchpad.adapter.ThemeItem;
-import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
+import com.kimjisub.launchpad.network.Networks;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -441,8 +441,7 @@ public class MainActivity extends BaseActivity {
 
 				if (I_added.size() > 0) b.recyclerView.smoothScrollToPosition(0);
 
-				if (I_list.size() == 0)
-					addErrorItem();
+				addErrorItem(I_list.size() == 0);
 
 				b.swipeRefreshLayout.setRefreshing(false);
 				updateComplete = true;
@@ -451,26 +450,29 @@ public class MainActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	void addErrorItem() {
-		String title = lang(R.string.unipackNotFound);
-		String subTitle = lang(R.string.clickToAddUnipack);
+	void addErrorItem(Boolean bool) {
+		if (bool) {
+			b.errItem
+					.setTitle(lang(R.string.unipackNotFound))
+					.setSubTitle(lang(R.string.clickToAddUnipack))
+					.setFlagColor(color(R.color.red))
+					.setOnEventListener(new PackViewSimple.OnEventListener() {
+						@Override
+						public void onViewClick(PackViewSimple v) {
+							startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
+						}
 
-		PackViewSimple packViewSimple = PackViewSimple.errItem(MainActivity.this, title, subTitle, new PackViewSimple.OnEventListener() {
-			@Override
-			public void onViewClick(PackViewSimple v) {
-				startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
-			}
+						@Override
+						public void onViewLongClick(PackViewSimple v) {
+						}
 
-			@Override
-			public void onViewLongClick(PackViewSimple v) {
-			}
+						@Override
+						public void onPlayClick(PackViewSimple v) {
+						}
+					});
+		}
 
-			@Override
-			public void onPlayClick(PackViewSimple v) {
-			}
-		});
-
-		// TODO
+		b.errItem.setVisibility(bool ? View.VISIBLE : View.GONE);
 	}
 
 	// ============================================================================================= UniPack Work
