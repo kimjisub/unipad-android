@@ -231,7 +231,7 @@ public class PlayActivity extends BaseActivity {
 					progressDialog = new ProgressDialog(PlayActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 					progressDialog.setTitle(lang(R.string.loading));
-					progressDialog.setMessage(lang(R.string.wait));
+					progressDialog.setMessage(lang(R.string.wait_a_sec));
 					progressDialog.setCancelable(false);
 
 					int soundNum = 0;

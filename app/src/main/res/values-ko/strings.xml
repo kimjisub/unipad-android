@@ -12,10 +12,11 @@
 	<string name="warning">경고</string>
 	<string name="error">에러</string>
 	<string name="errOccur">문제가 발생하였습니다.</string>
-	<string name="wait">잠시만 기다려주세요…</string>
+	<string name="wait_a_sec">잠시만 기다려주세요…</string>
 	<string name="analyzing">분석중</string>
 	<string name="loading">로딩중</string>
-	<string name="download">다운로드 하기</string>
+	<string name="download">다운로드</string>
+	<string name="downloadWaiting">다운로드 대기중</string>
 	<string name="downloading">다운로드 중</string>
 	<string name="downloaded">다운로드 됨</string>
 	<string name="success">성공</string>
@@ -31,6 +32,10 @@
 	<string name="quit">나가기</string>
 	<string name="website">웹사이트</string>
 	<string name="measuring">측정중…</string>
+	<string name="general">일반</string>
+	<string name="notice">공지</string>
+	<string name="newUnipack">새로운 유니팩</string>
+	<string name="notFound">찾을 수 없습니다.</string>
 
 	<!--Panel-->
 	<string name="unipack_count">유니팩 개수</string>

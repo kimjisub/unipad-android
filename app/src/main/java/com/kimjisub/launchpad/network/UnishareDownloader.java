@@ -30,7 +30,7 @@ public class UnishareDownloader {
 
 		void onDownloading(long downloadedSize);
 
-		void onDownloadEnd();
+		void onDownloadEnd(File zip);
 
 		void onAnalyzeStart();
 
@@ -38,7 +38,7 @@ public class UnishareDownloader {
 
 		void onAnalyzeFail(Unipack unipack);
 
-		void onAnalyzeEnd();
+		void onAnalyzeEnd(File folder);
 
 		void onException(Throwable e);
 	}
@@ -70,15 +70,18 @@ public class UnishareDownloader {
 				byte[] buf = new byte[1024];
 				long downloadSize = 0L;
 				int n;
+				int loop = 0;
 				while (-1 != (n = in.read(buf))) {
 					out.write(buf, 0, n);
 					downloadSize += n != -1 ? n : 0;
-					listener.onDownloading(downloadSize);
+					if (loop % 100 == 0)
+						listener.onDownloading(downloadSize);
+					loop++;
 				}
 				in.close();
 				out.close();
 
-				listener.onDownloadEnd();
+				listener.onDownloadEnd(zip);
 
 
 				listener.onAnalyzeStart();
@@ -93,7 +96,7 @@ public class UnishareDownloader {
 				} else
 					listener.onAnalyzeSuccess(unipack);
 
-				listener.onAnalyzeEnd();
+				listener.onAnalyzeEnd(folder);
 
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -283,6 +283,13 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 	// ============================================================================================= Activity Cycle
 
+
+	@Override
+	public void startActivity(Intent intent){
+		super.startActivity(intent);
+		overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
