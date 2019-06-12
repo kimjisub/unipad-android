@@ -4,7 +4,6 @@ import com.kimjisub.launchpad.api.BaseApiService;
 import com.kimjisub.launchpad.manager.Log;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -38,7 +37,6 @@ public class FileApi extends BaseApiService {
 
 		return fileService;
 	}
-
 
 
 	public interface FileService {
