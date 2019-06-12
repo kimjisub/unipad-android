@@ -29,6 +29,7 @@
 
 	<!--ect-->
 	<color name="border_icon_on_background">#ccc</color>
+	<color name="popup_background">#3000</color>
 
 	<!--app color-->
 	<color name="app_orange">#ff8f00</color>
