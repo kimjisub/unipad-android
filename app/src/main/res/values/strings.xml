@@ -36,6 +36,7 @@
 	<string name="notice">Notice</string>
 	<string name="newUnipack">New UniPack</string>
 	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Panel-->
 	<string name="unipack_count">Number of UniPacks</string>

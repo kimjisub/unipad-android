@@ -29,10 +29,12 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	int id;
 	long fileSize;
 	long downloadedSize;
-	//String activityMsg = "";
 	String identifyCode = "";
 	String errorMsg = "";
 	UnishareVO unishare;
+	Unipack unipack;
+	Throwable throwable;
+	int prevPercent = 0;
 
 	void initVar() {
 		code = getIntent().getData().getQueryParameter("code");
@@ -76,6 +78,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 						@Override
 						public void onGetFileSize(long fileSize_) {
 							fileSize = fileSize_ > 0 ? fileSize_ : unishare.fileSize;
+							log("fileSize: " + fileSize_ + "→" + fileSize);
 						}
 
 						@Override
@@ -93,20 +96,22 @@ public class ImportPackByUrlActivity extends BaseActivity {
 						@Override
 						public void onAnalyzeStart() {
 							log("Analyzing Start");
-							setStatus(Status.analyzing);//,	code + "\n" + unishare.title + "\n" + unishare.producer, );
+							setStatus(Status.analyzing);
 						}
 
 						@Override
-						public void onAnalyzeSuccess(Unipack unipack) {
+						public void onAnalyzeSuccess(Unipack unipack_) {
 							log("Analyzing Success");
-							setStatus(Status.success);//, unipack.getInfoText(ImportPackByUrlActivity.this));
+							unipack = unipack_;
+							setStatus(Status.success);
 						}
 
 						@Override
 						public void onAnalyzeFail(Unipack unipack) {
 							log("Analyzing Fail");
 							Log.err(unipack.ErrorDetail);
-							setStatus(Status.failed);//, unipack.ErrorDetail);
+							errorMsg = unipack.ErrorDetail;
+							setStatus(Status.failed);
 						}
 
 						@Override
@@ -116,10 +121,11 @@ public class ImportPackByUrlActivity extends BaseActivity {
 						}
 
 						@Override
-						public void onException(Throwable e) {
-							e.printStackTrace();
-							setStatus(Status.failed);//, e.toString());
-							log("Exception: " + e.getMessage());
+						public void onException(Throwable throwable_) {
+							throwable = throwable_;
+							throwable.printStackTrace();
+							setStatus(Status.exception);
+							log("Exception: " + throwable.getMessage());
 						}
 					});
 				} else {
@@ -149,7 +155,8 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		analyzing(4, R.string.analyzing),
 		success(5, R.string.success, false),
 		failed(6, R.string.failed, false),
-		notFound(7, R.string.unipackNotFound, false);
+		exception(7, R.string.exceptionOccurred, false),
+		notFound(8, R.string.unipackNotFound, false);
 
 		int value;
 		int titleStringId;
@@ -166,6 +173,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 			this.ongoing = ongoing;
 		}
 	}
+
 
 	void setStatus(Status status) {
 		runOnUiThread(() -> {
@@ -187,35 +195,46 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
+					notificationBuilder.setProgress(100, 0, true);
 					break;
 				case downloading:
 					int percent = (int) ((float) downloadedSize / fileSize * 100);
 					String downloadedSizeMB = FileManager.byteToMB(downloadedSize);
 					String fileSizeMB = FileManager.byteToMB(fileSize);
 
+					if (prevPercent == percent) return;
+					prevPercent = percent;
+
 					b.title.setText(status.titleStringId);
 					b.message.setText(percent + "%\n" + downloadedSizeMB + " / " + fileSizeMB + "MB");
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(percent + "%\n" + downloadedSizeMB + " / " + fileSizeMB + "MB");
-					notificationBuilder.setProgress(100, percent, true);
+					notificationBuilder.setProgress(100, percent, false);
 					break;
 				case analyzing:
 					b.title.setText(status.titleStringId);
 					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
-					notificationBuilder.setProgress(0, 0, true);
+					notificationBuilder.setProgress(100, 0, true);
 					break;
 				case success:
 					b.title.setText(status.titleStringId);
-					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
+					b.message.setText(unipack.getInfoText(ImportPackByUrlActivity.this));
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
 					notificationBuilder.setProgress(0, 0, false);
 					break;
 				case failed:
 					b.title.setText(status.titleStringId);
-					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
+					b.message.setText(errorMsg);
+					notificationBuilder.setContentTitle(identifyCode);
+					notificationBuilder.setContentText(lang(status.titleStringId));
+					notificationBuilder.setProgress(0, 0, false);
+					break;
+				case exception:
+					b.title.setText(status.titleStringId);
+					b.message.setText(throwable.getMessage());
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
 					notificationBuilder.setProgress(0, 0, false);
@@ -242,7 +261,10 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 	void delayFinish() {
 		log("delayFinish()");
-		runOnUiThread(() -> new Handler().postDelayed(() -> finish(), 3000));
+		runOnUiThread(() -> new Handler().postDelayed(() -> {
+			finish();
+			overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
+		}, 3000));
 		//restartApp(this);
 	}
 
