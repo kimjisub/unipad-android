@@ -6,11 +6,11 @@ import java.util.ArrayList;
 
 public class SyncCheckBox {
 
-	ArrayList<CheckBox> checkBoxes = new ArrayList();
-	OnCheckedChange onCheckedChange;
+	private ArrayList<CheckBox> checkBoxes;
+	private OnCheckedChange onCheckedChange;
 
 	// =========================================================================================
-	OnLongClick onLongClick;
+	private OnLongClick onLongClick;
 	private boolean isChecked = false;
 	private boolean isLocked = false;
 
@@ -19,6 +19,8 @@ public class SyncCheckBox {
 
 
 	public SyncCheckBox(CheckBox... cbs) {
+		checkBoxes = new ArrayList();
+
 		for (CheckBox cb : cbs)
 			addCheckBox(cb);
 	}
