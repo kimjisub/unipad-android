@@ -19,7 +19,7 @@ public class SyncCheckBox {
 
 
 	public SyncCheckBox(CheckBox... cbs) {
-		checkBoxes = new ArrayList();
+		checkBoxes = new ArrayList<>();
 
 		for (CheckBox cb : cbs)
 			addCheckBox(cb);
