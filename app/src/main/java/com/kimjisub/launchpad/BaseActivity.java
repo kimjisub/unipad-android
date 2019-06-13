@@ -285,7 +285,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
 
 	@Override
-	public void startActivity(Intent intent){
+	public void startActivity(Intent intent) {
 		super.startActivity(intent);
 		overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
 	}

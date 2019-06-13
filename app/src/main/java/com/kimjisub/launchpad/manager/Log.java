@@ -71,7 +71,7 @@ public class Log {
 		android.util.Log.e(tag, DEBUG ? detailMsg : msg);
 	}
 
-	public static String trace(final StackTraceElement e[], final int level) {
+	public static String trace(final StackTraceElement[] e, final int level) {
 		if (e != null && e.length >= level) {
 			final StackTraceElement s = e[level];
 

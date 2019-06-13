@@ -7,9 +7,9 @@ import android.os.Bundle;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
-import com.kimjisub.launchpad.databinding.ActivityThemeBinding;
 import com.kimjisub.launchpad.adapter.ThemeAdapter;
 import com.kimjisub.launchpad.adapter.ThemeItem;
+import com.kimjisub.launchpad.databinding.ActivityThemeBinding;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 

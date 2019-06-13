@@ -118,10 +118,8 @@ public class MainActivity extends BaseActivity {
 				@Override
 				public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 					Long data = dataSnapshot.getValue(Long.class);
-					if (PreferenceManager.PrevStoreCount.load(MainActivity.this) == data)
-						runOnUiThread(() -> blink(false));
-					else
-						runOnUiThread(() -> blink(true));
+					Long prev = PreferenceManager.PrevStoreCount.load(MainActivity.this);
+					runOnUiThread(() -> blink(!data.equals(prev)));
 				}
 
 				@Override
@@ -398,6 +396,7 @@ public class MainActivity extends BaseActivity {
 							I_added.add(0, item);
 					}
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				return null;
 			}

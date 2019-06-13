@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad;
 
-import android.app.Application;
 import android.os.Build;
 import android.support.multidex.MultiDexApplication;
 

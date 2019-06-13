@@ -7,8 +7,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
+import com.kimjisub.launchpad.manager.Log;
 
 import java.text.SimpleDateFormat;
 
@@ -73,6 +73,7 @@ public class DB_UnipackOpen extends SQLiteOpenHelper {
 
 		return cursor.getCount();
 	}
+
 	public void deleteAllRows() {
 		db.delete(TABLE_NAME, "1", null);
 	}

@@ -3,8 +3,8 @@ package com.kimjisub.launchpad.adapter;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-import com.kimjisub.launchpad.R;
 
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.ThemeActivity;
 
 public class ThemeAdapter extends RecyclerView.Adapter<ThemeHolder> {
