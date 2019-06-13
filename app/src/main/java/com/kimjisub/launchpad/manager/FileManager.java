@@ -129,7 +129,7 @@ public class FileManager {
 		return time;
 	}
 
-	public static File[] sortByName(File[] files) throws Exception{
+	public static File[] sortByName(File[] files) throws Exception {
 
 		Arrays.sort(files, (Comparator<Object>) (object1, object2) -> ((File) object1).getName().toLowerCase().compareTo(((File) object2).getName().toLowerCase()));
 

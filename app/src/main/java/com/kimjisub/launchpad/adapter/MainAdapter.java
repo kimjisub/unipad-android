@@ -7,10 +7,10 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 
+import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.MainActivity;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
-import com.kimjisub.design.PackViewSimple;
 
 public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 
@@ -92,7 +92,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
-		if(item.isNew)
+		if (item.isNew)
 			a = AnimationUtils.loadAnimation(context, R.anim.pack_new_in);
 		item.isNew = false;
 		packViewSimple.setAnimation(a);

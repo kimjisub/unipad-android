@@ -15,14 +15,14 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
-import com.kimjisub.launchpad.network.Networks;
-import com.kimjisub.launchpad.network.fb.fbStore;
 import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.launchpad.network.Networks;
+import com.kimjisub.launchpad.network.fb.fbStore;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -318,7 +318,7 @@ public class FBStoreActivity extends BaseActivity {
 					InputStream input = new BufferedInputStream(url.openStream());
 					OutputStream output = new FileOutputStream(F_UniPackZip);
 
-					byte data[] = new byte[1024];
+					byte[] data = new byte[1024];
 
 					long total = 0;
 

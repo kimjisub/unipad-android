@@ -54,12 +54,13 @@ public class BaseApiService {
 		}
 	}
 
-	protected static Gson getGson(){
+	protected static Gson getGson() {
 		final GsonBuilder builder = new GsonBuilder();
 
 		builder.registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
 
 			final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
 			@Override
 			public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 				try {
