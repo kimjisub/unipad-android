@@ -78,7 +78,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 						@Override
 						public void onGetFileSize(long fileSize_) {
 							fileSize = fileSize_ > 0 ? fileSize_ : unishare.fileSize;
-							log("fileSize: " + fileSize_ + "→" + fileSize);
+							log("fileSize: " + fileSize_ + " → " + fileSize);
 						}
 
 						@Override
