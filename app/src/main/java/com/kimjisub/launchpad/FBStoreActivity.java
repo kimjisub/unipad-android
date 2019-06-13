@@ -441,6 +441,7 @@ public class FBStoreActivity extends BaseActivity {
 		fbStore fbStore = item.fbStore;
 		b.panelPack.title.setText(fbStore.title);
 		b.panelPack.subTitle.setText(fbStore.producerName);
+		b.panelPack.downloadCount.setText(fbStore.downloadCount + "");
 	}
 
 	// ============================================================================================= Activity
