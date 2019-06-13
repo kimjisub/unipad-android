@@ -40,7 +40,7 @@ public class UnishareDownloader {
 
 		void onAnalyzeEnd(File folder);
 
-		void onException(Throwable e);
+		void onException(Throwable throwable);
 	}
 
 	public UnishareDownloader(UnishareVO unishare, File F_UniPackRootExt, UnishareDownloadListener listener) {
