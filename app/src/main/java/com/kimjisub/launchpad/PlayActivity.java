@@ -31,15 +31,15 @@ import android.widget.RelativeLayout;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
-import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
+import com.kimjisub.design.SyncCheckBox;
 import com.kimjisub.launchpad.adapter.ThemeItem;
-import com.kimjisub.launchpad.playManager.ColorManager;
+import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
-import com.kimjisub.design.SyncCheckBox;
+import com.kimjisub.launchpad.playManager.ColorManager;
 import com.vungle.warren.LoadAdCallback;
 import com.vungle.warren.PlayAdCallback;
 import com.vungle.warren.Vungle;
@@ -158,10 +158,11 @@ public class PlayActivity extends BaseActivity {
 
 		String path = getIntent().getStringExtra("path");
 		File file = new File(path);
-		log("[01] Start Load Unipack " + path);
-		unipack = new Unipack(file, true);
 
 		try {
+			log("[01] Start Load Unipack " + path);
+			unipack = new Unipack(file, true);
+
 			log("[02] Check ErrorDetail");
 			if (unipack.ErrorDetail != null) {
 				new AlertDialog.Builder(PlayActivity.this)
@@ -308,8 +309,13 @@ public class PlayActivity extends BaseActivity {
 			}).execute();
 
 
-		} catch (OutOfMemoryError ignore) {
+		} catch (OutOfMemoryError e) {
+			e.printStackTrace();
 			showToast(R.string.outOfMemory);
+			finish();
+		} catch (Exception e) {
+			e.printStackTrace();
+			showToast(R.string.exceptionOccurred);
 			finish();
 		}
 	}
