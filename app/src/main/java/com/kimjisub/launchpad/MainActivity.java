@@ -484,161 +484,165 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void autoMapping(Unipack uni) {
-		final Unipack unipack = new Unipack(uni.F_project, true);
+		try {
+			final Unipack unipack = new Unipack(uni.F_project, true);
 
-		if (unipack.isAutoPlay && unipack.autoPlayTable != null) {
-			(new AsyncTask<String, String, String>() {
+			if (unipack.isAutoPlay && unipack.autoPlayTable != null) {
+				(new AsyncTask<String, String, String>() {
 
-				ProgressDialog progressDialog;
+					ProgressDialog progressDialog;
 
-				ArrayList<Unipack.AutoPlay> autoplay1;
-				ArrayList<Unipack.AutoPlay> autoplay2;
-				ArrayList<Unipack.AutoPlay> autoplay3;
+					ArrayList<Unipack.AutoPlay> autoplay1;
+					ArrayList<Unipack.AutoPlay> autoplay2;
+					ArrayList<Unipack.AutoPlay> autoplay3;
 
-				@Override
-				protected void onPreExecute() {
-					autoplay1 = new ArrayList<>();
-					for (Unipack.AutoPlay e : unipack.autoPlayTable) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
-								autoplay1.add(e);
-								break;
-							case Unipack.AutoPlay.OFF:
-								break;
-							case Unipack.AutoPlay.CHAIN:
-								autoplay1.add(e);
-								break;
-							case Unipack.AutoPlay.DELAY:
-								autoplay1.add(e);
-								break;
-						}
-					}
-
-					autoplay2 = new ArrayList<>();
-					Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
-					for (Unipack.AutoPlay e : autoplay1) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
-								if (prevDelay != null) {
-									autoplay2.add(prevDelay);
-									prevDelay = null;
-								}
-								autoplay2.add(e);
-								break;
-							case Unipack.AutoPlay.CHAIN:
-								autoplay2.add(e);
-								break;
-							case Unipack.AutoPlay.DELAY:
-								if (prevDelay != null)
-									prevDelay.d += e.d;
-								else
-									prevDelay = e;
-								break;
-						}
-					}
-
-					progressDialog = new ProgressDialog(MainActivity.this);
-					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setTitle(lang(R.string.analyzing));
-					progressDialog.setMessage(lang(R.string.wait_a_sec));
-					progressDialog.setCancelable(false);
-					progressDialog.setMax(autoplay2.size());
-					progressDialog.show();
-					super.onPreExecute();
-				}
-
-				@Override
-				protected String doInBackground(String... params) {
-
-					autoplay3 = new ArrayList<>();
-					int nextDuration = 1000;
-					MediaPlayer mplayer = new MediaPlayer();
-					for (Unipack.AutoPlay e : autoplay2) {
-						try {
+					@Override
+					protected void onPreExecute() {
+						autoplay1 = new ArrayList<>();
+						for (Unipack.AutoPlay e : unipack.autoPlayTable) {
 							switch (e.func) {
 								case Unipack.AutoPlay.ON:
-									int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
-									nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable[e.currChain][e.x][e.y].get(num).file.getPath());
-									autoplay3.add(e);
+									autoplay1.add(e);
+									break;
+								case Unipack.AutoPlay.OFF:
 									break;
 								case Unipack.AutoPlay.CHAIN:
-									autoplay3.add(e);
+									autoplay1.add(e);
 									break;
 								case Unipack.AutoPlay.DELAY:
-									e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
-									autoplay3.add(e);
+									autoplay1.add(e);
 									break;
 							}
-						} catch (Exception ee) {
+						}
+
+						autoplay2 = new ArrayList<>();
+						Unipack.AutoPlay prevDelay = new Unipack.AutoPlay(0, 0);
+						for (Unipack.AutoPlay e : autoplay1) {
+							switch (e.func) {
+								case Unipack.AutoPlay.ON:
+									if (prevDelay != null) {
+										autoplay2.add(prevDelay);
+										prevDelay = null;
+									}
+									autoplay2.add(e);
+									break;
+								case Unipack.AutoPlay.CHAIN:
+									autoplay2.add(e);
+									break;
+								case Unipack.AutoPlay.DELAY:
+									if (prevDelay != null)
+										prevDelay.d += e.d;
+									else
+										prevDelay = e;
+									break;
+							}
+						}
+
+						progressDialog = new ProgressDialog(MainActivity.this);
+						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						progressDialog.setTitle(lang(R.string.analyzing));
+						progressDialog.setMessage(lang(R.string.wait_a_sec));
+						progressDialog.setCancelable(false);
+						progressDialog.setMax(autoplay2.size());
+						progressDialog.show();
+						super.onPreExecute();
+					}
+
+					@Override
+					protected String doInBackground(String... params) {
+
+						autoplay3 = new ArrayList<>();
+						int nextDuration = 1000;
+						MediaPlayer mplayer = new MediaPlayer();
+						for (Unipack.AutoPlay e : autoplay2) {
+							try {
+								switch (e.func) {
+									case Unipack.AutoPlay.ON:
+										int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
+										nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable[e.currChain][e.x][e.y].get(num).file.getPath());
+										autoplay3.add(e);
+										break;
+									case Unipack.AutoPlay.CHAIN:
+										autoplay3.add(e);
+										break;
+									case Unipack.AutoPlay.DELAY:
+										e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+										autoplay3.add(e);
+										break;
+								}
+							} catch (Exception ee) {
+								ee.printStackTrace();
+							}
+							publishProgress();
+						}
+						mplayer.release();
+
+						StringBuilder stringBuilder = new StringBuilder();
+						for (Unipack.AutoPlay e : autoplay3) {
+							switch (e.func) {
+								case Unipack.AutoPlay.ON:
+									//int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
+									stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
+									break;
+								case Unipack.AutoPlay.CHAIN:
+									stringBuilder.append("c ").append(e.c + 1).append("\n");
+									break;
+								case Unipack.AutoPlay.DELAY:
+									stringBuilder.append("d ").append(e.d).append("\n");
+									break;
+							}
+						}
+						try {
+							File filePre = new File(unipack.F_project, "autoPlay");
+							@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.F_project, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
+							filePre.renameTo(fileNow);
+
+							BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.F_autoPlay)));
+							writer.write(stringBuilder.toString());
+							writer.close();
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} catch (IOException ee) {
 							ee.printStackTrace();
 						}
-						publishProgress();
-					}
-					mplayer.release();
 
-					StringBuilder stringBuilder = new StringBuilder();
-					for (Unipack.AutoPlay e : autoplay3) {
-						switch (e.func) {
-							case Unipack.AutoPlay.ON:
-								//int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
-								stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n");
-								break;
-							case Unipack.AutoPlay.CHAIN:
-								stringBuilder.append("c ").append(e.c + 1).append("\n");
-								break;
-							case Unipack.AutoPlay.DELAY:
-								stringBuilder.append("d ").append(e.d).append("\n");
-								break;
+						return null;
+					}
+
+					@Override
+					protected void onProgressUpdate(String... progress) {
+						if (progressDialog.isShowing())
+							progressDialog.incrementProgressBy(1);
+					}
+
+					@Override
+					protected void onPostExecute(String result) {
+						super.onPostExecute(result);
+
+						try {
+							if (progressDialog != null && progressDialog.isShowing())
+								progressDialog.dismiss();
+							new AlertDialog.Builder(MainActivity.this)
+									.setTitle(lang(R.string.success))
+									.setMessage(lang(R.string.remapDone))
+									.setPositiveButton(lang(R.string.accept), null)
+									.show();
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
 					}
-					try {
-						File filePre = new File(unipack.F_project, "autoPlay");
-						@SuppressLint("SimpleDateFormat") File fileNow = new File(unipack.F_project, "autoPlay_" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date(System.currentTimeMillis())));
-						filePre.renameTo(fileNow);
-
-						BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(unipack.F_autoPlay)));
-						writer.write(stringBuilder.toString());
-						writer.close();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException ee) {
-						ee.printStackTrace();
-					}
-
-					return null;
-				}
-
-				@Override
-				protected void onProgressUpdate(String... progress) {
-					if (progressDialog.isShowing())
-						progressDialog.incrementProgressBy(1);
-				}
-
-				@Override
-				protected void onPostExecute(String result) {
-					super.onPostExecute(result);
-
-					try {
-						if (progressDialog != null && progressDialog.isShowing())
-							progressDialog.dismiss();
-						new AlertDialog.Builder(MainActivity.this)
-								.setTitle(lang(R.string.success))
-								.setMessage(lang(R.string.remapDone))
-								.setPositiveButton(lang(R.string.accept), null)
-								.show();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}).execute();
+				}).execute();
 
 
-		} else {
-			new AlertDialog.Builder(MainActivity.this)
-					.setTitle(lang(R.string.failed))
-					.setMessage(lang(R.string.remapFail))
-					.setPositiveButton(lang(R.string.accept), null)
-					.show();
+			} else {
+				new AlertDialog.Builder(MainActivity.this)
+						.setTitle(lang(R.string.failed))
+						.setMessage(lang(R.string.remapFail))
+						.setPositiveButton(lang(R.string.accept), null)
+						.show();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -685,7 +689,7 @@ public class MainActivity extends BaseActivity {
 						msg2 = unipack.ErrorDetail;
 					}
 
-				} catch (IOException e) {
+				} catch (Exception e) {
 					msg1 = lang(R.string.analyzeFailed);
 					msg2 = e.toString();
 					FileManager.deleteDirectory(F_UniPack);
@@ -873,15 +877,19 @@ public class MainActivity extends BaseActivity {
 						b.panelPack.fileSize.setText(fileSize);
 				});
 
-				Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
-				item.unipack = unipackDetail;
-				publishProgress(fileSize);
-				handler.post(() -> {
-					if (b.panelPack.path.getText().toString().equals(item.path)) {
-						b.panelPack.soundCount.setText(unipackDetail.soundTableCount + "");
-						b.panelPack.ledCount.setText(unipackDetail.ledTableCount + "");
-					}
-				});
+				try {
+					Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
+					item.unipack = unipackDetail;
+					publishProgress(fileSize);
+					handler.post(() -> {
+						if (b.panelPack.path.getText().toString().equals(item.path)) {
+							b.panelPack.soundCount.setText(unipackDetail.soundTableCount + "");
+							b.panelPack.ledCount.setText(unipackDetail.ledTableCount + "");
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				return null;
 			}
 

@@ -8,7 +8,6 @@ import com.kimjisub.launchpad.R;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
@@ -48,435 +47,431 @@ public class Unipack {
 	public ArrayList<LED>[][][] ledTable = null;
 	public ArrayList<AutoPlay> autoPlayTable = null;
 
-	public Unipack(File F_project, boolean loadDetail) {
+	public Unipack(File F_project, boolean loadDetail) throws Exception {
 
 		this.F_project = F_project;
 		this.loadDetail = loadDetail;
 
-		try {
-			for (File item : F_project.listFiles()) {
-				switch (item.getName().toLowerCase()) {
-					case "info":
-						F_info = item;
-						break;
-					case "sounds":
-						F_sounds = item;
-						break;
-					case "keysound":
-						F_keySound = item;
-						break;
-					case "keyled":
-						F_keyLED = item;
-						break;
-					case "autoplay":
-						F_autoPlay = item;
-						break;
+		for (File item : F_project.listFiles()) {
+			switch (item.getName().toLowerCase()) {
+				case "info":
+					F_info = item;
+					break;
+				case "sounds":
+					F_sounds = item;
+					break;
+				case "keysound":
+					F_keySound = item;
+					break;
+				case "keyled":
+					F_keyLED = item;
+					break;
+				case "autoplay":
+					F_autoPlay = item;
+					break;
+			}
+		}
+
+
+		isInfo = F_info != null && F_info.isFile();
+		isSounds = F_sounds != null && F_sounds.isDirectory();
+		isKeySound = F_keySound != null && F_keySound.isFile();
+		isKeyLED = F_keyLED != null && F_keyLED.isDirectory();
+		isAutoPlay = F_autoPlay != null && F_autoPlay.isFile();
+
+		if (!isInfo) addErr("info doesn't exist");
+		if (!isKeySound) addErr("keySound doesn't exist");
+		if (!isInfo && !isKeySound) addErr("It does not seem to be UniPack.");
+
+		if (!isInfo || !isKeySound) CriticalError = true;
+		else {
+
+			if (isInfo) {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_info)));
+				String s;
+				while ((s = reader.readLine()) != null) {
+
+					if (s.length() == 0)
+						continue;
+
+					try {
+						String[] split = s.split("=", 2);
+
+						String key = split[0];
+						String value = split[1];
+
+						switch (key) {
+							case "title":
+								title = value;
+								break;
+							case "producerName":
+								producerName = value;
+								break;
+							case "buttonX":
+								buttonX = Integer.parseInt(value);
+								break;
+							case "buttonY":
+								buttonY = Integer.parseInt(value);
+								break;
+							case "chain":
+								chain = Integer.parseInt(value);
+								break;
+							case "squareButton":
+								squareButton = value.equals("true");
+								break;
+							case "website":
+								website = value;
+								break;
+						}
+					} catch (ArrayIndexOutOfBoundsException e) {
+						e.printStackTrace();
+						addErr("info : [" + s + "] format is not found");
+					}
 				}
+
+				if (title == null)
+					addErr("info : title was missing");
+				if (producerName == null)
+					addErr("info : producerName was missing");
+				if (buttonX == 0)
+					addErr("info : buttonX was missing");
+				if (buttonY == 0)
+					addErr("info : buttonY was missing");
+				if (chain == 0)
+					addErr("info : chain was missing");
+				if (!(1 <= chain && chain <= 24)) {
+					addErr("info : chain out of range");
+					CriticalError = true;
+				}
+
+				reader.close();
 			}
 
 
-			isInfo = F_info != null && F_info.isFile();
-			isSounds = F_sounds != null && F_sounds.isDirectory();
-			isKeySound = F_keySound != null && F_keySound.isFile();
-			isKeyLED = F_keyLED != null && F_keyLED.isDirectory();
-			isAutoPlay = F_autoPlay != null && F_autoPlay.isFile();
-
-			if (!isInfo) addErr("info doesn't exist");
-			if (!isKeySound) addErr("keySound doesn't exist");
-			if (!isInfo && !isKeySound) addErr("It does not seem to be UniPack.");
-
-			if (!isInfo || !isKeySound) CriticalError = true;
-			else {
-
-				if (isInfo) {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_info)));
+			if (loadDetail) {
+				if (isKeySound) {
+					soundTable = new ArrayList[chain][buttonX][buttonY];
+					soundTableCount = 0;
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_keySound)));
 					String s;
 					while ((s = reader.readLine()) != null) {
+						String[] split = s.split(" ");
 
-						if (s.length() == 0)
-							continue;
+						int c;
+						int x;
+						int y;
+						String soundURL;
+						int loop = 0;
+						int wormhole = -1;
 
 						try {
-							String[] split = s.split("=", 2);
+							if (split.length <= 2)
+								continue;
 
-							String key = split[0];
-							String value = split[1];
+							c = Integer.parseInt(split[0]) - 1;
+							x = Integer.parseInt(split[1]) - 1;
+							y = Integer.parseInt(split[2]) - 1;
+							soundURL = split[3];
 
-							switch (key) {
-								case "title":
-									title = value;
-									break;
-								case "producerName":
-									producerName = value;
-									break;
-								case "buttonX":
-									buttonX = Integer.parseInt(value);
-									break;
-								case "buttonY":
-									buttonY = Integer.parseInt(value);
-									break;
-								case "chain":
-									chain = Integer.parseInt(value);
-									break;
-								case "squareButton":
-									squareButton = value.equals("true");
-									break;
-								case "website":
-									website = value;
-									break;
+							if (split.length >= 5)
+								loop = Integer.parseInt(split[4]) - 1;
+							if (split.length >= 6) {
+								loop = Integer.parseInt(split[4]) - 1;
+								wormhole = Integer.parseInt(split[5]) - 1;
 							}
-						} catch (ArrayIndexOutOfBoundsException e) {
-							e.printStackTrace();
-							addErr("info : [" + s + "] format is not found");
+
+						} catch (NumberFormatException | IndexOutOfBoundsException e) {
+							addErr("keySound : [" + s + "]" + " format is incorrect");
+							continue;
+						}
+
+
+						if (c < 0 || c >= chain)
+							addErr("keySound : [" + s + "]" + " chain is incorrect");
+						else if (x < 0 || x >= buttonX)
+							addErr("keySound : [" + s + "]" + " x is incorrect");
+						else if (y < 0 || y >= buttonY)
+							addErr("keySound : [" + s + "]" + " y is incorrect");
+						else {
+
+							Sound sound = new Sound(new File(F_sounds.getAbsolutePath() + "/" + soundURL), loop, wormhole);
+
+							if (!sound.file.isFile()) {
+								addErr("keySound : [" + s + "]" + " sound was not found");
+								continue;
+							}
+
+							if (soundTable[c][x][y] == null)
+								soundTable[c][x][y] = new ArrayList();
+							sound.num = soundTable[c][x][y].size();
+							soundTable[c][x][y].add(sound);
+							soundTableCount++;
+
 						}
 					}
-
-					if (title == null)
-						addErr("info : title was missing");
-					if (producerName == null)
-						addErr("info : producerName was missing");
-					if (buttonX == 0)
-						addErr("info : buttonX was missing");
-					if (buttonY == 0)
-						addErr("info : buttonY was missing");
-					if (chain == 0)
-						addErr("info : chain was missing");
-					if (!(1 <= chain && chain <= 24)) {
-						addErr("info : chain out of range");
-						CriticalError = true;
-					}
-
 					reader.close();
 				}
 
 
-				if (loadDetail) {
-					if (isKeySound) {
-						soundTable = new ArrayList[chain][buttonX][buttonY];
-						soundTableCount = 0;
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_keySound)));
-						String s;
-						while ((s = reader.readLine()) != null) {
-							String[] split = s.split(" ");
+				if (isKeyLED) {
+					ledTable = new ArrayList[chain][buttonX][buttonY];
+					ledTableCount = 0;
+					File[] fileList = FileManager.sortByName(F_keyLED.listFiles());
+					for (File file : fileList) {
+						if (file.isFile()) {
+							String fileName = file.getName();
+							String[] split1 = fileName.split(" ");
 
 							int c;
 							int x;
 							int y;
-							String soundURL;
-							int loop = 0;
-							int wormhole = -1;
+							int loop = 1;
 
 							try {
-								if (split.length <= 2)
+								if (split1.length <= 2)
 									continue;
 
-								c = Integer.parseInt(split[0]) - 1;
-								x = Integer.parseInt(split[1]) - 1;
-								y = Integer.parseInt(split[2]) - 1;
-								soundURL = split[3];
+								c = Integer.parseInt(split1[0]) - 1;
+								x = Integer.parseInt(split1[1]) - 1;
+								y = Integer.parseInt(split1[2]) - 1;
+								if (split1.length >= 4)
+									loop = Integer.parseInt(split1[3]);
 
-								if (split.length >= 5)
-									loop = Integer.parseInt(split[4]) - 1;
-								if (split.length >= 6) {
-									loop = Integer.parseInt(split[4]) - 1;
-									wormhole = Integer.parseInt(split[5]) - 1;
+								if (c < 0 || c >= chain) {
+									addErr("keyLED : [" + fileName + "]" + " chain is incorrect");
+									continue;
+								} else if (x < 0 || x >= buttonX) {
+									addErr("keyLED : [" + fileName + "]" + " x is incorrect");
+									continue;
+								} else if (y < 0 || y >= buttonY) {
+									addErr("keyLED : [" + fileName + "]" + " y is incorrect");
+									continue;
+								} else if (loop < 0) {
+									addErr("keyLED : [" + fileName + "]" + " loop is incorrect");
+									continue;
 								}
 
+
 							} catch (NumberFormatException | IndexOutOfBoundsException e) {
-								addErr("keySound : [" + s + "]" + " format is incorrect");
+								addErr("keyLED : [" + fileName + "]" + " format is incorrect");
 								continue;
 							}
 
+							ArrayList<LED.Syntax> LEDs = new ArrayList<>();
 
-							if (c < 0 || c >= chain)
-								addErr("keySound : [" + s + "]" + " chain is incorrect");
-							else if (x < 0 || x >= buttonX)
-								addErr("keySound : [" + s + "]" + " x is incorrect");
-							else if (y < 0 || y >= buttonY)
-								addErr("keySound : [" + s + "]" + " y is incorrect");
-							else {
+							BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+							String s;
+							while ((s = reader.readLine()) != null) {
+								String[] split2 = s.split(" ");
 
-								Sound sound = new Sound(new File(F_sounds.getAbsolutePath() + "/" + soundURL), loop, wormhole);
+								String option;
+								int _x = -1;
+								int _y = -1;
+								int _color = -1;
+								int _velo = 4;
+								int _delay = -1;
 
-								if (!sound.file.isFile()) {
-									addErr("keySound : [" + s + "]" + " sound was not found");
-									continue;
-								}
-
-								if (soundTable[c][x][y] == null)
-									soundTable[c][x][y] = new ArrayList();
-								sound.num = soundTable[c][x][y].size();
-								soundTable[c][x][y].add(sound);
-								soundTableCount++;
-
-							}
-						}
-						reader.close();
-					}
-
-
-					if (isKeyLED) {
-						ledTable = new ArrayList[chain][buttonX][buttonY];
-						ledTableCount = 0;
-						File[] fileList = FileManager.sortByName(F_keyLED.listFiles());
-						for (File file : fileList) {
-							if (file.isFile()) {
-								String fileName = file.getName();
-								String[] split1 = fileName.split(" ");
-
-								int c;
-								int x;
-								int y;
-								int loop = 1;
 
 								try {
-									if (split1.length <= 2)
+									if (split2[0].equals(""))
 										continue;
 
-									c = Integer.parseInt(split1[0]) - 1;
-									x = Integer.parseInt(split1[1]) - 1;
-									y = Integer.parseInt(split1[2]) - 1;
-									if (split1.length >= 4)
-										loop = Integer.parseInt(split1[3]);
-
-									if (c < 0 || c >= chain) {
-										addErr("keyLED : [" + fileName + "]" + " chain is incorrect");
-										continue;
-									} else if (x < 0 || x >= buttonX) {
-										addErr("keyLED : [" + fileName + "]" + " x is incorrect");
-										continue;
-									} else if (y < 0 || y >= buttonY) {
-										addErr("keyLED : [" + fileName + "]" + " y is incorrect");
-										continue;
-									} else if (loop < 0) {
-										addErr("keyLED : [" + fileName + "]" + " loop is incorrect");
-										continue;
-									}
-
-
-								} catch (NumberFormatException | IndexOutOfBoundsException e) {
-									addErr("keyLED : [" + fileName + "]" + " format is incorrect");
-									continue;
-								}
-
-								ArrayList<LED.Syntax> LEDs = new ArrayList<>();
-
-								BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-								String s;
-								while ((s = reader.readLine()) != null) {
-									String[] split2 = s.split(" ");
-
-									String option;
-									int _x = -1;
-									int _y = -1;
-									int _color = -1;
-									int _velo = 4;
-									int _delay = -1;
-
-
-									try {
-										if (split2[0].equals(""))
-											continue;
-
-										option = split2[0];
-
-										switch (option) {
-											case "on":
-											case "o":
-												try {
-													_x = Integer.parseInt(split2[1]) - 1;
-												} catch (NumberFormatException ignore) {
-												}
-												_y = Integer.parseInt(split2[2]) - 1;
-
-												if (split2.length == 4)
-													_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
-												else if (split2.length == 5) {
-													if (split2[3].equals("auto") || split2[3].equals("a")) {
-														_velo = Integer.parseInt(split2[4]);
-														_color = LaunchpadColor.ARGB[_velo];
-													} else {
-														_velo = Integer.parseInt(split2[4]);
-														_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
-													}
-												} else {
-													addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
-													continue;
-												}
-												break;
-											case "off":
-											case "f":
-												try {
-													_x = Integer.parseInt(split2[1]) - 1;
-												} catch (NumberFormatException ignore) {
-												}
-												_y = Integer.parseInt(split2[2]) - 1;
-												break;
-											case "delay":
-											case "d":
-												_delay = Integer.parseInt(split2[1]);
-												break;
-											default:
-												addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
-												continue;
-										}
-
-									} catch (NumberFormatException | IndexOutOfBoundsException e) {
-										addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
-										continue;
-									}
-
+									option = split2[0];
 
 									switch (option) {
 										case "on":
 										case "o":
-											LEDs.add(new LED.Syntax(_x, _y, _color, _velo));
+											try {
+												_x = Integer.parseInt(split2[1]) - 1;
+											} catch (NumberFormatException ignore) {
+											}
+											_y = Integer.parseInt(split2[2]) - 1;
+
+											if (split2.length == 4)
+												_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
+											else if (split2.length == 5) {
+												if (split2[3].equals("auto") || split2[3].equals("a")) {
+													_velo = Integer.parseInt(split2[4]);
+													_color = LaunchpadColor.ARGB[_velo];
+												} else {
+													_velo = Integer.parseInt(split2[4]);
+													_color = Integer.parseInt(split2[3], 16) + 0xFF000000;
+												}
+											} else {
+												addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
+												continue;
+											}
 											break;
 										case "off":
 										case "f":
-											LEDs.add(new LED.Syntax(_x, _y));
+											try {
+												_x = Integer.parseInt(split2[1]) - 1;
+											} catch (NumberFormatException ignore) {
+											}
+											_y = Integer.parseInt(split2[2]) - 1;
 											break;
 										case "delay":
 										case "d":
-											LEDs.add(new LED.Syntax(_delay));
+											_delay = Integer.parseInt(split2[1]);
 											break;
+										default:
+											addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
+											continue;
 									}
-								}
-								if (ledTable[c][x][y] == null)
-									ledTable[c][x][y] = new ArrayList<>();
-								ledTable[c][x][y].add(new LED(LEDs, loop, ledTable[c][x][y].size()));
-								ledTableCount++;
-								reader.close();
-							} else
-								addErr("keyLED : " + file.getName() + " is not file");
-						}
-					}
 
-					if (isAutoPlay) {
-						autoPlayTable = new ArrayList<>();
-						int[][] map = new int[buttonX][buttonY];
-
-						int currChain = 0;
-
-						BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(getMainAutoplay())));
-						String s;
-						while ((s = reader.readLine()) != null) {
-							String[] split = s.split(" ");
-
-							String option;
-							int x = -1;
-							int y = -1;
-							int chain = -1;
-							int delay = -1;
-
-							try {
-								if (split[0].equals(""))
+								} catch (NumberFormatException | IndexOutOfBoundsException e) {
+									addErr("keyLED : [" + fileName + "].[" + s + "]" + " format is incorrect");
 									continue;
+								}
 
-								option = split[0];
 
 								switch (option) {
 									case "on":
 									case "o":
-										x = Integer.parseInt(split[1]) - 1;
-										y = Integer.parseInt(split[2]) - 1;
-										if (x < 0 || x >= buttonX) {
-											addErr("autoPlay : [" + s + "]" + " x is incorrect");
-											continue;
-										}
-										if (y < 0 || y >= buttonY) {
-											addErr("autoPlay : [" + s + "]" + " y is incorrect");
-											continue;
-										}
+										LEDs.add(new LED.Syntax(_x, _y, _color, _velo));
 										break;
 									case "off":
 									case "f":
-										x = Integer.parseInt(split[1]) - 1;
-										y = Integer.parseInt(split[2]) - 1;
-										if (x < 0 || x >= buttonX) {
-											addErr("autoPlay : [" + s + "]" + " x is incorrect");
-											continue;
-										} else if (y < 0 || y >= buttonY) {
-											addErr("autoPlay : [" + s + "]" + " y is incorrect");
-											continue;
-										}
-										break;
-									case "touch":
-									case "t":
-										x = Integer.parseInt(split[1]) - 1;
-										y = Integer.parseInt(split[2]) - 1;
-										if (x < 0 || x >= buttonX) {
-											addErr("autoPlay : [" + s + "]" + " x is incorrect");
-											continue;
-										} else if (y < 0 || y >= buttonY) {
-											addErr("autoPlay : [" + s + "]" + " y is incorrect");
-											continue;
-										}
-										break;
-									case "chain":
-									case "c":
-										chain = Integer.parseInt(split[1]) - 1;
-										if (chain < 0 || chain >= this.chain) {
-											addErr("autoPlay : [" + s + "]" + " chain is incorrect");
-											continue;
-										}
+										LEDs.add(new LED.Syntax(_x, _y));
 										break;
 									case "delay":
 									case "d":
-										delay = Integer.parseInt(split[1]);
+										LEDs.add(new LED.Syntax(_delay));
 										break;
-									default:
-										addErr("autoPlay : [" + s + "]" + " format is incorrect");
-										continue;
 								}
-
-							} catch (NumberFormatException | IndexOutOfBoundsException e) {
-								addErr("autoPlay : [" + s + "]" + " format is incorrect");
-								continue;
 							}
+							if (ledTable[c][x][y] == null)
+								ledTable[c][x][y] = new ArrayList<>();
+							ledTable[c][x][y].add(new LED(LEDs, loop, ledTable[c][x][y].size()));
+							ledTableCount++;
+							reader.close();
+						} else
+							addErr("keyLED : " + file.getName() + " is not file");
+					}
+				}
+
+				if (isAutoPlay) {
+					autoPlayTable = new ArrayList<>();
+					int[][] map = new int[buttonX][buttonY];
+
+					int currChain = 0;
+
+					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(getMainAutoplay())));
+					String s;
+					while ((s = reader.readLine()) != null) {
+						String[] split = s.split(" ");
+
+						String option;
+						int x = -1;
+						int y = -1;
+						int chain = -1;
+						int delay = -1;
+
+						try {
+							if (split[0].equals(""))
+								continue;
+
+							option = split[0];
 
 							switch (option) {
 								case "on":
 								case "o":
-									autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
-									Sound sound = Sound_get(currChain, x, y, map[x][y]);
-									map[x][y]++;
-									if (sound.wormhole != -1) {
-										autoPlayTable.add(new AutoPlay(currChain = sound.wormhole));
-										for (int i = 0; i < buttonX; i++)
-											for (int j = 0; j < buttonY; j++)
-												map[i][j] = 0;
+									x = Integer.parseInt(split[1]) - 1;
+									y = Integer.parseInt(split[2]) - 1;
+									if (x < 0 || x >= buttonX) {
+										addErr("autoPlay : [" + s + "]" + " x is incorrect");
+										continue;
+									}
+									if (y < 0 || y >= buttonY) {
+										addErr("autoPlay : [" + s + "]" + " y is incorrect");
+										continue;
 									}
 									break;
 								case "off":
 								case "f":
-									autoPlayTable.add(new AutoPlay(x, y, currChain));
+									x = Integer.parseInt(split[1]) - 1;
+									y = Integer.parseInt(split[2]) - 1;
+									if (x < 0 || x >= buttonX) {
+										addErr("autoPlay : [" + s + "]" + " x is incorrect");
+										continue;
+									} else if (y < 0 || y >= buttonY) {
+										addErr("autoPlay : [" + s + "]" + " y is incorrect");
+										continue;
+									}
 									break;
 								case "touch":
 								case "t":
-									autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
-									autoPlayTable.add(new AutoPlay(x, y, currChain));
-									map[x][y]++;
+									x = Integer.parseInt(split[1]) - 1;
+									y = Integer.parseInt(split[2]) - 1;
+									if (x < 0 || x >= buttonX) {
+										addErr("autoPlay : [" + s + "]" + " x is incorrect");
+										continue;
+									} else if (y < 0 || y >= buttonY) {
+										addErr("autoPlay : [" + s + "]" + " y is incorrect");
+										continue;
+									}
 									break;
 								case "chain":
 								case "c":
-									autoPlayTable.add(new AutoPlay(currChain = chain));
-									for (int i = 0; i < buttonX; i++)
-										for (int j = 0; j < buttonY; j++)
-											map[i][j] = 0;
+									chain = Integer.parseInt(split[1]) - 1;
+									if (chain < 0 || chain >= this.chain) {
+										addErr("autoPlay : [" + s + "]" + " chain is incorrect");
+										continue;
+									}
 									break;
 								case "delay":
 								case "d":
-									autoPlayTable.add(new AutoPlay(delay, currChain));
+									delay = Integer.parseInt(split[1]);
 									break;
+								default:
+									addErr("autoPlay : [" + s + "]" + " format is incorrect");
+									continue;
 							}
+
+						} catch (NumberFormatException | IndexOutOfBoundsException e) {
+							addErr("autoPlay : [" + s + "]" + " format is incorrect");
+							continue;
 						}
-						reader.close();
+
+						switch (option) {
+							case "on":
+							case "o":
+								autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
+								Sound sound = Sound_get(currChain, x, y, map[x][y]);
+								map[x][y]++;
+								if (sound.wormhole != -1) {
+									autoPlayTable.add(new AutoPlay(currChain = sound.wormhole));
+									for (int i = 0; i < buttonX; i++)
+										for (int j = 0; j < buttonY; j++)
+											map[i][j] = 0;
+								}
+								break;
+							case "off":
+							case "f":
+								autoPlayTable.add(new AutoPlay(x, y, currChain));
+								break;
+							case "touch":
+							case "t":
+								autoPlayTable.add(new AutoPlay(x, y, currChain, map[x][y]));
+								autoPlayTable.add(new AutoPlay(x, y, currChain));
+								map[x][y]++;
+								break;
+							case "chain":
+							case "c":
+								autoPlayTable.add(new AutoPlay(currChain = chain));
+								for (int i = 0; i < buttonX; i++)
+									for (int j = 0; j < buttonY; j++)
+										map[i][j] = 0;
+								break;
+							case "delay":
+							case "d":
+								autoPlayTable.add(new AutoPlay(delay, currChain));
+								break;
+						}
 					}
+					reader.close();
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -591,7 +586,7 @@ public class Unipack {
 
 	// =============================================================================================
 
-	String getMainAutoplay() {
+	String getMainAutoplay() throws Exception {
 		File[] fileList = FileManager.sortByName(F_project.listFiles());
 		for (File f : fileList) {
 			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
@@ -600,7 +595,7 @@ public class Unipack {
 		return null;
 	}
 
-	public String[] getAutoplays() {
+	public String[] getAutoplays() throws Exception {
 		File[] fileList = FileManager.sortByName(F_project.listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
