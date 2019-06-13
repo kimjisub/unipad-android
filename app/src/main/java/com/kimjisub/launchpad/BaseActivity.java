@@ -31,7 +31,7 @@ import static com.kimjisub.launchpad.manager.Constant.ADMOB;
 import static com.kimjisub.launchpad.manager.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 
-public abstract class BaseActivity extends AppCompatActivity {
+public class BaseActivity extends AppCompatActivity {
 
 	private static InterstitialAd interstitialAd;
 
