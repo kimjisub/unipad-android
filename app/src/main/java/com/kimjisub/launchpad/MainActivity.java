@@ -257,7 +257,7 @@ public class MainActivity extends BaseActivity {
 				item.isMoving = true;
 				File source = new File(item.path);
 				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
-				File target = FileManager.getChild(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
+				File target = new File(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
 
 				(new AsyncTask<String, String, String>() {
 					@Override

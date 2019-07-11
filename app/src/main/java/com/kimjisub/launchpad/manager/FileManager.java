@@ -141,9 +141,9 @@ public class FileManager {
 		String newName = filterFilename(name);
 		for (int i = 1; ; i++) {
 			if (i == 1)
-				ret = getChild(dir, newName + extension);
+				ret = new File(dir, newName + extension);
 			else
-				ret = getChild(dir, newName + " (" + i + ")" + extension);
+				ret = new File(dir, newName + " (" + i + ")" + extension);
 
 			if (!ret.exists())
 				break;
@@ -245,10 +245,6 @@ public class FileManager {
 		}
 	}
 
-	public static File getChild(File parent, String childName) {
-		return new File(parent.getPath() + "/" + childName);
-	}
-
 	public static void makeDirWhenNotExist(File dir) {
 		if (!dir.isDirectory()) {
 			if (dir.isFile())
@@ -260,7 +256,7 @@ public class FileManager {
 	// ============================================================================================= Get Info
 
 	public static void makeNomedia(File parent) {
-		File nomedia = getChild(parent, ".nomedia");
+		File nomedia = new File(parent, ".nomedia");
 		if (!nomedia.isFile()) {
 			try {
 				(new FileWriter(nomedia)).close();
@@ -294,7 +290,7 @@ public class FileManager {
 	}
 
 	public static File getExternalUniPackRoot() {
-		return getChild(Environment.getExternalStorageDirectory(), "Unipad");
+		return new File(Environment.getExternalStorageDirectory(), "Unipad");
 	}
 
 	public static File getInternalUniPackRoot(Context context) {
