@@ -15,6 +15,14 @@
 			},
 			"oauth_client": [
 				{
+					"client_id": "215327865638-4mq5138qu8hhgsflk57gi15fithiv7tg.apps.googleusercontent.com",
+					"client_type": 1,
+					"android_info": {
+						"package_name": "com.kimjisub.launchpad",
+						"certificate_hash": "0ed59de0987e1e8e61701901a2d57f60c9effce5"
+					}
+				},
+				{
 					"client_id": "215327865638-sfpieea44mj248t7h9mu0r9n6isur9i6.apps.googleusercontent.com",
 					"client_type": 1,
 					"android_info": {
@@ -33,20 +41,65 @@
 				}
 			],
 			"services": {
-				"analytics_service": {
-					"status": 1
-				},
 				"appinvite_service": {
-					"status": 2,
 					"other_platform_oauth_client": [
 						{
 							"client_id": "215327865638-uc719nold1me1c6e3c4da8o4hovru209.apps.googleusercontent.com",
 							"client_type": 3
+						},
+						{
+							"client_id": "215327865638-lqucfeths116le48eq8jgte90tmk06k4.apps.googleusercontent.com",
+							"client_type": 2,
+							"ios_info": {
+								"bundle_id": "com.kimjisub.unipad"
+							}
 						}
 					]
+				}
+			},
+			"admob_app_id": "ca-app-pub-1077445788578961~6318287933"
+		},
+		{
+			"client_info": {
+				"mobilesdk_app_id": "1:215327865638:android:feb941350c6f8658",
+				"android_client_info": {
+					"package_name": "com.kimjisub.launchpad.dev"
+				}
+			},
+			"oauth_client": [
+				{
+					"client_id": "215327865638-4i2sdhes7cpe7v43f5jsilbqljvve5n5.apps.googleusercontent.com",
+					"client_type": 1,
+					"android_info": {
+						"package_name": "com.kimjisub.launchpad.dev",
+						"certificate_hash": "8596aec9baca973d9f561dcf03d1d38067bcfc32"
+					}
 				},
-				"ads_service": {
-					"status": 2
+				{
+					"client_id": "215327865638-uc719nold1me1c6e3c4da8o4hovru209.apps.googleusercontent.com",
+					"client_type": 3
+				}
+			],
+			"api_key": [
+				{
+					"current_key": "AIzaSyD6x7EVopHrt_yjXFL6iHzT55JWFYhpPSg"
+				}
+			],
+			"services": {
+				"appinvite_service": {
+					"other_platform_oauth_client": [
+						{
+							"client_id": "215327865638-uc719nold1me1c6e3c4da8o4hovru209.apps.googleusercontent.com",
+							"client_type": 3
+						},
+						{
+							"client_id": "215327865638-lqucfeths116le48eq8jgte90tmk06k4.apps.googleusercontent.com",
+							"client_type": 2,
+							"ios_info": {
+								"bundle_id": "com.kimjisub.unipad"
+							}
+						}
+					]
 				}
 			}
 		}
