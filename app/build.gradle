@@ -16,8 +16,19 @@ android {
 		renderscriptSupportModeEnabled true
 		multiDexEnabled true
 	}
+	signingConfigs {
+		release {
+			storeFile file('/Users/kimjisub/Github/UniPad-Android/etc/asdf.jks')
+			storePassword 'asdfasdf'
+			keyAlias "asdf"
+			keyPassword 'asdfasdf'
+		}
+	}
 	buildTypes {
 		release {
+			manifestPlaceholders = [appName: "@string/app_name"]
+			signingConfig signingConfigs.release
+
 			minifyEnabled true
 			useProguard true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -29,19 +40,12 @@ android {
 			proguardFile 'proguard-vungle.pro'
 		}
 		debug {
+			manifestPlaceholders = [appName: "@string/app_name_test"]
+			applicationIdSuffix ".dev"
+
 			minifyEnabled false
 			useProguard true
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-		}
-	}
-	flavorDimensions "dev"
-	productFlavors {
-		dev {
-			dimension "dev"
-			//noinspection DevModeObsolete
-			minSdkVersion 21
-			resConfigs ("ko", "xxhdpi")
-			aaptOptions.cruncherEnabled = false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
 	dexOptions {
