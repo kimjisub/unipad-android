@@ -82,7 +82,7 @@ public class MainActivity extends BaseActivity {
 		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
 
 		// View
-		b.panelTotal.version.setText(BuildConfig.VERSION_NAME);
+		b.panelTotal.setVersion(BuildConfig.VERSION_NAME);
 		b.panelPack.title.setSelected(true);
 		b.panelPack.subTitle.setSelected(true);
 		b.panelPack.path.setSelected(true);
@@ -157,9 +157,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onRefresh() {
-				if (billingManager.isPurchaseRemoveAds() || billingManager.isPurchaseProTools()) {
-					b.panelTotal.version.setTextColor(color(R.color.orange));
-				}
+				b.panelTotal.setPremium(billingManager.isPurchaseRemoveAds() || billingManager.isPurchaseProTools());
 
 				if (billingManager.isShowAds()) {
 					if (checkAdsCooltime()) {
@@ -421,7 +419,7 @@ public class MainActivity extends BaseActivity {
 					}
 					I_list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
-					b.panelTotal.unipackCount.setText(I_list.size() + "");
+					b.panelTotal.setUnipackCount(I_list.size() + "");
 				}
 
 				for (MainItem F_removed : I_removed) {
@@ -431,7 +429,7 @@ public class MainActivity extends BaseActivity {
 							int I = i;
 							I_list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
-							b.panelTotal.unipackCount.setText(I_list.size() + "");
+							b.panelTotal.setUnipackCount(I_list.size() + "");
 							break;
 						}
 						i++;
@@ -818,12 +816,12 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
-		b.panelTotal.unipackCount.setText(I_list.size() + "");
-		b.panelTotal.openCount.setText(DB_unipackOpen.getAllCount() + "");
-		b.panelTotal.padTouchCount.setText(lang(R.string.measuring));
+		b.panelTotal.setUnipackCount(I_list.size() + "");
+		b.panelTotal.setOpenCount(DB_unipackOpen.getAllCount() + "");
+		b.panelTotal.setPadTouchCount(lang(R.string.measuring));
 		try {
 			String name = new ThemeItem(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
-			b.panelTotal.selectedTheme.setText(name);
+			b.panelTotal.setThemeName(name);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -838,7 +836,7 @@ public class MainActivity extends BaseActivity {
 
 				@Override
 				protected void onProgressUpdate(String... strings) {
-					b.panelTotal.unipackCapacity.setText(strings[0]);
+					b.panelTotal.setUnipackCapacity(strings[0]);
 				}
 			}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}

@@ -37,6 +37,7 @@
 						android:gravity="bottom|right"
 						android:paddingLeft="8dp"
 						android:text="0.0.0"
+						android:textColor="@color/text"
 						android:textSize="10dp" />
 
 				</RelativeLayout>
@@ -58,22 +59,26 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/unipack_count" />
+							android:text="@string/unipack_count"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/unipack_capacity" />
+							android:text="@string/unipack_capacity"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/open_count" />
+							android:text="@string/open_count"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:text="@string/padtouch_count"
+							android:textColor="@color/text"
 							android:visibility="gone" />
 
 						<TextView
@@ -83,7 +88,8 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/selected_theme" />
+							android:text="@string/selected_theme"
+							android:textColor="@color/text" />
 
 					</LinearLayout>
 
@@ -98,19 +104,22 @@
 							android:id="@+id/unipackCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="0" />
+							android:text="0"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:id="@+id/unipackCapacity"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="0" />
+							android:text="0"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:id="@+id/openCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="0" />
+							android:text="0"
+							android:textColor="@color/text" />
 
 						<TextView
 							android:id="@+id/padTouchCount"
@@ -127,7 +136,8 @@
 							android:id="@+id/selectedTheme"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="0" />
+							android:text="0"
+							android:textColor="@color/text" />
 
 					</LinearLayout>
 

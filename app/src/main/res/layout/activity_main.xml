@@ -42,9 +42,8 @@
 				android:layout_marginBottom="16dp"
 				android:layout_weight="2">
 
-				<include
+				<com.kimjisub.design.MainTotalPanel
 					android:id="@+id/panel_total"
-					layout="@layout/panel_main_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
@@ -71,16 +70,16 @@
 					<LinearLayout
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:paddingTop="16dp"
-						android:orientation="vertical">
+						android:orientation="vertical"
+						android:paddingTop="16dp">
 
 						<com.kimjisub.design.PackViewSimple
 							android:id="@+id/errItem"
-							android:visibility="gone"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content"
 							android:layout_marginLeft="16dp"
 							android:layout_marginRight="16dp"
-							android:layout_width="match_parent"
-							android:layout_height="wrap_content"/>
+							android:visibility="gone" />
 
 						<android.support.v7.widget.RecyclerView
 							android:id="@+id/recyclerView"
