@@ -1,12 +1,8 @@
 package com.kimjisub.design;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.TypedArray;
 import android.databinding.DataBindingUtil;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,11 +10,9 @@ import android.widget.RelativeLayout;
 
 import com.kimjisub.design.databinding.PanelMainPackBinding;
 
-import java.io.File;
-
 public class MainPackPanel extends RelativeLayout {
 
-	private PanelMainPackBinding b;
+	public PanelMainPackBinding b;
 
 	public MainPackPanel(Context context) {
 		super(context);
@@ -46,35 +40,35 @@ public class MainPackPanel extends RelativeLayout {
 
 
 		b.star.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onStarClick(v);
 		});
 		b.bookmark.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onBookmarkClick(v);
 		});
 		b.edit.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onEditClick(v);
 		});
 		b.storage.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onStorageClick(v);
 		});
 		b.youtube.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onYoutubeClick(v);
 		});
 		b.website.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onWebsiteClick(v);
 		});
 		b.func.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onFuncClick(v);
 		});
 		b.delete.setOnClickListener(v -> {
-			if(onEventListener != null)
+			if (onEventListener != null)
 				onEventListener.onDeleteClick(v);
 		});
 	}
@@ -96,41 +90,22 @@ public class MainPackPanel extends RelativeLayout {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public void setTitle(String title) {
-		b.title.setText(title);
-	}
-
-	public void setSubTitle(String subTitle) {
-		b.subTitle.setText(subTitle);
-	}
-
-	public void setPath(String path) {
-		b.path.setText(path);
-	}
-
 	public void setStar(boolean star) {
-		b.star.
-				b.subTitle.setText(subTitle);
+		b.star.setImageResource(star ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
 	}
 
-	public void setUnipackCount(String unipackCount) {
-		b.unipackCount.setText(unipackCount);
+	public void setBookmark(boolean bookmark) {
+		b.star.setImageResource(bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
 	}
 
-	public void setOpenCount(String openCount) {
-		b.openCount.setText(openCount);
+	public void setStorage(boolean external) {
+		b.star.setImageResource(external ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
+		b.star.setClickable(true);
 	}
 
-	public void setPadTouchCount(String padTouchCount) {
-		b.padTouchCount.setText(padTouchCount);
-	}
-
-	public void setThemeName(String padTouchCount) {
-		b.padTouchCount.setText(padTouchCount);
-	}
-
-	public void setUnipackCapacity(String padTouchCount) {
-		b.padTouchCount.setText(padTouchCount);
+	public void setStorageMoving() {
+		b.star.setImageResource(R.drawable.ic_copy_24dp);
+		b.star.setClickable(false);
 	}
 
 

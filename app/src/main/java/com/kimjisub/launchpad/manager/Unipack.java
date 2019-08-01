@@ -1,6 +1,9 @@
-package com.kimjisub.manager;
+package com.kimjisub.launchpad.manager;
 
 import android.content.Context;
+
+import com.kimjisub.manager.FileManager;
+import com.kimjisub.manager.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -613,11 +616,11 @@ public class Unipack {
 	}
 
 	public String getInfoText(Context context) {
-		return context.getResources().getString(R.string.title) + " : " + this.title + "\n" +
-				context.getResources().getString(R.string.producerName) + " : " + this.producerName + "\n" +
-				context.getResources().getString(R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
-				context.getResources().getString(R.string.chainCount) + " : " + this.chain + "\n" +
-				context.getResources().getString(R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
+		return context.getResources().getString(com.kimjisub.manager.R.string.title) + " : " + this.title + "\n" +
+				context.getResources().getString(com.kimjisub.manager.R.string.producerName) + " : " + this.producerName + "\n" +
+				context.getResources().getString(com.kimjisub.manager.R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
+				context.getResources().getString(com.kimjisub.manager.R.string.chainCount) + " : " + this.chain + "\n" +
+				context.getResources().getString(com.kimjisub.manager.R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
 	}
 
 	public static class Sound {

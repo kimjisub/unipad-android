@@ -1,4 +1,4 @@
-package com.kimjisub.manager;
+package com.kimjisub.launchpad.manager;
 
 public class LaunchpadColor {
 

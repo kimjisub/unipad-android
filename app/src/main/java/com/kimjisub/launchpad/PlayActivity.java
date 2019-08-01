@@ -35,11 +35,11 @@ import com.kimjisub.design.SyncCheckBox;
 import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
+import com.kimjisub.launchpad.playManager.ColorManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
-import com.kimjisub.launchpad.playManager.ColorManager;
 import com.vungle.warren.LoadAdCallback;
 import com.vungle.warren.PlayAdCallback;
 import com.vungle.warren.Vungle;
@@ -48,7 +48,8 @@ import com.vungle.warren.error.VungleException;
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manager.Constant.*;
+import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
+import static com.kimjisub.manager.Log.log;
 
 public class PlayActivity extends BaseActivity {
 	ActivityPlayBinding b;

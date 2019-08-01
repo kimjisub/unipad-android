@@ -20,7 +20,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
-import com.kimjisub.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
