@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
@@ -29,6 +29,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.design.FileExplorer;
 import com.kimjisub.design.MainPackPanel;
 import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.launchpad.BuildConfig;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.MainAdapter;
 import com.kimjisub.launchpad.adapter.MainItem;
 import com.kimjisub.launchpad.adapter.ThemeItem;

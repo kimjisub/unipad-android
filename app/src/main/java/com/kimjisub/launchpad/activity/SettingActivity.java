@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 

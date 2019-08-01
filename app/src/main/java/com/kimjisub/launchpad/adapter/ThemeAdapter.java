@@ -5,7 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.kimjisub.launchpad.R;
-import com.kimjisub.launchpad.ThemeActivity;
+import com.kimjisub.launchpad.activity.ThemeActivity;
 
 public class ThemeAdapter extends RecyclerView.Adapter<ThemeHolder> {
 

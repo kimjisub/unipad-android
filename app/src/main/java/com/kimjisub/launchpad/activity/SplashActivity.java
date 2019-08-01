@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.Manifest;
 import android.content.Intent;
@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.kimjisub.launchpad.BuildConfig;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 

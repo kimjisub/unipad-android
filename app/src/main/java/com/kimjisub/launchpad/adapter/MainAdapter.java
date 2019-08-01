@@ -8,7 +8,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 
 import com.kimjisub.design.PackViewSimple;
-import com.kimjisub.launchpad.MainActivity;
+import com.kimjisub.launchpad.activity.MainActivity;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 

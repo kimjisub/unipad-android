@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;

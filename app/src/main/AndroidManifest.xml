@@ -30,7 +30,7 @@
 		android:usesCleartextTraffic="true"
 		tools:replace="android:label">
 		<activity
-			android:name=".SplashActivity"
+			android:name=".activity.SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape">
 			<intent-filter>
@@ -40,32 +40,32 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name=".MainActivity"
+			android:name=".activity.MainActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"></activity>
 		<activity
-			android:name=".FBStoreActivity"
+			android:name=".activity.FBStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape" />
 		<activity
-			android:name=".FSStoreActivity"
+			android:name=".activity.FSStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape" />
 		<activity
-			android:name=".PlayActivity"
+			android:name=".activity.PlayActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape" />
 		<activity
-			android:name=".ThemeActivity"
+			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape" />
 		<activity
-			android:name=".SettingActivity"
+			android:name=".activity.SettingActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="portrait"
 			android:theme="@style/SettingTheme" />
 		<activity
-			android:name=".LaunchpadActivity"
+			android:name=".activity.LaunchpadActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			android:theme="@style/PopupTheme">
@@ -78,7 +78,7 @@
 				android:resource="@xml/device_filter" />
 		</activity>
 		<activity
-			android:name=".ImportPackByFileActivity"
+			android:name=".activity.ImportPackByFileActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			android:theme="@style/PopupTheme">
@@ -98,7 +98,7 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name=".ImportPackByUrlActivity"
+			android:name=".activity.ImportPackByUrlActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			android:theme="@style/PopupTheme">
