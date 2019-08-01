@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -7,6 +7,7 @@ import android.os.Bundle;
 import com.azoft.carousellayoutmanager.CarouselLayoutManager;
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.azoft.carousellayoutmanager.CenterScrollListener;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.ThemeAdapter;
 import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityThemeBinding;

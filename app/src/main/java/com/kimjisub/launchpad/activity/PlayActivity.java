@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
@@ -32,6 +32,7 @@ import com.anjlab.android.iab.v3.TransactionDetails;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
 import com.kimjisub.design.SyncCheckBox;
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;

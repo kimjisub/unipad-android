@@ -1,7 +1,8 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.os.Bundle;
 
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding;
 
 public class ImportPackByFileActivity extends BaseActivity {

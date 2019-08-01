@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad;
+package com.kimjisub.launchpad.activity;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.manager.Log;
@@ -25,11 +26,11 @@ import com.kimjisub.launchpad.manager.PreferenceManager;
 import java.util.Iterator;
 import java.util.Objects;
 
-import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.MK2;
-import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.MidiFighter;
-import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.Piano;
-import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.Pro;
-import static com.kimjisub.launchpad.LaunchpadActivity.MidiDevice.S;
+import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.MK2;
+import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.MidiFighter;
+import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.Piano;
+import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.Pro;
+import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.S;
 
 public class LaunchpadActivity extends BaseActivity {
 
