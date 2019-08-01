@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
-import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 
 import java.util.Iterator;

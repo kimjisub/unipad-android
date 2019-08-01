@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
-import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.manager.Log;
 
 import java.text.SimpleDateFormat;
 

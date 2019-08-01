@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.api.file;
 
 import com.kimjisub.launchpad.api.BaseApiService;
-import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.manager.Log;
 
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
