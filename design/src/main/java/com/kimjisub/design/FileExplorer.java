@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.kimjisub.design.manage.FileManager;
+import com.kimjisub.manager.FileManager;
 
 import java.io.File;
 import java.util.ArrayList;

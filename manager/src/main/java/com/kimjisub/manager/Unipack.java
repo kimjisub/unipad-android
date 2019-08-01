@@ -1,9 +1,6 @@
-package com.kimjisub.launchpad.manager;
+package com.kimjisub.manager;
 
 import android.content.Context;
-
-import com.kimjisub.launchpad.BaseActivity;
-import com.kimjisub.launchpad.R;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -616,11 +613,11 @@ public class Unipack {
 	}
 
 	public String getInfoText(Context context) {
-		return BaseActivity.lang(context, R.string.title) + " : " + this.title + "\n" +
-				BaseActivity.lang(context, R.string.producerName) + " : " + this.producerName + "\n" +
-				BaseActivity.lang(context, R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
-				BaseActivity.lang(context, R.string.chainCount) + " : " + this.chain + "\n" +
-				BaseActivity.lang(context, R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
+		return context.getResources().getString(R.string.title) + " : " + this.title + "\n" +
+				context.getResources().getString(R.string.producerName) + " : " + this.producerName + "\n" +
+				context.getResources().getString(R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
+				context.getResources().getString(R.string.chainCount) + " : " + this.chain + "\n" +
+				context.getResources().getString(R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
 	}
 
 	public static class Sound {

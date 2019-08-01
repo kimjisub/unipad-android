@@ -1,12 +1,10 @@
-package com.kimjisub.launchpad.manager;
+package com.kimjisub.manager;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Environment;
 
-import net.sf.jazzlib.ZipEntry;
-import net.sf.jazzlib.ZipInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -18,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -129,7 +129,7 @@ public class FileManager {
 		return time;
 	}
 
-	public static File[] sortByName(File[] files) throws Exception {
+	public static File[] sortByName(File[] files) {
 
 		Arrays.sort(files, (Comparator<Object>) (object1, object2) -> ((File) object1).getName().toLowerCase().compareTo(((File) object2).getName().toLowerCase()));
 

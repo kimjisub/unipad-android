@@ -22,16 +22,12 @@ import android.widget.TextView;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manager.BillingManager;
-import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.manager.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_1;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_10;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_100;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_5;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DONATE_50;
+import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class SettingActivity extends PreferenceActivity {
 
@@ -150,18 +146,18 @@ public class SettingActivity extends PreferenceActivity {
 					//"Donate $100"
 			};
 			String[] summaryList = {
-					DONATE_1,
-					DONATE_5,
-					DONATE_10,
-					DONATE_50,
-					DONATE_100
+					BILLING.DONATE_1,
+					BILLING.DONATE_5,
+					BILLING.DONATE_10,
+					BILLING.DONATE_50,
+					BILLING.DONATE_100
 			};
 			String[] urlList = {
-					DONATE_1,
-					DONATE_5,
-					DONATE_10,
-					DONATE_50,
-					DONATE_100
+					BILLING.DONATE_1,
+					BILLING.DONATE_5,
+					BILLING.DONATE_10,
+					BILLING.DONATE_50,
+					BILLING.DONATE_100
 			};
 
 			ListView listView = new ListView(SettingActivity.this);
