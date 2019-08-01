@@ -22,7 +22,7 @@ import android.widget.TextView;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.kimjisub.launchpad.manager.BillingManager;
-import com.kimjisub.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Locale;

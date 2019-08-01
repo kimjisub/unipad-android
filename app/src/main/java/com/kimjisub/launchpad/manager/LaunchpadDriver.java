@@ -1,4 +1,6 @@
-package com.kimjisub.manager;
+package com.kimjisub.launchpad.manager;
+
+import com.kimjisub.manager.Log;
 
 public class LaunchpadDriver {
 

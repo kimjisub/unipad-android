@@ -1,4 +1,4 @@
-package com.kimjisub.manager;
+package com.kimjisub.launchpad.manager;
 
 import android.content.Context;
 import android.content.SharedPreferences;

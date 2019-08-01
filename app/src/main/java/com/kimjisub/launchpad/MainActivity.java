@@ -38,14 +38,12 @@ import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.launchpad.manager.BillingManager;
-import com.kimjisub.launchpad.manager.FileManager;
-import com.kimjisub.launchpad.manager.LaunchpadDriver;
-import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.manager.FileManager;
+import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.manager.Log;
-import com.kimjisub.manager.PreferenceManager;
-import com.kimjisub.manager.Unipack;
+import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.Unipack;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -269,8 +267,7 @@ public class MainActivity extends BaseActivity {
 						@Override
 						protected void onPreExecute() {
 							super.onPreExecute();
-							b.panelPack.storage.setImageResource(R.drawable.ic_copy_24dp);
-							b.panelPack.storage.setClickable(false);
+							b.panelPack.setStorageMoving();
 						}
 
 						@Override
@@ -804,14 +801,14 @@ public class MainActivity extends BaseActivity {
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
-				b.panelPack.getRoot().setVisibility(View.VISIBLE);
-				b.panelPack.getRoot().setAlpha(1);
+				b.panelPack.setVisibility(View.VISIBLE);
+				b.panelPack.setAlpha(1);
 			}
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				b.panelPack.getRoot().setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-				b.panelPack.getRoot().setAlpha(playIndex != -1 ? 1 : 0);
+				b.panelPack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				b.panelPack.setAlpha(playIndex != -1 ? 1 : 0);
 			}
 
 			@Override
@@ -825,10 +822,10 @@ public class MainActivity extends BaseActivity {
 		else
 			updatePanelPack(hardWork);
 
-		int visibility = b.panelPack.getRoot().getVisibility();
+		int visibility = b.panelPack.getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
 				|| (visibility == View.INVISIBLE && playIndex != -1))
-			b.panelPack.getRoot().startAnimation(animation);
+			b.panelPack.startAnimation(animation);
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -864,21 +861,20 @@ public class MainActivity extends BaseActivity {
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
-		b.panelPack.star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
-		b.panelPack.bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
-		b.panelPack.storage.setImageResource(!FileManager.isInternalFile(MainActivity.this, unipack.F_project) ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
-		b.panelPack.storage.setClickable(true);
-		b.panelPack.title.setText(unipack.title);
-		b.panelPack.subTitle.setText(unipack.producerName);
-		b.panelPack.path.setText(item.path);
-		b.panelPack.scale.setText(unipack.buttonX + " × " + unipack.buttonY);
-		b.panelPack.chainCount.setText(unipack.chain + "");
-		b.panelPack.soundCount.setText(lang(R.string.measuring));
-		b.panelPack.ledCount.setText(lang(R.string.measuring));
-		b.panelPack.fileSize.setText(lang(R.string.measuring));
-		b.panelPack.openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
-		b.panelPack.padTouchCount.setText(lang(R.string.measuring));
-		b.panelPack.website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
+		b.panelPack.setStar(unipackVO.pin);
+		b.panelPack.setBookmark(unipackVO.bookmark);
+		b.panelPack.setStorage(!FileManager.isInternalFile(MainActivity.this, unipack.F_project));
+		b.panelPack.b.title.setText(unipack.title);
+		b.panelPack.b.subTitle.setText(unipack.producerName);
+		b.panelPack.b.path.setText(item.path);
+		b.panelPack.b.scale.setText(unipack.buttonX + " × " + unipack.buttonY);
+		b.panelPack.b.chainCount.setText(unipack.chain + "");
+		b.panelPack.b.soundCount.setText(lang(R.string.measuring));
+		b.panelPack.b.ledCount.setText(lang(R.string.measuring));
+		b.panelPack.b.fileSize.setText(lang(R.string.measuring));
+		b.panelPack.b.openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
+		b.panelPack.b.padTouchCount.setText(lang(R.string.measuring));
+		b.panelPack.b.website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
 		(new AsyncTask<String, String, String>() {
 			Handler handler = new Handler();
@@ -887,8 +883,8 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> {
-					if (b.panelPack.path.getText().toString().equals(item.path))
-						b.panelPack.fileSize.setText(fileSize);
+					if (b.panelPack.b.path.getText().toString().equals(item.path))
+						b.panelPack.b.fileSize.setText(fileSize);
 				});
 
 				try {
@@ -896,9 +892,9 @@ public class MainActivity extends BaseActivity {
 					item.unipack = unipackDetail;
 					publishProgress(fileSize);
 					handler.post(() -> {
-						if (b.panelPack.path.getText().toString().equals(item.path)) {
-							b.panelPack.soundCount.setText(unipackDetail.soundTableCount + "");
-							b.panelPack.ledCount.setText(unipackDetail.ledTableCount + "");
+						if (b.panelPack.b.path.getText().toString().equals(item.path)) {
+							b.panelPack.b.soundCount.setText(unipackDetail.soundTableCount + "");
+							b.panelPack.b.ledCount.setText(unipackDetail.ledTableCount + "");
 						}
 					});
 				} catch (Exception e) {
@@ -926,8 +922,8 @@ public class MainActivity extends BaseActivity {
 
 		item.flagColor = flagColor;
 
-		b.panelPack.star.setImageResource(unipackVO.pin ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
-		b.panelPack.bookmark.setImageResource(unipackVO.bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
+		b.panelPack.setStar(unipackVO.pin);
+		b.panelPack.setBookmark(unipackVO.bookmark);
 	}
 
 	// ============================================================================================= Launchpad
