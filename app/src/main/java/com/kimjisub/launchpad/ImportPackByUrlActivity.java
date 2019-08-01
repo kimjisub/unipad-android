@@ -277,6 +277,4 @@ public class ImportPackByUrlActivity extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 	}
-
-
 }

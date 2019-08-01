@@ -8,6 +8,7 @@
 	<color name="white">#FFFFFF</color>
 	
 	<!--text-->
+	<color name="text">#767d89</color>
 	<color name="title">#767d89</color>
 	<color name="subTitle">#a1a6ae</color>
 	
