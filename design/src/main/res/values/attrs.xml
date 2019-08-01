@@ -19,4 +19,6 @@
 	</declare-styleable>
 
 	<declare-styleable name="MainTotalPanel" />
+
+	<declare-styleable name="MainPackPanel" />
 </resources>

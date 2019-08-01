@@ -27,6 +27,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.design.FileExplorer;
+import com.kimjisub.design.MainPackPanel;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.adapter.MainAdapter;
 import com.kimjisub.launchpad.adapter.MainItem;
@@ -41,8 +42,10 @@ import com.kimjisub.launchpad.manager.FileManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
-import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.Networks;
+import com.kimjisub.manager.FileManager;
+import com.kimjisub.manager.PreferenceManager;
+import com.kimjisub.manager.Unipack;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,7 +58,7 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 
-import static com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
+import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class MainActivity extends BaseActivity {
 	ActivityMainBinding b;
@@ -83,9 +86,6 @@ public class MainActivity extends BaseActivity {
 
 		// View
 		b.panelTotal.setVersion(BuildConfig.VERSION_NAME);
-		b.panelPack.title.setSelected(true);
-		b.panelPack.subTitle.setSelected(true);
-		b.panelPack.path.setSelected(true);
 
 		// animation
 		if (onFirst) {
@@ -226,103 +226,120 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-		b.panelPack.star.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null) {
-				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
-				unipackVO.pin = !unipackVO.pin;
-				DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
+		b.panelPack.setOnEventListener(new MainPackPanel.OnEventListener() {
+			@Override
+			public void onStarClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null) {
+					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
+					unipackVO.pin = !unipackVO.pin;
+					DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
 
-				updatePanelPackOption();
+					updatePanelPackOption();
+				}
 			}
-		});
-		b.panelPack.bookmark.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null) {
-				UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
-				unipackVO.bookmark = !unipackVO.bookmark;
-				DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
 
-				updatePanelPackOption();
+			@Override
+			public void onBookmarkClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null) {
+					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
+					unipackVO.bookmark = !unipackVO.bookmark;
+					DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
+
+					updatePanelPackOption();
+				}
 			}
-		});
-		b.panelPack.edit.setOnClickListener(v -> {
 
-		});
-		b.panelPack.storage.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null) {
-				item.isMoving = true;
-				File source = new File(item.path);
-				boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
-				File target = new File(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
+			@Override
+			public void onEditClick(View v) {
 
-				(new AsyncTask<String, String, String>() {
-					@Override
-					protected void onPreExecute() {
-						super.onPreExecute();
-						b.panelPack.storage.setImageResource(R.drawable.ic_copy_24dp);
-						b.panelPack.storage.setClickable(false);
-					}
-
-					@Override
-					protected String doInBackground(String... params) {
-						FileManager.moveDirectory(source, target);
-						return null;
-					}
-
-					@Override
-					protected void onProgressUpdate(String... strings) {
-					}
-
-					@Override
-					protected void onPostExecute(String result) {
-						super.onPostExecute(result);
-						update();
-					}
-
-				}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-				updatePanelPackOption();
 			}
-		});
-		b.panelPack.youtube.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null) {
-				String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
-				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+
+			@Override
+			public void onStorageClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null) {
+					item.isMoving = true;
+					File source = new File(item.path);
+					boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
+					File target = new File(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
+
+					(new AsyncTask<String, String, String>() {
+						@Override
+						protected void onPreExecute() {
+							super.onPreExecute();
+							b.panelPack.storage.setImageResource(R.drawable.ic_copy_24dp);
+							b.panelPack.storage.setClickable(false);
+						}
+
+						@Override
+						protected String doInBackground(String... params) {
+							FileManager.moveDirectory(source, target);
+							return null;
+						}
+
+						@Override
+						protected void onProgressUpdate(String... strings) {
+						}
+
+						@Override
+						protected void onPostExecute(String result) {
+							super.onPostExecute(result);
+							update();
+						}
+
+					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+					updatePanelPackOption();
+				}
 			}
-		});
-		b.panelPack.website.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null) {
-				String website = item.unipack.website;
-				if (website != null)
+
+			@Override
+			public void onYoutubeClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null) {
+					String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+				}
 			}
-		});
-		b.panelPack.func.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null)
-				new AlertDialog.Builder(MainActivity.this)
-						.setTitle(lang(R.string.warning))
-						.setMessage(lang(R.string.doYouWantToRemapProject))
-						.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
-							autoMapping(item.unipack);
-						}).setNegativeButton(lang(R.string.cancel), null)
-						.show();
-		});
-		b.panelPack.delete.setOnClickListener(v -> {
-			MainItem item = getCurrPlay();
-			if (item != null)
 
-				new AlertDialog.Builder(MainActivity.this)
-						.setTitle(lang(R.string.warning))
-						.setMessage(lang(R.string.doYouWantToDeleteProject))
-						.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
-							deleteUnipack(item.unipack);
-						}).setNegativeButton(lang(R.string.cancel), null)
-						.show();
+			@Override
+			public void onWebsiteClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null) {
+					String website = item.unipack.website;
+					if (website != null)
+						startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
+				}
+			}
+
+			@Override
+			public void onFuncClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null)
+					new AlertDialog.Builder(MainActivity.this)
+							.setTitle(lang(R.string.warning))
+							.setMessage(lang(R.string.doYouWantToRemapProject))
+							.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
+								autoMapping(item.unipack);
+							}).setNegativeButton(lang(R.string.cancel), null)
+							.show();
+			}
+
+			@Override
+			public void onDeleteClick(View v) {
+				MainItem item = getCurrPlay();
+				if (item != null)
+
+					new AlertDialog.Builder(MainActivity.this)
+							.setTitle(lang(R.string.warning))
+							.setMessage(lang(R.string.doYouWantToDeleteProject))
+							.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
+								deleteUnipack(item.unipack);
+							}).setNegativeButton(lang(R.string.cancel), null)
+							.show();
+			}
 		});
 
 

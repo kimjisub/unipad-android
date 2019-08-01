@@ -1,11 +1,8 @@
 package com.kimjisub.design;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.databinding.DataBindingUtil;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
@@ -18,6 +15,7 @@ public class MainTotalPanel extends RelativeLayout {
 
 	public MainTotalPanel(Context context) {
 		super(context);
+		init();
 	}
 
 	public MainTotalPanel(Context context, AttributeSet attrs) {
@@ -51,7 +49,7 @@ public class MainTotalPanel extends RelativeLayout {
 		typedArray.recycle();
 	}
 
-	///////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public void setVersion(String version) {
 		b.version.setText(version);
@@ -61,24 +59,23 @@ public class MainTotalPanel extends RelativeLayout {
 		b.version.setTextColor(getResources().getColor(premium ? R.color.orange : R.color.text));
 	}
 
-	@SuppressLint("SetTextI18n")
 	public void setUnipackCount(String unipackCount) {
 		b.unipackCount.setText(unipackCount);
 	}
 
-	public void setOpenCount(String openCount){
+	public void setOpenCount(String openCount) {
 		b.openCount.setText(openCount);
 	}
 
-	public void setPadTouchCount(String padTouchCount){
+	public void setPadTouchCount(String padTouchCount) {
 		b.padTouchCount.setText(padTouchCount);
 	}
 
-	public void setThemeName(String padTouchCount){
+	public void setThemeName(String padTouchCount) {
 		b.padTouchCount.setText(padTouchCount);
 	}
 
-	public void setUnipackCapacity(String padTouchCount){
+	public void setUnipackCapacity(String padTouchCount) {
 		b.padTouchCount.setText(padTouchCount);
 	}
 }
