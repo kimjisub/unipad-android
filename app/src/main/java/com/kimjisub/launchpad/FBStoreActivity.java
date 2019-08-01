@@ -18,7 +18,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
 import com.kimjisub.launchpad.manager.FileManager;
-import com.kimjisub.launchpad.manager.Log;
+import com.kimjisub.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.Networks;
