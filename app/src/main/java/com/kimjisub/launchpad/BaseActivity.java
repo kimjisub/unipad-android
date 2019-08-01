@@ -155,7 +155,7 @@ public class BaseActivity extends AppCompatActivity {
 		if (!Vungle.isInitialized()) {
 			Log.vungle("isInitialized() == false");
 			Log.vungle("init start");
-			Vungle.init(Constant.VUNGLE.APPID, getApplicationContext(), new InitCallback() {
+			Vungle.init(VUNGLE.APPID, getApplicationContext(), new InitCallback() {
 				@Override
 				public void onSuccess() {
 					// Initialization has succeeded and SDK is ready to load an ad or play one if there
@@ -206,7 +206,7 @@ public class BaseActivity extends AppCompatActivity {
 	void loadAdmob() {
 		Log.admob("loadAdmob ================================");
 		interstitialAd = new InterstitialAd(this);
-		interstitialAd.setAdUnitId(Constant.ADMOB.MAIN_START);
+		interstitialAd.setAdUnitId(ADMOB.MAIN_START);
 		interstitialAd.loadAd(new AdRequest.Builder()
 				.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 				.build());
