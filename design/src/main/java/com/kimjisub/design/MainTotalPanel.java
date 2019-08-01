@@ -23,23 +23,17 @@ public class MainTotalPanel extends RelativeLayout {
 	public MainTotalPanel(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
+		getAttrs(attrs);
 	}
 
 	public MainTotalPanel(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 		init();
-		getAttrs(attrs);
-	}
-
-	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	public MainTotalPanel(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-		super(context, attrs, defStyleAttr, defStyleRes);
-		init();
 		getAttrs(attrs, defStyleAttr);
 	}
 
 	private void init() {
-		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_main_total, null, true);
+		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_main_total, this, true);
 	}
 
 	private void getAttrs(AttributeSet attrs) {
