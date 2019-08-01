@@ -29,6 +29,5 @@ public class Constant {
 
 		public static final String MAIN_INFEED = "18426-4958348";
 		public static final String PLAY_END = "44597-8583205";
-
 	}
 }

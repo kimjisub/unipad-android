@@ -7,9 +7,7 @@ import android.support.annotation.Nullable;
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 
-import static com.kimjisub.launchpad.manager.Constant.BILLING.DEVELOPERPAYLOAD;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.PRO_TOOLS;
-import static com.kimjisub.launchpad.manager.Constant.BILLING.REMOVE_ADS;
+import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class BillingManager {
 	Activity activity;
@@ -24,7 +22,7 @@ public class BillingManager {
 	public BillingManager(Activity activity) {
 		this.activity = activity;
 
-		billingProcessor = new BillingProcessor(activity, DEVELOPERPAYLOAD, new BillingProcessor.IBillingHandler() {
+		billingProcessor = new BillingProcessor(activity, BILLING.DEVELOPERPAYLOAD, new BillingProcessor.IBillingHandler() {
 			@Override
 			public void onProductPurchased(@NonNull String productId, @Nullable TransactionDetails details) {
 				refresh();
@@ -80,8 +78,8 @@ public class BillingManager {
 		if (billingProcessor.isInitialized()) {
 			billingProcessor.loadOwnedPurchasesFromGoogle();
 
-			isRemoveAds = billingProcessor.isSubscribed(REMOVE_ADS);
-			isProTools = billingProcessor.isSubscribed(PRO_TOOLS);
+			isRemoveAds = billingProcessor.isSubscribed(BILLING.REMOVE_ADS);
+			isProTools = billingProcessor.isSubscribed(BILLING.PRO_TOOLS);
 			refreshDone = true;
 			_onRefresh();
 		}
@@ -121,11 +119,11 @@ public class BillingManager {
 	// =============================================================================================
 
 	public void subscribe_removeAds() {
-		subscribe(REMOVE_ADS);
+		subscribe(BILLING.REMOVE_ADS);
 	}
 
 	public void subscribe_proTools() {
-		subscribe(PRO_TOOLS);
+		subscribe(BILLING.PRO_TOOLS);
 	}
 
 	// ============================================================================================= BillingEventListener

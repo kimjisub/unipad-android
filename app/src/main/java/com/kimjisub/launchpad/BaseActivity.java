@@ -18,20 +18,22 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.kimjisub.launchpad.manager.FileManager;
-import com.kimjisub.launchpad.manager.Log;
-import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.manager.FileManager;
+import com.kimjisub.manager.Log;
+import com.kimjisub.manager.PreferenceManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manager.Constant.ADMOB;
-import static com.kimjisub.launchpad.manager.Constant.ADSCOOLTIME;
-import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
+import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class BaseActivity extends AppCompatActivity {
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private static InterstitialAd interstitialAd;
 
@@ -153,7 +155,7 @@ public class BaseActivity extends AppCompatActivity {
 		if (!Vungle.isInitialized()) {
 			Log.vungle("isInitialized() == false");
 			Log.vungle("init start");
-			Vungle.init(VUNGLE.APPID, getApplicationContext(), new InitCallback() {
+			Vungle.init(Constant.VUNGLE.APPID, getApplicationContext(), new InitCallback() {
 				@Override
 				public void onSuccess() {
 					// Initialization has succeeded and SDK is ready to load an ad or play one if there
@@ -204,7 +206,7 @@ public class BaseActivity extends AppCompatActivity {
 	void loadAdmob() {
 		Log.admob("loadAdmob ================================");
 		interstitialAd = new InterstitialAd(this);
-		interstitialAd.setAdUnitId(ADMOB.MAIN_START);
+		interstitialAd.setAdUnitId(Constant.ADMOB.MAIN_START);
 		interstitialAd.loadAd(new AdRequest.Builder()
 				.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 				.build());

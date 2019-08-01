@@ -48,8 +48,7 @@ import com.vungle.warren.error.VungleException;
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
-import static com.kimjisub.launchpad.manager.Log.log;
+import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class PlayActivity extends BaseActivity {
 	ActivityPlayBinding b;
