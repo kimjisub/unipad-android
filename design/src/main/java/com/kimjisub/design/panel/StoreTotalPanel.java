@@ -3,12 +3,12 @@ package com.kimjisub.design.panel;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.databinding.DataBindingUtil;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
 
 import com.kimjisub.design.R;
+import com.kimjisub.design.databinding.PanelMainTotalBinding;
 import com.kimjisub.design.databinding.PanelStoreTotalBinding;
 
 public class StoreTotalPanel extends RelativeLayout {
@@ -55,10 +55,6 @@ public class StoreTotalPanel extends RelativeLayout {
 
 	public void setVersion(String version) {
 		b.version.setText(version);
-	}
-
-	public void setCustomLogo(Drawable drawable) {
-		b.customLogo.setImageDrawable(drawable);
 	}
 
 	public void setPremium(Boolean premium) {

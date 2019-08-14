@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.playManager;
+package com.kimjisub.launchpad.manager;
 
 import com.kimjisub.launchpad.manager.LaunchpadColor;
 

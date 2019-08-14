@@ -1,4 +1,4 @@
-package com.kimjisub.design.Panel;
+package com.kimjisub.design.panel;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -10,30 +10,31 @@ import android.widget.RelativeLayout;
 
 import com.kimjisub.design.R;
 import com.kimjisub.design.databinding.PanelMainPackBinding;
+import com.kimjisub.design.databinding.PanelStorePackBinding;
 
-public class MainPackPanel extends RelativeLayout {
+public class StorePackPanel extends RelativeLayout {
 
-	public PanelMainPackBinding b;
+	public PanelStorePackBinding b;
 
-	public MainPackPanel(Context context) {
+	public StorePackPanel(Context context) {
 		super(context);
 		init();
 	}
 
-	public MainPackPanel(Context context, AttributeSet attrs) {
+	public StorePackPanel(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
 		getAttrs(attrs);
 	}
 
-	public MainPackPanel(Context context, AttributeSet attrs, int defStyleAttr) {
+	public StorePackPanel(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 		init();
 		getAttrs(attrs, defStyleAttr);
 	}
 
 	private void init() {
-		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_main_pack, this, true);
+		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_store_pack, this, true);
 
 		b.title.setSelected(true);
 		b.subTitle.setSelected(true);
