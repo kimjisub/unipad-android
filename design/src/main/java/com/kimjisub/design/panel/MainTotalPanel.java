@@ -1,4 +1,4 @@
-package com.kimjisub.design.Panel;
+package com.kimjisub.design.panel;
 
 import android.content.Context;
 import android.content.res.TypedArray;
