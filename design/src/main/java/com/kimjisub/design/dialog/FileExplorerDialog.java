@@ -1,4 +1,4 @@
-package com.kimjisub.design;
+package com.kimjisub.design.dialog;
 
 import android.content.Context;
 import android.support.v7.app.AlertDialog;
@@ -8,13 +8,14 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.kimjisub.design.R;
 import com.kimjisub.manager.FileManager;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileExplorer {
+public class FileExplorerDialog {
 
 	Context context;
 
@@ -28,7 +29,7 @@ public class FileExplorer {
 	String path;
 	private OnEventListener onEventListener = null;
 
-	public FileExplorer(Context context, String path) {
+	public FileExplorerDialog(Context context, String path) {
 		this.context = context;
 		this.path = path;
 	}
@@ -93,7 +94,7 @@ public class FileExplorer {
 		LV_list.setAdapter(fileList);
 	}
 
-	public FileExplorer setOnEventListener(OnEventListener listener) {
+	public FileExplorerDialog setOnEventListener(OnEventListener listener) {
 		this.onEventListener = listener;
 		return this;
 	}

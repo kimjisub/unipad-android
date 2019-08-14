@@ -1,4 +1,4 @@
-package com.kimjisub.design;
+package com.kimjisub.design.Panel;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
 
+import com.kimjisub.design.R;
 import com.kimjisub.design.databinding.PanelMainTotalBinding;
 
 public class MainTotalPanel extends RelativeLayout {

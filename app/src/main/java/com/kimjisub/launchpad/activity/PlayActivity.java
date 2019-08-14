@@ -31,7 +31,7 @@ import android.widget.RelativeLayout;
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.kimjisub.design.Chain;
 import com.kimjisub.design.Pad;
-import com.kimjisub.design.SyncCheckBox;
+import com.kimjisub.design.manage.SyncCheckBox;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;

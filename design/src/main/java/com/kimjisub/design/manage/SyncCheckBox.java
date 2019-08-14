@@ -1,4 +1,4 @@
-package com.kimjisub.design;
+package com.kimjisub.design.manage;
 
 import android.widget.CheckBox;
 

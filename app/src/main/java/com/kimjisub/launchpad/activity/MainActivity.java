@@ -26,8 +26,8 @@ import com.github.clans.fab.FloatingActionMenu;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import com.kimjisub.design.FileExplorer;
-import com.kimjisub.design.MainPackPanel;
+import com.kimjisub.design.dialog.FileExplorerDialog;
+import com.kimjisub.design.Panel.MainPackPanel;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
@@ -184,8 +184,8 @@ public class MainActivity extends BaseActivity {
 
 		b.fabReconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
 
-		b.fabLoadUniPack.setOnClickListener(v -> new FileExplorer(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
-				.setOnEventListener(new FileExplorer.OnEventListener() {
+		b.fabLoadUniPack.setOnClickListener(v -> new FileExplorerDialog(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
+				.setOnEventListener(new FileExplorerDialog.OnEventListener() {
 					@Override
 					public void onFileSelected(String filePath) {
 						loadUnipack(new File(filePath));

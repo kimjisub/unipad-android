@@ -17,7 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.kimjisub.design.manage.UIManager;
+import com.kimjisub.manager.UIManager;
 
 public class PackViewSimple extends RelativeLayout {
 

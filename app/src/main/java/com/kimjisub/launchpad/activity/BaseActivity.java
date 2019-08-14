@@ -32,8 +32,6 @@ import static com.kimjisub.launchpad.manager.Constant.*;
 
 public class BaseActivity extends AppCompatActivity {
 
-
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private static InterstitialAd interstitialAd;
