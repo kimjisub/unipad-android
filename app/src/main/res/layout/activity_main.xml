@@ -42,12 +42,12 @@
 				android:layout_marginBottom="16dp"
 				android:layout_weight="2">
 
-				<com.kimjisub.design.MainTotalPanel
+				<com.kimjisub.design.Panel.MainTotalPanel
 					android:id="@+id/panel_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
-				<com.kimjisub.design.MainPackPanel
+				<com.kimjisub.design.Panel.MainPackPanel
 					android:id="@+id/panel_pack"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
