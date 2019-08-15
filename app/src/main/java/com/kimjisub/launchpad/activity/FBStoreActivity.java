@@ -46,10 +46,7 @@ public class FBStoreActivity extends BaseActivity {
 	File[] F_UniPackList;
 
 	void initVar(boolean onFirst) {
-		b.panelTotal.version.setText(BuildConfig.VERSION_NAME);
-		b.panelPack.title.setSelected(true);
-		b.panelPack.subTitle.setSelected(true);
-		b.panelPack.path.setSelected(true);
+		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 
 		if (onFirst) {
 			firebase_store = new Networks.FirebaseManager("store");
@@ -403,14 +400,15 @@ public class FBStoreActivity extends BaseActivity {
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
-				b.panelPack.getRoot().setVisibility(View.VISIBLE);
-				b.panelPack.getRoot().setAlpha(1);
+
+				b.panelPack.setVisibility(View.VISIBLE);
+				b.panelPack.setAlpha(1);
 			}
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				b.panelPack.getRoot().setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-				b.panelPack.getRoot().setAlpha(playIndex != -1 ? 1 : 0);
+				b.panelPack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				b.panelPack.setAlpha(playIndex != -1 ? 1 : 0);
 			}
 
 			@Override
@@ -424,16 +422,16 @@ public class FBStoreActivity extends BaseActivity {
 		else
 			updatePanelPack(hardWork);
 
-		int visibility = b.panelPack.getRoot().getVisibility();
+		int visibility = b.panelPack.getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
 				|| (visibility == View.INVISIBLE && playIndex != -1))
-			b.panelPack.getRoot().startAnimation(animation);
+			b.panelPack.startAnimation(animation);
 	}
 
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
-		b.panelTotal.unipackStoreCount.setText(P_list.size() + "");
-		b.panelTotal.unipackDownloadedCount.setText(getDownloadedCount() + "");
+		b.panelTotal.b.storeCount.setText(P_list.size() + "");
+		b.panelTotal.b.downloadedCount.setText(getDownloadedCount() + "");
 	}
 
 	void updatePanelPack(boolean hardWork) {
@@ -441,9 +439,9 @@ public class FBStoreActivity extends BaseActivity {
 		PackItem item = P_list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
 		fbStore fbStore = item.fbStore;
-		b.panelPack.title.setText(fbStore.title);
-		b.panelPack.subTitle.setText(fbStore.producerName);
-		b.panelPack.downloadCount.setText(fbStore.downloadCount + "");
+		b.panelPack.b.title.setText(fbStore.title);
+		b.panelPack.b.subTitle.setText(fbStore.producerName);
+		b.panelPack.b.downloadCount.setText(fbStore.downloadCount + "");
 	}
 
 	// ============================================================================================= Activity

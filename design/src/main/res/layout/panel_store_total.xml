@@ -25,10 +25,10 @@
 					android:paddingTop="8dp">
 
 					<ImageView
+						android:id="@+id/customLogo"
 						android:layout_width="130dp"
 						android:layout_height="50dp"
-						android:scaleType="centerInside"
-						android:src="@drawable/custom_logo" />
+						android:scaleType="centerInside"/>
 
 					<TextView
 						android:id="@+id/version"
@@ -75,13 +75,13 @@
 						android:paddingLeft="32dp">
 
 						<TextView
-							android:id="@+id/unipackStoreCount"
+							android:id="@+id/storeCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:text="0" />
 
 						<TextView
-							android:id="@+id/unipackDownloadedCount"
+							android:id="@+id/downloadedCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:text="0" />
