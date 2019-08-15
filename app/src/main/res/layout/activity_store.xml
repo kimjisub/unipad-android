@@ -21,19 +21,15 @@
 				android:layout_marginBottom="16dp"
 				android:layout_weight="2">
 
-				<include
+				<com.kimjisub.design.panel.StoreTotalPanel
 					android:id="@+id/panel_total"
-					layout="@layout/panel_store_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
-				<include
+				<com.kimjisub.design.panel.StorePackPanel
 					android:id="@+id/panel_pack"
-					layout="@layout/panel_store_pack"
 					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:alpha="0"
-					android:visibility="invisible" />
+					android:layout_height="match_parent" />
 
 			</RelativeLayout>
 

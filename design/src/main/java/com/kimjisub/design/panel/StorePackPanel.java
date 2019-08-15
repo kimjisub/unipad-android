@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.RelativeLayout;
 
 import com.kimjisub.design.R;
-import com.kimjisub.design.databinding.PanelMainPackBinding;
 import com.kimjisub.design.databinding.PanelStorePackBinding;
 
 public class StorePackPanel extends RelativeLayout {
@@ -40,23 +39,6 @@ public class StorePackPanel extends RelativeLayout {
 		b.subTitle.setSelected(true);
 		b.path.setSelected(true);
 
-
-		b.star.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onStarClick(v);
-		});
-		b.bookmark.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onBookmarkClick(v);
-		});
-		b.edit.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onEditClick(v);
-		});
-		b.storage.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onStorageClick(v);
-		});
 		b.youtube.setOnClickListener(v -> {
 			if (onEventListener != null)
 				onEventListener.onYoutubeClick(v);
@@ -64,14 +46,6 @@ public class StorePackPanel extends RelativeLayout {
 		b.website.setOnClickListener(v -> {
 			if (onEventListener != null)
 				onEventListener.onWebsiteClick(v);
-		});
-		b.func.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onFuncClick(v);
-		});
-		b.delete.setOnClickListener(v -> {
-			if (onEventListener != null)
-				onEventListener.onDeleteClick(v);
 		});
 	}
 
@@ -92,45 +66,13 @@ public class StorePackPanel extends RelativeLayout {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public void setStar(boolean star) {
-		b.star.setImageResource(star ? R.drawable.ic_star_24dp : R.drawable.ic_star_border_24dp);
-	}
-
-	public void setBookmark(boolean bookmark) {
-		b.star.setImageResource(bookmark ? R.drawable.ic_bookmark_24dp : R.drawable.ic_bookmark_border_24dp);
-	}
-
-	public void setStorage(boolean external) {
-		b.star.setImageResource(external ? R.drawable.ic_public_24dp : R.drawable.ic_lock_24dp);
-		b.star.setClickable(true);
-	}
-
-	public void setStorageMoving() {
-		b.star.setImageResource(R.drawable.ic_copy_24dp);
-		b.star.setClickable(false);
-	}
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
 	OnEventListener onEventListener;
 
 	public interface OnEventListener {
-		void onStarClick(View v);
-
-		void onBookmarkClick(View v);
-
-		void onEditClick(View v);
-
-		void onStorageClick(View v);
 
 		void onYoutubeClick(View v);
 
 		void onWebsiteClick(View v);
-
-		void onFuncClick(View v);
-
-		void onDeleteClick(View v);
 	}
 
 	public void setOnEventListener(OnEventListener onEventListener) {
