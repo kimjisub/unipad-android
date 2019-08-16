@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
 import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.launchpad.network.fb.fbStore;
@@ -46,8 +47,6 @@ public class FBStoreActivity extends BaseActivity {
 	File[] F_UniPackList;
 
 	void initVar(boolean onFirst) {
-		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
-
 		if (onFirst) {
 			firebase_store = new Networks.FirebaseManager("store");
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
@@ -430,8 +429,17 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
+		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.storeCount.setText(P_list.size() + "");
 		b.panelTotal.b.downloadedCount.setText(getDownloadedCount() + "");
+
+		String packageName = PreferenceManager.SelectedTheme.load(FBStoreActivity.this);
+		try {
+			ThemeResources resources = new ThemeResources(FBStoreActivity.this, packageName);
+			b.panelTotal.b.customLogo.setImageDrawable(resources.custom_logo != null ? resources.custom_logo : getResources().getDrawable(R.drawable.custom_logo));
+		} catch (Exception e) {
+			b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
+		}
 	}
 
 	void updatePanelPack(boolean hardWork) {
