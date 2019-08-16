@@ -26,26 +26,26 @@ import com.github.clans.fab.FloatingActionMenu;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.design.dialog.FileExplorerDialog;
 import com.kimjisub.design.panel.MainPackPanel;
-import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.MainAdapter;
 import com.kimjisub.launchpad.adapter.MainItem;
-import com.kimjisub.launchpad.adapter.ThemeItem;
 import com.kimjisub.launchpad.databinding.ActivityMainBinding;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
 import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 import com.kimjisub.launchpad.manager.BillingManager;
+import com.kimjisub.launchpad.manager.LaunchpadDriver;
+import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.manager.ThemeResources;
+import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.manager.FileManager;
-import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.manager.Log;
-import com.kimjisub.launchpad.manager.PreferenceManager;
-import com.kimjisub.launchpad.manager.Unipack;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,7 +58,7 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 
-import static com.kimjisub.launchpad.manager.Constant.*;
+import static com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
 public class MainActivity extends BaseActivity {
 	ActivityMainBinding b;
@@ -83,9 +83,6 @@ public class MainActivity extends BaseActivity {
 		// DB
 		DB_unipack = new DB_Unipack(MainActivity.this);
 		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
-
-		// View
-		b.panelTotal.setVersion(BuildConfig.VERSION_NAME);
 
 		// animation
 		if (onFirst) {
@@ -435,7 +432,7 @@ public class MainActivity extends BaseActivity {
 					}
 					I_list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
-					b.panelTotal.setUnipackCount(I_list.size() + "");
+					b.panelTotal.b.unipackCount.setText(I_list.size() + "");
 				}
 
 				for (MainItem F_removed : I_removed) {
@@ -445,7 +442,7 @@ public class MainActivity extends BaseActivity {
 							int I = i;
 							I_list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
-							b.panelTotal.setUnipackCount(I_list.size() + "");
+							b.panelTotal.b.unipackCount.setText(I_list.size() + "");
 							break;
 						}
 						i++;
@@ -832,15 +829,21 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
-		b.panelTotal.setUnipackCount(I_list.size() + "");
-		b.panelTotal.setOpenCount(DB_unipackOpen.getAllCount() + "");
-		b.panelTotal.setPadTouchCount(lang(R.string.measuring));
+		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
+		b.panelTotal.b.unipackCount.setText(I_list.size() + "");
+		b.panelTotal.b.openCount.setText(DB_unipackOpen.getAllCount() + "");
+		b.panelTotal.b.padTouchCount.setText(lang(R.string.measuring));
+
+
+		String packageName = PreferenceManager.SelectedTheme.load(MainActivity.this);
 		try {
-			String name = new ThemeItem(MainActivity.this, PreferenceManager.SelectedTheme.load(MainActivity.this)).name;
-			b.panelTotal.setThemeName(name);
+			ThemeResources resources = new ThemeResources(MainActivity.this, packageName);
+			b.panelTotal.b.customLogo.setImageDrawable(resources.custom_logo != null ? resources.custom_logo : getResources().getDrawable(R.drawable.custom_logo));
 		} catch (Exception e) {
-			e.printStackTrace();
+			b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		}
+
+
 		if (hardWork)
 			(new AsyncTask<String, String, String>() {
 				@Override
@@ -852,7 +855,7 @@ public class MainActivity extends BaseActivity {
 
 				@Override
 				protected void onProgressUpdate(String... strings) {
-					b.panelTotal.setUnipackCapacity(strings[0]);
+					b.panelTotal.b.unipackCapacity.setText(strings[0]);
 				}
 			}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}

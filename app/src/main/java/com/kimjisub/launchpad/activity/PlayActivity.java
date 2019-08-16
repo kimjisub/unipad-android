@@ -38,6 +38,7 @@ import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.ColorManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
+import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.manager.Log;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
@@ -70,7 +71,7 @@ public class PlayActivity extends BaseActivity {
 	final long DELAY = 1;
 
 	// =============================================================================================
-	ThemeItem.Resources theme;
+	ThemeResources theme;
 
 	Unipack unipack;
 	boolean unipackLoaded = false;

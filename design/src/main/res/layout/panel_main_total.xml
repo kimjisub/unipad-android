@@ -25,10 +25,10 @@
 					android:paddingTop="8dp">
 
 					<ImageView
+						android:id="@+id/customLogo"
 						android:layout_width="130dp"
 						android:layout_height="50dp"
-						android:scaleType="centerInside"
-						android:src="@drawable/custom_logo" />
+						android:scaleType="centerInside" />
 
 					<TextView
 						android:id="@+id/version"
