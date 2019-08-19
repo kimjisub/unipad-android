@@ -730,20 +730,20 @@ public class MainActivity extends BaseActivity {
 	}
 
 	@SuppressLint("SetTextI18n")
-	public void togglePlay(UnipackItem item) {
+	public void togglePlay(UnipackItem target) {
 		try {
 			int i = 0;
-			for (UnipackItem unipackItem : list) {
-				PackViewSimple packViewSimple = unipackItem.packViewSimple;
+			for (UnipackItem item : list) {
+				PackViewSimple packViewSimple = item.packViewSimple;
 
-				if (item != null && unipackItem.path.equals(item.path)) {
-					unipackItem.isToggle = !unipackItem.isToggle;
+				if (target != null && item.path.equals(target.path)) {
+					item.isToggle = !item.isToggle;
 					lastPlayIndex = i;
 				} else
-					unipackItem.isToggle = false;
+					item.isToggle = false;
 
 				if (packViewSimple != null)
-					packViewSimple.toggle(unipackItem.isToggle, color(R.color.red), unipackItem.flagColor);
+					packViewSimple.toggle(item.isToggle, color(R.color.red), item.flagColor);
 
 				i++;
 			}
@@ -771,8 +771,8 @@ public class MainActivity extends BaseActivity {
 		int index = -1;
 
 		int i = 0;
-		for (UnipackItem unipackItem : list) {
-			if (unipackItem.isToggle) {
+		for (UnipackItem item : list) {
+			if (item.isToggle) {
 				index = i;
 				break;
 			}
