@@ -8,9 +8,6 @@ import java.util.Map;
 
 @IgnoreExtraProperties
 public class fbStore {
-
-	public int index = 0;
-
 	public String code;
 	public String title;
 	public String producerName;

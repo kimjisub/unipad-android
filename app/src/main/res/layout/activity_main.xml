@@ -61,7 +61,7 @@
 					<android.support.v7.widget.RecyclerView
 						android:id="@+id/recyclerView"
 						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
+						android:layout_height="match_parent"
 						android:clipToPadding="false"
 						android:orientation="vertical"
 						android:paddingLeft="16dp"
@@ -78,8 +78,8 @@
 					android:layout_height="wrap_content"
 					android:layout_centerInParent="true"
 					android:gravity="center"
-					android:visibility="gone"
-					android:orientation="vertical">
+					android:orientation="vertical"
+					android:visibility="gone">
 
 					<ImageView
 						android:layout_width="100dp"
@@ -101,8 +101,6 @@
 						android:text="@string/clickToAddUnipack"
 						android:textColor="@color/gray1" />
 				</LinearLayout>
-
-
 			</RelativeLayout>
 		</LinearLayout>
 
