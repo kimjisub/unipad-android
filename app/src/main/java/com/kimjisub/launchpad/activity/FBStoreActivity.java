@@ -432,14 +432,6 @@ public class FBStoreActivity extends BaseActivity {
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.storeCount.setText(P_list.size() + "");
 		b.panelTotal.b.downloadedCount.setText(getDownloadedCount() + "");
-
-		String packageName = PreferenceManager.SelectedTheme.load(FBStoreActivity.this);
-		try {
-			ThemeResources resources = new ThemeResources(FBStoreActivity.this, packageName, false);
-			b.panelTotal.b.customLogo.setImageDrawable(resources.custom_logo != null ? resources.custom_logo : getResources().getDrawable(R.drawable.custom_logo));
-		} catch (Exception e) {
-			b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
-		}
 	}
 
 	void updatePanelPack(boolean hardWork) {
