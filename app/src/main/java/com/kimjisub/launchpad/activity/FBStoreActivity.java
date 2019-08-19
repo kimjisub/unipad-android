@@ -429,6 +429,7 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanelMain(boolean hardWork) {
 		Log.test("main");
+		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.storeCount.setText(P_list.size() + "");
 		b.panelTotal.b.downloadedCount.setText(getDownloadedCount() + "");
