@@ -13,31 +13,32 @@ import com.kimjisub.launchpad.activity.BaseActivity;
 
 import java.util.ArrayList;
 
-public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
+public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 	BaseActivity context;
-	ArrayList<UnipackItem> list;
+	ArrayList<StoreItem> list;
 
-	public UnipackAdapter(BaseActivity context, ArrayList<UnipackItem> list, EventListener eventListener) {
+	public StoreAdapter(BaseActivity context, ArrayList<StoreItem> list, EventListener eventListener) {
 		this.context = context;
 		this.list = list;
 		this.eventListener = eventListener;
 	}
 
 	@Override
-	public UnipackHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public StoreHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packViewSimple.setLayoutParams(lp);
-		UnipackHolder unipackHolder = new UnipackHolder(packViewSimple);
+		StoreHolder unipackHolder = new StoreHolder(packViewSimple);
 
 		return unipackHolder;
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull UnipackHolder unipackHolder, int position) {
-		UnipackItem item = list.get(position);
+	public void onBindViewHolder(@NonNull StoreHolder unipackHolder, int position) {
+		StoreItem item = list.get(position);
 		PackViewSimple packViewSimple = unipackHolder.packViewSimple;
+
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
@@ -51,27 +52,14 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		String title = item.unipack.title;
-		String subTitle = item.unipack.producerName;
-
-		if (item.unipack.CriticalError) {
-			item.flagColor = context.color(R.color.red);
-			title = context.lang(R.string.errOccur);
-			subTitle = item.path;
-		} else
-			item.flagColor = context.color(R.color.skyblue);
-
-		if (item.bookmark)
-			item.flagColor = context.color(R.color.orange);
-
-
 		packViewSimple
-				.cancelAllAnimation()
-				.setFlagColor(item.flagColor)
-				.setTitle(title)
-				.setSubTitle(subTitle)
-				.setOption1(context.lang(R.string.LED_), item.unipack.isKeyLED)
-				.setOption2(context.lang(R.string.autoPlay_), item.unipack.isAutoPlay)
+				.setFlagColor(context.color(item.isDownloaded ? R.color.green : R.color.red))
+				.setTitle(item.fbStore.title)
+				.setSubTitle(item.fbStore.producerName)
+				.setOption1(context.lang(R.string.LED_), item.fbStore.isLED)
+				.setOption2(context.lang(R.string.autoPlay_), item.fbStore.isAutoPlay)
+				.setPlayImageShow(false)
+				.setPlayText(context.lang(item.isDownloaded ? R.string.downloaded : R.string.download))
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
@@ -87,14 +75,9 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 					public void onPlayClick(PackViewSimple v) {
 						eventListener.onPlayClick(item, v);
 					}
-				})
-				.setToggle(item.isToggle, context.color(R.color.red), item.flagColor);
-
+				});
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
-		if (item.isNew)
-			a = AnimationUtils.loadAnimation(context, R.anim.pack_new_in);
-		item.isNew = false;
 		packViewSimple.setAnimation(a);
 	}
 
@@ -109,10 +92,10 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 	EventListener eventListener;
 
 	public interface EventListener {
-		public void onViewClick(UnipackItem item, PackViewSimple v);
+		public void onViewClick(StoreItem item, PackViewSimple v);
 
-		public void onViewLongClick(UnipackItem item, PackViewSimple v);
+		public void onViewLongClick(StoreItem item, PackViewSimple v);
 
-		public void onPlayClick(UnipackItem item, PackViewSimple v);
+		public void onPlayClick(StoreItem item, PackViewSimple v);
 	}
 }

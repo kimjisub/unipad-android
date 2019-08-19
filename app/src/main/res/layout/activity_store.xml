@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	<android.support.constraint.ConstraintLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
@@ -11,11 +12,9 @@
 			android:orientation="horizontal"
 			android:weightSum="5">
 
-
 			<RelativeLayout
 				android:layout_width="0dp"
 				android:layout_height="match_parent"
-				android:layout_marginStart="16dp"
 				android:layout_marginLeft="16dp"
 				android:layout_marginTop="16dp"
 				android:layout_marginBottom="16dp"
@@ -29,36 +28,62 @@
 				<com.kimjisub.design.panel.StorePackPanel
 					android:id="@+id/panel_pack"
 					android:layout_width="match_parent"
-					android:layout_height="match_parent" />
+					android:layout_height="match_parent"
+					android:alpha="0"
+					android:visibility="invisible" />
 
 			</RelativeLayout>
 
-			<android.support.v7.widget.RecyclerView
-				android:id="@+id/recyclerView"
-				android:layout_width="0dp"
-				android:layout_height="match_parent"
-				android:layout_weight="3"
-				android:clipToPadding="false"
-				android:paddingTop="16dp"
-				android:paddingBottom="6dp"
-				android:orientation="vertical"
-				android:scrollbarThumbVertical="@color/gray2" />
-
-			<ScrollView
+			<RelativeLayout
 				android:layout_width="0dp"
 				android:layout_height="match_parent"
 				android:layout_weight="3">
 
-				<LinearLayout
-					android:id="@+id/list"
+				<android.support.v7.widget.RecyclerView
+					android:id="@+id/recyclerView"
 					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
+					android:layout_height="match_parent"
+					android:clipToPadding="false"
 					android:orientation="vertical"
-					android:paddingTop="16dp" />
+					android:paddingLeft="16dp"
+					android:paddingTop="16dp"
+					android:paddingRight="16dp"
+					android:paddingBottom="6dp"
+					android:scrollbarThumbVertical="@color/gray2" />
 
-			</ScrollView>
+				<LinearLayout
+					android:id="@+id/errItem"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_centerInParent="true"
+					android:gravity="center"
+					android:visibility="gone"
+					android:orientation="vertical">
+
+					<ImageView
+						android:layout_width="100dp"
+						android:layout_height="100dp"
+						android:tint="@color/white"
+						app:srcCompat="@drawable/ic_error_outline_24dp" />
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_gravity="center_horizontal"
+						android:text="@string/errOccur"
+						android:textColor="@color/white" />
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_gravity="center_horizontal"
+						android:text="@string/UnableToAccessServer"
+						android:textColor="@color/gray1" />
+				</LinearLayout>
+
+			</RelativeLayout>
 
 		</LinearLayout>
 
-	</RelativeLayout>
+	</android.support.constraint.ConstraintLayout>
 </layout>
