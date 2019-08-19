@@ -5,43 +5,51 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.LinearLayout;
 
 import com.kimjisub.design.PackViewSimple;
-import com.kimjisub.launchpad.activity.MainActivity;
 import com.kimjisub.launchpad.R;
+import com.kimjisub.launchpad.activity.BaseActivity;
+import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.vo.UnipackVO;
 
-public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
+import java.util.ArrayList;
 
-	private MainActivity context;
+public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
-	public MainAdapter(MainActivity context) {
+	BaseActivity context;
+	ArrayList<UnipackItem> list;
+	DB_Unipack DB_unipack;
+
+	public UnipackAdapter(BaseActivity context, ArrayList<UnipackItem> list, EventListener eventListener) {
 		this.context = context;
+		this.list = list;
+		this.eventListener = eventListener;
+
+		this.DB_unipack = new DB_Unipack(context);
 	}
 
 	@Override
-	public MainHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public UnipackHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
-		MainHolder mainHolder = new MainHolder(packViewSimple);
+		UnipackHolder unipackHolder = new UnipackHolder(packViewSimple);
 
-		return mainHolder;
+		return unipackHolder;
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull MainHolder mainHolder, int position) {
-		MainItem item = context.I_list.get(position);
-		PackViewSimple packViewSimple = mainHolder.packViewSimple;
+	public void onBindViewHolder(@NonNull UnipackHolder unipackHolder, int position) {
+		UnipackItem item = list.get(position);
+		PackViewSimple packViewSimple = unipackHolder.packViewSimple;
 
-		if (mainHolder.position != -1)
+		if (unipackHolder.position != -1)
 			try {
-				context.I_list.get(mainHolder.position).packViewSimple = null;
+				list.get(unipackHolder.position).packViewSimple = null;
 			} catch (Exception e) {
 			}
 		item.packViewSimple = packViewSimple;
-		mainHolder.position = position;
+		unipackHolder.position = position;
 
-		UnipackVO unipackVO = context.DB_unipack.getOrCreateByPath(item.unipack.F_project.getName());
+		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(item.unipack.F_project.getName());
 
 		String title = item.unipack.title;
 		String subTitle = item.unipack.producerName;
@@ -67,18 +75,17 @@ public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
-						if (!item.isMoving)
-							context.togglePlay(item);
+						eventListener.onViewClick(item, v);
 					}
 
 					@Override
 					public void onViewLongClick(PackViewSimple v) {
+						eventListener.onViewLongClick(item, v);
 					}
 
 					@Override
 					public void onPlayClick(PackViewSimple v) {
-						if (!item.isMoving)
-							context.pressPlay(item);
+						eventListener.onPlayClick(item, v);
 					}
 				})
 				.setToggle(item.isToggle, context.color(R.color.red), item.flagColor);
@@ -93,8 +100,19 @@ public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 
 	@Override
 	public int getItemCount() {
-		return context.I_list.size();
+		return list.size();
 	}
 
 
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	EventListener eventListener;
+
+	public interface EventListener {
+		public void onViewClick(UnipackItem item, PackViewSimple v);
+
+		public void onViewLongClick(UnipackItem item, PackViewSimple v);
+
+		public void onPlayClick(UnipackItem item, PackViewSimple v);
+	}
 }

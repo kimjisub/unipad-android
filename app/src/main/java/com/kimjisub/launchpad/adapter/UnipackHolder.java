@@ -4,11 +4,11 @@ import android.support.v7.widget.RecyclerView;
 
 import com.kimjisub.design.PackViewSimple;
 
-public class MainHolder extends RecyclerView.ViewHolder {
+public class UnipackHolder extends RecyclerView.ViewHolder {
 	PackViewSimple packViewSimple;
 	int position = -1;
 
-	public MainHolder(PackViewSimple view) {
+	public UnipackHolder(PackViewSimple view) {
 		super(view);
 		packViewSimple = view;
 	}
