@@ -15,9 +15,7 @@ public class ThemeItem {
 	public Context context;
 	public String package_name;
 	public Drawable icon;
-	public String name;
-	public String author;
-	public String description;
+	public String name, author, description;
 	public String version;
 	public ThemeResources resources;
 
@@ -33,15 +31,6 @@ public class ThemeItem {
 		description = res.getString(res.getIdentifier(package_name + ":string/theme_description", null, null));
 		author = res.getString(res.getIdentifier(package_name + ":string/theme_author", null, null));
 	}
-
-	public void loadThemeResources() throws Exception {
-		resources = new ThemeResources(context, package_name);
-	}
-
-	public void loadDefaultThemeResources() throws Exception {
-		resources = new ThemeResources(context);
-	}
-
 
 	public final static ArrayList<ThemeItem> getThemePackList(Context context) {
 		ArrayList<ThemeItem> ret = new ArrayList<>();

@@ -837,10 +837,12 @@ public class MainActivity extends BaseActivity {
 
 		String packageName = PreferenceManager.SelectedTheme.load(MainActivity.this);
 		try {
-			ThemeResources resources = new ThemeResources(MainActivity.this, packageName);
+			ThemeResources resources = new ThemeResources(MainActivity.this, packageName, false);
 			b.panelTotal.b.customLogo.setImageDrawable(resources.custom_logo != null ? resources.custom_logo : getResources().getDrawable(R.drawable.custom_logo));
+			b.panelTotal.b.selectedTheme.setText(resources.name);
 		} catch (Exception e) {
 			b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
+			b.panelTotal.b.selectedTheme.setText(R.string.theme_name);
 		}
 
 

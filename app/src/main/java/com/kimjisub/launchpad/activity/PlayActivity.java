@@ -327,17 +327,13 @@ public class PlayActivity extends BaseActivity {
 		String packageName = PreferenceManager.SelectedTheme.load(PlayActivity.this);
 		if (num >= 2) {
 			try {
-				ThemeItem mTheme = new ThemeItem(PlayActivity.this, packageName);
-				mTheme.loadDefaultThemeResources();
-				theme = mTheme.resources;
+				theme = new ThemeResources(PlayActivity.this, true);
 			} catch (Exception ignore) {
 			}
 			return true;
 		}
 		try {
-			ThemeItem mTheme = new ThemeItem(PlayActivity.this, packageName);
-			mTheme.loadThemeResources();
-			theme = mTheme.resources;
+			theme = new ThemeResources(PlayActivity.this, packageName, true);
 			return true;
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
