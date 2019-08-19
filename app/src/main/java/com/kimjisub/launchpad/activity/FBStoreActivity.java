@@ -58,7 +58,7 @@ public class FBStoreActivity extends BaseActivity {
 
 				@Override
 				public void onViewClick(StoreItem item, PackViewSimple v) {
-					togglePlay(item.fbStore.code);
+					togglePlay(item);
 				}
 
 				@Override
@@ -96,10 +96,9 @@ public class FBStoreActivity extends BaseActivity {
 				try {
 					fbStore d = dataSnapshot.getValue(fbStore.class);
 
-
 					boolean _isDownloaded = false;
 					for (File dir : F_UniPackList) {
-						if (s.equals(dir.getName())) {
+						if (d.code.equals(dir.getName())) {
 							_isDownloaded = true;
 							break;
 						}
@@ -121,7 +120,7 @@ public class FBStoreActivity extends BaseActivity {
 			public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 				try {
 					fbStore d = dataSnapshot.getValue(fbStore.class);
-					StoreItem item = getPackItemByCode(s);
+					StoreItem item = getPackItemByCode(d.code);
 					item.fbStore = d;
 					RV_adapter.notifyItemChanged(list.indexOf(item));
 				} catch (Exception e) {
@@ -159,16 +158,18 @@ public class FBStoreActivity extends BaseActivity {
 
 	// ============================================================================================= List Manage
 
-	void togglePlay(String code) {
+	void togglePlay(StoreItem target) {
 		try {
 			for (StoreItem item : list) {
-				fbStore fbStore = item.fbStore;
 				PackViewSimple packViewSimple = item.packViewSimple;
 
-				if (fbStore.code.equals(code))
-					packViewSimple.toggle();
+				if (target != null && item.fbStore.code.equals(target.fbStore.code))
+					item.isToggle = !item.isToggle;
 				else
-					packViewSimple.toggle(false);
+					item.isToggle = false;
+
+				if (packViewSimple != null)
+					packViewSimple.toggle(item.isToggle);
 			}
 
 			updatePanel(false);
@@ -194,6 +195,8 @@ public class FBStoreActivity extends BaseActivity {
 	}
 
 	StoreItem getPackItemByCode(String code) {
+		Log.test("code: "+code);
+
 		StoreItem ret = null;
 		for (StoreItem item : list)
 			if (item.fbStore.code.equals(code)) {
@@ -420,6 +423,7 @@ public class FBStoreActivity extends BaseActivity {
 		initVar(false);
 
 		list.clear();
+		RV_adapter.notifyDataSetChanged();
 
 		togglePlay(null);
 		updatePanel(true);
