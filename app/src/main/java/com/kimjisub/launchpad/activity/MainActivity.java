@@ -359,6 +359,10 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
+		b.errItem.setOnClickListener(v -> {
+			startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
+		});
+
 
 		checkThings();
 		update(false);
@@ -473,38 +477,13 @@ public class MainActivity extends BaseActivity {
 
 				if (I_added.size() > 0) b.recyclerView.smoothScrollToPosition(0);
 
-				addErrorItem(I_list.size() == 0);
+				b.errItem.setVisibility(I_list.size() == 0 ? View.VISIBLE : View.GONE);
 
 				b.swipeRefreshLayout.setRefreshing(false);
 				updateProcessing = false;
 			}
 
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-	}
-
-	void addErrorItem(Boolean bool) {
-		if (bool) {
-			b.errItem
-					.setTitle(lang(R.string.unipackNotFound))
-					.setSubTitle(lang(R.string.clickToAddUnipack))
-					.setFlagColor(color(R.color.red))
-					.setOnEventListener(new PackViewSimple.OnEventListener() {
-						@Override
-						public void onViewClick(PackViewSimple v) {
-							startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
-						}
-
-						@Override
-						public void onViewLongClick(PackViewSimple v) {
-						}
-
-						@Override
-						public void onPlayClick(PackViewSimple v) {
-						}
-					});
-		}
-
-		b.errItem.setVisibility(bool ? View.VISIBLE : View.GONE);
 	}
 
 	// ============================================================================================= UniPack Work
