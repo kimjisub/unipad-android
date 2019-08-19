@@ -32,8 +32,8 @@ import com.kimjisub.design.dialog.FileExplorerDialog;
 import com.kimjisub.design.panel.MainPackPanel;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
-import com.kimjisub.launchpad.adapter.MainAdapter;
-import com.kimjisub.launchpad.adapter.MainItem;
+import com.kimjisub.launchpad.adapter.UnipackAdapter;
+import com.kimjisub.launchpad.adapter.UnipackItem;
 import com.kimjisub.launchpad.databinding.ActivityMainBinding;
 import com.kimjisub.launchpad.db.manager.DB_Unipack;
 import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
@@ -67,18 +67,16 @@ public class MainActivity extends BaseActivity {
 	BillingManager billingManager;
 
 	// DB
-	public DB_Unipack DB_unipack;
+	DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
 	ValueAnimator VA_floatingAnimation;
 
 	int lastPlayIndex = -1;
-	public ArrayList<MainItem> I_list;
+	ArrayList<UnipackItem> I_list;
 	RecyclerView.Adapter RV_adapter;
 
 	Networks.FirebaseManager firebase_storeCount;
-
-	boolean updateComplete = true;
 
 	void initVar(boolean onFirst) {
 		// DB
@@ -105,7 +103,24 @@ public class MainActivity extends BaseActivity {
 		// var
 		if (onFirst) {
 			I_list = new ArrayList<>();
-			RV_adapter = new MainAdapter(MainActivity.this);
+			RV_adapter = new UnipackAdapter(MainActivity.this, I_list, new UnipackAdapter.EventListener() {
+
+				@Override
+				public void onViewClick(UnipackItem item, PackViewSimple v) {
+					if (!item.isMoving)
+						togglePlay(item);
+				}
+
+				@Override
+				public void onViewLongClick(UnipackItem item, PackViewSimple v) {
+				}
+
+				@Override
+				public void onPlayClick(UnipackItem item, PackViewSimple v) {
+					if (!item.isMoving)
+						pressPlay(item);
+				}
+			});
 
 			b.recyclerView.setHasFixedSize(false);
 			DividerItemDecoration divider = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
@@ -230,7 +245,7 @@ public class MainActivity extends BaseActivity {
 		b.panelPack.setOnEventListener(new MainPackPanel.OnEventListener() {
 			@Override
 			public void onStarClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null) {
 					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 					unipackVO.pin = !unipackVO.pin;
@@ -242,7 +257,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onBookmarkClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null) {
 					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 					unipackVO.bookmark = !unipackVO.bookmark;
@@ -259,7 +274,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onStorageClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null) {
 					item.isMoving = true;
 					File source = new File(item.path);
@@ -297,7 +312,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onYoutubeClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null) {
 					String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
@@ -306,7 +321,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onWebsiteClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null) {
 					String website = item.unipack.website;
 					if (website != null)
@@ -316,7 +331,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onFuncClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null)
 					new AlertDialog.Builder(MainActivity.this)
 							.setTitle(lang(R.string.warning))
@@ -329,7 +344,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onDeleteClick(View v) {
-				MainItem item = getCurrPlay();
+				UnipackItem item = getCurrPlay();
 				if (item != null)
 
 					new AlertDialog.Builder(MainActivity.this)
@@ -359,20 +374,19 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void update(boolean animateNew) {
 		lastPlayIndex = -1;
-		if (!updateComplete)
+		if (b.swipeRefreshLayout.isRefreshing())
 			return;
 
 		b.swipeRefreshLayout.setRefreshing(true);
-		updateComplete = false;
 
 		togglePlay(null);
 		updatePanel(true);
 
 		(new AsyncTask<String, String, String>() {
 
-			ArrayList<MainItem> I_curr = new ArrayList<>();
-			ArrayList<MainItem> I_added = new ArrayList<>();
-			ArrayList<MainItem> I_removed = new ArrayList<>(I_list);
+			ArrayList<UnipackItem> I_curr = new ArrayList<>();
+			ArrayList<UnipackItem> I_added = new ArrayList<>();
+			ArrayList<UnipackItem> I_removed = new ArrayList<>(I_list);
 
 			@Override
 			protected void onPreExecute() {
@@ -389,15 +403,15 @@ public class MainActivity extends BaseActivity {
 
 						String path = file.getPath();
 						Unipack unipack = new Unipack(file, false);
-						MainItem packItem = new MainItem(unipack, path, animateNew);
+						UnipackItem packItem = new UnipackItem(unipack, path, animateNew);
 
 						I_curr.add(packItem);
 					}
 
-					for (MainItem item : I_curr) {
+					for (UnipackItem item : I_curr) {
 						int index = -1;
 						int i = 0;
-						for (MainItem item2 : I_removed) {
+						for (UnipackItem item2 : I_removed) {
 							if (item2.path.equals(item.path)) {
 								index = i;
 								break;
@@ -424,11 +438,11 @@ public class MainActivity extends BaseActivity {
 			protected void onPostExecute(String result) {
 				super.onPostExecute(result);
 
-				for (MainItem F_added : I_added) {
+				for (UnipackItem F_added : I_added) {
 
 					int i = 0;
 					long targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project);
-					for (MainItem item : I_list) {
+					for (UnipackItem item : I_list) {
 						long testTime = FileManager.getInnerFileLastModified(item.unipack.F_project);
 						if (targetTime > testTime)
 							break;
@@ -439,9 +453,9 @@ public class MainActivity extends BaseActivity {
 					b.panelTotal.b.unipackCount.setText(I_list.size() + "");
 				}
 
-				for (MainItem F_removed : I_removed) {
+				for (UnipackItem F_removed : I_removed) {
 					int i = 0;
-					for (MainItem item : I_list) {
+					for (UnipackItem item : I_list) {
 						if (item.path.equals(F_removed.path)) {
 							int I = i;
 							I_list.remove(I);
@@ -458,7 +472,6 @@ public class MainActivity extends BaseActivity {
 				addErrorItem(I_list.size() == 0);
 
 				b.swipeRefreshLayout.setRefreshing(false);
-				updateComplete = true;
 			}
 
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -734,20 +747,20 @@ public class MainActivity extends BaseActivity {
 	}
 
 	@SuppressLint("SetTextI18n")
-	public void togglePlay(MainItem item) {
+	public void togglePlay(UnipackItem item) {
 		try {
 			int i = 0;
-			for (MainItem mainItem : I_list) {
-				PackViewSimple packViewSimple = mainItem.packViewSimple;
+			for (UnipackItem unipackItem : I_list) {
+				PackViewSimple packViewSimple = unipackItem.packViewSimple;
 
-				if (item != null && mainItem.path.equals(item.path)) {
-					mainItem.isToggle = !mainItem.isToggle;
+				if (item != null && unipackItem.path.equals(item.path)) {
+					unipackItem.isToggle = !unipackItem.isToggle;
 					lastPlayIndex = i;
 				} else
-					mainItem.isToggle = false;
+					unipackItem.isToggle = false;
 
 				if (packViewSimple != null)
-					packViewSimple.toggle(mainItem.isToggle, color(R.color.red), mainItem.flagColor);
+					packViewSimple.toggle(unipackItem.isToggle, color(R.color.red), unipackItem.flagColor);
 
 				i++;
 			}
@@ -760,7 +773,7 @@ public class MainActivity extends BaseActivity {
 		}
 	}
 
-	public void pressPlay(MainItem item) {
+	public void pressPlay(UnipackItem item) {
 		rescanScale(b.scale, b.paddingScale);
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
@@ -775,8 +788,8 @@ public class MainActivity extends BaseActivity {
 		int index = -1;
 
 		int i = 0;
-		for (MainItem mainItem : I_list) {
-			if (mainItem.isToggle) {
+		for (UnipackItem unipackItem : I_list) {
+			if (unipackItem.isToggle) {
 				index = i;
 				break;
 			}
@@ -786,8 +799,8 @@ public class MainActivity extends BaseActivity {
 		return index;
 	}
 
-	MainItem getCurrPlay() {
-		MainItem ret = null;
+	UnipackItem getCurrPlay() {
+		UnipackItem ret = null;
 
 		int playIndex = getPlayIndex();
 		if (playIndex != -1)
@@ -866,7 +879,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
-		MainItem item = I_list.get(getPlayIndex());
+		UnipackItem item = I_list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
@@ -916,7 +929,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPackOption() {
-		MainItem item = I_list.get(getPlayIndex());
+		UnipackItem item = I_list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
