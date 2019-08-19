@@ -851,6 +851,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
+		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.unipackCount.setText(I_list.size() + "");
 		b.panelTotal.b.openCount.setText(DB_unipackOpen.getAllCount() + "");
