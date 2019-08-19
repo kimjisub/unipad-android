@@ -295,8 +295,16 @@ public class BaseActivity extends AppCompatActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
-		initVar();
 
+		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
+				paramThrowable.printStackTrace();
+			}
+		});*/
+
+
+		initVar();
 		startActivity(this);
 	}
 
