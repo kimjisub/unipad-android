@@ -18,14 +18,11 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
 	BaseActivity context;
 	ArrayList<UnipackItem> list;
-	DB_Unipack DB_unipack;
 
 	public UnipackAdapter(BaseActivity context, ArrayList<UnipackItem> list, EventListener eventListener) {
 		this.context = context;
 		this.list = list;
 		this.eventListener = eventListener;
-
-		this.DB_unipack = new DB_Unipack(context);
 	}
 
 	@Override
@@ -49,8 +46,6 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		item.packViewSimple = packViewSimple;
 		unipackHolder.position = position;
 
-		UnipackVO unipackVO = DB_unipack.getOrCreateByPath(item.unipack.F_project.getName());
-
 		String title = item.unipack.title;
 		String subTitle = item.unipack.producerName;
 
@@ -61,7 +56,7 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		} else
 			item.flagColor = context.color(R.color.skyblue);
 
-		if (unipackVO.bookmark)
+		if (item.bookmark)
 			item.flagColor = context.color(R.color.orange);
 
 
