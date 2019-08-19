@@ -435,7 +435,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		String packageName = PreferenceManager.SelectedTheme.load(FBStoreActivity.this);
 		try {
-			ThemeResources resources = new ThemeResources(FBStoreActivity.this, packageName);
+			ThemeResources resources = new ThemeResources(FBStoreActivity.this, packageName, false);
 			b.panelTotal.b.customLogo.setImageDrawable(resources.custom_logo != null ? resources.custom_logo : getResources().getDrawable(R.drawable.custom_logo));
 		} catch (Exception e) {
 			b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
