@@ -403,7 +403,8 @@ public class MainActivity extends BaseActivity {
 
 						String path = file.getPath();
 						Unipack unipack = new Unipack(file, false);
-						UnipackItem packItem = new UnipackItem(unipack, path, animateNew);
+						UnipackVO unipackVO = DB_unipack.getOrCreateByPath(unipack.F_project.getName());
+						UnipackItem packItem = new UnipackItem(unipack, path, unipackVO.bookmark, animateNew);
 
 						I_curr.add(packItem);
 					}
