@@ -70,14 +70,13 @@ public class MainActivity extends BaseActivity {
 	DB_Unipack DB_unipack;
 	DB_UnipackOpen DB_unipackOpen;
 
+	// Firebase
+	Networks.FirebaseManager firebase_storeCount;
 	ValueAnimator VA_floatingAnimation;
 
-	int lastPlayIndex = -1;
-	ArrayList<UnipackItem> I_list;
+	ArrayList<UnipackItem> list;
 	RecyclerView.Adapter RV_adapter;
-
-	Networks.FirebaseManager firebase_storeCount;
-
+	int lastPlayIndex = -1;
 	boolean updateProcessing = false;
 
 	void initVar(boolean onFirst) {
@@ -104,8 +103,8 @@ public class MainActivity extends BaseActivity {
 
 		// var
 		if (onFirst) {
-			I_list = new ArrayList<>();
-			RV_adapter = new UnipackAdapter(MainActivity.this, I_list, new UnipackAdapter.EventListener() {
+			list = new ArrayList<>();
+			RV_adapter = new UnipackAdapter(MainActivity.this, list, new UnipackAdapter.EventListener() {
 
 				@Override
 				public void onViewClick(UnipackItem item, PackViewSimple v) {
@@ -393,7 +392,7 @@ public class MainActivity extends BaseActivity {
 
 			ArrayList<UnipackItem> I_curr = new ArrayList<>();
 			ArrayList<UnipackItem> I_added = new ArrayList<>();
-			ArrayList<UnipackItem> I_removed = new ArrayList<>(I_list);
+			ArrayList<UnipackItem> I_removed = new ArrayList<>(list);
 
 			@Override
 			protected void onPreExecute() {
@@ -450,25 +449,25 @@ public class MainActivity extends BaseActivity {
 
 					int i = 0;
 					long targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project);
-					for (UnipackItem item : I_list) {
+					for (UnipackItem item : list) {
 						long testTime = FileManager.getInnerFileLastModified(item.unipack.F_project);
 						if (targetTime > testTime)
 							break;
 						i++;
 					}
-					I_list.add(i, F_added);
+					list.add(i, F_added);
 					RV_adapter.notifyItemInserted(i);
-					b.panelTotal.b.unipackCount.setText(I_list.size() + "");
+					b.panelTotal.b.unipackCount.setText(list.size() + "");
 				}
 
 				for (UnipackItem F_removed : I_removed) {
 					int i = 0;
-					for (UnipackItem item : I_list) {
+					for (UnipackItem item : list) {
 						if (item.path.equals(F_removed.path)) {
 							int I = i;
-							I_list.remove(I);
+							list.remove(I);
 							RV_adapter.notifyItemRemoved(I);
-							b.panelTotal.b.unipackCount.setText(I_list.size() + "");
+							b.panelTotal.b.unipackCount.setText(list.size() + "");
 							break;
 						}
 						i++;
@@ -477,7 +476,7 @@ public class MainActivity extends BaseActivity {
 
 				if (I_added.size() > 0) b.recyclerView.smoothScrollToPosition(0);
 
-				b.errItem.setVisibility(I_list.size() == 0 ? View.VISIBLE : View.GONE);
+				b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 				b.swipeRefreshLayout.setRefreshing(false);
 				updateProcessing = false;
@@ -727,14 +726,14 @@ public class MainActivity extends BaseActivity {
 
 
 	void togglePlay(int i) {
-		togglePlay(I_list.get(i));
+		togglePlay(list.get(i));
 	}
 
 	@SuppressLint("SetTextI18n")
 	public void togglePlay(UnipackItem item) {
 		try {
 			int i = 0;
-			for (UnipackItem unipackItem : I_list) {
+			for (UnipackItem unipackItem : list) {
 				PackViewSimple packViewSimple = unipackItem.packViewSimple;
 
 				if (item != null && unipackItem.path.equals(item.path)) {
@@ -772,7 +771,7 @@ public class MainActivity extends BaseActivity {
 		int index = -1;
 
 		int i = 0;
-		for (UnipackItem unipackItem : I_list) {
+		for (UnipackItem unipackItem : list) {
 			if (unipackItem.isToggle) {
 				index = i;
 				break;
@@ -788,7 +787,7 @@ public class MainActivity extends BaseActivity {
 
 		int playIndex = getPlayIndex();
 		if (playIndex != -1)
-			ret = I_list.get(playIndex);
+			ret = list.get(playIndex);
 
 		return ret;
 	}
@@ -832,7 +831,7 @@ public class MainActivity extends BaseActivity {
 	void updatePanelMain(boolean hardWork) {
 		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
-		b.panelTotal.b.unipackCount.setText(I_list.size() + "");
+		b.panelTotal.b.unipackCount.setText(list.size() + "");
 		b.panelTotal.b.openCount.setText(DB_unipackOpen.getAllCount() + "");
 		b.panelTotal.b.padTouchCount.setText(lang(R.string.measuring));
 
@@ -864,7 +863,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
-		UnipackItem item = I_list.get(getPlayIndex());
+		UnipackItem item = list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
@@ -914,7 +913,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPackOption() {
-		UnipackItem item = I_list.get(getPlayIndex());
+		UnipackItem item = list.get(getPlayIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
@@ -965,7 +964,7 @@ public class MainActivity extends BaseActivity {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
 								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
-								//b.recyclerView.smoothScrollToPosition(0, I_list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (I_list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								//b.recyclerView.smoothScrollToPosition(0, list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
@@ -976,7 +975,7 @@ public class MainActivity extends BaseActivity {
 								showSelectLPUI();
 						} else if (f == 2 && upDown) {
 							if (haveNow())
-								I_list.get(lastPlayIndex).packViewSimple.onPlayClick();
+								list.get(lastPlayIndex).packViewSimple.onPlayClick();
 						}
 					}
 
@@ -998,11 +997,11 @@ public class MainActivity extends BaseActivity {
 	}
 
 	boolean haveNow() {
-		return 0 <= lastPlayIndex && lastPlayIndex <= I_list.size() - 1;
+		return 0 <= lastPlayIndex && lastPlayIndex <= list.size() - 1;
 	}
 
 	boolean haveNext() {
-		return lastPlayIndex < I_list.size() - 1;
+		return lastPlayIndex < list.size() - 1;
 	}
 
 	boolean havePrev() {
