@@ -78,6 +78,8 @@ public class MainActivity extends BaseActivity {
 
 	Networks.FirebaseManager firebase_storeCount;
 
+	boolean updateProcessing = false;
+
 	void initVar(boolean onFirst) {
 		// DB
 		DB_unipack = new DB_Unipack(MainActivity.this);
@@ -374,10 +376,11 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void update(boolean animateNew) {
 		lastPlayIndex = -1;
-		if (b.swipeRefreshLayout.isRefreshing())
+		if (updateProcessing)
 			return;
 
 		b.swipeRefreshLayout.setRefreshing(true);
+		updateProcessing = true;
 
 		togglePlay(null);
 		updatePanel(true);
@@ -473,6 +476,7 @@ public class MainActivity extends BaseActivity {
 				addErrorItem(I_list.size() == 0);
 
 				b.swipeRefreshLayout.setRefreshing(false);
+				updateProcessing = false;
 			}
 
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
