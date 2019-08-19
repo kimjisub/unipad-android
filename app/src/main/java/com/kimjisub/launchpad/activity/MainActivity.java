@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -107,8 +108,11 @@ public class MainActivity extends BaseActivity {
 			RV_adapter = new MainAdapter(MainActivity.this);
 
 			b.recyclerView.setHasFixedSize(false);
-			b.recyclerView.setAdapter(RV_adapter);
+			DividerItemDecoration divider = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
+			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
+			b.recyclerView.addItemDecoration(divider);
 			b.recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+			b.recyclerView.setAdapter(RV_adapter);
 
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			firebase_storeCount.setEventListener(new ValueEventListener() {

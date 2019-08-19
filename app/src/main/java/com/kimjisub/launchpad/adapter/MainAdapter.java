@@ -23,13 +23,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainHolder> {
 	@Override
 	public MainHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
-		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		int left = context.dpToPx(16);
-		int top = 0;
-		int right = context.dpToPx(16);
-		int bottom = context.dpToPx(10);
-		lp.setMargins(left, top, right, bottom);
-		packViewSimple.setLayoutParams(lp);
 		MainHolder mainHolder = new MainHolder(packViewSimple);
 
 		return mainHolder;
