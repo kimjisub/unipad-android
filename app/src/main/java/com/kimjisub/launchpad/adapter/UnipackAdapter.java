@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.activity.BaseActivity;
+import com.kimjisub.manager.Log;
 
 import java.util.ArrayList;
 
@@ -29,25 +30,26 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packViewSimple.setLayoutParams(lp);
-		UnipackHolder unipackHolder = new UnipackHolder(packViewSimple);
+		UnipackHolder holder = new UnipackHolder(packViewSimple);
 
-		return unipackHolder;
+		return holder;
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull UnipackHolder unipackHolder, int position) {
-		UnipackItem item = list.get(position);
-		PackViewSimple packViewSimple = unipackHolder.packViewSimple;
+	public void onBindViewHolder(@NonNull UnipackHolder holder, int position) {
+		Log.test("onBindViewHolder: " + position);
+		UnipackItem item = list.get(holder.getAdapterPosition());
+		PackViewSimple packViewSimple = holder.packViewSimple;
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
-			list.get(unipackHolder.position).packViewSimple = null;
+			list.get(holder.position).packViewSimple = null;
 		} catch (Exception ignored) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
 		item.packViewSimple = packViewSimple;
-		unipackHolder.position = position;
+		holder.position = holder.getAdapterPosition();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,10 +111,10 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 	EventListener eventListener;
 
 	public interface EventListener {
-		public void onViewClick(UnipackItem item, PackViewSimple v);
+		void onViewClick(UnipackItem item, PackViewSimple v);
 
-		public void onViewLongClick(UnipackItem item, PackViewSimple v);
+		void onViewLongClick(UnipackItem item, PackViewSimple v);
 
-		public void onPlayClick(UnipackItem item, PackViewSimple v);
+		void onPlayClick(UnipackItem item, PackViewSimple v);
 	}
 }

@@ -17,7 +17,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -75,7 +74,7 @@ public class MainActivity extends BaseActivity {
 	ValueAnimator VA_floatingAnimation;
 
 	ArrayList<UnipackItem> list;
-	RecyclerView.Adapter RV_adapter;
+	UnipackAdapter adapter;
 	int lastPlayIndex = -1;
 	boolean updateProcessing = false;
 
@@ -104,7 +103,7 @@ public class MainActivity extends BaseActivity {
 		// var
 		if (onFirst) {
 			list = new ArrayList<>();
-			RV_adapter = new UnipackAdapter(MainActivity.this, list, new UnipackAdapter.EventListener() {
+			adapter = new UnipackAdapter(MainActivity.this, list, new UnipackAdapter.EventListener() {
 
 				@Override
 				public void onViewClick(UnipackItem item, PackViewSimple v) {
@@ -128,7 +127,7 @@ public class MainActivity extends BaseActivity {
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
 			b.recyclerView.addItemDecoration(divider);
 			b.recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-			b.recyclerView.setAdapter(RV_adapter);
+			b.recyclerView.setAdapter(adapter);
 
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			firebase_storeCount.setEventListener(new ValueEventListener() {
@@ -456,7 +455,7 @@ public class MainActivity extends BaseActivity {
 						i++;
 					}
 					list.add(i, F_added);
-					RV_adapter.notifyItemInserted(i);
+					adapter.notifyItemInserted(i);
 					b.panelTotal.b.unipackCount.setText(list.size() + "");
 				}
 
@@ -466,7 +465,7 @@ public class MainActivity extends BaseActivity {
 						if (item.path.equals(F_removed.path)) {
 							int I = i;
 							list.remove(I);
-							RV_adapter.notifyItemRemoved(I);
+							adapter.notifyItemRemoved(I);
 							b.panelTotal.b.unipackCount.setText(list.size() + "");
 							break;
 						}
@@ -795,8 +794,8 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= panel
 
 	void updatePanel(boolean hardWork) {
-		int playIndex = getSelectedIndex();
-		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
+		int selectedIndex = getSelectedIndex();
+		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, selectedIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
@@ -806,8 +805,8 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				b.panelPack.setVisibility(playIndex != -1 ? View.VISIBLE : View.INVISIBLE);
-				b.panelPack.setAlpha(playIndex != -1 ? 1 : 0);
+				b.panelPack.setVisibility(selectedIndex != -1 ? View.VISIBLE : View.INVISIBLE);
+				b.panelPack.setAlpha(selectedIndex != -1 ? 1 : 0);
 			}
 
 			@Override
@@ -816,14 +815,14 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-		if (playIndex == -1)
+		if (selectedIndex == -1)
 			updatePanelMain(hardWork);
 		else
-			updatePanelPack(hardWork);
+			updatePanelPack(list.get(selectedIndex));
 
 		int visibility = b.panelPack.getVisibility();
-		if ((visibility == View.VISIBLE && playIndex == -1)
-				|| (visibility == View.INVISIBLE && playIndex != -1))
+		if ((visibility == View.VISIBLE && selectedIndex == -1)
+				|| (visibility == View.INVISIBLE && selectedIndex != -1))
 			b.panelPack.startAnimation(animation);
 	}
 
@@ -862,8 +861,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	void updatePanelPack(boolean hardWork) {
-		UnipackItem item = list.get(getSelectedIndex());
+	void updatePanelPack(UnipackItem item) {
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
