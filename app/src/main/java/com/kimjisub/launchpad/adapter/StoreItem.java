@@ -12,9 +12,8 @@ public class StoreItem {
 	public PackViewSimple packViewSimple;
 	public boolean isToggle = false;
 
-	public StoreItem(fbStore fbStore, boolean isDownloaded, boolean isDownloading) {
+	public StoreItem(fbStore fbStore, boolean isDownloaded) {
 		this.fbStore = fbStore;
 		this.isDownloaded = isDownloaded;
-		this.isDownloading = isDownloading;
 	}
 }

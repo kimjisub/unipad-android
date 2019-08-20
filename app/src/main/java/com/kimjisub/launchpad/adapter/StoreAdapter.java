@@ -31,13 +31,14 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packViewSimple.setLayoutParams(lp);
-		StoreHolder unipackHolder = new StoreHolder(packViewSimple);
+		StoreHolder holder = new StoreHolder(packViewSimple);
 
-		return unipackHolder;
+		return holder;
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull StoreHolder holder, int position) {
+		Log.test("onBindViewHolder: " + position);
 		StoreItem item = list.get(holder.getAdapterPosition());
 		PackViewSimple packViewSimple = holder.packViewSimple;
 
@@ -81,8 +82,6 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
 		packViewSimple.setAnimation(a);
-
-		Log.test("onBindViewHolder: " + item.fbStore.code);
 	}
 
 	@Override
@@ -91,9 +90,25 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 			super.onBindViewHolder(holder, position, payloads);
 			return;
 		}
+		Log.test("onBindViewHolder payloads: " + position);
+
+		StoreItem item = list.get(holder.getAdapterPosition());
+		PackViewSimple packViewSimple = holder.packViewSimple;
 
 		for (Object payload : payloads) {
 			if (payload instanceof String) {
+				switch ((String) payload) {
+					case "update":
+						Log.test("update");
+						packViewSimple
+								.setFlagColor(context.color(item.isDownloaded ? R.color.green : R.color.red))
+								.setTitle(item.fbStore.title)
+								.setSubTitle(item.fbStore.producerName)
+								.setOption1(context.lang(R.string.LED_), item.fbStore.isLED)
+								.setOption2(context.lang(R.string.autoPlay_), item.fbStore.isAutoPlay)
+								.setPlayText(context.lang(item.isDownloaded ? R.string.downloaded : R.string.download));
+						break;
+				}
 				/*String type = (String) payload;
 				if (TextUtils.equals(type, "click") && holder instanceof TextHolder) {
 					TextHolder textHolder = (TextHolder) holder;
@@ -126,10 +141,10 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 	EventListener eventListener;
 
 	public interface EventListener {
-		public void onViewClick(StoreItem item, PackViewSimple v);
+		void onViewClick(StoreItem item, PackViewSimple v);
 
-		public void onViewLongClick(StoreItem item, PackViewSimple v);
+		void onViewLongClick(StoreItem item, PackViewSimple v);
 
-		public void onPlayClick(StoreItem item, PackViewSimple v);
+		void onPlayClick(StoreItem item, PackViewSimple v);
 	}
 }
