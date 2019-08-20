@@ -110,7 +110,7 @@ public class FBStoreActivity extends BaseActivity {
 					RV_adapter.notifyItemInserted(0);
 					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
-					updatePanelMain(false);
+					updatePanelMain();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -126,7 +126,7 @@ public class FBStoreActivity extends BaseActivity {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				//updatePanel(false);
+				updatePanel();
 			}
 
 			@Override
@@ -172,7 +172,7 @@ public class FBStoreActivity extends BaseActivity {
 					packViewSimple.toggle(item.isToggle);
 			}
 
-			updatePanel(false);
+			updatePanel();
 
 		} catch (ConcurrentModificationException e) {
 			e.printStackTrace();
@@ -337,7 +337,7 @@ public class FBStoreActivity extends BaseActivity {
 					packViewSimple.setPlayText(lang(R.string.downloaded));
 					packViewSimple.animateFlagColor(color(R.color.green));
 					item.isDownloaded = true;
-					updatePanel(false);
+					updatePanel();
 				}
 			}
 
@@ -350,7 +350,7 @@ public class FBStoreActivity extends BaseActivity {
 
 	// ============================================================================================= panel
 
-	void updatePanel(boolean hardWork) {
+	void updatePanel() {
 		Log.test("updatePanel");
 		int playIndex = getPlayIndex();
 		Animation animation = AnimationUtils.loadAnimation(FBStoreActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
@@ -375,9 +375,9 @@ public class FBStoreActivity extends BaseActivity {
 		});
 
 		if (playIndex == -1)
-			updatePanelMain(hardWork);
+			updatePanelMain();
 		else
-			updatePanelPack(hardWork);
+			updatePanelPack();
 
 		int visibility = b.panelPack.getVisibility();
 		if ((visibility == View.VISIBLE && playIndex == -1)
@@ -385,7 +385,7 @@ public class FBStoreActivity extends BaseActivity {
 			b.panelPack.startAnimation(animation);
 	}
 
-	void updatePanelMain(boolean hardWork) {
+	void updatePanelMain() {
 		Log.test("main");
 		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
@@ -393,7 +393,7 @@ public class FBStoreActivity extends BaseActivity {
 		b.panelTotal.b.downloadedCount.setText(getDownloadedCount() + "");
 	}
 
-	void updatePanelPack(boolean hardWork) {
+	void updatePanelPack() {
 		Log.test("pack");
 		StoreItem item = list.get(getPlayIndex());
 		PackViewSimple packViewSimple = item.packViewSimple;
@@ -426,7 +426,7 @@ public class FBStoreActivity extends BaseActivity {
 		RV_adapter.notifyDataSetChanged();
 
 		togglePlay(null);
-		updatePanel(true);
+		updatePanel();
 
 		firebase_store.attachEventListener(true);
 		firebase_storeCount.attachEventListener(true);
