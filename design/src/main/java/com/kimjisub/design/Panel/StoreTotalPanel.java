@@ -2,8 +2,8 @@ package com.kimjisub.design.panel;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.databinding.DataBindingUtil;
-import android.graphics.drawable.Drawable;
+import androidx.databinding.DataBindingUtil;
+
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.RelativeLayout;

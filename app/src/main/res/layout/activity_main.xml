@@ -2,7 +2,7 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<android.support.constraint.ConstraintLayout
+	<androidx.constraintlayout.widget.ConstraintLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
@@ -53,12 +53,12 @@
 				android:layout_height="match_parent"
 				android:layout_weight="3">
 
-				<android.support.v4.widget.SwipeRefreshLayout
+				<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 					android:id="@+id/swipeRefreshLayout"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent">
 
-					<android.support.v7.widget.RecyclerView
+					<androidx.recyclerview.widget.RecyclerView
 						android:id="@+id/recyclerView"
 						android:layout_width="match_parent"
 						android:layout_height="match_parent"
@@ -70,7 +70,7 @@
 						android:paddingBottom="6dp"
 						android:scrollbarThumbVertical="@color/gray2" />
 
-				</android.support.v4.widget.SwipeRefreshLayout>
+				</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 				<LinearLayout
 					android:id="@+id/errItem"
@@ -177,5 +177,5 @@
 
 		</com.github.clans.fab.FloatingActionMenu>
 
-	</android.support.constraint.ConstraintLayout>
+	</androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -3,7 +3,7 @@ package com.kimjisub.launchpad.activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.api.unipad.UniPadApi;

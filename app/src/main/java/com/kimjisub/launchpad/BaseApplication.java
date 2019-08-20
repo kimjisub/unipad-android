@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad;
 
 import android.os.Build;
-import android.support.multidex.MultiDexApplication;
+import androidx.multidex.MultiDexApplication;
 
 import com.kimjisub.launchpad.manager.NotificationManager;
 

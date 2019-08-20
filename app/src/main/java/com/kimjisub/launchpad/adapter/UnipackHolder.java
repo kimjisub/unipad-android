@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.adapter;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.kimjisub.design.PackViewSimple;
 
