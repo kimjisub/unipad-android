@@ -6,7 +6,7 @@ import android.app.NotificationChannelGroup;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.annotation.StringDef;
+import androidx.annotation.StringDef;
 
 import com.kimjisub.launchpad.R;
 
