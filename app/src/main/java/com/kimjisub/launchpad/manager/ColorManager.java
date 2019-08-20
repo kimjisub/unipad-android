@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.manager;
 
-import com.kimjisub.launchpad.manager.LaunchpadColor;
-
 public class ColorManager {
 	public static final int COUNT = 5;
 
