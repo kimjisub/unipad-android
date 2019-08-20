@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.adapter;
 
 import com.kimjisub.design.PackViewSimple;
-import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.fb.fbStore;
 
 public class StoreItem {

@@ -3,13 +3,14 @@ package com.kimjisub.launchpad.activity;
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -74,10 +75,10 @@ public class FBStoreActivity extends BaseActivity {
 				}
 			});
 
-			b.recyclerView.setHasFixedSize(false);
 			DividerItemDecoration divider = new DividerItemDecoration(FBStoreActivity.this, DividerItemDecoration.VERTICAL);
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
 			b.recyclerView.addItemDecoration(divider);
+			b.recyclerView.setHasFixedSize(false);
 			b.recyclerView.setLayoutManager(new LinearLayoutManager(FBStoreActivity.this));
 			b.recyclerView.setAdapter(adapter);
 		}

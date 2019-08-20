@@ -1,8 +1,9 @@
 package com.kimjisub.launchpad.adapter;
 
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.activity.ThemeActivity;

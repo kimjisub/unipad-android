@@ -11,18 +11,19 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.appcompat.app.AlertDialog;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -122,10 +123,10 @@ public class MainActivity extends BaseActivity {
 				}
 			});
 
-			b.recyclerView.setHasFixedSize(false);
 			DividerItemDecoration divider = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
 			b.recyclerView.addItemDecoration(divider);
+			b.recyclerView.setHasFixedSize(false);
 			b.recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 			b.recyclerView.setAdapter(adapter);
 

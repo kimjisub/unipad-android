@@ -9,8 +9,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +16,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -28,7 +29,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static com.kimjisub.launchpad.manager.Constant.*;
+import static com.kimjisub.launchpad.manager.Constant.BILLING;
 
 public class SettingActivity extends PreferenceActivity {
 

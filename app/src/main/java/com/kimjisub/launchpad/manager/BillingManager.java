@@ -1,13 +1,14 @@
 package com.kimjisub.launchpad.manager;
 
 import android.app.Activity;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.anjlab.android.iab.v3.BillingProcessor;
 import com.anjlab.android.iab.v3.TransactionDetails;
 
-import static com.kimjisub.launchpad.manager.Constant.*;
+import static com.kimjisub.launchpad.manager.Constant.BILLING;
 
 public class BillingManager {
 	Activity activity;

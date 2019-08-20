@@ -41,7 +41,7 @@ public class ThemeResources {
 		description = getCustomString("theme_description", R.string.theme_description);
 		author = getCustomString("theme_author", R.string.theme_author);
 
-		if(!fullLoad)
+		if (!fullLoad)
 			return;
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ public class ThemeResources {
 		description = defaultRes.getString(R.string.theme_description);
 		author = defaultRes.getString(R.string.theme_author);
 
-		if(!fullLoad)
+		if (!fullLoad)
 			return;
 
 		////////////////////////////////////////////////////////////////////////////////////////////////

@@ -5,7 +5,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 
-import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.manager.ThemeResources;
 
 import java.util.ArrayList;

@@ -3,32 +3,35 @@ package com.kimjisub.launchpad.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import androidx.databinding.DataBindingUtil;
-import androidx.databinding.ViewDataBinding;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Process;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.R;
+import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
-import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.vungle.warren.InitCallback;
 import com.vungle.warren.Vungle;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manager.Constant.*;
+import static com.kimjisub.launchpad.manager.Constant.ADMOB;
+import static com.kimjisub.launchpad.manager.Constant.ADSCOOLTIME;
+import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 
 public class BaseActivity extends AppCompatActivity {
 

@@ -28,7 +28,7 @@
 						android:id="@+id/customLogo"
 						android:layout_width="130dp"
 						android:layout_height="50dp"
-						android:scaleType="centerInside"/>
+						android:scaleType="centerInside" />
 
 					<TextView
 						android:id="@+id/version"
