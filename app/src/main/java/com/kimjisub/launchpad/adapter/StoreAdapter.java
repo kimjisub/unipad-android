@@ -10,8 +10,10 @@ import android.widget.LinearLayout;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.activity.BaseActivity;
+import com.kimjisub.manager.Log;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
@@ -35,20 +37,20 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 	}
 
 	@Override
-	public void onBindViewHolder(@NonNull StoreHolder unipackHolder, int position) {
-		StoreItem item = list.get(position);
-		PackViewSimple packViewSimple = unipackHolder.packViewSimple;
+	public void onBindViewHolder(@NonNull StoreHolder holder, int position) {
+		StoreItem item = list.get(holder.getAdapterPosition());
+		PackViewSimple packViewSimple = holder.packViewSimple;
 
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
-			list.get(unipackHolder.position).packViewSimple = null;
+			list.get(holder.position).packViewSimple = null;
 		} catch (Exception ignored) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
 		item.packViewSimple = packViewSimple;
-		unipackHolder.position = position;
+		holder.position = holder.getAdapterPosition();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +81,38 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
 		packViewSimple.setAnimation(a);
+
+		Log.test("onBindViewHolder: " + item.fbStore.code);
+	}
+
+	@Override
+	public void onBindViewHolder(@NonNull StoreHolder holder, int position, @NonNull List<Object> payloads) {
+		if (payloads.isEmpty()) {
+			super.onBindViewHolder(holder, position, payloads);
+			return;
+		}
+
+		for (Object payload : payloads) {
+			if (payload instanceof String) {
+				/*String type = (String) payload;
+				if (TextUtils.equals(type, "click") && holder instanceof TextHolder) {
+					TextHolder textHolder = (TextHolder) holder;
+					textHolder.mFavorite.setVisibility(View.VISIBLE);
+					textHolder.mFavorite.setAlpha(0f);
+					textHolder.mFavorite.setScaleX(0f);
+					textHolder.mFavorite.setScaleY(0f);
+
+					//animation
+					textHolder.mFavorite.animate()
+							.scaleX(1f)
+							.scaleY(1f)
+							.alpha(1f)
+							.setInterpolator(new OvershootInterpolator())
+							.setDuration(300);
+
+				}*/
+			}
+		}
 	}
 
 	@Override

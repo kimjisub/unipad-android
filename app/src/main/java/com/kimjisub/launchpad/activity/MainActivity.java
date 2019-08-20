@@ -246,7 +246,7 @@ public class MainActivity extends BaseActivity {
 		b.panelPack.setOnEventListener(new MainPackPanel.OnEventListener() {
 			@Override
 			public void onStarClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null) {
 					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 					unipackVO.pin = !unipackVO.pin;
@@ -258,7 +258,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onBookmarkClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null) {
 					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 					unipackVO.bookmark = !unipackVO.bookmark;
@@ -275,7 +275,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onStorageClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null) {
 					item.isMoving = true;
 					File source = new File(item.path);
@@ -313,7 +313,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onYoutubeClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null) {
 					String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
@@ -322,7 +322,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onWebsiteClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null) {
 					String website = item.unipack.website;
 					if (website != null)
@@ -332,7 +332,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onFuncClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null)
 					new AlertDialog.Builder(MainActivity.this)
 							.setTitle(lang(R.string.warning))
@@ -345,7 +345,7 @@ public class MainActivity extends BaseActivity {
 
 			@Override
 			public void onDeleteClick(View v) {
-				UnipackItem item = getCurrPlay();
+				UnipackItem item = getSelected();
 				if (item != null)
 
 					new AlertDialog.Builder(MainActivity.this)
@@ -767,7 +767,7 @@ public class MainActivity extends BaseActivity {
 		startActivity(intent);
 	}
 
-	int getPlayIndex() {
+	int getSelectedIndex() {
 		int index = -1;
 
 		int i = 0;
@@ -782,10 +782,10 @@ public class MainActivity extends BaseActivity {
 		return index;
 	}
 
-	UnipackItem getCurrPlay() {
+	UnipackItem getSelected() {
 		UnipackItem ret = null;
 
-		int playIndex = getPlayIndex();
+		int playIndex = getSelectedIndex();
 		if (playIndex != -1)
 			ret = list.get(playIndex);
 
@@ -795,7 +795,7 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= panel
 
 	void updatePanel(boolean hardWork) {
-		int playIndex = getPlayIndex();
+		int playIndex = getSelectedIndex();
 		Animation animation = AnimationUtils.loadAnimation(MainActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
@@ -863,7 +863,7 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(boolean hardWork) {
-		UnipackItem item = list.get(getPlayIndex());
+		UnipackItem item = list.get(getSelectedIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
@@ -913,7 +913,7 @@ public class MainActivity extends BaseActivity {
 	}
 
 	void updatePanelPackOption() {
-		UnipackItem item = list.get(getPlayIndex());
+		UnipackItem item = list.get(getSelectedIndex());
 		Unipack unipack = item.unipack;
 		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
 
@@ -1061,7 +1061,7 @@ public class MainActivity extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (getPlayIndex() != -1)
+		if (getSelectedIndex() != -1)
 			togglePlay(null);
 		else
 			super.onBackPressed();

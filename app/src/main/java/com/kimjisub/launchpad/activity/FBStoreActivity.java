@@ -72,6 +72,7 @@ public class FBStoreActivity extends BaseActivity {
 						startDownload(getPackItemByCode(item.fbStore.code));
 				}
 			});
+
 			b.recyclerView.setHasFixedSize(false);
 			DividerItemDecoration divider = new DividerItemDecoration(FBStoreActivity.this, DividerItemDecoration.VERTICAL);
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
@@ -110,6 +111,7 @@ public class FBStoreActivity extends BaseActivity {
 					RV_adapter.notifyItemInserted(0);
 					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
+
 					updatePanelMain();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -118,15 +120,17 @@ public class FBStoreActivity extends BaseActivity {
 
 			@Override
 			public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
 				try {
 					fbStore d = dataSnapshot.getValue(fbStore.class);
 					StoreItem item = getPackItemByCode(d.code);
 					item.fbStore = d;
-					RV_adapter.notifyItemChanged(list.indexOf(item));
+					//RV_adapter.notifyItem(list.indexOf(item));
+					Log.test("onChildChanged: " + s + " / " + list.indexOf(item));
+					updatePanelPack();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				updatePanel();
 			}
 
 			@Override
@@ -179,7 +183,7 @@ public class FBStoreActivity extends BaseActivity {
 		}
 	}
 
-	int getPlayIndex() {
+	int getSelectedIndex() {
 		int index = -1;
 
 		int i = 0;
@@ -195,8 +199,6 @@ public class FBStoreActivity extends BaseActivity {
 	}
 
 	StoreItem getPackItemByCode(String code) {
-		Log.test("code: "+code);
-
 		StoreItem ret = null;
 		for (StoreItem item : list)
 			if (item.fbStore.code.equals(code)) {
@@ -352,7 +354,7 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanel() {
 		Log.test("updatePanel");
-		int playIndex = getPlayIndex();
+		int playIndex = getSelectedIndex();
 		Animation animation = AnimationUtils.loadAnimation(FBStoreActivity.this, playIndex != -1 ? R.anim.panel_in : R.anim.panel_out);
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
@@ -395,8 +397,10 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanelPack() {
 		Log.test("pack");
-		StoreItem item = list.get(getPlayIndex());
-		PackViewSimple packViewSimple = item.packViewSimple;
+		int selectedIndex = getSelectedIndex();
+		if (selectedIndex == -1)
+			return;
+		StoreItem item = list.get(selectedIndex);
 		fbStore fbStore = item.fbStore;
 		b.panelPack.b.title.setText(fbStore.title);
 		b.panelPack.b.subTitle.setText(fbStore.producerName);
@@ -407,7 +411,7 @@ public class FBStoreActivity extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (getPlayIndex() != -1)
+		if (getSelectedIndex() != -1)
 			togglePlay(null);
 		else {
 			if (getDownloadingCount() > 0)
@@ -424,6 +428,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		list.clear();
 		RV_adapter.notifyDataSetChanged();
+		b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 		togglePlay(null);
 		updatePanel();
