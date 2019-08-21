@@ -17,8 +17,8 @@ import java.util.ArrayList;
 
 public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
-	BaseActivity context;
-	ArrayList<UnipackItem> list;
+	private BaseActivity context;
+	private ArrayList<UnipackItem> list;
 
 	public UnipackAdapter(BaseActivity context, ArrayList<UnipackItem> list, EventListener eventListener) {
 		this.context = context;
@@ -26,14 +26,16 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		this.eventListener = eventListener;
 	}
 
+	int viewHolderCount = 0;
+	@NonNull
 	@Override
-	public UnipackHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public UnipackHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+		Log.test("onCreateViewHolder: " + viewHolderCount++);
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packViewSimple.setLayoutParams(lp);
-		UnipackHolder holder = new UnipackHolder(packViewSimple);
 
-		return holder;
+		return new UnipackHolder(packViewSimple);
 	}
 
 	@Override
@@ -109,7 +111,7 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	EventListener eventListener;
+	private EventListener eventListener;
 
 	public interface EventListener {
 		void onViewClick(UnipackItem item, PackViewSimple v);

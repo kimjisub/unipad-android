@@ -58,9 +58,7 @@ public class FBStoreActivity extends BaseActivity {
 
 				@Override
 				public void onViewClick(StoreItem item, PackViewSimple v) {
-
-					adapter.notifyItemChanged(0);
-					//togglePlay(item);
+					togglePlay(item);
 				}
 
 				@Override
@@ -80,6 +78,7 @@ public class FBStoreActivity extends BaseActivity {
 			b.recyclerView.addItemDecoration(divider);
 			b.recyclerView.setHasFixedSize(false);
 			b.recyclerView.setLayoutManager(new LinearLayoutManager(FBStoreActivity.this));
+			//b.recyclerView.setItemAnimator(null);
 			b.recyclerView.setAdapter(adapter);
 		}
 		F_UniPackList = getUniPackDirList();
@@ -101,14 +100,13 @@ public class FBStoreActivity extends BaseActivity {
 				try {
 					fbStore d = dataSnapshot.getValue(fbStore.class);
 
-					boolean _isDownloaded = false;
+					boolean isDownloaded = false;
 					for (File dir : F_UniPackList) {
 						if (d.code.equals(dir.getName())) {
-							_isDownloaded = true;
+							isDownloaded = true;
 							break;
 						}
 					}
-					final boolean isDownloaded = _isDownloaded;
 
 
 					list.add(0, new StoreItem(d, isDownloaded));
@@ -120,6 +118,7 @@ public class FBStoreActivity extends BaseActivity {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				Log.test("onChildAdded: ");
 			}
 
 			@Override

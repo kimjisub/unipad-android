@@ -18,8 +18,8 @@ import java.util.List;
 
 public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
-	BaseActivity context;
-	ArrayList<StoreItem> list;
+	private BaseActivity context;
+	private ArrayList<StoreItem> list;
 
 	public StoreAdapter(BaseActivity context, ArrayList<StoreItem> list, EventListener eventListener) {
 		this.context = context;
@@ -27,14 +27,17 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 		this.eventListener = eventListener;
 	}
 
+	int viewHolderCount = 0;
+
+	@NonNull
 	@Override
-	public StoreHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+	public StoreHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+		Log.test("onCreateViewHolder: " + viewHolderCount++);
 		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packViewSimple.setLayoutParams(lp);
-		StoreHolder holder = new StoreHolder(packViewSimple);
 
-		return holder;
+		return new StoreHolder(packViewSimple);
 	}
 
 	@Override
@@ -136,10 +139,9 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 		return list.size();
 	}
 
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	EventListener eventListener;
+	private EventListener eventListener;
 
 	public interface EventListener {
 		void onViewClick(StoreItem item, PackViewSimple v);
