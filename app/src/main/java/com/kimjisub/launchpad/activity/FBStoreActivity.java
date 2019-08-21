@@ -410,9 +410,10 @@ public class FBStoreActivity extends BaseActivity {
 	void updatePanelPack(StoreItem item) {
 		Log.test("panel pack");
 		fbStore fbStore = item.fbStore;
-		b.panelPack.b.title.setText(fbStore.title);
-		b.panelPack.b.subTitle.setText(fbStore.producerName);
-		b.panelPack.b.downloadCount.setText(fbStore.downloadCount + "");
+
+		b.panelPack.updateTitle(fbStore.title);
+		b.panelPack.updateSubTitle(fbStore.producerName);
+		b.panelPack.updateDownloadCount(fbStore.downloadCount + "");
 	}
 
 	// ============================================================================================= Activity

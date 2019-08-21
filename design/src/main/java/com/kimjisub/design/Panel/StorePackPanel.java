@@ -2,18 +2,19 @@ package com.kimjisub.design.panel;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import androidx.databinding.DataBindingUtil;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
+
+import androidx.databinding.DataBindingUtil;
 
 import com.kimjisub.design.R;
 import com.kimjisub.design.databinding.PanelStorePackBinding;
 
 public class StorePackPanel extends RelativeLayout {
 
-	public PanelStorePackBinding b;
+	PanelStorePackBinding b;
 
 	public StorePackPanel(Context context) {
 		super(context);
@@ -62,6 +63,44 @@ public class StorePackPanel extends RelativeLayout {
 	private void setTypeArray(TypedArray typedArray) {
 
 		typedArray.recycle();
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	public void setTitle(String title) {
+		b.title.setText(title);
+	}
+
+	public void setSubTitle(String subTitle) {
+		b.subTitle.setText(subTitle);
+	}
+
+	public void setDownloadCount(String downloadCount) {
+		b.downloadCount.setText(downloadCount);
+	}
+
+	public void updateTitle(String title) {
+		if (!b.title.getText().equals(title)) {
+			b.title.setAlpha(0);
+			setTitle(title);
+			b.title.animate().alpha(1).setDuration(500).start();
+		}
+	}
+
+	public void updateSubTitle(String subTitle) {
+		if (!b.subTitle.getText().equals(subTitle)) {
+			b.subTitle.setAlpha(0);
+			setSubTitle(subTitle);
+			b.subTitle.animate().alphaBy(0).alpha(1).setDuration(500).start();
+		}
+	}
+
+	public void updateDownloadCount(String downloadCount) {
+		if (!b.downloadCount.getText().equals(downloadCount)) {
+			b.downloadCount.setAlpha(0);
+			setDownloadCount(downloadCount);
+			b.downloadCount.animate().alphaBy(0).alpha(1).setDuration(500).start();
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
