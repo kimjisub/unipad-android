@@ -113,6 +113,7 @@ dependencies {
 	implementation 'gun0912.ted:tedpermission:2.2.2'
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
 	implementation 'com.anjlab.android.iab.v3:library:1.0.44'
+	implementation 'com.orhanobut:logger:2.2.0'
 
 	api project(':design')
 	api project(':manager')
