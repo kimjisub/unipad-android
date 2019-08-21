@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -72,6 +73,19 @@ public class FBStoreActivity extends BaseActivity {
 						startDownload(getPackItemByCode(item.fbStore.code));
 				}
 			});
+			adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+				@Override
+				public void onItemRangeInserted(int positionStart, int itemCount) {
+					super.onItemRangeInserted(positionStart, itemCount);
+					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
+				}
+
+				@Override
+				public void onItemRangeRemoved(int positionStart, int itemCount) {
+					super.onItemRangeRemoved(positionStart, itemCount);
+					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
+				}
+			});
 
 			DividerItemDecoration divider = new DividerItemDecoration(FBStoreActivity.this, DividerItemDecoration.VERTICAL);
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
@@ -111,7 +125,6 @@ public class FBStoreActivity extends BaseActivity {
 
 					list.add(0, new StoreItem(d, isDownloaded));
 					adapter.notifyItemInserted(0);
-					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 
 					updatePanelMain();
@@ -371,7 +384,6 @@ public class FBStoreActivity extends BaseActivity {
 		animation.setAnimationListener(new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
-
 				b.panelPack.setVisibility(View.VISIBLE);
 				b.panelPack.setAlpha(1);
 			}
@@ -413,7 +425,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		b.panelPack.updateTitle(fbStore.title);
 		b.panelPack.updateSubTitle(fbStore.producerName);
-		b.panelPack.updateDownloadCount(fbStore.downloadCount + "");
+		b.panelPack.updateDownloadCount(fbStore.downloadCount);
 	}
 
 	// ============================================================================================= Activity
@@ -437,7 +449,6 @@ public class FBStoreActivity extends BaseActivity {
 
 		list.clear();
 		adapter.notifyDataSetChanged();
-		b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 		togglePlay(null);
 		updatePanel();

@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.github.clans.fab.FloatingActionMenu;
@@ -122,6 +123,20 @@ public class MainActivity extends BaseActivity {
 						pressPlay(item);
 				}
 			});
+			adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+				@Override
+				public void onItemRangeInserted(int positionStart, int itemCount) {
+					super.onItemRangeInserted(positionStart, itemCount);
+					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
+				}
+
+				@Override
+				public void onItemRangeRemoved(int positionStart, int itemCount) {
+					super.onItemRangeRemoved(positionStart, itemCount);
+					b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
+				}
+			});
+			b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 			DividerItemDecoration divider = new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL);
 			divider.setDrawable(getResources().getDrawable(R.drawable.border_divider));
@@ -358,9 +373,7 @@ public class MainActivity extends BaseActivity {
 			}
 		});
 
-		b.errItem.setOnClickListener(v -> {
-			startActivity(new Intent(MainActivity.this, FBStoreActivity.class));
-		});
+		b.errItem.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, FBStoreActivity.class)));
 
 
 		checkThings();
@@ -475,8 +488,6 @@ public class MainActivity extends BaseActivity {
 				}
 
 				if (I_added.size() > 0) b.recyclerView.smoothScrollToPosition(0);
-
-				b.errItem.setVisibility(list.size() == 0 ? View.VISIBLE : View.GONE);
 
 				b.swipeRefreshLayout.setRefreshing(false);
 				updateProcessing = false;
