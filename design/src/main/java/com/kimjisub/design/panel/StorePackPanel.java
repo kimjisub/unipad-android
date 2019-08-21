@@ -12,9 +12,13 @@ import androidx.databinding.DataBindingUtil;
 import com.kimjisub.design.R;
 import com.kimjisub.design.databinding.PanelStorePackBinding;
 
+import java.text.DecimalFormat;
+
 public class StorePackPanel extends RelativeLayout {
 
 	PanelStorePackBinding b;
+
+	DecimalFormat numberFormatter = new DecimalFormat("###,###");
 
 	public StorePackPanel(Context context) {
 		super(context);
@@ -79,6 +83,12 @@ public class StorePackPanel extends RelativeLayout {
 		b.downloadCount.setText(downloadCount);
 	}
 
+	public void setDownloadCount(long downloadCount) {
+		String downloadCountFormatted = numberFormatter.format(downloadCount);
+
+		setDownloadCount(downloadCountFormatted);
+	}
+
 	public void updateTitle(String title) {
 		if (!b.title.getText().equals(title)) {
 			b.title.setAlpha(0);
@@ -95,10 +105,12 @@ public class StorePackPanel extends RelativeLayout {
 		}
 	}
 
-	public void updateDownloadCount(String downloadCount) {
-		if (!b.downloadCount.getText().equals(downloadCount)) {
+	public void updateDownloadCount(long downloadCount) {
+		String downloadCountFormatted = numberFormatter.format(downloadCount);
+
+		if (!b.downloadCount.getText().equals(downloadCountFormatted)) {
 			b.downloadCount.setAlpha(0);
-			setDownloadCount(downloadCount);
+			setDownloadCount(downloadCountFormatted);
 			b.downloadCount.animate().alphaBy(0).alpha(1).setDuration(500).start();
 		}
 	}
