@@ -82,12 +82,12 @@ dependencies {
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
 	// Firebase
-	implementation 'com.google.firebase:firebase-core:17.0.1'
-	implementation 'com.google.firebase:firebase-firestore:20.2.0'
-	implementation 'com.google.firebase:firebase-database:18.0.1'
-	implementation 'com.google.firebase:firebase-messaging:19.0.1'
+	implementation 'com.google.firebase:firebase-core:17.1.0'
+	implementation 'com.google.firebase:firebase-firestore:21.0.0'
+	implementation 'com.google.firebase:firebase-database:19.0.0'
+	implementation 'com.google.firebase:firebase-messaging:20.0.0'
 	implementation 'com.google.firebase:firebase-ads:18.1.1'
-	implementation 'com.google.firebase:firebase-perf:18.0.1'
+	implementation 'com.google.firebase:firebase-perf:19.0.0'
 	implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
 	// Retrofit 2
