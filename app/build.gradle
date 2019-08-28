@@ -29,8 +29,8 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
 
-			minifyEnabled true
 			useProguard true
+			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 			proguardFile 'proguard-billing.pro'
 			proguardFile 'proguard-common.pro'
@@ -87,7 +87,7 @@ dependencies {
 	implementation 'com.google.firebase:firebase-database:19.0.0'
 	implementation 'com.google.firebase:firebase-messaging:20.0.0'
 	implementation 'com.google.firebase:firebase-ads:18.1.1'
-	implementation 'com.google.firebase:firebase-perf:19.0.0'
+	implementation 'com.google.firebase:firebase-perf:18.0.1'
 	implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
 	// Retrofit 2
