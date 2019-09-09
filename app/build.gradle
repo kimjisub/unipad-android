@@ -70,9 +70,9 @@ allprojects {
 
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	implementation 'androidx.appcompat:appcompat:1.0.2'
+	implementation 'androidx.appcompat:appcompat:1.1.0'
 	implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-	implementation 'androidx.core:core:1.0.2'
+	implementation 'androidx.core:core:1.1.0'
 	implementation 'androidx.browser:browser:1.0.0'
 	implementation 'androidx.multidex:multidex:2.0.1'
 
@@ -82,22 +82,22 @@ dependencies {
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
 	// Firebase
-	implementation 'com.google.firebase:firebase-core:17.1.0'
+	implementation 'com.google.firebase:firebase-core:17.2.0'
 	implementation 'com.google.firebase:firebase-firestore:21.0.0'
 	implementation 'com.google.firebase:firebase-database:19.0.0'
 	implementation 'com.google.firebase:firebase-messaging:20.0.0'
-	implementation 'com.google.firebase:firebase-ads:18.1.1'
-	implementation 'com.google.firebase:firebase-perf:18.0.1'
+	implementation 'com.google.firebase:firebase-ads:18.2.0'
+	implementation 'com.google.firebase:firebase-perf:19.0.0'
 	implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
 	// Retrofit 2
-	implementation 'com.squareup.retrofit2:retrofit:2.4.0'
-	implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
-	implementation 'com.squareup.okhttp3:logging-interceptor:3.7.0'
-	implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.6.0'
+	implementation 'com.squareup.retrofit2:retrofit:2.6.1'
+	implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
+	implementation 'com.squareup.okhttp3:logging-interceptor:4.1.1'
+	implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.1.1'
 
 	// Admob
-	implementation 'com.google.android.gms:play-services-ads:18.1.1'
+	implementation 'com.google.android.gms:play-services-ads:18.2.0'
 	implementation 'com.google.android.gms:play-services-identity:17.0.0'
 	implementation 'com.google.android.gms:play-services-gcm:17.0.0'
 
@@ -112,7 +112,7 @@ dependencies {
 	implementation 'com.github.clans:fab:1.6.4'
 	implementation 'gun0912.ted:tedpermission:2.2.2'
 	implementation 'com.github.mmin18:realtimeblurview:1.1.0'
-	implementation 'com.anjlab.android.iab.v3:library:1.0.44'
+	implementation 'com.anjlab.android.iab.v3:library:1.1.0'
 	implementation 'com.orhanobut:logger:2.2.0'
 
 	api project(':design')
