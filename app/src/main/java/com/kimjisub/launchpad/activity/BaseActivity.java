@@ -15,11 +15,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.room.Room;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kimjisub.launchpad.R;
+import com.kimjisub.launchpad.db.AppDataBase;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
@@ -34,6 +36,8 @@ import static com.kimjisub.launchpad.manager.Constant.ADSCOOLTIME;
 import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 
 public class BaseActivity extends AppCompatActivity {
+
+	AppDataBase db;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -292,6 +296,7 @@ public class BaseActivity extends AppCompatActivity {
 	public void startActivity(Intent intent) {
 		super.startActivity(intent);
 		overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
+		db = Room.databaseBuilder(this, AppDataBase.class, "UniPad-db").build();
 	}
 
 	@Override
