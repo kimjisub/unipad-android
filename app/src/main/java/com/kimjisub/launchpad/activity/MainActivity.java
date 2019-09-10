@@ -288,6 +288,7 @@ public class MainActivity extends BaseActivity {
 					boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
 					File target = new File(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
 
+
 					(new AsyncTask<String, String, String>() {
 						@Override
 						protected void onPreExecute() {
@@ -299,10 +300,6 @@ public class MainActivity extends BaseActivity {
 						protected String doInBackground(String... params) {
 							FileManager.moveDirectory(source, target);
 							return null;
-						}
-
-						@Override
-						protected void onProgressUpdate(String... strings) {
 						}
 
 						@Override
@@ -437,10 +434,6 @@ public class MainActivity extends BaseActivity {
 					e.printStackTrace();
 				}
 				return null;
-			}
-
-			@Override
-			protected void onProgressUpdate(String... strings) {
 			}
 
 			@Override
@@ -802,9 +795,7 @@ public class MainActivity extends BaseActivity {
 		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 
-		db.unipackOpenDAO().getCount().observe(this, integer ->
-				b.panelTotal.b.openCount.setText(integer.toString())
-		);
+
 	}
 
 
