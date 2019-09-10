@@ -36,10 +36,8 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.UnipackAdapter;
 import com.kimjisub.launchpad.adapter.UnipackItem;
 import com.kimjisub.launchpad.databinding.ActivityMainBinding;
-import com.kimjisub.launchpad.db.manager.DB_Unipack;
-import com.kimjisub.launchpad.db.manager.DB_UnipackOpen;
-import com.kimjisub.launchpad.db.vo.UnipackOpenVO;
-import com.kimjisub.launchpad.db.vo.UnipackVO;
+import com.kimjisub.launchpad.db.ent.UnipackENT;
+import com.kimjisub.launchpad.db.ent.UnipackOpenENT;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.PreferenceManager;
@@ -67,10 +65,6 @@ public class MainActivity extends BaseActivity {
 
 	BillingManager billingManager;
 
-	// DB
-	DB_Unipack DB_unipack;
-	DB_UnipackOpen DB_unipackOpen;
-
 	// Firebase
 	Networks.FirebaseManager firebase_storeCount;
 	ValueAnimator VA_floatingAnimation;
@@ -81,10 +75,6 @@ public class MainActivity extends BaseActivity {
 	boolean updateProcessing = false;
 
 	void initVar(boolean onFirst) {
-		// DB
-		DB_unipack = new DB_Unipack(MainActivity.this);
-		DB_unipackOpen = new DB_UnipackOpen(MainActivity.this);
-
 		// animation
 		if (onFirst) {
 			int color1 = color(R.color.red);
@@ -168,6 +158,8 @@ public class MainActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		b = setContentViewBind(R.layout.activity_main);
 		initVar(true);
+
+		db.unipackOpenDAO().getCount().observe(this, integer -> b.panelTotal.b.openCount.setText(integer.toString()));
 
 		loadAdmob();
 		billingManager = new BillingManager(MainActivity.this, new BillingManager.BillingEventListener() {
@@ -263,9 +255,9 @@ public class MainActivity extends BaseActivity {
 			public void onStarClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
-					unipackVO.pin = !unipackVO.pin;
-					DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
+					UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
+					unipackENT.pin = !unipackENT.pin;
+					db.unipackDAO().update(unipackENT);
 
 					updatePanelPackOption();
 				}
@@ -275,9 +267,9 @@ public class MainActivity extends BaseActivity {
 			public void onBookmarkClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
-					unipackVO.bookmark = !unipackVO.bookmark;
-					DB_unipack.update(item.unipack.F_project.getName(), unipackVO);
+					UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
+					unipackENT.bookmark = !unipackENT.bookmark;
+					db.unipackDAO().update(unipackENT);
 
 					updatePanelPackOption();
 				}
@@ -422,8 +414,8 @@ public class MainActivity extends BaseActivity {
 
 						String path = file.getPath();
 						Unipack unipack = new Unipack(file, false);
-						UnipackVO unipackVO = DB_unipack.getOrCreateByPath(unipack.F_project.getName());
-						UnipackItem packItem = new UnipackItem(unipack, path, unipackVO.bookmark, animateNew);
+						UnipackENT unipackENT = db.unipackDAO().getOrCreate(unipack.F_project.getName());
+						UnipackItem packItem = new UnipackItem(unipack, path, unipackENT.bookmark, animateNew);
 
 						I_curr.add(packItem);
 					}
@@ -771,7 +763,7 @@ public class MainActivity extends BaseActivity {
 		rescanScale(b.scale, b.paddingScale);
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
-		DB_unipackOpen.add(new UnipackOpenVO(item.unipack.F_project.getName(), new Date()));
+		db.unipackOpenDAO().insert(new UnipackOpenENT(item.unipack.F_project.getName(), new Date()));
 
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 		intent.putExtra("path", item.path);
@@ -843,7 +835,7 @@ public class MainActivity extends BaseActivity {
 		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
 		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.unipackCount.setText(list.size() + "");
-		b.panelTotal.b.openCount.setText(DB_unipackOpen.getAllCount() + "");
+
 		b.panelTotal.b.padTouchCount.setText(lang(R.string.measuring));
 
 
@@ -875,10 +867,11 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(UnipackItem item) {
 		Unipack unipack = item.unipack;
-		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
+		UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
+		int openCount = db.unipackOpenDAO().getCount(item.unipack.F_project.getName()).getValue();
 
-		b.panelPack.setStar(unipackVO.pin);
-		b.panelPack.setBookmark(unipackVO.bookmark);
+		b.panelPack.setStar(unipackENT.pin);
+		b.panelPack.setBookmark(unipackENT.bookmark);
 		b.panelPack.setStorage(!FileManager.isInternalFile(MainActivity.this, unipack.F_project));
 		b.panelPack.b.title.setText(unipack.title);
 		b.panelPack.b.subTitle.setText(unipack.producerName);
@@ -888,7 +881,7 @@ public class MainActivity extends BaseActivity {
 		b.panelPack.b.soundCount.setText(lang(R.string.measuring));
 		b.panelPack.b.ledCount.setText(lang(R.string.measuring));
 		b.panelPack.b.fileSize.setText(lang(R.string.measuring));
-		b.panelPack.b.openCount.setText(DB_unipackOpen.getCountByPath(item.unipack.F_project.getName()) + "");
+		b.panelPack.b.openCount.setText(openCount);
 		b.panelPack.b.padTouchCount.setText(lang(R.string.measuring));
 		b.panelPack.b.website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
@@ -925,7 +918,7 @@ public class MainActivity extends BaseActivity {
 	void updatePanelPackOption() {
 		UnipackItem item = list.get(getSelectedIndex());
 		Unipack unipack = item.unipack;
-		UnipackVO unipackVO = DB_unipack.getByPath(item.unipack.F_project.getName());
+		UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
 
 		int flagColor;
 		if (unipack.CriticalError)
@@ -933,13 +926,13 @@ public class MainActivity extends BaseActivity {
 		else
 			flagColor = color(R.color.skyblue);
 
-		if (unipackVO.bookmark)
+		if (unipackENT.bookmark)
 			flagColor = color(R.color.orange);
 
 		item.flagColor = flagColor;
 
-		b.panelPack.setStar(unipackVO.pin);
-		b.panelPack.setBookmark(unipackVO.bookmark);
+		b.panelPack.setStar(unipackENT.pin);
+		b.panelPack.setBookmark(unipackENT.bookmark);
 	}
 
 	// ============================================================================================= Launchpad
