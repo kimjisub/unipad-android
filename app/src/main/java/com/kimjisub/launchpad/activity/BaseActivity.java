@@ -296,13 +296,14 @@ public class BaseActivity extends AppCompatActivity {
 	public void startActivity(Intent intent) {
 		super.startActivity(intent);
 		overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
-		db = Room.databaseBuilder(this, AppDataBase.class, "UniPad-db").build();
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
+
+		db = Room.databaseBuilder(this, AppDataBase.class, "UniPad-db").build();
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
