@@ -41,10 +41,10 @@ file (GLOB_RECURSE APP_SOURCES
 		)
 
 # Build the libhello-oboe library
-add_library(oboe-manager SHARED
+add_library(hello-oboe SHARED
 		${DEBUG_UTILS_SOURCES}
 		${APP_SOURCES}
 		)
 
 # Specify the libraries needed for hello-oboe
-target_link_libraries(oboe-manager android log oboe)
+target_link_libraries(hello-oboe android log oboe)
