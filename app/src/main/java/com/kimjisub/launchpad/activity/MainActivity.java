@@ -158,8 +158,7 @@ public class MainActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 		b = setContentViewBind(R.layout.activity_main);
 		initVar(true);
-
-		db.unipackOpenDAO().getCount().observe(this, integer -> b.panelTotal.b.openCount.setText(integer.toString()));
+		initPannel();
 
 		loadAdmob();
 		billingManager = new BillingManager(MainActivity.this, new BillingManager.BillingEventListener() {
@@ -255,11 +254,11 @@ public class MainActivity extends BaseActivity {
 			public void onStarClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
-					unipackENT.pin = !unipackENT.pin;
-					db.unipackDAO().update(unipackENT);
-
-					updatePanelPackOption();
+					new Thread(() ->{
+						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
+						unipackENT.pin = !unipackENT.pin;
+						db.unipackDAO().update(unipackENT);
+					}).start();
 				}
 			}
 
@@ -267,11 +266,11 @@ public class MainActivity extends BaseActivity {
 			public void onBookmarkClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
-					unipackENT.bookmark = !unipackENT.bookmark;
-					db.unipackDAO().update(unipackENT);
-
-					updatePanelPackOption();
+					new Thread(() ->{
+						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
+						unipackENT.bookmark = !unipackENT.bookmark;
+						db.unipackDAO().update(unipackENT);
+					}).start();
 				}
 			}
 
@@ -313,8 +312,6 @@ public class MainActivity extends BaseActivity {
 						}
 
 					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-					updatePanelPackOption();
 				}
 			}
 
@@ -763,7 +760,10 @@ public class MainActivity extends BaseActivity {
 		rescanScale(b.scale, b.paddingScale);
 		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
-		db.unipackOpenDAO().insert(new UnipackOpenENT(item.unipack.F_project.getName(), new Date()));
+		new Thread(()->{
+			db.unipackOpenDAO().insert(new UnipackOpenENT(item.unipack.F_project.getName(), new Date()));
+		}).start();
+
 
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 		intent.putExtra("path", item.path);
@@ -796,6 +796,17 @@ public class MainActivity extends BaseActivity {
 	}
 
 	// ============================================================================================= panel
+
+	@SuppressLint("SetTextI18n")
+	void initPannel() {
+		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
+		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
+
+		db.unipackOpenDAO().getCount().observe(this, integer ->
+				b.panelTotal.b.openCount.setText(integer.toString())
+		);
+	}
+
 
 	void updatePanel(boolean hardWork) {
 		int selectedIndex = getSelectedIndex();
@@ -832,8 +843,6 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
-		b.panelTotal.b.customLogo.setImageResource(R.drawable.custom_logo);
-		b.panelTotal.b.version.setText(BuildConfig.VERSION_NAME);
 		b.panelTotal.b.unipackCount.setText(list.size() + "");
 
 		b.panelTotal.b.padTouchCount.setText(lang(R.string.measuring));
@@ -867,11 +876,29 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(UnipackItem item) {
 		Unipack unipack = item.unipack;
-		UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
-		int openCount = db.unipackOpenDAO().getCount(item.unipack.F_project.getName()).getValue();
+		new Thread(() -> {
+			UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
 
-		b.panelPack.setStar(unipackENT.pin);
-		b.panelPack.setBookmark(unipackENT.bookmark);
+			int flagColor;
+			if (unipack.CriticalError)
+				flagColor = color(R.color.red);
+			else
+				flagColor = color(R.color.skyblue);
+
+			if (unipackENT.bookmark)
+				flagColor = color(R.color.orange);
+
+			item.flagColor = flagColor;
+
+			b.panelPack.setStar(unipackENT.pin);
+			b.panelPack.setBookmark(unipackENT.bookmark);
+		}).start();
+
+		db.unipackOpenDAO().getCount(item.unipack.F_project.getName()).observe(this, integer -> {
+			b.panelPack.b.openCount.setText(integer.toString());
+		});
+
+
 		b.panelPack.setStorage(!FileManager.isInternalFile(MainActivity.this, unipack.F_project));
 		b.panelPack.b.title.setText(unipack.title);
 		b.panelPack.b.subTitle.setText(unipack.producerName);
@@ -881,7 +908,6 @@ public class MainActivity extends BaseActivity {
 		b.panelPack.b.soundCount.setText(lang(R.string.measuring));
 		b.panelPack.b.ledCount.setText(lang(R.string.measuring));
 		b.panelPack.b.fileSize.setText(lang(R.string.measuring));
-		b.panelPack.b.openCount.setText(openCount);
 		b.panelPack.b.padTouchCount.setText(lang(R.string.measuring));
 		b.panelPack.b.website.setVisibility(unipack.website != null ? View.VISIBLE : View.INVISIBLE);
 
@@ -913,26 +939,6 @@ public class MainActivity extends BaseActivity {
 			}
 
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-	}
-
-	void updatePanelPackOption() {
-		UnipackItem item = list.get(getSelectedIndex());
-		Unipack unipack = item.unipack;
-		UnipackENT unipackENT = db.unipackDAO().get(item.unipack.F_project.getName());
-
-		int flagColor;
-		if (unipack.CriticalError)
-			flagColor = color(R.color.red);
-		else
-			flagColor = color(R.color.skyblue);
-
-		if (unipackENT.bookmark)
-			flagColor = color(R.color.orange);
-
-		item.flagColor = flagColor;
-
-		b.panelPack.setStar(unipackENT.pin);
-		b.panelPack.setBookmark(unipackENT.bookmark);
 	}
 
 	// ============================================================================================= Launchpad
@@ -967,7 +973,7 @@ public class MainActivity extends BaseActivity {
 							if (havePrev()) {
 								togglePlay(lastPlayIndex - 1);
 								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
-								//b.recyclerView.smoothScrollToPosition(0, list.get(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (list.get(lastPlayIndex).packViewSimple.getHeight() / 2));
+								//b.recyclerView.smoothScrollToPosition(0, list.find(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (list.find(lastPlayIndex).packViewSimple.getHeight() / 2));
 							} else
 								showSelectLPUI();
 						} else if (f == 1 && upDown) {
@@ -1086,6 +1092,7 @@ public class MainActivity extends BaseActivity {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		super.onActivityResult(requestCode, resultCode, intent);
 		switch (requestCode) {
 			case 0:
 				checkThings();
