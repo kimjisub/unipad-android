@@ -27,6 +27,7 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 	}
 
 	int viewHolderCount = 0;
+
 	@NonNull
 	@Override
 	public UnipackHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

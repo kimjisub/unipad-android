@@ -1,10 +1,6 @@
 package com.kimjisub.launchpad.midi.controller;
 
-import android.content.Context;
-
-import com.kimjisub.launchpad.activity.LaunchpadActivity;
 import com.kimjisub.launchpad.midi.MidiConnection;
-import com.kimjisub.launchpad.midi.driver.DriverRef;
 
 public abstract class MidiController {
 

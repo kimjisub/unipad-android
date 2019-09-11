@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.db.ent;
 
-import android.database.Cursor;
-
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -9,14 +7,7 @@ import androidx.room.TypeConverters;
 
 import com.kimjisub.launchpad.db.converter.DateConverter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import javax.annotation.Nonnull;
 
 @Entity
 @TypeConverters(DateConverter.class)

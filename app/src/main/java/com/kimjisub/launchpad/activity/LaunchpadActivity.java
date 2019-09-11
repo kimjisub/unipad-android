@@ -3,13 +3,7 @@ package com.kimjisub.launchpad.activity;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -20,18 +14,11 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.midi.MidiConnection;
-import com.kimjisub.launchpad.midi.controller.MidiController;
-import com.kimjisub.launchpad.midi.driver.DriverRef;
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2;
 import com.kimjisub.launchpad.midi.driver.LaunchpadPRO;
 import com.kimjisub.launchpad.midi.driver.LaunchpadS;
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard;
 import com.kimjisub.launchpad.midi.driver.MidiFighter;
-import com.kimjisub.launchpad.midi.driver.Noting;
-import com.kimjisub.manager.Log;
-
-import java.util.Iterator;
-import java.util.Objects;
 
 public class LaunchpadActivity extends BaseActivity {
 
@@ -165,7 +152,6 @@ public class LaunchpadActivity extends BaseActivity {
 
 		PreferenceManager.LaunchpadConnectMethod.save(LaunchpadActivity.this, mode);
 	}
-
 
 
 	// Controller /////////////////////////////////////////////////////////////////////////////////////////
