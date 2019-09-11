@@ -37,12 +37,11 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.ColorManager;
-import com.kimjisub.launchpad.midi.MidiConnection;
-import com.kimjisub.launchpad.midi.controller.MidiController;
-import com.kimjisub.launchpad.midi.driver.DriverRef;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.launchpad.manager.Unipack;
+import com.kimjisub.launchpad.midi.MidiConnection;
+import com.kimjisub.launchpad.midi.controller.MidiController;
 import com.kimjisub.manager.Log;
 import com.vungle.warren.LoadAdCallback;
 import com.vungle.warren.PlayAdCallback;
@@ -1309,7 +1308,7 @@ public class PlayActivity extends BaseActivity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		if (UILoaded)
-			MidiConnection.setController(midiController);;
+			MidiConnection.setController(midiController);
 
 		if (Scale_PaddingHeight == 0) {
 			log("padding 크기값들이 잘못되었습니다.");

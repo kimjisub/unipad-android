@@ -10,7 +10,6 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
 
-import com.kimjisub.launchpad.activity.LaunchpadActivity;
 import com.kimjisub.launchpad.midi.controller.MidiController;
 import com.kimjisub.launchpad.midi.driver.DriverRef;
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2;
