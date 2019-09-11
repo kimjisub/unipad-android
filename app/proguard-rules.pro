@@ -57,3 +57,8 @@
 
 # RealtimeBlurView
 -keep class android.support.v8.renderscript.** { *; }
+
+# Coroutine
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}

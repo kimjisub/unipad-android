@@ -494,7 +494,7 @@ public class PlayActivity extends BaseActivity {
 		skin_set();
 
 		UILoaded = true;
-		MidiConnection.setController(midiController);
+		MidiConnection.INSTANCE.setController(midiController);
 	}
 
 	void skin_set() {
@@ -637,14 +637,14 @@ public class PlayActivity extends BaseActivity {
 
 		if (x != -1) {
 			if (Item != null)
-				MidiConnection.driver.sendPadLED(x, y, Item.code);
+				MidiConnection.INSTANCE.getDriver().sendPadLED(x, y, Item.code);
 			else
-				MidiConnection.driver.sendPadLED(x, y, 0);
+				MidiConnection.INSTANCE.getDriver().sendPadLED(x, y, 0);
 		} else {
 			if (Item != null)
-				MidiConnection.driver.sendFunctionkeyLED(y, Item.code);
+				MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(y, Item.code);
 			else
-				MidiConnection.driver.sendFunctionkeyLED(y, 0);
+				MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(y, 0);
 
 		}
 
@@ -1308,7 +1308,7 @@ public class PlayActivity extends BaseActivity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		if (UILoaded)
-			MidiConnection.setController(midiController);
+			MidiConnection.INSTANCE.setController(midiController);
 
 		if (Scale_PaddingHeight == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
@@ -1377,7 +1377,7 @@ public class PlayActivity extends BaseActivity {
 		//padInit();
 
 		enable = false;
-		MidiConnection.removeController(midiController);
+		MidiConnection.INSTANCE.removeController(midiController);
 
 		if (unipackLoaded) {
 			if (billingManager.isShowAds()) {
