@@ -1,18 +1,16 @@
 package com.kimjisub.launchpad.midi.controller
 
-import com.kimjisub.launchpad.midi.MidiConnection
-
 abstract class MidiController {
 
-    abstract fun onAttach()
+	abstract fun onAttach()
 
-    abstract fun onDetach()
+	abstract fun onDetach()
 
-    abstract fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int)
+	abstract fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int)
 
-    abstract fun onFunctionkeyTouch(f: Int, upDown: Boolean)
+	abstract fun onFunctionkeyTouch(f: Int, upDown: Boolean)
 
-    abstract fun onChainTouch(c: Int, upDown: Boolean)
+	abstract fun onChainTouch(c: Int, upDown: Boolean)
 
-    abstract fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int)
+	abstract fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int)
 }

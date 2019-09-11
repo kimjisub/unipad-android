@@ -4,8 +4,8 @@ import com.kimjisub.design.PackViewSimple
 import com.kimjisub.launchpad.network.fb.StoreVO
 
 class StoreItem(
-	var storeVO: StoreVO,
-	var isDownloaded: Boolean = false
+		var storeVO: StoreVO,
+		var isDownloaded: Boolean = false
 ) {
 	var isDownloading: Boolean = false
 
