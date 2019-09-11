@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @IgnoreExtraProperties
-public class fbStore {
+public class StoreVO {
 	public String code;
 	public String title;
 	public String producerName;
@@ -15,19 +15,6 @@ public class fbStore {
 	public boolean isLED;
 	public int downloadCount;
 	public String URL;
-
-	public fbStore() {
-	}
-
-	public fbStore(String code, String title, String producerName, boolean isAutoPlay, boolean isLED, int downloadCount, String URL) {
-		this.code = code;
-		this.title = title;
-		this.producerName = producerName;
-		this.isAutoPlay = isAutoPlay;
-		this.isLED = isLED;
-		this.downloadCount = downloadCount;
-		this.URL = URL;
-	}
 
 	@Exclude
 	public Map<String, Object> toMap() {
