@@ -49,24 +49,24 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
-			list.get(holder.position).packViewSimple = null;
+			list.get(holder.position).setPackViewSimple(null);
 		} catch (Exception ignored) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
-		item.packViewSimple = packViewSimple;
+		item.setPackViewSimple(packViewSimple);
 		holder.position = holder.getAdapterPosition();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
 		packViewSimple
-				.setFlagColor(context.color(item.isDownloaded ? R.color.green : R.color.red))
-				.setTitle(item.fbStore.title)
-				.setSubTitle(item.fbStore.producerName)
-				.setOption1(context.lang(R.string.LED_), item.fbStore.isLED)
-				.setOption2(context.lang(R.string.autoPlay_), item.fbStore.isAutoPlay)
+				.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
+				.setTitle(item.getStoreVO().title)
+				.setSubTitle(item.getStoreVO().producerName)
+				.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED)
+				.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay)
 				.setPlayImageShow(false)
-				.setPlayText(context.lang(item.isDownloaded ? R.string.downloaded : R.string.download))
+				.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download))
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
 					@Override
 					public void onViewClick(PackViewSimple v) {
@@ -105,12 +105,12 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 					case "update":
 						Log.test("update");
 						packViewSimple
-								.setFlagColor(context.color(item.isDownloaded ? R.color.green : R.color.red))
-								.setTitle(item.fbStore.title)
-								.setSubTitle(item.fbStore.producerName)
-								.setOption1(context.lang(R.string.LED_), item.fbStore.isLED)
-								.setOption2(context.lang(R.string.autoPlay_), item.fbStore.isAutoPlay)
-								.setPlayText(context.lang(item.isDownloaded ? R.string.downloaded : R.string.download));
+								.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
+								.setTitle(item.getStoreVO().title)
+								.setSubTitle(item.getStoreVO().producerName)
+								.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED)
+								.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay)
+								.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download));
 						break;
 				}
 				/*String type = (String) payload;

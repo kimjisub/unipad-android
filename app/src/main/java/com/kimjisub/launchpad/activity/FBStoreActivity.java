@@ -26,7 +26,7 @@ import com.kimjisub.launchpad.databinding.ActivityStoreBinding;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.Unipack;
 import com.kimjisub.launchpad.network.Networks;
-import com.kimjisub.launchpad.network.fb.fbStore;
+import com.kimjisub.launchpad.network.fb.StoreVO;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
 
@@ -69,8 +69,8 @@ public class FBStoreActivity extends BaseActivity {
 
 				@Override
 				public void onPlayClick(StoreItem item, PackViewSimple v) {
-					if (!item.isDownloaded && !item.isDownloading)
-						startDownload(getPackItemByCode(item.fbStore.code));
+					if (!item.isDownloaded() && !item.isDownloading())
+						startDownload(getPackItemByCode(item.getStoreVO().code));
 				}
 			});
 			adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -112,7 +112,7 @@ public class FBStoreActivity extends BaseActivity {
 				Log.test("onChildAdded: " + s);
 
 				try {
-					fbStore d = dataSnapshot.getValue(fbStore.class);
+					StoreVO d = dataSnapshot.getValue(StoreVO.class);
 
 					boolean isDownloaded = false;
 					for (File dir : F_UniPackList) {
@@ -139,15 +139,15 @@ public class FBStoreActivity extends BaseActivity {
 				Log.test("onChildChanged: " + s);
 
 				try {
-					fbStore d = dataSnapshot.getValue(fbStore.class);
+					StoreVO d = dataSnapshot.getValue(StoreVO.class);
 					StoreItem item = getPackItemByCode(d.code);
-					item.fbStore = d;
+					item.setStoreVO(d);
 					adapter.notifyItemChanged(list.indexOf(item), "update");
 
 					int selectedIndex = getSelectedIndex();
 					if (selectedIndex != -1) {
-						String changeCode = item.fbStore.code;
-						String selectedCode = list.get(selectedIndex).fbStore.code;
+						String changeCode = item.getStoreVO().code;
+						String selectedCode = list.get(selectedIndex).getStoreVO().code;
 						if (changeCode.equals(selectedCode))
 							updatePanelPack(item);
 					}
@@ -190,15 +190,15 @@ public class FBStoreActivity extends BaseActivity {
 	void togglePlay(StoreItem target) {
 		try {
 			for (StoreItem item : list) {
-				PackViewSimple packViewSimple = item.packViewSimple;
+				PackViewSimple packViewSimple = item.getPackViewSimple();
 
-				if (target != null && item.fbStore.code.equals(target.fbStore.code))
-					item.isToggle = !item.isToggle;
+				if (target != null && item.getStoreVO().code.equals(target.getStoreVO().code))
+					item.setToggle(!item.isToggle());
 				else
-					item.isToggle = false;
+					item.setToggle(false);
 
 				if (packViewSimple != null)
-					packViewSimple.toggle(item.isToggle);
+					packViewSimple.toggle(item.isToggle());
 			}
 
 			updatePanel();
@@ -213,7 +213,7 @@ public class FBStoreActivity extends BaseActivity {
 
 		int i = 0;
 		for (StoreItem item : list) {
-			if (item.isToggle) {
+			if (item.isToggle()) {
 				index = i;
 				break;
 			}
@@ -226,7 +226,7 @@ public class FBStoreActivity extends BaseActivity {
 	StoreItem getPackItemByCode(String code) {
 		StoreItem ret = null;
 		for (StoreItem item : list)
-			if (item.fbStore.code.equals(code)) {
+			if (item.getStoreVO().code.equals(code)) {
 				ret = item;
 				break;
 			}
@@ -236,7 +236,7 @@ public class FBStoreActivity extends BaseActivity {
 	int getDownloadingCount() {
 		int count = 0;
 		for (StoreItem item : list) {
-			if (item.isDownloading)
+			if (item.isDownloading())
 				count++;
 		}
 
@@ -246,7 +246,7 @@ public class FBStoreActivity extends BaseActivity {
 	int getDownloadedCount() {
 		int count = 0;
 		for (StoreItem item : list) {
-			if (item.isDownloaded)
+			if (item.isDownloaded())
 				count++;
 		}
 
@@ -255,16 +255,16 @@ public class FBStoreActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void startDownload(StoreItem item) {
-		fbStore fbStore = item.fbStore;
-		PackViewSimple packViewSimple = item.packViewSimple;
+		StoreVO StoreVO = item.getStoreVO();
+		PackViewSimple packViewSimple = item.getPackViewSimple();
 
-		String code = fbStore.code;
-		String title = fbStore.title;
-		String producerName = fbStore.producerName;
-		boolean isAutoPlay = fbStore.isAutoPlay;
-		boolean isLED = fbStore.isLED;
-		int downloadCount = fbStore.downloadCount;
-		String URL = fbStore.URL;
+		String code = StoreVO.code;
+		String title = StoreVO.title;
+		String producerName = StoreVO.producerName;
+		boolean isAutoPlay = StoreVO.isAutoPlay;
+		boolean isLED = StoreVO.isLED;
+		int downloadCount = StoreVO.downloadCount;
+		String URL = StoreVO.URL;
 
 		File F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, code, ".zip");
 		File F_UniPack = new File(F_UniPackRootExt, code);
@@ -277,7 +277,7 @@ public class FBStoreActivity extends BaseActivity {
 
 			@Override
 			protected void onPreExecute() {
-				item.isDownloading = true;
+				item.setDownloading(true);
 
 				super.onPreExecute();
 			}
@@ -345,7 +345,7 @@ public class FBStoreActivity extends BaseActivity {
 					e.printStackTrace();
 				}
 
-				item.isDownloading = false;
+				item.setDownloading(false);
 
 				return null;
 			}
@@ -363,7 +363,7 @@ public class FBStoreActivity extends BaseActivity {
 				} else if (progress[0] == 2) {//완료
 					packViewSimple.setPlayText(lang(R.string.downloaded));
 					packViewSimple.animateFlagColor(color(R.color.green));
-					item.isDownloaded = true;
+					item.setDownloaded(true);
 					updatePanel();
 				}
 			}
@@ -421,11 +421,11 @@ public class FBStoreActivity extends BaseActivity {
 
 	void updatePanelPack(StoreItem item) {
 		Log.test("panel pack");
-		fbStore fbStore = item.fbStore;
+		StoreVO storeVO = item.getStoreVO();
 
-		b.panelPack.updateTitle(fbStore.title);
-		b.panelPack.updateSubTitle(fbStore.producerName);
-		b.panelPack.updateDownloadCount(fbStore.downloadCount);
+		b.panelPack.updateTitle(storeVO.title);
+		b.panelPack.updateSubTitle(storeVO.producerName);
+		b.panelPack.updateDownloadCount(storeVO.downloadCount);
 	}
 
 	// ============================================================================================= Activity

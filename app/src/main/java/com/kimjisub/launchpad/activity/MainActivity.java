@@ -1090,6 +1090,8 @@ public class MainActivity extends BaseActivity {
 			case 0:
 				checkThings();
 				break;
+			default:
+				break;
 		}
 	}
 
