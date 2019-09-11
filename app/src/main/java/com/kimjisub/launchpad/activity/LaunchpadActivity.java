@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbConstants;
@@ -19,94 +18,26 @@ import android.widget.TextView;
 
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityUsbmidiBinding;
-import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.PreferenceManager;
+import com.kimjisub.launchpad.midi.MidiConnection;
+import com.kimjisub.launchpad.midi.controller.MidiController;
+import com.kimjisub.launchpad.midi.driver.DriverRef;
+import com.kimjisub.launchpad.midi.driver.LaunchpadMK2;
+import com.kimjisub.launchpad.midi.driver.LaunchpadPRO;
+import com.kimjisub.launchpad.midi.driver.LaunchpadS;
+import com.kimjisub.launchpad.midi.driver.MasterKeyboard;
+import com.kimjisub.launchpad.midi.driver.MidiFighter;
+import com.kimjisub.launchpad.midi.driver.Noting;
 import com.kimjisub.manager.Log;
 
 import java.util.Iterator;
 import java.util.Objects;
-
-import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.MK2;
-import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.MidiFighter;
-import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.Piano;
-import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.Pro;
-import static com.kimjisub.launchpad.activity.LaunchpadActivity.MidiDevice.S;
 
 public class LaunchpadActivity extends BaseActivity {
 
 	ActivityUsbmidiBinding b;
 	LinearLayout[] LL_Launchpad;
 	LinearLayout[] LL_mode;
-
-	static UsbManager usbManager;
-	static UsbDevice usbDevice;
-	static UsbInterface usbInterface;
-	static UsbEndpoint usbEndpoint_in;
-	static UsbEndpoint usbEndpoint_out;
-	static UsbDeviceConnection usbDeviceConnection;
-	static boolean isRun = false;
-	static MidiDevice device = null;
-	static int mode = 0;
-	static LaunchpadDriver.DriverRef driver = new LaunchpadDriver.Nothing();
-	@SuppressLint("StaticFieldLeak")
-	private static Activity driverFrom = null;
-	private static LaunchpadDriver.DriverRef.OnConnectionEventListener onConnectionEventListener;
-	private static LaunchpadDriver.DriverRef.OnGetSignalListener onGetSignalListener;
-	private static LaunchpadDriver.DriverRef.OnSendSignalListener onSendSignalListener;
-
-
-	static void sendBuffer(byte cmd, byte sig, byte note, byte velocity) {
-		try {
-			byte[] buffer = {cmd, sig, note, velocity};
-			usbDeviceConnection.bulkTransfer(usbEndpoint_out, buffer, buffer.length, 1000);
-		} catch (Exception ignored) {
-		}
-	}
-
-	static void setDriverListener(Activity activity, LaunchpadDriver.DriverRef.OnConnectionEventListener listener1, LaunchpadDriver.DriverRef.OnGetSignalListener listener2) {
-		Log.driverCycle("1");
-		if (driverFrom != null) {
-			LaunchpadActivity.driver.sendClearLED();
-			driver.onDisconnected();
-		}
-
-		driverFrom = activity;
-		onConnectionEventListener = listener1;
-		onGetSignalListener = listener2;
-
-		setDriverListener();
-		driver.onConnected();
-	}
-
-	static void setDriverListener(LaunchpadDriver.DriverRef.OnSendSignalListener listener) {
-		Log.driverCycle("2");
-		onSendSignalListener = listener;
-
-		setDriverListener();
-	}
-
-	public static void removeDriverListener(Activity activity) {
-		Log.driverCycle("3");
-		if (driverFrom == activity) {
-			LaunchpadActivity.driver.sendClearLED();
-			driver.onDisconnected();
-
-			driverFrom = null;
-			onConnectionEventListener = null;
-			onGetSignalListener = null;
-
-			setDriverListener();
-		}
-	}
-
-	// ============================================================================================= 설정 선택
-
-	public static void setDriverListener() {
-		Log.driverCycle("setDriverListener");
-		driver.setOnConnectionEventListener(onConnectionEventListener);
-		driver.setOnGetSignalListener(onGetSignalListener);
-		driver.setOnSendSignalListener(onSendSignalListener);
-	}
 
 	@SuppressLint({"CutPasteId", "StaticFieldLeak"})
 	void initVar() {
@@ -121,25 +52,6 @@ public class LaunchpadActivity extends BaseActivity {
 				findViewById(R.id.speedFirst),
 				findViewById(R.id.avoidAfterimage)
 		};
-
-		setDriverListener((cmd, sig, note, velo) -> {
-			if (usbDeviceConnection != null) {
-				if (mode == 0) {
-					try {
-						(new AsyncTask<String, Integer, String>() {
-							@Override
-							protected String doInBackground(String... params) {
-								sendBuffer(cmd, sig, note, velo);
-								return null;
-							}
-						}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-					} catch (Exception ignore) {
-						//Log.midiDetail("MIDI send thread execute fail");
-					}
-				} else if (mode == 1)
-					sendBuffer(cmd, sig, note, velo);
-			}
-		});
 	}
 
 	public void onCreate(Bundle savedInstanceState) {
@@ -147,156 +59,67 @@ public class LaunchpadActivity extends BaseActivity {
 		b = setContentViewBind(R.layout.activity_usbmidi);
 		initVar();
 
-		mode = PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this);
+		MidiConnection.setListener(new MidiConnection.Listener() {
+			@Override
+			public void onConnectedListener() {
+				b.err.setVisibility(View.GONE);
+			}
 
-		selectDevice(device);
-		selectMode(mode);
+			@Override
+			public void onChangeDriver(Class cls) {
+				selectDriver(cls);
+			}
+
+			@Override
+			public void onChangeMode(int mode) {
+				selectMode(mode);
+			}
+
+			@Override
+			public void onUiLog(String log) {
+				b.info.append(log + "\n");
+			}
+		});
+
+		MidiConnection.setMode(PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this));
 
 		Intent intent = getIntent();
-		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-		usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction()))
-			initDevice(usbDevice);
-		else {
-			Iterator<UsbDevice> deviceIterator = ((UsbManager) Objects.requireNonNull(getSystemService(Context.USB_SERVICE))).getDeviceList().values().iterator();
-			if (deviceIterator.hasNext())
-				initDevice(deviceIterator.next());
-		}
+		MidiConnection.initConnection(intent, (UsbManager) getSystemService(Context.USB_SERVICE));
 
 
 		(new Handler()).postDelayed(this::finish, 2000);
 	}
 
-	private void initDevice(UsbDevice device) {
+	// Select Driver /////////////////////////////////////////////////////////////////////////////////////////
 
-		b.err.setVisibility(View.GONE);
-
-		int interfaceNum = 0;
-
-		if (device == null) {
-			Log.midiDetail("USB 에러 : device == null");
-			return;
-		} else {
-			try {
-				Log.midiDetail("DeviceName : " + device.getDeviceName());
-				Log.midiDetail("DeviceClass : " + device.getDeviceClass());
-				Log.midiDetail("DeviceId : " + device.getDeviceId());
-				Log.midiDetail("DeviceProtocol : " + device.getDeviceProtocol());
-				Log.midiDetail("DeviceSubclass : " + device.getDeviceSubclass());
-				Log.midiDetail("InterfaceCount : " + device.getInterfaceCount());
-				Log.midiDetail("VendorId : " + device.getVendorId());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			try {
-				Log.midiDetail("ProductId : " + device.getProductId());
-				b.info.append("ProductId : " + device.getProductId() + "\n");
-				switch (device.getProductId()) {
-					case 8:
-						selectDevice(MidiFighter.value);
-						b.info.append("prediction : MidiFighter\n");
-						break;
-					case 105:
-						selectDevice(MK2.value);
-						b.info.append("prediction : MK2\n");
-						break;
-					case 81:
-						selectDevice(Pro.value);
-						b.info.append("prediction : Pro\n");
-						break;
-					case 54:
-						selectDevice(S.value);
-						b.info.append("prediction : mk2 mini\n");
-						break;
-					case 8211:
-						selectDevice(Piano.value);
-						b.info.append("prediction : LX 61 piano\n");
-						break;
-					case 32822:
-						selectDevice(Pro.value);
-						b.info.append("prediction : Arduino Leonardo midi\n");
-						interfaceNum = 3;
-						break;
-					default:
-						selectDevice(Piano.value);
-						b.info.append("prediction : unknown\n");
-						break;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		for (int i = interfaceNum; i < device.getInterfaceCount(); i++) {
-			UsbInterface ui = device.getInterface(i);
-			if (ui.getEndpointCount() > 0) {
-				usbInterface = ui;
-				b.info.append("Interface : (" + (i + 1) + "/" + device.getInterfaceCount() + ")\n");
-				break;
-			}
-		}
-		for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
-			UsbEndpoint ep = usbInterface.getEndpoint(i);
-			if (ep.getDirection() == UsbConstants.USB_DIR_IN) {
-				b.info.append("Endpoint_In : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
-				usbEndpoint_in = ep;
-			} else if (ep.getDirection() == UsbConstants.USB_DIR_OUT) {
-				b.info.append("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
-				usbEndpoint_out = ep;
-			} else {
-				b.info.append("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface.getEndpointCount() + ")\n");
-			}
-		}
-		usbDeviceConnection = usbManager.openDevice(device);
-		if (usbDeviceConnection == null) {
-			Log.midiDetail("USB 에러 : usbDeviceConnection == null");
-			return;
-		}
-		if (usbDeviceConnection.claimInterface(usbInterface, true)) {
-			(new ReceiveTask()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		} else {
-			Log.midiDetail("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)");
-		}
+	public void selectDriver(View v) {
+		int index = Integer.parseInt((String) v.getTag());
+		selectDriver(new Class[]{LaunchpadS.class, LaunchpadMK2.class, LaunchpadPRO.class, MidiFighter.class, MasterKeyboard.class}[index]);
 	}
 
-	public void selectDeviceXml(View v) {
-		selectDevice(Integer.parseInt((String) v.getTag()));
-	}
 
-	// ============================================================================================= ReceiveTask
-
-	public void selectDevice(MidiDevice m) {
-		if (m != null)
-			selectDevice(m.value);
-	}
-
-	public void selectDevice(int num) {
-
-		switch (LL_Launchpad[num].getId()) {
-			case R.id.s:
-				device = S;
-				driver = new LaunchpadDriver.LaunchpadS();
+	public void selectDriver(Class cls) {
+		int index = 0;
+		switch (cls.getSimpleName()) {
+			case "LaunchpadS":
+				index = 0;
 				break;
-			case R.id.mk2:
-				device = MK2;
-				driver = new LaunchpadDriver.LaunchpadMK2();
+			case "LaunchpadMK2":
+				index = 1;
 				break;
-			case R.id.pro:
-				device = Pro;
-				driver = new LaunchpadDriver.LaunchpadPRO();
+			case "LaunchpadPRO":
+				index = 2;
 				break;
-			case R.id.midifighter:
-				device = MidiFighter;
-				driver = new LaunchpadDriver.MidiFighter();
+			case "MidiFighter":
+				index = 3;
 				break;
-			case R.id.piano:
-				device = Piano;
-				driver = new LaunchpadDriver.Piano();
+			case "MasterKeyboard":
+				index = 4;
 				break;
 		}
 
 		for (int i = 0; i < LL_Launchpad.length; i++) {
-			if (device.value == i) {
+			if (index == i) {
 				LL_Launchpad[i].setBackgroundColor(color(R.color.gray1));
 				int count = LL_Launchpad[i].getChildCount();
 				for (int j = 0; j < count; j++) {
@@ -312,28 +135,16 @@ public class LaunchpadActivity extends BaseActivity {
 				}
 			}
 		}
-
-		setDriverListener();
 	}
 
 
-	// ============================================================================================= Driver
+	// Select Mode /////////////////////////////////////////////////////////////////////////////////////////
 
 	public void selectModeXml(View v) {
 		selectMode(Integer.parseInt((String) v.getTag()));
 	}
 
-	public void selectMode(int num) {
-
-		switch (LL_mode[num].getId()) {
-			case R.id.speedFirst:
-				mode = 0;
-				break;
-			case R.id.avoidAfterimage:
-				mode = 1;
-				break;
-		}
-
+	public void selectMode(int mode) {
 		for (int i = 0; i < LL_mode.length; i++) {
 			if (mode == i) {
 				LL_mode[i].setBackgroundColor(color(R.color.gray1));
@@ -355,6 +166,10 @@ public class LaunchpadActivity extends BaseActivity {
 		PreferenceManager.LaunchpadConnectMethod.save(LaunchpadActivity.this, mode);
 	}
 
+
+
+	// Controller /////////////////////////////////////////////////////////////////////////////////////////
+
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -365,84 +180,5 @@ public class LaunchpadActivity extends BaseActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-	}
-
-	public enum MidiDevice {
-		S(0), MK2(1), Pro(2), MidiFighter(3), Piano(4);
-
-		private final int value;
-
-		MidiDevice(int value) {
-			this.value = value;
-		}
-	}
-
-	public static class ReceiveTask extends AsyncTask<String, Integer, String> {
-
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			driver.onConnected();
-		}
-
-		@SuppressLint("DefaultLocale")
-		@Override
-		protected String doInBackground(String... params) {
-			if (!isRun) {
-				isRun = true;
-				Log.midiDetail("USB 시작");
-
-				long prevTime = System.currentTimeMillis();
-				int count = 0;
-				byte[] byteArray = new byte[usbEndpoint_in.getMaxPacketSize()];
-				while (isRun) {
-					try {
-						int length = usbDeviceConnection.bulkTransfer(usbEndpoint_in, byteArray, byteArray.length, 1000);
-						if (length >= 4) {
-							for (int i = 0; i < length; i += 4) {
-								int cmd = byteArray[i];
-								int sig = byteArray[i + 1];
-								int note = byteArray[i + 2];
-								int velocity = byteArray[i + 3];
-
-								publishProgress(cmd, sig, note, velocity);
-								Log.midi(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity));
-							}
-						} else if (length == -1) {
-							long currTime = System.currentTimeMillis();
-							if (prevTime != currTime) {
-								count = 0;
-								prevTime = currTime;
-							} else {
-								count++;
-								if (count > 10)
-									break;
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						break;
-					}
-				}
-
-				Log.midiDetail("USB 끝");
-			}
-			isRun = false;
-			return null;
-		}
-
-		@Override
-		protected void onProgressUpdate(Integer... progress) {
-//			try {
-			driver.getSignal(progress[0], progress[1], progress[2], progress[3]);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-		}
-
-		@Override
-		protected void onPostExecute(String result) {
-			driver.onDisconnected();
-		}
 	}
 }
