@@ -37,7 +37,9 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.ColorManager;
-import com.kimjisub.launchpad.manager.LaunchpadDriver;
+import com.kimjisub.launchpad.midi.MidiConnection;
+import com.kimjisub.launchpad.midi.controller.MidiController;
+import com.kimjisub.launchpad.midi.driver.DriverRef;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.launchpad.manager.Unipack;
@@ -94,8 +96,6 @@ public class PlayActivity extends BaseActivity {
 
 	// ============================================================================================= Manager
 	ArrayList[][][] traceLog_table;
-
-	// ============================================================================================= 앱 시작
 	int[] traceLog_nextNum;
 	long rec_prevEventMS;
 	String rec_log = "";
@@ -148,7 +148,6 @@ public class PlayActivity extends BaseActivity {
 				setProMode(billingManager.isUnlockProTools());
 			}
 		});
-
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -496,7 +495,7 @@ public class PlayActivity extends BaseActivity {
 		skin_set();
 
 		UILoaded = true;
-		setDriver();
+		MidiConnection.setController(midiController);
 	}
 
 	void skin_set() {
@@ -639,14 +638,14 @@ public class PlayActivity extends BaseActivity {
 
 		if (x != -1) {
 			if (Item != null)
-				LaunchpadActivity.driver.sendPadLED(x, y, Item.code);
+				MidiConnection.driver.sendPadLED(x, y, Item.code);
 			else
-				LaunchpadActivity.driver.sendPadLED(x, y, 0);
+				MidiConnection.driver.sendPadLED(x, y, 0);
 		} else {
 			if (Item != null)
-				LaunchpadActivity.driver.sendFunctionkeyLED(y, Item.code);
+				MidiConnection.driver.sendFunctionkeyLED(y, Item.code);
 			else
-				LaunchpadActivity.driver.sendFunctionkeyLED(y, 0);
+				MidiConnection.driver.sendFunctionkeyLED(y, 0);
 
 		}
 
@@ -932,119 +931,109 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	void setDriver() {
-		LaunchpadActivity.setDriverListener(PlayActivity.this,
-				new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-					@Override
-					public void onConnected() {
-						Log.driverCycle("PlayActivity onConnected()");
-						updateLP();
-					}
+	MidiController midiController = new MidiController() {
+		@Override
+		public void onAttach() {
+			updateLP();
+		}
 
-					@Override
-					public void onDisconnected() {
-						Log.driverCycle("PlayActivity onDisconnected()");
+		@Override
+		public void onDetach() {
+
+		}
+
+		@Override
+		public void onPadTouch(int x, int y, boolean upDown, int velo) {
+			if (!bool_toggleOptionWindow) {
+				padTouch(x, y, upDown);
+			}
+		}
+
+		@Override
+		public void onFunctionkeyTouch(int f, boolean upDown) {
+			if (upDown) {
+				if (!bool_toggleOptionWindow) {
+					switch (f) {
+						case 0:
+							SCV_feedbackLight.toggleChecked();
+							break;
+						case 1:
+							SCV_LED.toggleChecked();
+							break;
+						case 2:
+							SCV_autoPlay.toggleChecked();
+							break;
+						case 3:
+							toggleOptionWindow();
+							break;
+						case 4:
+						case 5:
+						case 6:
+						case 7:
+							SCV_watermark.toggleChecked();
+							break;
 					}
-				}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-					@Override
-					public void onPadTouch(int x, int y, boolean upDown, int velo) {
-						if (!bool_toggleOptionWindow) {
-							padTouch(x, y, upDown);
+				} else {
+					if (0 <= f && f <= 7)
+						switch (f) {
+							case 0:
+								SCV_feedbackLight.toggleChecked();
+								break;
+							case 1:
+								SCV_LED.toggleChecked();
+								break;
+							case 2:
+								SCV_autoPlay.toggleChecked();
+								break;
+							case 3:
+								toggleOptionWindow();
+								break;
+							case 4:
+								SCV_hideUI.toggleChecked();
+								break;
+							case 5:
+								SCV_watermark.toggleChecked();
+								break;
+							case 6:
+								SCV_proLightMode.toggleChecked();
+								break;
+							case 7:
+								finish();
+								break;
 						}
+					else if (8 <= f && f <= 15) {
+						float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+						int currLevel = 8 - (f - 8) - 1;
+						float currPercent = (float) currLevel / (float) 7;
+						int currVolume = (int) (maxVolume * currPercent);
+
+						audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0);
 					}
+				}
+			}
+		}
 
-					@Override
-					public void onFunctionkeyTouch(int f, boolean upDown) {
-						if (upDown) {
-							if (!bool_toggleOptionWindow) {
-								switch (f) {
-									case 0:
-										SCV_feedbackLight.toggleChecked();
-										break;
-									case 1:
-										SCV_LED.toggleChecked();
-										break;
-									case 2:
-										SCV_autoPlay.toggleChecked();
-										break;
-									case 3:
-										toggleOptionWindow();
-										break;
-									case 4:
-										SCV_watermark.toggleChecked();
-										break;
-									case 5:
-										SCV_watermark.toggleChecked();
-										break;
-									case 6:
-										SCV_watermark.toggleChecked();
-										break;
-									case 7:
-										SCV_watermark.toggleChecked();
-										break;
-								}
-							} else {
-								if (0 <= f && f <= 7)
-									switch (f) {
-										case 0:
-											SCV_feedbackLight.toggleChecked();
-											break;
-										case 1:
-											SCV_LED.toggleChecked();
-											break;
-										case 2:
-											SCV_autoPlay.toggleChecked();
-											break;
-										case 3:
-											toggleOptionWindow();
-											break;
-										case 4:
-											SCV_hideUI.toggleChecked();
-											break;
-										case 5:
-											SCV_watermark.toggleChecked();
-											break;
-										case 6:
-											SCV_proLightMode.toggleChecked();
-											break;
-										case 7:
-											finish();
-											break;
-									}
-								else if (8 <= f && f <= 15) {
+		@Override
+		public void onChainTouch(int c, boolean upDown) {
+			if (!bool_toggleOptionWindow) {
+				if (upDown && unipack.chain > c)
+					chainChange(c);
+			}
+		}
 
-									float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-									int currLevel = 8 - (f - 8) - 1;
-									float currPercent = (float) currLevel / (float) 7;
-									int currVolume = (int) (maxVolume * currPercent);
-
-									audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0);
-								}
-							}
-						}
-					}
-
-					@Override
-					public void onChainTouch(int c, boolean upDown) {
-						if (!bool_toggleOptionWindow) {
-							if (upDown && unipack.chain > c)
-								chainChange(c);
-						} else {
-						}
-					}
-
-					@Override
-					public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-						if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
-							updateLP();
-					}
-				});
-	}
+		@Override
+		public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+			if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+				updateLP();
+		}
+	};
 
 	void updateLP() {
 		chainChange(chain);
 		refreshWatermark();
 	}
+
+	// TraceLog /////////////////////////////////////////////////////////////////////////////////////////
 
 	void traceLog_show() {
 		//log("traceLog_show");
@@ -1064,8 +1053,6 @@ public class PlayActivity extends BaseActivity {
 		for (int i = 0; i < traceLog_table[chain][x][y].size(); i++)
 			U_pads[x][y].appendTraceLog(traceLog_table[chain][x][y].get(i) + " ");
 	}
-
-	// ============================================================================================= Trace Log
 
 	void traceLog_init() {
 		log("traceLog_init");
@@ -1285,6 +1272,9 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
+
+	// Activity /////////////////////////////////////////////////////////////////////////////////////////
+
 	@Override
 	public void onBackPressed() {
 		toggleOptionWindow();
@@ -1319,7 +1309,7 @@ public class PlayActivity extends BaseActivity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		if (UILoaded)
-			setDriver();
+			MidiConnection.setController(midiController);;
 
 		if (Scale_PaddingHeight == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
@@ -1355,8 +1345,6 @@ public class PlayActivity extends BaseActivity {
 		}
 	}
 
-	// ============================================================================================= Activity
-
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -1390,7 +1378,7 @@ public class PlayActivity extends BaseActivity {
 		//padInit();
 
 		enable = false;
-		LaunchpadActivity.removeDriverListener(PlayActivity.this);
+		MidiConnection.removeController(midiController);
 
 		if (unipackLoaded) {
 			if (billingManager.isShowAds()) {
@@ -1431,6 +1419,8 @@ public class PlayActivity extends BaseActivity {
 			}
 		}
 	}
+
+	// Thread /////////////////////////////////////////////////////////////////////////////////////////
 
 	@SuppressLint("StaticFieldLeak")
 	class LEDTask extends AsyncTask<String, Integer, String> {

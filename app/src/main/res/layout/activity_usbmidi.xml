@@ -50,7 +50,7 @@
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
-						android:onClick="selectDeviceXml"
+						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="0">
 
@@ -70,7 +70,7 @@
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
-						android:onClick="selectDeviceXml"
+						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="1">
 
@@ -90,7 +90,7 @@
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
-						android:onClick="selectDeviceXml"
+						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="2">
 
@@ -118,7 +118,7 @@
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
-						android:onClick="selectDeviceXml"
+						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="3">
 
@@ -138,7 +138,7 @@
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
-						android:onClick="selectDeviceXml"
+						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="4">
 

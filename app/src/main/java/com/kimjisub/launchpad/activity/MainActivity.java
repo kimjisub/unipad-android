@@ -39,10 +39,11 @@ import com.kimjisub.launchpad.databinding.ActivityMainBinding;
 import com.kimjisub.launchpad.db.ent.UnipackENT;
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT;
 import com.kimjisub.launchpad.manager.BillingManager;
-import com.kimjisub.launchpad.manager.LaunchpadDriver;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.launchpad.manager.Unipack;
+import com.kimjisub.launchpad.midi.MidiConnection;
+import com.kimjisub.launchpad.midi.controller.MidiController;
 import com.kimjisub.launchpad.network.Networks;
 import com.kimjisub.manager.FileManager;
 import com.kimjisub.manager.Log;
@@ -73,6 +74,8 @@ public class MainActivity extends BaseActivity {
 	UnipackAdapter adapter;
 	int lastPlayIndex = -1;
 	boolean updateProcessing = false;
+
+	MidiController midiController;
 
 	void initVar(boolean onFirst) {
 		// animation
@@ -149,6 +152,61 @@ public class MainActivity extends BaseActivity {
 				}
 			});
 		}
+
+		midiController = new MidiController() {
+			@Override
+			public void onAttach() {
+				Log.driverCycle("MainActivity onConnected()");
+				updateLP();
+			}
+
+			@Override
+			public void onDetach() {
+				Log.driverCycle("MainActivity onDisconnected()");
+			}
+
+			@Override
+			public void onPadTouch(int x, int y, boolean upDown, int velo) {
+				if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
+					if (upDown)
+						MidiConnection.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+					else
+						MidiConnection.driver.sendPadLED(x, y, 0);
+				}
+			}
+
+			@Override
+			public void onFunctionkeyTouch(int f, boolean upDown) {
+				if (f == 0 && upDown) {
+					if (havePrev()) {
+						togglePlay(lastPlayIndex - 1);
+						b.recyclerView.smoothScrollToPosition(lastPlayIndex);
+						//b.recyclerView.smoothScrollToPosition(0, list.find(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (list.find(lastPlayIndex).packViewSimple.getHeight() / 2));
+					} else
+						showSelectLPUI();
+				} else if (f == 1 && upDown) {
+					if (haveNext()) {
+						togglePlay(lastPlayIndex + 1);
+						b.recyclerView.smoothScrollToPosition(lastPlayIndex);
+					} else
+						showSelectLPUI();
+				} else if (f == 2 && upDown) {
+					if (haveNow())
+						list.get(lastPlayIndex).packViewSimple.onPlayClick();
+				}
+			}
+
+			@Override
+			public void onChainTouch(int c, boolean upDown) {
+
+			}
+
+			@Override
+			public void onUnknownEvent(int cmd, int sig, int note, int velo) {
+				if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+					updateLP();
+			}
+		};
 	}
 
 	// =============================================================================================
@@ -197,6 +255,7 @@ public class MainActivity extends BaseActivity {
 		});
 		startMain();
 		updatePanel(true);
+
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -254,7 +313,7 @@ public class MainActivity extends BaseActivity {
 			public void onStarClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					new Thread(() ->{
+					new Thread(() -> {
 						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
 						unipackENT.pin = !unipackENT.pin;
 						db.unipackDAO().update(unipackENT);
@@ -266,7 +325,7 @@ public class MainActivity extends BaseActivity {
 			public void onBookmarkClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					new Thread(() ->{
+					new Thread(() -> {
 						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
 						unipackENT.bookmark = !unipackENT.bookmark;
 						db.unipackDAO().update(unipackENT);
@@ -364,7 +423,6 @@ public class MainActivity extends BaseActivity {
 
 		checkThings();
 		update(false);
-		setDriver();
 	}
 
 	void checkThings() {
@@ -751,9 +809,8 @@ public class MainActivity extends BaseActivity {
 
 	public void pressPlay(UnipackItem item) {
 		rescanScale(b.scale, b.paddingScale);
-		LaunchpadActivity.removeDriverListener(MainActivity.this);
 
-		new Thread(()->{
+		new Thread(() -> {
 			db.unipackOpenDAO().insert(new UnipackOpenENT(item.unipack.F_project.getName(), new Date()));
 		}).start();
 
@@ -761,6 +818,7 @@ public class MainActivity extends BaseActivity {
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 		intent.putExtra("path", item.path);
 		startActivity(intent);
+		MidiConnection.removeController(midiController);
 	}
 
 	int getSelectedIndex() {
@@ -932,106 +990,6 @@ public class MainActivity extends BaseActivity {
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 	}
 
-	// ============================================================================================= Launchpad
-
-	void setDriver() {
-		LaunchpadActivity.setDriverListener(MainActivity.this,
-				new LaunchpadDriver.DriverRef.OnConnectionEventListener() {
-					@Override
-					public void onConnected() {
-						Log.driverCycle("MainActivity onConnected()");
-						updateLP();
-					}
-
-					@Override
-					public void onDisconnected() {
-						Log.driverCycle("MainActivity onDisconnected()");
-					}
-				}, new LaunchpadDriver.DriverRef.OnGetSignalListener() {
-					@Override
-					public void onPadTouch(int x, int y, boolean upDown, int velo) {
-						if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
-							if (upDown)
-								LaunchpadActivity.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
-							else
-								LaunchpadActivity.driver.sendPadLED(x, y, 0);
-						}
-					}
-
-					@Override
-					public void onFunctionkeyTouch(int f, boolean upDown) {
-						if (f == 0 && upDown) {
-							if (havePrev()) {
-								togglePlay(lastPlayIndex - 1);
-								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
-								//b.recyclerView.smoothScrollToPosition(0, list.find(lastPlayIndex).packViewSimple.getTop() + (-Scale_Height / 2) + (list.find(lastPlayIndex).packViewSimple.getHeight() / 2));
-							} else
-								showSelectLPUI();
-						} else if (f == 1 && upDown) {
-							if (haveNext()) {
-								togglePlay(lastPlayIndex + 1);
-								b.recyclerView.smoothScrollToPosition(lastPlayIndex);
-							} else
-								showSelectLPUI();
-						} else if (f == 2 && upDown) {
-							if (haveNow())
-								list.get(lastPlayIndex).packViewSimple.onPlayClick();
-						}
-					}
-
-					@Override
-					public void onChainTouch(int c, boolean upDown) {
-					}
-
-					@Override
-					public void onUnknownEvent(int cmd, int sig, int note, int velo) {
-						if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
-							updateLP();
-					}
-				});
-	}
-
-	void updateLP() {
-		showWatermark();
-		showSelectLPUI();
-	}
-
-	boolean haveNow() {
-		return 0 <= lastPlayIndex && lastPlayIndex <= list.size() - 1;
-	}
-
-	boolean haveNext() {
-		return lastPlayIndex < list.size() - 1;
-	}
-
-	boolean havePrev() {
-		return 0 < lastPlayIndex;
-	}
-
-	void showSelectLPUI() {
-		if (havePrev())
-			LaunchpadActivity.driver.sendFunctionkeyLED(0, 63);
-		else
-			LaunchpadActivity.driver.sendFunctionkeyLED(0, 5);
-
-		if (haveNow())
-			LaunchpadActivity.driver.sendFunctionkeyLED(2, 61);
-		else
-			LaunchpadActivity.driver.sendFunctionkeyLED(2, 0);
-
-		if (haveNext())
-			LaunchpadActivity.driver.sendFunctionkeyLED(1, 63);
-		else
-			LaunchpadActivity.driver.sendFunctionkeyLED(1, 5);
-	}
-
-	void showWatermark() {
-		LaunchpadActivity.driver.sendPadLED(3, 3, 61);
-		LaunchpadActivity.driver.sendPadLED(3, 4, 40);
-		LaunchpadActivity.driver.sendPadLED(4, 3, 40);
-		LaunchpadActivity.driver.sendPadLED(4, 4, 61);
-	}
-
 	// ============================================================================================= Check
 
 	void versionCheck() {
@@ -1057,6 +1015,49 @@ public class MainActivity extends BaseActivity {
 			VA_floatingAnimation.end();
 	}
 
+	// ============================================================================================= Controller
+
+	void updateLP() {
+		showWatermark();
+		showSelectLPUI();
+	}
+
+	boolean haveNow() {
+		return 0 <= lastPlayIndex && lastPlayIndex <= list.size() - 1;
+	}
+
+	boolean haveNext() {
+		return lastPlayIndex < list.size() - 1;
+	}
+
+	boolean havePrev() {
+		return 0 < lastPlayIndex;
+	}
+
+	void showSelectLPUI() {
+		if (havePrev())
+			MidiConnection.driver.sendFunctionkeyLED(0, 63);
+		else
+			MidiConnection.driver.sendFunctionkeyLED(0, 5);
+
+		if (haveNow())
+			MidiConnection.driver.sendFunctionkeyLED(2, 61);
+		else
+			MidiConnection.driver.sendFunctionkeyLED(2, 0);
+
+		if (haveNext())
+			MidiConnection.driver.sendFunctionkeyLED(1, 63);
+		else
+			MidiConnection.driver.sendFunctionkeyLED(1, 5);
+	}
+
+	void showWatermark() {
+		MidiConnection.driver.sendPadLED(3, 3, 61);
+		MidiConnection.driver.sendPadLED(3, 4, 40);
+		MidiConnection.driver.sendPadLED(4, 3, 40);
+		MidiConnection.driver.sendPadLED(4, 4, 61);
+	}
+
 	// ============================================================================================= Activity
 
 	@Override
@@ -1072,12 +1073,13 @@ public class MainActivity extends BaseActivity {
 		super.onResume();
 
 		initVar(false);
-		setDriver();
+
 		checkThings();
 
 		new Handler().postDelayed(() -> update(), 1000);
 
 
+		MidiConnection.setController(midiController);
 		firebase_storeCount.attachEventListener(true);
 	}
 
@@ -1095,6 +1097,8 @@ public class MainActivity extends BaseActivity {
 	public void onPause() {
 		super.onPause();
 
+
+		MidiConnection.setController(midiController);
 		firebase_storeCount.attachEventListener(false);
 	}
 
@@ -1102,6 +1106,6 @@ public class MainActivity extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 
-		LaunchpadActivity.removeDriverListener(MainActivity.this);
+		MidiConnection.removeController(midiController);
 	}
 }
