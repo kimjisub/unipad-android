@@ -169,9 +169,9 @@ public class MainActivity extends BaseActivity {
 			public void onPadTouch(int x, int y, boolean upDown, int velo) {
 				if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
 					if (upDown)
-						MidiConnection.driver.sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
+						MidiConnection.INSTANCE.getDriver().sendPadLED(x, y, new int[]{40, 61}[(int) (Math.random() * 2)]);
 					else
-						MidiConnection.driver.sendPadLED(x, y, 0);
+						MidiConnection.INSTANCE.getDriver().sendPadLED(x, y, 0);
 				}
 			}
 
@@ -818,7 +818,7 @@ public class MainActivity extends BaseActivity {
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
 		intent.putExtra("path", item.path);
 		startActivity(intent);
-		MidiConnection.removeController(midiController);
+		MidiConnection.INSTANCE.removeController(midiController);
 	}
 
 	int getSelectedIndex() {
@@ -1036,26 +1036,26 @@ public class MainActivity extends BaseActivity {
 
 	void showSelectLPUI() {
 		if (havePrev())
-			MidiConnection.driver.sendFunctionkeyLED(0, 63);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(0, 63);
 		else
-			MidiConnection.driver.sendFunctionkeyLED(0, 5);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(0, 5);
 
 		if (haveNow())
-			MidiConnection.driver.sendFunctionkeyLED(2, 61);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(2, 61);
 		else
-			MidiConnection.driver.sendFunctionkeyLED(2, 0);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(2, 0);
 
 		if (haveNext())
-			MidiConnection.driver.sendFunctionkeyLED(1, 63);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(1, 63);
 		else
-			MidiConnection.driver.sendFunctionkeyLED(1, 5);
+			MidiConnection.INSTANCE.getDriver().sendFunctionkeyLED(1, 5);
 	}
 
 	void showWatermark() {
-		MidiConnection.driver.sendPadLED(3, 3, 61);
-		MidiConnection.driver.sendPadLED(3, 4, 40);
-		MidiConnection.driver.sendPadLED(4, 3, 40);
-		MidiConnection.driver.sendPadLED(4, 4, 61);
+		MidiConnection.INSTANCE.getDriver().sendPadLED(3, 3, 61);
+		MidiConnection.INSTANCE.getDriver().sendPadLED(3, 4, 40);
+		MidiConnection.INSTANCE.getDriver().sendPadLED(4, 3, 40);
+		MidiConnection.INSTANCE.getDriver().sendPadLED(4, 4, 61);
 	}
 
 	// ============================================================================================= Activity
@@ -1079,7 +1079,7 @@ public class MainActivity extends BaseActivity {
 		new Handler().postDelayed(() -> update(), 1000);
 
 
-		MidiConnection.setController(midiController);
+		MidiConnection.INSTANCE.setController(midiController);
 		firebase_storeCount.attachEventListener(true);
 	}
 
@@ -1100,7 +1100,7 @@ public class MainActivity extends BaseActivity {
 		super.onPause();
 
 
-		MidiConnection.setController(midiController);
+		MidiConnection.INSTANCE.setController(midiController);
 		firebase_storeCount.attachEventListener(false);
 	}
 
@@ -1108,6 +1108,6 @@ public class MainActivity extends BaseActivity {
 	public void onDestroy() {
 		super.onDestroy();
 
-		MidiConnection.removeController(midiController);
+		MidiConnection.INSTANCE.removeController(midiController);
 	}
 }

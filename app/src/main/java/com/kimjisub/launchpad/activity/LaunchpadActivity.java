@@ -46,7 +46,7 @@ public class LaunchpadActivity extends BaseActivity {
 		b = setContentViewBind(R.layout.activity_usbmidi);
 		initVar();
 
-		MidiConnection.setListener(new MidiConnection.Listener() {
+		MidiConnection.INSTANCE.setListener(new MidiConnection.Listener() {
 			@Override
 			public void onConnectedListener() {
 				b.err.setVisibility(View.GONE);
@@ -68,10 +68,10 @@ public class LaunchpadActivity extends BaseActivity {
 			}
 		});
 
-		MidiConnection.setMode(PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this));
+		MidiConnection.INSTANCE.setMode(PreferenceManager.LaunchpadConnectMethod.load(LaunchpadActivity.this));
 
 		Intent intent = getIntent();
-		MidiConnection.initConnection(intent, (UsbManager) getSystemService(Context.USB_SERVICE));
+		MidiConnection.INSTANCE.initConnection(intent, (UsbManager) getSystemService(Context.USB_SERVICE));
 
 
 		(new Handler()).postDelayed(this::finish, 2000);
