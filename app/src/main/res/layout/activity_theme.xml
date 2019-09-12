@@ -26,6 +26,7 @@
 			android:layout_marginBottom="20dp"
 			android:background="@drawable/border_apply"
 			android:clickable="true"
+			android:focusable="true"
 			android:gravity="center"
 			android:text="@string/apply"
 			android:textColor="@color/white"
