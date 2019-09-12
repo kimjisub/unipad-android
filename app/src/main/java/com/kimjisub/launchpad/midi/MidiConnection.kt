@@ -52,23 +52,28 @@ object MidiConnection {
 			}
 		}
 
-		onSendSignalListener = DriverRef.OnSendSignalListener { cmd, sig, note, velo ->
-			if (usbDeviceConnection != null) {
-				if (mode == 0) {
-					try {
-						object : AsyncTask<String, Int, String>() {
-							override fun doInBackground(vararg params: String): String? {
-								sendBuffer(cmd, sig, note, velo)
-								return null
-							}
-						}.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
-					} catch (ignore: Exception) {
-						//Log.midiDetail("MIDI send thread execute fail");
-					}
+		onSendSignalListener = object : DriverRef.OnSendSignalListener {
+			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velo: Byte) {
+				if (usbDeviceConnection != null) {
+					if (mode == 0) {
+						try {
 
-				} else if (mode == 1)
-					sendBuffer(cmd, sig, note, velo)
+							// todo switch to coroutine
+							object : AsyncTask<String, Int, String>() {
+								override fun doInBackground(vararg params: String): String? {
+									sendBuffer(cmd, sig, note, velo)
+									return null
+								}
+							}.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+						} catch (ignore: Exception) {
+							//Log.midiDetail("MIDI send thread execute fail");
+						}
+
+					} else if (mode == 1)
+						sendBuffer(cmd, sig, note, velo)
+				}
 			}
+
 		}
 
 		onGetSignalListener = object : DriverRef.OnGetSignalListener {
