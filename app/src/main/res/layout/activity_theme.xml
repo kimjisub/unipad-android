@@ -17,17 +17,8 @@
 			android:textColor="@color/white"
 			android:textSize="32dp" />
 
-		<androidx.recyclerview.widget.RecyclerView
-			android:id="@+id/list"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:layout_alignParentStart="true"
-			android:layout_alignParentLeft="true"
-			android:layout_alignParentTop="true" />
-
-
 		<TextView
-			android:id="@+id/apply"
+			android:id="@+id/TV_apply"
 			android:layout_width="80dp"
 			android:layout_height="30dp"
 			android:layout_alignParentBottom="true"
@@ -39,6 +30,14 @@
 			android:text="@string/apply"
 			android:textColor="@color/white"
 			android:textSize="12dp" />
+
+		<androidx.recyclerview.widget.RecyclerView
+			android:id="@+id/RV_list"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_alignParentStart="true"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentTop="true" />
 
 	</RelativeLayout>
 </layout>
