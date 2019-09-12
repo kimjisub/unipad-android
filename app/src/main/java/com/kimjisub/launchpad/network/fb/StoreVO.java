@@ -18,7 +18,7 @@ public class StoreVO {
 
 	@Exclude
 	public Map<String, Object> toMap() {
-		HashMap<String, Object> result = new HashMap<>();
+		Map<String, Object> result = new HashMap<>();
 		result.put("code", code);
 		result.put("title", title);
 		result.put("producerName", producerName);
