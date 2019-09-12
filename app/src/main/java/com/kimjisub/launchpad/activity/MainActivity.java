@@ -35,7 +35,6 @@ import com.google.gson.reflect.TypeToken;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.design.dialog.FileExplorerDialog;
 import com.kimjisub.design.panel.MainPackPanel;
-import com.kimjisub.launchpad.BaseApplication;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.UnipackAdapter;
@@ -1002,9 +1001,10 @@ public class MainActivity extends BaseActivity {
 		String thisVersion = BuildConfig.VERSION_NAME;
 		String currVersionJson = FirebaseRemoteConfig.getInstance().getString("android_version");
 
-		if(currVersionJson.length() > 0){
+		if (currVersionJson.length() > 0) {
 			Gson gson = new GsonBuilder().create();
-			List<String> currVersionList = gson.fromJson(currVersionJson, new TypeToken<List<String>>(){}.getType());
+			List<String> currVersionList = gson.fromJson(currVersionJson, new TypeToken<List<String>>() {
+			}.getType());
 
 			if (!currVersionList.contains(thisVersion))
 				Snackbar.make(b.getRoot(), lang(R.string.newVersionFound) + "\n" + thisVersion + " → " + currVersionList.get(0), Snackbar.LENGTH_SHORT)

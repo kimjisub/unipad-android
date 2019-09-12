@@ -213,7 +213,7 @@ object MidiConnection {
 
 		override fun onPreExecute() {
 			super.onPreExecute()
-			driver!!.onConnected()
+			driver.onConnected()
 		}
 
 		@SuppressLint("DefaultLocale")
@@ -280,11 +280,11 @@ object MidiConnection {
 		override fun onProgressUpdate(vararg progress: Int?) {
 
 			progress[0]
-			driver!!.getSignal(progress[0]!!, progress[1]!!, progress[2]!!, progress[3]!!)
+			driver.getSignal(progress[0]!!, progress[1]!!, progress[2]!!, progress[3]!!)
 		}
 
 		override fun onPostExecute(result: String) {
-			driver!!.onDisconnected()
+			driver.onDisconnected()
 		}
 	}
 
@@ -292,8 +292,8 @@ object MidiConnection {
 
 	fun setDriver(cls: Class<*>) {
 		if (driver != null) {
-			driver!!.sendClearLED()
-			driver!!.onDisconnected()
+			driver.sendClearLED()
+			driver.onDisconnected()
 			driver = Noting()
 		}
 
@@ -301,7 +301,7 @@ object MidiConnection {
 			driver = cls.newInstance() as DriverRef
 			setDriverListener()
 			if (isRun)
-				driver!!.onConnected()
+				driver.onConnected()
 		} catch (e: IllegalAccessException) {
 			e.printStackTrace()
 		} catch (e: InstantiationException) {
@@ -312,9 +312,9 @@ object MidiConnection {
 	}
 
 	fun setDriverListener() {
-		driver!!.setOnCycleListener(onCycleListener)
-		driver!!.setOnGetSignalListener(onGetSignalListener)
-		driver!!.setOnSendSignalListener(onSendSignalListener)
+		driver.setOnCycleListener(onCycleListener)
+		driver.setOnGetSignalListener(onGetSignalListener)
+		driver.setOnSendSignalListener(onSendSignalListener)
 	}
 
 	// Controller /////////////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +337,7 @@ object MidiConnection {
 	fun setListener(listener_: Listener) {
 		listener = listener_
 
-		onChangeDriver(driver!!.javaClass)
+		onChangeDriver(driver.javaClass)
 		onChangeMode(mode)
 	}
 
