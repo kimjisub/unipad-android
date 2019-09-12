@@ -1,0 +1,57 @@
+package com.kimjisub.launchpad.api.unipad
+
+import com.kimjisub.launchpad.api.BaseApiService
+import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
+import com.kimjisub.manager.Log
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.logging.HttpLoggingInterceptor.Level
+import okhttp3.logging.HttpLoggingInterceptor.Logger
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.Retrofit.Builder
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
+
+class UniPadApi : BaseApiService() {
+
+	companion object {
+		private const val URL = "https://api.unipad.kr"
+
+		val service: UniPadApiService by lazy {
+			val interceptor = HttpLoggingInterceptor(object : Logger {
+				override fun log(message: String) {
+					Log.network(message)
+				}
+			})
+					.setLevel(Level.BODY)
+			val client: OkHttpClient = unsafeOkHttpClient
+					.addInterceptor(interceptor)
+					//.cookieJar(new MyCookieJar())
+					.build()
+			val retrofit: Retrofit = Builder()
+					.baseUrl(URL)
+					.addConverterFactory(GsonConverterFactory.create(gson))
+					.client(client)
+					.build()
+			retrofit.create(UniPadApiService::class.java)
+		}
+
+		interface UniPadApiService {
+
+			// unishare /////////////////////////////////////////////////////////////////////////////////////////
+
+			@GET("/unishare")
+			fun unishare_list(): Call<List<UnishareVO?>?>?
+
+			@POST("/unishare")
+			fun unishare_make(@Body item: UnishareVO?): Call<UnishareVO?>?
+
+			@GET("/unishare/{code}")
+			fun unishare_get(@Path("code") code: String?): Call<UnishareVO?>?
+		}
+	}
+}

@@ -60,14 +60,15 @@ public class ImportPackByUrlActivity extends BaseActivity {
 		identifyCode = "#" + code;
 		setStatus(Status.prepare);
 
-		UniPadApi.getService().unishare_get(code).enqueue(new Callback<UnishareVO>() {
+
+		UniPadApi.Companion.getService().unishare_get(code).enqueue(new Callback<UnishareVO>() {
 			@Override
 			public void onResponse(Call<UnishareVO> call, Response<UnishareVO> response) {
 				if (response.isSuccessful()) {
 					unishare = response.body();
-					log("title: " + unishare.title);
-					log("producerName: " + unishare.producer);
-					identifyCode = unishare.title + " #" + unishare._id;
+					log("title: " + unishare.getTitle());
+					log("producerName: " + unishare.getProducer());
+					identifyCode = unishare.getTitle() + " #" + unishare.get_id();
 					setStatus(Status.getInfo);
 
 					new UnishareDownloader(unishare, F_UniPackRootExt, new UnishareDownloader.UnishareDownloadListener() {
@@ -79,7 +80,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 
 						@Override
 						public void onGetFileSize(long fileSize_) {
-							fileSize = fileSize_ > 0 ? fileSize_ : unishare.fileSize;
+							fileSize = fileSize_ > 0 ? fileSize_ : unishare.getFileSize();
 							log("fileSize: " + fileSize_ + " → " + fileSize);
 						}
 
@@ -194,7 +195,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					break;
 				case downloadStart:
 					b.title.setText(status.titleStringId);
-					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
+					b.message.setText("#" + code + "\n" + unishare.getTitle() + "\n" + unishare.getProducer());
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
 					notificationBuilder.setProgress(100, 0, true);
@@ -215,7 +216,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					break;
 				case analyzing:
 					b.title.setText(status.titleStringId);
-					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
+					b.message.setText("#" + code + "\n" + unishare.getTitle() + "\n" + unishare.getProducer());
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
 					notificationBuilder.setProgress(100, 0, true);
@@ -243,7 +244,7 @@ public class ImportPackByUrlActivity extends BaseActivity {
 					break;
 				case notFound:
 					b.title.setText(status.titleStringId);
-					b.message.setText("#" + code + "\n" + unishare.title + "\n" + unishare.producer);
+					b.message.setText("#" + code + "\n" + unishare.getTitle() + "\n" + unishare.getProducer());
 					notificationBuilder.setContentTitle(identifyCode);
 					notificationBuilder.setContentText(lang(status.titleStringId));
 					notificationBuilder.setProgress(0, 0, false);

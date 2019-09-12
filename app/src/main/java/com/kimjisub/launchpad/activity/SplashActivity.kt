@@ -10,6 +10,7 @@ import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.api.unipad.UniPadApi
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import kotlinx.android.synthetic.main.activity_splash.*
