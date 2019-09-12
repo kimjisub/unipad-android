@@ -129,7 +129,7 @@ public class SettingActivity extends PreferenceActivity {
 			for (int i = 0; i < listT.length; i++)
 				data.add(new mItem(listT[i], listS[i], listI[i]));
 
-			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.item_setting, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(actionList[position], Uri.parse(urlList[position]))));
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
@@ -167,7 +167,7 @@ public class SettingActivity extends PreferenceActivity {
 			for (int i = 0; i < titleList.length; i++)
 				data.add(new mItem(titleList[i], summaryList[i]));
 
-			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.item_setting, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> billingManager.purchase(urlList[position]));
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
@@ -230,7 +230,7 @@ public class SettingActivity extends PreferenceActivity {
 			for (int i = 0; i < titleList.length; i++)
 				data.add(new mItem(titleList[i], summaryList[i]));
 
-			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.setting_item, data));
+			listView.setAdapter(new mAdapter(SettingActivity.this, R.layout.item_setting, data));
 			listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlList[position]))));
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(SettingActivity.this);
