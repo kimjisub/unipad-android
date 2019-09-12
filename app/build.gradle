@@ -98,6 +98,7 @@ dependencies {
 	implementation 'com.google.firebase:firebase-messaging:20.0.0'
 	implementation 'com.google.firebase:firebase-ads:18.2.0'
 	implementation 'com.google.firebase:firebase-perf:19.0.0'
+	implementation 'com.google.firebase:firebase-config:19.0.0'
 	implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
 	// Retrofit 2

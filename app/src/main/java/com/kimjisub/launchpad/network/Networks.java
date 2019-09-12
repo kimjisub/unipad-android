@@ -43,46 +43,6 @@ public class Networks {
 		return html.toString();
 	}
 
-	public static class CheckVersion {
-		FirebaseDatabase database;
-		DatabaseReference myRef;
-
-		private onChangeListener dataListener = null;
-
-		public CheckVersion setOnChangeListener(onChangeListener listener) {
-			this.dataListener = listener;
-			return this;
-		}
-
-		void onChange(String version) {
-			if (dataListener != null)
-				dataListener.onChange(version);
-		}
-
-		public void run() {
-			database = FirebaseDatabase.getInstance();
-			myRef = database.getReference("appVersion");
-
-			myRef.addValueEventListener(new ValueEventListener() {
-				@Override
-				public void onDataChange(DataSnapshot dataSnapshot) {
-					onChange(dataSnapshot.getValue(String.class));
-				}
-
-				@Override
-				public void onCancelled(DatabaseError databaseError) {
-
-				}
-			});
-
-		}
-
-
-		public interface onChangeListener {
-			void onChange(String version);
-		}
-	}
-
 	public static class FirebaseManager {
 		FirebaseDatabase database;
 		DatabaseReference myRef;
