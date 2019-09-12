@@ -7,7 +7,7 @@
 		android:orientation="vertical">
 
 		<TextView
-			android:id="@+id/info"
+			android:id="@+id/TV_log"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentStart="true"
@@ -17,7 +17,6 @@
 			android:textSize="10dp" />
 
 		<LinearLayout
-			android:id="@+id/linearLayout2"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_centerHorizontal="true"
@@ -46,7 +45,7 @@
 					android:orientation="horizontal">
 
 					<LinearLayout
-						android:id="@+id/s"
+						android:id="@+id/BTN_S"
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
@@ -66,7 +65,7 @@
 					</LinearLayout>
 
 					<LinearLayout
-						android:id="@+id/mk2"
+						android:id="@+id/BTN_Mk2"
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
@@ -86,7 +85,7 @@
 					</LinearLayout>
 
 					<LinearLayout
-						android:id="@+id/pro"
+						android:id="@+id/BTN_Pro"
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
@@ -114,7 +113,7 @@
 
 
 					<LinearLayout
-						android:id="@+id/midifighter"
+						android:id="@+id/BTN_Midifighter"
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
@@ -134,7 +133,7 @@
 					</LinearLayout>
 
 					<LinearLayout
-						android:id="@+id/piano"
+						android:id="@+id/BTN_Piano"
 						android:layout_width="120dp"
 						android:layout_height="100dp"
 						android:gravity="center"
@@ -170,7 +169,7 @@
 			android:orientation="vertical">
 
 			<LinearLayout
-				android:id="@+id/speedFirst"
+				android:id="@+id/BTN_speedFirst"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center"
@@ -191,7 +190,7 @@
 			</LinearLayout>
 
 			<LinearLayout
-				android:id="@+id/avoidAfterimage"
+				android:id="@+id/BTN_avoidAfterimage"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center"
@@ -214,7 +213,7 @@
 		</LinearLayout>
 
 		<RelativeLayout
-			android:id="@+id/err"
+			android:id="@+id/RL_err"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:background="@color/background1"
