@@ -28,9 +28,14 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.kimjisub.design.PackViewSimple;
 import com.kimjisub.design.dialog.FileExplorerDialog;
 import com.kimjisub.design.panel.MainPackPanel;
+import com.kimjisub.launchpad.BaseApplication;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.UnipackAdapter;
@@ -58,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
+import java.util.List;
 
 import static com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET;
 
@@ -993,19 +999,20 @@ public class MainActivity extends BaseActivity {
 	// ============================================================================================= Check
 
 	void versionCheck() {
-		if (!BuildConfig.VERSION_NAME.contains("b")) {
-			new Networks.CheckVersion().setOnChangeListener(version -> {
-				try {
-					String currVersion = BuildConfig.VERSION_NAME;
-					if (version != null && !currVersion.equals(version)) {
-						Snackbar.make(b.getRoot(), lang(R.string.newVersionFound) + "\n" + currVersion + " → " + version, Snackbar.LENGTH_SHORT)
-								.setAction(R.string.update, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))))
-								.show();
-					}
-				} catch (Exception ignore) {
-				}
-			}).run();
+		String thisVersion = BuildConfig.VERSION_NAME;
+		String currVersionJson = FirebaseRemoteConfig.getInstance().getString("android_version");
+
+		if(currVersionJson.length() > 0){
+			Gson gson = new GsonBuilder().create();
+			List<String> currVersionList = gson.fromJson(currVersionJson, new TypeToken<List<String>>(){}.getType());
+
+			if (!currVersionList.contains(thisVersion))
+				Snackbar.make(b.getRoot(), lang(R.string.newVersionFound) + "\n" + thisVersion + " → " + currVersionList.get(0), Snackbar.LENGTH_SHORT)
+						.setAction(R.string.update, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))))
+						.show();
 		}
+
+
 	}
 
 	void blink(final boolean bool) {

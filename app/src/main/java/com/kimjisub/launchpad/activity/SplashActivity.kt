@@ -4,13 +4,14 @@ import android.Manifest.permission
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
+import com.kimjisub.launchpad.BaseApplication
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.api.unipad.UniPadApi
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import kotlinx.android.synthetic.main.activity_splash.*
@@ -18,6 +19,7 @@ import kotlinx.android.synthetic.main.activity_splash.*
 class SplashActivity : BaseActivity() {
 	internal var billingManager: BillingManager? = null
 	// Timer
+	var startTime: Long? = null
 	internal var handler = Handler()
 	internal var runnable = Runnable {
 		finish()
@@ -29,10 +31,11 @@ class SplashActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_splash)
+		startTime = System.currentTimeMillis()
 
 		TV_version.text = BuildConfig.VERSION_NAME
 
-		var billingEventListener = object : BillingEventListener {
+		val billingEventListener = object : BillingEventListener {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
@@ -47,7 +50,9 @@ class SplashActivity : BaseActivity() {
 		TedPermission.with(this)
 				.setPermissionListener(object : PermissionListener {
 					override fun onPermissionGranted() {
-						handler.postDelayed(runnable, 3000)
+						val endTime = System.currentTimeMillis()
+						val durTime = endTime - startTime!!
+						handler.postDelayed(runnable, 2000 - durTime)
 					}
 
 					override fun onPermissionDenied(deniedPermissions: List<String?>?) {
