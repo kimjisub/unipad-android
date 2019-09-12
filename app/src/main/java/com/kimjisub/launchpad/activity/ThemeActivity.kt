@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.activity_theme.*
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
-	val themeList: ArrayList<ThemeItem> by lazy { getThemePackList(applicationContext) }
+	val list: ArrayList<ThemeItem> by lazy { getThemePackList(applicationContext) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -33,7 +33,7 @@ class ThemeActivity : BaseActivity() {
 
 		RV_list.apply {
 			layoutManager = manager
-			adapter = ThemeAdapter(this@ThemeActivity, themeList)
+			adapter = ThemeAdapter(this@ThemeActivity, list)
 
 			setHasFixedSize(true)
 			addOnScrollListener(CenterScrollListener())
@@ -48,8 +48,8 @@ class ThemeActivity : BaseActivity() {
 	}
 
 	private fun selectTheme(i: Int) {
-		if (themeList.size != i)
-			SelectedTheme.save(this@ThemeActivity, themeList[i].package_name)
+		if (list.size != i)
+			SelectedTheme.save(this@ThemeActivity, list[i].package_name)
 		else
 			startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")))
 	}
@@ -58,7 +58,7 @@ class ThemeActivity : BaseActivity() {
 		var ret = 0
 		val selectedThemePackageName: String = SelectedTheme.load(this@ThemeActivity)
 		var i = 0
-		for (themeItem in themeList) {
+		for (themeItem in list) {
 			Log.log(selectedThemePackageName + ", " + themeItem.package_name)
 			if (themeItem.package_name == selectedThemePackageName) {
 				ret = i
