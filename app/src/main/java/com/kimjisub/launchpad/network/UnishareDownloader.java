@@ -48,8 +48,8 @@ public class UnishareDownloader {
 		this.F_UniPackRootExt = F_UniPackRootExt;
 		this.listener = listener;
 
-		zip = FileManager.makeNextPath(F_UniPackRootExt, unishare.title + " #" + unishare._id, ".zip");
-		folder = FileManager.makeNextPath(F_UniPackRootExt, unishare.title + " #" + unishare._id, "/");
+		zip = FileManager.makeNextPath(F_UniPackRootExt, unishare.getTitle() + " #" + unishare.get_id(), ".zip");
+		folder = FileManager.makeNextPath(F_UniPackRootExt, unishare.getTitle() + " #" + unishare.get_id(), "/");
 
 		(new DownloadThread()).execute();
 	}
@@ -60,7 +60,7 @@ public class UnishareDownloader {
 		protected String doInBackground(String... strings) {
 			try {
 				listener.onDownloadStart();
-				Call<ResponseBody> call = FileApi.getService().unishare_download(unishare._id);
+				Call<ResponseBody> call = FileApi.Companion.getService().unishare_download(unishare.get_id());
 				ResponseBody responseBody = call.execute().body();
 				InputStream in = responseBody.byteStream();
 
