@@ -22,15 +22,14 @@ class UniPadApi : BaseApiService() {
 		private const val URL = "https://api.unipad.kr"
 
 		val service: UniPadApiService by lazy {
-			val interceptor = HttpLoggingInterceptor(object : Logger {
+			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {
 				override fun log(message: String) {
 					Log.network(message)
 				}
 			})
-					.setLevel(Level.BODY)
+			httpLoggingInterceptor.level = Level.BODY
 			val client: OkHttpClient = unsafeOkHttpClient
-					.addInterceptor(interceptor)
-					//.cookieJar(new MyCookieJar())
+					.addInterceptor(httpLoggingInterceptor)
 					.build()
 			val retrofit: Retrofit = Builder()
 					.baseUrl(URL)

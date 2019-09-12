@@ -4,12 +4,10 @@ import android.Manifest.permission
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
-import com.kimjisub.launchpad.BaseApplication
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.manager.BillingManager

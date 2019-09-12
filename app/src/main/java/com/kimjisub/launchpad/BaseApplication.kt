@@ -10,8 +10,6 @@ import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
 
 class BaseApplication : MultiDexApplication() {
-	var remoteConfig: FirebaseRemoteConfig? = null
-
 	override fun onCreate() {
 		super.onCreate()
 
@@ -37,14 +35,14 @@ class BaseApplication : MultiDexApplication() {
 	}
 
 	private fun setupRemoteConfig() {
-		remoteConfig = FirebaseRemoteConfig.getInstance()
+		val remoteConfig = FirebaseRemoteConfig.getInstance()
 
 		val configSettings = FirebaseRemoteConfigSettings.Builder().apply {
 			if (BuildConfig.DEBUG)
 				setMinimumFetchIntervalInSeconds(60)
 		}.build()
 
-		remoteConfig!!.setConfigSettingsAsync(configSettings)
-		remoteConfig!!.fetchAndActivate()
+		remoteConfig.setConfigSettingsAsync(configSettings)
+		remoteConfig.fetchAndActivate()
 	}
 }
