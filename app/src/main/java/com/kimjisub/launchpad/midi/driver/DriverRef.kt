@@ -20,13 +20,9 @@ abstract class DriverRef {
 	////
 
 
-	fun onConnected() {
-		if (onCycleListener != null) onCycleListener!!.onConnected()
-	}
+	fun onConnected() = onCycleListener?.onConnected()
 
-	fun onDisconnected() {
-		if (onCycleListener != null) onCycleListener!!.onDisconnected()
-	}
+	fun onDisconnected() = onCycleListener?.onDisconnected()
 
 
 	// OnGetSignalListener /////////////////////////////////////////////////////////////////////////////////////////
