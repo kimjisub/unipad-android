@@ -7,14 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.preference.CheckBoxPreference
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.core.content.ContextCompat
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.*
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.firebase.iid.FirebaseInstanceId
 import com.kimjisub.launchpad.R
@@ -28,6 +26,25 @@ import java.util.*
 
 class SettingFragment : PreferenceFragmentCompat() {
 	private var billingManager: BillingManager? = null
+
+	override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
+		super.setPreferenceScreen(preferenceScreen)
+
+		if (preferenceScreen != null) {
+			val count = preferenceScreen.preferenceCount
+			for (i in 0 until count)
+				removeIconSpace(preferenceScreen.getPreference(i))
+		}
+	}
+
+	private fun removeIconSpace(preference: Preference?) {
+		if (preference != null) {
+			preference.isIconSpaceReserved = false
+			if (preference is PreferenceCategory)
+				for (i in 0 until preference.preferenceCount)
+					removeIconSpace(preference.getPreference(i))
+		}
+	}
 
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		addPreferencesFromResource(xml.setting)
@@ -142,7 +159,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			builder.show()
 			false
 		}
-		findPreference<Preference>("removeAds")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference ->
+		findPreference<CheckBoxPreference>("removeAds")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference ->
 			(preference as CheckBoxPreference).isChecked = billingManager!!.isPurchaseRemoveAds
 			billingManager!!.subscribe_removeAds()
 			false

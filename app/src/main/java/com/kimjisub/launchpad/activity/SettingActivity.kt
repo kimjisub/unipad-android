@@ -1,13 +1,11 @@
 package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
-import android.preference.PreferenceActivity
-import com.kimjisub.launchpad.R.xml
+import com.kimjisub.launchpad.R.layout
 
-class SettingActivity : PreferenceActivity() {
-	public override fun onCreate(savedInstanceState: Bundle) {
-		BaseActivity.startActivity(this)
+class SettingActivity : BaseActivity() {
+	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		addPreferencesFromResource(xml.setting)
+		setContentView(layout.activity_setting)
 	}
 }
