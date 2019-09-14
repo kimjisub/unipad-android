@@ -9,7 +9,7 @@
 
 	<!--text-->
 	<color name="title">#767d89</color>
-	<color name="subTitle">#a1a6ae</color>
+	<color name="subtitle">#a1a6ae</color>
 
 	<!--skin-->
 	<color name="checkbox">#a6b4c9</color>

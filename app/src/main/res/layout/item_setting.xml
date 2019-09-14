@@ -48,7 +48,7 @@
 				android:layout_height="wrap_content"
 				android:gravity="center_vertical"
 				android:text="@{data.subtitle}"
-				android:textColor="@color/subTitle"
+				android:textColor="@color/subtitle"
 				android:textSize="13dp" />
 		</LinearLayout>
 

@@ -41,7 +41,7 @@ public class StorePackPanel extends RelativeLayout {
 		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_store_pack, this, true);
 
 		b.title.setSelected(true);
-		b.subTitle.setSelected(true);
+		b.subtitle.setSelected(true);
 		b.path.setSelected(true);
 
 		b.youtube.setOnClickListener(v -> {
@@ -75,8 +75,8 @@ public class StorePackPanel extends RelativeLayout {
 		b.title.setText(title);
 	}
 
-	public void setSubTitle(String subTitle) {
-		b.subTitle.setText(subTitle);
+	public void setSubtitle(String subtitle) {
+		b.subtitle.setText(subtitle);
 	}
 
 	public void setDownloadCount(String downloadCount) {
@@ -97,11 +97,11 @@ public class StorePackPanel extends RelativeLayout {
 		}
 	}
 
-	public void updateSubTitle(String subTitle) {
-		if (!b.subTitle.getText().equals(subTitle)) {
-			b.subTitle.setAlpha(0);
-			setSubTitle(subTitle);
-			b.subTitle.animate().alphaBy(0).alpha(1).setDuration(500).start();
+	public void updateSubtitle(String subtitle) {
+		if (!b.subtitle.getText().equals(subtitle)) {
+			b.subtitle.setAlpha(0);
+			setSubtitle(subtitle);
+			b.subtitle.animate().alphaBy(0).alpha(1).setDuration(500).start();
 		}
 	}
 

@@ -428,7 +428,7 @@ public class FBStoreActivity extends BaseActivity {
 		StoreVO storeVO = item.getStoreVO();
 
 		b.panelPack.updateTitle(storeVO.getTitle());
-		b.panelPack.updateSubTitle(storeVO.getProducerName());
+		b.panelPack.updateSubtitle(storeVO.getProducerName());
 		b.panelPack.updateDownloadCount(storeVO.getDownloadCount());
 	}
 

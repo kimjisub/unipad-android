@@ -36,7 +36,7 @@ public class MainPackPanel extends RelativeLayout {
 		b = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.panel_main_pack, this, true);
 
 		b.title.setSelected(true);
-		b.subTitle.setSelected(true);
+		b.subtitle.setSelected(true);
 		b.path.setSelected(true);
 
 
