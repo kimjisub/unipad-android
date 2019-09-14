@@ -799,7 +799,7 @@ public class MainActivity extends BaseActivity {
 					item.isToggle = false;
 
 				if (packView != null)
-					packView.toggle(item.isToggle, color(R.color.red), item.flagColor);
+					packView.toggle(item.isToggle);
 
 				i++;
 			}

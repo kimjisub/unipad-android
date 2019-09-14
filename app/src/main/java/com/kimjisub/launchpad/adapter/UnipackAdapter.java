@@ -71,14 +71,17 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 			item.flagColor = context.color(R.color.orange);
 
 
-		packView
-				.cancelAllAnimation()
-				.setFlagColor(item.flagColor)
-				.setTitle(title)
-				.setSubTitle(subTitle)
-				.setOption1(context.lang(R.string.LED_), item.unipack.isKeyLED)
-				.setOption2(context.lang(R.string.autoPlay_), item.unipack.isAutoPlay)
-				.setOnEventListener(new PackView.OnEventListener() {
+
+		packView.setAnimate(false);
+		packView.setToggleColor(context.color(R.color.red));
+		packView.setUntoggleColor(item.flagColor);
+		packView.setTitle(title);
+		packView.setSubtitle(subTitle);
+		packView.setOption1Name(context.lang(R.string.LED_));
+		packView.setOption1(item.unipack.isKeyLED);
+		packView.setOption2Name(context.lang(R.string.autoPlay_));
+		packView.setOption2(item.unipack.isAutoPlay);
+		packView.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onViewClick(PackView v) {
 						eventListener.onViewClick(item, v);
@@ -93,8 +96,9 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 					public void onPlayClick(PackView v) {
 						eventListener.onPlayClick(item, v);
 					}
-				})
-				.setToggle(item.isToggle, context.color(R.color.red), item.flagColor);
+				});
+		packView.toggle(item.isToggle);
+		packView.setAnimate(true);
 
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);

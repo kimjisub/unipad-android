@@ -269,7 +269,8 @@ public class FBStoreActivity extends BaseActivity {
 		File F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, code, ".zip");
 		File F_UniPack = new File(F_UniPackRootExt, code);
 
-		packView.animateFlagColor(color(R.color.gray1));
+		packView.setToggleColor(color(R.color.gray1));
+		packView.setUntoggleColor(color(R.color.gray1));
 		packView.setPlayText("0%");
 
 		(new AsyncTask<String, Long, String>() {
@@ -356,13 +357,16 @@ public class FBStoreActivity extends BaseActivity {
 					packView.setPlayText((int) ((float) progress[1] / progress[2] * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(progress[2]) + "MB");
 				} else if (progress[0] == 1) {//분석중
 					packView.setPlayText(lang(R.string.analyzing));
-					packView.animateFlagColor(color(R.color.orange));
+					packView.setToggleColor(color(R.color.orange));
+					packView.setUntoggleColor(color(R.color.orange));
 				} else if (progress[0] == -1) {//실패
 					packView.setPlayText(lang(R.string.failed));
-					packView.animateFlagColor(color(R.color.red));
+					packView.setToggleColor(color(R.color.red));
+					packView.setUntoggleColor(color(R.color.red));
 				} else if (progress[0] == 2) {//완료
 					packView.setPlayText(lang(R.string.downloaded));
-					packView.animateFlagColor(color(R.color.green));
+					packView.setToggleColor(color(R.color.green));
+					packView.setUntoggleColor(color(R.color.green));
 					item.setDownloaded(true);
 					updatePanel();
 				}
