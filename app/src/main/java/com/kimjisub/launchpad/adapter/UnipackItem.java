@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.adapter;
 
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.manager.Unipack;
 
 public class UnipackItem {
@@ -10,7 +10,7 @@ public class UnipackItem {
 	public boolean isNew;
 
 
-	public PackViewSimple packViewSimple;
+	public PackView packView;
 	public int flagColor;
 	public boolean isToggle = false;
 	public boolean isMoving = false;

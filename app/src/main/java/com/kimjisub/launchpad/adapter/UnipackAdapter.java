@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.activity.BaseActivity;
 import com.kimjisub.manager.Log;
@@ -32,27 +32,27 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 	@Override
 	public UnipackHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 		Log.test("onCreateViewHolder: " + viewHolderCount++);
-		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
+		PackView packView = new PackView(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		packViewSimple.setLayoutParams(lp);
+		packView.setLayoutParams(lp);
 
-		return new UnipackHolder(packViewSimple);
+		return new UnipackHolder(packView);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull UnipackHolder holder, int position) {
 		Log.test("onBindViewHolder: " + position);
 		UnipackItem item = list.get(holder.getAdapterPosition());
-		PackViewSimple packViewSimple = holder.packViewSimple;
+		PackView packView = holder.packView;
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
-			list.get(holder.position).packViewSimple = null;
+			list.get(holder.position).packView = null;
 		} catch (Exception ignored) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
-		item.packViewSimple = packViewSimple;
+		item.packView = packView;
 		holder.position = holder.getAdapterPosition();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,26 +71,26 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 			item.flagColor = context.color(R.color.orange);
 
 
-		packViewSimple
+		packView
 				.cancelAllAnimation()
 				.setFlagColor(item.flagColor)
 				.setTitle(title)
 				.setSubTitle(subTitle)
 				.setOption1(context.lang(R.string.LED_), item.unipack.isKeyLED)
 				.setOption2(context.lang(R.string.autoPlay_), item.unipack.isAutoPlay)
-				.setOnEventListener(new PackViewSimple.OnEventListener() {
+				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
-					public void onViewClick(PackViewSimple v) {
+					public void onViewClick(PackView v) {
 						eventListener.onViewClick(item, v);
 					}
 
 					@Override
-					public void onViewLongClick(PackViewSimple v) {
+					public void onViewLongClick(PackView v) {
 						eventListener.onViewLongClick(item, v);
 					}
 
 					@Override
-					public void onPlayClick(PackViewSimple v) {
+					public void onPlayClick(PackView v) {
 						eventListener.onPlayClick(item, v);
 					}
 				})
@@ -101,7 +101,7 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		if (item.isNew)
 			a = AnimationUtils.loadAnimation(context, R.anim.pack_new_in);
 		item.isNew = false;
-		packViewSimple.setAnimation(a);
+		packView.setAnimation(a);
 	}
 
 	@Override
@@ -115,10 +115,10 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 	private EventListener eventListener;
 
 	public interface EventListener {
-		void onViewClick(UnipackItem item, PackViewSimple v);
+		void onViewClick(UnipackItem item, PackView v);
 
-		void onViewLongClick(UnipackItem item, PackViewSimple v);
+		void onViewLongClick(UnipackItem item, PackView v);
 
-		void onPlayClick(UnipackItem item, PackViewSimple v);
+		void onPlayClick(UnipackItem item, PackView v);
 	}
 }

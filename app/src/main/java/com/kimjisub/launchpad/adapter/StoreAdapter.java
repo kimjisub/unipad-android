@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.activity.BaseActivity;
 import com.kimjisub.manager.Log;
@@ -33,33 +33,33 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 	@Override
 	public StoreHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 		Log.test("onCreateViewHolder: " + viewHolderCount++);
-		PackViewSimple packViewSimple = new PackViewSimple(parent.getContext());
+		PackView packView = new PackView(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-		packViewSimple.setLayoutParams(lp);
+		packView.setLayoutParams(lp);
 
-		return new StoreHolder(packViewSimple);
+		return new StoreHolder(packView);
 	}
 
 	@Override
 	public void onBindViewHolder(@NonNull StoreHolder holder, int position) {
 		Log.test("onBindViewHolder: " + position);
 		StoreItem item = list.get(holder.getAdapterPosition());
-		PackViewSimple packViewSimple = holder.packViewSimple;
+		PackView packView = holder.packView;
 
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
-			list.get(holder.position).setPackViewSimple(null);
+			list.get(holder.position).setPackView(null);
 		} catch (Exception ignored) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
-		item.setPackViewSimple(packViewSimple);
+		item.setPackView(packView);
 		holder.position = holder.getAdapterPosition();
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		packViewSimple
+		packView
 				.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
 				.setTitle(item.getStoreVO().getTitle())
 				.setSubTitle(item.getStoreVO().getProducerName())
@@ -67,25 +67,25 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 				.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay())
 				.setPlayImageShow(false)
 				.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download))
-				.setOnEventListener(new PackViewSimple.OnEventListener() {
+				.setOnEventListener(new PackView.OnEventListener() {
 					@Override
-					public void onViewClick(PackViewSimple v) {
+					public void onViewClick(PackView v) {
 						eventListener.onViewClick(item, v);
 					}
 
 					@Override
-					public void onViewLongClick(PackViewSimple v) {
+					public void onViewLongClick(PackView v) {
 						eventListener.onViewLongClick(item, v);
 					}
 
 					@Override
-					public void onPlayClick(PackViewSimple v) {
+					public void onPlayClick(PackView v) {
 						eventListener.onPlayClick(item, v);
 					}
 				});
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
-		packViewSimple.setAnimation(a);
+		packView.setAnimation(a);
 	}
 
 	@Override
@@ -97,14 +97,14 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 		Log.test("onBindViewHolder payloads: " + position);
 
 		StoreItem item = list.get(holder.getAdapterPosition());
-		PackViewSimple packViewSimple = holder.packViewSimple;
+		PackView packView = holder.packView;
 
 		for (Object payload : payloads) {
 			if (payload instanceof String) {
 				switch ((String) payload) {
 					case "update":
 						Log.test("update");
-						packViewSimple
+						packView
 								.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
 								.setTitle(item.getStoreVO().getTitle())
 								.setSubTitle(item.getStoreVO().getProducerName())
@@ -144,10 +144,10 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 	private EventListener eventListener;
 
 	public interface EventListener {
-		void onViewClick(StoreItem item, PackViewSimple v);
+		void onViewClick(StoreItem item, PackView v);
 
-		void onViewLongClick(StoreItem item, PackViewSimple v);
+		void onViewLongClick(StoreItem item, PackView v);
 
-		void onPlayClick(StoreItem item, PackViewSimple v);
+		void onPlayClick(StoreItem item, PackView v);
 	}
 }

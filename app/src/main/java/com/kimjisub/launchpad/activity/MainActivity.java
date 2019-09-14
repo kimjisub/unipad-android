@@ -32,7 +32,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 import com.kimjisub.design.dialog.FileExplorerDialog;
 import com.kimjisub.design.panel.MainPackPanel;
 import com.kimjisub.launchpad.BuildConfig;
@@ -106,17 +106,17 @@ public class MainActivity extends BaseActivity {
 			adapter = new UnipackAdapter(MainActivity.this, list, new UnipackAdapter.EventListener() {
 
 				@Override
-				public void onViewClick(UnipackItem item, PackViewSimple v) {
+				public void onViewClick(UnipackItem item, PackView v) {
 					if (!item.isMoving)
 						togglePlay(item);
 				}
 
 				@Override
-				public void onViewLongClick(UnipackItem item, PackViewSimple v) {
+				public void onViewLongClick(UnipackItem item, PackView v) {
 				}
 
 				@Override
-				public void onPlayClick(UnipackItem item, PackViewSimple v) {
+				public void onPlayClick(UnipackItem item, PackView v) {
 					if (!item.isMoving)
 						pressPlay(item);
 				}
@@ -197,7 +197,7 @@ public class MainActivity extends BaseActivity {
 						showSelectLPUI();
 				} else if (f == 2 && upDown) {
 					if (haveNow())
-						list.get(lastPlayIndex).packViewSimple.onPlayClick();
+						list.get(lastPlayIndex).packView.onPlayClick();
 				}
 			}
 
@@ -790,7 +790,7 @@ public class MainActivity extends BaseActivity {
 		try {
 			int i = 0;
 			for (UnipackItem item : list) {
-				PackViewSimple packViewSimple = item.packViewSimple;
+				PackView packView = item.packView;
 
 				if (target != null && item.path.equals(target.path)) {
 					item.isToggle = !item.isToggle;
@@ -798,8 +798,8 @@ public class MainActivity extends BaseActivity {
 				} else
 					item.isToggle = false;
 
-				if (packViewSimple != null)
-					packViewSimple.toggle(item.isToggle, color(R.color.red), item.flagColor);
+				if (packView != null)
+					packView.toggle(item.isToggle, color(R.color.red), item.flagColor);
 
 				i++;
 			}

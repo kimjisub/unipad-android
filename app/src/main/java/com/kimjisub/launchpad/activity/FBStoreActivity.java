@@ -17,7 +17,7 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 import com.kimjisub.launchpad.BuildConfig;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.StoreAdapter;
@@ -58,17 +58,17 @@ public class FBStoreActivity extends BaseActivity {
 			adapter = new StoreAdapter(FBStoreActivity.this, list, new StoreAdapter.EventListener() {
 
 				@Override
-				public void onViewClick(StoreItem item, PackViewSimple v) {
+				public void onViewClick(StoreItem item, PackView v) {
 					togglePlay(item);
 				}
 
 				@Override
-				public void onViewLongClick(StoreItem item, PackViewSimple v) {
+				public void onViewLongClick(StoreItem item, PackView v) {
 
 				}
 
 				@Override
-				public void onPlayClick(StoreItem item, PackViewSimple v) {
+				public void onPlayClick(StoreItem item, PackView v) {
 					if (!item.isDownloaded() && !item.isDownloading())
 						startDownload(getPackItemByCode(item.getStoreVO().getCode()));
 				}
@@ -190,15 +190,15 @@ public class FBStoreActivity extends BaseActivity {
 	void togglePlay(StoreItem target) {
 		try {
 			for (StoreItem item : list) {
-				PackViewSimple packViewSimple = item.getPackViewSimple();
+				PackView packView = item.getPackView();
 
 				if (target != null && item.getStoreVO().getCode().equals(target.getStoreVO().getCode()))
 					item.setToggle(!item.isToggle());
 				else
 					item.setToggle(false);
 
-				if (packViewSimple != null)
-					packViewSimple.toggle(item.isToggle());
+				if (packView != null)
+					packView.toggle(item.isToggle());
 			}
 
 			updatePanel();
@@ -256,7 +256,7 @@ public class FBStoreActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void startDownload(StoreItem item) {
 		StoreVO StoreVO = item.getStoreVO();
-		PackViewSimple packViewSimple = item.getPackViewSimple();
+		PackView packView = item.getPackView();
 
 		String code = StoreVO.getCode();
 		String title = StoreVO.getTitle();
@@ -269,8 +269,8 @@ public class FBStoreActivity extends BaseActivity {
 		File F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, code, ".zip");
 		File F_UniPack = new File(F_UniPackRootExt, code);
 
-		packViewSimple.animateFlagColor(color(R.color.gray1));
-		packViewSimple.setPlayText("0%");
+		packView.animateFlagColor(color(R.color.gray1));
+		packView.setPlayText("0%");
 
 		(new AsyncTask<String, Long, String>() {
 
@@ -353,16 +353,16 @@ public class FBStoreActivity extends BaseActivity {
 			@Override
 			protected void onProgressUpdate(Long... progress) {
 				if (progress[0] == 0) {//다운중
-					packViewSimple.setPlayText((int) ((float) progress[1] / progress[2] * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(progress[2]) + "MB");
+					packView.setPlayText((int) ((float) progress[1] / progress[2] * 100) + "%\n" + FileManager.byteToMB(progress[1]) + " / " + FileManager.byteToMB(progress[2]) + "MB");
 				} else if (progress[0] == 1) {//분석중
-					packViewSimple.setPlayText(lang(R.string.analyzing));
-					packViewSimple.animateFlagColor(color(R.color.orange));
+					packView.setPlayText(lang(R.string.analyzing));
+					packView.animateFlagColor(color(R.color.orange));
 				} else if (progress[0] == -1) {//실패
-					packViewSimple.setPlayText(lang(R.string.failed));
-					packViewSimple.animateFlagColor(color(R.color.red));
+					packView.setPlayText(lang(R.string.failed));
+					packView.animateFlagColor(color(R.color.red));
 				} else if (progress[0] == 2) {//완료
-					packViewSimple.setPlayText(lang(R.string.downloaded));
-					packViewSimple.animateFlagColor(color(R.color.green));
+					packView.setPlayText(lang(R.string.downloaded));
+					packView.animateFlagColor(color(R.color.green));
 					item.setDownloaded(true);
 					updatePanel();
 				}
