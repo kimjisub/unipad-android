@@ -271,8 +271,8 @@ public class MainActivity extends BaseActivity {
 
 		b.fabReconnectLaunchpad.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, LaunchpadActivity.class)));
 
-		b.fabLoadUniPack.setOnClickListener(v -> new FileExplorerDialog(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this))
-				.setOnEventListener(new FileExplorerDialog.OnEventListener() {
+		b.fabLoadUniPack.setOnClickListener(v -> new FileExplorerDialog(MainActivity.this, PreferenceManager.FileExplorerPath.load(MainActivity.this),
+				new FileExplorerDialog.OnEventListener() {
 					@Override
 					public void onFileSelected(String filePath) {
 						loadUnipack(new File(filePath));
