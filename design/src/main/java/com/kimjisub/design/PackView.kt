@@ -142,7 +142,7 @@ class PackView : RelativeLayout {
 	var option2Name: String
 		get() = TV_option1.text.toString()
 		set(value) {
-			TV_option1.text = value
+			TV_option2.text = value
 		}
 
 	var option1: Boolean = false
