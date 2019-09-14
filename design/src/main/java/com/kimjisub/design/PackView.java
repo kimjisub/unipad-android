@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,35 +23,27 @@ public class PackView extends RelativeLayout {
 
 	Context context;
 
-	RelativeLayout RL_root;
-	RelativeLayout RL_touchView;
-	RelativeLayout RL_detail;
+	LinearLayout LL_touchView;
 	LinearLayout LL_leftView;
 	RelativeLayout RL_playBtn;
 	ImageView IV_playImg;
 	TextView TV_playText;
-	LinearLayout LL_btns;
-	LinearLayout LL_extendBtns;
-	LinearLayout LL_infos;
-	LinearLayout LL_extendView;
 
 	RelativeLayout RL_flag;
+	RelativeLayout RL_flagSize;
 	int RL_flag_color;
 	TextView TV_title;
 	TextView TV_subTitle;
 	TextView TV_option1;
 	TextView TV_option2;
 
-	boolean status = false;
-
 	int PX_flag_default;
 	int PX_flag_enable;
-	int PX_info_default;
-	int PX_info_enable;
-	int PX_info_extend;
-	private boolean isPlay = false;
-	private int levDetail = 0;
+	private boolean isToggle = false;
 	private OnEventListener onEventListener = null;
+
+	ValueAnimator flagAnimator;
+	Animation toggleAnimator;
 
 	public PackView(Context context) {
 		super(context);
@@ -90,19 +81,14 @@ public class PackView extends RelativeLayout {
 
 
 		// set view
-		RL_root = findViewById(R.id.root);
-		RL_touchView = findViewById(R.id.touchView);
-		RL_detail = findViewById(R.id.detail);
+		LL_touchView = findViewById(R.id.V_touchView);
 		LL_leftView = findViewById(R.id.leftView);
 		RL_playBtn = findViewById(R.id.playBtn);
 		IV_playImg = findViewById(R.id.playImg);
 		TV_playText = findViewById(R.id.playText);
-		LL_btns = findViewById(R.id.btns);
-		LL_extendBtns = findViewById(R.id.extendBtns);
-		LL_infos = findViewById(R.id.infos);
-		LL_extendView = findViewById(R.id.extendView);
 
 		RL_flag = findViewById(R.id.flag);
+		RL_flagSize = findViewById(R.id.flagSize);
 		TV_title = findViewById(R.id.title);
 		TV_subTitle = findViewById(R.id.subTitle);
 		TV_option1 = findViewById(R.id.option1);
@@ -111,28 +97,20 @@ public class PackView extends RelativeLayout {
 		// set vars
 		PX_flag_default = UIManager.dpToPx(context, 10);
 		PX_flag_enable = UIManager.dpToPx(context, 100);
-		PX_info_default = UIManager.dpToPx(context, 40);
-		PX_info_enable = UIManager.dpToPx(context, 75);
-		PX_info_extend = UIManager.dpToPx(context, 300);
-
-
-		// set preset
-		LL_leftView.setX(PX_flag_default);
-
 
 		// set listener
-		RL_touchView.setOnClickListener(v1 -> onViewClick());
-		RL_touchView.setOnLongClickListener(v2 -> {
+		LL_touchView.setOnClickListener(v1 -> onViewClick());
+		LL_touchView.setOnLongClickListener(v2 -> {
 			onViewLongClick();
 			return true;
 		});
 	}
-	//========================================================================================= set / update / etc..
 
 	private void getAttrs(AttributeSet attrs) {
 		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView);
 		setTypeArray(typedArray);
 	}
+	//============================================================================================== set / update / etc..
 
 	private void getAttrs(AttributeSet attrs, int defStyle) {
 		TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.PackView, defStyle, 0);
@@ -171,43 +149,6 @@ public class PackView extends RelativeLayout {
 		typedArray.recycle();
 	}
 
-	public boolean getStatus() {
-		return status;
-	}
-
-	public PackView setStatus(boolean bool) {
-		status = bool;
-
-		return this;
-	}
-
-	public PackView setFlagColor(int color) {
-		GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
-		flagBackground.setColor(color);
-		RL_flag.setBackground(flagBackground);
-		RL_flag_color = color;
-
-		return this;
-	}
-
-	public PackView updateFlagColor(int colorNext) {
-
-		int colorPrev = RL_flag_color;
-		ValueAnimator animator = ObjectAnimator.ofObject(new ArgbEvaluator(), colorPrev, colorNext);
-		animator.setDuration(500);
-		animator.addUpdateListener(valueAnimator -> {
-			int color3 = (int) valueAnimator.getAnimatedValue();
-
-			GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
-			flagBackground.setColor(color3);
-			RL_flag.setBackground(flagBackground);
-		});
-		animator.start();
-		RL_flag_color = colorNext;
-
-		return this;
-	}
-
 	public PackView setTitle(String str) {
 		TV_title.setText(str);
 		return this;
@@ -215,60 +156,6 @@ public class PackView extends RelativeLayout {
 
 	public PackView setSubTitle(String str) {
 		TV_subTitle.setText(str);
-		return this;
-	}
-
-	public PackView addInfo(String title, String content) {
-
-		LinearLayout LL_info = (LinearLayout) View.inflate(context, R.layout.res_info, null);
-		((TextView) LL_info.findViewById(R.id.title)).setText(title);
-		((TextView) LL_info.findViewById(R.id.content)).setText(content);
-
-		ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-		LL_infos.addView(LL_info, lp);
-
-		return this;
-	}
-
-	public PackView clearInfo() {
-
-		LL_infos.removeAllViews();
-
-		return this;
-	}
-
-	public PackView updateInfo(int index, String contents) {
-
-		LinearLayout linearLayout = (LinearLayout) LL_infos.getChildAt(index);
-		TextView textView = linearLayout.findViewById(R.id.content);
-
-		textView.setText(contents);
-		textView.setAlpha(0);
-		textView.animate().alpha(1).setDuration(500).start();
-
-		return this;
-	}
-
-	public PackView addBtn(String title, int color) {
-
-		LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
-		((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
-		((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
-
-
-		final int count = LL_btns.getChildCount();
-		LL_btn.setOnClickListener(view -> onFunctionBtnClick(count));
-
-		LL_btns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-		return this;
-	}
-
-	public PackView clearBtn() {
-
-		LL_btns.removeAllViews();
-
 		return this;
 	}
 
@@ -292,8 +179,6 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 
-	//========================================================================================= Play
-
 	public PackView setPlayImageShow(boolean bool) {
 		IV_playImg.setVisibility(bool ? VISIBLE : GONE);
 
@@ -306,195 +191,178 @@ public class PackView extends RelativeLayout {
 		return this;
 	}
 
-	public PackView setExtendView(View v, int height, String[] btnTitles, int[] btnColors, final OnExtendEventListener listener) {
-		LL_extendView.removeAllViews();
-		LL_extendView.addView(v);
+	//============================================================================================== Flag
 
-		PX_info_extend = height + PX_info_enable - UIManager.dpToPx(context, 7);
+	public PackView animateFlagColor(int colorNext) {
 
-		LL_extendBtns.removeAllViews();
+		int colorPrev = RL_flag_color;
+		flagAnimator = ObjectAnimator.ofObject(new ArgbEvaluator(), colorPrev, colorNext);
+		flagAnimator.setDuration(500);
+		flagAnimator.addUpdateListener(valueAnimator -> {
+			int color = (int) valueAnimator.getAnimatedValue();
 
-		for (int i = 0; i < btnTitles.length; i++) {
-			final int I = i;
-
-			String title = btnTitles[i];
-			int color = btnColors[i];
-
-			LinearLayout LL_btn = (LinearLayout) View.inflate(context, R.layout.res_btn, null);
-			((TextView) LL_btn.findViewById(R.id.btn)).setText(title);
-			((GradientDrawable) LL_btn.findViewById(R.id.btn).getBackground()).setColor(color);
-
-			final PackView packView = this;
-			LL_btn.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View view) {
-					if (listener != null)
-						listener.onExtendFunctionBtnClick(packView, I);
-				}
-			});
-
-			LL_extendBtns.addView(LL_btn, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-		}
+			GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
+			flagBackground.setColor(color);
+			RL_flag.setBackground(flagBackground);
+		});
+		flagAnimator.start();
+		RL_flag_color = colorNext;
 
 		return this;
 	}
 
-	public void togglePlay(boolean bool) {
-		if (isPlay != bool) {
+	public PackView setFlagColor(int color) {
+		GradientDrawable flagBackground = (GradientDrawable) getResources().getDrawable(R.drawable.border_all_round);
+		flagBackground.setColor(color);
+		RL_flag.setBackground(flagBackground);
+		RL_flag_color = color;
+
+		return this;
+	}
+
+	//============================================================================================== Toggle
+
+	public PackView animateToggle(final int target) {
+		int start = RL_flagSize.getLayoutParams().width;
+
+		final int change = target - start;
+		toggleAnimator = new Animation() {
+			@Override
+			protected void applyTransformation(float interpolatedTime, Transformation t) {
+				ViewGroup.LayoutParams params = RL_flagSize.getLayoutParams();
+				params.width = start + (int) (change * interpolatedTime);
+				RL_flagSize.setLayoutParams(params);
+			}
+		};
+		toggleAnimator.setDuration(500);
+		RL_flagSize.startAnimation(toggleAnimator);
+
+		return this;
+	}
+
+	public PackView skipAnimateToggle(final int target) {
+		ViewGroup.LayoutParams params = RL_flagSize.getLayoutParams();
+		params.width = target;
+		RL_flagSize.setLayoutParams(params);
+
+		return this;
+	}
+
+	public PackView toggle(boolean bool) {
+		if (isToggle != bool) {
 			if (bool) {
 				//animation
-				LL_leftView.animate().x(PX_flag_enable).setDuration(500).start();
+				animateToggle(PX_flag_enable);
 
 				//clickEvent
-				RL_playBtn.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						onPlayClick();
-					}
-				});
+				RL_playBtn.setOnClickListener(v -> onPlayClick());
 			} else {
 				//animation
-				LL_leftView.animate().x(PX_flag_default).setDuration(500).start();
+				animateToggle(PX_flag_default);
 
 				//clickEvent
 				RL_playBtn.setOnClickListener(null);
 				RL_playBtn.setClickable(false);
 			}
-			isPlay = bool;
+			isToggle = bool;
 		}
+
+		return this;
 	}
 
-	public void togglePlay() {
-		togglePlay(!isPlay);
+	public PackView toggle() {
+		toggle(!isToggle);
+
+		return this;
 	}
 
-	public void togglePlay(boolean bool, int onColor, int offColor) {
-		togglePlay(bool);
-		if (isPlay)
-			updateFlagColor(onColor);
+	public PackView toggle(boolean bool, int onColor, int offColor) {
+		toggle(bool);
+		if (isToggle)
+			animateFlagColor(onColor);
 		else
-			updateFlagColor(offColor);
+			animateFlagColor(offColor);
 
+		return this;
 	}
 
-	//========================================================================================= Info
-
-	public void togglePlay(int onColor, int offColor) {
-		togglePlay(!isPlay);
-		if (isPlay)
-			updateFlagColor(onColor);
+	public PackView toggle(int onColor, int offColor) {
+		toggle(!isToggle);
+		if (isToggle)
+			animateFlagColor(onColor);
 		else
-			updateFlagColor(offColor);
+			animateFlagColor(offColor);
 
+		return this;
 	}
 
-	public boolean isPlay() {
-		return isPlay;
-	}
-
-	public void toggleDetail(int lev) {
-		if (levDetail != lev || lev == 2) {
-			final int px_default = PX_info_default;
-			final int px_enable = PX_info_enable;
-			final int px_extend = PX_info_extend;
-
-			int start = 0;
-			int end = 0;
-			if (lev == 0) {
-				LayoutParams params = (LayoutParams) RL_detail.getLayoutParams();
-				start = params.height;
-				end = px_default;
-				animateExtendBtns(false);
-			} else if (lev == 1) {
-				LayoutParams params = (LayoutParams) RL_detail.getLayoutParams();
-				start = params.height;
-				end = px_enable;
-				animateExtendBtns(false);
-			} else if (lev == 2) {
-				LayoutParams params = (LayoutParams) RL_detail.getLayoutParams();
-				start = params.height;
-				end = px_extend;
-				animateExtendBtns(true);
-			}
-
-			Animation a = animateDetail(start, end);
-			if (lev != 2)
-				a.setAnimationListener(new Animation.AnimationListener() {
-					@Override
-					public void onAnimationStart(Animation animation) {
-
-					}
-
-					@Override
-					public void onAnimationEnd(Animation animation) {
-						LL_extendView.removeAllViews();
-						LL_extendBtns.removeAllViews();
-					}
-
-					@Override
-					public void onAnimationRepeat(Animation animation) {
-
-					}
-				});
-
-			levDetail = lev;
-		}
-	}
-
-	public Animation animateDetail(final int start, final int end) {
-		final int change = end - start;
-
-		Animation a = new Animation() {
-			@Override
-			protected void applyTransformation(float interpolatedTime, Transformation t) {
-				LayoutParams params = (LayoutParams) RL_detail.getLayoutParams();
-				params.height = start + (int) (change * interpolatedTime);
-				RL_detail.setLayoutParams(params);
-			}
-		};
-		a.setDuration(500);
-		RL_detail.startAnimation(a);
-		return a;
-	}
-
-	public void animateExtendBtns(boolean bool) {
-		if (LL_btns.getVisibility() == VISIBLE && !bool)
-			return;
-		if (LL_extendBtns.getVisibility() == VISIBLE && bool)
-			return;
-		Animation fade_in = AnimationUtils.loadAnimation(context, R.anim.btn_fade_in);
-		fade_in.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.accelerate_decelerate_interpolator));
-
-		Animation fade_out = AnimationUtils.loadAnimation(context, R.anim.btn_fade_out);
-		fade_in.setInterpolator(AnimationUtils.loadInterpolator(context, android.R.anim.accelerate_decelerate_interpolator));
-
+	public PackView setToggle(boolean bool) {
 		if (bool) {
-			LL_extendBtns.setVisibility(VISIBLE);
-			LL_btns.setAnimation(fade_out);
-			LL_extendBtns.setAnimation(fade_in);
-			LL_btns.setVisibility(GONE);
+			//animation
+			skipAnimateToggle(PX_flag_enable);
+
+			//clickEvent
+			RL_playBtn.setOnClickListener(v -> onPlayClick());
 		} else {
-			LL_btns.setVisibility(VISIBLE);
-			LL_extendBtns.setAnimation(fade_out);
-			LL_btns.setAnimation(fade_in);
-			LL_extendBtns.setVisibility(GONE);
+			//animation
+			skipAnimateToggle(PX_flag_default);
+
+			//clickEvent
+			RL_playBtn.setOnClickListener(null);
+			RL_playBtn.setClickable(false);
 		}
+		isToggle = bool;
+
+		return this;
 	}
 
-	public void toggleDetail() {
-		toggleDetail(levDetail == 0 ? 1 : 0);
+	public PackView setToggle() {
+		setToggle(!isToggle);
+
+		return this;
 	}
 
-	public boolean isDetail() {
-		return levDetail != 0;
+	public PackView setToggle(boolean bool, int onColor, int offColor) {
+		setToggle(bool);
+		if (isToggle)
+			setFlagColor(onColor);
+		else
+			setFlagColor(offColor);
+
+		return this;
 	}
 
+	public PackView setToggle(int onColor, int offColor) {
+		setToggle(!isToggle);
+		if (isToggle)
+			setFlagColor(onColor);
+		else
+			setFlagColor(offColor);
 
-	//========================================================================================= Listener
-
-	public int levDetail() {
-		return levDetail;
+		return this;
 	}
+
+	public boolean isToggle() {
+		return isToggle;
+	}
+
+	//==============================================================================================
+
+	public PackView cancelAllAnimation() {
+		if (flagAnimator != null) {
+			flagAnimator.cancel();
+			setFlagColor(RL_flag_color);
+		}
+		if (toggleAnimator != null) {
+			toggleAnimator.cancel();
+			setToggle(isToggle);
+		}
+
+		return this;
+	}
+
+	//============================================================================================== Listener
+
 
 	public PackView setOnEventListener(OnEventListener listener) {
 		this.onEventListener = listener;
@@ -510,12 +378,7 @@ public class PackView extends RelativeLayout {
 	}
 
 	public void onPlayClick() {
-		if (onEventListener != null && isPlay()) onEventListener.onPlayClick(this);
-	}
-
-	public void onFunctionBtnClick(int index) {
-		if (onEventListener != null && isDetail())
-			onEventListener.onFunctionBtnClick(this, index);
+		if (onEventListener != null && isToggle()) onEventListener.onPlayClick(this);
 	}
 
 	public interface OnEventListener {
@@ -525,11 +388,5 @@ public class PackView extends RelativeLayout {
 		void onViewLongClick(PackView v);
 
 		void onPlayClick(PackView v);
-
-		void onFunctionBtnClick(PackView v, int index);
-	}
-
-	public interface OnExtendEventListener {
-		void onExtendFunctionBtnClick(PackView v, int index);
 	}
 }

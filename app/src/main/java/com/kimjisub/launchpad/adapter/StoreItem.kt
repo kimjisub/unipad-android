@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.adapter
 
-import com.kimjisub.design.PackViewSimple
+import com.kimjisub.design.PackView
 import com.kimjisub.launchpad.network.fb.StoreVO
 
 class StoreItem(
@@ -10,7 +10,7 @@ class StoreItem(
 	var isDownloading: Boolean = false
 
 
-	var packViewSimple: PackViewSimple? = null
+	var packView: PackView? = null
 	var isToggle = false
 
 }

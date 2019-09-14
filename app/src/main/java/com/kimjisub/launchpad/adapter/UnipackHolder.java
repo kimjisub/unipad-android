@@ -2,14 +2,14 @@ package com.kimjisub.launchpad.adapter;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.kimjisub.design.PackViewSimple;
+import com.kimjisub.design.PackView;
 
 public class UnipackHolder extends RecyclerView.ViewHolder {
-	PackViewSimple packViewSimple;
+	PackView packView;
 	int position = -1;
 
-	public UnipackHolder(PackViewSimple view) {
+	public UnipackHolder(PackView view) {
 		super(view);
-		packViewSimple = view;
+		packView = view;
 	}
 }
