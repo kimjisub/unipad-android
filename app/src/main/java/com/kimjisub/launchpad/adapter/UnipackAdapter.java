@@ -58,12 +58,12 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
 		String title = item.unipack.title;
-		String subTitle = item.unipack.producerName;
+		String subtitle = item.unipack.producerName;
 
 		if (item.unipack.CriticalError) {
 			item.flagColor = context.color(R.color.red);
 			title = context.lang(R.string.errOccur);
-			subTitle = item.path;
+			subtitle = item.path;
 		} else
 			item.flagColor = context.color(R.color.skyblue);
 
@@ -76,7 +76,7 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		packView.setToggleColor(context.color(R.color.red));
 		packView.setUntoggleColor(item.flagColor);
 		packView.setTitle(title);
-		packView.setSubtitle(subTitle);
+		packView.setSubtitle(subtitle);
 		packView.setOption1Name(context.lang(R.string.LED_));
 		packView.setOption1(item.unipack.isKeyLED);
 		packView.setOption2Name(context.lang(R.string.autoPlay_));

@@ -955,7 +955,7 @@ public class MainActivity extends BaseActivity {
 
 		b.panelPack.setStorage(!FileManager.isInternalFile(MainActivity.this, unipack.F_project));
 		b.panelPack.b.title.setText(unipack.title);
-		b.panelPack.b.subTitle.setText(unipack.producerName);
+		b.panelPack.b.subtitle.setText(unipack.producerName);
 		b.panelPack.b.path.setText(item.path);
 		b.panelPack.b.scale.setText(unipack.buttonX + " × " + unipack.buttonY);
 		b.panelPack.b.chainCount.setText(unipack.chain + "");

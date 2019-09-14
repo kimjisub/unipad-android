@@ -96,8 +96,8 @@ class PackView : RelativeLayout {
 		String title = typedArray.getString(R.styleable.PackView_title);
 		//setTitle(title);
 
-		String subTitle = typedArray.getString(R.styleable.PackView_subTitle);
-		//setSubTitle(subTitle);
+		String subtitle = typedArray.getString(R.styleable.PackView_subtitle);
+		//setSubtitle(subtitle);
 
 		Boolean LED = typedArray.getBoolean(R.styleable.PackView_LED, false);
 		//setLED(LED);
