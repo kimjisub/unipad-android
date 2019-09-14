@@ -38,6 +38,7 @@ import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
 import com.kimjisub.launchpad.manager.ChanelManager;
 import com.kimjisub.launchpad.manager.ChanelManager.Chanel;
+import com.kimjisub.launchpad.manager.Functions;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
 import com.kimjisub.launchpad.manager.Unipack;
@@ -410,7 +411,7 @@ public class PlayActivity extends BaseActivity {
 				rec_prevEventMS = System.currentTimeMillis();
 				rec_log = "c " + (chain + 1);
 			} else {
-				putClipboard(rec_log);
+				Functions.INSTANCE.putClipboard(this, rec_log);
 				showToast(R.string.copied);
 				rec_log = "";
 			}
@@ -1081,13 +1082,6 @@ public class PlayActivity extends BaseActivity {
 
 	void rec_addLog(String msg) {
 		rec_log += "\n" + msg;
-	}
-
-	void putClipboard(String msg) {
-		ClipboardManager clipboardManager = (ClipboardManager) PlayActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
-		ClipData clipData = ClipData.newPlainText("LABEL", msg);
-		assert clipboardManager != null;
-		clipboardManager.setPrimaryClip(clipData);
 	}
 
 	void setProMode(boolean bool) {

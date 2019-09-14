@@ -1,21 +1,15 @@
 package com.kimjisub.launchpad.fragment
 
 import android.app.AlertDialog
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.*
-import androidx.core.content.ContextCompat
+import android.widget.AdapterView
+import android.widget.ListView
 import androidx.preference.*
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.firebase.iid.FirebaseInstanceId
-import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
@@ -23,6 +17,7 @@ import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.Constant
+import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.Log
 import java.util.*
@@ -192,8 +187,11 @@ class SettingFragment : PreferenceFragmentCompat() {
 			false
 		}
 		findPreference<Preference>("FCMToken")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
-			putClipboard(FirebaseInstanceId.getInstance().token)
-			BaseActivity.showToast(context!!, string.copied)
+			try {
+				Functions.putClipboard(activity!!, FirebaseInstanceId.getInstance().token!!)
+				BaseActivity.showToast(context!!, string.copied)
+			} catch (ignore: Exception) {
+			}
 			false
 		}
 	}
@@ -203,11 +201,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 		(findPreference<Preference>("proTools") as CheckBoxPreference).isChecked = billingManager!!.isPurchaseProTools
 	}
 
-	private fun putClipboard(msg: String?) {
-		val clipboardManager = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
-		val clipData: ClipData? = ClipData.newPlainText("LABEL", msg)
-		clipboardManager?.primaryClip = clipData
-	}
 
 	override fun onResume() {
 		findPreference<Preference>("select_theme")?.summary = PreferenceManager.SelectedTheme.load(context)
