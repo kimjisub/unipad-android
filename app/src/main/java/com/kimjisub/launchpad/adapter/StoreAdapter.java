@@ -61,10 +61,10 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 		packViewSimple
 				.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
-				.setTitle(item.getStoreVO().title)
-				.setSubTitle(item.getStoreVO().producerName)
-				.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED)
-				.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay)
+				.setTitle(item.getStoreVO().getTitle())
+				.setSubTitle(item.getStoreVO().getProducerName())
+				.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED())
+				.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay())
 				.setPlayImageShow(false)
 				.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download))
 				.setOnEventListener(new PackViewSimple.OnEventListener() {
@@ -106,10 +106,10 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 						Log.test("update");
 						packViewSimple
 								.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
-								.setTitle(item.getStoreVO().title)
-								.setSubTitle(item.getStoreVO().producerName)
-								.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED)
-								.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay)
+								.setTitle(item.getStoreVO().getTitle())
+								.setSubTitle(item.getStoreVO().getProducerName())
+								.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED())
+								.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay())
 								.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download));
 						break;
 				}

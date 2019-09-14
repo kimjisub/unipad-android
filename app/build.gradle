@@ -92,8 +92,8 @@ dependencies {
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
 	// Room
-	implementation 'androidx.room:room-runtime:2.1.0'
-	annotationProcessor 'androidx.room:room-compiler:2.1.0'
+	implementation "android.arch.persistence.room:runtime:1.1.1"
+	kapt "android.arch.persistence.room:compiler:1.1.1"
 
 	// Firebase
 	implementation 'com.google.firebase:firebase-core:17.2.0'
