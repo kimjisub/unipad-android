@@ -70,7 +70,7 @@ public class FBStoreActivity extends BaseActivity {
 				@Override
 				public void onPlayClick(StoreItem item, PackViewSimple v) {
 					if (!item.isDownloaded() && !item.isDownloading())
-						startDownload(getPackItemByCode(item.getStoreVO().code));
+						startDownload(getPackItemByCode(item.getStoreVO().getCode()));
 				}
 			});
 			adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -116,7 +116,7 @@ public class FBStoreActivity extends BaseActivity {
 
 					boolean isDownloaded = false;
 					for (File dir : F_UniPackList) {
-						if (d.code.equals(dir.getName())) {
+						if (d.getCode().equals(dir.getName())) {
 							isDownloaded = true;
 							break;
 						}
@@ -140,14 +140,14 @@ public class FBStoreActivity extends BaseActivity {
 
 				try {
 					StoreVO d = dataSnapshot.getValue(StoreVO.class);
-					StoreItem item = getPackItemByCode(d.code);
+					StoreItem item = getPackItemByCode(d.getCode());
 					item.setStoreVO(d);
 					adapter.notifyItemChanged(list.indexOf(item), "update");
 
 					int selectedIndex = getSelectedIndex();
 					if (selectedIndex != -1) {
-						String changeCode = item.getStoreVO().code;
-						String selectedCode = list.get(selectedIndex).getStoreVO().code;
+						String changeCode = item.getStoreVO().getCode();
+						String selectedCode = list.get(selectedIndex).getStoreVO().getCode();
 						if (changeCode.equals(selectedCode))
 							updatePanelPack(item);
 					}
@@ -192,7 +192,7 @@ public class FBStoreActivity extends BaseActivity {
 			for (StoreItem item : list) {
 				PackViewSimple packViewSimple = item.getPackViewSimple();
 
-				if (target != null && item.getStoreVO().code.equals(target.getStoreVO().code))
+				if (target != null && item.getStoreVO().getCode().equals(target.getStoreVO().getCode()))
 					item.setToggle(!item.isToggle());
 				else
 					item.setToggle(false);
@@ -226,7 +226,7 @@ public class FBStoreActivity extends BaseActivity {
 	StoreItem getPackItemByCode(String code) {
 		StoreItem ret = null;
 		for (StoreItem item : list)
-			if (item.getStoreVO().code.equals(code)) {
+			if (item.getStoreVO().getCode().equals(code)) {
 				ret = item;
 				break;
 			}
@@ -258,13 +258,13 @@ public class FBStoreActivity extends BaseActivity {
 		StoreVO StoreVO = item.getStoreVO();
 		PackViewSimple packViewSimple = item.getPackViewSimple();
 
-		String code = StoreVO.code;
-		String title = StoreVO.title;
-		String producerName = StoreVO.producerName;
-		boolean isAutoPlay = StoreVO.isAutoPlay;
-		boolean isLED = StoreVO.isLED;
-		int downloadCount = StoreVO.downloadCount;
-		String URL = StoreVO.URL;
+		String code = StoreVO.getCode();
+		String title = StoreVO.getTitle();
+		String producerName = StoreVO.getProducerName();
+		boolean isAutoPlay = StoreVO.isAutoPlay();
+		boolean isLED = StoreVO.isLED();
+		int downloadCount = StoreVO.getDownloadCount();
+		String URL = StoreVO.getURL();
 
 		File F_UniPackZip = FileManager.makeNextPath(F_UniPackRootExt, code, ".zip");
 		File F_UniPack = new File(F_UniPackRootExt, code);
@@ -423,9 +423,9 @@ public class FBStoreActivity extends BaseActivity {
 		Log.test("panel pack");
 		StoreVO storeVO = item.getStoreVO();
 
-		b.panelPack.updateTitle(storeVO.title);
-		b.panelPack.updateSubTitle(storeVO.producerName);
-		b.panelPack.updateDownloadCount(storeVO.downloadCount);
+		b.panelPack.updateTitle(storeVO.getTitle());
+		b.panelPack.updateSubTitle(storeVO.getProducerName());
+		b.panelPack.updateDownloadCount(storeVO.getDownloadCount());
 	}
 
 	// ============================================================================================= Activity
