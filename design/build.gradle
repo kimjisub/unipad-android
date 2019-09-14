@@ -1,4 +1,7 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
 	compileSdkVersion 28
@@ -36,6 +39,8 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 	androidTestImplementation 'androidx.test:runner:1.2.0'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+	kapt 'com.android.databinding:compiler:3.5.0'
 
 	api project(':manager')
 }
