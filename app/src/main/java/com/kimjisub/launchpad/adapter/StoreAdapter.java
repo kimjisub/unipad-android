@@ -59,15 +59,18 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		packView
-				.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
-				.setTitle(item.getStoreVO().getTitle())
-				.setSubTitle(item.getStoreVO().getProducerName())
-				.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED())
-				.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay())
-				.setPlayImageShow(false)
-				.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download))
-				.setOnEventListener(new PackView.OnEventListener() {
+		packView.setAnimate(false);
+		packView.setToggleColor(context.color(item.isDownloaded() ? R.color.green : R.color.red));
+		packView.setUntoggleColor(context.color(item.isDownloaded() ? R.color.green : R.color.red));
+		packView.setTitle(item.getStoreVO().getTitle());
+		packView.setSubtitle(item.getStoreVO().getProducerName());
+		packView.setOption1Name(context.lang(R.string.LED_));
+		packView.setOption1(item.getStoreVO().isLED());
+		packView.setOption2Name(context.lang(R.string.autoPlay_));
+		packView.setOption2(item.getStoreVO().isAutoPlay());
+		packView.showPlayImage(false);
+		packView.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download));
+		packView.setOnEventListener(new PackView.OnEventListener() {
 					@Override
 					public void onViewClick(PackView v) {
 						eventListener.onViewClick(item, v);
@@ -83,6 +86,7 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 						eventListener.onPlayClick(item, v);
 					}
 				});
+		packView.setAnimate(true);
 
 		Animation a = AnimationUtils.loadAnimation(context, R.anim.pack_in);
 		packView.setAnimation(a);
@@ -104,13 +108,13 @@ public class StoreAdapter extends RecyclerView.Adapter<StoreHolder> {
 				switch ((String) payload) {
 					case "update":
 						Log.test("update");
-						packView
-								.setFlagColor(context.color(item.isDownloaded() ? R.color.green : R.color.red))
-								.setTitle(item.getStoreVO().getTitle())
-								.setSubTitle(item.getStoreVO().getProducerName())
-								.setOption1(context.lang(R.string.LED_), item.getStoreVO().isLED())
-								.setOption2(context.lang(R.string.autoPlay_), item.getStoreVO().isAutoPlay())
-								.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download));
+						packView.setToggleColor(context.color(item.isDownloaded() ? R.color.green : R.color.red));
+						packView.setUntoggleColor(context.color(item.isDownloaded() ? R.color.green : R.color.red));
+						packView.setTitle(item.getStoreVO().getTitle());
+						packView.setSubtitle(item.getStoreVO().getProducerName());
+						packView.setOption1(item.getStoreVO().isLED());
+						packView.setOption2(item.getStoreVO().isAutoPlay());
+						packView.setPlayText(context.lang(item.isDownloaded() ? R.string.downloaded : R.string.download));
 						break;
 				}
 				/*String type = (String) payload;

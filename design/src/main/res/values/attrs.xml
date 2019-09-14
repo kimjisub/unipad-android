@@ -1,24 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<attr name="flagColor" format="reference|integer" />
+	<attr name="toggle" format="boolean" />
 
+	<attr name="title" format="string" />
+	<attr name="subtitle" format="string" />
+
+	<attr name="option1Name" format="string" />
+	<attr name="option2Name" format="string" />
+
+	<attr name="option1" format="boolean" />
+	<attr name="option2" format="boolean" />
 
 	<declare-styleable name="PackView">
-		<attr name="flagColor" format="reference|integer" />
+		<attr name="flagColor" />
+		<attr name="toggle"/>
 
-		<attr name="title" format="string" />
-		<attr name="subTitle" format="string" />
+		<attr name="title" />
+		<attr name="subtitle" />
 
-		<attr name="LED" format="boolean" />
-		<attr name="AutoPlay" format="boolean" />
+		<attr name="option1Name" />
+		<attr name="option2Name" />
 
-		<attr name="size" format="string" />
-		<attr name="chain" format="string" />
-		<attr name="capacity" format="integer" />
+		<attr name="option1" />
+		<attr name="option2" />
 
-		<attr name="optionVisibility" format="boolean" />
 	</declare-styleable>
 
 	<declare-styleable name="MainTotalPanel" />
 
 	<declare-styleable name="MainPackPanel" />
+
 </resources>
