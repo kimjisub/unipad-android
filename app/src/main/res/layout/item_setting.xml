@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<data>
+
+		<variable
+			name="data"
+			type="com.kimjisub.launchpad.adapter.DialogListItem" />
+
+		<import type="android.view.View" />
+	</data>
 
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -14,8 +24,8 @@
 			android:layout_width="45dp"
 			android:layout_height="45dp"
 			android:layout_margin="7dp"
-			android:scaleType="fitCenter" />
-		<!--android:background="@drawable/community_facebook"-->
+			android:scaleType="fitCenter"
+			app:imgRes="@{data.iconResId}" />
 
 		<LinearLayout
 			android:layout_width="wrap_content"
@@ -28,16 +38,16 @@
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center_vertical"
-				android:text="New Text"
+				android:text="@{data.title}"
 				android:textColor="@color/title"
 				android:textSize="17dp" />
 
 			<TextView
-				android:id="@+id/summary"
+				android:id="@+id/subtitle"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center_vertical"
-				android:text="New Text"
+				android:text="@{data.subtitle}"
 				android:textColor="@color/subTitle"
 				android:textSize="13dp" />
 		</LinearLayout>
