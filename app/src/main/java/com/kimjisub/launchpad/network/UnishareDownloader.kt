@@ -12,11 +12,11 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class UnishareDownloader(
-		internal var unishare: UnishareVO,
-		internal var F_UniPackRootExt: File,
-		internal var listener: UnishareDownloadListener) {
-	internal val zip: File = FileManager.makeNextPath(F_UniPackRootExt, unishare.title + " #" + unishare._id, ".zip")
-	internal val folder: File = FileManager.makeNextPath(F_UniPackRootExt, unishare.title + " #" + unishare._id, "/")
+		private val unishare: UnishareVO,
+		UniPackRootExt: File,
+		private var listener: UnishareDownloadListener) {
+	private val zip: File = FileManager.makeNextPath(UniPackRootExt, unishare.title + " #" + unishare._id, ".zip")
+	private val folder: File = FileManager.makeNextPath(UniPackRootExt, unishare.title + " #" + unishare._id, "/")
 
 	interface UnishareDownloadListener {
 		fun onDownloadStart()
@@ -47,8 +47,6 @@ class UnishareDownloader(
 					fileSize = responseBody.contentLength()
 				}
 				listener.onGetFileSize(fileSize!!)
-
-				delay(1000)
 
 				withContext(Dispatchers.IO) {
 					outputStream = FileOutputStream(zip)
