@@ -28,12 +28,10 @@ public abstract class UnipackDAO {
 
 	public UnipackENT getOrCreate(String path) {
 		UnipackENT item = find(path);
-		Log.test("getOrCreate: " + path);
 
 		if (item == null) {
 			item = new UnipackENT(path, 0, false, false, new Date());
 			insert(item);
-			Log.test("insert");
 
 		}
 
