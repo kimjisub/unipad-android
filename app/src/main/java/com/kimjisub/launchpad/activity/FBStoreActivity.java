@@ -261,8 +261,8 @@ public class FBStoreActivity extends BaseActivity {
 		String code = StoreVO.getCode();
 		String title = StoreVO.getTitle();
 		String producerName = StoreVO.getProducerName();
-		boolean isAutoPlay = StoreVO.isAutoPlay();
-		boolean isLED = StoreVO.isLED();
+		boolean isAutoPlay = StoreVO.isAutoPlay;
+		boolean isLED = StoreVO.isLED;
 		int downloadCount = StoreVO.getDownloadCount();
 		String URL = StoreVO.getURL();
 
