@@ -11,6 +11,10 @@ public class Log {
 		printLog("com.kimjisub._test", msg);
 	}
 
+	public static void download(String msg) {
+		printLog("com.kimjisub._download", msg);
+	}
+
 	public static void network(String msg) {
 		printLog("com.kimjisub._network", msg);
 	}
