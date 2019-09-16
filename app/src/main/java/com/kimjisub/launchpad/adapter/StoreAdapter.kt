@@ -49,6 +49,8 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
 		item.packView = packView
 		holder.realPosition = holder.adapterPosition
+
+		////////////////////////////////////////////////////////////////////////////////////////////////
 		packView.apply {
 			animate = false
 			toggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
@@ -75,7 +77,7 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 				}
 			})
 			animate = true
-			val a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
+			val a: Animation = AnimationUtils.loadAnimation(context, anim.pack_in)
 			animation = a
 		}
 	}
@@ -125,9 +127,6 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 	}
 
 	override fun getItemCount() = list.size
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 	interface EventListener {
 		fun onViewClick(item: StoreItem, v: PackView)
