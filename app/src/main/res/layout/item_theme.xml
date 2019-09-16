@@ -20,7 +20,7 @@
 			android:layout_width="150dp"
 			android:layout_height="150dp"
 			android:layout_gravity="center"
-			android:src="@{data.icon}" />
+			android:src="@{data.icon ?? @drawable/theme_add}" />
 
 		<TextView
 			android:id="@+id/version"
@@ -33,7 +33,7 @@
 			android:paddingTop="3dp"
 			android:paddingRight="30dp"
 			android:paddingBottom="3dp"
-			android:text="@{data.version}"
+			android:text="@{data.version ?? @string/themeDownload}"
 			android:textColor="@color/white" />
 
 		<TextView
