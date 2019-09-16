@@ -292,7 +292,7 @@ public class Unipack {
 											else if (split2.length == 5) {
 												if (split2[3].equals("auto") || split2[3].equals("a")) {
 													_velo = Integer.parseInt(split2[4]);
-													_color = LaunchpadColor.ARGB[_velo];
+													_color = (int)LaunchpadColor.INSTANCE.getARGB()[_velo];
 												} else {
 													_velo = Integer.parseInt(split2[4]);
 													_color = Integer.parseInt(split2[3], 16) + 0xFF000000;

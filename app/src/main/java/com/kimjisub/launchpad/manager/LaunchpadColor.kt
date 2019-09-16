@@ -1,8 +1,7 @@
-package com.kimjisub.launchpad.manager;
+package com.kimjisub.launchpad.manager
 
-public class LaunchpadColor {
-
-	public static final int[] ARGB = new int[]{
+object LaunchpadColor {
+	val ARGB = longArrayOf(
 			0x00000000,//0
 			0x77fafafa,//1
 			0xAAfafafa,//2
@@ -145,11 +144,10 @@ public class LaunchpadColor {
 			0xFFffff00,//124
 			0xFFbeb212,
 			0xFFf5d01d,//126
-			0xFFe37829,
-	};
-
-	public static final int[] SCode = new int[]{
-			0,//0
+			0xFFe37829
+	)
+	val SCode = intArrayOf(
+			0, //0
 			61,
 			62,
 			63,
@@ -158,7 +156,7 @@ public class LaunchpadColor {
 			3,
 			3,
 
-			21,//8
+			21, //8
 			63,
 			62,
 			61,
@@ -167,7 +165,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//16
+			53, //16
 			56,
 			56,
 			56,
@@ -176,7 +174,7 @@ public class LaunchpadColor {
 			56,
 			56,
 
-			56,//24
+			56, //24
 			56,
 			56,
 			56,
@@ -185,7 +183,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//32
+			53, //32
 			53,
 			53,
 			53,
@@ -194,7 +192,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//40
+			53, //40
 			53,
 			53,
 			53,
@@ -203,7 +201,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//48
+			53, //48
 			53,
 			53,
 			53,
@@ -212,7 +210,7 @@ public class LaunchpadColor {
 			39,
 			39,
 
-			37,//56
+			37, //56
 			39,
 			39,
 			39,
@@ -221,7 +219,7 @@ public class LaunchpadColor {
 			57,
 			56,
 
-			56,//64
+			56, //64
 			40,
 			53,
 			53,
@@ -230,7 +228,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			3,//72
+			3, //72
 			57,
 			57,
 			56,
@@ -239,7 +237,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//80
+			53, //80
 			53,
 			53,
 			53,
@@ -248,7 +246,7 @@ public class LaunchpadColor {
 			56,
 			56,
 
-			56,//88
+			56, //88
 			56,
 			56,
 			53,
@@ -257,7 +255,7 @@ public class LaunchpadColor {
 			47,
 			63,
 
-			59,//96
+			59, //96
 			57,
 			57,
 			57,
@@ -266,7 +264,7 @@ public class LaunchpadColor {
 			56,
 			53,
 
-			53,//104
+			53, //104
 			53,
 			3,
 			19,
@@ -275,7 +273,7 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			53,//112
+			53, //112
 			53,
 			53,
 			53,
@@ -284,15 +282,12 @@ public class LaunchpadColor {
 			53,
 			53,
 
-			3,//120
+			3, //120
 			3,
 			56,
 			56,
 			57,
 			57,
 			57,
-			57,
-
-	};
-
+			57)
 }
