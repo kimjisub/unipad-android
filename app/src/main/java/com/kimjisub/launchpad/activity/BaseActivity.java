@@ -37,8 +37,6 @@ import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 
 public class BaseActivity extends AppCompatActivity {
 
-	AppDataBase db;
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private static InterstitialAd interstitialAd;
@@ -302,8 +300,6 @@ public class BaseActivity extends AppCompatActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.activity("onCreate " + this.getLocalClassName());
 		super.onCreate(savedInstanceState);
-
-		db = Room.databaseBuilder(this, AppDataBase.class, "UniPad-db").build();
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
