@@ -13,8 +13,8 @@ import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.Log
 import java.util.*
 
-class StoreItem(var storeVO: StoreVO, var isDownloaded: Boolean = false) {
-	var isDownloading: Boolean = false
+class StoreItem(var storeVO: StoreVO, var downloaded: Boolean = false) {
+	var downloading: Boolean = false
 
 	var packView: PackView? = null
 	var isToggle = false
@@ -53,8 +53,8 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		packView.apply {
 			animate = false
-			toggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
-			untoggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+			toggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
+			untoggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 			title = item.storeVO.title!!
 			subtitle = item.storeVO.producerName!!
 			option1Name = context.getString(string.LED_)
@@ -62,7 +62,7 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 			option2Name = context.getString(string.autoPlay_)
 			option2 = item.storeVO.isAutoPlay
 			showPlayImage(false)
-			setPlayText(context.getString(if (item.isDownloaded) string.downloaded else string.download))
+			setPlayText(context.getString(if (item.downloaded) string.downloaded else string.download))
 			setOnEventListener(object : PackView.OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)
@@ -96,13 +96,13 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 					"update" -> {
 						Log.test("update")
 						packView.apply {
-							toggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
-							untoggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+							toggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
+							untoggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 							title = item.storeVO.title!!
 							subtitle = item.storeVO.producerName!!
 							option1 = item.storeVO.isLED
 							option2 = item.storeVO.isAutoPlay
-							setPlayText(context.getString(if (item.isDownloaded) string.downloaded else string.download))
+							setPlayText(context.getString(if (item.downloaded) string.downloaded else string.download))
 						}
 					}
 				}/*String type = (String) payload;

@@ -69,7 +69,7 @@ public class FBStoreActivity extends BaseActivity {
 
 				@Override
 				public void onPlayClick(StoreItem item, PackView v) {
-					if (!item.isDownloaded() && !item.isDownloading())
+					if (!item.getDownloaded() && !item.getDownloading())
 						startDownload(getPackItemByCode(item.getStoreVO().getCode()));
 				}
 			});
@@ -236,7 +236,7 @@ public class FBStoreActivity extends BaseActivity {
 	int getDownloadingCount() {
 		int count = 0;
 		for (StoreItem item : list) {
-			if (item.isDownloading())
+			if (item.getDownloading())
 				count++;
 		}
 
@@ -246,7 +246,7 @@ public class FBStoreActivity extends BaseActivity {
 	int getDownloadedCount() {
 		int count = 0;
 		for (StoreItem item : list) {
-			if (item.isDownloaded())
+			if (item.getDownloaded())
 				count++;
 		}
 
