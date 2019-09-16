@@ -61,7 +61,7 @@ class ChanelManager(x: Int, y: Int) {
 	fun add(x: Int, y: Int, chanel: Chanel, color: Int, code: Int) {
 		var color = color
 		if (color == -1)
-			color = LaunchpadColor.ARGB[code]
+			color = LaunchpadColor.ARGB[code].toInt()
 		if (x != -1)
 			btn[x][y][chanel.priority] = Item(chanel, color, code)
 		else
