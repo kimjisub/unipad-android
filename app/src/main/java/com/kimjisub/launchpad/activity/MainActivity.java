@@ -18,6 +18,7 @@ import android.view.animation.AnimationUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,6 +41,7 @@ import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.adapter.UnipackAdapter;
 import com.kimjisub.launchpad.adapter.UnipackItem;
 import com.kimjisub.launchpad.databinding.ActivityMainBinding;
+import com.kimjisub.launchpad.db.AppDataBase;
 import com.kimjisub.launchpad.db.ent.UnipackENT;
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT;
 import com.kimjisub.launchpad.manager.BillingManager;
@@ -68,6 +70,8 @@ import static com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY
 
 public class MainActivity extends BaseActivity {
 	ActivityMainBinding b;
+
+	AppDataBase db;
 
 	BillingManager billingManager;
 
@@ -223,6 +227,8 @@ public class MainActivity extends BaseActivity {
 		initVar(true);
 		initPannel();
 
+		db = AppDataBase.Companion.getInstance(this);
+
 		loadAdmob();
 		billingManager = new BillingManager(MainActivity.this, new BillingManager.BillingEventListener() {
 			@Override
@@ -320,7 +326,7 @@ public class MainActivity extends BaseActivity {
 				if (item != null) {
 					new Thread(() -> {
 						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
-						unipackENT.pin = !unipackENT.pin;
+						unipackENT.setPin(!unipackENT.getPin());
 						db.unipackDAO().update(unipackENT);
 					}).start();
 				}
@@ -332,7 +338,7 @@ public class MainActivity extends BaseActivity {
 				if (item != null) {
 					new Thread(() -> {
 						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
-						unipackENT.bookmark = !unipackENT.bookmark;
+						unipackENT.setBookmark(!unipackENT.getBookmark());
 						db.unipackDAO().update(unipackENT);
 					}).start();
 				}
@@ -472,7 +478,7 @@ public class MainActivity extends BaseActivity {
 						String path = file.getPath();
 						Unipack unipack = new Unipack(file, false);
 						UnipackENT unipackENT = db.unipackDAO().getOrCreate(unipack.F_project.getName());
-						UnipackItem packItem = new UnipackItem(unipack, path, unipackENT.bookmark, animateNew);
+						UnipackItem packItem = new UnipackItem(unipack, path, unipackENT.getBookmark(), animateNew);
 
 						I_curr.add(packItem);
 					}
@@ -898,6 +904,7 @@ public class MainActivity extends BaseActivity {
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelMain(boolean hardWork) {
 		b.panelTotal.b.unipackCount.setText(list.size() + "");
+		db.unipackOpenDAO().getCount().observe(this, integer -> b.panelTotal.b.openCount.setText(integer.toString()));
 
 		b.panelTotal.b.padTouchCount.setText(lang(R.string.measuring));
 
@@ -939,13 +946,13 @@ public class MainActivity extends BaseActivity {
 			else
 				flagColor = color(R.color.skyblue);
 
-			if (unipackENT.bookmark)
+			if (unipackENT.getBookmark())
 				flagColor = color(R.color.orange);
 
 			item.flagColor = flagColor;
 
-			b.panelPack.setStar(unipackENT.pin);
-			b.panelPack.setBookmark(unipackENT.bookmark);
+			b.panelPack.setStar(unipackENT.getPin());
+			b.panelPack.setBookmark(unipackENT.getBookmark());
 		}).start();
 
 		db.unipackOpenDAO().getCount(item.unipack.F_project.getName()).observe(this, integer -> {
