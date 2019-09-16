@@ -3,17 +3,18 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<androidx.constraintlayout.widget.ConstraintLayout
+		android:id="@+id/CL_root"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
 		<LinearLayout
-			android:id="@+id/scale"
+			android:id="@+id/LL_scale"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:padding="8dp">
 
 			<LinearLayout
-				android:id="@+id/paddingScale"
+				android:id="@+id/LL_paddingScale"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
 				android:orientation="vertical" />
@@ -29,18 +30,19 @@
 			<RelativeLayout
 				android:layout_width="0dp"
 				android:layout_height="match_parent"
+				android:layout_marginStart="16dp"
 				android:layout_marginLeft="16dp"
 				android:layout_marginTop="16dp"
 				android:layout_marginBottom="16dp"
 				android:layout_weight="2">
 
 				<com.kimjisub.design.panel.MainTotalPanel
-					android:id="@+id/panel_total"
+					android:id="@+id/P_main_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
 				<com.kimjisub.design.panel.MainPackPanel
-					android:id="@+id/panel_pack"
+					android:id="@+id/P_main_pack"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:alpha="0"
@@ -54,12 +56,12 @@
 				android:layout_weight="3">
 
 				<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-					android:id="@+id/swipeRefreshLayout"
+					android:id="@+id/SRL_swipeRefreshLayout"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent">
 
 					<androidx.recyclerview.widget.RecyclerView
-						android:id="@+id/recyclerView"
+						android:id="@+id/RV_recyclerView"
 						android:layout_width="match_parent"
 						android:layout_height="match_parent"
 						android:clipToPadding="false"
@@ -73,7 +75,7 @@
 				</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 				<LinearLayout
-					android:id="@+id/errItem"
+					android:id="@+id/LL_errItem"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:layout_centerInParent="true"
@@ -105,7 +107,7 @@
 		</LinearLayout>
 
 		<com.github.clans.fab.FloatingActionMenu
-			android:id="@+id/floatingMenu"
+			android:id="@+id/FAM_floatingMenu"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentEnd="true"
@@ -136,7 +138,7 @@
 			app:menu_openDirection="up">
 
 			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/fab_reconnectLaunchpad"
+				android:id="@+id/FAB_reconnectLaunchpad"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:src="@drawable/baseline_launchpad_24dp"
@@ -146,7 +148,7 @@
 				app:fab_size="mini" />
 
 			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/fab_loadUniPack"
+				android:id="@+id/FAB_loadUniPack"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:src="@drawable/baseline_folder_open_white_24"
@@ -156,7 +158,7 @@
 				app:fab_size="mini" />
 
 			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/fab_store"
+				android:id="@+id/FAB_store"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:src="@drawable/baseline_shopping_basket_white_24"
@@ -166,7 +168,7 @@
 				app:fab_size="mini" />
 
 			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/fab_setting"
+				android:id="@+id/FAB_setting"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:src="@drawable/baseline_settings_white_24"
