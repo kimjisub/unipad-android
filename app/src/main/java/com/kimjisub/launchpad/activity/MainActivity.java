@@ -18,7 +18,6 @@ import android.view.animation.AnimationUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -107,11 +106,11 @@ public class MainActivity extends BaseActivity {
 		// var
 		if (onFirst) {
 			list = new ArrayList<>();
-			adapter = new UnipackAdapter(MainActivity.this, list, new UnipackAdapter.EventListener() {
+			adapter = new UnipackAdapter(list, new UnipackAdapter.EventListener() {
 
 				@Override
 				public void onViewClick(UnipackItem item, PackView v) {
-					if (!item.isMoving)
+					if (!item.getMoving())
 						togglePlay(item);
 				}
 
@@ -121,7 +120,7 @@ public class MainActivity extends BaseActivity {
 
 				@Override
 				public void onPlayClick(UnipackItem item, PackView v) {
-					if (!item.isMoving)
+					if (!item.getMoving())
 						pressPlay(item);
 				}
 			});
@@ -201,7 +200,7 @@ public class MainActivity extends BaseActivity {
 						showSelectLPUI();
 				} else if (f == 2 && upDown) {
 					if (haveNow())
-						list.get(lastPlayIndex).packView.onPlayClick();
+						list.get(lastPlayIndex).getPackView().onPlayClick();
 				}
 			}
 
@@ -325,7 +324,7 @@ public class MainActivity extends BaseActivity {
 				UnipackItem item = getSelected();
 				if (item != null) {
 					new Thread(() -> {
-						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
+						UnipackENT unipackENT = db.unipackDAO().find(item.getUnipack().F_project.getName());
 						unipackENT.setPin(!unipackENT.getPin());
 						db.unipackDAO().update(unipackENT);
 					}).start();
@@ -337,7 +336,7 @@ public class MainActivity extends BaseActivity {
 				UnipackItem item = getSelected();
 				if (item != null) {
 					new Thread(() -> {
-						UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
+						UnipackENT unipackENT = db.unipackDAO().find(item.getUnipack().F_project.getName());
 						unipackENT.setBookmark(!unipackENT.getBookmark());
 						db.unipackDAO().update(unipackENT);
 					}).start();
@@ -353,8 +352,8 @@ public class MainActivity extends BaseActivity {
 			public void onStorageClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					item.isMoving = true;
-					File source = new File(item.path);
+					item.setMoving(true);
+					File source = new File(item.getPath());
 					boolean isInternal = FileManager.isInternalFile(MainActivity.this, source);
 					File target = new File(isInternal ? F_UniPackRootExt : F_UniPackRootInt, source.getName());
 
@@ -386,7 +385,7 @@ public class MainActivity extends BaseActivity {
 			public void onYoutubeClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					String website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title;
+					String website = "https://www.youtube.com/results?search_query=UniPad+" + item.getUnipack().title;
 					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 				}
 			}
@@ -395,7 +394,7 @@ public class MainActivity extends BaseActivity {
 			public void onWebsiteClick(View v) {
 				UnipackItem item = getSelected();
 				if (item != null) {
-					String website = item.unipack.website;
+					String website = item.getUnipack().website;
 					if (website != null)
 						startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(website)));
 				}
@@ -409,7 +408,7 @@ public class MainActivity extends BaseActivity {
 							.setTitle(lang(R.string.warning))
 							.setMessage(lang(R.string.doYouWantToRemapProject))
 							.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
-								autoMapping(item.unipack);
+								autoMapping(item.getUnipack());
 							}).setNegativeButton(lang(R.string.cancel), null)
 							.show();
 			}
@@ -423,7 +422,7 @@ public class MainActivity extends BaseActivity {
 							.setTitle(lang(R.string.warning))
 							.setMessage(lang(R.string.doYouWantToDeleteProject))
 							.setPositiveButton(lang(R.string.accept), (dialog, which) -> {
-								deleteUnipack(item.unipack);
+								deleteUnipack(item.getUnipack());
 							}).setNegativeButton(lang(R.string.cancel), null)
 							.show();
 			}
@@ -487,7 +486,7 @@ public class MainActivity extends BaseActivity {
 						int index = -1;
 						int i = 0;
 						for (UnipackItem item2 : I_removed) {
-							if (item2.path.equals(item.path)) {
+							if (item2.getPath().equals(item.getPath())) {
 								index = i;
 								break;
 							}
@@ -512,9 +511,9 @@ public class MainActivity extends BaseActivity {
 				for (UnipackItem F_added : I_added) {
 
 					int i = 0;
-					long targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project);
+					long targetTime = FileManager.getInnerFileLastModified(F_added.getUnipack().F_project);
 					for (UnipackItem item : list) {
-						long testTime = FileManager.getInnerFileLastModified(item.unipack.F_project);
+						long testTime = FileManager.getInnerFileLastModified(item.getUnipack().F_project);
 						if (targetTime > testTime)
 							break;
 						i++;
@@ -527,7 +526,7 @@ public class MainActivity extends BaseActivity {
 				for (UnipackItem F_removed : I_removed) {
 					int i = 0;
 					for (UnipackItem item : list) {
-						if (item.path.equals(F_removed.path)) {
+						if (item.getPath().equals(F_removed.getPath())) {
 							int I = i;
 							list.remove(I);
 							adapter.notifyItemRemoved(I);
@@ -796,16 +795,16 @@ public class MainActivity extends BaseActivity {
 		try {
 			int i = 0;
 			for (UnipackItem item : list) {
-				PackView packView = item.packView;
+				PackView packView = item.getPackView();
 
-				if (target != null && item.path.equals(target.path)) {
-					item.isToggle = !item.isToggle;
+				if (target != null && item.getPath().equals(target.getPath())) {
+					item.setToggle(!item.getToggle());
 					lastPlayIndex = i;
 				} else
-					item.isToggle = false;
+					item.setToggle(false);
 
 				if (packView != null)
-					packView.toggle(item.isToggle);
+					packView.toggle(item.getToggle());
 
 				i++;
 			}
@@ -822,12 +821,12 @@ public class MainActivity extends BaseActivity {
 		rescanScale(b.scale, b.paddingScale);
 
 		new Thread(() -> {
-			db.unipackOpenDAO().insert(new UnipackOpenENT(item.unipack.F_project.getName(), new Date()));
+			db.unipackOpenDAO().insert(new UnipackOpenENT(item.getUnipack().F_project.getName(), new Date()));
 		}).start();
 
 
 		Intent intent = new Intent(MainActivity.this, PlayActivity.class);
-		intent.putExtra("path", item.path);
+		intent.putExtra("path", item.getPath());
 		startActivity(intent);
 		MidiConnection.INSTANCE.removeController(midiController);
 	}
@@ -837,7 +836,7 @@ public class MainActivity extends BaseActivity {
 
 		int i = 0;
 		for (UnipackItem item : list) {
-			if (item.isToggle) {
+			if (item.getToggle()) {
 				index = i;
 				break;
 			}
@@ -936,9 +935,9 @@ public class MainActivity extends BaseActivity {
 
 	@SuppressLint("StaticFieldLeak")
 	void updatePanelPack(UnipackItem item) {
-		Unipack unipack = item.unipack;
+		Unipack unipack = item.getUnipack();
 		new Thread(() -> {
-			UnipackENT unipackENT = db.unipackDAO().find(item.unipack.F_project.getName());
+			UnipackENT unipackENT = db.unipackDAO().find(item.getUnipack().F_project.getName());
 
 			int flagColor;
 			if (unipack.CriticalError)
@@ -949,13 +948,13 @@ public class MainActivity extends BaseActivity {
 			if (unipackENT.getBookmark())
 				flagColor = color(R.color.orange);
 
-			item.flagColor = flagColor;
+			item.setFlagColor(flagColor);
 
 			b.panelPack.setStar(unipackENT.getPin());
 			b.panelPack.setBookmark(unipackENT.getBookmark());
 		}).start();
 
-		db.unipackOpenDAO().getCount(item.unipack.F_project.getName()).observe(this, integer -> {
+		db.unipackOpenDAO().getCount(item.getUnipack().F_project.getName()).observe(this, integer -> {
 			b.panelPack.b.openCount.setText(integer.toString());
 		});
 
@@ -963,7 +962,7 @@ public class MainActivity extends BaseActivity {
 		b.panelPack.setStorage(!FileManager.isInternalFile(MainActivity.this, unipack.F_project));
 		b.panelPack.b.title.setText(unipack.title);
 		b.panelPack.b.subtitle.setText(unipack.producerName);
-		b.panelPack.b.path.setText(item.path);
+		b.panelPack.b.path.setText(item.getPath());
 		b.panelPack.b.scale.setText(unipack.buttonX + " × " + unipack.buttonY);
 		b.panelPack.b.chainCount.setText(unipack.chain + "");
 		b.panelPack.b.soundCount.setText(lang(R.string.measuring));
@@ -979,16 +978,16 @@ public class MainActivity extends BaseActivity {
 			protected String doInBackground(String... params) {
 				String fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB";
 				handler.post(() -> {
-					if (b.panelPack.b.path.getText().toString().equals(item.path))
+					if (b.panelPack.b.path.getText().toString().equals(item.getPath()))
 						b.panelPack.b.fileSize.setText(fileSize);
 				});
 
 				try {
-					Unipack unipackDetail = new Unipack(item.unipack.F_project, true);
-					item.unipack = unipackDetail;
+					Unipack unipackDetail = new Unipack(item.getUnipack().F_project, true);
+					item.setUnipack(unipackDetail);
 					publishProgress(fileSize);
 					handler.post(() -> {
-						if (b.panelPack.b.path.getText().toString().equals(item.path)) {
+						if (b.panelPack.b.path.getText().toString().equals(item.getPath())) {
 							b.panelPack.b.soundCount.setText(unipackDetail.soundTableCount + "");
 							b.panelPack.b.ledCount.setText(unipackDetail.ledTableCount + "");
 						}
