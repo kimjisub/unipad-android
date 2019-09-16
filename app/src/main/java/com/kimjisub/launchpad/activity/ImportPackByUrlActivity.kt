@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
 import androidx.core.app.NotificationCompat
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
@@ -15,6 +14,7 @@ import com.kimjisub.launchpad.network.UnishareDownloader.UnishareDownloadListene
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*
+import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -258,9 +258,11 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 	private fun delayFinish() {
 		log("delayFinish()")
-		Handler().postDelayed({
+		CoroutineScope(Dispatchers.Main).launch {
+			delay(3000)
+
 			finish()
 			overridePendingTransition(anim.activity_in, anim.activity_out)
-		}, 3000)
+		}
 	}
 }
