@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.PackView
 import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.manager.Unipack
 import java.util.*
 
@@ -39,70 +38,67 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 	}
 
 	override fun onBindViewHolder(holder: UnipackHolder, position: Int) {
-		val context= holder.packView.context
+		val context = holder.packView.context
 
 		val item = list[holder.adapterPosition]
 		val packView = holder.packView
 
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
-
-
 		try {
 			list[holder.realPosition].packView = null
 		} catch (ignored: Exception) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
-
 		item.packView = packView
 		holder.realPosition = holder.adapterPosition
+
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		var title: String? = item.unipack.title
-		var subtitle: String? = item.unipack.producerName
+		var viewingTitle: String = item.unipack.title
+		var viewingSubtitle: String = item.unipack.producerName
 		if (item.unipack.CriticalError) {
 			item.flagColor = ContextCompat.getColor(context, color.red)
-			title = context.getString(string.errOccur)
-			subtitle = item.path
-		} else item.flagColor = ContextCompat.getColor(context,color.skyblue)
-		if (item.bookmark) item.flagColor = ContextCompat.getColor(context, color.orange)
-		packView.animate = false
-		packView.toggleColor = ContextCompat.getColor(context,color.red)
-		packView.untoggleColor = item.flagColor
-		packView.title = title!!
-		packView.subtitle = subtitle!!
-		packView.option1Name = context.getString(string.LED_)
-		packView.option1 = item.unipack.isKeyLED
-		packView.option2Name = context.getString(string.autoPlay_)
-		packView.option2 = item.unipack.isAutoPlay
-		packView.setOnEventListener(object : OnEventListener {
-			override fun onViewClick(v: PackView) {
-				eventListener.onViewClick(item, v)
-			}
+			viewingTitle = context.getString(string.errOccur)
+			viewingSubtitle = item.path
+		} else
+			item.flagColor = ContextCompat.getColor(context, color.skyblue)
+		if (item.bookmark)
+			item.flagColor = ContextCompat.getColor(context, color.orange)
 
-			override fun onViewLongClick(v: PackView) {
-				eventListener.onViewLongClick(item, v)
-			}
+		packView.apply {
+			animate = false
+			toggleColor = ContextCompat.getColor(context, color.red)
+			untoggleColor = item.flagColor
+			title = viewingTitle
+			subtitle = viewingSubtitle
+			option1Name = context.getString(string.LED_)
+			option1 = item.unipack.isKeyLED
+			option2Name = context.getString(string.autoPlay_)
+			option2 = item.unipack.isAutoPlay
+			setOnEventListener(object : OnEventListener {
+				override fun onViewClick(v: PackView) {
+					eventListener.onViewClick(item, v)
+				}
 
-			override fun onPlayClick(v: PackView) {
-				eventListener.onPlayClick(item, v)
-			}
-		})
-		packView.toggle(item.toggle)
-		packView.animate = true
-		var a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
-		if (item.isNew) a = AnimationUtils.loadAnimation(context, anim.pack_new_in)
-		item.isNew = false
-		packView.animation = a
+				override fun onViewLongClick(v: PackView) {
+					eventListener.onViewLongClick(item, v)
+				}
+
+				override fun onPlayClick(v: PackView) {
+					eventListener.onPlayClick(item, v)
+				}
+			})
+			toggle(item.toggle)
+			animate = true
+			var a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
+			if (item.isNew) a = AnimationUtils.loadAnimation(context, anim.pack_new_in)
+			item.isNew = false
+			animation = a
+		}
 	}
 
-	override fun getItemCount(): Int {
-		return list.size
-	}
-
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
+	override fun getItemCount() = list.size
 
 	interface EventListener {
 		fun onViewClick(item: UnipackItem, v: PackView)
