@@ -4,12 +4,11 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout.LayoutParams
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.PackView
-import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.Log
 import java.util.*
@@ -25,7 +24,7 @@ class StoreHolder(val packView: PackView) : RecyclerView.ViewHolder(packView) {
 	var realPosition = -1
 }
 
-class StoreAdapter(private val context: BaseActivity, private val list: ArrayList<StoreItem>, private val eventListener: EventListener) : Adapter<StoreHolder>() {
+class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventListener: EventListener) : Adapter<StoreHolder>() {
 	private var viewHolderCount = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoreHolder {
 		Log.test("onCreateViewHolder: " + viewHolderCount++)
@@ -50,33 +49,35 @@ class StoreAdapter(private val context: BaseActivity, private val list: ArrayLis
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
 		item.packView = packView
 		holder.realPosition = holder.adapterPosition
-		packView.animate = false
-		packView.toggleColor = context.color(if (item.isDownloaded) color.green else color.red)
-		packView.untoggleColor = context.color(if (item.isDownloaded) color.green else color.red)
-		packView.title = item.storeVO.title!!
-		packView.subtitle = item.storeVO.producerName!!
-		packView.option1Name = context.lang(string.LED_)
-		packView.option1 = item.storeVO.isLED
-		packView.option2Name = context.lang(string.autoPlay_)
-		packView.option2 = item.storeVO.isAutoPlay
-		packView.showPlayImage(false)
-		packView.setPlayText(context.lang(if (item.isDownloaded) string.downloaded else string.download))
-		packView.setOnEventListener(object : OnEventListener {
-			override fun onViewClick(v: PackView) {
-				eventListener.onViewClick(item, v)
-			}
+		packView.apply {
+			animate = false
+			toggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+			untoggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+			title = item.storeVO.title!!
+			subtitle = item.storeVO.producerName!!
+			option1Name = context.getString(string.LED_)
+			option1 = item.storeVO.isLED
+			option2Name = context.getString(string.autoPlay_)
+			option2 = item.storeVO.isAutoPlay
+			showPlayImage(false)
+			setPlayText(context.getString(if (item.isDownloaded) string.downloaded else string.download))
+			setOnEventListener(object : PackView.OnEventListener {
+				override fun onViewClick(v: PackView) {
+					eventListener.onViewClick(item, v)
+				}
 
-			override fun onViewLongClick(v: PackView) {
-				eventListener.onViewLongClick(item, v)
-			}
+				override fun onViewLongClick(v: PackView) {
+					eventListener.onViewLongClick(item, v)
+				}
 
-			override fun onPlayClick(v: PackView) {
-				eventListener.onPlayClick(item, v)
-			}
-		})
-		packView.animate = true
-		val a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
-		packView.animation = a
+				override fun onPlayClick(v: PackView) {
+					eventListener.onPlayClick(item, v)
+				}
+			})
+			animate = true
+			val a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
+			animation = a
+		}
 	}
 
 	override fun onBindViewHolder(holder: StoreHolder, position: Int, payloads: List<Any>) {
@@ -92,13 +93,15 @@ class StoreAdapter(private val context: BaseActivity, private val list: ArrayLis
 				when (payload) {
 					"update" -> {
 						Log.test("update")
-						packView.toggleColor = context.color(if (item.isDownloaded) color.green else color.red)
-						packView.untoggleColor = context.color(if (item.isDownloaded) color.green else color.red)
-						packView.title = item.storeVO.title!!
-						packView.subtitle = item.storeVO.producerName!!
-						packView.option1 = item.storeVO.isLED
-						packView.option2 = item.storeVO.isAutoPlay
-						packView.setPlayText(context.lang(if (item.isDownloaded) string.downloaded else string.download))
+						packView.apply {
+							toggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+							untoggleColor = ContextCompat.getColor(context, if (item.isDownloaded) color.green else color.red)
+							title = item.storeVO.title!!
+							subtitle = item.storeVO.producerName!!
+							option1 = item.storeVO.isLED
+							option2 = item.storeVO.isAutoPlay
+							setPlayText(context.getString(if (item.isDownloaded) string.downloaded else string.download))
+						}
 					}
 				}/*String type = (String) payload;
 				if (TextUtils.equals(type, "click") && holder instanceof TextHolder) {

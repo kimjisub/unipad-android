@@ -16,12 +16,11 @@ data class DialogListItem(
 
 
 class DialogListAdapter(
-		private val context: Context,
 		private val list: ArrayList<DialogListItem>)
 	: BaseAdapter() {
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-		val view = LayoutInflater.from(context).inflate(layout.item_setting, parent, false)
+		val view = LayoutInflater.from(parent.context).inflate(layout.item_setting, parent, false)
 		val bind = ItemSettingBinding.bind(view)
 
 		val item = list[position]

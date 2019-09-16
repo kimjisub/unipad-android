@@ -93,7 +93,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
-			listView.adapter = DialogListAdapter(context!!, data)
+			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
 				startActivity(Intent(list[position].action, Uri.parse(list[position].url)))
 			}
@@ -128,7 +128,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
-			listView.adapter = DialogListAdapter(context!!, data)
+			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long -> billingManager!!.purchase(list[position].purchaseId) }
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(lang(string.donation))
@@ -178,7 +178,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
-			listView.adapter = DialogListAdapter(context!!, data)
+			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(list[position].url))) }
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(lang(string.openSourceLicense))
