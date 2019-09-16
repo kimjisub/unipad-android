@@ -12,7 +12,7 @@ import com.kimjisub.launchpad.databinding.ItemThemeBinding
 import com.kimjisub.launchpad.manager.ThemeResources
 import java.util.*
 
-class ThemeItem(val context: Context, val package_name: String) {
+class ThemeItem(context: Context, val package_name: String) {
 	val res: Resources = context.packageManager.getResourcesForApplication(package_name)
 
 	val icon: Drawable = res.getDrawable(res.getIdentifier("$package_name:drawable/theme_ic", null, null))
@@ -39,14 +39,12 @@ class ThemeAdapter(val list: ArrayList<ThemeItem>)
 	}
 
 	override fun onBindViewHolder(holder: ThemeHolder, position: Int) {
-
 		holder.apply {
 			if (position < list.size)
 				binding.data = list[position]
 			else {
 				val context = holder.binding.root.context
-				binding.icon.background = ContextCompat.getDrawable(context, drawable.theme_add)
-				binding.version.text = context.getString(string.themeDownload)
+				binding.data = null
 			}
 		}
 	}
