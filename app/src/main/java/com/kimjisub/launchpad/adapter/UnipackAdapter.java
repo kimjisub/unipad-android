@@ -26,12 +26,9 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 		this.eventListener = eventListener;
 	}
 
-	int viewHolderCount = 0;
-
 	@NonNull
 	@Override
 	public UnipackHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-		Log.test("onCreateViewHolder: " + viewHolderCount++);
 		PackView packView = new PackView(parent.getContext());
 		final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 		packView.setLayoutParams(lp);
@@ -41,7 +38,6 @@ public class UnipackAdapter extends RecyclerView.Adapter<UnipackHolder> {
 
 	@Override
 	public void onBindViewHolder(@NonNull UnipackHolder holder, int position) {
-		Log.test("onBindViewHolder: " + position);
 		UnipackItem item = list.get(holder.getAdapterPosition());
 		PackView packView = holder.packView;
 
