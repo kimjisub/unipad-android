@@ -1,11 +1,9 @@
 package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
-import androidx.core.app.NotificationCompat.Builder
+import androidx.core.app.NotificationCompat
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
@@ -26,23 +24,15 @@ class ImportPackByUrlActivity : BaseActivity() {
 	private val code: String? by lazy { intent?.data?.getQueryParameter("code") }
 
 	private var fileSize: Long = 0
-	private var downloadedSize: Long = 0
 	private var identifyCode = ""
-	private var errorMsg = ""
-	private var unishare: UnishareVO? = null
-	private var unipack: Unipack? = null
-	private var throwable: Throwable? = null
-	private var prevPercent = 0
 
 	// Notification /////////////////////////////////////////////////////////////////////////////////////////
 
-	private val notificationBuilder: Builder by lazy {
-		val builder = Builder(this)
+	private val notificationBuilder: NotificationCompat.Builder by lazy {
+		val builder = NotificationCompat.Builder(this, Channel.DOWNLOAD)
 		builder.apply {
 			setAutoCancel(true)
 			setSmallIcon(mipmap.ic_launcher)
-			if (VERSION.SDK_INT >= VERSION_CODES.O)
-				setChannelId(Channel.DOWNLOAD)
 		}
 		builder
 	}
@@ -57,17 +47,19 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 		setStatus(Status.Prepare)
 		service.unishare_get(code)!!.enqueue(object : Callback<UnishareVO?> {
+			var prevPercent: Int = 0
+
 			override fun onResponse(call: Call<UnishareVO?>, response: Response<UnishareVO?>) {
 				if (response.isSuccessful) {
-					unishare = response.body()
-					log("title: " + unishare!!.title)
-					log("producerName: " + unishare!!.producer)
-					identifyCode = unishare!!.title + " #" + unishare!!._id
+					val unishare = response.body()!!
+					identifyCode = "${unishare.title} #${unishare._id}"
+					log("title: " + unishare.title)
+					log("producerName: " + unishare.producer)
 					setStatus(Status.GetInfo)
-					UnishareDownloader(unishare!!, F_UniPackRootExt, object : UnishareDownloadListener {
+					UnishareDownloader(unishare, F_UniPackRootExt, object : UnishareDownloadListener {
 						override fun onDownloadStart() {
 							log("Download start")
-							setStatus(Status.DownloadStart)
+							setStatus(Status.DownloadStart, unishare.title, unishare.producer)
 						}
 
 						override fun onGetFileSize(contentSize: Long, realSize: Long) {
@@ -75,9 +67,15 @@ class ImportPackByUrlActivity : BaseActivity() {
 							log("fileSize: $contentSize → $realSize")
 						}
 
-						override fun onDownloading(downloadedSize_: Long) {
-							downloadedSize = downloadedSize_
-							setStatus(Status.Downloading)
+						override fun onDownloading(downloadedSize: Long) {
+							val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
+							if (prevPercent == percent) return
+							val downloadedMB: String = FileManager.byteToMB(downloadedSize)
+							val fileSizeMB: String = FileManager.byteToMB(fileSize)
+
+							prevPercent = percent
+
+							setStatus(Status.Downloading, percent.toString(), downloadedMB, fileSizeMB)
 						}
 
 						override fun onDownloadEnd(zip: File) {
@@ -86,20 +84,18 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 						override fun onAnalyzeStart() {
 							log("Analyzing Start")
-							setStatus(Status.Analyzing)
+							setStatus(Status.Analyzing, unishare.title, unishare.producer)
 						}
 
-						override fun onAnalyzeSuccess(unipack_: Unipack) {
+						override fun onAnalyzeSuccess(unipack: Unipack) {
 							log("Analyzing Success")
-							unipack = unipack_
-							setStatus(Status.Success)
+							setStatus(Status.Success, unipack.getInfoText(this@ImportPackByUrlActivity))
 						}
 
 						override fun onAnalyzeFail(unipack: Unipack) {
 							log("Analyzing Fail")
 							Log.err(unipack.ErrorDetail)
-							errorMsg = unipack.ErrorDetail
-							setStatus(Status.Failed)
+							setStatus(Status.Failed, unipack.ErrorDetail)
 						}
 
 						override fun onAnalyzeEnd(folder: File) {
@@ -107,11 +103,10 @@ class ImportPackByUrlActivity : BaseActivity() {
 							delayFinish()
 						}
 
-						override fun onException(throwable_: Throwable) {
-							throwable = throwable_
-							throwable!!.printStackTrace()
-							setStatus(Status.Exception)
-							log("Exception: " + throwable!!.message)
+						override fun onException(throwable: Throwable) {
+							throwable.printStackTrace()
+							setStatus(Status.Exception, throwable.message)
+							log("Exception: " + throwable.message)
 						}
 					})
 				} else {
@@ -126,7 +121,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 			override fun onFailure(call: Call<UnishareVO?>?, t: Throwable?) {
 				log("server error")
-				setStatus(Status.Failed)//, "server error\n" + t.getMessage());
+				setStatus(Status.Failed, "server error\n" + t?.message)
 			}
 		})
 	}
@@ -144,91 +139,121 @@ class ImportPackByUrlActivity : BaseActivity() {
 	}
 
 	@SuppressLint("SetTextI18n")
-	private fun setStatus(status: Status) {
+	private fun setStatus(status: Status, vararg args: String?) {
+
+		var title = 0
+		var message = ""
+		var notificationTitle = ""
+		var notificationText = ""
 		when (status) {
 			Status.Prepare -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = identifyCode
-				notificationBuilder.apply {
-					setContentText(identifyCode)
-					setContentText(lang(status.titleStringId))
-				}
+				title = status.titleStringId
+				message = identifyCode
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
 			}
 			Status.GetInfo -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = identifyCode
-				notificationBuilder.apply {
-					setContentTitle(identifyCode)
-					setContentText(lang(status.titleStringId))
-				}
+				title = status.titleStringId
+				message = identifyCode
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
 			}
 			Status.DownloadStart -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = "#${code}\n${unishare!!.title}\n${unishare!!.producer}"
+				val unishareTitle = args[0]!!
+				val unishareProducer = args[1]!!
+
+				title = status.titleStringId
+				message = "#${code}\n${unishareTitle}\n${unishareProducer}"
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
 
 				notificationBuilder.apply {
-					setContentText(lang(status.titleStringId))
 					setProgress(100, 0, true)
 				}
 			}
 			Status.Downloading -> {
-				val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-				if (prevPercent == percent) return
+				val percent = args[0]
+				val downloadedMB = args[1]
+				val fileSizeMB = args[2]
 
-				val downloadedSizeMB: String = FileManager.byteToMB(downloadedSize.toFloat())
-				val fileSizeMB: String = FileManager.byteToMB(fileSize.toFloat())
+				title = status.titleStringId
+				message = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
+				notificationTitle = identifyCode
+				notificationText = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
 
-				prevPercent = percent
-				TV_title.setText(status.titleStringId)
-				TV_message.text = "${percent}%\n${downloadedSizeMB} / ${fileSizeMB} MB"
 				notificationBuilder.apply {
-					setContentTitle(identifyCode)
-					setContentText(TV_message.text)
-					setProgress(100, percent, false)
+					setProgress(100, percent!!.toInt(), false)
 				}
 			}
 			Status.Analyzing -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = "#${code}\n${unishare!!.title}\n${unishare!!.producer}"
-				notificationBuilder.setContentTitle(identifyCode)
-				notificationBuilder.setContentText(lang(status.titleStringId))
-				notificationBuilder.setProgress(100, 0, true)
+				val unishareTitle = args[0]!!
+				val unishareProducer = args[1]!!
+
+				title = status.titleStringId
+				message = "#${code}\n${unishareTitle}\n${unishareProducer}"
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
+
+				notificationBuilder.apply {
+					setProgress(100, 0, true)
+				}
 			}
 			Status.Success -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = unipack!!.getInfoText(this@ImportPackByUrlActivity)
-				notificationBuilder.setContentTitle(identifyCode)
-				notificationBuilder.setContentText(lang(status.titleStringId))
-				notificationBuilder.setProgress(0, 0, false)
+				val unipackToString = args[0]!!
+
+				title = status.titleStringId
+				message = unipackToString
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
+
+				notificationBuilder.apply {
+					setProgress(0, 0, false)
+				}
 			}
 			Status.Failed -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = errorMsg
-				notificationBuilder.setContentTitle(identifyCode)
-				notificationBuilder.setContentText(lang(status.titleStringId))
-				notificationBuilder.setProgress(0, 0, false)
+				val errorMsg = args[0]!!
+
+				title = status.titleStringId
+				message = errorMsg
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
+
+				notificationBuilder.apply {
+					setProgress(0, 0, false)
+				}
 			}
 			Status.Exception -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = throwable!!.message
-				notificationBuilder.setContentTitle(identifyCode)
-				notificationBuilder.setContentText(lang(status.titleStringId))
-				notificationBuilder.setProgress(0, 0, false)
+				val throwableMessage = args[0]!!
+
+				title = status.titleStringId
+				message = throwableMessage
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
+
+				notificationBuilder.apply {
+					setProgress(0, 0, false)
+				}
 			}
 			Status.NotFound -> {
-				TV_title.setText(status.titleStringId)
-				TV_message.text = "#${code}\n${unishare!!.title}\n${unishare!!.producer}"
-				notificationBuilder.setContentTitle(identifyCode)
-				notificationBuilder.setContentText(lang(status.titleStringId))
-				notificationBuilder.setProgress(0, 0, false)
+				title = status.titleStringId
+				message = identifyCode
+				notificationTitle = identifyCode
+				notificationText = lang(status.titleStringId)
 			}
 		}
-		notificationBuilder.setOngoing(status.ongoing)
-		NotificationManager.getManager(this@ImportPackByUrlActivity).notify(notificationId, notificationBuilder.build())
+		TV_title.setText(title)
+		TV_message.text = message
+		notificationBuilder.apply {
+			setContentTitle(notificationTitle)
+			setContentText(notificationText)
+			setOngoing(status.ongoing)
+		}
+		NotificationManager.getManager(this).notify(notificationId, notificationBuilder.build())
 	}
 
 	private fun log(msg: String) {
 		TV_info.append(msg + "\n")
+		Log.download(msg)
 	}
 
 	private fun delayFinish() {
@@ -237,6 +262,5 @@ class ImportPackByUrlActivity : BaseActivity() {
 			finish()
 			overridePendingTransition(anim.activity_in, anim.activity_out)
 		}, 3000)
-		//restartApp(this);
 	}
 }
