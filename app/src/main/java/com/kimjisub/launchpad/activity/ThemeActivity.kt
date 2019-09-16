@@ -33,7 +33,7 @@ class ThemeActivity : BaseActivity() {
 
 		RV_list.apply {
 			layoutManager = manager
-			adapter = ThemeAdapter(this@ThemeActivity, list)
+			adapter = ThemeAdapter(list)
 
 			setHasFixedSize(true)
 			addOnScrollListener(CenterScrollListener())

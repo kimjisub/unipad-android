@@ -28,11 +28,11 @@ class ThemeHolder(val binding: ItemThemeBinding)
 	: RecyclerView.ViewHolder(binding.root)
 
 
-class ThemeAdapter(val context: Context, val list: ArrayList<ThemeItem>)
+class ThemeAdapter(val list: ArrayList<ThemeItem>)
 	: RecyclerView.Adapter<ThemeHolder>() {
 
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ThemeHolder {
-		val view = LayoutInflater.from(context)
+		val view = LayoutInflater.from(parent.context)
 				.inflate(layout.item_theme, parent, false)
 
 		return ThemeHolder(ItemThemeBinding.bind(view))
@@ -44,6 +44,7 @@ class ThemeAdapter(val context: Context, val list: ArrayList<ThemeItem>)
 			if (position < list.size)
 				binding.data = list[position]
 			else {
+				val context = holder.binding.root.context
 				binding.icon.background = ContextCompat.getDrawable(context, drawable.theme_add)
 				binding.version.text = context.getString(string.themeDownload)
 			}

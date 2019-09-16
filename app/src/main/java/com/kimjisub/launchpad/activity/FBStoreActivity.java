@@ -55,7 +55,7 @@ public class FBStoreActivity extends BaseActivity {
 			firebase_store = new Networks.FirebaseManager("store");
 			firebase_storeCount = new Networks.FirebaseManager("storeCount");
 			list = new ArrayList<>();
-			adapter = new StoreAdapter(FBStoreActivity.this, list, new StoreAdapter.EventListener() {
+			adapter = new StoreAdapter(list, new StoreAdapter.EventListener() {
 
 				@Override
 				public void onViewClick(StoreItem item, PackView v) {
