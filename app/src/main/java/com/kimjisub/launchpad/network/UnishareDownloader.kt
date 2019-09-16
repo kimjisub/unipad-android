@@ -5,7 +5,10 @@ import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.manager.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -20,7 +23,7 @@ class UnishareDownloader(
 
 	interface UnishareDownloadListener {
 		fun onDownloadStart()
-		fun onGetFileSize(fileSize: Long)
+		fun onGetFileSize(contentSize: Long, realSize: Long)
 		fun onDownloading(downloadedSize: Long)
 		fun onDownloadEnd(zip: File)
 		fun onAnalyzeStart()
@@ -46,7 +49,7 @@ class UnishareDownloader(
 					inputStream = responseBody!!.byteStream()
 					fileSize = responseBody.contentLength()
 				}
-				listener.onGetFileSize(fileSize!!)
+				listener.onGetFileSize(fileSize!!, if (fileSize!! > 0) fileSize!! else unishare.fileSize)
 
 				withContext(Dispatchers.IO) {
 					outputStream = FileOutputStream(zip)
@@ -62,7 +65,7 @@ class UnishareDownloader(
 						outputStream!!.write(buf, 0, n)
 						downloadSize += n.toLong()
 						if (loop % 100 == 0)
-							listener.onDownloading(downloadSize)
+							withContext(Dispatchers.Main) { listener.onDownloading(downloadSize) }
 						loop++
 					}
 					inputStream!!.close()
