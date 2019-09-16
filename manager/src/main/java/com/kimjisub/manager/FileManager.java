@@ -5,7 +5,6 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Environment;
 
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -267,8 +266,8 @@ public class FileManager {
 	}
 
 	@SuppressLint("DefaultLocale")
-	public static String byteToMB(float Byte) {
-		return String.format("%.2f", Byte / 1024L / 1024L);
+	public static String byteToMB(long b) {
+		return String.format("%.2f", (float) b / 1024 / 1024);
 	}
 
 	public static long getFolderSize(File file) {
