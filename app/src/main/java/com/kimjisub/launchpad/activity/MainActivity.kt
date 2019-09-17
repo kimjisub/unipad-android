@@ -46,6 +46,7 @@ import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
+import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
 import com.kimjisub.launchpad.manager.PreferenceManager.*
 import com.kimjisub.launchpad.manager.ThemeResources
@@ -64,78 +65,74 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : BaseActivity() {
+	private val colors by lazy { ColorManager(this) }
+
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
 
 
-	private val red by lazy { ContextCompat.getColor(this, color.red) }
-	private val orange by lazy { ContextCompat.getColor(this, color.orange) }
-	// Firebase
-	private var firebase_storeCount: FirebaseManager? = null
-	private val storeAnimator: ValueAnimator by lazy { ObjectAnimator.ofObject(ArgbEvaluator(), orange, red) }
 	private var list: ArrayList<UnipackItem> = ArrayList()
-	private var adapter: UnipackAdapter? = null
+
 	private var lastPlayIndex = -1
 	private var updateProcessing = false
-	private var midiController: MidiController? = null
 
-	private fun initVar(onFirst: Boolean) {
-		// animation
-		if (onFirst) {
-			storeAnimator.duration = 300
-			storeAnimator.repeatCount = Animation.INFINITE
-			storeAnimator.repeatMode = ValueAnimator.REVERSE
-			storeAnimator.addUpdateListener { valueAnimator: ValueAnimator ->
-				val color = valueAnimator.animatedValue as Int
-				FAM_floatingMenu.menuButtonColorNormal = color
-				FAM_floatingMenu.menuButtonColorPressed = color
-				FAB_store.colorNormal = color
-				FAB_store.colorPressed = color
+	private val adapter: UnipackAdapter by lazy {
+		val adapter = UnipackAdapter(list, object : EventListener {
+			override fun onViewClick(item: UnipackItem, v: PackView) {
+				if (!item.moving) togglePlay(item)
 			}
+
+			override fun onViewLongClick(item: UnipackItem, v: PackView) {}
+			override fun onPlayClick(item: UnipackItem, v: PackView) {
+				if (!item.moving) pressPlay(item)
+			}
+		})
+		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
+			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+				super.onItemRangeInserted(positionStart, itemCount)
+				LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+			}
+
+			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+				super.onItemRangeRemoved(positionStart, itemCount)
+				LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+			}
+		})
+
+		adapter
+	}
+
+	private val storeAnimator: ValueAnimator by lazy {
+		val animator = ObjectAnimator.ofObject(ArgbEvaluator(), colors.orange, colors.red)
+		animator.duration = 300
+		animator.repeatCount = Animation.INFINITE
+		animator.repeatMode = ValueAnimator.REVERSE
+		animator.addUpdateListener {
+			val color = it.animatedValue as Int
+			FAM_floatingMenu.menuButtonColorNormal = color
+			FAM_floatingMenu.menuButtonColorPressed = color
+			FAB_store.colorNormal = color
+			FAB_store.colorPressed = color
 		}
+		animator
+	}
 
-		// var
-		if (onFirst) {
-			adapter = UnipackAdapter(list, object : EventListener {
-				override fun onViewClick(item: UnipackItem, v: PackView) {
-					if (!item.moving) togglePlay(item)
-				}
+	private val firebase_storeCount: FirebaseManager by lazy {
+		val firebaseManager = FirebaseManager("storeCount")
+		firebaseManager.setEventListener(object : ValueEventListener {
+			override fun onDataChange(dataSnapshot: DataSnapshot) {
+				val data: Long? = dataSnapshot.getValue(Long::class.java)
+				val prev = PrevStoreCount.load(this@MainActivity)
+				runOnUiThread { blink(data != prev) }
+			}
 
-				override fun onViewLongClick(item: UnipackItem, v: PackView) {}
-				override fun onPlayClick(item: UnipackItem, v: PackView) {
-					if (!item.moving) pressPlay(item)
-				}
-			})
-			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
-				override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-					super.onItemRangeInserted(positionStart, itemCount)
-					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
-				}
+			override fun onCancelled(databaseError: DatabaseError) {}
+		})
+		firebaseManager
+	}
 
-				override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-					super.onItemRangeRemoved(positionStart, itemCount)
-					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
-				}
-			})
-			LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
-			val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
-			divider.setDrawable(resources.getDrawable(drawable.border_divider))
-			RV_recyclerView.addItemDecoration(divider)
-			RV_recyclerView.setHasFixedSize(false)
-			RV_recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
-			RV_recyclerView.adapter = adapter
-			firebase_storeCount = FirebaseManager("storeCount")
-			firebase_storeCount!!.setEventListener(object : ValueEventListener {
-				override fun onDataChange(dataSnapshot: DataSnapshot) {
-					val data: Long? = dataSnapshot.getValue(Long::class.java)
-					val prev = PrevStoreCount.load(this@MainActivity)
-					runOnUiThread { blink(data != prev) }
-				}
-
-				override fun onCancelled(databaseError: DatabaseError) {}
-			})
-		}
-		midiController = object : MidiController() {
+	private val midiController: MidiController by lazy {
+		object : MidiController() {
 			override fun onAttach() {
 				Log.driverCycle("MainActivity onConnected()")
 				updateLP()
@@ -180,7 +177,16 @@ class MainActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_main)
-		initVar(true)
+
+
+		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
+		divider.setDrawable(resources.getDrawable(drawable.border_divider))
+		RV_recyclerView.addItemDecoration(divider)
+		RV_recyclerView.setHasFixedSize(false)
+		RV_recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+		RV_recyclerView.adapter = adapter
+
+
 		initPannel()
 		loadAdmob()
 		billingManager = BillingManager(this@MainActivity, object : BillingEventListener {
@@ -711,8 +717,8 @@ class MainActivity : BaseActivity() {
 		Thread(Runnable {
 			var unipackENT: UnipackENT? = db.unipackDAO()!!.find(item.unipack.F_project.name)
 			var flagColor: Int
-			flagColor = if (unipack.CriticalError) color(color.red) else color(color.skyblue)
-			if (unipackENT!!.bookmark) flagColor = color(color.orange)
+			flagColor = if (unipack.CriticalError) colors.red else colors.skyblue
+			if (unipackENT!!.bookmark) flagColor = colors.orange
 			item.flagColor = flagColor
 			P_main_pack.setStar(unipackENT.pin)
 			P_main_pack.setBookmark(unipackENT.bookmark)
@@ -813,11 +819,10 @@ class MainActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		initVar(false)
 		checkThings()
 		Handler().postDelayed({ update() }, 1000)
 		controller = midiController
-		firebase_storeCount!!.attachEventListener(true)
+		firebase_storeCount.attachEventListener(true)
 	}
 
 	public override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -832,11 +837,11 @@ class MainActivity : BaseActivity() {
 	override fun onPause() {
 		super.onPause()
 		controller = midiController
-		firebase_storeCount!!.attachEventListener(false)
+		firebase_storeCount.attachEventListener(false)
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
-		removeController((midiController)!!)
+		removeController(midiController)
 	}
 }
