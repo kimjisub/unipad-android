@@ -14,6 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 class FileApi : BaseApiService() {
 
@@ -45,6 +46,10 @@ class FileApi : BaseApiService() {
 			@GET("/unishare/{code}/download")
 			@Streaming
 			fun unishare_download(@Path("code") code: String?): Call<ResponseBody?>?
+
+			@GET
+			@Streaming
+			fun download(@Url url : String): Call<ResponseBody>
 		}
 
 	}
