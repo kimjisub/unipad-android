@@ -31,12 +31,12 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 				if (file.canRead())
 					moveDir(mPath[position])
 				else
-					showDialog(file.name, lang(string.cantReadFolder))
+					showDialog(file.name, getString(string.cantReadFolder))
 			} else {
 				if (file.canRead())
 					onFileSelected(file.path)
 				else
-					showDialog(file.name, lang(string.cantReadFile))
+					showDialog(file.name, getString(string.cantReadFile))
 			}
 		}
 		moveDir(path)
@@ -90,15 +90,15 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 
 	// view /////////////////////////////////////////////////////////////////////////////////////////
 
-	private fun lang(id: Int): String {
-		return context.resources.getString(id)
+	private fun getString(id: Int): String {
+		return context.getString(id)
 	}
 
 	private fun showDialog(title: String?, content: String) {
 		Builder(context)
 				.setTitle(title)
 				.setMessage(content)
-				.setPositiveButton(lang(string.accept), null)
+				.setPositiveButton(getString(string.accept), null)
 				.show()
 	}
 

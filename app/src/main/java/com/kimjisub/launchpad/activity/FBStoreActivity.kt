@@ -244,13 +244,13 @@ class FBStoreActivity : BaseActivity() {
 					}
 
 					override fun onAnalyzeStart(zip: File) {
-						packView.setPlayText(lang(string.analyzing))
+						packView.setPlayText(getString(string.analyzing))
 						packView.toggleColor = colors.orange
 						packView.untoggleColor = colors.orange
 					}
 
 					override fun onInstallComplete(folder: File, unipack: Unipack) {
-						packView.setPlayText(lang(string.downloaded))
+						packView.setPlayText(getString(string.downloaded))
 						packView.toggleColor = colors.green
 						packView.untoggleColor = colors.green
 						item.downloaded = true
@@ -258,7 +258,7 @@ class FBStoreActivity : BaseActivity() {
 					}
 
 					override fun onException(throwable: Throwable) {
-						packView.setPlayText(lang(string.failed))
+						packView.setPlayText(getString(string.failed))
 						packView.toggleColor = colors.red
 						packView.untoggleColor = colors.red
 					}
