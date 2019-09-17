@@ -150,13 +150,13 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = identifyCode
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 			}
 			Status.GetInfo -> {
 				title = status.titleStringId
 				message = identifyCode
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 			}
 			Status.DownloadStart -> {
 				val unishareTitle = args[0]!!
@@ -165,7 +165,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = "#${code}\n${unishareTitle}\n${unishareProducer}"
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 
 				notificationBuilder.apply {
 					setProgress(100, 0, true)
@@ -192,7 +192,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = "#${code}\n${unishareTitle}\n${unishareProducer}"
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 
 				notificationBuilder.apply {
 					setProgress(100, 0, true)
@@ -204,7 +204,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = unipackToString
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 
 				notificationBuilder.apply {
 					setProgress(0, 0, false)
@@ -216,7 +216,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = errorMsg
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 
 				notificationBuilder.apply {
 					setProgress(0, 0, false)
@@ -228,7 +228,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = throwableMessage
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 
 				notificationBuilder.apply {
 					setProgress(0, 0, false)
@@ -238,7 +238,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				title = status.titleStringId
 				message = identifyCode
 				notificationTitle = identifyCode
-				notificationText = lang(status.titleStringId)
+				notificationText = getString(status.titleStringId)
 			}
 		}
 		TV_title.setText(title)

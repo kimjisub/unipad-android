@@ -4,11 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Process
-import android.util.DisplayMetrics
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -135,26 +133,6 @@ open class BaseActivity : AppCompatActivity() {
 
 	val colors by lazy { ColorManager(this) }
 
-	fun lang(id: Int): String {
-		return lang(this, id)
-	}
-
-
-	fun dpToPx(dp: Float): Int {
-		val metrics: DisplayMetrics = resources.displayMetrics
-		val px = dp * (metrics.densityDpi / 160f)
-		return Math.round(px)
-	}
-
-	fun pxToDp(pixel: Int): Int {
-		var dp = 0f
-		try {
-			val metrics: DisplayMetrics = resources.displayMetrics
-			dp = pixel / (metrics.densityDpi / 160f)
-		} catch (ignored: Exception) {
-		}
-		return dp.toInt()
-	}
 
 	// ============================================================================================= Activity Cycle
 
@@ -263,21 +241,17 @@ open class BaseActivity : AppCompatActivity() {
 
 		fun requestRestart(context: Context) {
 			AlertDialog.Builder(context)
-					.setTitle(lang(context, string.requireRestart))
-					.setMessage(lang(context, string.doYouWantToRestartApp))
-					.setPositiveButton(lang(context, string.restart)) { dialog: DialogInterface, which: Int ->
+					.setTitle(context.getString(string.requireRestart))
+					.setMessage(context.getString(string.doYouWantToRestartApp))
+					.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
 						restartApp(context as Activity)
 						dialog.dismiss()
 					}
-					.setNegativeButton(lang(context, string.cancel)) { dialog: DialogInterface, which: Int ->
+					.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
 						dialog.dismiss()
 						(context as Activity).finish()
 					}
 					.show()
-		}
-
-		fun lang(context: Context, id: Int): String {
-			return context.resources.getString(id)
 		}
 	}
 }

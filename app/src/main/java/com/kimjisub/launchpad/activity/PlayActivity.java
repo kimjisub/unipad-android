@@ -172,9 +172,9 @@ public class PlayActivity extends BaseActivity {
 			log("[02] Check ErrorDetail");
 			if (unipack.ErrorDetail != null) {
 				new AlertDialog.Builder(PlayActivity.this)
-						.setTitle(unipack.CriticalError ? lang(R.string.error) : lang(R.string.warning))
+						.setTitle(unipack.CriticalError ? getString(R.string.error) : getString(R.string.warning))
 						.setMessage(unipack.ErrorDetail)
-						.setPositiveButton(unipack.CriticalError ? lang(R.string.quit) : lang(R.string.accept), unipack.CriticalError ? (dialogInterface, i) -> finish() : null)
+						.setPositiveButton(unipack.CriticalError ? getString(R.string.quit) : getString(R.string.accept), unipack.CriticalError ? (dialogInterface, i) -> finish() : null)
 						.setCancelable(false)
 						.show();
 			}
@@ -237,8 +237,8 @@ public class PlayActivity extends BaseActivity {
 
 					progressDialog = new ProgressDialog(PlayActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-					progressDialog.setTitle(lang(R.string.loading));
-					progressDialog.setMessage(lang(R.string.wait_a_sec));
+					progressDialog.setTitle(getString(R.string.loading));
+					progressDialog.setMessage(getString(R.string.wait_a_sec));
 					progressDialog.setCancelable(false);
 
 					int soundNum = 0;
@@ -343,11 +343,11 @@ public class PlayActivity extends BaseActivity {
 			e.printStackTrace();
 
 			Companion.requestRestart(this);
-			showToast(lang(R.string.skinMemoryErr) + "\n" + packageName);
+			showToast(getString(R.string.skinMemoryErr) + "\n" + packageName);
 			return false;
 		} catch (Exception e) {
 			e.printStackTrace();
-			showToast(lang(R.string.skinErr) + "\n" + packageName);
+			showToast(getString(R.string.skinErr) + "\n" + packageName);
 			PreferenceManager.SelectedTheme.save(PlayActivity.this, getPackageName());
 			return skin_init(num + 1);
 		}

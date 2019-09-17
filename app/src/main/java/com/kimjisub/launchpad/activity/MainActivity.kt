@@ -310,18 +310,18 @@ class MainActivity : BaseActivity() {
 			override fun onFuncClick(v: View?) {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
-						.setTitle(lang(string.warning))
-						.setMessage(lang(string.doYouWantToRemapProject))
-						.setPositiveButton(lang(string.accept)) { _: DialogInterface?, _: Int -> autoMapping(item.unipack) }.setNegativeButton(lang(string.cancel), null)
+						.setTitle(getString(string.warning))
+						.setMessage(getString(string.doYouWantToRemapProject))
+						.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> autoMapping(item.unipack) }.setNegativeButton(getString(string.cancel), null)
 						.show()
 			}
 
 			override fun onDeleteClick(v: View?) {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
-						.setTitle(lang(string.warning))
-						.setMessage(lang(string.doYouWantToDeleteProject))
-						.setPositiveButton(lang(string.accept)) { _: DialogInterface?, _: Int -> deleteUnipack(item.unipack) }.setNegativeButton(lang(string.cancel), null)
+						.setTitle(getString(string.warning))
+						.setMessage(getString(string.doYouWantToDeleteProject))
+						.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUnipack(item.unipack) }.setNegativeButton(getString(string.cancel), null)
 						.show()
 			}
 		})
@@ -459,8 +459,8 @@ class MainActivity : BaseActivity() {
 						}
 						progressDialog = ProgressDialog(this@MainActivity)
 						progressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-						progressDialog!!.setTitle(lang(string.analyzing))
-						progressDialog!!.setMessage(lang(string.wait_a_sec))
+						progressDialog!!.setTitle(getString(string.analyzing))
+						progressDialog!!.setMessage(getString(string.wait_a_sec))
 						progressDialog!!.setCancelable(false)
 						progressDialog!!.max = autoplay2!!.size
 						progressDialog!!.show()
@@ -524,9 +524,9 @@ class MainActivity : BaseActivity() {
 						try {
 							if (progressDialog != null && progressDialog!!.isShowing) progressDialog!!.dismiss()
 							Builder(this@MainActivity)
-									.setTitle(lang(string.success))
-									.setMessage(lang(string.remapDone))
-									.setPositiveButton(lang(string.accept), null)
+									.setTitle(getString(string.success))
+									.setMessage(getString(string.remapDone))
+									.setPositiveButton(getString(string.accept), null)
 									.show()
 						} catch (e: Exception) {
 							e.printStackTrace()
@@ -535,9 +535,9 @@ class MainActivity : BaseActivity() {
 				}).execute()
 			} else {
 				Builder(this@MainActivity)
-						.setTitle(lang(string.failed))
-						.setMessage(lang(string.remapFail))
-						.setPositiveButton(lang(string.accept), null)
+						.setTitle(getString(string.failed))
+						.setMessage(getString(string.remapFail))
+						.setPositiveButton(getString(string.accept), null)
 						.show()
 			}
 		} catch (e: Exception) {
@@ -552,8 +552,8 @@ class MainActivity : BaseActivity() {
 			var msg1: String? = null
 			var msg2: String? = null
 			override fun onPreExecute() {
-				progressDialog.setTitle(lang(string.analyzing))
-				progressDialog.setMessage(lang(string.wait_a_sec))
+				progressDialog.setTitle(getString(string.analyzing))
+				progressDialog.setMessage(getString(string.wait_a_sec))
 				progressDialog.setCancelable(false)
 				progressDialog.show()
 				super.onPreExecute()
@@ -567,18 +567,18 @@ class MainActivity : BaseActivity() {
 					FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
 					val unipack = Unipack(F_UniPack, true)
 					if (unipack.ErrorDetail == null) {
-						msg1 = lang(string.analyzeComplete)
+						msg1 = getString(string.analyzeComplete)
 						msg2 = unipack.getInfoText(this@MainActivity)
 					} else if (unipack.CriticalError) {
-						msg1 = lang(string.analyzeFailed)
+						msg1 = getString(string.analyzeFailed)
 						msg2 = unipack.ErrorDetail
 						FileManager.deleteDirectory(F_UniPack)
 					} else {
-						msg1 = lang(string.warning)
+						msg1 = getString(string.warning)
 						msg2 = unipack.ErrorDetail
 					}
 				} catch (e: Exception) {
-					msg1 = lang(string.analyzeFailed)
+					msg1 = getString(string.analyzeFailed)
 					msg2 = e.toString()
 					FileManager.deleteDirectory(F_UniPack)
 				}
@@ -690,7 +690,7 @@ class MainActivity : BaseActivity() {
 	private fun updatePanelMain(hardWork: Boolean) {
 		P_main_total.b.unipackCount.text = list.size.toString()
 		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_main_total.b.openCount.text = integer.toString() })
-		P_main_total.b.padTouchCount.text = lang(string.measuring)
+		P_main_total.b.padTouchCount.text = getString(string.measuring)
 		val packageName: String? = SelectedTheme.load(this@MainActivity)
 		try {
 			val resources = ThemeResources(this@MainActivity, packageName, false)
@@ -730,10 +730,10 @@ class MainActivity : BaseActivity() {
 		P_main_pack.b.path.text = item.path
 		P_main_pack.b.scale.text = "${unipack.buttonX} × ${unipack.buttonY}"
 		P_main_pack.b.chainCount.text = unipack.chain.toString()
-		P_main_pack.b.soundCount.text = lang(string.measuring)
-		P_main_pack.b.ledCount.text = lang(string.measuring)
-		P_main_pack.b.fileSize.text = lang(string.measuring)
-		P_main_pack.b.padTouchCount.text = lang(string.measuring)
+		P_main_pack.b.soundCount.text = getString(string.measuring)
+		P_main_pack.b.ledCount.text = getString(string.measuring)
+		P_main_pack.b.fileSize.text = getString(string.measuring)
+		P_main_pack.b.padTouchCount.text = getString(string.measuring)
 		P_main_pack.b.website.visibility = if (unipack.website != null) View.VISIBLE else View.INVISIBLE
 		(object : AsyncTask<String?, String?, String?>() {
 			var handler = Handler()
@@ -768,7 +768,7 @@ class MainActivity : BaseActivity() {
 			val gson: Gson = GsonBuilder().create()
 			val currVersionList: List<String> = gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
-				CL_root.snackbar( "${lang(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", lang(string.update)) {
+				CL_root.snackbar( "${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", getString(string.update)) {
 					startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
 				}
 		}

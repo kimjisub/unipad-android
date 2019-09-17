@@ -11,7 +11,6 @@ import androidx.preference.*
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.firebase.iid.FirebaseInstanceId
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
@@ -64,7 +63,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 		}
 		findPreference<Preference>("community")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
 
-			Log.test("test: ${lang(string.officialFacebook)}")
+			Log.test("test: ${getString(string.officialFacebook)}")
 
 			class Item(
 					val title: String,
@@ -77,7 +76,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 						subtitle: Int,
 						iconResId: Int,
 						url: String,
-						action: String) : this(lang(title), lang(subtitle), iconResId, url, action)
+						action: String) : this(getString(title), getString(subtitle), iconResId, url, action)
 
 				fun toListItem() = DialogListItem(title, subtitle, iconResId)
 			}
@@ -99,7 +98,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 				startActivity(Intent(list[position].action, Uri.parse(list[position].url)))
 			}
 			val builder = AlertDialog.Builder(context)
-			builder.setTitle(lang(string.community))
+			builder.setTitle(getString(string.community))
 			builder.setView(listView)
 			builder.show()
 			false
@@ -111,7 +110,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 					val purchaseId: String) {
 				constructor(
 						title: Int,
-						purchaseId: String) : this(lang(title), purchaseId, purchaseId)
+						purchaseId: String) : this(getString(title), purchaseId, purchaseId)
 
 				constructor(
 						title: String,
@@ -132,7 +131,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long -> billingManager!!.purchase(list[position].purchaseId) }
 			val builder = AlertDialog.Builder(context)
-			builder.setTitle(lang(string.donation))
+			builder.setTitle(getString(string.donation))
 			builder.setView(listView)
 			builder.show()
 			false
@@ -158,12 +157,12 @@ class SettingFragment : PreferenceFragmentCompat() {
 					val url: String) {
 				constructor(
 						title: Int,
-						purchaseId: String) : this(lang(title), purchaseId, purchaseId)
+						purchaseId: String) : this(getString(title), purchaseId, purchaseId)
 
 				constructor(
 						title: Int,
 						subtitle: Int,
-						url: String) : this(lang(title), lang(subtitle), url)
+						url: String) : this(getString(title), getString(subtitle), url)
 
 				fun toListItem() = DialogListItem(title, subtitle)
 			}
@@ -182,7 +181,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(list[position].url))) }
 			val builder = AlertDialog.Builder(context)
-			builder.setTitle(lang(string.openSourceLicense))
+			builder.setTitle(getString(string.openSourceLicense))
 			builder.setView(listView)
 			builder.show()
 			false
@@ -213,18 +212,14 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 		val language: String = systemLocale.language // 언어 코드 출력 ex) ko
 
-		findPreference<Preference>("language")?.title = lang(string.language) + " (" + lang(string.languageCode) + ")"
+		findPreference<Preference>("language")?.title = getString(string.language) + " (" + getString(string.languageCode) + ")"
 		findPreference<Preference>("language")?.summary = "$displayCountry ($country) - $language"
-		findPreference<Preference>("copyright")?.summary = String.format(lang(string.translatedBy), lang(string.translator))
+		findPreference<Preference>("copyright")?.summary = String.format(getString(string.translatedBy), getString(string.translator))
 		super.onResume()
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
 		billingManager!!.release()
-	}
-
-	internal fun lang(id: Int): String {
-		return BaseActivity.lang(context!!, id)
 	}
 }
