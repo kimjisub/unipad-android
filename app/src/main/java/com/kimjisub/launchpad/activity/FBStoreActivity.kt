@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
 import android.view.animation.Animation
@@ -29,9 +28,7 @@ import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_store.*
-import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
+import java.io.File
 import java.util.*
 
 class FBStoreActivity : BaseActivity() {
@@ -79,18 +76,23 @@ class FBStoreActivity : BaseActivity() {
 
 	// =============================================================================================
 
+	val asdf: Array<File> by lazy { uniPackDirList }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_store)
 		initVar(true)
+
+		P_total.b.customLogo.setImageResource(drawable.custom_logo)
+		P_total.b.version.text = BuildConfig.VERSION_NAME
+		P_total.b.storeCount.text = list!!.size.toString()
 		firebase_store!!.setEventListener(object : ChildEventListener {
 			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
 				Log.test("onChildAdded: $s")
 				try {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					var isDownloaded = false
-					for (dir in uniPackDirList) {
+					for (dir in asdf) {
 						if (d.code == dir.name) {
 							isDownloaded = true
 							break
@@ -218,47 +220,40 @@ class FBStoreActivity : BaseActivity() {
 				workspace = F_UniPackRootExt,
 				folderName = item.storeVO.code!!,
 				listener = object : UnipackInstaller.Listener {
-					var contentLength :Long = 0
 
-					override fun onDownloadStart() {
+					override fun onInstallStart() {
 					}
 
-					override fun onGetFileSize(contentLength: Long) {
-						this.contentLength = contentLength
-					}
-
-					override fun onDownloading(downloadedSize: Long) {
-						val percent = (downloadedSize.toFloat() / contentLength * 100).toInt()
-						val downloadedMB: String = FileManager.byteToMB(downloadedSize)
-						val fileSizeMB: String = FileManager.byteToMB(contentLength)
+					override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+						val percent = 0
+						val downloadedMB: String = FileManager.byteToMB(0)
+						val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
 						packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
 					}
 
-					override fun onDownloadEnd(zip: File) {
+					override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+						val downloadedMB: String = FileManager.byteToMB(downloadedSize)
+						val fileSizeMB: String = FileManager.byteToMB(fileSize)
+
+						packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
 					}
 
-					override fun onAnalyzeStart() {
+					override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+					}
+
+					override fun onAnalyzeStart(zip: File) {
 						packView.setPlayText(lang(string.analyzing))
 						packView.toggleColor = color(color.orange)
 						packView.untoggleColor = color(color.orange)
 					}
 
-					override fun onAnalyzeSuccess(unipack: Unipack) {
+					override fun onInstallComplete(folder: File, unipack: Unipack) {
 						packView.setPlayText(lang(string.downloaded))
 						packView.toggleColor = color(color.green)
 						packView.untoggleColor = color(color.green)
 						item.downloaded = true
 						updatePanel()
-					}
-
-					override fun onAnalyzeFail(unipack: Unipack) {
-						packView.setPlayText(lang(string.failed))
-						packView.toggleColor = color(color.red)
-						packView.untoggleColor = color(color.red)
-					}
-
-					override fun onAnalyzeEnd(folder: File) {
 					}
 
 					override fun onException(throwable: Throwable) {
@@ -298,9 +293,6 @@ class FBStoreActivity : BaseActivity() {
 
 	internal fun updatePanelMain() {
 		Log.test("panel main")
-		P_total.b.customLogo.setImageResource(drawable.custom_logo)
-		P_total.b.version.text = BuildConfig.VERSION_NAME
-		P_total.b.storeCount.text = list!!.size.toString()
 		P_total.b.downloadedCount.text = downloadedCount.toString()
 	}
 
