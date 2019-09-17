@@ -17,14 +17,12 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -46,7 +44,6 @@ import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
-import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
 import com.kimjisub.launchpad.manager.PreferenceManager.*
 import com.kimjisub.launchpad.manager.ThemeResources
@@ -60,12 +57,13 @@ import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.design.snackbar
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : BaseActivity() {
-	private val colors by lazy { ColorManager(this) }
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
@@ -590,7 +588,9 @@ class MainActivity : BaseActivity() {
 			override fun onProgressUpdate(vararg progress: String?) {}
 			override fun onPostExecute(result: String?) {
 				update()
-				showDialog(msg1, msg2)
+				alert(msg1!!, msg2!!) {
+					positiveButton(string.accept) { it.dismiss() }
+				}.show()
 				progressDialog.dismiss()
 				super.onPostExecute(result)
 			}
@@ -767,9 +767,10 @@ class MainActivity : BaseActivity() {
 		if (currVersionJson.isNotEmpty()) {
 			val gson: Gson = GsonBuilder().create()
 			val currVersionList: List<String> = gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
-			if (!currVersionList.contains(thisVersion)) Snackbar.make(CL_root, lang(string.newVersionFound) + "\n" + thisVersion + " → " + currVersionList[0], Snackbar.LENGTH_SHORT)
-					.setAction(string.update) { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))) }
-					.show()
+			if (!currVersionList.contains(thisVersion))
+				CL_root.snackbar( "${lang(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", lang(string.update)) {
+					startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+				}
 		}
 	}
 

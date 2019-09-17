@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.Log
+import org.jetbrains.anko.toast
 import java.util.*
 
 class SettingFragment : PreferenceFragmentCompat() {
@@ -189,7 +190,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 		findPreference<Preference>("FCMToken")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
 			try {
 				Functions.putClipboard(activity!!, FirebaseInstanceId.getInstance().token!!)
-				BaseActivity.showToast(context!!, string.copied)
+				context?.toast(string.copied)
 			} catch (ignore: Exception) {
 			}
 			false
@@ -224,6 +225,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 	}
 
 	internal fun lang(id: Int): String {
-		return BaseActivity.lang(context, id)
+		return BaseActivity.lang(context!!, id)
 	}
 }

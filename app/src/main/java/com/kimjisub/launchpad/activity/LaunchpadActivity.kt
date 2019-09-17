@@ -111,11 +111,11 @@ class LaunchpadActivity : BaseActivity() {
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun changeViewColor(layout: ViewGroup, backgroundColorRes: Int, textColorRes: Int) {
-		layout.setBackgroundColor(color(backgroundColorRes))
+		layout.setBackgroundColor(colors.get(backgroundColorRes))
 		val count = layout.childCount
 		for (j in 0 until count) {
 			val textView = layout.getChildAt(j) as TextView
-			textView.setTextColor(color(textColorRes))
+			textView.setTextColor(colors.get(textColorRes))
 		}
 	}
 

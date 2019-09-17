@@ -17,6 +17,7 @@ import com.google.android.gms.ads.AdRequest.Builder
 import com.google.android.gms.ads.InterstitialAd
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant.*
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevAdsShowTime
 import com.kimjisub.manager.FileManager
@@ -132,21 +133,12 @@ open class BaseActivity : AppCompatActivity() {
 	// ============================================================================================= Show Things, Get Resources
 
 
-	fun showDialog(title: String, content: String) {
-		showDialog(this, title, content)
-	}
+	val colors by lazy { ColorManager(this) }
 
 	fun lang(id: Int): String {
 		return lang(this, id)
 	}
 
-	fun color(id: Int): Int {
-		return color(this, id)
-	}
-
-	fun drawable(id: Int): Drawable {
-		return drawable(this, id)
-	}
 
 	fun dpToPx(dp: Float): Int {
 		val metrics: DisplayMetrics = resources.displayMetrics
@@ -182,8 +174,6 @@ open class BaseActivity : AppCompatActivity() {
 				paramThrowable.printStackTrace();
 			}
 		});*/
-
-
 
 		startActivity(this)
 	}
@@ -286,24 +276,8 @@ open class BaseActivity : AppCompatActivity() {
 					.show()
 		}
 
-		fun showDialog(context: Context, title: String, content: String) {
-			AlertDialog.Builder(context)
-					.setTitle(title)
-					.setMessage(content)
-					.setPositiveButton(lang(context, string.accept), null)
-					.show()
-		}
-
 		fun lang(context: Context, id: Int): String {
 			return context.resources.getString(id)
-		}
-
-		fun color(context: Context, id: Int): Int {
-			return context.resources.getColor(id)
-		}
-
-		fun drawable(context: Context, id: Int): Drawable {
-			return context.resources.getDrawable(id)
 		}
 	}
 }
