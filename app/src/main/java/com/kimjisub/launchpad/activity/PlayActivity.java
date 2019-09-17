@@ -28,6 +28,7 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.databinding.DataBindingUtil;
 
 import com.anjlab.android.iab.v3.TransactionDetails;
 import com.kimjisub.design.Chain;
@@ -157,7 +158,7 @@ public class PlayActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		b = setContentViewBind(R.layout.activity_play);
+		b = DataBindingUtil.setContentView(this, R.layout.activity_play);
 		initVar();
 
 		String path = getIntent().getStringExtra("path");
@@ -339,7 +340,8 @@ public class PlayActivity extends BaseActivity {
 			return true;
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
-			requestRestart(this);
+
+			Companion.requestRestart(this);
 			showToast(lang(R.string.skinMemoryErr) + "\n" + packageName);
 			return false;
 		} catch (Exception e) {
@@ -359,11 +361,11 @@ public class PlayActivity extends BaseActivity {
 		int buttonSizeY;
 
 		if (unipack.squareButton) {
-			buttonSizeX = buttonSizeY = Math.min(Scale_PaddingHeight / unipack.buttonX, Scale_PaddingWidth / unipack.buttonY);
+			buttonSizeX = buttonSizeY = Math.min(Companion.getScale_PaddingHeight()/ unipack.buttonX, Companion.getScale_PaddingWidth()/ unipack.buttonY);
 
 		} else {
-			buttonSizeX = Scale_Width / unipack.buttonY;
-			buttonSizeY = Scale_Height / unipack.buttonX;
+			buttonSizeX = Companion.getScale_Width()/ unipack.buttonY;
+			buttonSizeY = Companion.getScale_Height() / unipack.buttonX;
 		}
 
 		b.purchase.setOnCheckedChangeListener((compoundButton, b) -> {
@@ -1307,9 +1309,9 @@ public class PlayActivity extends BaseActivity {
 		if (UILoaded)
 			MidiConnection.INSTANCE.setController(midiController);
 
-		if (Scale_PaddingHeight == 0) {
+		if (Companion.getScale_PaddingHeight()== 0) {
 			log("padding 크기값들이 잘못되었습니다.");
-			requestRestart(PlayActivity.this);
+			Companion.requestRestart(PlayActivity.this);
 		}
 
 		if (billingManager.isShowAds()) {
