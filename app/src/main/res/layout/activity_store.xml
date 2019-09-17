@@ -21,12 +21,12 @@
 				android:layout_weight="2">
 
 				<com.kimjisub.design.panel.StoreTotalPanel
-					android:id="@+id/panel_total"
+					android:id="@+id/P_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
 				<com.kimjisub.design.panel.StorePackPanel
-					android:id="@+id/panel_pack"
+					android:id="@+id/P_pack"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:alpha="0"
@@ -44,7 +44,7 @@
 					android:layout_height="match_parent">
 
 					<androidx.recyclerview.widget.RecyclerView
-						android:id="@+id/recyclerView"
+						android:id="@+id/RV_recyclerView"
 						android:layout_width="match_parent"
 						android:layout_height="match_parent"
 						android:clipToPadding="false"
@@ -58,7 +58,7 @@
 				</androidx.core.widget.NestedScrollView>
 
 				<LinearLayout
-					android:id="@+id/errItem"
+					android:id="@+id/LL_errItem"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:layout_centerInParent="true"
