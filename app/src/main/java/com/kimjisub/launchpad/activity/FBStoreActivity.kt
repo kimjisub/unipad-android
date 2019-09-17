@@ -28,6 +28,7 @@ import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_store.*
+import org.jetbrains.anko.toast
 import java.io.File
 import java.util.*
 
@@ -204,8 +205,8 @@ class FBStoreActivity : BaseActivity() {
 		val packView = item.packView!!
 		val F_UniPackZip: File = FileManager.makeNextPath(F_UniPackRootExt, code!!, ".zip")
 		val F_UniPack = File(F_UniPackRootExt, code)
-		packView.toggleColor = color(color.gray1)
-		packView.untoggleColor = color(color.gray1)
+		packView.toggleColor = colors.gray1
+		packView.untoggleColor = colors.gray1
 		packView.setPlayText("0%")
 
 		item.downloading = true
@@ -244,22 +245,22 @@ class FBStoreActivity : BaseActivity() {
 
 					override fun onAnalyzeStart(zip: File) {
 						packView.setPlayText(lang(string.analyzing))
-						packView.toggleColor = color(color.orange)
-						packView.untoggleColor = color(color.orange)
+						packView.toggleColor = colors.orange
+						packView.untoggleColor = colors.orange
 					}
 
 					override fun onInstallComplete(folder: File, unipack: Unipack) {
 						packView.setPlayText(lang(string.downloaded))
-						packView.toggleColor = color(color.green)
-						packView.untoggleColor = color(color.green)
+						packView.toggleColor = colors.green
+						packView.untoggleColor = colors.green
 						item.downloaded = true
 						updatePanel()
 					}
 
 					override fun onException(throwable: Throwable) {
 						packView.setPlayText(lang(string.failed))
-						packView.toggleColor = color(color.red)
-						packView.untoggleColor = color(color.red)
+						packView.toggleColor = colors.red
+						packView.untoggleColor = colors.red
 					}
 
 				})
@@ -309,7 +310,7 @@ class FBStoreActivity : BaseActivity() {
 
 	override fun onBackPressed() {
 		if (selectedIndex != -1) togglePlay(null) else {
-			if (downloadingCount > 0) showToast(string.canNotQuitWhileDownloading) else super.onBackPressed()
+			if (downloadingCount > 0) toast(string.canNotQuitWhileDownloading) else super.onBackPressed()
 		}
 	}
 

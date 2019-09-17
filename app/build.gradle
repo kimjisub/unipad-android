@@ -90,6 +90,11 @@ dependencies {
 	androidTestImplementation 'androidx.test:runner:1.2.0'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
+	// Anko
+	implementation "org.jetbrains.anko:anko:$anko_version"
+	implementation "org.jetbrains.anko:anko-commons:$anko_version"
+	implementation "org.jetbrains.anko:anko-design:$anko_version"
+
 	// Room
 	implementation "android.arch.persistence.room:runtime:1.1.1"
 	kapt "android.arch.persistence.room:compiler:1.1.1"

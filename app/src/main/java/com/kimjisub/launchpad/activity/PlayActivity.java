@@ -24,6 +24,7 @@ import android.view.animation.Transformation;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1873,5 +1874,20 @@ public class PlayActivity extends BaseActivity {
 			b.autoPlayControlView.setVisibility(View.GONE);
 		}
 
+	}
+
+	public void showToast(String msg) {
+		showToast(this, msg);
+	}
+
+	public void showToast(int resId) {
+		showToast(this, resId);
+	}
+	public static void showToast(Context context, String msg) {
+		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+	}
+
+	public static void showToast(Context context, int resId) {
+		Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
 	}
 }
