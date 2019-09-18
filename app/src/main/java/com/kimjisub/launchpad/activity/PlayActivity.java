@@ -2,8 +2,6 @@ package com.kimjisub.launchpad.activity;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -54,10 +52,10 @@ import com.vungle.warren.error.VungleException;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Locale;
 
-import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.*;
 import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.GUIDE;
+import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.LED;
+import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.PRESSED;
 import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 import static com.kimjisub.manager.Log.log;
 
@@ -329,7 +327,7 @@ public class PlayActivity extends BaseActivity {
 
 	boolean skin_init(int num) {
 		log("[10] skin_init (" + num + ")");
-		String packageName = PreferenceManager.SelectedTheme.load(PlayActivity.this);
+		String packageName = PreferenceManager.SelectedTheme.INSTANCE.load(PlayActivity.this);
 		if (num >= 2) {
 			try {
 				theme = new ThemeResources(PlayActivity.this, true);
@@ -349,7 +347,7 @@ public class PlayActivity extends BaseActivity {
 		} catch (Exception e) {
 			e.printStackTrace();
 			showToast(getString(R.string.skinErr) + "\n" + packageName);
-			PreferenceManager.SelectedTheme.save(PlayActivity.this, getPackageName());
+			PreferenceManager.SelectedTheme.INSTANCE.save(PlayActivity.this, getPackageName());
 			return skin_init(num + 1);
 		}
 	}
@@ -363,10 +361,10 @@ public class PlayActivity extends BaseActivity {
 		int buttonSizeY;
 
 		if (unipack.squareButton) {
-			buttonSizeX = buttonSizeY = Math.min(Companion.getScale_PaddingHeight()/ unipack.buttonX, Companion.getScale_PaddingWidth()/ unipack.buttonY);
+			buttonSizeX = buttonSizeY = Math.min(Companion.getScale_PaddingHeight() / unipack.buttonX, Companion.getScale_PaddingWidth() / unipack.buttonY);
 
 		} else {
-			buttonSizeX = Companion.getScale_Width()/ unipack.buttonY;
+			buttonSizeX = Companion.getScale_Width() / unipack.buttonY;
 			buttonSizeY = Companion.getScale_Height() / unipack.buttonX;
 		}
 
@@ -1311,7 +1309,7 @@ public class PlayActivity extends BaseActivity {
 		if (UILoaded)
 			MidiConnection.INSTANCE.setController(midiController);
 
-		if (Companion.getScale_PaddingHeight()== 0) {
+		if (Companion.getScale_PaddingHeight() == 0) {
 			log("padding 크기값들이 잘못되었습니다.");
 			Companion.requestRestart(PlayActivity.this);
 		}
@@ -1884,6 +1882,7 @@ public class PlayActivity extends BaseActivity {
 	public void showToast(int resId) {
 		showToast(this, resId);
 	}
+
 	public static void showToast(Context context, String msg) {
 		Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 	}
