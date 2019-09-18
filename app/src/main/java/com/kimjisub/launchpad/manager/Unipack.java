@@ -483,7 +483,7 @@ public class Unipack {
 			soundTable[c][x][y].add(tmp);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("Sound_push (" + c + ", " + x + ", " + y + ")");
+			Log.INSTANCE.err("Sound_push (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -502,10 +502,10 @@ public class Unipack {
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.INSTANCE.err("Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		} catch (ArithmeticException ee) {
-			Log.err("ArithmeticException : Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.INSTANCE.err("ArithmeticException : Sound_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -519,7 +519,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("Sound_get (" + c + ", " + x + ", " + y + ")");
+			Log.INSTANCE.err("Sound_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return new Sound();
 		}
@@ -533,7 +533,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return new Sound();
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("Sound_get (" + c + ", " + x + ", " + y + ")");
+			Log.INSTANCE.err("Sound_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return new Sound();
 		}
@@ -547,7 +547,7 @@ public class Unipack {
 			ledTable[c][x][y].add(e);
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("LED_push (" + c + ", " + x + ", " + y + ")");
+			Log.INSTANCE.err("LED_push (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -566,7 +566,7 @@ public class Unipack {
 				}
 		} catch (NullPointerException ignored) {
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("LED_push (" + c + ", " + x + ", " + y + ", " + num + ")");
+			Log.INSTANCE.err("LED_push (" + c + ", " + x + ", " + y + ", " + num + ")");
 			ee.printStackTrace();
 		}
 	}
@@ -578,7 +578,7 @@ public class Unipack {
 		} catch (NullPointerException ignored) {
 			return null;
 		} catch (IndexOutOfBoundsException ee) {
-			Log.err("LED_get (" + c + ", " + x + ", " + y + ")");
+			Log.INSTANCE.err("LED_get (" + c + ", " + x + ", " + y + ")");
 			ee.printStackTrace();
 			return null;
 		}
