@@ -27,6 +27,72 @@ import java.util.*
 
 open class BaseActivity : AppCompatActivity() {
 
+	companion object {
+
+		private var interstitialAd: InterstitialAd? = null
+		var Scale_Width = 0
+		var Scale_Height = 0
+		var Scale_PaddingWidth = 0
+		var Scale_PaddingHeight = 0
+
+
+		var activityList = ArrayList<Activity>()
+		internal fun startActivity(activity: Activity) {
+			activityList.add(activity)
+			printActivityLog(activity.localClassName + " start")
+		}
+
+		internal fun finishActivity(activity: Activity) {
+			var exist = false
+			val size = activityList.size
+			for (i in 0 until size) {
+				if (activityList[i] === activity) {
+					activityList[i].finish()
+					activityList.removeAt(i)
+					exist = true
+					break
+				}
+			}
+			printActivityLog(activity.localClassName + " finish" + if (exist) "" else " error")
+		}
+
+		internal fun restartApp(activity: Activity) {
+			val size = activityList.size
+			for (i in size - 1 downTo 0) {
+				activityList[i].finish()
+				activityList.removeAt(i)
+			}
+			activity.startActivity(Intent(activity, MainActivity::class.java))
+			printActivityLog(activity.localClassName + " requestRestart")
+			Process.killProcess(Process.myPid())
+		}
+
+		internal fun printActivityLog(log: String) {
+			val str = StringBuilder("ACTIVITY STACK - $log[")
+			val size = activityList.size
+			for (i in 0 until size) {
+				val activity = activityList[i]
+				str.append(", ").append(activity.localClassName)
+			}
+			Log.activity("$str]")
+		}
+
+		fun requestRestart(context: Context) {
+			AlertDialog.Builder(context)
+					.setTitle(context.getString(string.requireRestart))
+					.setMessage(context.getString(string.doYouWantToRestartApp))
+					.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
+						restartApp(context as Activity)
+						dialog.dismiss()
+					}
+					.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
+						dialog.dismiss()
+						(context as Activity).finish()
+					}
+					.show()
+		}
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	val F_UniPackRootExt: File by lazy {
 		val externalPath = FileManager.getExternalUniPackRoot()
@@ -187,71 +253,5 @@ open class BaseActivity : AppCompatActivity() {
 		Log.activity("onDestroy " + this.localClassName)
 		super.onDestroy()
 		finishActivity(this)
-	}
-
-	companion object {
-
-		private var interstitialAd: InterstitialAd? = null
-		var Scale_Width = 0
-		var Scale_Height = 0
-		var Scale_PaddingWidth = 0
-		var Scale_PaddingHeight = 0
-
-
-		var activityList = ArrayList<Activity>()
-		internal fun startActivity(activity: Activity) {
-			activityList.add(activity)
-			printActivityLog(activity.localClassName + " start")
-		}
-
-		internal fun finishActivity(activity: Activity) {
-			var exist = false
-			val size = activityList.size
-			for (i in 0 until size) {
-				if (activityList[i] === activity) {
-					activityList[i].finish()
-					activityList.removeAt(i)
-					exist = true
-					break
-				}
-			}
-			printActivityLog(activity.localClassName + " finish" + if (exist) "" else " error")
-		}
-
-		internal fun restartApp(activity: Activity) {
-			val size = activityList.size
-			for (i in size - 1 downTo 0) {
-				activityList[i].finish()
-				activityList.removeAt(i)
-			}
-			activity.startActivity(Intent(activity, MainActivity::class.java))
-			printActivityLog(activity.localClassName + " requestRestart")
-			Process.killProcess(Process.myPid())
-		}
-
-		internal fun printActivityLog(log: String) {
-			val str = StringBuilder("ACTIVITY STACK - $log[")
-			val size = activityList.size
-			for (i in 0 until size) {
-				val activity = activityList[i]
-				str.append(", ").append(activity.localClassName)
-			}
-			Log.activity("$str]")
-		}
-
-		fun requestRestart(context: Context) {
-			AlertDialog.Builder(context)
-					.setTitle(context.getString(string.requireRestart))
-					.setMessage(context.getString(string.doYouWantToRestartApp))
-					.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
-						restartApp(context as Activity)
-						dialog.dismiss()
-					}
-					.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
-						dialog.dismiss()
-						(context as Activity).finish()
-					}
-					.show()
-		}
 	}
 }
