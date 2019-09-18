@@ -21,7 +21,8 @@ class SplashActivity : BaseActivity() {
 	internal var handler = Handler()
 	internal var runnable = Runnable {
 		finish()
-		startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+		val intent = Intent(this@SplashActivity, MainActivity::class.java)
+		startActivity(intent)
 	}
 
 	val orange: Int by lazy { ContextCompat.getColor(this, color.orange) }
