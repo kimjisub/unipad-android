@@ -9,12 +9,16 @@ import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.NotificationManager.Channel
 import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.network.UnipackInstaller
 import com.kimjisub.launchpad.network.UnishareDownloader
 import com.kimjisub.launchpad.network.UnishareDownloader.UnishareDownloadListener
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -47,8 +51,6 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 		setStatus(Status.Prepare)
 		service.unishare_get(code)!!.enqueue(object : Callback<UnishareVO?> {
-			var prevPercent: Int = 0
-
 			override fun onResponse(call: Call<UnishareVO?>, response: Response<UnishareVO?>) {
 				if (response.isSuccessful) {
 					val unishare = response.body()!!
@@ -56,59 +58,8 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("title: " + unishare.title)
 					log("producerName: " + unishare.producer)
 					setStatus(Status.GetInfo)
-					UnishareDownloader(unishare, F_UniPackRootExt, object : UnishareDownloadListener {
-						override fun onDownloadStart() {
-							log("Download start")
-							setStatus(Status.DownloadStart, unishare.title, unishare.producer)
-						}
 
-						override fun onGetFileSize(contentSize: Long, realSize: Long) {
-							fileSize = realSize
-							log("fileSize: $contentSize → $realSize")
-						}
-
-						override fun onDownloading(downloadedSize: Long) {
-							val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-							if (prevPercent == percent) return
-							val downloadedMB: String = FileManager.byteToMB(downloadedSize)
-							val fileSizeMB: String = FileManager.byteToMB(fileSize)
-
-							prevPercent = percent
-
-							setStatus(Status.Downloading, percent.toString(), downloadedMB, fileSizeMB)
-						}
-
-						override fun onDownloadEnd(zip: File) {
-							log("Download End")
-						}
-
-						override fun onAnalyzeStart() {
-							log("Analyzing Start")
-							setStatus(Status.Analyzing, unishare.title, unishare.producer)
-						}
-
-						override fun onAnalyzeSuccess(unipack: Unipack) {
-							log("Analyzing Success")
-							setStatus(Status.Success, unipack.getInfoText(this@ImportPackByUrlActivity))
-						}
-
-						override fun onAnalyzeFail(unipack: Unipack) {
-							log("Analyzing Fail")
-							Log.err(unipack.ErrorDetail)
-							setStatus(Status.Failed, unipack.ErrorDetail)
-						}
-
-						override fun onAnalyzeEnd(folder: File) {
-							log("Analyzing End")
-							delayFinish()
-						}
-
-						override fun onException(throwable: Throwable) {
-							throwable.printStackTrace()
-							setStatus(Status.Exception, throwable.message)
-							log("Exception: " + throwable.message)
-						}
-					})
+					startInstall(unishare)
 				} else {
 					when (response.code()) {
 						404 -> {
@@ -124,6 +75,51 @@ class ImportPackByUrlActivity : BaseActivity() {
 				setStatus(Status.Failed, "server error\n" + t?.message)
 			}
 		})
+	}
+
+	fun startInstall(unishare: UnishareVO) {
+		UnipackInstaller(
+				url = "https://api.unipad.kr/unishare/${unishare._id}/download",
+				workspace = F_UniPackRootExt,
+				folderName = "${unishare.title} #${unishare._id}",
+				listener = object:UnipackInstaller.Listener{
+					override fun onInstallStart() {
+						log("Install start")
+						setStatus(Status.DownloadStart, unishare.title, unishare.producer)
+					}
+
+					override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+						log("fileSize: $contentLength → $fileSize")
+					}
+
+					override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+					}
+
+					override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+						val downloadedMB: String = FileManager.byteToMB(downloadedSize)
+						val fileSizeMB: String = FileManager.byteToMB(fileSize)
+
+						setStatus(Status.Downloading, percent.toString(), downloadedMB, fileSizeMB)
+					}
+
+					override fun onAnalyzeStart(zip: File) {
+						log("Analyzing Start")
+						setStatus(Status.Analyzing, unishare.title, unishare.producer)
+					}
+
+					override fun onInstallComplete(folder: File, unipack: Unipack) {
+						log("Install Success")
+						setStatus(Status.Success, unipack.getInfoText(this@ImportPackByUrlActivity))
+						delayFinish()
+					}
+
+					override fun onException(throwable: Throwable) {
+						log("Exception: " + throwable.message)
+						throwable.printStackTrace()
+						setStatus(Status.Exception, throwable.message)
+					}
+				}
+		)
 	}
 
 	private enum class Status(var titleStringId: Int, var ongoing: Boolean = true) {

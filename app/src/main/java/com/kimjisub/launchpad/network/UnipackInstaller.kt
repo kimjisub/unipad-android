@@ -41,6 +41,7 @@ class UnipackInstaller(
 				val contentLength = responseBody.contentLength()
 				val fileSize = contentLength.coerceAtLeast(preKnownFileSize)
 				withContext(Dispatchers.Main) { listener.onGetFileSize(fileSize, contentLength, preKnownFileSize) }
+				// todo async
 
 				val inputStream = responseBody.byteStream()
 				val outputStream = FileOutputStream(zip)
