@@ -19,7 +19,6 @@ import retrofit2.http.Url
 class FileApi : BaseApiService() {
 
 	companion object {
-		private const val URL = "https://api.unipad.kr"
 
 		val service: FileService by lazy {
 			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {
@@ -32,7 +31,6 @@ class FileApi : BaseApiService() {
 					.addInterceptor(httpLoggingInterceptor)
 					.build()
 			val retrofit: Retrofit = Builder()
-					.baseUrl(URL)
 					.addConverterFactory(GsonConverterFactory.create(gson))
 					.client(client)
 					.build()

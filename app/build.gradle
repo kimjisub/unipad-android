@@ -32,7 +32,6 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
 
-			useProguard true
 			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 			proguardFile 'proguard-billing.pro'
@@ -47,7 +46,6 @@ android {
 			applicationIdSuffix ".dev"
 
 			minifyEnabled false
-			useProguard true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
@@ -80,6 +78,7 @@ dependencies {
 	implementation 'androidx.appcompat:appcompat:1.1.0'
 	implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 	implementation 'androidx.core:core:1.1.0'
+	implementation 'androidx.core:core-ktx:1.1.0'
 	implementation 'androidx.browser:browser:1.0.0'
 	implementation 'androidx.preference:preference:1.1.0'
 	implementation 'androidx.multidex:multidex:2.0.1'
