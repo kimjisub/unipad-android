@@ -73,9 +73,9 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			title = viewingTitle
 			subtitle = viewingSubtitle
 			option1Name = context.getString(string.LED_)
-			option1 = item.unipack.isKeyLED
+			option1 = item.unipack.keyLEDExist
 			option2Name = context.getString(string.autoPlay_)
-			option2 = item.unipack.isAutoPlay
+			option2 = item.unipack.autoPlayExist
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)

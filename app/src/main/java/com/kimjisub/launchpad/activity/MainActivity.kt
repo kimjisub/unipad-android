@@ -427,7 +427,7 @@ class MainActivity : BaseActivity() {
 	private fun autoMapping(uni: Unipack) {
 		try {
 			val unipack = Unipack(uni.F_project, true)
-			if (unipack.isAutoPlay && unipack.autoPlayTable != null) {
+			if (unipack.autoPlayExist && unipack.autoPlayTable != null) {
 				(object : AsyncTask<String?, String?, String?>() {
 					var progressDialog: ProgressDialog? = null
 					var autoplay1: ArrayList<AutoPlay>? = null
