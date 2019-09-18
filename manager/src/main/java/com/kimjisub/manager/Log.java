@@ -7,6 +7,10 @@ public class Log {
 		printLog("com.kimjisub._log", msg);
 	}
 
+	public static void fbmsg(String msg) {
+		printLog("com.kimjisub._fbmsg", msg);
+	}
+
 	public static void test(String msg) {
 		printLog("com.kimjisub._test", msg);
 	}
