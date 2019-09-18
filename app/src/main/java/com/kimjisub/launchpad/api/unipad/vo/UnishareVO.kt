@@ -7,10 +7,8 @@ data class UnishareVO(
 		var content: String? = null,
 		var website: String? = null,
 		var youtube: String? = null,
-		var url: String? = null,
 		var fileSize: Long = 0,
-		var isPublic: Boolean = false,
+		var isPublic: Boolean = false,//todo remove is
 		var password: String? = null,
-		var downloadCount: Int = 0,
-		var deleted: Boolean = false
+		var downloadCount: Int = 0
 )
