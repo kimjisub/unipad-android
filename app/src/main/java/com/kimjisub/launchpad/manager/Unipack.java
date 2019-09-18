@@ -216,7 +216,7 @@ public class Unipack {
 				if (keyLEDExist) {
 					ledTable = new ArrayList[chain][buttonX][buttonY];
 					ledTableCount = 0;
-					File[] fileList = FileManager.sortByName(F_keyLED.listFiles());
+					File[] fileList = FileManager.INSTANCE.sortByName(F_keyLED.listFiles());
 					for (File file : fileList) {
 						if (file.isFile()) {
 							String fileName = file.getName();
@@ -587,7 +587,7 @@ public class Unipack {
 	// =============================================================================================
 
 	String getMainAutoplay() throws Exception {
-		File[] fileList = FileManager.sortByName(F_project.listFiles());
+		File[] fileList = FileManager.INSTANCE.sortByName(F_project.listFiles());
 		for (File f : fileList) {
 			if (f.isFile() && f.getName().toLowerCase().startsWith("autoplay"))
 				return f.getPath();
@@ -596,7 +596,7 @@ public class Unipack {
 	}
 
 	public String[] getAutoplays() throws Exception {
-		File[] fileList = FileManager.sortByName(F_project.listFiles());
+		File[] fileList = FileManager.INSTANCE.sortByName(F_project.listFiles());
 		ArrayList autoPlays = new ArrayList();
 		for (File f : fileList) {
 			if (f.isFile() && (f.getName().toLowerCase().startsWith("autoplay") || f.getName().toLowerCase().startsWith("_autoplay")))
@@ -620,7 +620,7 @@ public class Unipack {
 				context.getResources().getString(com.kimjisub.manager.R.string.producerName) + " : " + this.producerName + "\n" +
 				context.getResources().getString(com.kimjisub.manager.R.string.scale) + " : " + this.buttonX + " x " + this.buttonY + "\n" +
 				context.getResources().getString(com.kimjisub.manager.R.string.chainCount) + " : " + this.chain + "\n" +
-				context.getResources().getString(com.kimjisub.manager.R.string.fileSize) + " : " + FileManager.byteToMB(FileManager.getFolderSize(F_project)) + " MB";
+				context.getResources().getString(com.kimjisub.manager.R.string.fileSize) + " : " + FileManager.INSTANCE.byteToMB(FileManager.INSTANCE.getFolderSize(F_project)) + " MB";
 	}
 
 	public static class Sound {
