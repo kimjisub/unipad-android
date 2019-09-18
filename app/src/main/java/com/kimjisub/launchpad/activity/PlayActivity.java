@@ -165,10 +165,10 @@ public class PlayActivity extends BaseActivity {
 		File file = new File(path);
 
 		try {
-			log("[01] Start Load Unipack " + path);
+			Log.log("[01] Start Load Unipack " + path);
 			unipack = new Unipack(file, true);
 
-			log("[02] Check ErrorDetail");
+			Log.log("[02] Check ErrorDetail");
 			if (unipack.ErrorDetail != null) {
 				new AlertDialog.Builder(PlayActivity.this)
 						.setTitle(unipack.CriticalError ? getString(R.string.error) : getString(R.string.warning))
@@ -178,18 +178,18 @@ public class PlayActivity extends BaseActivity {
 						.show();
 			}
 
-			log("[03] Init Vars");
+			Log.log("[03] Init Vars");
 			U_pads = new Pad[unipack.buttonX][unipack.buttonY];
 			U_chains = new Chain[32];
 			channelManager = new ChannelManager(unipack.buttonX, unipack.buttonY);
 
-			log("[04] Start LEDTask (isKeyLED = " + unipack.keyLEDExist + ")");
+			Log.log("[04] Start LEDTask (isKeyLED = " + unipack.keyLEDExist + ")");
 			if (unipack.keyLEDExist) {
 				ledTask = new LEDTask();
 				ledTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			}
 
-			log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
+			Log.log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
 			if (unipack.squareButton) {
 				if (!unipack.keyLEDExist) {
 					SCV_LED.setVisibility(View.GONE);
@@ -218,7 +218,7 @@ public class PlayActivity extends BaseActivity {
 				SCV_record.setLocked(true);
 			}
 
-			log("[06] Set CheckBox Checked");
+			Log.log("[06] Set CheckBox Checked");
 			if (unipack.keyLEDExist) {
 				SCV_feedbackLight.setChecked(false);
 				SCV_LED.setChecked(true);
@@ -232,7 +232,7 @@ public class PlayActivity extends BaseActivity {
 
 				@Override
 				protected void onPreExecute() {
-					log("[07] onPreExecute");
+					Log.log("[07] onPreExecute");
 
 					progressDialog = new ProgressDialog(PlayActivity.this);
 					progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -257,7 +257,7 @@ public class PlayActivity extends BaseActivity {
 
 				@Override
 				protected String doInBackground(String... params) {
-					log("[08] doInBackground");
+					Log.log("[08] doInBackground");
 
 					try {
 
@@ -291,7 +291,7 @@ public class PlayActivity extends BaseActivity {
 
 				@Override
 				protected void onPostExecute(String result) {
-					log("[09] onPostExecute");
+					Log.log("[09] onPostExecute");
 					if (unipackLoaded) {
 						try {
 							if (progressDialog != null && progressDialog.isShowing())
@@ -326,7 +326,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	boolean skin_init(int num) {
-		log("[10] skin_init (" + num + ")");
+		Log.log("[10] skin_init (" + num + ")");
 		String packageName = PreferenceManager.SelectedTheme.INSTANCE.load(PlayActivity.this);
 		if (num >= 2) {
 			try {
@@ -356,7 +356,7 @@ public class PlayActivity extends BaseActivity {
 
 	@SuppressLint("ClickableViewAccessibility")
 	void showUI() {
-		log("[11] showUI");
+		Log.log("[11] showUI");
 		int buttonSizeX;
 		int buttonSizeY;
 
@@ -390,7 +390,7 @@ public class PlayActivity extends BaseActivity {
 				try {
 					autoPlayTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 				} catch (Exception e) {
-					log("autoplay thread execute fail");
+					Log.log("autoplay thread execute fail");
 					SCV_autoPlay.setChecked(false);
 					e.printStackTrace();
 				}
@@ -504,7 +504,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void skin_set() {
-		log("[12] skin_set");
+		Log.log("[12] skin_set");
 		b.background.setImageDrawable(theme.getPlaybg());
 		if (theme.getCustom_logo() != null)
 			b.customLogo.setImageDrawable(theme.getCustom_logo());
@@ -657,7 +657,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void LEDInit() {
-		log("LEDInit");
+		Log.log("LEDInit");
 		if (unipack.keyLEDExist) {
 			try {
 				for (int i = 0; i < unipack.buttonX; i++) {
@@ -684,7 +684,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_play() {
-		log("autoPlay_play");
+		Log.log("autoPlay_play");
 		padInit();
 		LEDInit();
 		autoPlayTask.isPlaying = true;
@@ -701,7 +701,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_stop() {
-		log("autoPlay_stop");
+		Log.log("autoPlay_stop");
 		autoPlayTask.isPlaying = false;
 
 		padInit();
@@ -717,14 +717,14 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_prev() {
-		log("autoPlay_prev");
+		Log.log("autoPlay_prev");
 		padInit();
 		LEDInit();
 		int progress = autoPlayTask.progress - 40;
 		if (progress < 0) progress = 0;
 		autoPlayTask.progress = progress;
 		if (!autoPlayTask.isPlaying) {
-			log("!isPlaying");
+			Log.log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
@@ -732,13 +732,13 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_after() {
-		log("autoPlay_after");
+		Log.log("autoPlay_after");
 		padInit();
 		LEDInit();
 		autoPlayTask.progress += 40;
 		autoPlayTask.achieve = -1;
 		if (!autoPlayTask.isPlaying) {
-			log("!isPlaying");
+			Log.log("!isPlaying");
 			autoPlayTask.achieve = -1;
 			autoPlayTask.check();
 		}
@@ -746,7 +746,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_guidePad(int x, int y, boolean onOff) {
-		//log("autoPlay_guidePad (" + buttonX + ", " + buttonY + ", " + onOff + ")");
+		//Log.log("autoPlay_guidePad (" + buttonX + ", " + buttonY + ", " + onOff + ")");
 		if (onOff) {
 			channelManager.add(x, y, GUIDE, -1, 17);
 			setLED(x, y);
@@ -759,7 +759,7 @@ public class PlayActivity extends BaseActivity {
 	// ============================================================================================= pad, chain Event
 
 	void autoPlay_guideChain(int c, boolean onOff) {
-		log("autoPlay_guideChain (" + c + ", " + onOff + ")");
+		Log.log("autoPlay_guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
 			channelManager.add(-1, 8 + c, GUIDE, -1, 17);
 			setLED(-1, 8 + c);
@@ -771,7 +771,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_removeGuide() {
-		log("autoPlay_removeGuide");
+		Log.log("autoPlay_removeGuide");
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++) {
@@ -789,7 +789,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void autoPlay_checkGuide(int x, int y) {
-		//log("autoPlay_checkGuide (" + buttonX + ", " + buttonY + ")");
+		//Log.log("autoPlay_checkGuide (" + buttonX + ", " + buttonY + ")");
 		if (autoPlayTask != null && autoPlayTask.loop && !autoPlayTask.isPlaying) {
 
 			ArrayList<Unipack.AutoPlay> guideItems = autoPlayTask.guideItems;
@@ -812,7 +812,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void padTouch(int x, int y, boolean upDown) {
-		//log("padTouch (" + buttonX + ", " + buttonY + ", " + upDown + ")");
+		//Log.log("padTouch (" + buttonX + ", " + buttonY + ", " + upDown + ")");
 		try {
 			if (upDown) {
 				soundPool.stop(stopID[chain][x][y]);
@@ -864,14 +864,14 @@ public class PlayActivity extends BaseActivity {
 	// ============================================================================================= Launchpad Connection
 
 	void padInit() {
-		log("padInit");
+		Log.log("padInit");
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++)
 				padTouch(i, j, false);
 	}
 
 	void chainChange(int num) {
-		//log("chainChange (" + num + ")");
+		//Log.log("chainChange (" + num + ")");
 		try {
 			if (num >= 0 && num < unipack.chain) {
 				chain = num;
@@ -904,7 +904,7 @@ public class PlayActivity extends BaseActivity {
 	// ============================================================================================= Trace Log
 
 	void chainBtnsRefresh() {
-		log("chainBtnsRefresh");
+		Log.log("chainBtnsRefresh");
 
 		try {
 			// chain
@@ -1041,7 +1041,7 @@ public class PlayActivity extends BaseActivity {
 	// TraceLog /////////////////////////////////////////////////////////////////////////////////////////
 
 	void traceLog_show() {
-		//log("traceLog_show");
+		//Log.log("traceLog_show");
 		for (int i = 0; i < unipack.buttonX; i++) {
 			for (int j = 0; j < unipack.buttonY; j++) {
 				U_pads[i][j].setTraceLogText("");
@@ -1052,7 +1052,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void traceLog_log(int x, int y) {
-		//log("traceLog_log (" + buttonX + ", " + buttonY + ")");
+		//Log.log("traceLog_log (" + buttonX + ", " + buttonY + ")");
 		traceLog_table[chain][x][y].add(traceLog_nextNum[chain]++);
 		U_pads[x][y].setTraceLogText("");
 		for (int i = 0; i < traceLog_table[chain][x][y].size(); i++)
@@ -1060,7 +1060,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void traceLog_init() {
-		log("traceLog_init");
+		Log.log("traceLog_init");
 		traceLog_table = new ArrayList[unipack.chain][unipack.buttonX][unipack.buttonY];
 		traceLog_nextNum = new int[unipack.chain];
 
@@ -1098,7 +1098,7 @@ public class PlayActivity extends BaseActivity {
 	// ============================================================================================= setProMode
 
 	void refreshWatermark() {
-		log("refreshWatermark");
+		Log.log("refreshWatermark");
 		int[] topBar = new int[8];
 
 		boolean UI;
@@ -1291,14 +1291,14 @@ public class PlayActivity extends BaseActivity {
 
 			@Override
 			public void onChange(boolean selfChange) {
-				log("changed volume 1");
+				Log.log("changed volume 1");
 				chainBtnsRefresh();
 				super.onChange(selfChange);
 			}
 
 			@Override
 			public void onChange(boolean selfChange, Uri uri) {
-				log("changed volume 2");
+				Log.log("changed volume 2");
 				chainBtnsRefresh();
 				super.onChange(selfChange, uri);
 			}
@@ -1310,7 +1310,7 @@ public class PlayActivity extends BaseActivity {
 			MidiConnection.INSTANCE.setController(midiController);
 
 		if (Companion.getScale_PaddingHeight() == 0) {
-			log("padding 크기값들이 잘못되었습니다.");
+			Log.log("padding 크기값들이 잘못되었습니다.");
 			Companion.requestRestart(PlayActivity.this);
 		}
 
@@ -1562,7 +1562,7 @@ public class PlayActivity extends BaseActivity {
 
 					} else if (e == null) {
 						LEDEvents.remove(i);
-						log("led 오류 e == null");
+						Log.log("led 오류 e == null");
 					} else if (e.isShutdown) {
 						for (int x = 0; x < unipack.buttonX; x++) {
 							for (int y = 0; y < unipack.buttonY; y++) {
@@ -1709,7 +1709,7 @@ public class PlayActivity extends BaseActivity {
 				if (isPlaying) {
 					if (beforeStartPlaying) {
 						beforeStartPlaying = false;
-						log("beforeStartPlaying");
+						Log.log("beforeStartPlaying");
 						publishProgress(8);
 					}
 
