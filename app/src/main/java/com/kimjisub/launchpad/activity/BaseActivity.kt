@@ -16,7 +16,7 @@ import com.google.android.gms.ads.InterstitialAd
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
-import com.kimjisub.launchpad.manager.Constant.*
+import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevAdsShowTime
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -127,7 +127,7 @@ open class BaseActivity : AppCompatActivity() {
 	fun checkAdsCooltime(): Boolean {
 		val prevTime = PrevAdsShowTime.load(this)
 		val currTime = System.currentTimeMillis()
-		return currTime < prevTime || currTime - prevTime >= ADSCOOLTIME
+		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
 	}
 
 	fun updateAdsCooltime() {
@@ -139,7 +139,7 @@ open class BaseActivity : AppCompatActivity() {
 		if (!Vungle.isInitialized()) {
 			Log.vungle("isInitialized() == false")
 			Log.vungle("init start")
-			Vungle.init(VUNGLE.APPID, applicationContext, object : InitCallback {
+			Vungle.init(Constant.VUNGLE.APPID, applicationContext, object : InitCallback {
 				override fun onSuccess() {
 					// Initialization has succeeded and SDK is ready to load an ad or play one if there
 					// is one pre-cached already
@@ -188,7 +188,7 @@ open class BaseActivity : AppCompatActivity() {
 	internal fun loadAdmob() {
 		Log.admob("loadAdmob ================================")
 		interstitialAd = InterstitialAd(this)
-		interstitialAd!!.adUnitId = ADMOB.MAIN_START
+		interstitialAd!!.adUnitId = Constant.ADMOB.MAIN_START
 		interstitialAd!!.loadAd(Builder()
 				.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
 				.build())
