@@ -67,7 +67,7 @@
 		<activity
 			android:name=".activity.LaunchpadActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"
+			android:launchMode="singleInstance"
 			android:theme="@style/PopupTheme">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
@@ -80,7 +80,7 @@
 		<activity
 			android:name=".activity.ImportPackByFileActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"
+			android:launchMode="singleInstance"
 			android:theme="@style/PopupTheme">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
@@ -100,7 +100,7 @@
 		<activity
 			android:name=".activity.ImportPackByUrlActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"
+			android:launchMode="singleInstance"
 			android:theme="@style/PopupTheme">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
