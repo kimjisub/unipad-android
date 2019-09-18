@@ -12,7 +12,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 	 * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
 	 */
 	// [START receive_message]
-	override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+	override fun onMessageReceived(remoteMessage: RemoteMessage) {
 		// [START_EXCLUDE]
 		// There are two types of messages data messages and notification messages. Data messages are handled
 		// here in onMessageReceived whether the app is in the foreground or background. Data messages are the type
@@ -25,11 +25,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
 		// TODO(developer): Handle FCM messages here.
 		// Not getting messages here? See why this may be: https://goo.gl/39bRNJ
-		Log.fbmsg(TAG, "From: ${remoteMessage?.from}")
+		Log.fbmsg("From: ${remoteMessage?.from}")
 
 		// Check if message contains a data payload.
 		remoteMessage?.data?.isNotEmpty()?.let {
-			Log.fbmsg(TAG, "Message data payload: " + remoteMessage.data)
+			Log.fbmsg("Message data payload: " + remoteMessage.data)
 
 			if (/* Check if data needs to be processed by long running job */ true) {
 				// For long-running tasks (10 seconds or more) use WorkManager.
@@ -42,7 +42,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
 		// Check if message contains a notification payload.
 		remoteMessage?.notification?.let {
-			Log.fbmsg(TAG, "Message Notification Body: ${it.body}")
+			Log.fbmsg("Message Notification Body: ${it.body}")
 		}
 
 		// Also if you intend on generating your own notifications as a result of a received FCM
@@ -56,8 +56,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 	 * the previous token had been compromised. Note that this is called when the InstanceID token
 	 * is initially generated so this is where you would retrieve the token.
 	 */
-	override fun onNewToken(token: String?) {
-		Log.fbmsg(TAG, "Refreshed token: $token")
+	override fun onNewToken(token: String) {
+		Log.fbmsg("Refreshed token: $token")
 
 		// If you want to send messages to this application instance or
 		// manage this apps subscriptions on the server side, send the
@@ -80,7 +80,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 	 * Handle time allotted to BroadcastReceivers.
 	 */
 	private fun handleNow() {
-		Log.fbmsg(TAG, "Short lived task is done.")
+		Log.fbmsg("Short lived task is done.")
 	}
 
 	/**
