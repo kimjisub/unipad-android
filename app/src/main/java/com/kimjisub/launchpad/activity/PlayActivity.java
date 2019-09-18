@@ -36,8 +36,8 @@ import com.kimjisub.design.manage.SyncCheckBox;
 import com.kimjisub.launchpad.R;
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding;
 import com.kimjisub.launchpad.manager.BillingManager;
-import com.kimjisub.launchpad.manager.ChanelManager;
-import com.kimjisub.launchpad.manager.ChanelManager.Chanel;
+import com.kimjisub.launchpad.manager.ChannelManager;
+import com.kimjisub.launchpad.manager.ChannelManager.Channel;
 import com.kimjisub.launchpad.manager.Functions;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
@@ -53,9 +53,9 @@ import com.vungle.warren.error.VungleException;
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.GUIDE;
-import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.LED;
-import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.PRESSED;
+import static com.kimjisub.launchpad.manager.ChannelManager.Channel.GUIDE;
+import static com.kimjisub.launchpad.manager.ChannelManager.Channel.LED;
+import static com.kimjisub.launchpad.manager.ChannelManager.Channel.PRESSED;
 import static com.kimjisub.launchpad.manager.Constant.VUNGLE;
 import static com.kimjisub.manager.Log.log;
 
@@ -95,7 +95,7 @@ public class PlayActivity extends BaseActivity {
 
 	int chain = 0;
 	AudioManager audioManager;
-	ChanelManager chanelManager;
+	ChannelManager channelManager;
 
 
 	// ============================================================================================= Manager
@@ -181,7 +181,7 @@ public class PlayActivity extends BaseActivity {
 			log("[03] Init Vars");
 			U_pads = new Pad[unipack.buttonX][unipack.buttonY];
 			U_chains = new Chain[32];
-			chanelManager = new ChanelManager(unipack.buttonX, unipack.buttonY);
+			channelManager = new ChannelManager(unipack.buttonX, unipack.buttonY);
 
 			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
 			if (unipack.isKeyLED) {
@@ -583,11 +583,11 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void setLEDUI(int x, int y) {
-		ChanelManager.Item Item = chanelManager.get(x, y);
+		ChannelManager.Item Item = channelManager.get(x, y);
 
 		if (x != -1) {
 			if (Item != null) {
-				switch (Item.getChanel()) {
+				switch (Item.getChannel()) {
 					case GUIDE:
 						U_pads[x][y].setLedBackgroundColor(Item.getColor());
 						break;
@@ -605,7 +605,7 @@ public class PlayActivity extends BaseActivity {
 			if (0 <= c && c < 32)
 				if (theme.isChainLED()) {
 					if (Item != null) {
-						switch (Item.getChanel()) {
+						switch (Item.getChannel()) {
 							case GUIDE:
 								U_chains[c].setLedBackgroundColor(Item.getColor());
 								break;
@@ -620,7 +620,7 @@ public class PlayActivity extends BaseActivity {
 						U_chains[c].setLedBackgroundColor(0);
 				} else {
 					if (Item != null) {
-						switch (Item.getChanel()) {
+						switch (Item.getChannel()) {
 							case GUIDE:
 								U_chains[c].setBackgroundImageDrawable(theme.getChain__());
 								break;
@@ -639,7 +639,7 @@ public class PlayActivity extends BaseActivity {
 	}
 
 	void setLEDLaunchpad(int x, int y) {
-		ChanelManager.Item Item = chanelManager.get(x, y);
+		ChannelManager.Item Item = channelManager.get(x, y);
 
 		if (x != -1) {
 			if (Item != null)
@@ -665,7 +665,7 @@ public class PlayActivity extends BaseActivity {
 						if (ledTask.isEventExist(i, j))
 							ledTask.eventShutdown(i, j);
 
-						chanelManager.remove(i, j, LED);
+						channelManager.remove(i, j, LED);
 						setLED(i, j);
 					}
 				}
@@ -674,7 +674,7 @@ public class PlayActivity extends BaseActivity {
 					if (ledTask.isEventExist(-1, i))
 						ledTask.eventShutdown(-1, i);
 
-					chanelManager.remove(-1, i, LED);
+					channelManager.remove(-1, i, LED);
 					setLED(-1, i);
 				}
 			} catch (Exception e) {
@@ -748,10 +748,10 @@ public class PlayActivity extends BaseActivity {
 	void autoPlay_guidePad(int x, int y, boolean onOff) {
 		//log("autoPlay_guidePad (" + buttonX + ", " + buttonY + ", " + onOff + ")");
 		if (onOff) {
-			chanelManager.add(x, y, GUIDE, -1, 17);
+			channelManager.add(x, y, GUIDE, -1, 17);
 			setLED(x, y);
 		} else {
-			chanelManager.remove(x, y, GUIDE);
+			channelManager.remove(x, y, GUIDE);
 			setLED(x, y);
 		}
 	}
@@ -761,10 +761,10 @@ public class PlayActivity extends BaseActivity {
 	void autoPlay_guideChain(int c, boolean onOff) {
 		log("autoPlay_guideChain (" + c + ", " + onOff + ")");
 		if (onOff) {
-			chanelManager.add(-1, 8 + c, GUIDE, -1, 17);
+			channelManager.add(-1, 8 + c, GUIDE, -1, 17);
 			setLED(-1, 8 + c);
 		} else {
-			chanelManager.remove(-1, 8 + c, GUIDE);
+			channelManager.remove(-1, 8 + c, GUIDE);
 			setLED(-1, 8 + c);
 			chainBtnsRefresh();
 		}
@@ -775,11 +775,11 @@ public class PlayActivity extends BaseActivity {
 		try {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++) {
-					chanelManager.remove(i, j, GUIDE);
+					channelManager.remove(i, j, GUIDE);
 					setLED(i, j);
 				}
 			for (int i = 0; i < 32; i++) {
-				chanelManager.remove(-1, i, GUIDE);
+				channelManager.remove(-1, i, GUIDE);
 				setLED(-1, i);
 			}
 			chainBtnsRefresh();
@@ -831,7 +831,7 @@ public class PlayActivity extends BaseActivity {
 					traceLog_log(x, y);
 
 				if (SCV_feedbackLight.isChecked()) {
-					chanelManager.add(x, y, PRESSED, -1, 3);
+					channelManager.add(x, y, PRESSED, -1, 3);
 					setLED(x, y);
 				}
 
@@ -847,7 +847,7 @@ public class PlayActivity extends BaseActivity {
 				if (unipack.Sound_get(chain, x, y).loop == -1)
 					soundPool.stop(stopID[chain][x][y]);
 
-				chanelManager.remove(x, y, PRESSED);
+				channelManager.remove(x, y, PRESSED);
 				setLED(x, y);
 
 				if (SCV_LED.isChecked()) {
@@ -910,9 +910,9 @@ public class PlayActivity extends BaseActivity {
 			// chain
 			for (int i = 0; i < 8; i++) {
 				if (i == chain)
-					chanelManager.add(-1, 8 + i, Chanel.CHAIN, -1, 3);
+					channelManager.add(-1, 8 + i, Channel.CHAIN, -1, 3);
 				else
-					chanelManager.remove(-1, 8 + i, Chanel.CHAIN);
+					channelManager.remove(-1, 8 + i, Channel.CHAIN);
 				setLEDUI(-1, 8 + i);
 				setLEDLaunchpad(-1, 8 + i);
 			}
@@ -927,9 +927,9 @@ public class PlayActivity extends BaseActivity {
 
 			for (int i = 0; i < 8; i++) {
 				if (8 - i <= currLevel)
-					chanelManager.add(-1, i + 8, Chanel.UI, -1, 40);
+					channelManager.add(-1, i + 8, Channel.UI, -1, 40);
 				else
-					chanelManager.remove(-1, i + 8, Chanel.UI);
+					channelManager.remove(-1, i + 8, Channel.UI);
 				setLED(-1, i + 8);
 			}
 		} catch (Exception e) {
@@ -1128,9 +1128,9 @@ public class PlayActivity extends BaseActivity {
 		}
 
 
-		chanelManager.setCirIgnore(Chanel.UI, !UI);
-		chanelManager.setCirIgnore(Chanel.UI_UNIPAD, !UI_UNIPAD);
-		chanelManager.setCirIgnore(Chanel.CHAIN, !CHAIN);
+		channelManager.setCirIgnore(Channel.UI, !UI);
+		channelManager.setCirIgnore(Channel.UI_UNIPAD, !UI_UNIPAD);
+		channelManager.setCirIgnore(Channel.CHAIN, !CHAIN);
 
 		if (!bool_toggleOptionWindow) {
 			topBar[0] = 0;
@@ -1144,9 +1144,9 @@ public class PlayActivity extends BaseActivity {
 
 			for (int i = 0; i < 8; i++) {
 				if (topBar[i] != 0)
-					chanelManager.add(-1, i, Chanel.UI_UNIPAD, -1, topBar[i]);
+					channelManager.add(-1, i, Channel.UI_UNIPAD, -1, topBar[i]);
 				else
-					chanelManager.remove(-1, i, Chanel.UI_UNIPAD);
+					channelManager.remove(-1, i, Channel.UI_UNIPAD);
 				setLED(-1, i);
 			}
 		} else {
@@ -1161,9 +1161,9 @@ public class PlayActivity extends BaseActivity {
 
 			for (int i = 0; i < 8; i++) {
 				if (topBar[i] != 0)
-					chanelManager.add(-1, i, Chanel.UI, -1, topBar[i]);
+					channelManager.add(-1, i, Channel.UI, -1, topBar[i]);
 				else
-					chanelManager.remove(-1, i, Chanel.UI);
+					channelManager.remove(-1, i, Channel.UI);
 				setLED(-1, i);
 			}
 		}
@@ -1199,7 +1199,7 @@ public class PlayActivity extends BaseActivity {
 		}
 
 
-		chanelManager.setCirIgnore(Chanel.LED, !bool);
+		channelManager.setCirIgnore(Channel.LED, !bool);
 		chainBtnsRefresh();
 	}
 
@@ -1515,12 +1515,12 @@ public class PlayActivity extends BaseActivity {
 									switch (func) {
 										case Unipack.LED.Syntax.ON:
 											if (x != -1) {
-												chanelManager.add(x, y, Chanel.LED, color, velo);
+												channelManager.add(x, y, Channel.LED, color, velo);
 												setLEDLaunchpad(x, y);
 												publishProgress(x, y);
 												btnLED[x][y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
 											} else {
-												chanelManager.add(x, y, Chanel.LED, color, velo);
+												channelManager.add(x, y, Channel.LED, color, velo);
 												setLEDLaunchpad(x, y);
 												publishProgress(x, y);
 												cirLED[y] = new LED(e.buttonX, e.buttonY, x, y, color, velo);
@@ -1531,14 +1531,14 @@ public class PlayActivity extends BaseActivity {
 
 											if (x != -1) {
 												if (btnLED[x][y] != null && btnLED[x][y].equal(e.buttonX, e.buttonY)) {
-													chanelManager.remove(x, y, Chanel.LED);
+													channelManager.remove(x, y, Channel.LED);
 													setLEDLaunchpad(x, y);
 													publishProgress(x, y);
 													btnLED[x][y] = null;
 												}
 											} else {
 												if (cirLED[y] != null && cirLED[y].equal(e.buttonX, e.buttonY)) {
-													chanelManager.remove(x, y, Chanel.LED);
+													channelManager.remove(x, y, Channel.LED);
 													setLEDLaunchpad(x, y);
 													publishProgress(x, y);
 													cirLED[y] = null;
@@ -1567,7 +1567,7 @@ public class PlayActivity extends BaseActivity {
 						for (int x = 0; x < unipack.buttonX; x++) {
 							for (int y = 0; y < unipack.buttonY; y++) {
 								if (btnLED[x][y] != null && btnLED[x][y].equal(e.buttonX, e.buttonY)) {
-									chanelManager.remove(x, y, Chanel.LED);
+									channelManager.remove(x, y, Channel.LED);
 									setLEDLaunchpad(x, y);
 									publishProgress(x, y);
 									btnLED[x][y] = null;
@@ -1577,7 +1577,7 @@ public class PlayActivity extends BaseActivity {
 
 						for (int y = 0; y < cirLED.length; y++) {
 							if (cirLED[y] != null && cirLED[y].equal(e.buttonX, e.buttonY)) {
-								chanelManager.remove(-1, y, Chanel.LED);
+								channelManager.remove(-1, y, Channel.LED);
 								setLEDLaunchpad(-1, y);
 								publishProgress(-1, y);
 								cirLED[y] = null;

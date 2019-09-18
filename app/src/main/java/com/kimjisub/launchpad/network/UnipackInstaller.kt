@@ -29,7 +29,7 @@ class UnipackInstaller(
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
-		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.DOWNLOAD)
+		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
 		builder.apply {
 			setAutoCancel(true)
 			setSmallIcon(R.mipmap.ic_launcher)
