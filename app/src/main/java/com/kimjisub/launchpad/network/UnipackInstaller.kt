@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class UnipackInstaller(
+class UnipackInstaller(//todo notification manage
 		private val url: String,
 		workspace: File,
 		folderName: String,

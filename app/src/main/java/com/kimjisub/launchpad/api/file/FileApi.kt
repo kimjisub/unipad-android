@@ -43,10 +43,6 @@ class FileApi : BaseApiService() {
 
 			// unishare /////////////////////////////////////////////////////////////////////////////////////////
 
-			@GET("/unishare/{code}/download")
-			@Streaming
-			fun unishare_download(@Path("code") code: String?): Call<ResponseBody?>?
-
 			@GET
 			@Streaming
 			fun download(@Url url : String): Call<ResponseBody>

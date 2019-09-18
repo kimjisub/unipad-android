@@ -10,8 +10,6 @@ import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.NotificationManager.Channel
 import com.kimjisub.launchpad.manager.Unipack
 import com.kimjisub.launchpad.network.UnipackInstaller
-import com.kimjisub.launchpad.network.UnishareDownloader
-import com.kimjisub.launchpad.network.UnishareDownloader.UnishareDownloadListener
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*
@@ -82,7 +80,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				url = "https://api.unipad.kr/unishare/${unishare._id}/download",
 				workspace = F_UniPackRootExt,
 				folderName = "${unishare.title} #${unishare._id}",
-				listener = object:UnipackInstaller.Listener{
+				listener = object : UnipackInstaller.Listener {
 					override fun onInstallStart() {
 						log("Install start")
 						setStatus(Status.DownloadStart, unishare.title, unishare.producer)
