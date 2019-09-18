@@ -54,6 +54,7 @@ import com.vungle.warren.error.VungleException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.*;
 import static com.kimjisub.launchpad.manager.ChanelManager.Chanel.GUIDE;
@@ -506,67 +507,67 @@ public class PlayActivity extends BaseActivity {
 
 	void skin_set() {
 		log("[12] skin_set");
-		b.background.setImageDrawable(theme.playbg);
-		if (theme.custom_logo != null)
-			b.customLogo.setImageDrawable(theme.custom_logo);
+		b.background.setImageDrawable(theme.getPlaybg());
+		if (theme.getCustom_logo() != null)
+			b.customLogo.setImageDrawable(theme.getCustom_logo());
 		else
 			b.customLogo.setImageDrawable(null);
 
 
 		for (int i = 0; i < unipack.buttonX; i++)
 			for (int j = 0; j < unipack.buttonY; j++) {
-				U_pads[i][j].setBackgroundImageDrawable(theme.btn);
-				U_pads[i][j].setTraceLogTextColor(theme.trace_log);
+				U_pads[i][j].setBackgroundImageDrawable(theme.getBtn());
+				U_pads[i][j].setTraceLogTextColor(theme.getTrace_log());
 			}
 
 		if (unipack.buttonX < 16 && unipack.buttonY < 16) {
 			for (int i = 0; i < unipack.buttonX; i++)
 				for (int j = 0; j < unipack.buttonY; j++)
-					U_pads[i][j].setPhantomImageDrawable(theme.phantom);
+					U_pads[i][j].setPhantomImageDrawable(theme.getPhantom());
 
-			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.phantom_ != null) {
+			if (unipack.buttonX % 2 == 0 && unipack.buttonY % 2 == 0 && unipack.squareButton && theme.getPhantom_() != null) {
 				int x = unipack.buttonX / 2 - 1;
 				int y = unipack.buttonY / 2 - 1;
 
-				U_pads[x][y].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x][y].setPhantomImageDrawable(theme.getPhantom_());
 
-				U_pads[x + 1][y].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x + 1][y].setPhantomImageDrawable(theme.getPhantom_());
 				U_pads[x + 1][y].setPhantomRotation(270);
 
-				U_pads[x][y + 1].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x][y + 1].setPhantomImageDrawable(theme.getPhantom_());
 				U_pads[x][y + 1].setPhantomRotation(90);
 
-				U_pads[x + 1][y + 1].setPhantomImageDrawable(theme.phantom_);
+				U_pads[x + 1][y + 1].setPhantomImageDrawable(theme.getPhantom_());
 				U_pads[x + 1][y + 1].setPhantomRotation(180);
 			}
 		}
 
 		for (int i = 0; i < 32; i++) {
-			if (theme.isChainLED) {
-				U_chains[i].setBackgroundImageDrawable(theme.btn);
-				U_chains[i].setPhantomImageDrawable(theme.chainled);
+			if (theme.isChainLED()) {
+				U_chains[i].setBackgroundImageDrawable(theme.getBtn());
+				U_chains[i].setPhantomImageDrawable(theme.getChainled());
 			} else {
-				U_chains[i].setPhantomImageDrawable(theme.chain);
+				U_chains[i].setPhantomImageDrawable(theme.getChain());
 				U_chains[i].setLedVisibility(View.GONE);
 			}
 		}
 
 		chainBtnsRefresh();
 
-		b.prev.setBackground(theme.xml_prev);
-		b.play.setBackground(theme.xml_play);
-		b.next.setBackground(theme.xml_next);
+		b.prev.setBackground(theme.getXml_prev());
+		b.play.setBackground(theme.getXml_play());
+		b.next.setBackground(theme.getXml_next());
 
 
 		for (CheckBox cb1 : CB1s) {
-			cb1.setTextColor(theme.checkbox);
+			cb1.setTextColor(theme.getCheckbox());
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-				cb1.setButtonTintList(ColorStateList.valueOf(theme.checkbox));
+				cb1.setButtonTintList(ColorStateList.valueOf(theme.getCheckbox()));
 		}
 		for (CheckBox cb2 : CB2s) {
-			cb2.setTextColor(theme.option_window_checkbox);
+			cb2.setTextColor(theme.getOption_window_checkbox());
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-				cb2.setButtonTintList(ColorStateList.valueOf(theme.option_window_checkbox));
+				cb2.setButtonTintList(ColorStateList.valueOf(theme.getOption_window_checkbox()));
 		}
 		//RL_option_window.setBackgroundColor(theme.option_window);
 		//IB_option_quit.setBackgroundColor(theme.option_window_btn);
@@ -593,7 +594,7 @@ public class PlayActivity extends BaseActivity {
 						U_pads[x][y].setLedBackgroundColor(Item.getColor());
 						break;
 					case PRESSED:
-						U_pads[x][y].setLedBackground(theme.btn_);
+						U_pads[x][y].setLedBackground(theme.getBtn_());
 						break;
 					case LED:
 						U_pads[x][y].setLedBackgroundColor(Item.getColor());
@@ -604,7 +605,7 @@ public class PlayActivity extends BaseActivity {
 		} else {
 			int c = y - 8;
 			if (0 <= c && c < 32)
-				if (theme.isChainLED) {
+				if (theme.isChainLED()) {
 					if (Item != null) {
 						switch (Item.getChanel()) {
 							case GUIDE:
@@ -623,17 +624,17 @@ public class PlayActivity extends BaseActivity {
 					if (Item != null) {
 						switch (Item.getChanel()) {
 							case GUIDE:
-								U_chains[c].setBackgroundImageDrawable(theme.chain__);
+								U_chains[c].setBackgroundImageDrawable(theme.getChain__());
 								break;
 							case PRESSED:
-								U_chains[c].setBackgroundImageDrawable(theme.chain_);
+								U_chains[c].setBackgroundImageDrawable(theme.getChain_());
 								break;
 							case LED:
-								U_chains[c].setBackgroundImageDrawable(theme.chain);
+								U_chains[c].setBackgroundImageDrawable(theme.getChain());
 								break;
 						}
 					} else
-						U_chains[c].setBackgroundImageDrawable(theme.chain);
+						U_chains[c].setBackgroundImageDrawable(theme.getChain());
 				}
 
 		}
@@ -690,7 +691,7 @@ public class PlayActivity extends BaseActivity {
 		LEDInit();
 		autoPlayTask.isPlaying = true;
 
-		b.play.setBackground(theme.xml_pause);
+		b.play.setBackground(theme.getXml_pause());
 
 		if (unipack.isKeyLED) {
 			SCV_LED.setChecked(true);
@@ -708,7 +709,7 @@ public class PlayActivity extends BaseActivity {
 		padInit();
 		LEDInit();
 
-		b.play.setBackground(theme.xml_play);
+		b.play.setBackground(theme.getXml_play());
 
 
 		autoPlayTask.achieve = -1;
