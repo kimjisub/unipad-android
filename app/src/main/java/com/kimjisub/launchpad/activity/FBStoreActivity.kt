@@ -217,6 +217,8 @@ class FBStoreActivity : BaseActivity() {
 
 
 		UnipackInstaller(
+				context = this,
+				title = item.storeVO.title!!,
 				url = item.storeVO.URL!!,
 				workspace = F_UniPackRootExt,
 				folderName = item.storeVO.code!!,

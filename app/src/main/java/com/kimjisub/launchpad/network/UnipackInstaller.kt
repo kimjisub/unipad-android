@@ -1,6 +1,10 @@
 package com.kimjisub.launchpad.network
 
+import android.content.Context
+import androidx.core.app.NotificationCompat
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.api.file.FileApi
+import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -11,7 +15,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class UnipackInstaller(//todo notification manage
+class UnipackInstaller(
+		private val context: Context,
+		private val title: String,
 		private val url: String,
 		workspace: File,
 		folderName: String,
@@ -19,6 +25,17 @@ class UnipackInstaller(//todo notification manage
 		private var listener: Listener) {
 	private val zip: File = FileManager.makeNextPath(workspace, folderName, ".zip")
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
+
+	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
+	private val notificationManager = NotificationManager.getManager(context)
+	private val notificationBuilder: NotificationCompat.Builder by lazy {
+		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.DOWNLOAD)
+		builder.apply {
+			setAutoCancel(true)
+			setSmallIcon(R.mipmap.ic_launcher)
+		}
+		builder
+	}
 
 	interface Listener {
 		fun onInstallStart()
@@ -34,14 +51,13 @@ class UnipackInstaller(//todo notification manage
 	init {
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
-				withContext(Dispatchers.Main) { listener.onInstallStart() }
+				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val call = FileApi.service.download(url)
 				val responseBody = call.execute().body()!!
 				val contentLength = responseBody.contentLength()
 				val fileSize = contentLength.coerceAtLeast(preKnownFileSize)
-				withContext(Dispatchers.Main) { listener.onGetFileSize(fileSize, contentLength, preKnownFileSize) }
-				// todo async
+				withContext(Dispatchers.Main) { onGetFileSize(fileSize, contentLength, preKnownFileSize) }
 
 				val inputStream = responseBody.byteStream()
 				val outputStream = FileOutputStream(zip)
@@ -49,8 +65,7 @@ class UnipackInstaller(//todo notification manage
 				var downloadedSize = 0L
 				var n: Int
 				var prevPercent: Int = -1
-				val tickSize : Long = fileSize / 10000
-				var prevTick : Long = -1 // 1/1000 of file size
+				var prevMillis = System.currentTimeMillis()
 				while (true) {
 					n = inputStream.read(buf)
 					if (n == -1)
@@ -58,14 +73,15 @@ class UnipackInstaller(//todo notification manage
 
 					outputStream.write(buf, 0, n)
 					downloadedSize += n.toLong()
-					val tick = downloadedSize/tickSize
-					if (tick != prevTick) {
+					val millis = System.currentTimeMillis()
+					if (millis - prevMillis > 20) {
 						val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-						withContext(Dispatchers.Main) { listener.onDownloadProgress(percent, downloadedSize, fileSize) }
-						prevTick = tick
+						Log.test("${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB")
+						withContext(Dispatchers.Main) { onDownloadProgress(percent, downloadedSize, fileSize) }
+						prevMillis = millis
 
-						if(prevPercent != percent){
-							withContext(Dispatchers.Main) { listener.onDownloadProgressPercent(percent, downloadedSize, fileSize) }
+						if (prevPercent != percent) {
+							withContext(Dispatchers.Main) { onDownloadProgressPercent(percent, downloadedSize, fileSize) }
 							prevPercent = percent
 						}
 					}
@@ -73,7 +89,7 @@ class UnipackInstaller(//todo notification manage
 				inputStream.close()
 				outputStream.close()
 
-				withContext(Dispatchers.Main) { listener.onAnalyzeStart(zip) }
+				withContext(Dispatchers.Main) { onAnalyzeStart(zip) }
 
 				FileManager.unZipFile(zip.path, folder.path)
 				val unipack = Unipack(folder, true)
@@ -83,14 +99,83 @@ class UnipackInstaller(//todo notification manage
 					throw UniPackCriticalErrorException(unipack.ErrorDetail)
 				}
 
-				withContext(Dispatchers.Main) { listener.onInstallComplete(folder, unipack) }
+				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+
 			} catch (e: Exception) {
 				e.printStackTrace()
-				withContext(Dispatchers.Main) { listener.onException(e) }
+				withContext(Dispatchers.Main) { onException(e) }
 				FileManager.deleteDirectory(folder)
 			}
 			FileManager.deleteDirectory(zip)
 		}
+	}
+
+	private fun onInstallStart() {
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText(context.getString(R.string.downloadWaiting))
+			setProgress(100, 0, true)
+			setOngoing(true)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+
+		listener.onInstallStart()
+	}
+
+	private fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+		listener.onGetFileSize(fileSize, contentLength, preKnownFileSize)
+	}
+
+	private fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+		listener.onDownloadProgress(percent, downloadedSize, fileSize)
+	}
+
+	private fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText("${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB")
+			setProgress(100, percent, false)
+			setOngoing(true)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+
+		listener.onDownloadProgressPercent(percent, downloadedSize, fileSize)
+	}
+
+	private fun onAnalyzeStart(zip: File) {
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText(context.getString(R.string.analyzing))
+			setProgress(100, 0, true)
+			setOngoing(true)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+
+		listener.onAnalyzeStart(zip)
+	}
+
+	private fun onInstallComplete(folder: File, unipack: Unipack) {
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText(context.getString(R.string.success))
+			setProgress(0, 0, false)
+			setOngoing(false)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+
+		listener.onInstallComplete(folder, unipack)
+	}
+
+	private fun onException(throwable: Throwable) {
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText(context.getString(R.string.downloadWaiting))
+			setProgress(0, 0, false)
+			setOngoing(false)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+
+		listener.onException(throwable)
 	}
 
 	class UniPackCriticalErrorException(message: String) : Exception(message)
