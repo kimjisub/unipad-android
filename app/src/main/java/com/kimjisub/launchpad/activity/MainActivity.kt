@@ -45,7 +45,9 @@ import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
-import com.kimjisub.launchpad.manager.PreferenceManager.*
+import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
+import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.manager.Unipack
 import com.kimjisub.launchpad.manager.Unipack.AutoPlay
@@ -218,14 +220,14 @@ class MainActivity : BaseActivity() {
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
 		FAB_reconnectLaunchpad.setOnClickListener { startActivity(Intent(this@MainActivity, LaunchpadActivity::class.java)) }
 		FAB_loadUniPack.setOnClickListener {
-			FileExplorerDialog(this@MainActivity, FileExplorerPath.load(this@MainActivity),
+			FileExplorerDialog(this@MainActivity, PreferenceManager.FileExplorerPath.load(this@MainActivity),
 					object : OnEventListener {
 						override fun onFileSelected(filePath: String) {
 							loadUnipack(File(filePath))
 						}
 
 						override fun onPathChanged(folderPath: String) {
-							FileExplorerPath.save(this@MainActivity, folderPath)
+							PreferenceManager.FileExplorerPath.save(this@MainActivity, folderPath)
 						}
 					})
 					.show()
