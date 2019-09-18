@@ -183,20 +183,20 @@ public class PlayActivity extends BaseActivity {
 			U_chains = new Chain[32];
 			channelManager = new ChannelManager(unipack.buttonX, unipack.buttonY);
 
-			log("[04] Start LEDTask (isKeyLED = " + unipack.isKeyLED + ")");
-			if (unipack.isKeyLED) {
+			log("[04] Start LEDTask (isKeyLED = " + unipack.keyLEDExist + ")");
+			if (unipack.keyLEDExist) {
 				ledTask = new LEDTask();
 				ledTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 			}
 
 			log("[05] Set Button Layout (squareButton = " + unipack.squareButton + ")");
 			if (unipack.squareButton) {
-				if (!unipack.isKeyLED) {
+				if (!unipack.keyLEDExist) {
 					SCV_LED.setVisibility(View.GONE);
 					SCV_LED.setLocked(true);
 				}
 
-				if (!unipack.isAutoPlay) {
+				if (!unipack.autoPlayExist) {
 					SCV_autoPlay.setVisibility(View.GONE);
 					SCV_autoPlay.setLocked(true);
 				}
@@ -219,7 +219,7 @@ public class PlayActivity extends BaseActivity {
 			}
 
 			log("[06] Set CheckBox Checked");
-			if (unipack.isKeyLED) {
+			if (unipack.keyLEDExist) {
 				SCV_feedbackLight.setChecked(false);
 				SCV_LED.setChecked(true);
 			} else
@@ -378,7 +378,7 @@ public class PlayActivity extends BaseActivity {
 			refreshWatermark();
 		});
 		SCV_LED.setOnCheckedChange((isChecked) -> {
-			if (unipack.isKeyLED) {
+			if (unipack.keyLEDExist) {
 				if (!isChecked)
 					LEDInit();
 			}
@@ -658,7 +658,7 @@ public class PlayActivity extends BaseActivity {
 
 	void LEDInit() {
 		log("LEDInit");
-		if (unipack.isKeyLED) {
+		if (unipack.keyLEDExist) {
 			try {
 				for (int i = 0; i < unipack.buttonX; i++) {
 					for (int j = 0; j < unipack.buttonY; j++) {
@@ -691,7 +691,7 @@ public class PlayActivity extends BaseActivity {
 
 		b.play.setBackground(theme.getXml_pause());
 
-		if (unipack.isKeyLED) {
+		if (unipack.keyLEDExist) {
 			SCV_LED.setChecked(true);
 			SCV_feedbackLight.setChecked(false);
 		} else {
@@ -1864,7 +1864,7 @@ public class PlayActivity extends BaseActivity {
 		@Override
 		protected void onPostExecute(String result) {
 			SCV_autoPlay.setChecked(false);
-			if (unipack.isKeyLED) {
+			if (unipack.keyLEDExist) {
 				SCV_LED.setChecked(true);
 				SCV_feedbackLight.setChecked(false);
 			} else {

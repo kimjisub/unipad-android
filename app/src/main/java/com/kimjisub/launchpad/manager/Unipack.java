@@ -18,11 +18,11 @@ public class Unipack {
 	public String ErrorDetail = null;
 	public boolean CriticalError = false;
 
-	public boolean isInfo = false;
-	public boolean isSounds = false;
-	public boolean isKeySound = false;
-	public boolean isKeyLED = false;
-	public boolean isAutoPlay = false;
+	public boolean infoExist = false;
+	public boolean soundExist = false;
+	public boolean keySoundExist = false;
+	public boolean keyLEDExist = false;
+	public boolean autoPlayExist = false;
 
 	public File F_info;
 	public File F_sounds;
@@ -73,20 +73,20 @@ public class Unipack {
 		}
 
 
-		isInfo = F_info != null && F_info.isFile();
-		isSounds = F_sounds != null && F_sounds.isDirectory();
-		isKeySound = F_keySound != null && F_keySound.isFile();
-		isKeyLED = F_keyLED != null && F_keyLED.isDirectory();
-		isAutoPlay = F_autoPlay != null && F_autoPlay.isFile();
+		infoExist = F_info != null && F_info.isFile();
+		soundExist = F_sounds != null && F_sounds.isDirectory();
+		keySoundExist = F_keySound != null && F_keySound.isFile();
+		keyLEDExist = F_keyLED != null && F_keyLED.isDirectory();
+		autoPlayExist = F_autoPlay != null && F_autoPlay.isFile();
 
-		if (!isInfo) addErr("info doesn't exist");
-		if (!isKeySound) addErr("keySound doesn't exist");
-		if (!isInfo && !isKeySound) addErr("It does not seem to be UniPack.");
+		if (!infoExist) addErr("info doesn't exist");
+		if (!keySoundExist) addErr("keySound doesn't exist");
+		if (!infoExist && !keySoundExist) addErr("It does not seem to be UniPack.");
 
-		if (!isInfo || !isKeySound) CriticalError = true;
+		if (!infoExist || !keySoundExist) CriticalError = true;
 		else {
 
-			if (isInfo) {
+			if (infoExist) {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_info)));
 				String s;
 				while ((s = reader.readLine()) != null) {
@@ -149,7 +149,7 @@ public class Unipack {
 
 
 			if (loadDetail) {
-				if (isKeySound) {
+				if (keySoundExist) {
 					soundTable = new ArrayList[chain][buttonX][buttonY];
 					soundTableCount = 0;
 					BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(F_keySound)));
@@ -213,7 +213,7 @@ public class Unipack {
 				}
 
 
-				if (isKeyLED) {
+				if (keyLEDExist) {
 					ledTable = new ArrayList[chain][buttonX][buttonY];
 					ledTableCount = 0;
 					File[] fileList = FileManager.sortByName(F_keyLED.listFiles());
@@ -350,7 +350,7 @@ public class Unipack {
 					}
 				}
 
-				if (isAutoPlay) {
+				if (autoPlayExist) {
 					autoPlayTable = new ArrayList<>();
 					int[][] map = new int[buttonX][buttonY];
 
