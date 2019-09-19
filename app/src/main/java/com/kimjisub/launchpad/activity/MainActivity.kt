@@ -187,7 +187,7 @@ class MainActivity : BaseActivity() {
 		RV_recyclerView.adapter = adapter
 
 
-		initPannel()
+		initPanel()
 		loadAdmob()
 		billingManager = BillingManager(this@MainActivity, object : BillingEventListener {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
@@ -670,7 +670,7 @@ class MainActivity : BaseActivity() {
 
 
 	@SuppressLint("SetTextI18n")
-	private fun initPannel() {
+	private fun initPanel() {
 		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		P_total.data.version.set(BuildConfig.VERSION_NAME)
 	}
