@@ -135,14 +135,6 @@ object FileManager {
 
 	}
 
-	fun <T>mergeArray(vararg multiArray: Array<T>): Array<T> {
-		val ret: ArrayList<T> = arrayListOf()
-		for (array in multiArray)
-			for (item in array)
-				ret.add(item)
-		return ret.toArray() as Array<T>
-	}
-
 	fun isInternalFile(context: Context, file: File): Boolean {
 		val target: String? = getInternalUniPackRoot(context).path
 		val source: String = file.path

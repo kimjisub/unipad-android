@@ -84,9 +84,9 @@ class FBStoreActivity : BaseActivity() {
 		setContentView(layout.activity_store)
 		initVar(true)
 
-		P_total.b.customLogo.setImageResource(drawable.custom_logo)
-		P_total.b.version.text = BuildConfig.VERSION_NAME
-		P_total.b.storeCount.text = list!!.size.toString()
+		P_total.b.IVLogo.setImageResource(drawable.custom_logo)
+		P_total.b.TVVersion.text = BuildConfig.VERSION_NAME
+		P_total.b.TVStoreCount.text = list!!.size.toString()
 		firebase_store!!.setEventListener(object : ChildEventListener {
 			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
 				Log.test("onChildAdded: $s")
@@ -217,55 +217,55 @@ class FBStoreActivity : BaseActivity() {
 
 
 		UnipackInstaller(
-				context = this,
-				title = item.storeVO.title!!,
-				url = item.storeVO.URL!!,
-				workspace = F_UniPackRootExt,
-				folderName = item.storeVO.code!!,
-				listener = object : UnipackInstaller.Listener {
+			context = this,
+			title = item.storeVO.title!!,
+			url = item.storeVO.URL!!,
+			workspace = F_UniPackRootExt,
+			folderName = item.storeVO.code!!,
+			listener = object : UnipackInstaller.Listener {
 
-					override fun onInstallStart() {
-					}
+				override fun onInstallStart() {
+				}
 
-					override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
-						val percent = 0
-						val downloadedMB: String = FileManager.byteToMB(0)
-						val fileSizeMB: String = FileManager.byteToMB(fileSize)
+				override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+					val percent = 0
+					val downloadedMB: String = FileManager.byteToMB(0)
+					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
-						packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
-					}
+					packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
+				}
 
-					override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
-						val downloadedMB: String = FileManager.byteToMB(downloadedSize)
-						val fileSizeMB: String = FileManager.byteToMB(fileSize)
+				override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
+					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
-						packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
-					}
+					packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
+				}
 
-					override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
-					}
+				override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+				}
 
-					override fun onAnalyzeStart(zip: File) {
-						packView.setPlayText(getString(string.analyzing))
-						packView.toggleColor = colors.orange
-						packView.untoggleColor = colors.orange
-					}
+				override fun onAnalyzeStart(zip: File) {
+					packView.setPlayText(getString(string.analyzing))
+					packView.toggleColor = colors.orange
+					packView.untoggleColor = colors.orange
+				}
 
-					override fun onInstallComplete(folder: File, unipack: Unipack) {
-						packView.setPlayText(getString(string.downloaded))
-						packView.toggleColor = colors.green
-						packView.untoggleColor = colors.green
-						item.downloaded = true
-						updatePanel()
-					}
+				override fun onInstallComplete(folder: File, unipack: Unipack) {
+					packView.setPlayText(getString(string.downloaded))
+					packView.toggleColor = colors.green
+					packView.untoggleColor = colors.green
+					item.downloaded = true
+					updatePanel()
+				}
 
-					override fun onException(throwable: Throwable) {
-						packView.setPlayText(getString(string.failed))
-						packView.toggleColor = colors.red
-						packView.untoggleColor = colors.red
-					}
+				override fun onException(throwable: Throwable) {
+					packView.setPlayText(getString(string.failed))
+					packView.toggleColor = colors.red
+					packView.untoggleColor = colors.red
+				}
 
-				})
+			})
 	}
 
 	// ============================================================================================= panel
@@ -291,19 +291,20 @@ class FBStoreActivity : BaseActivity() {
 		if (playIndex == -1) updatePanelMain() else updatePanelPack(list!![playIndex])
 		val visibility = P_pack.visibility
 		if (visibility == View.VISIBLE && playIndex == -1
-				|| visibility == View.INVISIBLE && playIndex != -1) P_pack.startAnimation(animation)
+			|| visibility == View.INVISIBLE && playIndex != -1
+		) P_pack.startAnimation(animation)
 	}
 
 	internal fun updatePanelMain() {
 		Log.test("panel main")
-		P_total.b.downloadedCount.text = downloadedCount.toString()
+		P_total.b.TVDownloadedCount.text = downloadedCount.toString()
 	}
 
 	internal fun updatePanelPack(item: StoreItem?) {
 		Log.test("panel pack")
 		val storeVO = item!!.storeVO
-		P_pack.updateTitle(storeVO.title)
-		P_pack.updateSubtitle(storeVO.producerName)
+		P_pack.updateTitle(storeVO.title!!)
+		P_pack.updateSubtitle(storeVO.producerName!!)
 		P_pack.updateDownloadCount(storeVO.downloadCount.toLong())
 	}
 
