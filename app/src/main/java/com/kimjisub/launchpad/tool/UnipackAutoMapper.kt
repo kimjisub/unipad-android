@@ -60,9 +60,12 @@ class UnipackAutoMapper(
 					}
 				}
 
+				withContext(Dispatchers.Main) { listener.onGetWorkSize(autoplay2.size) }
+
 				var nextDuration = 1000
 				val mplayer = MediaPlayer()
-				for (e: Unipack.AutoPlay in autoplay2) {
+				for ((i, e) in autoplay2.withIndex()) {
+
 					try {
 						when (e.func) {
 							Unipack.AutoPlay.ON -> {
@@ -79,7 +82,7 @@ class UnipackAutoMapper(
 					} catch (ee: Exception) {
 						ee.printStackTrace()
 					}
-					publishProgress()
+					withContext(Dispatchers.Main) { listener.onProgress(i) }
 				}
 				mplayer.release()
 				val stringBuilder = StringBuilder()
@@ -113,16 +116,14 @@ class UnipackAutoMapper(
 
 
 
-				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+				withContext(Dispatchers.Main) { listener.onDone() }
 
 			} catch (e: Exception) {
 				e.printStackTrace()
-				withContext(Dispatchers.Main) { onException(e) }
-				FileManager.deleteDirectory(folder)
+				withContext(Dispatchers.Main) { listener.onException(e) }
 			}
-			FileManager.deleteDirectory(zip)
 		}
 	}
 
 	class UniPackCriticalErrorException(message: String) : Exception(message)
-}}
+}

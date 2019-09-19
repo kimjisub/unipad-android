@@ -56,9 +56,11 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
+import com.kimjisub.launchpad.tool.UnipackAutoMapper
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_setting.*
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.design.snackbar
 import java.io.*
@@ -430,130 +432,46 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun autoMapping(uni: Unipack) {
-		try {
-			val unipack = Unipack(uni.F_project, true)
-			if (unipack.autoPlayExist && unipack.autoPlayTable != null) {
-				(object : AsyncTask<String?, String?, String?>() {
-					var progressDialog: ProgressDialog? = null
-					var autoplay1: ArrayList<AutoPlay>? = null
-					var autoplay2: ArrayList<AutoPlay>? = null
-					var autoplay3: ArrayList<AutoPlay>? = null
-					override fun onPreExecute() {
-						autoplay1 = ArrayList()
-						for (e: AutoPlay in unipack.autoPlayTable) {
-							when (e.func) {
-								AutoPlay.ON -> autoplay1!!.add(e)
-								AutoPlay.OFF -> {
-								}
-								AutoPlay.CHAIN -> autoplay1!!.add(e)
-								AutoPlay.DELAY -> autoplay1!!.add(e)
-							}
-						}
-						autoplay2 = ArrayList()
-						var prevDelay: AutoPlay? = AutoPlay(0, 0)
-						for (e: AutoPlay in autoplay1!!) {
-							when (e.func) {
-								AutoPlay.ON -> {
-									if (prevDelay != null) {
-										autoplay2!!.add(prevDelay)
-										prevDelay = null
-									}
-									autoplay2!!.add(e)
-								}
-								AutoPlay.CHAIN -> autoplay2!!.add(e)
-								AutoPlay.DELAY -> if (prevDelay != null) prevDelay.d += e.d else prevDelay = e
-							}
-						}
-						progressDialog = ProgressDialog(this@MainActivity)
-						progressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-						progressDialog!!.setTitle(getString(string.analyzing))
-						progressDialog!!.setMessage(getString(string.wait_a_sec))
-						progressDialog!!.setCancelable(false)
-						progressDialog!!.max = autoplay2!!.size
-						progressDialog!!.show()
-						super.onPreExecute()
-					}
+	private fun autoMapping(unipack: Unipack) {
+		UnipackAutoMapper(unipack, object : UnipackAutoMapper.Listener{
+			val progressDialog: ProgressDialog = ProgressDialog(this@MainActivity)
+			override fun onStart() {
+				progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+				progressDialog.setTitle(getString(string.analyzing))
+				progressDialog.setMessage(getString(string.wait_a_sec))
+				progressDialog.setCancelable(false)
+				progressDialog.show()
+			}
 
-					override fun doInBackground(vararg params: String?): String? {
-						autoplay3 = ArrayList()
-						var nextDuration = 1000
-						val mplayer = MediaPlayer()
-						for (e: AutoPlay in autoplay2!!) {
-							try {
-								when (e.func) {
-									AutoPlay.ON -> {
-										val num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size
-										nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable[e.currChain][e.x][e.y][num].file.path)
-										autoplay3!!.add(e)
-									}
-									AutoPlay.CHAIN -> autoplay3!!.add(e)
-									AutoPlay.DELAY -> {
-										e.d = nextDuration + AUTOPLAY_AUTOMAPPING_DELAY_PRESET
-										autoplay3!!.add(e)
-									}
-								}
-							} catch (ee: Exception) {
-								ee.printStackTrace()
-							}
-							publishProgress()
-						}
-						mplayer.release()
-						val stringBuilder = StringBuilder()
-						for (e: AutoPlay in autoplay3!!) {
-							when (e.func) {
-								AutoPlay.ON -> //int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
-									stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n")
-								AutoPlay.CHAIN -> stringBuilder.append("c ").append(e.c + 1).append("\n")
-								AutoPlay.DELAY -> stringBuilder.append("d ").append(e.d).append("\n")
-							}
-						}
-						try {
-							val filePre = File(unipack.F_project, "autoPlay")
-							@SuppressLint("SimpleDateFormat") val fileNow = File(
-								unipack.F_project,
-								"autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date(System.currentTimeMillis()))
-							)
-							filePre.renameTo(fileNow)
-							val writer = BufferedWriter(OutputStreamWriter(FileOutputStream(unipack.F_autoPlay)))
-							writer.write(stringBuilder.toString())
-							writer.close()
-						} catch (e: FileNotFoundException) {
-							e.printStackTrace()
-						} catch (ee: IOException) {
-							ee.printStackTrace()
-						}
-						return null
-					}
+			override fun onGetWorkSize(size: Int) {
+				progressDialog.max = size
+			}
 
-					override fun onProgressUpdate(vararg progress: String?) {
-						if (progressDialog!!.isShowing) progressDialog!!.incrementProgressBy(1)
-					}
+			override fun onProgress(progress: Int) {
+				progressDialog.progress = progress
+			}
 
-					override fun onPostExecute(result: String?) {
-						super.onPostExecute(result)
-						try {
-							if (progressDialog != null && progressDialog!!.isShowing) progressDialog!!.dismiss()
-							Builder(this@MainActivity)
-								.setTitle(getString(string.success))
-								.setMessage(getString(string.remapDone))
-								.setPositiveButton(getString(string.accept), null)
-								.show()
-						} catch (e: Exception) {
-							e.printStackTrace()
-						}
-					}
-				}).execute()
-			} else {
+			override fun onDone() {
+				if(progressDialog.isShowing) progressDialog.dismiss()
+
+				Builder(this@MainActivity)
+					.setTitle(getString(string.success))
+					.setMessage(getString(string.remapDone))
+					.setPositiveButton(getString(string.accept), null)
+					.show()
+			}
+
+			override fun onException(throwable: Throwable) {
+				if(progressDialog.isShowing) progressDialog.dismiss()
+
+
 				Builder(this@MainActivity)
 					.setTitle(getString(string.failed))
 					.setMessage(getString(string.remapFail))
 					.setPositiveButton(getString(string.accept), null)
 					.show()
 			}
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
+		})
 	}
 
 	@SuppressLint("StaticFieldLeak")

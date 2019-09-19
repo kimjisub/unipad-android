@@ -7,9 +7,9 @@ import android.view.LayoutInflater
 import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.kimjisub.design.R.*
+import com.kimjisub.design.R.layout
+import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
-import kotlin.math.log
 
 class MainTotalPanel
 @JvmOverloads
@@ -30,10 +30,10 @@ constructor(
 	private val b: PanelMainTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_total, this, true)
 	val data = Data()
 
-	class Data{
+	class Data {
 		val logo: ObservableField<Drawable> = ObservableField()
 		val version: ObservableField<String> = ObservableField()
-		val premium : ObservableField<Boolean> = ObservableField()
+		val premium: ObservableField<Boolean> = ObservableField()
 
 		val unipackCount: ObservableField<String> = ObservableField()
 		val unipackCapacity: ObservableField<String> = ObservableField()
