@@ -7,7 +7,6 @@ import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
-import com.kimjisub.design.databinding.PanelStorePackBinding
 import com.kimjisub.design.databinding.PanelStoreTotalBinding
 
 class StoreTotalPanel
@@ -26,7 +25,7 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	val b: PanelStoreTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context),layout.panel_store_total,this,false)
+	val b: PanelStoreTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_total, this, false)
 
 	init {
 		/*val v = LayoutInflater.from(context)

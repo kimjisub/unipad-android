@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import androidx.core.content.ContextCompat
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.color
 
 class ColorManager(val context: Context) {
 	fun get(id: Int) = ContextCompat.getColor(context, id)

@@ -228,10 +228,10 @@ object MidiConnection {
 				while (isRun) {
 					try {
 						val length = usbDeviceConnection!!.bulkTransfer(
-								usbEndpoint_in,
-								byteArray,
-								byteArray.size,
-								1000
+							usbEndpoint_in,
+							byteArray,
+							byteArray.size,
+							1000
 						)
 						if (length >= 4) {
 							var i = 0
@@ -243,13 +243,13 @@ object MidiConnection {
 
 								publishProgress(cmd, sig, note, velocity)
 								Log.midi(
-										String.format(
-												"%-7d%-7d%-7d%-7d",
-												cmd,
-												sig,
-												note,
-												velocity
-										)
+									String.format(
+										"%-7d%-7d%-7d%-7d",
+										cmd,
+										sig,
+										note,
+										velocity
+									)
 								)
 								i += 4
 							}

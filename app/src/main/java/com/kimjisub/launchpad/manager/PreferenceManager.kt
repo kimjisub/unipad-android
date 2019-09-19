@@ -7,7 +7,8 @@ import android.content.SharedPreferences.Editor
 import android.os.Environment
 import java.io.File
 
-object PreferenceManager {//todo change to kotlin getter setter style
+object PreferenceManager {
+	//todo change to kotlin getter setter style
 	private val DATA = "data"
 
 	object LaunchpadConnectMethod {

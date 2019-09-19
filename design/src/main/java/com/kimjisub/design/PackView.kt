@@ -23,22 +23,24 @@ class PackView : RelativeLayout {
 
 	@JvmOverloads
 	constructor(
-			context: Context,
-			attrs: AttributeSet? = null,
-			defStyleAttr: Int = 0)
+		context: Context,
+		attrs: AttributeSet? = null,
+		defStyleAttr: Int = 0
+	)
 			: super(context, attrs, defStyleAttr)
 
 	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	constructor(
-			context: Context,
-			attrs: AttributeSet?,
-			defStyleAttr: Int,
-			defStyleRes: Int)
+		context: Context,
+		attrs: AttributeSet?,
+		defStyleAttr: Int,
+		defStyleRes: Int
+	)
 			: super(context, attrs, defStyleAttr, defStyleRes)
 
 	init {
 		LayoutInflater.from(context)
-				.inflate(layout.packview, this, true)
+			.inflate(layout.packview, this, true)
 
 		// set listener
 		LL_touchView.setOnClickListener { onViewClick() }
@@ -79,7 +81,7 @@ class PackView : RelativeLayout {
 		}
 
 	private fun getAttrs(attrs: AttributeSet) {
-		val typedArray: TypedArray = getContext().obtainStyledAttributes(attrs, styleable.PackView)
+		val typedArray: TypedArray = context.obtainStyledAttributes(attrs, styleable.PackView)
 		setTypeArray(typedArray)
 	}
 

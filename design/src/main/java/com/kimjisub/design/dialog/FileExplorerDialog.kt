@@ -96,10 +96,10 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 
 	private fun showDialog(title: String?, content: String) {
 		Builder(context)
-				.setTitle(title)
-				.setMessage(content)
-				.setPositiveButton(getString(string.accept), null)
-				.show()
+			.setTitle(title)
+			.setMessage(content)
+			.setPositiveButton(getString(string.accept), null)
+			.show()
 	}
 
 }

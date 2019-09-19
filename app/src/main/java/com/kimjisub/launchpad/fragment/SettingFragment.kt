@@ -66,29 +66,49 @@ class SettingFragment : PreferenceFragmentCompat() {
 			Log.test("test: ${getString(string.officialFacebook)}")
 
 			class Item(
-					val title: String,
-					val subtitle: String,
-					val iconResId: Int,
-					val url: String,
-					val action: String) {
+				val title: String,
+				val subtitle: String,
+				val iconResId: Int,
+				val url: String,
+				val action: String
+			) {
 				constructor(
-						title: Int,
-						subtitle: Int,
-						iconResId: Int,
-						url: String,
-						action: String) : this(getString(title), getString(subtitle), iconResId, url, action)
+					title: Int,
+					subtitle: Int,
+					iconResId: Int,
+					url: String,
+					action: String
+				) : this(getString(title), getString(subtitle), iconResId, url, action)
 
 				fun toListItem() = DialogListItem(title, subtitle, iconResId)
 			}
 
 			val list = arrayOf(
-					Item(string.officialHomepage, string.officialHomepage_, drawable.community_web, "https://unipad.io", Intent.ACTION_VIEW),
-					Item(string.officialFacebook, string.officialFacebook_, drawable.community_facebook, "https://www.facebook.com/playunipad", Intent.ACTION_VIEW),
-					Item(string.facebookCommunity, string.facebookCommunity_, drawable.community_facebook_group, "https://www.facebook.com/groups/playunipad", Intent.ACTION_VIEW),
-					Item(string.naverCafe, string.naverCafe_, drawable.community_cafe, "http://cafe.naver.com/unipad", Intent.ACTION_VIEW),
-					Item(string.discord, string.discord_, drawable.community_discord, "https://discord.gg/ESDgyNs", Intent.ACTION_VIEW),
-					Item(string.kakaotalk, string.kakaotalk_, drawable.community_kakaotalk, "http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-", Intent.ACTION_VIEW),
-					Item(string.email, string.email_, drawable.community_mail, "mailto:0226unipad@gmail.com", Intent.ACTION_SENDTO)
+				Item(string.officialHomepage, string.officialHomepage_, drawable.community_web, "https://unipad.io", Intent.ACTION_VIEW),
+				Item(
+					string.officialFacebook,
+					string.officialFacebook_,
+					drawable.community_facebook,
+					"https://www.facebook.com/playunipad",
+					Intent.ACTION_VIEW
+				),
+				Item(
+					string.facebookCommunity,
+					string.facebookCommunity_,
+					drawable.community_facebook_group,
+					"https://www.facebook.com/groups/playunipad",
+					Intent.ACTION_VIEW
+				),
+				Item(string.naverCafe, string.naverCafe_, drawable.community_cafe, "http://cafe.naver.com/unipad", Intent.ACTION_VIEW),
+				Item(string.discord, string.discord_, drawable.community_discord, "https://discord.gg/ESDgyNs", Intent.ACTION_VIEW),
+				Item(
+					string.kakaotalk,
+					string.kakaotalk_,
+					drawable.community_kakaotalk,
+					"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
+					Intent.ACTION_VIEW
+				),
+				Item(string.email, string.email_, drawable.community_mail, "mailto:0226unipad@gmail.com", Intent.ACTION_SENDTO)
 			)
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
@@ -105,31 +125,35 @@ class SettingFragment : PreferenceFragmentCompat() {
 		}
 		findPreference<Preference>("donation")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
 			class Item(
-					val title: String,
-					val subtitle: String,
-					val purchaseId: String) {
+				val title: String,
+				val subtitle: String,
+				val purchaseId: String
+			) {
 				constructor(
-						title: Int,
-						purchaseId: String) : this(getString(title), purchaseId, purchaseId)
+					title: Int,
+					purchaseId: String
+				) : this(getString(title), purchaseId, purchaseId)
 
 				constructor(
-						title: String,
-						purchaseId: String) : this(title, purchaseId, purchaseId)
+					title: String,
+					purchaseId: String
+				) : this(title, purchaseId, purchaseId)
 
 				fun toListItem() = DialogListItem(title, subtitle)
 			}
 
 			val list = arrayOf(
-					Item("Donate $1", Constant.BILLING.DONATE_1),
-					Item("Donate $5", Constant.BILLING.DONATE_5),
-					Item("Donate $10", Constant.BILLING.DONATE_10),
-					Item("Donate $50", Constant.BILLING.DONATE_50)
+				Item("Donate $1", Constant.BILLING.DONATE_1),
+				Item("Donate $5", Constant.BILLING.DONATE_5),
+				Item("Donate $10", Constant.BILLING.DONATE_10),
+				Item("Donate $50", Constant.BILLING.DONATE_50)
 			)
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data)
-			listView.onItemClickListener = AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long -> billingManager!!.purchase(list[position].purchaseId) }
+			listView.onItemClickListener =
+				AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long -> billingManager!!.purchase(list[position].purchaseId) }
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(string.donation))
 			builder.setView(listView)
@@ -152,34 +176,44 @@ class SettingFragment : PreferenceFragmentCompat() {
 		}
 		findPreference<Preference>("OpenSourceLicense")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
 			class Item(
-					val title: String,
-					val subtitle: String,
-					val url: String) {
+				val title: String,
+				val subtitle: String,
+				val url: String
+			) {
 				constructor(
-						title: Int,
-						purchaseId: String) : this(getString(title), purchaseId, purchaseId)
+					title: Int,
+					purchaseId: String
+				) : this(getString(title), purchaseId, purchaseId)
 
 				constructor(
-						title: Int,
-						subtitle: Int,
-						url: String) : this(getString(title), getString(subtitle), url)
+					title: Int,
+					subtitle: Int,
+					url: String
+				) : this(getString(title), getString(subtitle), url)
 
 				fun toListItem() = DialogListItem(title, subtitle)
 			}
 
 			val list = arrayOf(
-					Item("CarouselLayoutManager", "Apache License 2.0", "https://github.com/Azoft/CarouselLayoutManager"),
-					Item("FloatingActionButton", "Apache License 2.0", "https://github.com/Clans/FloatingActionButton"),
-					Item("TedPermission", "Apache License 2.0", "https://github.com/ParkSangGwon/TedPermission"),
-					Item("RealtimeBlurView", "Apache License 2.0", "https://github.com/mmin18/RealtimeBlurView"),
-					Item("Android In-App Billing v3 Library", "Apache License 2.0", "https://github.com/anjlab/android-inapp-billing-v3"),
-					Item("Retrofit", "Apache License 2.0", "https://github.com/square/retrofit")
+				Item("CarouselLayoutManager", "Apache License 2.0", "https://github.com/Azoft/CarouselLayoutManager"),
+				Item("FloatingActionButton", "Apache License 2.0", "https://github.com/Clans/FloatingActionButton"),
+				Item("TedPermission", "Apache License 2.0", "https://github.com/ParkSangGwon/TedPermission"),
+				Item("RealtimeBlurView", "Apache License 2.0", "https://github.com/mmin18/RealtimeBlurView"),
+				Item("Android In-App Billing v3 Library", "Apache License 2.0", "https://github.com/anjlab/android-inapp-billing-v3"),
+				Item("Retrofit", "Apache License 2.0", "https://github.com/square/retrofit")
 			)
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data)
-			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(list[position].url))) }
+			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long ->
+				startActivity(
+					Intent(
+						Intent.ACTION_VIEW,
+						Uri.parse(list[position].url)
+					)
+				)
+			}
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(string.openSourceLicense))
 			builder.setView(listView)

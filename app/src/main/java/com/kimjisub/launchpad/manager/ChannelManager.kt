@@ -23,7 +23,8 @@ class ChannelManager(x: Int, y: Int) {
 	data class Item(
 		var channel: Channel,
 		var color: Int,
-		var code: Int)
+		var code: Int
+	)
 
 
 	init {

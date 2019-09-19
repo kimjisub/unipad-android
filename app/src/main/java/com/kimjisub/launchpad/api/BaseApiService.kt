@@ -27,24 +27,24 @@ open class BaseApiService {
 
 
 				val trustAllCerts = arrayOf<TrustManager>(
-						object : X509TrustManager {
-							override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-							}
-
-							override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-							}
-
-							override fun getAcceptedIssuers(): Array<out X509Certificate>? {
-								return arrayOf()
-							}
+					object : X509TrustManager {
+						override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
 						}
+
+						override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+						}
+
+						override fun getAcceptedIssuers(): Array<out X509Certificate>? {
+							return arrayOf()
+						}
+					}
 				)
 				val sslContext = SSLContext.getInstance("SSL")
 				sslContext.init(null, trustAllCerts, SecureRandom())
 				val sslSocketFactory = sslContext.socketFactory
 				return OkHttpClient.Builder()
-						.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-						.hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
+					.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+					.hostnameVerifier(HostnameVerifier { _: String?, _: SSLSession? -> true })
 
 			}
 

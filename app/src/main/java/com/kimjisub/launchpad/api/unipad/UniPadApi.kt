@@ -29,13 +29,13 @@ class UniPadApi : BaseApiService() {
 			})
 			httpLoggingInterceptor.level = Level.BODY
 			val client: OkHttpClient = unsafeOkHttpClient
-					.addInterceptor(httpLoggingInterceptor)
-					.build()
+				.addInterceptor(httpLoggingInterceptor)
+				.build()
 			val retrofit: Retrofit = Builder()
-					.baseUrl(URL)
-					.addConverterFactory(GsonConverterFactory.create(gson))
-					.client(client)
-					.build()
+				.baseUrl(URL)
+				.addConverterFactory(GsonConverterFactory.create(gson))
+				.client(client)
+				.build()
 			retrofit.create(UniPadApiService::class.java)
 		}
 

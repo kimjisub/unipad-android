@@ -16,13 +16,13 @@ import java.io.File
 import java.io.FileOutputStream
 
 class UnipackInstaller(
-		private val context: Context,
-		private val title: String,
-		private val url: String,
-		workspace: File,
-		folderName: String,
-		preKnownFileSize: Long = 0,
-		private var listener: Listener
+	private val context: Context,
+	private val title: String,
+	private val url: String,
+	workspace: File,
+	folderName: String,
+	preKnownFileSize: Long = 0,
+	private var listener: Listener
 ) {
 	private val zip: File = FileManager.makeNextPath(workspace, folderName, ".zip")
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")

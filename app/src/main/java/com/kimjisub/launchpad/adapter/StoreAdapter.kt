@@ -12,6 +12,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.Log
 import java.util.*
+
 // todo fix async system
 class StoreItem(var storeVO: StoreVO, var downloaded: Boolean = false) {
 	var downloading: Boolean = false

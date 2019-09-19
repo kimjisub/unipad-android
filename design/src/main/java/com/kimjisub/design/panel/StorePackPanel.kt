@@ -1,7 +1,6 @@
 package com.kimjisub.design.panel
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,6 @@ import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
-import com.kimjisub.design.databinding.PanelMainTotalBinding
 import com.kimjisub.design.databinding.PanelStorePackBinding
 import kotlinx.android.synthetic.main.panel_main_pack.view.*
 import kotlinx.android.synthetic.main.panel_store_total.view.*
@@ -31,7 +29,7 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	val b: PanelStorePackBinding = DataBindingUtil.inflate(LayoutInflater.from(context),layout.panel_store_pack,this,false)
+	val b: PanelStorePackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, false)
 
 	init {
 		/*val v = LayoutInflater.from(context)

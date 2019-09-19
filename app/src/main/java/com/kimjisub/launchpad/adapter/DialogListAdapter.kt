@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.adapter
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +9,15 @@ import com.kimjisub.launchpad.databinding.ItemSettingBinding
 import java.util.*
 
 data class DialogListItem(
-		val title: String,
-		val subtitle: String,
-		val iconResId: Int? = null)
+	val title: String,
+	val subtitle: String,
+	val iconResId: Int? = null
+)
 
 
 class DialogListAdapter(
-		private val list: ArrayList<DialogListItem>)
-	: BaseAdapter() {
+	private val list: ArrayList<DialogListItem>
+) : BaseAdapter() {
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
 		val view = LayoutInflater.from(parent.context).inflate(layout.item_setting, parent, false)
