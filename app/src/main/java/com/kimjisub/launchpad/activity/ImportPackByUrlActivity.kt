@@ -5,7 +5,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.manager.Unipack
-import com.kimjisub.launchpad.network.UnipackInstaller
+import com.kimjisub.launchpad.tool.UnipackInstaller
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*
@@ -65,57 +65,57 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 	fun startInstall(unishare: UnishareVO) {
 		UnipackInstaller(
-				context = this,
-				title = "${unishare.title} #${unishare._id}",
-				url = "https://api.unipad.kr/unishare/${unishare._id}/download",
-				workspace = F_UniPackRootExt,
-				folderName = "${unishare.title} #${unishare._id}",
-				listener = object : UnipackInstaller.Listener {
-					override fun onInstallStart() {
-						log("Install start")
-						TV_title.setText(string.downloadWaiting)
-						TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
-					}
-
-					override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
-						log("fileSize: $contentLength → $fileSize")
-					}
-
-					override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
-					}
-
-					override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
-						val downloadedMB: String = FileManager.byteToMB(downloadedSize)
-						val fileSizeMB: String = FileManager.byteToMB(fileSize)
-
-						TV_title.setText(string.downloading)
-						TV_message.text = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
-					}
-
-					override fun onAnalyzeStart(zip: File) {
-						log("Analyzing Start")
-
-						TV_title.setText(string.analyzing)
-						TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
-					}
-
-					override fun onInstallComplete(folder: File, unipack: Unipack) {
-						log("Install Success")
-
-						TV_title.setText(string.success)
-						TV_message.text = unipack.getInfoText(this@ImportPackByUrlActivity)
-
-						delayFinish()
-					}
-
-					override fun onException(throwable: Throwable) {
-						log("Exception: " + throwable.message)
-						throwable.printStackTrace()
-
-						TV_title.setText(string.exceptionOccurred)
-						TV_message.text = throwable.message
-					}
+			context = this,
+			title = "${unishare.title} #${unishare._id}",
+			url = "https://api.unipad.kr/unishare/${unishare._id}/download",
+			workspace = F_UniPackRootExt,
+			folderName = "${unishare.title} #${unishare._id}",
+			listener = object : UnipackInstaller.Listener {
+				override fun onStart() {
+					log("Install start")
+					TV_title.setText(string.downloadWaiting)
+					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
+
+				override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+					log("fileSize: $contentLength → $fileSize")
+				}
+
+				override fun onProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+				}
+
+				override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
+					val fileSizeMB: String = FileManager.byteToMB(fileSize)
+
+					TV_title.setText(string.downloading)
+					TV_message.text = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
+				}
+
+				override fun onAnalyzeStart(zip: File) {
+					log("Analyzing Start")
+
+					TV_title.setText(string.analyzing)
+					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
+				}
+
+				override fun onInstallComplete(folder: File, unipack: Unipack) {
+					log("Install Success")
+
+					TV_title.setText(string.success)
+					TV_message.text = unipack.getInfoText(this@ImportPackByUrlActivity)
+
+					delayFinish()
+				}
+
+				override fun onException(throwable: Throwable) {
+					log("Exception: " + throwable.message)
+					throwable.printStackTrace()
+
+					TV_title.setText(string.exceptionOccurred)
+					TV_message.text = throwable.message
+				}
+			}
 		)
 	}
 
