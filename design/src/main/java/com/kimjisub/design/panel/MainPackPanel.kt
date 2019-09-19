@@ -5,8 +5,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
-import androidx.databinding.BindingMethod
-import androidx.databinding.BindingMethods
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.*
@@ -30,7 +28,25 @@ constructor(
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
 	private val b: PanelMainPackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_pack, this, true)
-	val data: Data = Data()
+	val data =Data()
+
+	class Data{
+		val star: ObservableField<Boolean> = ObservableField()
+		val bookmark: ObservableField<Boolean> = ObservableField()
+		val storage: ObservableField<Boolean> = ObservableField()
+		val moving: ObservableField<Boolean> = ObservableField()
+		val title: ObservableField<String> = ObservableField()
+		val subtitle: ObservableField<String> = ObservableField()
+		val scale: ObservableField<String> = ObservableField()
+		val chainCount: ObservableField<String> = ObservableField()
+		val soundCount: ObservableField<String> = ObservableField()
+		val ledCount: ObservableField<String> = ObservableField()
+		val fileSize: ObservableField<String> = ObservableField()
+		val openCount: ObservableField<String> = ObservableField()
+		val padTouchCount: ObservableField<String> = ObservableField()
+		val websiteExist: ObservableField<Boolean> = ObservableField()
+		val path: ObservableField<String> = ObservableField()
+	}
 
 	init {
 		/*LayoutInflater.from(context)
@@ -74,27 +90,7 @@ constructor(
 		}
 	}
 
-	class Data {
-		val star: ObservableField<Boolean> = ObservableField(false)
-		val bookmark: ObservableField<Boolean> = ObservableField(false)
-		val storage:ObservableField<Boolean> = ObservableField(false)
-		val moving: ObservableField<Boolean> = ObservableField(false)
 
-		val title: ObservableField<String> = ObservableField()
-		val subtitle: ObservableField<String> = ObservableField()
-
-		val scale : ObservableField<String> = ObservableField()
-		val chainCount: ObservableField<String> = ObservableField()
-		val soundCount : ObservableField<String> = ObservableField()
-		val ledCount: ObservableField<String> = ObservableField()
-		val fileSize: ObservableField<String> = ObservableField()
-		val openCount: ObservableField<String> = ObservableField()
-		val padTouchCount: ObservableField<String> = ObservableField()
-
-		val websiteExist: ObservableField<Boolean> = ObservableField(false)
-
-		val path: ObservableField<String> = ObservableField()
-	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +117,7 @@ constructor(
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	internal var onEventListener: OnEventListener? = null
+	var onEventListener: OnEventListener? = null
 
 	interface OnEventListener {
 		fun onStarClick(v: View)
@@ -132,10 +128,6 @@ constructor(
 		fun onWebsiteClick(v: View)
 		fun onFuncClick(v: View)
 		fun onDeleteClick(v: View)
-	}
-
-	fun setOnEventListener(onEventListener: OnEventListener?) {
-		this.onEventListener = onEventListener
 	}
 }
 

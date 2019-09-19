@@ -243,7 +243,7 @@ class MainActivity : BaseActivity() {
 				if (opened) handler.postDelayed(runnable, 5000) else handler.removeCallbacks(runnable)
 			}
 		})
-		P_pack.setOnEventListener(object : MainPackPanel.OnEventListener {
+		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
 			override fun onStarClick(v: View) {
 				val item = selected
 				if (item != null) {
@@ -277,7 +277,7 @@ class MainActivity : BaseActivity() {
 					(object : AsyncTask<String?, String?, String?>() {
 						override fun onPreExecute() {
 							super.onPreExecute()
-							P_pack.setStorageMoving()
+							P_pack.data.moving.set(true)
 						}
 
 						override fun doInBackground(vararg params: String?): String? {
@@ -332,7 +332,7 @@ class MainActivity : BaseActivity() {
 					)
 					.show()
 			}
-		})
+		}
 		LL_errItem.setOnClickListener { startActivity(Intent(this@MainActivity, FBStoreActivity::class.java)) }
 		checkThings()
 		update(false)
@@ -732,13 +732,14 @@ class MainActivity : BaseActivity() {
 			flagColor = if (unipack.CriticalError) colors.red else colors.skyblue
 			if (unipackENT!!.bookmark) flagColor = colors.orange
 			item.flagColor = flagColor
-			P_pack.setStar(unipackENT.pin)
-			P_pack.setBookmark(unipackENT.bookmark)
+
+			P_pack.data.star.set(unipackENT.pin)
+			P_pack.data.bookmark.set(unipackENT.bookmark)
 		}).start()
 		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(
 			this,
 			Observer { integer: Int? -> P_pack.data.openCount.set(integer.toString()) })
-		P_pack.setStorage(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
+		P_pack.data.storage.set(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
 		P_pack.data.title.set(unipack.title)
 		P_pack.data.subtitle.set(unipack.producerName)
 		P_pack.data.path.set(item.path)
