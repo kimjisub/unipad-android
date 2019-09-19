@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.*
 import com.kimjisub.design.databinding.PanelMainTotalBinding
+import kotlin.math.log
 
 class MainTotalPanel
 @JvmOverloads
@@ -27,7 +28,20 @@ constructor(
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
 	private val b: PanelMainTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_total, this, true)
-	val data: Data = Data()
+	val data = Data()
+
+	class Data{
+		val logo: ObservableField<Drawable> = ObservableField()
+		val version: ObservableField<String> = ObservableField()
+		val premium : ObservableField<Boolean> = ObservableField()
+
+		val unipackCount: ObservableField<String> = ObservableField()
+		val unipackCapacity: ObservableField<String> = ObservableField()
+		val openCount: ObservableField<String> = ObservableField()
+		val padTouchCount: ObservableField<String> = ObservableField()
+		val selectedTheme: ObservableField<String> = ObservableField()
+	}
+
 
 	init {
 		/*LayoutInflater.from(context)
@@ -43,20 +57,6 @@ constructor(
 
 			typedArray.recycle()
 		}
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
-	class Data {
-		val logo: ObservableField<Drawable> = ObservableField()
-		val version: ObservableField<String> = ObservableField()
-		val premium : ObservableField<Boolean> = ObservableField()
-
-		val unipackCount: ObservableField<String> = ObservableField()
-		val unipackCapacity: ObservableField<String> = ObservableField()
-		val openCount: ObservableField<String> = ObservableField()
-		val padTouchCount: ObservableField<String> = ObservableField()
-		val selectedTheme: ObservableField<String> = ObservableField()
 	}
 
 }

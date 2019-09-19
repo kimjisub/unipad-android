@@ -3,8 +3,6 @@
 
 	<data>
 
-		<import type="com.kimjisub.design.R.color" />
-
 		<variable
 			name="data"
 			type="com.kimjisub.design.panel.MainTotalPanel.Data" />
@@ -36,9 +34,9 @@
 
 					<ImageView
 						android:layout_width="130dp"
-						android:src="@{data.logo}"
 						android:layout_height="50dp"
-						android:scaleType="centerInside" />
+						android:scaleType="centerInside"
+						android:src="@{data.logo}" />
 
 					<TextView
 						android:layout_width="130dp"
@@ -46,7 +44,7 @@
 						android:gravity="bottom|right"
 						android:paddingLeft="8dp"
 						android:text="@{data.version}"
-						android:textColor="@{data.premium ? color.orange : color.text}"
+						android:textColor="@{data.premium ? @color/orange : @color/text}"
 						android:textSize="10dp" />
 
 				</RelativeLayout>
