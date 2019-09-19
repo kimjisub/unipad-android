@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.network
+package com.kimjisub.launchpad.tool
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
@@ -22,7 +22,8 @@ class UnipackInstaller(
 		workspace: File,
 		folderName: String,
 		preKnownFileSize: Long = 0,
-		private var listener: Listener) {
+		private var listener: Listener
+) {
 	private val zip: File = FileManager.makeNextPath(workspace, folderName, ".zip")
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
 
