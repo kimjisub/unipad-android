@@ -23,18 +23,18 @@ import kotlinx.android.synthetic.main.activity_usbmidi.*
 class LaunchpadActivity : BaseActivity() {
 	private val LL_Launchpad: Array<LinearLayout> by lazy {
 		arrayOf(
-				BTN_S,
-				BTN_Mk2,
-				BTN_Pro,
-				BTN_Midifighter,
-				BTN_Piano
+			BTN_S,
+			BTN_Mk2,
+			BTN_Pro,
+			BTN_Midifighter,
+			BTN_Piano
 		)
 	}
 
 	private val LL_mode: Array<LinearLayout> by lazy {
 		arrayOf(
-				BTN_speedFirst,
-				BTN_avoidAfterimage
+			BTN_speedFirst,
+			BTN_avoidAfterimage
 		)
 	}
 
@@ -69,7 +69,15 @@ class LaunchpadActivity : BaseActivity() {
 
 	fun selectDriver(v: View) {
 		val index = Integer.parseInt(v.tag as String)
-		selectDriver(arrayOf<Class<*>>(LaunchpadS::class.java, LaunchpadMK2::class.java, LaunchpadPRO::class.java, MidiFighter::class.java, MasterKeyboard::class.java)[index])
+		selectDriver(
+			arrayOf<Class<*>>(
+				LaunchpadS::class.java,
+				LaunchpadMK2::class.java,
+				LaunchpadPRO::class.java,
+				MidiFighter::class.java,
+				MasterKeyboard::class.java
+			)[index]
+		)
 	}
 
 	fun selectDriver(cls: Class<*>) {

@@ -79,17 +79,17 @@ open class BaseActivity : AppCompatActivity() {
 
 		fun requestRestart(context: Context) {
 			AlertDialog.Builder(context)
-					.setTitle(context.getString(string.requireRestart))
-					.setMessage(context.getString(string.doYouWantToRestartApp))
-					.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
-						restartApp(context as Activity)
-						dialog.dismiss()
-					}
-					.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
-						dialog.dismiss()
-						(context as Activity).finish()
-					}
-					.show()
+				.setTitle(context.getString(string.requireRestart))
+				.setMessage(context.getString(string.doYouWantToRestartApp))
+				.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
+					restartApp(context as Activity)
+					dialog.dismiss()
+				}
+				.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
+					dialog.dismiss()
+					(context as Activity).finish()
+				}
+				.show()
 		}
 	}
 
@@ -189,9 +189,11 @@ open class BaseActivity : AppCompatActivity() {
 		Log.admob("loadAdmob ================================")
 		interstitialAd = InterstitialAd(this)
 		interstitialAd!!.adUnitId = Constant.ADMOB.MAIN_START
-		interstitialAd!!.loadAd(Builder()
+		interstitialAd!!.loadAd(
+			Builder()
 				.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
-				.build())
+				.build()
+		)
 	}
 
 	// ============================================================================================= Show Things, Get Resources

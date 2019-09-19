@@ -25,11 +25,11 @@ class BaseApplication : MultiDexApplication() {
 
 	private fun setupLogger() {
 		val formatStrategy = PrettyFormatStrategy.newBuilder()
-				.showThreadInfo(true)
-				.methodCount(2)
-				.methodOffset(5)
-				.tag("com.kimjisub._")
-				.build()
+			.showThreadInfo(true)
+			.methodCount(2)
+			.methodOffset(5)
+			.tag("com.kimjisub._")
+			.build()
 		Logger.addLogAdapter(AndroidLogAdapter())
 		Logger.d("Logger Ready")
 	}

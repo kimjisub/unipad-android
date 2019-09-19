@@ -28,9 +28,9 @@ constructor(
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
 	private val b: PanelMainPackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_pack, this, true)
-	val data =Data()
+	val data = Data()
 
-	class Data{
+	class Data {
 		val star: ObservableField<Boolean> = ObservableField()
 		val bookmark: ObservableField<Boolean> = ObservableField()
 		val storage: ObservableField<Boolean> = ObservableField()
@@ -89,7 +89,6 @@ constructor(
 			typedArray.recycle()
 		}
 	}
-
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////

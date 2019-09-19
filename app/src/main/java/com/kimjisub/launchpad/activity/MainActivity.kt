@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
@@ -44,13 +43,11 @@ import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
-import com.kimjisub.launchpad.manager.Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
 import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.manager.Unipack
-import com.kimjisub.launchpad.manager.Unipack.AutoPlay
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -60,11 +57,9 @@ import com.kimjisub.launchpad.tool.UnipackAutoMapper
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.item_setting.*
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.design.snackbar
-import java.io.*
-import java.text.SimpleDateFormat
+import java.io.File
 import java.util.*
 
 class MainActivity : BaseActivity() {
@@ -433,7 +428,7 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("StaticFieldLeak")
 	private fun autoMapping(unipack: Unipack) {
-		UnipackAutoMapper(unipack, object : UnipackAutoMapper.Listener{
+		UnipackAutoMapper(unipack, object : UnipackAutoMapper.Listener {
 			val progressDialog: ProgressDialog = ProgressDialog(this@MainActivity)
 			override fun onStart() {
 				progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
@@ -452,7 +447,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onDone() {
-				if(progressDialog.isShowing) progressDialog.dismiss()
+				if (progressDialog.isShowing) progressDialog.dismiss()
 
 				Builder(this@MainActivity)
 					.setTitle(getString(string.success))
@@ -462,7 +457,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onException(throwable: Throwable) {
-				if(progressDialog.isShowing) progressDialog.dismiss()
+				if (progressDialog.isShowing) progressDialog.dismiss()
 
 
 				Builder(this@MainActivity)
@@ -559,7 +554,7 @@ class MainActivity : BaseActivity() {
 		val intent = Intent(this@MainActivity, PlayActivity::class.java)
 		intent.putExtra("path", item.path)
 		startActivity(intent)
-		removeController((midiController)!!)
+		removeController((midiController))
 	}
 
 	private val selectedIndex: Int
@@ -604,7 +599,7 @@ class MainActivity : BaseActivity() {
 
 			override fun onAnimationEnd(animation: Animation?) {
 				P_pack.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
-				P_pack.setAlpha(if (selectedIndex != -1) 1.toFloat() else 0.toFloat())
+				P_pack.alpha = if (selectedIndex != -1) 1.toFloat() else 0.toFloat()
 			}
 
 			override fun onAnimationRepeat(animation: Animation?) {}
@@ -672,7 +667,7 @@ class MainActivity : BaseActivity() {
 			var handler = Handler()
 			override fun doInBackground(vararg params: String?): String? {
 				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
-				handler.post { if ((P_pack.data.path.get() == item.path)) P_pack.data.fileSize.set(fileSize )}
+				handler.post { if ((P_pack.data.path.get() == item.path)) P_pack.data.fileSize.set(fileSize) }
 				try {
 					val unipackDetail = Unipack(item.unipack.F_project, true)
 					item.unipack = unipackDetail

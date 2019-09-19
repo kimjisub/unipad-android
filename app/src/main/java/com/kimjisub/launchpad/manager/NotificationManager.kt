@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.manager
 
 import android.app.Notification
-import android.app.Notification.Builder
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
@@ -10,7 +9,6 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import com.kimjisub.launchpad.R.mipmap
 import com.kimjisub.launchpad.R.string
 
 object NotificationManager {

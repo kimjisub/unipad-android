@@ -14,22 +14,24 @@ class Pad : RelativeLayout {
 
 	@JvmOverloads
 	constructor(
-			context: Context,
-			attrs: AttributeSet? = null,
-			defStyleAttr: Int = 0)
+		context: Context,
+		attrs: AttributeSet? = null,
+		defStyleAttr: Int = 0
+	)
 			: super(context, attrs, defStyleAttr)
 
 	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	constructor(
-			context: Context,
-			attrs: AttributeSet?,
-			defStyleAttr: Int,
-			defStyleRes: Int)
+		context: Context,
+		attrs: AttributeSet?,
+		defStyleAttr: Int,
+		defStyleRes: Int
+	)
 			: super(context, attrs, defStyleAttr, defStyleRes)
 
 	init {
 		LayoutInflater.from(context)
-				.inflate(layout.pad, this, true)
+			.inflate(layout.pad, this, true)
 	}
 
 	override fun setOnClickListener(listener: OnClickListener) {

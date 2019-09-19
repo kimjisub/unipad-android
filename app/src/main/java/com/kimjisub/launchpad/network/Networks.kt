@@ -19,7 +19,8 @@ object Networks {
 			conn.useCaches = false
 			if (conn.responseCode == HttpURLConnection.HTTP_OK) {
 				val br = BufferedReader(
-						InputStreamReader(conn.inputStream))
+					InputStreamReader(conn.inputStream)
+				)
 				while (true) {
 					val line = br.readLine() ?: break
 					html.append(line)
@@ -50,8 +51,12 @@ object Networks {
 		}
 
 		fun attachEventListener(bool: Boolean): FirebaseManager {
-			if (childEventListener != null) if (bool) myRef.addChildEventListener(childEventListener!!) else myRef.removeEventListener(childEventListener!!)
-			if (valueEventListener != null) if (bool) myRef.addValueEventListener(valueEventListener!!) else myRef.removeEventListener(valueEventListener!!)
+			if (childEventListener != null) if (bool) myRef.addChildEventListener(childEventListener!!) else myRef.removeEventListener(
+				childEventListener!!
+			)
+			if (valueEventListener != null) if (bool) myRef.addValueEventListener(valueEventListener!!) else myRef.removeEventListener(
+				valueEventListener!!
+			)
 			return this
 		}
 

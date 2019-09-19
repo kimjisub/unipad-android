@@ -3,22 +3,23 @@ package com.kimjisub.launchpad.midi.driver
 class LaunchpadMK2 : DriverRef() {
 	companion object {
 		internal val circleCode = arrayOf(
-				intArrayOf(11, -80, 104),
-				intArrayOf(11, -80, 105),
-				intArrayOf(11, -80, 106),
-				intArrayOf(11, -80, 107),
-				intArrayOf(11, -80, 108),
-				intArrayOf(11, -80, 109),
-				intArrayOf(11, -80, 110),
-				intArrayOf(11, -80, 111),
-				intArrayOf(9, -112, 89),
-				intArrayOf(9, -112, 79),
-				intArrayOf(9, -112, 69),
-				intArrayOf(9, -112, 59),
-				intArrayOf(9, -112, 49),
-				intArrayOf(9, -112, 39),
-				intArrayOf(9, -112, 29),
-				intArrayOf(9, -112, 19))
+			intArrayOf(11, -80, 104),
+			intArrayOf(11, -80, 105),
+			intArrayOf(11, -80, 106),
+			intArrayOf(11, -80, 107),
+			intArrayOf(11, -80, 108),
+			intArrayOf(11, -80, 109),
+			intArrayOf(11, -80, 110),
+			intArrayOf(11, -80, 111),
+			intArrayOf(9, -112, 89),
+			intArrayOf(9, -112, 79),
+			intArrayOf(9, -112, 69),
+			intArrayOf(9, -112, 59),
+			intArrayOf(9, -112, 49),
+			intArrayOf(9, -112, 39),
+			intArrayOf(9, -112, 29),
+			intArrayOf(9, -112, 19)
+		)
 	}
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {

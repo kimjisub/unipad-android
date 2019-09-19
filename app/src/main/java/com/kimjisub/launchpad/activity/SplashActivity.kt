@@ -47,24 +47,24 @@ class SplashActivity : BaseActivity() {
 		billingManager = BillingManager(this@SplashActivity, billingEventListener)
 
 		TedPermission.with(this)
-				.setPermissionListener(object : PermissionListener {
-					override fun onPermissionGranted() {
-						val endTime = System.currentTimeMillis()
-						val durTime = endTime - startTime!!
-						handler.postDelayed(runnable, 2000 - durTime)
-					}
+			.setPermissionListener(object : PermissionListener {
+				override fun onPermissionGranted() {
+					val endTime = System.currentTimeMillis()
+					val durTime = endTime - startTime!!
+					handler.postDelayed(runnable, 2000 - durTime)
+				}
 
-					override fun onPermissionDenied(deniedPermissions: List<String?>?) {
-						finish()
-					}
-				})
-				.setRationaleMessage(string.permissionRequire)
-				.setDeniedMessage(string.permissionDenied)
-				.setPermissions(
-						permission.READ_EXTERNAL_STORAGE,
-						permission.WRITE_EXTERNAL_STORAGE
-				)
-				.check()
+				override fun onPermissionDenied(deniedPermissions: List<String?>?) {
+					finish()
+				}
+			})
+			.setRationaleMessage(string.permissionRequire)
+			.setDeniedMessage(string.permissionDenied)
+			.setPermissions(
+				permission.READ_EXTERNAL_STORAGE,
+				permission.WRITE_EXTERNAL_STORAGE
+			)
+			.check()
 	}
 
 	override fun onStop() {

@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.binding
 
 import android.graphics.drawable.Drawable
-import android.view.View
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
 
@@ -15,6 +14,7 @@ object ImageViewBindingAdapter {
 			imageView.setImageDrawable(null)
 
 	}
+
 	@JvmStatic
 	@BindingAdapter("imgRes")
 	fun imgRes(imageView: ImageView, drawable: Drawable?) {

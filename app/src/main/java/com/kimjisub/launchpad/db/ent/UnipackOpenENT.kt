@@ -9,8 +9,9 @@ import java.util.*
 @Entity
 @TypeConverters(DateConverter::class)
 class UnipackOpenENT(
-		var path: String,
-		var created_at: Date) {
+	var path: String,
+	var created_at: Date
+) {
 	@PrimaryKey(autoGenerate = true)
 	var id: Long = 0
 

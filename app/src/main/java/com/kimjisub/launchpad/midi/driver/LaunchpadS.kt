@@ -5,22 +5,23 @@ import com.kimjisub.launchpad.manager.LaunchpadColor
 class LaunchpadS : DriverRef() {
 	companion object {
 		internal val circleCode = arrayOf(
-				intArrayOf(11, -80, 104),
-				intArrayOf(11, -80, 105),
-				intArrayOf(11, -80, 106),
-				intArrayOf(11, -80, 107),
-				intArrayOf(11, -80, 108),
-				intArrayOf(11, -80, 109),
-				intArrayOf(11, -80, 110),
-				intArrayOf(11, -80, 111),
-				intArrayOf(9, -112, 8),
-				intArrayOf(9, -112, 24),
-				intArrayOf(9, -112, 40),
-				intArrayOf(9, -112, 56),
-				intArrayOf(9, -112, 72),
-				intArrayOf(9, -112, 88),
-				intArrayOf(9, -112, 104),
-				intArrayOf(9, -112, 120))
+			intArrayOf(11, -80, 104),
+			intArrayOf(11, -80, 105),
+			intArrayOf(11, -80, 106),
+			intArrayOf(11, -80, 107),
+			intArrayOf(11, -80, 108),
+			intArrayOf(11, -80, 109),
+			intArrayOf(11, -80, 110),
+			intArrayOf(11, -80, 111),
+			intArrayOf(9, -112, 8),
+			intArrayOf(9, -112, 24),
+			intArrayOf(9, -112, 40),
+			intArrayOf(9, -112, 56),
+			intArrayOf(9, -112, 72),
+			intArrayOf(9, -112, 88),
+			intArrayOf(9, -112, 104),
+			intArrayOf(9, -112, 120)
+		)
 	}
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {

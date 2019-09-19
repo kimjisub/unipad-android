@@ -14,10 +14,10 @@ import com.kimjisub.launchpad.manager.Unipack
 import java.util.*
 
 data class UnipackItem(
-		var unipack: Unipack,
-		var path: String,
-		var bookmark: Boolean,
-		var isNew: Boolean
+	var unipack: Unipack,
+	var path: String,
+	var bookmark: Boolean,
+	var isNew: Boolean
 ) {
 	var packView: PackView? = null
 	var flagColor: Int = 0
