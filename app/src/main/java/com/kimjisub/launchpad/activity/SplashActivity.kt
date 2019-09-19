@@ -40,7 +40,7 @@ class SplashActivity : BaseActivity() {
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {}
 			override fun onRefresh() {
-				if (billingManager!!.isPurchaseRemoveAds || billingManager!!.isPurchaseProTools)
+				if (billingManager!!.purchaseRemoveAds || billingManager!!.purchaseProTools)
 					TV_version.setTextColor(orange)
 			}
 		}

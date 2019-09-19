@@ -161,12 +161,12 @@ class SettingFragment : PreferenceFragmentCompat() {
 			false
 		}
 		findPreference<CheckBoxPreference>("removeAds")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference ->
-			(preference as CheckBoxPreference).isChecked = billingManager!!.isPurchaseRemoveAds
+			(preference as CheckBoxPreference).isChecked = billingManager!!.purchaseRemoveAds
 			billingManager!!.subscribe_removeAds()
 			false
 		}
 		findPreference<Preference>("proTools")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference ->
-			(preference as CheckBoxPreference).isChecked = billingManager!!.isPurchaseProTools
+			(preference as CheckBoxPreference).isChecked = billingManager!!.purchaseProTools
 			billingManager!!.subscribe_proTools()
 			false
 		}
@@ -231,8 +231,8 @@ class SettingFragment : PreferenceFragmentCompat() {
 	}
 
 	internal fun updateBilling() {
-		(findPreference<Preference>("removeAds") as CheckBoxPreference).isChecked = billingManager!!.isPurchaseRemoveAds
-		(findPreference<Preference>("proTools") as CheckBoxPreference).isChecked = billingManager!!.isPurchaseProTools
+		(findPreference<Preference>("removeAds") as CheckBoxPreference).isChecked = billingManager!!.purchaseRemoveAds
+		(findPreference<Preference>("proTools") as CheckBoxPreference).isChecked = billingManager!!.purchaseProTools
 	}
 
 

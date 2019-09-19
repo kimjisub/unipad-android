@@ -192,8 +192,8 @@ class MainActivity : BaseActivity() {
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {}
 			override fun onRefresh() {
-				P_total.data.premium.set(billingManager!!.isPurchaseRemoveAds || billingManager!!.isPurchaseProTools)
-				if (billingManager!!.isShowAds) {
+				P_total.data.premium.set(billingManager!!.purchaseRemoveAds || billingManager!!.purchaseProTools)
+				if (billingManager!!.showAds) {
 					if (checkAdsCooltime()) {
 						updateAdsCooltime()
 						showAdmob()
