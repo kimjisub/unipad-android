@@ -122,7 +122,7 @@ public class PlayActivity extends BaseActivity {
 
 		SCV_watermark.forceSetChecked(true);
 
-		/*if (!BillingManager.isShowAds())
+		/*if (!BillingManager.showAds())
 			AV_adview.setVisibility(View.GONE);*/
 
 		billingManager = new BillingManager(PlayActivity.this, new BillingManager.BillingEventListener() {
@@ -148,7 +148,7 @@ public class PlayActivity extends BaseActivity {
 
 			@Override
 			public void onRefresh() {
-				setProMode(billingManager.isUnlockProTools());
+				setProMode(billingManager.getUnlockProTools());
 			}
 		});
 	}
@@ -1313,7 +1313,7 @@ public class PlayActivity extends BaseActivity {
 			Companion.requestRestart(PlayActivity.this);
 		}
 
-		if (billingManager.isShowAds()) {
+		if (billingManager.getShowAds()) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/
 
@@ -1378,7 +1378,7 @@ public class PlayActivity extends BaseActivity {
 		MidiConnection.INSTANCE.removeController(midiController);
 
 		if (unipackLoaded) {
-			if (billingManager.isShowAds()) {
+			if (billingManager.getShowAds()) {
 				if (checkAdsCooltime()) {
 					updateAdsCooltime();
 
