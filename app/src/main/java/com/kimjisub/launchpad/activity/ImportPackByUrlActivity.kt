@@ -71,7 +71,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 			workspace = F_UniPackRootExt,
 			folderName = "${unishare.title} #${unishare._id}",
 			listener = object : UnipackInstaller.Listener {
-				override fun onStart() {
+				override fun onInstallStart() {
 					log("Install start")
 					TV_title.setText(string.downloadWaiting)
 					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
@@ -81,7 +81,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("fileSize: $contentLength → $fileSize")
 				}
 
-				override fun onProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+				override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
 				}
 
 				override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {

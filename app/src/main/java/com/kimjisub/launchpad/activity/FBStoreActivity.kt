@@ -23,7 +23,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
 import com.kimjisub.launchpad.manager.Unipack
 import com.kimjisub.launchpad.network.Networks
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
-import com.kimjisub.launchpad.network.UnipackInstaller
+import com.kimjisub.launchpad.tool.UnipackInstaller
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -223,7 +223,6 @@ class FBStoreActivity : BaseActivity() {
 			workspace = F_UniPackRootExt,
 			folderName = item.storeVO.code!!,
 			listener = object : UnipackInstaller.Listener {
-
 				override fun onInstallStart() {
 				}
 
