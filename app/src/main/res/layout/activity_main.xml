@@ -37,12 +37,12 @@
 				android:layout_weight="2">
 
 				<com.kimjisub.design.panel.MainTotalPanel
-					android:id="@+id/P_main_total"
+					android:id="@+id/P_total"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent" />
 
 				<com.kimjisub.design.panel.MainPackPanel
-					android:id="@+id/P_main_pack"
+					android:id="@+id/P_pack"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:alpha="0"

@@ -25,6 +25,7 @@
 			android:layout_height="45dp"
 			android:layout_margin="7dp"
 			android:scaleType="fitCenter"
+			android:visibility="@{data.iconResId != null ? View.VISIBLE : View.GONE}"
 			app:imgRes="@{data.iconResId}" />
 
 		<LinearLayout

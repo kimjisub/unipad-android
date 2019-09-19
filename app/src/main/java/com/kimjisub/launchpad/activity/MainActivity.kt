@@ -195,7 +195,7 @@ class MainActivity : BaseActivity() {
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {}
 			override fun onRefresh() {
-				P_main_total.setPremium(billingManager!!.isPurchaseRemoveAds || billingManager!!.isPurchaseProTools)
+				P_total.data.premium.set(billingManager!!.isPurchaseRemoveAds || billingManager!!.isPurchaseProTools)
 				if (billingManager!!.isShowAds) {
 					if (checkAdsCooltime()) {
 						updateAdsCooltime()
@@ -221,16 +221,16 @@ class MainActivity : BaseActivity() {
 		FAB_reconnectLaunchpad.setOnClickListener { startActivity(Intent(this@MainActivity, LaunchpadActivity::class.java)) }
 		FAB_loadUniPack.setOnClickListener {
 			FileExplorerDialog(this@MainActivity, PreferenceManager.FileExplorerPath.load(this@MainActivity),
-					object : OnEventListener {
-						override fun onFileSelected(filePath: String) {
-							loadUnipack(File(filePath))
-						}
+				object : OnEventListener {
+					override fun onFileSelected(filePath: String) {
+						loadUnipack(File(filePath))
+					}
 
-						override fun onPathChanged(folderPath: String) {
-							PreferenceManager.FileExplorerPath.save(this@MainActivity, folderPath)
-						}
-					})
-					.show()
+					override fun onPathChanged(folderPath: String) {
+						PreferenceManager.FileExplorerPath.save(this@MainActivity, folderPath)
+					}
+				})
+				.show()
 		}
 		FAB_store.setOnClickListener { startActivityForResult(Intent(this@MainActivity, FBStoreActivity::class.java), 0) }
 		FAB_store.setOnLongClickListener { false }
@@ -243,8 +243,8 @@ class MainActivity : BaseActivity() {
 				if (opened) handler.postDelayed(runnable, 5000) else handler.removeCallbacks(runnable)
 			}
 		})
-		P_main_pack.setOnEventListener(object : MainPackPanel.OnEventListener {
-			override fun onStarClick(v: View?) {
+		P_pack.setOnEventListener(object : MainPackPanel.OnEventListener {
+			override fun onStarClick(v: View) {
 				val item = selected
 				if (item != null) {
 					Thread(Runnable {
@@ -255,7 +255,7 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onBookmarkClick(v: View?) {
+			override fun onBookmarkClick(v: View) {
 				val item = selected
 				if (item != null) {
 					Thread(Runnable {
@@ -266,8 +266,8 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onEditClick(v: View?) {}
-			override fun onStorageClick(v: View?) {
+			override fun onEditClick(v: View) {}
+			override fun onStorageClick(v: View) {
 				val item = selected
 				if (item != null) {
 					item.moving = true
@@ -277,7 +277,7 @@ class MainActivity : BaseActivity() {
 					(object : AsyncTask<String?, String?, String?>() {
 						override fun onPreExecute() {
 							super.onPreExecute()
-							P_main_pack.setStorageMoving()
+							P_pack.setStorageMoving()
 						}
 
 						override fun doInBackground(vararg params: String?): String? {
@@ -293,7 +293,7 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onYoutubeClick(v: View?) {
+			override fun onYoutubeClick(v: View) {
 				val item = selected
 				if (item != null) {
 					val website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title
@@ -301,7 +301,7 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onWebsiteClick(v: View?) {
+			override fun onWebsiteClick(v: View) {
 				val item = selected
 				if (item != null) {
 					val website: String? = item.unipack.website
@@ -309,22 +309,28 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onFuncClick(v: View?) {
+			override fun onFuncClick(v: View) {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
-						.setTitle(getString(string.warning))
-						.setMessage(getString(string.doYouWantToRemapProject))
-						.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> autoMapping(item.unipack) }.setNegativeButton(getString(string.cancel), null)
-						.show()
+					.setTitle(getString(string.warning))
+					.setMessage(getString(string.doYouWantToRemapProject))
+					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> autoMapping(item.unipack) }.setNegativeButton(
+						getString(string.cancel),
+						null
+					)
+					.show()
 			}
 
-			override fun onDeleteClick(v: View?) {
+			override fun onDeleteClick(v: View) {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
-						.setTitle(getString(string.warning))
-						.setMessage(getString(string.doYouWantToDeleteProject))
-						.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUnipack(item.unipack) }.setNegativeButton(getString(string.cancel), null)
-						.show()
+					.setTitle(getString(string.warning))
+					.setMessage(getString(string.doYouWantToDeleteProject))
+					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUnipack(item.unipack) }.setNegativeButton(
+						getString(string.cancel),
+						null
+					)
+					.show()
 			}
 		})
 		LL_errItem.setOnClickListener { startActivity(Intent(this@MainActivity, FBStoreActivity::class.java)) }
@@ -392,8 +398,8 @@ class MainActivity : BaseActivity() {
 						i++
 					}
 					list.add(i, F_added)
-					adapter!!.notifyItemInserted(i)
-					P_main_total.b.unipackCount.text = list.size.toString()
+					adapter.notifyItemInserted(i)
+					P_total.data.unipackCapacity.set(list.size.toString())
 				}
 				for (F_removed: UnipackItem in I_removed) {
 					var i = 0
@@ -401,8 +407,8 @@ class MainActivity : BaseActivity() {
 						if ((item.path == F_removed.path)) {
 							val I = i
 							list.removeAt(I)
-							adapter!!.notifyItemRemoved(I)
-							P_main_total.b.unipackCount.text = list.size.toString()
+							adapter.notifyItemRemoved(I)
+							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}
 						i++
@@ -504,7 +510,10 @@ class MainActivity : BaseActivity() {
 						}
 						try {
 							val filePre = File(unipack.F_project, "autoPlay")
-							@SuppressLint("SimpleDateFormat") val fileNow = File(unipack.F_project, "autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date(System.currentTimeMillis())))
+							@SuppressLint("SimpleDateFormat") val fileNow = File(
+								unipack.F_project,
+								"autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date(System.currentTimeMillis()))
+							)
 							filePre.renameTo(fileNow)
 							val writer = BufferedWriter(OutputStreamWriter(FileOutputStream(unipack.F_autoPlay)))
 							writer.write(stringBuilder.toString())
@@ -526,10 +535,10 @@ class MainActivity : BaseActivity() {
 						try {
 							if (progressDialog != null && progressDialog!!.isShowing) progressDialog!!.dismiss()
 							Builder(this@MainActivity)
-									.setTitle(getString(string.success))
-									.setMessage(getString(string.remapDone))
-									.setPositiveButton(getString(string.accept), null)
-									.show()
+								.setTitle(getString(string.success))
+								.setMessage(getString(string.remapDone))
+								.setPositiveButton(getString(string.accept), null)
+								.show()
 						} catch (e: Exception) {
 							e.printStackTrace()
 						}
@@ -537,10 +546,10 @@ class MainActivity : BaseActivity() {
 				}).execute()
 			} else {
 				Builder(this@MainActivity)
-						.setTitle(getString(string.failed))
-						.setMessage(getString(string.remapFail))
-						.setPositiveButton(getString(string.accept), null)
-						.show()
+					.setTitle(getString(string.failed))
+					.setMessage(getString(string.remapFail))
+					.setPositiveButton(getString(string.accept), null)
+					.show()
 			}
 		} catch (e: Exception) {
 			e.printStackTrace()
@@ -662,8 +671,8 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPannel() {
-		P_main_total.b.customLogo.setImageResource(drawable.custom_logo)
-		P_main_total.b.version.text = BuildConfig.VERSION_NAME
+		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
+		P_total.data.version.set(BuildConfig.VERSION_NAME)
 	}
 
 	private fun updatePanel(hardWork: Boolean) {
@@ -671,34 +680,35 @@ class MainActivity : BaseActivity() {
 		val animation: Animation = AnimationUtils.loadAnimation(this@MainActivity, if (selectedIndex != -1) anim.panel_in else anim.panel_out)
 		animation.setAnimationListener(object : AnimationListener {
 			override fun onAnimationStart(animation: Animation?) {
-				P_main_pack.visibility = View.VISIBLE
-				P_main_pack.alpha = 1f
+				P_pack.visibility = View.VISIBLE
+				P_pack.alpha = 1f
 			}
 
 			override fun onAnimationEnd(animation: Animation?) {
-				P_main_pack.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
-				P_main_pack.setAlpha(if (selectedIndex != -1) 1.toFloat() else 0.toFloat())
+				P_pack.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
+				P_pack.setAlpha(if (selectedIndex != -1) 1.toFloat() else 0.toFloat())
 			}
 
 			override fun onAnimationRepeat(animation: Animation?) {}
 		})
 		if (selectedIndex == -1) updatePanelMain(hardWork) else updatePanelPack(list[selectedIndex])
-		val visibility = P_main_pack.visibility
+		val visibility = P_pack.visibility
 		if (((visibility == View.VISIBLE && selectedIndex == -1)
-						|| (visibility == View.INVISIBLE && selectedIndex != -1))) P_main_pack.startAnimation(animation)
+					|| (visibility == View.INVISIBLE && selectedIndex != -1))
+		) P_pack.startAnimation(animation)
 	}
 
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
-		P_main_total.b.unipackCount.text = list.size.toString()
-		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_main_total.b.openCount.text = integer.toString() })
-		P_main_total.b.padTouchCount.text = getString(string.measuring)
+		P_total.data.unipackCount.set(list.size.toString())
+		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
+		P_total.data.padTouchCount.set(getString(string.measuring))
 		val packageName: String? = SelectedTheme.load(this@MainActivity)
 		try {
 			val resources = ThemeResources(this@MainActivity, packageName, false)
-			P_main_total.b.selectedTheme.text = resources.name
+			P_total.data.selectedTheme.set(resources.name)
 		} catch (e: Exception) {
-			P_main_total.b.selectedTheme.setText(string.theme_name)
+			P_total.data.selectedTheme.set(getString(string.theme_name))
 		}
 		if (hardWork) (object : AsyncTask<String?, String?, String?>() {
 			override fun doInBackground(vararg params: String?): String? {
@@ -708,7 +718,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onProgressUpdate(vararg values: String?) {
-				P_main_total.b.unipackCapacity.text = values[0]
+				P_total.data.unipackCapacity.set(values[0])
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
 	}
@@ -722,34 +732,36 @@ class MainActivity : BaseActivity() {
 			flagColor = if (unipack.CriticalError) colors.red else colors.skyblue
 			if (unipackENT!!.bookmark) flagColor = colors.orange
 			item.flagColor = flagColor
-			P_main_pack.setStar(unipackENT.pin)
-			P_main_pack.setBookmark(unipackENT.bookmark)
+			P_pack.setStar(unipackENT.pin)
+			P_pack.setBookmark(unipackENT.bookmark)
 		}).start()
-		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(this, Observer { integer: Int? -> P_main_pack.b.openCount.text = integer.toString() })
-		P_main_pack.setStorage(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
-		P_main_pack.b.title.text = unipack.title
-		P_main_pack.b.subtitle.text = unipack.producerName
-		P_main_pack.b.path.text = item.path
-		P_main_pack.b.scale.text = "${unipack.buttonX} × ${unipack.buttonY}"
-		P_main_pack.b.chainCount.text = unipack.chain.toString()
-		P_main_pack.b.soundCount.text = getString(string.measuring)
-		P_main_pack.b.ledCount.text = getString(string.measuring)
-		P_main_pack.b.fileSize.text = getString(string.measuring)
-		P_main_pack.b.padTouchCount.text = getString(string.measuring)
-		P_main_pack.b.website.visibility = if (unipack.website != null) View.VISIBLE else View.INVISIBLE
+		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(
+			this,
+			Observer { integer: Int? -> P_pack.data.openCount.set(integer.toString()) })
+		P_pack.setStorage(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
+		P_pack.data.title.set(unipack.title)
+		P_pack.data.subtitle.set(unipack.producerName)
+		P_pack.data.path.set(item.path)
+		P_pack.data.scale.set("${unipack.buttonX} × ${unipack.buttonY}")
+		P_pack.data.chainCount.set(unipack.chain.toString())
+		P_pack.data.soundCount.set(getString(string.measuring))
+		P_pack.data.ledCount.set(getString(string.measuring))
+		P_pack.data.fileSize.set(getString(string.measuring))
+		P_pack.data.padTouchCount.set(getString(string.measuring))
+		P_pack.data.websiteExist.set(unipack.website != null)
 		(object : AsyncTask<String?, String?, String?>() {
 			var handler = Handler()
 			override fun doInBackground(vararg params: String?): String? {
 				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
-				handler.post { if ((P_main_pack.b.path.text.toString() == item.path)) P_main_pack.b.fileSize.text = fileSize }
+				handler.post { if ((P_pack.data.path.get() == item.path)) P_pack.data.fileSize.set(fileSize )}
 				try {
 					val unipackDetail = Unipack(item.unipack.F_project, true)
 					item.unipack = unipackDetail
 					publishProgress(fileSize)
 					handler.post {
-						if ((P_main_pack.b.path.text.toString() == item.path)) {
-							P_main_pack.b.soundCount.text = unipackDetail.soundTableCount.toString()
-							P_main_pack.b.ledCount.text = unipackDetail.ledTableCount.toString()
+						if ((P_pack.data.path.get() == item.path)) {
+							P_pack.data.soundCount.set(unipackDetail.soundTableCount.toString())
+							P_pack.data.ledCount.set(unipackDetail.ledTableCount.toString())
 						}
 					}
 				} catch (e: Exception) {
@@ -770,7 +782,7 @@ class MainActivity : BaseActivity() {
 			val gson: Gson = GsonBuilder().create()
 			val currVersionList: List<String> = gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
-				CL_root.snackbar( "${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", getString(string.update)) {
+				CL_root.snackbar("${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", getString(string.update)) {
 					startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
 				}
 		}

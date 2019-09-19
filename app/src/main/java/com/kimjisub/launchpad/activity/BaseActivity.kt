@@ -116,8 +116,8 @@ open class BaseActivity : AppCompatActivity() {
 	}
 
 	internal val uniPackDirList: Array<File>
-		internal get() {
-			val projectFiles: Array<File> = FileManager.mergeArray(F_UniPackRootExt.listFiles(), F_UniPackRootInt.listFiles())
+		get() {
+			val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 			return FileManager.sortByTime(projectFiles)
 		}
 

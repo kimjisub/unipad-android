@@ -12,13 +12,13 @@ import retrofit2.Retrofit
 import retrofit2.Retrofit.Builder
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
-import retrofit2.http.Path
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 class FileApi : BaseApiService() {
 
 	companion object {
+		private const val URL = "https://api.unipad.kr"
 
 		val service: FileService by lazy {
 			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {
@@ -28,12 +28,13 @@ class FileApi : BaseApiService() {
 			})
 			httpLoggingInterceptor.level = Level.BODY
 			val client: OkHttpClient = unsafeOkHttpClient
-					.addInterceptor(httpLoggingInterceptor)
-					.build()
+				.addInterceptor(httpLoggingInterceptor)
+				.build()
 			val retrofit: Retrofit = Builder()
-					.addConverterFactory(GsonConverterFactory.create(gson))
-					.client(client)
-					.build()
+				.baseUrl(URL)
+				.addConverterFactory(GsonConverterFactory.create(gson))
+				.client(client)
+				.build()
 			retrofit.create(FileService::class.java)
 		}
 
@@ -43,7 +44,7 @@ class FileApi : BaseApiService() {
 
 			@GET
 			@Streaming
-			fun download(@Url url : String): Call<ResponseBody>
+			fun download(@Url url: String): Call<ResponseBody>
 		}
 
 	}

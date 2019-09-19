@@ -27,8 +27,10 @@
 
 	</declare-styleable>
 
-	<declare-styleable name="MainTotalPanel" />
+	<declare-styleable name="TotalPanel" />
 
 	<declare-styleable name="MainPackPanel" />
+
+	<declare-styleable name="StorePackPanel" />
 
 </resources>
