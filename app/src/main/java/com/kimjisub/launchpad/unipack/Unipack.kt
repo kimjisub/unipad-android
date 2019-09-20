@@ -1,26 +1,24 @@
 package com.kimjisub.launchpad.unipack
 
 import android.content.Context
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
+import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.launchpad.unipack.struct.LedAnimation
+import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.manager.FileManager.byteToMB
 import com.kimjisub.manager.FileManager.getFolderSize
 import com.kimjisub.manager.FileManager.sortByName
 import com.kimjisub.manager.Log.err
-import com.kimjisub.manager.R.string
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 
+
 class Unipack(val F_project: File, val loadDetail: Boolean) {
 	var errorDetail: String? = null
 	var criticalError = false
-
-	var F_info: File? = null
-	var F_sounds: File? = null
-	var F_keySound: File? = null
-	var F_keyLED: File? = null
-	var F_autoPlay: File? = null
 
 	var title: String? = null
 	var producerName: String? = null
@@ -34,8 +32,25 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 	var ledTableCount = 0
 
 	var soundTable: Array<Array<Array<ArrayList<Sound>?>>>? = null
-	var ledTable: Array<Array<Array<ArrayList<Led>?>>>? = null
-	var autoPlayTable: ArrayList<AutoPlay>? = null
+	var ledAnimationTable: Array<Array<Array<ArrayList<LedAnimation>?>>>? = null
+	var autoPlayTable: AutoPlay? = null
+
+	var F_info: File? = null
+	var F_sounds: File? = null
+	var F_keySound: File? = null
+	var F_keyLED: File? = null
+	var F_autoPlay: File? = null
+
+	val infoExist
+		get() = F_info != null
+	val soundExist
+		get() = F_sounds != null
+	val keySoundExist
+		get() = F_keySound != null
+	val keyLEDExist
+		get() = F_keyLED != null
+	val autoPlayExist
+		get() = F_autoPlay != null
 
 	init {
 		checkFile()
@@ -73,8 +88,8 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 	private fun info() {
 		if (F_info != null) {
 			val reader = BufferedReader(InputStreamReader(FileInputStream(F_info)))
-			var s: String
-			while (reader.readLine().also { s = it } != null) {
+			while (true) {
+				val s = reader.readLine() ?: break
 				if (s.isEmpty()) continue
 				try {
 					val split = s.split("=", limit = 2)
@@ -116,8 +131,8 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 			}
 			soundCount = 0
 			val reader = BufferedReader(InputStreamReader(FileInputStream(F_keySound)))
-			var s: String
-			while (reader.readLine().also { s = it } != null) {
+			while (true) {
+				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
 				var c: Int
 				var x: Int
@@ -166,11 +181,11 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	private fun keyLed() {
+	private inline fun keyLed() {
 		if (F_keyLED != null) {
-			ledTable = Array(chain) {
+			ledAnimationTable = Array(chain) {
 				Array(buttonX) {
-					arrayOfNulls<ArrayList<Led>?>(buttonY)
+					arrayOfNulls<ArrayList<LedAnimation>?>(buttonY)
 				}
 			}
 			ledTableCount = 0
@@ -209,10 +224,10 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 						addErr("keyLED : [$fileName] format is incorrect")
 						continue
 					}
-					val ledList = ArrayList<Led.Syntax>()
+					val ledList = ArrayList<LedAnimation.Element>()
 					val reader = BufferedReader(InputStreamReader(FileInputStream(file)))
-					var s: String
-					loop@ while (reader.readLine().also { s = it } != null) {
+					loop@ while (true) {
+						val s = reader.readLine() ?: break
 						val split2 = s.split(" ").toTypedArray()
 						var option: String
 						var _x = -1
@@ -265,14 +280,14 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 							continue
 						}
 						when (option) {
-							"on", "o" -> ledList.add(Led.Syntax.On(_x, _y, _color, _velo))
-							"off", "f" -> ledList.add(Led.Syntax.Off(_x, _y))
-							"delay", "d" -> ledList.add(Led.Syntax.Delay(_delay))
+							"on", "o" -> ledList.add(LedAnimation.Element.On(_x, _y, _color, _velo))
+							"off", "f" -> ledList.add(LedAnimation.Element.Off(_x, _y))
+							"delay", "d" -> ledList.add(LedAnimation.Element.Delay(_delay))
 						}
 					}
-					if (ledTable!![c][x][y] == null)
-						ledTable!![c][x][y] = ArrayList()
-					ledTable!![c][x][y]!!.add(Led(ledList, loop, ledTable!![c][x][y]!!.size))
+					if (ledAnimationTable!![c][x][y] == null)
+						ledAnimationTable!![c][x][y] = ArrayList()
+					ledAnimationTable!![c][x][y]!!.add(LedAnimation(ledList, loop, ledAnimationTable!![c][x][y]!!.size))
 					ledTableCount++
 					reader.close()
 				} else addErr("keyLED : " + file.name + " is not file")
@@ -280,14 +295,14 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	private fun autoPlay() {
+	private inline fun autoPlay() {
 		if (F_autoPlay != null) {
-			autoPlayTable = ArrayList()
+			autoPlayTable = AutoPlay(ArrayList())
 			val map = Array(buttonX) { IntArray(buttonY) }
 			var currChain = 0
-			val reader = BufferedReader(InputStreamReader(FileInputStream(mainAutoplay)))
-			var s: String
-			loop@ while (reader.readLine().also { s = it } != null) {
+			val reader = BufferedReader(InputStreamReader(FileInputStream(F_autoPlay)))
+			loop@ while (true) {
+				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
 				var option: String
 				var x = -1
@@ -354,11 +369,11 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 				}
 				when (option) {
 					"on", "o" -> {
-						autoPlayTable!!.add(AutoPlay.On(x, y, currChain, map[x][y]))
+						autoPlayTable!!.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
 						val sound = Sound_get(currChain, x, y, map[x][y])
 						map[x][y]++
 						if (sound != null && sound.wormhole != -1) {
-							autoPlayTable!!.add(AutoPlay.Chain(sound.wormhole.also { currChain = it }))
+							autoPlayTable!!.elements.add(AutoPlay.Element.Chain(sound.wormhole.also { currChain = it }))
 							var i = 0
 							while (i < buttonX) {
 								var j = 0
@@ -370,14 +385,14 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 							}
 						}
 					}
-					"off", "f" -> autoPlayTable!!.add(AutoPlay.Off(x, y, currChain))
+					"off", "f" -> autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
 					"touch", "t" -> {
-						autoPlayTable!!.add(AutoPlay.On(x, y, currChain, map[x][y]))
-						autoPlayTable!!.add(AutoPlay.Off(x, y, currChain))
+						autoPlayTable!!.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
+						autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
 						map[x][y]++
 					}
 					"chain", "c" -> {
-						autoPlayTable!!.add(AutoPlay.Chain(chain.also { currChain = it }))
+						autoPlayTable!!.elements.add(AutoPlay.Element.Chain(chain.also { currChain = it }))
 						var i = 0
 						while (i < buttonX) {
 							var j = 0
@@ -388,55 +403,16 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 							i++
 						}
 					}
-					"delay", "d" -> autoPlayTable!!.add(AutoPlay.Delay(delay, currChain))
+					"delay", "d" -> autoPlayTable!!.elements.add(AutoPlay.Element.Delay(delay, currChain))
 				}
 			}
 			reader.close()
 		}
 	}
 
-
-	fun Sound_push(c: Int, x: Int, y: Int) {
-		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ")");
-
-		try {
-			val tmp = soundTable!![c][x][y]!![0]
-			soundTable!![c][x][y]!!.removeAt(0)
-			soundTable!![c][x][y]!!.add(tmp)
-		} catch (ignored: NullPointerException) {
-		} catch (ee: IndexOutOfBoundsException) {
-			err("Sound_push ($c, $x, $y)")
-			ee.printStackTrace()
-		}
-	}
-
-	fun Sound_push(c: Int, x: Int, y: Int, num: Int) {
-		//log("Sound_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
-
-		try {
-			val e = soundTable!![c][x][y]
-			if (soundTable!![c][x][y]!![0]!!.num != num) while (true) {
-				val tmp = e!![0]
-				e.removeAt(0)
-				e.add(tmp)
-				if (e[0]!!.num == num % e.size) break
-			}
-		} catch (ignored: NullPointerException) {
-		} catch (ee: IndexOutOfBoundsException) {
-			err("Sound_push ($c, $x, $y, $num)")
-			ee.printStackTrace()
-		} catch (ee: ArithmeticException) {
-			err("ArithmeticException : Sound_push ($c, $x, $y, $num)")
-			ee.printStackTrace()
-		}
-	}
-
-	// =============================================================================================
-
+	// Circular Queue /////////////////////////////////////////////////////////////////////////////////////////
 
 	fun Sound_get(c: Int, x: Int, y: Int): Sound? {
-		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
-
 		return try {
 			soundTable!![c][x][y]!![0]
 		} catch (ignored: NullPointerException) {
@@ -449,8 +425,6 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 	}
 
 	fun Sound_get(c: Int, x: Int, y: Int, num: Int): Sound? {
-		//log("Sound_get (" + c + ", " + buttonX + ", " + buttonY + ")");
-
 		return try {
 			val sound = soundTable!![c][x][y]
 			soundTable!![c][x][y]!![num % sound!!.size]
@@ -463,43 +437,42 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	fun LED_push(c: Int, x: Int, y: Int) {
-		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ")");
-
+	fun Sound_push(c: Int, x: Int, y: Int) {
 		try {
-			val led: Led? = ledTable!![c][x][y]!![0]
-			ledTable!![c][x][y]!!.removeAt(0)
-			ledTable!![c][x][y]!!.add(led)
-		} catch (ignored: NullPointerException) {
-		} catch (e: IndexOutOfBoundsException) {
-			err("LED_push ($c, $x, $y)")
-			e.printStackTrace()
-		}
-	}
-
-	fun LED_push(c: Int, x: Int, y: Int, num: Int) {
-		//log("LED_push (" + c + ", " + buttonX + ", " + buttonY + ", " + num + ")");
-
-		try {
-			val e: ArrayList<LED>? = ledTable!![c][x][y]
-			if (e!![0].num != num) while (true) {
-				val tmp = e[0]
-				e.removeAt(0)
-				e.add(tmp)
-				if (e[0].num == num % e.size) break
-			}
+			val item = soundTable!![c][x][y]!!.removeAt(0)
+			soundTable!![c][x][y]!!.add(item)
 		} catch (ignored: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
-			err("LED_push ($c, $x, $y, $num)")
+			err("Sound_push ($c, $x, $y)")
 			ee.printStackTrace()
 		}
 	}
 
-	fun LED_get(c: Int, x: Int, y: Int): Led? {
-		//log("LED_get (" + c + ", " + buttonX + ", " + buttonY + ")");
+	fun Sound_push(c: Int, x: Int, y: Int, num: Int) {
+		try {
+			val e = soundTable!![c][x][y]
+			if (soundTable!![c][x][y]!![0].num != num)
+				while (true) {
+					val tmp = e!![0]
+					e.removeAt(0)
+					e.add(tmp)
+					if (e[0].num == num % e.size)
+						break
+				}
+		} catch (ignored: NullPointerException) {
+		} catch (ee: IndexOutOfBoundsException) {
+			err("Sound_push ($c, $x, $y, $num)")
+			ee.printStackTrace()
+		} catch (ee: ArithmeticException) {
+			err("ArithmeticException : Sound_push ($c, $x, $y, $num)")
+			ee.printStackTrace()
+		}
+	}
 
+
+	fun LED_get(c: Int, x: Int, y: Int): LedAnimation? {
 		return try {
-			ledTable!![c][x][y]!![0]
+			ledAnimationTable!![c][x][y]!![0]
 		} catch (ignored: NullPointerException) {
 			null
 		} catch (ee: IndexOutOfBoundsException) {
@@ -509,31 +482,34 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	// =============================================================================================
-
-
-	@get:Throws(Exception::class)
-	internal val mainAutoplay: String?
-		get() {
-			val fileList = sortByName(F_project.listFiles())
-			for (f in fileList) {
-				if (f.isFile && f.name.toLowerCase().startsWith("autoplay")) return f.path
-			}
-			return null
+	fun LED_push(c: Int, x: Int, y: Int) {
+		try {
+			val item = ledAnimationTable!![c][x][y]!!.removeAt(0)
+			ledAnimationTable!![c][x][y]!!.add(item)
+		} catch (ignored: NullPointerException) {
+		} catch (e: IndexOutOfBoundsException) {
+			err("LED_push ($c, $x, $y)")
+			e.printStackTrace()
 		}
+	}
 
-	@get:Throws(Exception::class)
-	val autoplays: Array<String>
-		get() {
-			val fileList = sortByName(F_project.listFiles())
-			val autoPlays: ArrayList<*> = ArrayList<Any?>()
-			for (f in fileList) {
-				if (f.isFile && (f.name.toLowerCase().startsWith("autoplay") || f.name.toLowerCase().startsWith("_autoplay"))) autoPlays.add(f.path)
-			}
-			return autoPlays.toArray(arrayOf("")) as Array<String>
+	fun LED_push(c: Int, x: Int, y: Int, num: Int) {
+		try {
+			val e: ArrayList<LedAnimation>? = ledAnimationTable!![c][x][y]
+			if (e!![0].num != num)
+				while (true) {
+					val item = e.removeAt(0)
+					e.add(item)
+					if (e[0].num == num % e.size) break
+				}
+		} catch (ignored: NullPointerException) {
+		} catch (ee: IndexOutOfBoundsException) {
+			err("LED_push ($c, $x, $y, $num)")
+			ee.printStackTrace()
 		}
+	}
 
-	// =============================================================================================
+	// etc /////////////////////////////////////////////////////////////////////////////////////////
 
 
 	private fun addErr(content: String) {

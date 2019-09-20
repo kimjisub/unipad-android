@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.unipack
+package com.kimjisub.launchpad.unipack.struct
 
 import java.io.File
 

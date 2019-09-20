@@ -46,7 +46,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		addPreferencesFromResource(xml.setting)
 
-		billingManager = BillingManager(activity, object : BillingManager.BillingEventListener {
+		billingManager = BillingManager(activity!!.parent, object : BillingManager.BillingEventListener {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}

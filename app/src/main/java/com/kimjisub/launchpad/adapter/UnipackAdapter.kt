@@ -55,8 +55,8 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		var viewingTitle: String = item.unipack.title
-		var viewingSubtitle: String = item.unipack.producerName
+		var viewingTitle: String = item.unipack.title!!
+		var viewingSubtitle: String = item.unipack.producerName!!
 		if (item.unipack.criticalError) {
 			item.flagColor = ContextCompat.getColor(context, color.red)
 			viewingTitle = context.getString(string.errOccur)
@@ -73,9 +73,9 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			title = viewingTitle
 			subtitle = viewingSubtitle
 			option1Name = context.getString(string.LED_)
-			option1 = item.unipack.keyLEDExist
+			option1 = item.unipack.ledAnimationTable != null
 			option2Name = context.getString(string.autoPlay_)
-			option2 = item.unipack.autoPlayExist
+			option2 = item.unipack.autoPlayTable != null
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)

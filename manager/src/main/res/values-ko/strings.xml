@@ -46,7 +46,7 @@
 	<string name="unipack_capacity">유니팩 용량</string>
 	<string name="open_count">유니팩 실행 횟수</string>
 	<string name="padtouch_count">패드 터치 횟수</string>
-	<string name="LED_count">LED 이벤트 개수</string>
+	<string name="led_count">LED 이벤트 개수</string>
 	<string name="sound_count">사운드 개수</string>
 	<string name="selected_theme">선택된 테마</string>
 
