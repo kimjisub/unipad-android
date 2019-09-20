@@ -20,7 +20,7 @@ import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
-import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.network.Networks
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO

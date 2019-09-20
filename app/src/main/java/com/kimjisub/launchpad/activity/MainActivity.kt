@@ -47,7 +47,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
 import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
-import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -490,16 +490,16 @@ class MainActivity : BaseActivity() {
 				try {
 					FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
 					val unipack = Unipack(F_UniPack, true)
-					if (unipack.ErrorDetail == null) {
+					if (unipack.errorDetail == null) {
 						msg1 = getString(string.analyzeComplete)
-						msg2 = unipack.getInfoText(this@MainActivity)
-					} else if (unipack.CriticalError) {
+						msg2 = unipack.toString(this@MainActivity)
+					} else if (unipack.criticalError) {
 						msg1 = getString(string.analyzeFailed)
-						msg2 = unipack.ErrorDetail
+						msg2 = unipack.errorDetail
 						FileManager.deleteDirectory(F_UniPack)
 					} else {
 						msg1 = getString(string.warning)
-						msg2 = unipack.ErrorDetail
+						msg2 = unipack.errorDetail
 					}
 				} catch (e: Exception) {
 					msg1 = getString(string.analyzeFailed)
@@ -642,7 +642,7 @@ class MainActivity : BaseActivity() {
 		Thread(Runnable {
 			var unipackENT: UnipackENT? = db.unipackDAO()!!.find(item.unipack.F_project.name)
 			var flagColor: Int
-			flagColor = if (unipack.CriticalError) colors.red else colors.skyblue
+			flagColor = if (unipack.criticalError) colors.red else colors.skyblue
 			if (unipackENT!!.bookmark) flagColor = colors.orange
 			item.flagColor = flagColor
 
@@ -674,7 +674,7 @@ class MainActivity : BaseActivity() {
 					publishProgress(fileSize)
 					handler.post {
 						if ((P_pack.data.path.get() == item.path)) {
-							P_pack.data.soundCount.set(unipackDetail.soundTableCount.toString())
+							P_pack.data.soundCount.set(unipackDetail.soundCount.toString())
 							P_pack.data.ledCount.set(unipackDetail.ledTableCount.toString())
 						}
 					}

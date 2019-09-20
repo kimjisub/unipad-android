@@ -4,7 +4,7 @@ import android.os.Bundle
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
-import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.tool.UnipackInstaller
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -103,7 +103,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("Install Success")
 
 					TV_title.setText(string.success)
-					TV_message.text = unipack.getInfoText(this@ImportPackByUrlActivity)
+					TV_message.text = unipack.toString(this@ImportPackByUrlActivity)
 
 					delayFinish()
 				}

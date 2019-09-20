@@ -41,7 +41,7 @@ import com.kimjisub.launchpad.manager.ChannelManager.Channel;
 import com.kimjisub.launchpad.manager.Functions;
 import com.kimjisub.launchpad.manager.PreferenceManager;
 import com.kimjisub.launchpad.manager.ThemeResources;
-import com.kimjisub.launchpad.manager.Unipack;
+import com.kimjisub.launchpad.unipack.Unipack;
 import com.kimjisub.launchpad.midi.MidiConnection;
 import com.kimjisub.launchpad.midi.controller.MidiController;
 import com.kimjisub.manager.Log;
@@ -168,11 +168,11 @@ public class PlayActivity extends BaseActivity {
 			unipack = new Unipack(file, true);
 
 			Log.INSTANCE.log("[02] Check ErrorDetail");
-			if (unipack.ErrorDetail != null) {
+			if (unipack.errorDetail != null) {
 				new AlertDialog.Builder(PlayActivity.this)
-						.setTitle(unipack.CriticalError ? getString(R.string.error) : getString(R.string.warning))
-						.setMessage(unipack.ErrorDetail)
-						.setPositiveButton(unipack.CriticalError ? getString(R.string.quit) : getString(R.string.accept), unipack.CriticalError ? (dialogInterface, i) -> finish() : null)
+						.setTitle(unipack.criticalError ? getString(R.string.error) : getString(R.string.warning))
+						.setMessage(unipack.errorDetail)
+						.setPositiveButton(unipack.criticalError ? getString(R.string.quit) : getString(R.string.accept), unipack.criticalError ? (dialogInterface, i) -> finish() : null)
 						.setCancelable(false)
 						.show();
 			}
@@ -1655,7 +1655,7 @@ public class PlayActivity extends BaseActivity {
 				Unipack.LED e = unipack.LED_get(chain, buttonX, buttonY);
 				unipack.LED_push(chain, buttonX, buttonY);
 				if (e != null) {
-					syntaxs = e.syntaxs;
+					syntaxs = e.syntaxList;
 					loop = e.loop;
 					noError = true;
 				}
