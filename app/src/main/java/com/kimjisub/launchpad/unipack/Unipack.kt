@@ -181,7 +181,7 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	private inline fun keyLed() {
+	private fun keyLed() {
 		if (F_keyLED != null) {
 			ledAnimationTable = Array(chain) {
 				Array(buttonX) {
