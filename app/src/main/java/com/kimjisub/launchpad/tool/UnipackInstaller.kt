@@ -5,7 +5,7 @@ import androidx.core.app.NotificationCompat
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.NotificationManager
-import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.coroutines.CoroutineScope
@@ -94,10 +94,10 @@ class UnipackInstaller(
 
 				FileManager.unZipFile(zip.path, folder.path)
 				val unipack = Unipack(folder, true)
-				if (unipack.CriticalError) {
-					Log.err(unipack.ErrorDetail)
+				if (unipack.criticalError) {
+					Log.err(unipack.errorDetail)
 					FileManager.deleteDirectory(folder)
-					throw UniPackCriticalErrorException(unipack.ErrorDetail)
+					throw UniPackCriticalErrorException(unipack.errorDetail)
 				}
 
 				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }

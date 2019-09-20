@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.PackView
 import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.manager.Unipack
+import com.kimjisub.launchpad.unipack.Unipack
 import java.util.*
 
 data class UnipackItem(
@@ -57,7 +57,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 
 		var viewingTitle: String = item.unipack.title
 		var viewingSubtitle: String = item.unipack.producerName
-		if (item.unipack.CriticalError) {
+		if (item.unipack.criticalError) {
 			item.flagColor = ContextCompat.getColor(context, color.red)
 			viewingTitle = context.getString(string.errOccur)
 			viewingSubtitle = item.path
