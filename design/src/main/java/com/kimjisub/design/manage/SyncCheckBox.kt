@@ -12,13 +12,15 @@ class SyncCheckBox(vararg cbs: CheckBox) {
 			addCheckBox(cb)
 	}
 
-	fun addCheckBox(checkBox: CheckBox) {
-		checkBox.setOnCheckedChangeListener { _: CompoundButton?, b: Boolean -> setChecked(b) }
-		checkBox.setOnLongClickListener {
-			onLongClick()
-			false
+	fun addCheckBox(vararg cbs: CheckBox) {
+		for(cb in cbs) {
+			cb.setOnCheckedChangeListener { _: CompoundButton?, b: Boolean -> setChecked(b) }
+			cb.setOnLongClickListener {
+				onLongClick()
+				false
+			}
+			checkBoxes.add(cb)
 		}
-		checkBoxes.add(checkBox)
 	}
 
 	// Checked Manage /////////////////////////////////////////////////////////////////////////////////////////

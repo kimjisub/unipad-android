@@ -1,27 +1,27 @@
-package com.kimjisub.launchpad.unipack
+package com.kimjisub.launchpad.unipack.struct
 
 import java.util.*
 
-class Led(
-	val syntaxList: ArrayList<Syntax>,
+class LedAnimation(
+	val elements: ArrayList<Element>,
 	val loop: Int,
 	val num: Int
 ){
-	interface Syntax{
+	interface Element{
 		class On(
 			val x:Int,
 			val y:Int,
 			val color:Int = -1,
 			val velo:Int = 4
-		) : Syntax
+		) : Element
 
 		class Off(
 			val x:Int,
 			val y:Int
-		) : Syntax
+		) : Element
 
 		class Delay(
 			val delay:Int
-		) : Syntax
+		) : Element
 	}
 }

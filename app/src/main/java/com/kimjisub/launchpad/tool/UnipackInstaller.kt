@@ -95,9 +95,9 @@ class UnipackInstaller(
 				FileManager.unZipFile(zip.path, folder.path)
 				val unipack = Unipack(folder, true)
 				if (unipack.criticalError) {
-					Log.err(unipack.errorDetail)
+					Log.err(unipack.errorDetail!!)
 					FileManager.deleteDirectory(folder)
-					throw UniPackCriticalErrorException(unipack.errorDetail)
+					throw UniPackCriticalErrorException(unipack.errorDetail!!)
 				}
 
 				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }

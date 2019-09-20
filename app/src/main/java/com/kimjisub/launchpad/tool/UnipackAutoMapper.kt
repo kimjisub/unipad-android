@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.tool
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import com.kimjisub.launchpad.manager.Constant
+import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import kotlinx.coroutines.CoroutineScope
@@ -17,9 +18,9 @@ class UnipackAutoMapper(
 	private val unipack: Unipack,
 	private var listener: Listener
 ) {
-	private var autoplay1: ArrayList<Unipack.AutoPlay> = ArrayList()
-	private var autoplay2: ArrayList<Unipack.AutoPlay> = ArrayList()
-	private var autoplay3: ArrayList<Unipack.AutoPlay> = ArrayList()
+	private var autoplay1: ArrayList<AutoPlay.Element> = ArrayList()
+	private var autoplay2: ArrayList<AutoPlay.Element> = ArrayList()
+	private var autoplay3: ArrayList<AutoPlay.Element> = ArrayList()
 
 	interface Listener {
 		fun onStart()
@@ -35,28 +36,28 @@ class UnipackAutoMapper(
 			try {
 				withContext(Dispatchers.Main) { listener.onStart() }
 
-				for (e: Unipack.AutoPlay in unipack.autoPlayTable) {
-					when (e.func) {
-						Unipack.AutoPlay.ON -> autoplay1.add(e)
-						Unipack.AutoPlay.OFF -> {
+				for (e: AutoPlay.Element in unipack.autoPlayTable!!.elements) {
+					when (e) {
+						is AutoPlay.Element.On -> autoplay1.add(e)
+						is AutoPlay.Element.Off -> {
 						}
-						Unipack.AutoPlay.CHAIN -> autoplay1.add(e)
-						Unipack.AutoPlay.DELAY -> autoplay1.add(e)
+						is AutoPlay.Element.Chain -> autoplay1.add(e)
+						is AutoPlay.Element.Delay -> autoplay1.add(e)
 					}
 				}
 
-				var prevDelay: Unipack.AutoPlay? = Unipack.AutoPlay(0, 0)
-				for (e: Unipack.AutoPlay in autoplay1) {
-					when (e.func) {
-						Unipack.AutoPlay.ON -> {
+				var prevDelay: AutoPlay.Element.Delay? = AutoPlay.Element.Delay(0, 0)
+				for (e: AutoPlay.Element in autoplay1) {
+					when (e) {
+						is AutoPlay.Element.On -> {
 							if (prevDelay != null) {
 								autoplay2.add(prevDelay)
 								prevDelay = null
 							}
 							autoplay2.add(e)
 						}
-						Unipack.AutoPlay.CHAIN -> autoplay2.add(e)
-						Unipack.AutoPlay.DELAY -> if (prevDelay != null) prevDelay.d += e.d else prevDelay = e
+						is AutoPlay.Element.Chain -> autoplay2.add(e)
+						is AutoPlay.Element.Delay -> if (prevDelay != null) prevDelay.delay += e.delay else prevDelay = e
 					}
 				}
 
@@ -67,15 +68,15 @@ class UnipackAutoMapper(
 				for ((i, e) in autoplay2.withIndex()) {
 
 					try {
-						when (e.func) {
-							Unipack.AutoPlay.ON -> {
-								val num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size
-								nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable[e.currChain][e.x][e.y][num].file.path)
+						when (e) {
+							is AutoPlay.Element.On -> {
+								val num = e.num % unipack.soundTable!![e.currChain][e.x][e.y]!!.size
+								nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable!![e.currChain][e.x][e.y]!![num].file.path)
 								autoplay3.add(e)
 							}
-							Unipack.AutoPlay.CHAIN -> autoplay3.add(e)
-							Unipack.AutoPlay.DELAY -> {
-								e.d = nextDuration + Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
+							is AutoPlay.Element.Chain -> autoplay3.add(e)
+							is AutoPlay.Element.Delay -> {
+								e.delay = nextDuration + Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
 								autoplay3.add(e)
 							}
 						}
@@ -86,12 +87,12 @@ class UnipackAutoMapper(
 				}
 				mplayer.release()
 				val stringBuilder = StringBuilder()
-				for (e: Unipack.AutoPlay in autoplay3) {
-					when (e.func) {
-						Unipack.AutoPlay.ON -> //int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
+				for (e: AutoPlay.Element in autoplay3) {
+					when (e) {
+						is AutoPlay.Element.On -> //int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
 							stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n")
-						Unipack.AutoPlay.CHAIN -> stringBuilder.append("c ").append(e.c + 1).append("\n")
-						Unipack.AutoPlay.DELAY -> stringBuilder.append("d ").append(e.d).append("\n")
+						is AutoPlay.Element.Chain -> stringBuilder.append("c ").append(e.c + 1).append("\n")
+						is AutoPlay.Element.Delay -> stringBuilder.append("d ").append(e.delay).append("\n")
 					}
 				}
 				try {
@@ -110,20 +111,12 @@ class UnipackAutoMapper(
 					ee.printStackTrace()
 				}
 
-
-
-
-
-
-
 				withContext(Dispatchers.Main) { listener.onDone() }
 
-			} catch (e: Exception) {
+			} catch (e: Throwable) {
 				e.printStackTrace()
 				withContext(Dispatchers.Main) { listener.onException(e) }
 			}
 		}
 	}
-
-	class UniPackCriticalErrorException(message: String) : Exception(message)
 }
