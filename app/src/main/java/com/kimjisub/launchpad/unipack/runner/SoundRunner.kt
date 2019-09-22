@@ -1,10 +1,8 @@
 package com.kimjisub.launchpad.unipack.runner
 
-import android.app.ProgressDialog
 import android.media.AudioManager
 import android.media.SoundPool
-import android.os.AsyncTask
-import com.kimjisub.launchpad.R
+import android.os.Handler
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.manager.Log
@@ -13,13 +11,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 
-class SoundRunner(unipack: Unipack, listener: Listener) {
+class SoundRunner(
+	private val unipack: Unipack,
+	private val chain: ChainObserver,
+	private val listener: Listener
+) {
 
 	private var soundPool: SoundPool? = null
 	private var stopID: Array<Array<Array<Int>>>? = null
 
 	interface Listener {
-		fun onStart(soundCount:Int, soundPool: SoundPool, stopID: Array<Array<Array<Int>>>)
+		fun onStart(soundCount: Int)
 		fun onProgressTick()
 		fun onEnd()
 		fun onException(throwable: Throwable)
@@ -42,7 +44,7 @@ class SoundRunner(unipack: Unipack, listener: Listener) {
 				}
 			}
 
-			listener.onStart(soundCount, soundPool!!, stopID!!)
+			listener.onStart(soundCount)
 
 			try {
 				for (i in 0 until unipack.chain) {
@@ -66,6 +68,42 @@ class SoundRunner(unipack: Unipack, listener: Listener) {
 				e.printStackTrace()
 				listener.onException(e)
 			}
+		}
+	}
+
+	fun soundOn(x: Int, y: Int) {
+		soundPool!!.stop(stopID!![chain.value][x][y])
+		val e: Sound? = unipack.Sound_get(chain.value, x, y)
+		if (e != null) {
+			stopID!![chain.value][x][y] = soundPool!!.play(e.id, 1.0f, 1.0f, 0, e.loop, 1.0f)
+			unipack.Sound_push(chain.value, x, y)
+			if (e.wormhole != -1)
+				Handler().postDelayed({ chain.value = e.wormhole }, 100)
+		}
+	}
+
+	fun soundOff(x: Int, y: Int){
+		if (unipack.Sound_get(chain.value, x, y)!!.loop == -1)
+			soundPool!!.stop(stopID!![chain.value][x][y])
+	}
+
+	fun destroy(){
+		if (soundPool != null) {
+			for (i in unipack.soundTable!!)
+				for(j in i)
+					for(arrayList in j){
+						if (arrayList != null) {
+							for (sound in arrayList) {
+								try {
+									soundPool!!.unload(sound.id)
+								} catch (e: Exception) {
+									e.printStackTrace()
+								}
+							}
+						}
+					}
+			soundPool!!.release()
+			soundPool = null
 		}
 	}
 }

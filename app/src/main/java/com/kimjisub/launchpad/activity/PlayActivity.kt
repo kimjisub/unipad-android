@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.database.ContentObserver
 import android.media.AudioManager
-import android.media.SoundPool
 import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -54,9 +53,9 @@ import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
+import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.vungle.warren.LoadAdCallback
 import com.vungle.warren.PlayAdCallback
 import com.vungle.warren.Vungle
@@ -102,13 +101,15 @@ class PlayActivity : BaseActivity() {
 	private var enable = true
 	private var U_pads: Array<Array<Pad?>?>? = null
 	private var U_chains: Array<Chain?>? = null
-	private var ledRunner: LedRunner? = null
-	private var autoPlayRunner: AutoPlayRunner? = null
-	private var soundPool: SoundPool? = null
-	private var stopID: Array<Array<Array<Int>>>? = null
-	private var chain = 0
+	private var chain: ChainObserver = ChainObserver()
 	private var audioManager: AudioManager? = null
 	private var channelManager: ChannelManager? = null
+
+
+	private var ledRunner: LedRunner? = null
+	private var autoPlayRunner: AutoPlayRunner? = null
+	private var soundRunner: SoundRunner? = null
+
 	// ============================================================================================= Manager
 	private var traceLog_table: Array<Array<Array<ArrayList<Int>?>?>?>? = null
 	private var traceLog_nextNum: IntArray? = null
@@ -117,7 +118,6 @@ class PlayActivity : BaseActivity() {
 	private var bool_toggleOption_window = false
 
 	// ============================================================================================= 특성 다른 LED 처리
-
 
 	private fun initVar() {
 		SCB_feedbackLight.addCheckBox(CB1_feedbackLight, CB2_feedbackLight)
@@ -172,6 +172,7 @@ class PlayActivity : BaseActivity() {
 					.setCancelable(false)
 					.show()
 			}
+			chain.range = 0 until unipack!!.chain
 			log("[03] Init Vars")
 			U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
 			U_chains = arrayOfNulls<Chain?>(32)
@@ -180,53 +181,54 @@ class PlayActivity : BaseActivity() {
 			initRunner()
 			initLayout()
 
-			SoundRunner(unipack!!, listener = object : SoundRunner.Listener {
-				var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
-				override fun onStart(soundCount: Int, soundPool: SoundPool, stopID: Array<Array<Array<Int>>>) {
-					this@PlayActivity.soundPool = soundPool
-					this@PlayActivity.stopID = stopID
-					runOnUiThread {
-						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-						progressDialog.setTitle(getString(string.loading))
-						progressDialog.setMessage(getString(string.wait_a_sec))
-						progressDialog.setCancelable(false)
-						progressDialog.max = soundCount
-						progressDialog.show()
-					}
-				}
-
-				override fun onProgressTick() {
-					runOnUiThread {
-						progressDialog.incrementProgressBy(1)
-					}
-				}
-
-				override fun onEnd() {
-					runOnUiThread {
-						unipackLoaded = true
-						try {
-							if (progressDialog.isShowing)
-								progressDialog.dismiss()
-						} catch (e: Exception) {
-							e.printStackTrace()
-						}
-						try {
-							initTheme()
-						} catch (e: ArithmeticException) {
-							e.printStackTrace()
-						} catch (e: NullPointerException) {
-							e.printStackTrace()
+			soundRunner = SoundRunner(
+				unipack = unipack!!,
+				chain = chain,
+				listener = object : SoundRunner.Listener {
+					var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
+					override fun onStart(soundCount: Int) {
+						runOnUiThread {
+							progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+							progressDialog.setTitle(getString(string.loading))
+							progressDialog.setMessage(getString(string.wait_a_sec))
+							progressDialog.setCancelable(false)
+							progressDialog.max = soundCount
+							progressDialog.show()
 						}
 					}
-				}
 
-				override fun onException(throwable: Throwable) {
-					runOnUiThread {
-						toast(string.outOfCPU)
-						finish()
+					override fun onProgressTick() {
+						runOnUiThread {
+							progressDialog.incrementProgressBy(1)
+						}
 					}
-				}
-			})
+
+					override fun onEnd() {
+						runOnUiThread {
+							unipackLoaded = true
+							try {
+								if (progressDialog.isShowing)
+									progressDialog.dismiss()
+							} catch (e: Exception) {
+								e.printStackTrace()
+							}
+							try {
+								initTheme()
+							} catch (e: ArithmeticException) {
+								e.printStackTrace()
+							} catch (e: NullPointerException) {
+								e.printStackTrace()
+							}
+						}
+					}
+
+					override fun onException(throwable: Throwable) {
+						runOnUiThread {
+							toast(string.outOfCPU)
+							finish()
+						}
+					}
+				})
 		} catch (e: OutOfMemoryError) {
 			e.printStackTrace()
 			toast(string.outOfMemory)
@@ -240,111 +242,117 @@ class PlayActivity : BaseActivity() {
 
 	private fun initRunner() {
 		if (unipack!!.keyLEDExist) {
-			ledRunner = LedRunner(unipack!!, listener = object : LedRunner.Listener {
-				override fun onStart() {
-					TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-				}
+			ledRunner = LedRunner(
+				unipack = unipack!!,
+				chain = chain,
+				listener = object : LedRunner.Listener {
+					override fun onStart() {
+						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+					}
 
-				override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
-					channelManager!!.add(x, y, Channel.LED, color, velo)
-					setLed(x, y)
-				}
+					override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
+						channelManager!!.add(x, y, Channel.LED, color, velo)
+						setLed(x, y)
+					}
 
-				override fun onLedTurnOff(x: Int, y: Int) {
-					channelManager!!.remove(x, y, Channel.LED)
-					setLed(x, y)
-				}
+					override fun onLedTurnOff(x: Int, y: Int) {
+						channelManager!!.remove(x, y, Channel.LED)
+						setLed(x, y)
+					}
 
-				override fun onEnd() {
-					TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-				}
+					override fun onEnd() {
+						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+					}
 
-			})
+				})
 		}
 
 		if (unipack!!.autoPlayExist) {
-			autoPlayRunner = AutoPlayRunner(unipack!!, listener = object : AutoPlayRunner.Listener {
-				override fun onStart() {
-					runOnUiThread {
-						if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
-						autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
-						autoPlayProgressBar.progress = 0
-						autoPlay_play()
+			autoPlayRunner = AutoPlayRunner(
+				unipack = unipack!!,
+				chain = chain,
+				listener = object : AutoPlayRunner.Listener {
+					override fun onStart() {
+						runOnUiThread {
+							if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
+							autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
+							autoPlayProgressBar.progress = 0
+							autoPlay_play()
+						}
 					}
-				}
 
-				override fun onPadTouchOn(x: Int, y: Int) {
-					runOnUiThread {
-						padTouch(x, y, true)
+					override fun onPadTouchOn(x: Int, y: Int) {
+						runOnUiThread {
+							padTouch(x, y, true)
+						}
 					}
-				}
 
-				override fun onPadTouchOff(x: Int, y: Int) {
-					runOnUiThread {
-						padTouch(x, y, false)
+					override fun onPadTouchOff(x: Int, y: Int) {
+						runOnUiThread {
+							padTouch(x, y, false)
+						}
 					}
-				}
 
-				override fun onChainChange(c: Int) {
-					runOnUiThread {
-						chainChange(c)
+					override fun onChainChange(c: Int) {
+						runOnUiThread {
+							chain.value = c
+						}
 					}
-				}
 
-				override fun onGuidePadOn(x: Int, y: Int) {
-					runOnUiThread {
-						autoPlay_guidePad(x, y, true)
+					override fun onGuidePadOn(x: Int, y: Int) {
+						runOnUiThread {
+							autoPlay_guidePad(x, y, true)
+						}
 					}
-				}
 
-				override fun onGuidePadOff(x: Int, y: Int) {
-					runOnUiThread {
-						autoPlay_guidePad(x, y, false)
+					override fun onGuidePadOff(x: Int, y: Int) {
+						runOnUiThread {
+							autoPlay_guidePad(x, y, false)
+						}
 					}
-				}
 
-				override fun onGuideChainOn(c: Int) {
-					runOnUiThread {
-						autoPlay_guideChain(c, true)
+					override fun onGuideChainOn(c: Int) {
+						runOnUiThread {
+							autoPlay_guideChain(c, true)
+						}
 					}
-				}
 
-				override fun onGuideChainOff(c: Int) {
-					runOnUiThread {
-						autoPlay_guideChain(c, false)
+					override fun onGuideChainOff(c: Int) {
+						runOnUiThread {
+							autoPlay_guideChain(c, false)
+						}
 					}
-				}
 
-				override fun onRemoveGuide() {
-					runOnUiThread {
-						autoPlay_removeGuide()
+					override fun onRemoveGuide() {
+						runOnUiThread {
+							autoPlay_removeGuide()
+						}
 					}
-				}
 
-				override fun chainButsRefresh() {
-					runOnUiThread {
-						chainBtnsRefresh()
+					override fun chainButsRefresh() {
+						runOnUiThread {
+							chainBtnsRefresh()
+						}
 					}
-				}
 
-				override fun onProgressUpdate(progress: Int) {
-					runOnUiThread {
-						autoPlayProgressBar.progress = progress
+					override fun onProgressUpdate(progress: Int) {
+						runOnUiThread {
+							autoPlayProgressBar.progress = progress
+						}
 					}
-				}
 
-				override fun onEnd() {
-					runOnUiThread { }
-					SCB_autoPlay.setChecked(false)
-					if (unipack!!.ledAnimationTable != null) {
-						SCB_LED.setChecked(true)
-						SCB_feedbackLight.setChecked(false)
-					} else {
-						SCB_feedbackLight.setChecked(true)
+					override fun onEnd() {
+						runOnUiThread { }
+						SCB_autoPlay.setChecked(false)
+						if (unipack!!.ledAnimationTable != null) {
+							SCB_LED.setChecked(true)
+							SCB_feedbackLight.setChecked(false)
+						} else {
+							SCB_feedbackLight.setChecked(true)
+						}
+						autoPlayControlView.visibility = View.GONE
 					}
-					autoPlayControlView.visibility = View.GONE
-				}
-			})
+				})
 		}
 	}
 
@@ -485,7 +493,7 @@ class PlayActivity : BaseActivity() {
 			override fun onCheckedChange(b: Boolean) {
 				if (SCB_record.isChecked()) {
 					rec_prevEventMS = java.lang.System.currentTimeMillis()
-					rec_log = "c " + (chain + 1)
+					rec_log = "c " + (chain.value + 1)
 				} else {
 					putClipboard(this@PlayActivity, rec_log!!)
 					toast(string.copied)
@@ -545,16 +553,44 @@ class PlayActivity : BaseActivity() {
 			U_chains!![i] = Chain(this)
 			U_chains!![i]!!.layoutParams = RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY)
 			if (i in 0..7) {
-				U_chains!![i]!!.setOnClickListener { v: View? -> chainChange(i) }
+				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
 				chainsRight.addView(U_chains!![i])
 			}
 			if (i in 16..23) {
-				U_chains!![i]!!.setOnClickListener { v: View? -> chainChange(i) }
+				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
 				chainsLeft.addView(U_chains!![i], 0)
 			}
 		}
 		traceLog_init()
-		chainChange(chain)
+		chain.addObserver { curr: Int, prev: Int ->
+
+			//Log.log("chainChange (" + num + ")");
+			try {
+				chainBtnsRefresh()
+
+				// 다중매핑 초기화
+				for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
+					unipack!!.Sound_push(curr, i, j, 0)
+					unipack!!.LED_push(curr, i, j, 0)
+				}
+
+
+				// 녹음 chain 추가
+				if (SCB_record.isChecked()) {
+					val currTime = java.lang.System.currentTimeMillis()
+					rec_addLog("d " + (currTime - rec_prevEventMS))
+					rec_addLog("chain " + (curr + 1))
+					rec_prevEventMS = currTime
+				}
+
+				// 순서기록 표시
+
+
+				traceLog_show()
+			} catch (e: ArrayIndexOutOfBoundsException) {
+				e.printStackTrace()
+			}
+		}
 		proLightMode(SCB_proLightMode.isChecked())
 		skin_set()
 		UILoaded = true
@@ -807,7 +843,7 @@ class PlayActivity : BaseActivity() {
 			val guideItems: ArrayList<AutoPlay.Element.On>? = autoPlayRunner!!.guideItems
 			if (guideItems != null) {
 				loop@ for (autoPlay in guideItems) {
-					if (x == autoPlay.x && y == autoPlay.y && chain == autoPlay.currChain) {
+					if (x == autoPlay.x && y == autoPlay.y && chain.value == autoPlay.currChain) {
 						autoPlayRunner!!.achieve++
 						break@loop
 					}
@@ -821,14 +857,7 @@ class PlayActivity : BaseActivity() {
 
 		try {
 			if (upDown) {
-				soundPool!!.stop(stopID!![chain][x][y])
-				val e: Sound? = unipack!!.Sound_get(chain, x, y)
-				if (e != null) {
-					stopID!![chain][x][y] = soundPool!!.play(e.id, 1.0f, 1.0f, 0, e.loop, 1.0f)
-					unipack!!.Sound_push(chain, x, y)
-					if (e.wormhole != -1)
-						Handler().postDelayed({ chainChange(e.wormhole) }, 100)
-				}
+				soundRunner?.soundOn(x,y)
 				if (SCB_record.isChecked()) {
 					val currTime = java.lang.System.currentTimeMillis()
 					rec_addLog("d " + (currTime - rec_prevEventMS))
@@ -845,8 +874,7 @@ class PlayActivity : BaseActivity() {
 				autoPlay_checkGuide(x, y)
 
 			} else {
-				if (unipack!!.Sound_get(chain, x, y)!!.loop == -1)
-					soundPool!!.stop(stopID!![chain][x][y])
+				soundRunner?.soundOff(x,y)
 				channelManager!!.remove(x, y, Channel.PRESSED)
 				setLed(x, y)
 				ledRunner?.eventOff(x, y)
@@ -867,46 +895,6 @@ class PlayActivity : BaseActivity() {
 		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) padTouch(i, j, false)
 	}
 
-	private fun chainChange(num: Int) {
-		//Log.log("chainChange (" + num + ")");
-
-		ledRunner?.chain = num
-		autoPlayRunner?.chain = num
-
-		try {
-			if (num >= 0 && num < unipack!!.chain) {
-				chain = num
-				chainBtnsRefresh()
-			}
-
-			// 다중매핑 초기화
-
-
-			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
-				unipack!!.Sound_push(chain, i, j, 0)
-				unipack!!.LED_push(chain, i, j, 0)
-			}
-
-
-			// 녹음 chain 추가
-
-
-			if (SCB_record.isChecked()) {
-				val currTime = java.lang.System.currentTimeMillis()
-				rec_addLog("d " + (currTime - rec_prevEventMS))
-				rec_addLog("chain " + (chain + 1))
-				rec_prevEventMS = currTime
-			}
-
-			// 순서기록 표시
-
-
-			traceLog_show()
-		} catch (e: ArrayIndexOutOfBoundsException) {
-			e.printStackTrace()
-		}
-	}
-
 	// ============================================================================================= Trace Log
 
 
@@ -919,7 +907,7 @@ class PlayActivity : BaseActivity() {
 				val x = -1
 				val y = 8 + i
 
-				if (i == chain)
+				if (i == chain.value)
 					channelManager!!.add(x, y, Channel.CHAIN, -1, 3)
 				else
 					channelManager!!.remove(x, y, Channel.CHAIN)
@@ -995,7 +983,7 @@ class PlayActivity : BaseActivity() {
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {
 				if (!bool_toggleOption_window) {
-					if (upDown && unipack!!.chain > c) chainChange(c)
+					if (upDown && unipack!!.chain > c) chain.value = c
 				}
 			}
 
@@ -1005,7 +993,7 @@ class PlayActivity : BaseActivity() {
 		}
 
 	private fun updateLP() {
-		chainChange(chain)
+		chain.value = chain.value
 		refreshWatermark()
 	}
 
@@ -1018,8 +1006,8 @@ class PlayActivity : BaseActivity() {
 		for (i in 0 until unipack!!.buttonX) {
 			for (j in 0 until unipack!!.buttonY) {
 				U_pads!![i]!![j]!!.setTraceLogText("")
-				for (k in traceLog_table!![chain]!![i]!![j]!!.indices) U_pads!![i]!![j]!!.appendTraceLog(
-					traceLog_table!![chain]!![i]!![j]!![k].toString() + " "
+				for (k in traceLog_table!![chain.value]!![i]!![j]!!.indices) U_pads!![i]!![j]!!.appendTraceLog(
+					traceLog_table!![chain.value]!![i]!![j]!![k].toString() + " "
 				)
 			}
 		}
@@ -1028,9 +1016,9 @@ class PlayActivity : BaseActivity() {
 	private fun traceLog_log(x: Int, y: Int) {
 		//Log.log("traceLog_log (" + buttonX + ", " + buttonY + ")");
 
-		traceLog_table!![chain]!![x]!![y]!!.add(traceLog_nextNum!![chain]++)
+		traceLog_table!![chain.value]!![x]!![y]!!.add(traceLog_nextNum!![chain.value]++)
 		U_pads!![x]!![y]!!.setTraceLogText("")
-		for (i in traceLog_table!![chain]!![x]!![y]!!.indices) U_pads!![x]!![y]!!.appendTraceLog(traceLog_table!![chain]!![x]!![y]!![i].toString() + " ")
+		for (i in traceLog_table!![chain.value]!![x]!![y]!!.indices) U_pads!![x]!![y]!!.appendTraceLog(traceLog_table!![chain.value]!![x]!![y]!![i].toString() + " ")
 	}
 
 	private fun traceLog_init() {
@@ -1281,28 +1269,7 @@ class PlayActivity : BaseActivity() {
 		super.onDestroy()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()
-		if (soundPool != null) {
-			for (i in 0 until unipack!!.chain) {
-				for (j in 0 until unipack!!.buttonX) {
-					for (k in 0 until unipack!!.buttonY) {
-						val arrayList: ArrayList<*>? = unipack!!.soundTable!![i][j][k]
-						if (arrayList != null) {
-							for (l in arrayList.indices) {
-								if (unipack!!.soundTable!![i][j][k]!![l] != null) {
-									try {
-										soundPool!!.unload(unipack!!.soundTable!![i][j][k]!![l].id)
-									} catch (e: Exception) {
-										e.printStackTrace()
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			soundPool!!.release()
-			soundPool = null
-		}
+		soundRunner?.destroy()
 		//LEDInit();
 		//padInit();
 
