@@ -9,12 +9,12 @@ import kotlin.system.measureTimeMillis
 
 class LedRunner(
 	private val unipack: Unipack,
-	private val delay: Long = 16L,
-	private val listener: Listener
+	private val listener: Listener,
+	private val chain: ChainObserver,
+	private val delay: Long = 16L
 ) {
 	val coroutineContext = newSingleThreadContext("LedContext")
 
-	var chain = 0
 	private var btnLED: Array<Array<LED?>?>?
 	private var cirLED: Array<LED?>?
 	private var LEDEvents: ArrayList<LEDEvent?>?
@@ -103,8 +103,8 @@ class LedRunner(
 		}
 
 		init {
-			val e: LedAnimation? = unipack.LED_get(chain, buttonX, buttonY)
-			unipack.LED_push(chain, buttonX, buttonY)
+			val e: LedAnimation? = unipack.LED_get(chain.value, buttonX, buttonY)
+			unipack.LED_push(chain.value, buttonX, buttonY)
 
 			ledAnimation = e
 		}

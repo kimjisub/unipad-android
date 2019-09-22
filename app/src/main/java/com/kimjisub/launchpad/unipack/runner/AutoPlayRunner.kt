@@ -8,10 +8,10 @@ import java.util.*
 
 class AutoPlayRunner(
 	private val unipack: Unipack,
-	private val delay_: Long = 1L,
-	private val listener: Listener
+	private val listener: Listener,
+	private val chain: ChainObserver,
+	private val delay_: Long = 1L
 ) {
-	var chain = 0
 	var playmode = false
 	var progress = 0
 	var beforeStartPlaying = true
@@ -85,13 +85,13 @@ class AutoPlayRunner(
 
 						when (e) {
 							is AutoPlay.Element.On -> {
-								if (chain != e.currChain) listener.onChainChange(e.currChain)
+								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								unipack.Sound_push(e.currChain, e.x, e.y, e.num)
 								unipack.LED_push(e.currChain, e.x, e.y, e.num)
 								listener.onPadTouchOn(e.x, e.y)
 							}
 							is AutoPlay.Element.Off -> {
-								if (chain != e.currChain) listener.onChainChange(e.currChain)
+								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								listener.onPadTouchOff(e.x, e.y)
 							}
 							is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
@@ -103,10 +103,10 @@ class AutoPlayRunner(
 				} else {
 					beforeStartPlaying = true
 					if (delay <= currTime - startTime) delay = currTime - startTime
-					if (guideItems!!.size > 0 && guideItems!![0].currChain !== chain) { // 현재 체인이 다음 연습 체인이 아닌 경우
+					if (guideItems!!.size > 0 && guideItems!![0].currChain !== chain.value) { // 현재 체인이 다음 연습 체인이 아닌 경우
 
-						if (beforeChain == -1 || beforeChain != chain) {
-							beforeChain = chain
+						if (beforeChain == -1 || beforeChain != chain.value) {
+							beforeChain = chain.value
 							afterMatchChain = true
 							listener.onRemoveGuide()
 							listener.onGuideChainOn(guideItems!![0].currChain)
