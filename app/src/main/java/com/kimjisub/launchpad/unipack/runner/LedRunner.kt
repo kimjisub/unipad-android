@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.unipack.runner
 
-import android.annotation.SuppressLint
-import android.os.AsyncTask
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.manager.Log
@@ -13,7 +11,7 @@ import java.util.*
 
 class LedRunner(
 	private val unipack: Unipack,
-	private val delay: Long = 1L,
+	private val delay: Long = 16L,
 	private val listener: Listener
 ) {
 	var chain = 0
@@ -193,6 +191,7 @@ class LedRunner(
 						LEDEvents!!.removeAt(i)
 					}
 				}
+				val endTime = System.currentTimeMillis()
 				delay(delay)
 			}
 		}
