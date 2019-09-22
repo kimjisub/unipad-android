@@ -46,7 +46,9 @@ class SettingFragment : PreferenceFragmentCompat() {
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		addPreferencesFromResource(xml.setting)
 
-		billingManager = BillingManager(activity!!.parent, object : BillingManager.BillingEventListener {
+		// todo setting billingmanager
+		// activity!!.parent must not be null
+		/*billingManager = BillingManager(activity!!.parent, object : BillingManager.BillingEventListener {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
@@ -54,7 +56,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			override fun onRefresh() {
 				updateBilling()
 			}
-		})
+		})*/
 
 
 		findPreference<Preference>("select_theme")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -254,6 +256,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 	override fun onDestroy() {
 		super.onDestroy()
-		billingManager!!.release()
+		billingManager?.release()
 	}
 }
