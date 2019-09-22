@@ -52,7 +52,7 @@ import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.LedRunner
-import com.kimjisub.launchpad.unipack.runner.SoundLoader
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.manager.Log.log
@@ -180,7 +180,7 @@ class PlayActivity : BaseActivity() {
 			initRunner()
 			initLayout()
 
-			SoundLoader(unipack!!, listener = object : SoundLoader.Listener {
+			SoundRunner(unipack!!, listener = object : SoundRunner.Listener {
 				var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
 				override fun onStart(soundCount: Int, soundPool: SoundPool, stopID: Array<Array<Array<Int>>>) {
 					this@PlayActivity.soundPool = soundPool

@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 
-class SoundLoader(unipack: Unipack, listener: Listener) {
+class SoundRunner(unipack: Unipack, listener: Listener) {
 
 	private var soundPool: SoundPool? = null
 	private var stopID: Array<Array<Array<Int>>>? = null
