@@ -11,7 +11,6 @@ import android.database.ContentObserver
 import android.media.AudioManager
 import android.media.SoundPool
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
@@ -44,8 +43,7 @@ import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.Constant.VUNGLE
 import com.kimjisub.launchpad.manager.Functions.putClipboard
-import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme.load
-import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme.save
+import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -54,9 +52,9 @@ import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.LedRunner
+import com.kimjisub.launchpad.unipack.runner.SoundLoader
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.manager.Log.err
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
 import com.vungle.warren.LoadAdCallback
@@ -107,7 +105,7 @@ class PlayActivity : BaseActivity() {
 	private var ledRunner: LedRunner? = null
 	private var autoPlayRunner: AutoPlayRunner? = null
 	private var soundPool: SoundPool? = null
-	private var stopID: Array<Array<IntArray?>?>? = null
+	private var stopID: Array<Array<Array<Int>>>? = null
 	private var chain = 0
 	private var audioManager: AudioManager? = null
 	private var channelManager: ChannelManager? = null
@@ -158,154 +156,77 @@ class PlayActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_play)
 		initVar()
+
 		val path: String? = intent.getStringExtra("path")
 		val file = File(path)
 		try {
-			log("[01] Start Load Unipack $path")
 			unipack = Unipack(file, true)
-			log("[02] Check ErrorDetail")
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
 					.setTitle(if (unipack!!.criticalError) getString(string.error) else getString(string.warning))
 					.setMessage(unipack!!.errorDetail)
 					.setPositiveButton(
 						if (unipack!!.criticalError) getString(string.quit) else getString(string.accept),
-						if (unipack!!.criticalError) OnClickListener { dialogInterface: DialogInterface?, i: Int -> finish() } else null
+						if (unipack!!.criticalError) OnClickListener { _: DialogInterface?, _: Int -> finish() } else null
 					)
 					.setCancelable(false)
 					.show()
 			}
 			log("[03] Init Vars")
-			U_pads =
-				Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
+			U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
 			U_chains = arrayOfNulls<Chain?>(32)
 			channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
 			log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
-			if (unipack!!.keyLEDExist) {
-				ledRunner = LedRunner(unipack!!, listener = object : LedRunner.Listener {
-					override fun onStart() {
-						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-					}
+			initRunner()
+			initLayout()
 
-					override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
-						channelManager!!.add(x, y, Channel.LED, color, velo)
-						setLEDLaunchpad(x, y)
-						setLEDUI(x, y)
+			SoundLoader(unipack!!, listener = object : SoundLoader.Listener {
+				var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
+				override fun onStart(soundCount: Int, soundPool: SoundPool, stopID: Array<Array<Array<Int>>>) {
+					this@PlayActivity.soundPool = soundPool
+					this@PlayActivity.stopID = stopID
+					runOnUiThread {
+						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+						progressDialog.setTitle(getString(string.loading))
+						progressDialog.setMessage(getString(string.wait_a_sec))
+						progressDialog.setCancelable(false)
+						progressDialog.max = soundCount
+						progressDialog.show()
 					}
-
-					override fun onLedTurnOff(x: Int, y: Int) {
-						channelManager!!.remove(x, y, Channel.LED)
-						setLEDLaunchpad(x, y)
-						setLEDUI(x, y)
-					}
-
-					override fun onEnd() {
-						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-					}
-
-				})
-				ledRunner!!.launch()
-			}
-			log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
-			if (unipack!!.squareButton) {
-				if (!unipack!!.keyLEDExist) {
-					SCB_LED.setVisibility(View.GONE)
-					SCB_LED.isLocked = true
-				}
-				if (!unipack!!.autoPlayExist) {
-					SCB_autoPlay.setVisibility(View.GONE)
-					SCB_autoPlay.isLocked = true
-				}
-			} else {
-				RL_root.setPadding(0, 0, 0, 0)
-				SCB_feedbackLight.setVisibility(View.GONE)
-				SCB_LED.setVisibility(View.GONE)
-				SCB_autoPlay.setVisibility(View.GONE)
-				SCB_traceLog.setVisibility(View.GONE)
-				SCB_record.setVisibility(View.GONE)
-				SCB_feedbackLight.isLocked = true
-				SCB_LED.isLocked = true
-				SCB_autoPlay.isLocked = true
-				SCB_traceLog.isLocked = true
-				SCB_record.isLocked = true
-			}
-			log("[06] Set CheckBox Checked")
-			if (unipack!!.keyLEDExist) {
-				SCB_feedbackLight.setChecked(false)
-				SCB_LED.setChecked(true)
-			} else SCB_feedbackLight.setChecked(true)
-			object : AsyncTask<String?, String?, String?>() {
-				var progressDialog: ProgressDialog? = null
-				override fun onPreExecute() {
-					log("[07] onPreExecute")
-					progressDialog = ProgressDialog(this@PlayActivity)
-					progressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-					progressDialog!!.setTitle(getString(string.loading))
-					progressDialog!!.setMessage(getString(string.wait_a_sec))
-					progressDialog!!.setCancelable(false)
-					var soundNum = 0
-					for (i in 0 until unipack!!.chain) for (j in 0 until unipack!!.buttonX) for (k in 0 until unipack!!.buttonY) if (unipack!!.soundTable!![i][j][k] != null
-					) soundNum += unipack!!.soundTable!![i][j][k]!!.size
-					soundPool = SoundPool(soundNum, AudioManager.STREAM_MUSIC, 0)
-					stopID = Array(
-						unipack!!.chain
-					) { Array<IntArray?>(unipack!!.buttonX) { IntArray(unipack!!.buttonY) } }
-					progressDialog!!.max = soundNum
-					progressDialog!!.show()
-					super.onPreExecute()
 				}
 
-				override fun doInBackground(vararg params: String?): String? {
-					log("[08] doInBackground")
-					try {
-						for (i in 0 until unipack!!.chain) {
-							for (j in 0 until unipack!!.buttonX) {
-								for (k in 0 until unipack!!.buttonY) {
-									val arrayList: ArrayList<*>? = unipack!!.soundTable!![i][j][k]
-									if (arrayList != null) {
-										for (l in arrayList.indices) {
-											val e: Sound = unipack!!.soundTable!![i][j][k]!![l]
-											e.id = soundPool!!.load(e.file.path, 1)
-											publishProgress()
-										}
-									}
-								}
-							}
-						}
+				override fun onProgressTick() {
+					runOnUiThread {
+						progressDialog.incrementProgressBy(1)
+					}
+				}
+
+				override fun onEnd() {
+					runOnUiThread {
 						unipackLoaded = true
-					} catch (e: Exception) {
-						err("[08] doInBackground")
-						e.printStackTrace()
-					}
-					return null
-				}
-
-				override fun onProgressUpdate(vararg progress: String?) {
-					progressDialog!!.incrementProgressBy(1)
-				}
-
-				override fun onPostExecute(result: String?) {
-					log("[09] onPostExecute")
-					if (unipackLoaded) {
 						try {
-							if (progressDialog != null && progressDialog!!.isShowing) progressDialog!!.dismiss()
+							if (progressDialog.isShowing)
+								progressDialog.dismiss()
 						} catch (e: Exception) {
 							e.printStackTrace()
 						}
 						try {
-							if (skin_init(0)) showUI()
+							initTheme()
 						} catch (e: ArithmeticException) {
 							e.printStackTrace()
 						} catch (e: NullPointerException) {
 							e.printStackTrace()
 						}
-					} else {
+					}
+				}
+
+				override fun onException(throwable: Throwable) {
+					runOnUiThread {
 						toast(string.outOfCPU)
 						finish()
 					}
-					super.onPostExecute(result)
 				}
-			}.execute()
+			})
 		} catch (e: OutOfMemoryError) {
 			e.printStackTrace()
 			toast(string.outOfMemory)
@@ -317,10 +238,138 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun skin_init(num: Int): Boolean {
-		log("[10] skin_init ($num)")
-		val packageName = load(this@PlayActivity)
-		if (num >= 2) {
+	private fun initRunner() {
+		if (unipack!!.keyLEDExist) {
+			ledRunner = LedRunner(unipack!!, listener = object : LedRunner.Listener {
+				override fun onStart() {
+					TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+				}
+
+				override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
+					channelManager!!.add(x, y, Channel.LED, color, velo)
+					setLedLaunchpad(x, y)
+					runOnUiThread { setLedUI(x, y) }
+				}
+
+				override fun onLedTurnOff(x: Int, y: Int) {
+					channelManager!!.remove(x, y, Channel.LED)
+					setLedLaunchpad(x, y)
+					runOnUiThread { setLedUI(x, y) }
+				}
+
+				override fun onEnd() {
+					TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+				}
+
+			})
+		}
+
+		if (unipack!!.autoPlayExist) {
+			autoPlayRunner = AutoPlayRunner(unipack!!, listener = object : AutoPlayRunner.Listener {
+				override fun onStart() {
+					if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
+					autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
+					autoPlayProgressBar.progress = 0
+					autoPlay_play()
+				}
+
+				override fun onPadTouchOn(x: Int, y: Int) =
+					padTouch(x, y, true)
+
+				override fun onPadTouchOff(x: Int, y: Int) =
+					padTouch(x, y, false)
+
+				override fun onChainChange(c: Int) =
+					chainChange(c)
+
+				override fun onGuidePadOn(x: Int, y: Int) =
+					autoPlay_guidePad(x, y, true)
+
+				override fun onGuidePadOff(x: Int, y: Int) =
+					autoPlay_guidePad(x, y, false)
+
+				override fun onGuideChainOn(c: Int) =
+					autoPlay_guideChain(c, true)
+
+				override fun onGuideChainOff(c: Int) =
+					autoPlay_guideChain(c, false)
+
+				override fun onRemoveGuide() =
+					autoPlay_removeGuide()
+
+				override fun chainButsRefresh() =
+					chainBtnsRefresh()
+
+				override fun onProgressUpdate(progress: Int) {
+					autoPlayProgressBar.progress = progress
+				}
+
+				override fun onEnd() {
+					SCB_autoPlay.setChecked(false)
+					if (unipack!!.ledAnimationTable != null) {
+						SCB_LED.setChecked(true)
+						SCB_feedbackLight.setChecked(false)
+					} else {
+						SCB_feedbackLight.setChecked(true)
+					}
+					autoPlayControlView.visibility = View.GONE
+				}
+			})
+		}
+	}
+
+	private fun initLayout() {
+		log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
+		if (unipack!!.squareButton) {
+			if (!unipack!!.keyLEDExist) {
+				SCB_LED.setVisibility(View.GONE)
+				SCB_LED.isLocked = true
+			}
+			if (!unipack!!.autoPlayExist) {
+				SCB_autoPlay.setVisibility(View.GONE)
+				SCB_autoPlay.isLocked = true
+			}
+		} else {
+			RL_root.setPadding(0, 0, 0, 0)
+			SCB_feedbackLight.setVisibility(View.GONE)
+			SCB_LED.setVisibility(View.GONE)
+			SCB_autoPlay.setVisibility(View.GONE)
+			SCB_traceLog.setVisibility(View.GONE)
+			SCB_record.setVisibility(View.GONE)
+			SCB_feedbackLight.isLocked = true
+			SCB_LED.isLocked = true
+			SCB_autoPlay.isLocked = true
+			SCB_traceLog.isLocked = true
+			SCB_record.isLocked = true
+		}
+		log("[06] Set CheckBox Checked")
+		if (unipack!!.keyLEDExist) {
+			SCB_feedbackLight.setChecked(false)
+			SCB_LED.setChecked(true)
+		} else SCB_feedbackLight.setChecked(true)
+	}
+
+	private fun initTheme() {
+		val packageName = SelectedTheme.load(this@PlayActivity)
+
+		theme = try {
+			ThemeResources(this@PlayActivity, packageName, true)
+		} catch (e: OutOfMemoryError) {
+			e.printStackTrace()
+			toast("${getString(string.skinMemoryErr)}\n$packageName")
+			requestRestart(this)
+			null
+		} catch (e: Exception) {
+			e.printStackTrace()
+			toast("${getString(string.skinErr)}\n$packageName")
+			SelectedTheme.save(this@PlayActivity, getPackageName())
+			ThemeResources(this@PlayActivity, true)
+		}
+
+		if(theme != null)
+			showUI()
+
+		/*if (num >= 2) {//하다하다 안되면
 			try {
 				theme = ThemeResources(this@PlayActivity, true)
 			} catch (ignore: Exception) {
@@ -338,17 +387,14 @@ class PlayActivity : BaseActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			toast(getString(string.skinErr) + "\n" + packageName)
-			save(this@PlayActivity, getPackageName())
-			skin_init(num + 1)
-		}
+			SelectedTheme.save(this@PlayActivity, getPackageName())
+			initTheme(num + 1)
+		}*/
 	}
-
-	// ============================================================================================= LEDTask
 
 
 	@SuppressLint("ClickableViewAccessibility")
 	private fun showUI() {
-		log("[11] showUI")
 		val buttonSizeX: Int
 		val buttonSizeY: Int
 		if (unipack!!.squareButton) {
@@ -374,7 +420,12 @@ class PlayActivity : BaseActivity() {
 		SCB_LED.onCheckedChange = object : OnCheckedChange {
 			override fun onCheckedChange(b: Boolean) {
 				if (unipack!!.keyLEDExist) {
-					if (!b) LEDInit()
+					if (b) {
+						ledRunner?.launch()
+					} else {
+						ledRunner?.isPlaying = false
+						LEDInit()
+					}
 				}
 				refreshWatermark()
 			}
@@ -382,58 +433,6 @@ class PlayActivity : BaseActivity() {
 		SCB_autoPlay.onCheckedChange = object : OnCheckedChange {
 			override fun onCheckedChange(b: Boolean) {
 				if (b) {
-					autoPlayRunner = AutoPlayRunner(unipack!!, listener = object : AutoPlayRunner.Listener {
-
-						override fun onStart() {
-							if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
-							autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
-							autoPlayProgressBar.progress = 0
-							autoPlay_play()
-						}
-
-						override fun onPadTouchOn(x: Int, y: Int) =
-							padTouch(x, y, true)
-
-						override fun onPadTouchOff(x: Int, y: Int) =
-							padTouch(x, y, false)
-
-						override fun onChainChange(c: Int) =
-							chainChange(c)
-
-						override fun onGuidePadOn(x: Int, y: Int) =
-							autoPlay_guidePad(x, y, true)
-
-						override fun onGuidePadOff(x: Int, y: Int) =
-							autoPlay_guidePad(x, y, false)
-
-						override fun onGuideChainOn(c: Int) =
-							autoPlay_guideChain(c, true)
-
-						override fun onGuideChainOff(c: Int) =
-							autoPlay_guideChain(c, false)
-
-						override fun onRemoveGuide() =
-							autoPlay_removeGuide()
-
-						override fun chainButsRefresh() =
-							chainBtnsRefresh()
-
-						override fun onProgressUpdate(progress: Int){
-							autoPlayProgressBar.progress = progress
-						}
-
-						override fun onEnd() {
-							SCB_autoPlay.setChecked(false)
-							if (unipack!!.ledAnimationTable != null) {
-								SCB_LED.setChecked(true)
-								SCB_feedbackLight.setChecked(false)
-							} else {
-								SCB_feedbackLight.setChecked(true)
-							}
-							autoPlayControlView.visibility = View.GONE
-						}
-
-					})
 					autoPlayRunner!!.launch()
 				} else {
 					autoPlayRunner!!.loop = false
@@ -474,7 +473,6 @@ class PlayActivity : BaseActivity() {
 		SCB_watermark.onCheckedChange = object : OnCheckedChange {
 			override fun onCheckedChange(b: Boolean) {
 				refreshWatermark()
-				refreshWatermark()
 			}
 		}
 		SCB_proLightMode.onCheckedChange = object : OnCheckedChange {
@@ -483,29 +481,25 @@ class PlayActivity : BaseActivity() {
 				refreshWatermark()
 			}
 		}
-		prev.setOnClickListener { v: View? -> autoPlay_prev() }
-		play.setOnClickListener { v: View? -> if (autoPlayRunner!!.isPlaying) autoPlay_stop() else autoPlay_play() }
-		next.setOnClickListener { v: View? -> autoPlay_after() }
+		prev.setOnClickListener { autoPlay_prev() }
+		play.setOnClickListener { if (autoPlayRunner!!.isPlaying) autoPlay_stop() else autoPlay_play() }
+		next.setOnClickListener { autoPlay_after() }
 		option_blur.setOnClickListener { v: View? ->
 			if (bool_toggleOption_window) toggleOption_window(
 				false
 			)
 		}
-		quit.setOnClickListener { v: View? -> finish() }
+		quit.setOnClickListener { finish() }
 		pads.removeAllViews()
 		chainsRight.removeAllViews()
 		chainsLeft.removeAllViews()
 		for (i in 0 until unipack!!.buttonX) {
 			val row = LinearLayout(this)
-			row.layoutParams = LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-				1.toFloat()
-			)
+			row.layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1F)
 			for (j in 0 until unipack!!.buttonY) {
 				val pad = Pad(this)
 				pad.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
-				pad.setOnTouchListener { v: View?, event: MotionEvent? ->
+				pad.setOnTouchListener { _: View?, event: MotionEvent? ->
 					when (event!!.action) {
 						MotionEvent.ACTION_DOWN -> padTouch(i, j, true)
 						MotionEvent.ACTION_UP -> padTouch(i, j, false)
@@ -534,6 +528,7 @@ class PlayActivity : BaseActivity() {
 		proLightMode(SCB_proLightMode.isChecked())
 		skin_set()
 		UILoaded = true
+		UILoaded()
 		controller = midiController
 	}
 
@@ -591,17 +586,21 @@ class PlayActivity : BaseActivity() {
 		//IB_option_quit.setTextColor(theme.option_window_btn_text);
 	}
 
-	// ============================================================================================= AutoPlayTask
+	private fun UILoaded() {
+		if (unipack!!.keyLEDExist)
+			SCB_LED.setChecked(true)
+	}
 
+	// Led /////////////////////////////////////////////////////////////////////////////////////////
 
-	private fun setLED(x: Int, y: Int) {
+	private fun setLed(x: Int, y: Int) {
 		if (enable) {
-			setLEDUI(x, y)
-			setLEDLaunchpad(x, y)
+			setLedUI(x, y)
+			runOnUiThread { setLedLaunchpad(x, y) }
 		}
 	}
 
-	private fun setLEDUI(x: Int, y: Int) {
+	private fun setLedUI(x: Int, y: Int) {
 		val Item = channelManager!!.get(x, y)
 		if (x != -1) {
 			if (Item != null) {
@@ -633,7 +632,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun setLEDLaunchpad(x: Int, y: Int) {
+	private fun setLedLaunchpad(x: Int, y: Int) {
 		val Item = channelManager!!.get(x, y)
 		if (x != -1) {
 			if (Item != null) driver.sendPadLED(
@@ -655,21 +654,25 @@ class PlayActivity : BaseActivity() {
 			try {
 				for (i in 0 until unipack!!.buttonX) {
 					for (j in 0 until unipack!!.buttonY) {
-						if (ledRunner!!.isEventExist(i, j)) ledRunner!!.eventShutdown(i, j)
+						if (ledRunner!!.isEventExist(i, j))
+							ledRunner!!.eventShutdown(i, j)
 						channelManager!!.remove(i, j, Channel.LED)
-						setLED(i, j)
+						setLed(i, j)
 					}
 				}
 				for (i in 0..35) {
-					if (ledRunner!!.isEventExist(-1, i)) ledRunner!!.eventShutdown(-1, i)
+					if (ledRunner!!.isEventExist(-1, i))
+						ledRunner!!.eventShutdown(-1, i)
 					channelManager!!.remove(-1, i, Channel.LED)
-					setLED(-1, i)
+					setLed(-1, i)
 				}
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 		}
 	}
+
+	// unishare /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun autoPlay_play() {
 		log("autoPlay_play")
@@ -731,10 +734,10 @@ class PlayActivity : BaseActivity() {
 
 		if (onOff) {
 			channelManager!!.add(x, y, Channel.GUIDE, -1, 17)
-			setLED(x, y)
+			setLed(x, y)
 		} else {
 			channelManager!!.remove(x, y, Channel.GUIDE)
-			setLED(x, y)
+			setLed(x, y)
 		}
 	}
 
@@ -745,10 +748,10 @@ class PlayActivity : BaseActivity() {
 		log("autoPlay_guideChain ($c, $onOff)")
 		if (onOff) {
 			channelManager!!.add(-1, 8 + c, Channel.GUIDE, -1, 17)
-			setLED(-1, 8 + c)
+			setLed(-1, 8 + c)
 		} else {
 			channelManager!!.remove(-1, 8 + c, Channel.GUIDE)
-			setLED(-1, 8 + c)
+			setLed(-1, 8 + c)
 			chainBtnsRefresh()
 		}
 	}
@@ -758,11 +761,11 @@ class PlayActivity : BaseActivity() {
 		try {
 			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
 				channelManager!!.remove(i, j, Channel.GUIDE)
-				setLED(i, j)
+				setLed(i, j)
 			}
 			for (i in 0..31) {
 				channelManager!!.remove(-1, i, Channel.GUIDE)
-				setLED(-1, i)
+				setLed(-1, i)
 			}
 			chainBtnsRefresh()
 		} catch (e: Exception) {
@@ -777,13 +780,9 @@ class PlayActivity : BaseActivity() {
 			val guideItems: ArrayList<AutoPlay.Element.On>? = autoPlayRunner!!.guideItems
 			if (guideItems != null) {
 				loop@ for (autoPlay in guideItems) {
-					when (autoPlay) {
-						is AutoPlay.Element.On -> {
-							if (x == autoPlay.x && y == autoPlay.y && chain == autoPlay.currChain) {
-								autoPlayRunner!!.achieve++
-								break@loop
-							}
-						}
+					if (x == autoPlay.x && y == autoPlay.y && chain == autoPlay.currChain) {
+						autoPlayRunner!!.achieve++
+						break@loop
 					}
 				}
 			}
@@ -795,28 +794,35 @@ class PlayActivity : BaseActivity() {
 
 		try {
 			if (upDown) {
-				soundPool!!.stop(stopID!![chain]!![x]!![y])
-				val e: Sound = unipack!!.Sound_get(chain, x, y)!!
-				stopID!![chain]!![x]!![y] = soundPool!!.play(e.id, 1.0f, 1.0f, 0, e.loop, 1.0f)
-				unipack!!.Sound_push(chain, x, y)
+				soundPool!!.stop(stopID!![chain][x][y])
+				val e: Sound? = unipack!!.Sound_get(chain, x, y)
+				if (e != null) {
+					stopID!![chain][x][y] = soundPool!!.play(e.id, 1.0f, 1.0f, 0, e.loop, 1.0f)
+					unipack!!.Sound_push(chain, x, y)
+					if (e.wormhole != -1)
+						Handler().postDelayed({ chainChange(e.wormhole) }, 100)
+				}
 				if (SCB_record.isChecked()) {
 					val currTime = java.lang.System.currentTimeMillis()
 					rec_addLog("d " + (currTime - rec_prevEventMS))
 					rec_addLog("t " + (x + 1).toString() + " " + (y + 1))
 					rec_prevEventMS = currTime
 				}
-				if (SCB_traceLog.isChecked()) traceLog_log(x, y)
+				if (SCB_traceLog.isChecked())
+					traceLog_log(x, y)
 				if (SCB_feedbackLight.isChecked()) {
 					channelManager!!.add(x, y, Channel.PRESSED, -1, 3)
-					setLED(x, y)
+					setLed(x, y)
 				}
-				if (SCB_LED.isChecked()) ledRunner!!.addEvent(x, y)
+				if (ledRunner != null && ledRunner!!.isPlaying)
+					ledRunner!!.addEvent(x, y)
 				autoPlay_checkGuide(x, y)
-				if (e.wormhole !== -1) Handler().postDelayed({ chainChange(e.wormhole) }, 100)
+
 			} else {
-				if (unipack!!.Sound_get(chain, x, y)!!.loop == -1) soundPool!!.stop(stopID!![chain]!![x]!![y])
+				if (unipack!!.Sound_get(chain, x, y)!!.loop == -1)
+					soundPool!!.stop(stopID!![chain][x][y])
 				channelManager!!.remove(x, y, Channel.PRESSED)
-				setLED(x, y)
+				setLed(x, y)
 				if (SCB_LED.isChecked()) {
 					val e = ledRunner!!.searchEvent(x, y)
 					if (e != null && e.loop == 0) ledRunner!!.eventShutdown(x, y)
@@ -858,7 +864,7 @@ class PlayActivity : BaseActivity() {
 			// 녹음 chain 추가
 
 
-			if (SCB_record!!.isChecked()) {
+			if (SCB_record.isChecked()) {
 				val currTime = java.lang.System.currentTimeMillis()
 				rec_addLog("d " + (currTime - rec_prevEventMS))
 				rec_addLog("chain " + (chain + 1))
@@ -890,8 +896,8 @@ class PlayActivity : BaseActivity() {
 					-1,
 					3
 				) else channelManager!!.remove(-1, 8 + i, Channel.CHAIN)
-				setLEDUI(-1, 8 + i)
-				setLEDLaunchpad(-1, 8 + i)
+				setLedUI(-1, 8 + i)
+				setLedLaunchpad(-1, 8 + i)
 			}
 
 			// volume
@@ -910,7 +916,7 @@ class PlayActivity : BaseActivity() {
 					-1,
 					40
 				) else channelManager!!.remove(-1, i + 8, Channel.UI)
-				setLED(-1, i + 8)
+				setLed(-1, i + 8)
 			}
 		} catch (e: Exception) {
 		}
@@ -937,19 +943,19 @@ class PlayActivity : BaseActivity() {
 							1 -> SCB_LED.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
-							4, 5, 6, 7 -> SCB_watermark!!.toggleChecked()
+							4, 5, 6, 7 -> SCB_watermark.toggleChecked()
 						}
 					} else {
-						if (0 <= f && f <= 7) when (f) {
+						if (f in 0..7) when (f) {
 							0 -> SCB_feedbackLight.toggleChecked()
 							1 -> SCB_LED.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
-							4 -> SCB_hideUI!!.toggleChecked()
-							5 -> SCB_watermark!!.toggleChecked()
-							6 -> SCB_proLightMode!!.toggleChecked()
+							4 -> SCB_hideUI.toggleChecked()
+							5 -> SCB_watermark.toggleChecked()
+							6 -> SCB_proLightMode.toggleChecked()
 							7 -> finish()
-						} else if (8 <= f && f <= 15) {
+						} else if (f in 8..15) {
 							val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
 							val currLevel = 8 - (f - 8) - 1
 							val currPercent = currLevel.toFloat() / 7.toFloat()
@@ -1081,7 +1087,7 @@ class PlayActivity : BaseActivity() {
 					-1,
 					topBar[i]
 				) else channelManager!!.remove(-1, i, Channel.UI_UNIPAD)
-				setLED(-1, i)
+				setLed(-1, i)
 			}
 		} else {
 			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
@@ -1100,7 +1106,7 @@ class PlayActivity : BaseActivity() {
 					-1,
 					topBar[i]
 				) else channelManager!!.remove(-1, i, Channel.UI)
-				setLED(-1, i)
+				setLed(-1, i)
 			}
 		}
 		chainBtnsRefresh()
