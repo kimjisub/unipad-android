@@ -247,14 +247,12 @@ class PlayActivity : BaseActivity() {
 
 				override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
 					channelManager!!.add(x, y, Channel.LED, color, velo)
-					setLedLaunchpad(x, y)
-					runOnUiThread { setLedUI(x, y) }
+					setLed(x, y)
 				}
 
 				override fun onLedTurnOff(x: Int, y: Int) {
 					channelManager!!.remove(x, y, Channel.LED)
-					setLedLaunchpad(x, y)
-					runOnUiThread { setLedUI(x, y) }
+					setLed(x, y)
 				}
 
 				override fun onEnd() {
@@ -267,44 +265,76 @@ class PlayActivity : BaseActivity() {
 		if (unipack!!.autoPlayExist) {
 			autoPlayRunner = AutoPlayRunner(unipack!!, listener = object : AutoPlayRunner.Listener {
 				override fun onStart() {
-					if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
-					autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
-					autoPlayProgressBar.progress = 0
-					autoPlay_play()
+					runOnUiThread {
+						if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
+						autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
+						autoPlayProgressBar.progress = 0
+						autoPlay_play()
+					}
 				}
 
-				override fun onPadTouchOn(x: Int, y: Int) =
-					padTouch(x, y, true)
+				override fun onPadTouchOn(x: Int, y: Int) {
+					runOnUiThread {
+						padTouch(x, y, true)
+					}
+				}
 
-				override fun onPadTouchOff(x: Int, y: Int) =
-					padTouch(x, y, false)
+				override fun onPadTouchOff(x: Int, y: Int) {
+					runOnUiThread {
+						padTouch(x, y, false)
+					}
+				}
 
-				override fun onChainChange(c: Int) =
-					chainChange(c)
+				override fun onChainChange(c: Int) {
+					runOnUiThread {
+						chainChange(c)
+					}
+				}
 
-				override fun onGuidePadOn(x: Int, y: Int) =
-					autoPlay_guidePad(x, y, true)
+				override fun onGuidePadOn(x: Int, y: Int) {
+					runOnUiThread {
+						autoPlay_guidePad(x, y, true)
+					}
+				}
 
-				override fun onGuidePadOff(x: Int, y: Int) =
-					autoPlay_guidePad(x, y, false)
+				override fun onGuidePadOff(x: Int, y: Int) {
+					runOnUiThread {
+						autoPlay_guidePad(x, y, false)
+					}
+				}
 
-				override fun onGuideChainOn(c: Int) =
-					autoPlay_guideChain(c, true)
+				override fun onGuideChainOn(c: Int) {
+					runOnUiThread {
+						autoPlay_guideChain(c, true)
+					}
+				}
 
-				override fun onGuideChainOff(c: Int) =
-					autoPlay_guideChain(c, false)
+				override fun onGuideChainOff(c: Int) {
+					runOnUiThread {
+						autoPlay_guideChain(c, false)
+					}
+				}
 
-				override fun onRemoveGuide() =
-					autoPlay_removeGuide()
+				override fun onRemoveGuide() {
+					runOnUiThread {
+						autoPlay_removeGuide()
+					}
+				}
 
-				override fun chainButsRefresh() =
-					chainBtnsRefresh()
+				override fun chainButsRefresh() {
+					runOnUiThread {
+						chainBtnsRefresh()
+					}
+				}
 
 				override fun onProgressUpdate(progress: Int) {
-					autoPlayProgressBar.progress = progress
+					runOnUiThread {
+						autoPlayProgressBar.progress = progress
+					}
 				}
 
 				override fun onEnd() {
+					runOnUiThread { }
 					SCB_autoPlay.setChecked(false)
 					if (unipack!!.ledAnimationTable != null) {
 						SCB_LED.setChecked(true)
@@ -366,7 +396,7 @@ class PlayActivity : BaseActivity() {
 			ThemeResources(this@PlayActivity, true)
 		}
 
-		if(theme != null)
+		if (theme != null)
 			showUI()
 
 		/*if (num >= 2) {//하다하다 안되면
@@ -423,7 +453,7 @@ class PlayActivity : BaseActivity() {
 					if (b) {
 						ledRunner?.launch()
 					} else {
-						ledRunner?.isPlaying = false
+						ledRunner?.stop()
 						LEDInit()
 					}
 				}
@@ -433,9 +463,9 @@ class PlayActivity : BaseActivity() {
 		SCB_autoPlay.onCheckedChange = object : OnCheckedChange {
 			override fun onCheckedChange(b: Boolean) {
 				if (b) {
-					autoPlayRunner!!.launch()
+					autoPlayRunner?.launch()
 				} else {
-					autoPlayRunner!!.loop = false
+					autoPlayRunner?.stop()
 					padInit()
 					LEDInit()
 					autoPlay_removeGuide()
@@ -482,7 +512,7 @@ class PlayActivity : BaseActivity() {
 			}
 		}
 		prev.setOnClickListener { autoPlay_prev() }
-		play.setOnClickListener { if (autoPlayRunner!!.isPlaying) autoPlay_stop() else autoPlay_play() }
+		play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
 		next.setOnClickListener { autoPlay_after() }
 		option_blur.setOnClickListener { v: View? ->
 			if (bool_toggleOption_window) toggleOption_window(
@@ -595,8 +625,8 @@ class PlayActivity : BaseActivity() {
 
 	private fun setLed(x: Int, y: Int) {
 		if (enable) {
-			setLedUI(x, y)
-			runOnUiThread { setLedLaunchpad(x, y) }
+			setLedLaunchpad(x, y)
+			runOnUiThread { setLedUI(x, y) }
 		}
 	}
 
@@ -655,14 +685,14 @@ class PlayActivity : BaseActivity() {
 				for (i in 0 until unipack!!.buttonX) {
 					for (j in 0 until unipack!!.buttonY) {
 						if (ledRunner!!.isEventExist(i, j))
-							ledRunner!!.eventShutdown(i, j)
+							ledRunner!!.eventOff(i, j)
 						channelManager!!.remove(i, j, Channel.LED)
 						setLed(i, j)
 					}
 				}
 				for (i in 0..35) {
 					if (ledRunner!!.isEventExist(-1, i))
-						ledRunner!!.eventShutdown(-1, i)
+						ledRunner!!.eventOff(-1, i)
 					channelManager!!.remove(-1, i, Channel.LED)
 					setLed(-1, i)
 				}
@@ -678,7 +708,7 @@ class PlayActivity : BaseActivity() {
 		log("autoPlay_play")
 		padInit()
 		LEDInit()
-		autoPlayRunner!!.isPlaying = true
+		autoPlayRunner!!.playmode = true
 		play.background = theme!!.xml_pause
 		if (unipack!!.keyLEDExist) {
 			SCB_LED.setChecked(true)
@@ -691,7 +721,7 @@ class PlayActivity : BaseActivity() {
 
 	private fun autoPlay_stop() {
 		log("autoPlay_stop")
-		autoPlayRunner!!.isPlaying = false
+		autoPlayRunner!!.playmode = false
 		padInit()
 		LEDInit()
 		play.background = theme!!.xml_play
@@ -707,8 +737,8 @@ class PlayActivity : BaseActivity() {
 		var progress = autoPlayRunner!!.progress - 40
 		if (progress < 0) progress = 0
 		autoPlayRunner!!.progress = progress
-		if (!autoPlayRunner!!.isPlaying) {
-			log("!isPlaying")
+		if (!autoPlayRunner!!.playmode) {
+			log("!playmode")
 			autoPlayRunner!!.achieve = -1
 			autoPlayRunner!!.check()
 		}
@@ -721,8 +751,8 @@ class PlayActivity : BaseActivity() {
 		LEDInit()
 		autoPlayRunner!!.progress += 40
 		autoPlayRunner!!.achieve = -1
-		if (!autoPlayRunner!!.isPlaying) {
-			log("!isPlaying")
+		if (!autoPlayRunner!!.playmode) {
+			log("!playmode")
 			autoPlayRunner!!.achieve = -1
 			autoPlayRunner!!.check()
 		}
@@ -740,9 +770,6 @@ class PlayActivity : BaseActivity() {
 			setLed(x, y)
 		}
 	}
-
-	// ============================================================================================= pad, chain Event
-
 
 	private fun autoPlay_guideChain(c: Int, onOff: Boolean) {
 		log("autoPlay_guideChain ($c, $onOff)")
@@ -776,7 +803,7 @@ class PlayActivity : BaseActivity() {
 	private fun autoPlay_checkGuide(x: Int, y: Int) {
 		//Log.log("autoPlay_checkGuide (" + buttonX + ", " + buttonY + ")");
 
-		if (autoPlayRunner != null && autoPlayRunner!!.loop && !autoPlayRunner!!.isPlaying) {
+		if (autoPlayRunner != null && autoPlayRunner!!.active && !autoPlayRunner!!.playmode) {
 			val guideItems: ArrayList<AutoPlay.Element.On>? = autoPlayRunner!!.guideItems
 			if (guideItems != null) {
 				loop@ for (autoPlay in guideItems) {
@@ -814,8 +841,7 @@ class PlayActivity : BaseActivity() {
 					channelManager!!.add(x, y, Channel.PRESSED, -1, 3)
 					setLed(x, y)
 				}
-				if (ledRunner != null && ledRunner!!.isPlaying)
-					ledRunner!!.addEvent(x, y)
+				ledRunner?.eventOn(x, y)
 				autoPlay_checkGuide(x, y)
 
 			} else {
@@ -823,10 +849,8 @@ class PlayActivity : BaseActivity() {
 					soundPool!!.stop(stopID!![chain][x][y])
 				channelManager!!.remove(x, y, Channel.PRESSED)
 				setLed(x, y)
-				if (SCB_LED.isChecked()) {
-					val e = ledRunner!!.searchEvent(x, y)
-					if (e != null && e.loop == 0) ledRunner!!.eventShutdown(x, y)
-				}
+				ledRunner?.eventOff(x, y)
+
 			}
 		} catch (e: ArrayIndexOutOfBoundsException) {
 			e.printStackTrace()
@@ -845,6 +869,9 @@ class PlayActivity : BaseActivity() {
 
 	private fun chainChange(num: Int) {
 		//Log.log("chainChange (" + num + ")");
+
+		ledRunner?.chain = num
+		autoPlayRunner?.chain = num
 
 		try {
 			if (num >= 0 && num < unipack!!.chain) {
@@ -889,15 +916,15 @@ class PlayActivity : BaseActivity() {
 			// chain
 
 			for (i in 0..7) {
-				if (i == chain) channelManager!!.add(
-					-1,
-					8 + i,
-					Channel.CHAIN,
-					-1,
-					3
-				) else channelManager!!.remove(-1, 8 + i, Channel.CHAIN)
-				setLedUI(-1, 8 + i)
-				setLedLaunchpad(-1, 8 + i)
+				val x = -1
+				val y = 8 + i
+
+				if (i == chain)
+					channelManager!!.add(x, y, Channel.CHAIN, -1, 3)
+				else
+					channelManager!!.remove(x, y, Channel.CHAIN)
+
+				setLed(x, y)
 			}
 
 			// volume
@@ -1252,8 +1279,8 @@ class PlayActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
-		if (autoPlayRunner != null) autoPlayRunner!!.loop = false
-		if (ledRunner != null) ledRunner!!.isPlaying = false
+		autoPlayRunner?.stop()
+		ledRunner?.stop()
 		if (soundPool != null) {
 			for (i in 0 until unipack!!.chain) {
 				for (j in 0 until unipack!!.buttonX) {

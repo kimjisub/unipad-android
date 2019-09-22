@@ -1,13 +1,9 @@
 package com.kimjisub.launchpad.unipack.runner
 
-import android.annotation.SuppressLint
-import android.os.AsyncTask
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 
 class AutoPlayRunner(
@@ -16,14 +12,17 @@ class AutoPlayRunner(
 	private val listener: Listener
 ) {
 	var chain = 0
-	var loop = true
-	var isPlaying = false
+	var playmode = false
 	var progress = 0
 	var beforeStartPlaying = true
 	var afterMatchChain = false
 	var beforeChain = -1
 	var guideItems: ArrayList<AutoPlay.Element.On>? = ArrayList()
 	var achieve = 0
+
+	private var job: Job? = null
+	val active: Boolean
+		get() = job?.isActive ?: false
 
 	interface Listener {
 		fun onStart()
@@ -72,17 +71,15 @@ class AutoPlayRunner(
 	}
 
 	fun launch(){
-		CoroutineScope(Dispatchers.IO).launch {
+		job = CoroutineScope(Dispatchers.IO).launch {
+			listener.onStart()
+
 			var delay: Long = 0
-			val startTime = java.lang.System.currentTimeMillis()
-			while (progress < unipack.autoPlayTable!!.elements.size && loop) {
-				val currTime = java.lang.System.currentTimeMillis()
-				if (isPlaying) {
-					if (beforeStartPlaying) {
-						beforeStartPlaying = false
-						Log.log("beforeStartPlaying")
-						listener.onRemoveGuide()
-					}
+			val startTime = System.currentTimeMillis()
+			while (progress < unipack.autoPlayTable!!.elements.size && isActive) {
+				val currTime = System.currentTimeMillis()
+				if (playmode) {
+					beforeStartPlaying()
 					if (delay <= currTime - startTime) {
 						val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]
 
@@ -115,18 +112,7 @@ class AutoPlayRunner(
 							listener.onGuideChainOn(guideItems!![0].currChain)
 						}
 					} else {
-						if (afterMatchChain) {
-							afterMatchChain = false
-							listener.chainButsRefresh()
-							for (i in 0 until unipack.chain) listener.onGuideChainOff(i)
-							beforeChain = -1
-							for (i in guideItems!!.indices) {
-								val e: AutoPlay.Element? = guideItems!![i]
-								when (e) {
-									is AutoPlay.Element.On -> listener.onGuidePadOn(e.x, e.y)
-								}
-							}
-						}
+						afterMatchChain()
 						check()
 					}
 				}
@@ -136,6 +122,35 @@ class AutoPlayRunner(
 					e.printStackTrace()
 				}
 			}
+			listener.onEnd()
 		}
+	}
+
+	fun beforeStartPlaying(){
+		if (beforeStartPlaying) {
+			beforeStartPlaying = false
+			Log.log("beforeStartPlaying")
+			listener.onRemoveGuide()
+		}
+	}
+
+	fun afterMatchChain(){
+		if (afterMatchChain) {
+			afterMatchChain = false
+			listener.chainButsRefresh()
+			for (i in 0 until unipack.chain) listener.onGuideChainOff(i)
+			beforeChain = -1
+			for (i in guideItems!!.indices) {
+				val e: AutoPlay.Element? = guideItems!![i]
+				when (e) {
+					is AutoPlay.Element.On -> listener.onGuidePadOn(e.x, e.y)
+				}
+			}
+		}
+	}
+
+	fun stop() {
+		job?.cancel()
+		job = null
 	}
 }
