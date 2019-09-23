@@ -50,12 +50,13 @@ import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
+import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
-import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.vungle.warren.LoadAdCallback
 import com.vungle.warren.PlayAdCallback
 import com.vungle.warren.Vungle
@@ -66,7 +67,16 @@ import java.io.File
 import java.util.*
 
 class PlayActivity : BaseActivity() {
+
+	private var unipack: Unipack? = null
+	private var unipackLoaded = false
+	private var UILoaded = false
+	private var enable = true
+	private var chain: ChainObserver = ChainObserver()
+
 	// UI /////////////////////////////////////////////////////////////////////////////////////////
+
+	private var theme: ThemeResources? = null
 
 	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record) }
 	private val CB2s: Array<CheckBox> by lazy {
@@ -94,17 +104,14 @@ class PlayActivity : BaseActivity() {
 	private var billingManager: BillingManager? = null
 
 	// =============================================================================================
-	private var theme: ThemeResources? = null
-	private var unipack: Unipack? = null
-	private var unipackLoaded = false
-	private var UILoaded = false
-	private var enable = true
+
 	private var U_pads: Array<Array<Pad?>?>? = null
 	private var U_chains: Array<Chain?>? = null
-	private var chain: ChainObserver = ChainObserver()
+
 	private var audioManager: AudioManager? = null
 	private var channelManager: ChannelManager? = null
 
+	// Runner /////////////////////////////////////////////////////////////////////////////////////////
 
 	private var ledRunner: LedRunner? = null
 	private var autoPlayRunner: AutoPlayRunner? = null
@@ -116,8 +123,6 @@ class PlayActivity : BaseActivity() {
 	private var rec_prevEventMS: Long = 0
 	private var rec_log: String? = ""
 	private var bool_toggleOption_window = false
-
-	// ============================================================================================= 특성 다른 LED 처리
 
 	private fun initVar() {
 		SCB_feedbackLight.addCheckBox(CB1_feedbackLight, CB2_feedbackLight)
@@ -146,7 +151,8 @@ class PlayActivity : BaseActivity() {
 				override fun onBillingError(errorCode: Int, error: Throwable?) {}
 				override fun onBillingInitialized() {}
 				override fun onRefresh() {
-					setProMode(billingManager!!.unlockProTools)
+					//todo setProMode(billingManager!!.unlockProTools)
+					setProMode(true)
 				}
 			})
 	}
@@ -214,6 +220,8 @@ class PlayActivity : BaseActivity() {
 							}
 							try {
 								initTheme()
+								if (theme != null)
+									showUI()
 							} catch (e: ArithmeticException) {
 								e.printStackTrace()
 							} catch (e: NullPointerException) {
@@ -404,8 +412,6 @@ class PlayActivity : BaseActivity() {
 			ThemeResources(this@PlayActivity, true)
 		}
 
-		if (theme != null)
-			showUI()
 
 		/*if (num >= 2) {//하다하다 안되면
 			try {
@@ -521,11 +527,10 @@ class PlayActivity : BaseActivity() {
 		}
 		prev.setOnClickListener { autoPlay_prev() }
 		play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
-		next.setOnClickListener { autoPlay_after() }
-		option_blur.setOnClickListener { v: View? ->
-			if (bool_toggleOption_window) toggleOption_window(
-				false
-			)
+		next.setOnClickListener { autoPlay_next() }
+		option_blur.setOnClickListener {
+			if (bool_toggleOption_window)
+				toggleOption_window(false)
 		}
 		quit.setOnClickListener { finish() }
 		pads.removeAllViews()
@@ -552,11 +557,11 @@ class PlayActivity : BaseActivity() {
 		for (i in 0..31) {
 			U_chains!![i] = Chain(this)
 			U_chains!![i]!!.layoutParams = RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY)
-			if (i in 0..7) {
+			if (i in 8..15) {
 				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
 				chainsRight.addView(U_chains!![i])
 			}
-			if (i in 16..23) {
+			if (i in 24..31) {
 				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
 				chainsLeft.addView(U_chains!![i], 0)
 			}
@@ -668,17 +673,36 @@ class PlayActivity : BaseActivity() {
 
 	private fun setLedUI(x: Int, y: Int) {
 		val Item = channelManager!!.get(x, y)
-		if (x != -1) {
-			if (Item != null) {
-				when (Item.channel) {
-					Channel.GUIDE -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
-					Channel.PRESSED -> U_pads!![x]!![y]!!.setLedBackground(theme!!.btn_)
-					Channel.LED -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
-				}
-			} else U_pads!![x]!![y]!!.setLedBackgroundColor(0)
-		} else {
-			val c = y - 8
-			if (c in 0..31) if (theme!!.isChainLED) {
+		if (Item != null) {
+			when (Item.channel) {
+				Channel.GUIDE -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
+				Channel.PRESSED -> U_pads!![x]!![y]!!.setLedBackground(theme!!.btn_)
+				Channel.LED -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
+			}
+		} else U_pads!![x]!![y]!!.setLedBackgroundColor(0)
+	}
+
+	private fun setLedLaunchpad(x: Int, y: Int) {
+		val Item = channelManager!!.get(x, y)
+		if (Item != null)
+			driver.sendPadLED(x, y, Item.code)
+		else
+			driver.sendPadLED(x, y, 0)
+	}
+
+	private fun setLed(c: Int) {
+		if (enable) {
+			setLedLaunchpad(c)
+			runOnUiThread { setLedUI(c) }
+		}
+	}
+
+	private fun setLedUI(c: Int) {
+		val Item = channelManager!!.get(-1, c)
+		Log.test("${c} : ${Item}")
+		//val c = c - 8
+		if (c in 0..31)
+			if (theme!!.isChainLED) {
 				if (Item != null) {
 					when (Item.channel) {
 						Channel.GUIDE -> U_chains!![c]!!.setLedBackgroundColor(Item.color)
@@ -695,23 +719,14 @@ class PlayActivity : BaseActivity() {
 					}
 				} else U_chains!![c]!!.setBackgroundImageDrawable(theme!!.chain)
 			}
-		}
 	}
 
-	private fun setLedLaunchpad(x: Int, y: Int) {
-		val Item = channelManager!!.get(x, y)
-		if (x != -1) {
-			if (Item != null) driver.sendPadLED(
-				x,
-				y,
-				Item.code
-			) else driver.sendPadLED(x, y, 0)
-		} else {
-			if (Item != null) driver.sendFunctionkeyLED(
-				y,
-				Item.code
-			) else driver.sendFunctionkeyLED(y, 0)
-		}
+	private fun setLedLaunchpad(c: Int) {
+		val Item = channelManager!!.get(-1, c)
+		if (Item != null)
+			driver.sendFunctionkeyLED(c, Item.code)
+		else
+			driver.sendFunctionkeyLED(c, 0)
 	}
 
 	private fun LEDInit() {
@@ -730,7 +745,7 @@ class PlayActivity : BaseActivity() {
 					if (ledRunner!!.isEventExist(-1, i))
 						ledRunner!!.eventOff(-1, i)
 					channelManager!!.remove(-1, i, Channel.LED)
-					setLed(-1, i)
+					setLed(i)
 				}
 			} catch (e: Exception) {
 				e.printStackTrace()
@@ -770,29 +785,22 @@ class PlayActivity : BaseActivity() {
 		log("autoPlay_prev")
 		padInit()
 		LEDInit()
-		var progress = autoPlayRunner!!.progress - 40
-		if (progress < 0) progress = 0
-		autoPlayRunner!!.progress = progress
+		autoPlayRunner!!.progressOffset(-40)
 		if (!autoPlayRunner!!.playmode) {
-			log("!playmode")
 			autoPlayRunner!!.achieve = -1
-			autoPlayRunner!!.check()
+			autoPlayRunner!!.guideCheck()
 		}
-		autoPlayProgressBar.progress = autoPlayRunner!!.progress
 	}
 
-	private fun autoPlay_after() {
-		log("autoPlay_after")
+	private fun autoPlay_next() {
+		log("autoPlay_next")
 		padInit()
 		LEDInit()
-		autoPlayRunner!!.progress += 40
-		autoPlayRunner!!.achieve = -1
+		autoPlayRunner!!.progressOffset(40)
 		if (!autoPlayRunner!!.playmode) {
-			log("!playmode")
 			autoPlayRunner!!.achieve = -1
-			autoPlayRunner!!.check()
+			autoPlayRunner!!.guideCheck()
 		}
-		autoPlayProgressBar.progress = autoPlayRunner!!.progress
 	}
 
 	private fun autoPlay_guidePad(x: Int, y: Int, onOff: Boolean) {
@@ -811,10 +819,10 @@ class PlayActivity : BaseActivity() {
 		log("autoPlay_guideChain ($c, $onOff)")
 		if (onOff) {
 			channelManager!!.add(-1, 8 + c, Channel.GUIDE, -1, 17)
-			setLed(-1, 8 + c)
+			setLed(8 + c)
 		} else {
 			channelManager!!.remove(-1, 8 + c, Channel.GUIDE)
-			setLed(-1, 8 + c)
+			setLed(8 + c)
 			chainBtnsRefresh()
 		}
 	}
@@ -828,7 +836,7 @@ class PlayActivity : BaseActivity() {
 			}
 			for (i in 0..31) {
 				channelManager!!.remove(-1, i, Channel.GUIDE)
-				setLed(-1, i)
+				setLed(i)
 			}
 			chainBtnsRefresh()
 		} catch (e: Exception) {
@@ -857,7 +865,7 @@ class PlayActivity : BaseActivity() {
 
 		try {
 			if (upDown) {
-				soundRunner?.soundOn(x,y)
+				soundRunner?.soundOn(x, y)
 				if (SCB_record.isChecked()) {
 					val currTime = java.lang.System.currentTimeMillis()
 					rec_addLog("d " + (currTime - rec_prevEventMS))
@@ -874,7 +882,7 @@ class PlayActivity : BaseActivity() {
 				autoPlay_checkGuide(x, y)
 
 			} else {
-				soundRunner?.soundOff(x,y)
+				soundRunner?.soundOff(x, y)
 				channelManager!!.remove(x, y, Channel.PRESSED)
 				setLed(x, y)
 				ledRunner?.eventOff(x, y)
@@ -904,15 +912,14 @@ class PlayActivity : BaseActivity() {
 			// chain
 
 			for (i in 0..7) {
-				val x = -1
-				val y = 8 + i
+				val c = 8 + i
 
 				if (i == chain.value)
-					channelManager!!.add(x, y, Channel.CHAIN, -1, 3)
+					channelManager!!.add(-1, c, Channel.CHAIN, -1, 3)
 				else
-					channelManager!!.remove(x, y, Channel.CHAIN)
+					channelManager!!.remove(-1, c, Channel.CHAIN)
 
-				setLed(x, y)
+				setLed(c)
 			}
 
 			// volume
@@ -924,16 +931,14 @@ class PlayActivity : BaseActivity() {
 			var currLevel = Math.round(currPercent * 7) + 1
 			if (currLevel == 1) currLevel = 0
 			for (i in 0..7) {
-				if (8 - i <= currLevel) channelManager!!.add(
-					-1,
-					i + 8,
-					Channel.UI,
-					-1,
-					40
-				) else channelManager!!.remove(-1, i + 8, Channel.UI)
-				setLed(-1, i + 8)
+				if (8 - i <= currLevel)
+					channelManager!!.add(-1, i + 8, Channel.UI, -1, 40)
+				else
+					channelManager!!.remove(-1, i + 8, Channel.UI)
+				setLed(i + 8)
 			}
 		} catch (e: Exception) {
+			e.printStackTrace()
 		}
 	}
 
@@ -993,7 +998,7 @@ class PlayActivity : BaseActivity() {
 		}
 
 	private fun updateLP() {
-		chain.value = chain.value
+		chain.refresh()
 		refreshWatermark()
 	}
 
@@ -1052,9 +1057,6 @@ class PlayActivity : BaseActivity() {
 	}
 
 
-	// ============================================================================================= setProMode
-
-
 	private fun refreshWatermark() {
 		log("refreshWatermark")
 		val topBar = IntArray(8)
@@ -1095,14 +1097,10 @@ class PlayActivity : BaseActivity() {
 			topBar[6] = 61
 			topBar[7] = 40
 			for (i in 0..7) {
-				if (topBar[i] != 0) channelManager!!.add(
-					-1,
-					i,
-					Channel.UI_UNIPAD,
-					-1,
-					topBar[i]
-				) else channelManager!!.remove(-1, i, Channel.UI_UNIPAD)
-				setLed(-1, i)
+				if (topBar[i] != 0)
+					channelManager!!.add(-1, i, Channel.UI_UNIPAD, -1, topBar[i])
+				else channelManager!!.remove(-1, i, Channel.UI_UNIPAD)
+				setLed(i)
 			}
 		} else {
 			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
@@ -1121,13 +1119,11 @@ class PlayActivity : BaseActivity() {
 					-1,
 					topBar[i]
 				) else channelManager!!.remove(-1, i, Channel.UI)
-				setLed(-1, i)
+				setLed(i)
 			}
 		}
 		chainBtnsRefresh()
 	}
-
-	// ============================================================================================= Watermark
 
 
 	private fun proLightMode(bool: Boolean) {
@@ -1139,9 +1135,9 @@ class PlayActivity : BaseActivity() {
 			}
 		} else {
 			if (unipack!!.chain > 1) {
-				for (i in 0..31) {
+				for (i in 8..31) {
 					val chain = U_chains!![i]
-					if (i < unipack!!.chain) chain!!.visibility = View.VISIBLE
+					if (i < unipack!!.chain+8) chain!!.visibility = View.VISIBLE
 
 					//chain.setLedVisibility(View.INVISIBLE);
 					else chain!!.visibility = View.INVISIBLE
@@ -1153,9 +1149,6 @@ class PlayActivity : BaseActivity() {
 		channelManager!!.setCirIgnore(Channel.LED, !bool)
 		chainBtnsRefresh()
 	}
-
-	// ============================================================================================= Pro Mode
-
 
 	// ============================================================================================= Option Window
 

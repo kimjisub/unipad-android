@@ -14,31 +14,31 @@ class ChannelManager(x: Int, y: Int) {
 		PRESSED(3),
 		CHAIN(3),
 		LED(4);
-
-		companion object {
-			const val size = 5
-		}
 	}
 
 	data class Item(
 		var channel: Channel,
 		var color: Int,
 		var code: Int
-	)
+	) {
+		override fun toString(): String {
+			return "Item(channel=$channel, color=$color, code=$code)"
+		}
+	}
 
 
 	init {
-		btn = Array(x) { Array(y) { arrayOfNulls<Item?>(Channel.size) } }
-		cir = Array(36) { arrayOfNulls<Item?>(Channel.size) }
-		btnIgnoreList = BooleanArray(Channel.size)
-		cirIgnoreList = BooleanArray(Channel.size)
+		btn = Array(x) { Array(y) { arrayOfNulls<Item?>(Channel.values().size) } }
+		cir = Array(36) { arrayOfNulls<Item?>(Channel.values().size) }
+		btnIgnoreList = BooleanArray(Channel.values().size)
+		cirIgnoreList = BooleanArray(Channel.values().size)
 	}
 
 
 	fun get(x: Int, y: Int): Item? {
 		var ret: Item? = null
 		if (x != -1) {
-			for (i in 0 until Channel.size) {
+			for (i in Channel.values().indices) {
 				if (btnIgnoreList[i])
 					continue
 				if (btn[x][y][i] != null) {
@@ -47,7 +47,7 @@ class ChannelManager(x: Int, y: Int) {
 				}
 			}
 		} else {
-			for (i in 0 until Channel.size) {
+			for (i in Channel.values().indices) {
 				if (cirIgnoreList[i])
 					continue
 				if (cir[y][i] != null) {
