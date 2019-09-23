@@ -209,7 +209,7 @@ object MidiConnection {
 
 	}
 
-	class ReceiveTask : AsyncTask<String, Int, String>() {
+	class ReceiveTask : AsyncTask<String, Int, String?>() {
 
 		override fun onPreExecute() {
 			super.onPreExecute()
@@ -278,12 +278,10 @@ object MidiConnection {
 		}
 
 		override fun onProgressUpdate(vararg progress: Int?) {
-
-			progress[0]
 			driver.getSignal(progress[0]!!, progress[1]!!, progress[2]!!, progress[3]!!)
 		}
 
-		override fun onPostExecute(result: String) {
+		override fun onPostExecute(result: String?) {
 			driver.onDisconnected()
 		}
 	}
