@@ -11,9 +11,7 @@ class BillingManager(internal var activity: Activity) {
 	private var refreshDone = false
 
 	var purchaseRemoveAds = false
-		internal set
 	var purchaseProTools = false
-		internal set
 
 	// ============================================================================================= Constructor
 

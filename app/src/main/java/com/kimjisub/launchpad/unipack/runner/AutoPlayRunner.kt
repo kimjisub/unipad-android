@@ -13,12 +13,17 @@ class AutoPlayRunner(
 	private val delay_: Long = 1L
 ) {
 	var playmode = false
-	var progress = 0
 	var beforeStartPlaying = true
 	var afterMatchChain = false
 	var beforeChain = -1
 	var guideItems: ArrayList<AutoPlay.Element.On>? = ArrayList()
 	var achieve = 0
+
+	var progress = 0
+		set(value) {
+			field = value
+			listener.onProgressUpdate(progress)
+		}
 
 	private var job: Job? = null
 	val active: Boolean
@@ -40,7 +45,7 @@ class AutoPlayRunner(
 	}
 
 
-	fun check() {
+	fun guideCheck() {
 		if (achieve >= guideItems!!.size || achieve == -1) {
 			achieve = 0
 			for (i in guideItems!!.indices) {
@@ -70,7 +75,7 @@ class AutoPlayRunner(
 		}
 	}
 
-	fun launch(){
+	fun launch() {
 		job = CoroutineScope(Dispatchers.IO).launch {
 			listener.onStart()
 
@@ -98,7 +103,6 @@ class AutoPlayRunner(
 							is AutoPlay.Element.Delay -> delay += e.delay.toLong()
 						}
 						progress++
-						listener.onProgressUpdate(progress)
 					}
 				} else {
 					beforeStartPlaying = true
@@ -113,7 +117,7 @@ class AutoPlayRunner(
 						}
 					} else {
 						afterMatchChain()
-						check()
+						guideCheck()
 					}
 				}
 				try {
@@ -126,7 +130,7 @@ class AutoPlayRunner(
 		}
 	}
 
-	fun beforeStartPlaying(){
+	private fun beforeStartPlaying() {
 		if (beforeStartPlaying) {
 			beforeStartPlaying = false
 			Log.log("beforeStartPlaying")
@@ -134,7 +138,7 @@ class AutoPlayRunner(
 		}
 	}
 
-	fun afterMatchChain(){
+	private fun afterMatchChain() {
 		if (afterMatchChain) {
 			afterMatchChain = false
 			listener.chainButsRefresh()
@@ -147,6 +151,18 @@ class AutoPlayRunner(
 				}
 			}
 		}
+	}
+
+	fun progressOffset(offset: Int) {
+		val range = 0 until Int.MAX_VALUE
+		val targetProgress = progress + offset
+
+		progress =
+			when {
+				range.first > targetProgress -> range.first
+				range.last < targetProgress -> range.last
+				else -> targetProgress
+			}
 	}
 
 	fun stop() {

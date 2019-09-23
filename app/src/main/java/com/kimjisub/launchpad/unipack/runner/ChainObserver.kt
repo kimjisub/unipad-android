@@ -5,21 +5,23 @@ class ChainObserver {
 	var value: Int = 0
 		set(value) {
 			val realValue =
-				if (range.contains(value)) value
-				else
-					when {
-						range.first > value -> range.first
-						range.last < value -> range.last
-						else -> throw ArrayIndexOutOfBoundsException("WTF")
-					}
+				when {
+					range.first > value -> range.first
+					range.last < value -> range.last
+					else -> value
+				}
 
 			val prev = field
 			field = realValue
-			for (observer in observerList)
-				observer.invoke(field, prev)
+			refresh(field, prev)
 		}
 
 	private val observerList: ArrayList<(curr: Int, prev: Int) -> Unit> = ArrayList()
+
+	fun refresh(curr: Int = value, prev: Int = value) {
+		for (observer in observerList)
+			observer.invoke(curr, prev)
+	}
 
 	fun addObserver(observer: (curr: Int, prev: Int) -> Unit) = observerList.add(observer)
 
