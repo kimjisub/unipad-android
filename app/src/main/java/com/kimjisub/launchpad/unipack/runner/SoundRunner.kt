@@ -14,13 +14,13 @@ import java.util.*
 class SoundRunner(
 	private val unipack: Unipack,
 	private val chain: ChainObserver,
-	private val listener: Listener
+	private val loadingListener: LoadingListener
 ) {
 
 	private var soundPool: SoundPool? = null
 	private var stopID: Array<Array<Array<Int>>>? = null
 
-	interface Listener {
+	interface LoadingListener {
 		fun onStart(soundCount: Int)
 		fun onProgressTick()
 		fun onEnd()
@@ -44,7 +44,7 @@ class SoundRunner(
 				}
 			}
 
-			listener.onStart(soundCount)
+			loadingListener.onStart(soundCount)
 
 			try {
 				for (i in 0 until unipack.chain) {
@@ -55,18 +55,18 @@ class SoundRunner(
 								for (l in arrayList.indices) {
 									val e: Sound = unipack.soundTable!![i][j][k]!![l]
 									e.id = soundPool!!.load(e.file.path, 1)
-									listener.onProgressTick()
+									loadingListener.onProgressTick()
 								}
 							}
 						}
 					}
 				}
-				listener.onEnd()
+				loadingListener.onEnd()
 
 			} catch (e: Exception) {
 				Log.err("[08] doInBackground")
 				e.printStackTrace()
-				listener.onException(e)
+				loadingListener.onException(e)
 			}
 		}
 	}
