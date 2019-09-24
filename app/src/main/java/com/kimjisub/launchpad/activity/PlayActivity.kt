@@ -158,8 +158,9 @@ class PlayActivity : BaseActivity() {
 		initVar()
 
 		val path: String? = intent.getStringExtra("path")
-		val file = File(path)
+
 		try {
+			val file = File(path)
 			unipack = Unipack(file, true)
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
@@ -172,74 +173,28 @@ class PlayActivity : BaseActivity() {
 					.setCancelable(false)
 					.show()
 			}
-			chain.range = 0 until unipack!!.chain
-			log("[03] Init Vars")
-			U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
-			U_circle = arrayOfNulls<Chain?>(32)
-			channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
-			log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
-			initRunner()
-			initLayout()
 
-			soundRunner = SoundRunner(
-				unipack = unipack!!,
-				chain = chain,
-				loadingListener = object : SoundRunner.LoadingListener {
-					var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
-					override fun onStart(soundCount: Int) {
-						runOnUiThread {
-							progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-							progressDialog.setTitle(getString(string.loading))
-							progressDialog.setMessage(getString(string.wait_a_sec))
-							progressDialog.setCancelable(false)
-							progressDialog.max = soundCount
-							progressDialog.show()
-						}
-					}
-
-					override fun onProgressTick() {
-						runOnUiThread {
-							progressDialog.incrementProgressBy(1)
-						}
-					}
-
-					override fun onEnd() {
-						runOnUiThread {
-							unipackLoaded = true
-							try {
-								if (progressDialog.isShowing)
-									progressDialog.dismiss()
-							} catch (e: Exception) {
-								e.printStackTrace()
-							}
-							try {
-								initTheme()
-								if (theme != null)
-									showUI()
-							} catch (e: ArithmeticException) {
-								e.printStackTrace()
-							} catch (e: NullPointerException) {
-								e.printStackTrace()
-							}
-						}
-					}
-
-					override fun onException(throwable: Throwable) {
-						runOnUiThread {
-							toast(string.outOfCPU)
-							finish()
-						}
-					}
-				})
-		} catch (e: OutOfMemoryError) {
-			e.printStackTrace()
-			toast(string.outOfMemory)
-			finish()
+			if (!unipack!!.criticalError)
+				start()
 		} catch (e: Exception) {
 			e.printStackTrace()
-			toast(string.exceptionOccurred)
+			when (e) {
+				is OutOfMemoryError -> toast(string.outOfMemory)
+				else -> toast("${getString(string.exceptionOccurred)}\n${e.message}")
+			}
 			finish()
 		}
+	}
+
+	private fun start() {
+		chain.range = 0 until unipack!!.chain
+		log("[03] Init Vars")
+		U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
+		U_circle = arrayOfNulls<Chain?>(32)
+		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
+		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
+		initRunner()
+		initLayout()
 	}
 
 	private fun initRunner() {
@@ -356,6 +311,57 @@ class PlayActivity : BaseActivity() {
 					}
 				})
 		}
+
+		soundRunner = SoundRunner(
+			unipack = unipack!!,
+			chain = chain,
+			loadingListener = object : SoundRunner.LoadingListener {
+				var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
+				override fun onStart(soundCount: Int) {
+					runOnUiThread {
+						progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+						progressDialog.setTitle(getString(string.loading))
+						progressDialog.setMessage(getString(string.wait_a_sec))
+						progressDialog.setCancelable(false)
+						progressDialog.max = soundCount
+						progressDialog.show()
+					}
+				}
+
+				override fun onProgressTick() {
+					runOnUiThread {
+						progressDialog.incrementProgressBy(1)
+					}
+				}
+
+				override fun onEnd() {
+					runOnUiThread {
+						unipackLoaded = true
+						try {
+							if (progressDialog.isShowing)
+								progressDialog.dismiss()
+						} catch (e: Exception) {
+							e.printStackTrace()
+						}
+						try {
+							initTheme()
+							if (theme != null)
+								showUI()
+						} catch (e: ArithmeticException) {
+							e.printStackTrace()
+						} catch (e: NullPointerException) {
+							e.printStackTrace()
+						}
+					}
+				}
+
+				override fun onException(throwable: Throwable) {
+					runOnUiThread {
+						toast(string.outOfCPU)
+						finish()
+					}
+				}
+			})
 	}
 
 	private fun initLayout() {
