@@ -205,18 +205,29 @@ class PlayActivity : BaseActivity() {
 				unipack = unipack!!,
 				chain = chain,
 				listener = object : LedRunner.Listener {
+
 					override fun onStart() {
 						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
-					override fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
+					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
 						channelManager!!.add(x, y, Channel.LED, color, velo)
 						setLed(x, y)
 					}
 
-					override fun onLedTurnOff(x: Int, y: Int) {
+					override fun onPadLedTurnOff(x: Int, y: Int) {
 						channelManager!!.remove(x, y, Channel.LED)
 						setLed(x, y)
+					}
+
+					override fun onChainLedTurnOn(c: Int, color: Int, velo: Int) {
+						channelManager!!.add(-1, c, Channel.LED, color, velo)
+						setLed(c)
+					}
+
+					override fun onChainLedTurnOff(c: Int) {
+						channelManager!!.remove(-1, c, Channel.LED)
+						setLed(c)
 					}
 
 					override fun onEnd() {

@@ -25,8 +25,10 @@ class LedRunner(
 
 	interface Listener {
 		fun onStart()
-		fun onLedTurnOn(x: Int, y: Int, color: Int, velo: Int)
-		fun onLedTurnOff(x: Int, y: Int)
+		fun onPadLedTurnOn(x: Int, y: Int, color: Int, velo: Int)
+		fun onPadLedTurnOff(x: Int, y: Int)
+		fun onChainLedTurnOn(c: Int, color: Int, velo: Int)
+		fun onChainLedTurnOff(c: Int)
 		fun onEnd()
 	}
 
@@ -132,7 +134,7 @@ class LedRunner(
 	}
 
 
-	private suspend fun loop() {
+	private fun loop() {
 		val currTime = System.currentTimeMillis()
 		for (i in LEDEvents!!.indices) {
 			val e = LEDEvents!![i]
@@ -158,10 +160,10 @@ class LedRunner(
 									val velo = element.velo
 
 									if (x != -1) {
-										listener.onLedTurnOn(x, y, color, velo)
+										listener.onPadLedTurnOn(x, y, color, velo)
 										btnLED!![x]!![y] = LED(e.buttonX, e.buttonY, element)
 									} else {
-										listener.onLedTurnOn(x, y, color, velo)
+										listener.onChainLedTurnOn(y, color, velo)
 										cirLED!![y] = LED(e.buttonX, e.buttonY, element)
 									}
 								}
@@ -171,12 +173,12 @@ class LedRunner(
 
 									if (x != -1) {
 										if (btnLED!![x]!![y] != null && btnLED!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
-											listener.onLedTurnOff(x, y)
+											listener.onPadLedTurnOff(x, y)
 											btnLED!![x]!![y] = null
 										}
 									} else {
 										if (cirLED!![y] != null && cirLED!![y]!!.equal(e.buttonX, e.buttonY)) {
-											listener.onLedTurnOff(x, y)
+											listener.onChainLedTurnOff(y)
 											cirLED!![y] = null
 										}
 									}
@@ -200,14 +202,14 @@ class LedRunner(
 				for (x in 0 until unipack.buttonX) {
 					for (y in 0 until unipack.buttonY) {
 						if (btnLED!![x]!![y] != null && btnLED!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
-							listener.onLedTurnOff(x, y)
+							listener.onPadLedTurnOff(x, y)
 							btnLED!![x]!![y] = null
 						}
 					}
 				}
 				for (y in cirLED!!.indices) {
 					if (cirLED!![y] != null && cirLED!![y]!!.equal(e.buttonX, e.buttonY)) {
-						listener.onLedTurnOff(-1, y)
+						listener.onChainLedTurnOff(y)
 						cirLED!![y] = null
 					}
 				}
