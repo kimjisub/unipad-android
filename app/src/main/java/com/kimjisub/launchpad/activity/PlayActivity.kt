@@ -106,7 +106,7 @@ class PlayActivity : BaseActivity() {
 
 	// =============================================================================================
 
-	private var U_pads: Array<Array<Pad?>?>? = null
+	private var U_pads: Array<Array<Pad?>>? = null
 	private var U_circle: Array<Chain?>? = null
 
 	// Runner, Manager /////////////////////////////////////////////////////////////////////////////////////////
@@ -162,8 +162,7 @@ class PlayActivity : BaseActivity() {
 		val path: String? = intent.getStringExtra("path")
 
 		try {
-			val file = File(path)
-			unipack = Unipack(file, true)
+			unipack = Unipack(File(path), true)
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
 					.setTitle(if (unipack!!.criticalError) getString(string.error) else getString(string.warning))
@@ -191,12 +190,306 @@ class PlayActivity : BaseActivity() {
 	private fun start() {
 		chain.range = 0 until unipack!!.chain
 		log("[03] Init Vars")
-		U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
-		U_circle = arrayOfNulls<Chain?>(32)
+		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY){null} }
+		U_circle = Array(32){null}
 		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
 		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
-		initRunner()
+
 		initLayout()
+		initTheme()
+		if (theme != null)
+			showUI()
+		initRunner()
+	}
+
+
+
+	private fun initLayout() {
+		log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
+		if (unipack!!.squareButton) {
+			if (!unipack!!.keyLEDExist) {
+				SCB_LED.setVisibility(View.GONE)
+				SCB_LED.isLocked = true
+			}
+			if (!unipack!!.autoPlayExist) {
+				SCB_autoPlay.setVisibility(View.GONE)
+				SCB_autoPlay.isLocked = true
+			}
+		} else {
+			RL_root.setPadding(0, 0, 0, 0)
+			SCB_feedbackLight.setVisibility(View.GONE)
+			SCB_LED.setVisibility(View.GONE)
+			SCB_autoPlay.setVisibility(View.GONE)
+			SCB_traceLog.setVisibility(View.GONE)
+			SCB_record.setVisibility(View.GONE)
+			SCB_feedbackLight.isLocked = true
+			SCB_LED.isLocked = true
+			SCB_autoPlay.isLocked = true
+			SCB_traceLog.isLocked = true
+			SCB_record.isLocked = true
+		}
+		log("[06] Set CheckBox Checked")
+		if (unipack!!.keyLEDExist) {
+			SCB_feedbackLight.setChecked(false)
+			SCB_LED.setChecked(true)
+		} else SCB_feedbackLight.setChecked(true)
+	}
+
+	private fun initTheme() {
+		val packageName = SelectedTheme.load(this@PlayActivity)
+
+		theme = try {
+			ThemeResources(this@PlayActivity, packageName, true)
+		} catch (e: OutOfMemoryError) {
+			e.printStackTrace()
+			toast("${getString(string.skinMemoryErr)}\n$packageName")
+			requestRestart(this)
+			null
+		} catch (e: Exception) {
+			e.printStackTrace()
+			toast("${getString(string.skinErr)}\n$packageName")
+			SelectedTheme.save(this@PlayActivity, getPackageName())
+			ThemeResources(this@PlayActivity, true)
+		}
+
+
+		/*if (num >= 2) {//하다하다 안되면
+			try {
+				theme = ThemeResources(this@PlayActivity, true)
+			} catch (ignore: Exception) {
+			}
+			return true
+		}
+		return try {
+			theme = ThemeResources(this@PlayActivity, packageName, true)
+			true
+		} catch (e: OutOfMemoryError) {
+			e.printStackTrace()
+			requestRestart(this)
+			toast(getString(string.skinMemoryErr) + "\n" + packageName)
+			false
+		} catch (e: Exception) {
+			e.printStackTrace()
+			toast(getString(string.skinErr) + "\n" + packageName)
+			SelectedTheme.save(this@PlayActivity, getPackageName())
+			initTheme(num + 1)
+		}*/
+	}
+
+
+	@SuppressLint("ClickableViewAccessibility")
+	private fun showUI() {
+		try {
+
+			// Calc Button size
+			val buttonSizeX: Int
+			val buttonSizeY: Int
+			val buttonSizeMin: Int
+			if (unipack!!.squareButton) {
+				val xSize = Scale_PaddingHeight / unipack!!.buttonX
+				val ySize = Scale_PaddingWidth / unipack!!.buttonY
+
+				buttonSizeY = xSize.coerceAtMost(ySize)
+				buttonSizeX = buttonSizeY
+			} else {
+				buttonSizeX = Scale_Width / unipack!!.buttonY
+				buttonSizeY = Scale_Height / unipack!!.buttonX
+			}
+			buttonSizeMin = buttonSizeX.coerceAtMost(buttonSizeY)
+
+
+			// Setting
+			purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, b: Boolean ->
+				compoundButton!!.isChecked = false
+				startActivity(Intent(this@PlayActivity, SettingActivity::class.java))
+			}
+			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					padInit()
+					refreshWatermark()
+				}
+			}
+			SCB_LED.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					if (unipack!!.keyLEDExist) {
+						if (b) {
+							ledRunner?.launch()
+						} else {
+							ledRunner?.stop()
+							LEDInit()
+						}
+					}
+					refreshWatermark()
+				}
+			}
+			SCB_autoPlay.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					if (b) {
+						autoPlayRunner?.launch()
+					} else {
+						autoPlayRunner?.stop()
+						padInit()
+						LEDInit()
+						autoPlay_removeGuide()
+						autoPlayControlView.visibility = View.GONE
+					}
+					refreshWatermark()
+				}
+			}
+			SCB_traceLog.onLongClick = object : OnLongClick {
+				override fun onLongClick() {
+					traceLog_init()
+					toast(string.traceLogClear)
+					refreshWatermark()
+				}
+			}
+			SCB_record.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					if (SCB_record.isChecked()) {
+						rec_prevEventMS = java.lang.System.currentTimeMillis()
+						rec_log = "c " + (chain.value + 1)
+					} else {
+						putClipboard(this@PlayActivity, rec_log!!)
+						toast(string.copied)
+						rec_log = ""
+					}
+					refreshWatermark()
+				}
+			}
+			SCB_hideUI.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					option_view.visibility = if (b) View.GONE else View.VISIBLE
+					refreshWatermark()
+				}
+			}
+			SCB_watermark.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					refreshWatermark()
+				}
+			}
+			SCB_proLightMode.onCheckedChange = object : OnCheckedChange {
+				override fun onCheckedChange(b: Boolean) {
+					proLightMode(b)
+					refreshWatermark()
+				}
+			}
+			prev.setOnClickListener { autoPlay_prev() }
+			play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
+			next.setOnClickListener { autoPlay_next() }
+			option_blur.setOnClickListener {
+				if (bool_toggleOption_window)
+					toggleOption_window(false)
+			}
+			quit.setOnClickListener { finish() }
+			pads.removeAllViews()
+			chainsRight.removeAllViews()
+			chainsLeft.removeAllViews()
+
+			// Image Resources
+			background.setImageDrawable(theme!!.playbg)
+			custom_logo.setImageDrawable(theme!!.custom_logo)
+			prev.background = theme!!.xml_prev
+			play.background = theme!!.xml_play
+			next.background = theme!!.xml_next
+
+			// Setup Pads
+			for (x in 0 until unipack!!.buttonX) {
+				val row = LinearLayout(this)
+				row.layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1F)
+				for (y in 0 until unipack!!.buttonY) {
+					val view = Pad(this)
+					view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
+					view.setBackgroundImageDrawable(theme!!.btn)
+					view.setTraceLogTextColor(theme!!.trace_log!!)
+					view.setOnTouchListener { _: View?, event: MotionEvent? ->
+						when (event!!.action) {
+							MotionEvent.ACTION_DOWN -> padTouch(x, y, true)
+							MotionEvent.ACTION_UP -> padTouch(x, y, false)
+						}
+						false
+					}
+					U_pads!![x][y] = view
+					row.addView(view)
+				}
+				pads.addView(row)
+			}
+			if (unipack!!.buttonX < 16 && unipack!!.buttonY < 16) {
+				for (i in 0 until unipack!!.buttonX)
+					for (j in 0 until unipack!!.buttonY)
+						U_pads!![i][j]!!.setPhantomImageDrawable(theme!!.phantom)
+				if (unipack!!.buttonX % 2 == 0 && unipack!!.buttonY % 2 == 0 && unipack!!.squareButton && theme!!.phantom_ != null) {
+					val x = unipack!!.buttonX / 2 - 1
+					val y = unipack!!.buttonY / 2 - 1
+					U_pads!![x][y]!!.setPhantomImageDrawable(theme!!.phantom_)
+					U_pads!![x + 1][y]!!.setPhantomImageDrawable(theme!!.phantom_)
+					U_pads!![x + 1][y]!!.setPhantomRotation(270f)
+					U_pads!![x][y + 1]!!.setPhantomImageDrawable(theme!!.phantom_)
+					U_pads!![x][y + 1]!!.setPhantomRotation(90f)
+					U_pads!![x + 1][y + 1]!!.setPhantomImageDrawable(theme!!.phantom_)
+					U_pads!![x + 1][y + 1]!!.setPhantomRotation(180f)
+				}
+			}
+
+			// Setup Chains
+			for (i in 0..31) {
+				val c = i - 8
+				val view = Chain(this)
+				view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
+				if (theme!!.isChainLED) {
+					view.setBackgroundImageDrawable(theme!!.btn)
+					view.setPhantomImageDrawable(theme!!.chainled)
+				} else {
+					view.setPhantomImageDrawable(theme!!.chain)
+					view.setLedVisibility(View.GONE)
+				}
+
+				U_circle!![i] = view
+				if (c in 0..7) {
+					U_circle!![i]!!.setOnClickListener { chain.value = c }
+					chainsRight.addView(U_circle!![i])
+				}
+				if (c in 16..23) {
+					U_circle!![i]!!.setOnClickListener { chain.value = c }
+					chainsLeft.addView(U_circle!![i], 0)
+				}
+			}
+
+
+			traceLog_init()
+
+			proLightMode(SCB_proLightMode.isChecked())
+
+
+
+
+			for (cb1 in CB1s) {
+				cb1.setTextColor(theme!!.checkbox!!)
+				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb1.buttonTintList = ColorStateList.valueOf(
+					theme!!.checkbox!!
+				)
+			}
+			for (cb2 in CB2s) {
+				cb2.setTextColor(theme!!.option_window_checkbox!!)
+				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb2.buttonTintList = ColorStateList.valueOf(
+					theme!!.option_window_checkbox!!
+				)
+			}
+
+
+			UILoaded = true
+			UILoaded()
+			controller = midiController
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+	}
+
+	private fun UILoaded() {
+		chainBtnsRefresh()
+		updateVolumeUI()
+		if (unipack!!.keyLEDExist)
+			SCB_LED.setChecked(true)
+
 	}
 
 	private fun initRunner() {
@@ -356,15 +649,6 @@ class PlayActivity : BaseActivity() {
 						} catch (e: Exception) {
 							e.printStackTrace()
 						}
-						try {
-							initTheme()
-							if (theme != null)
-								showUI()
-						} catch (e: ArithmeticException) {
-							e.printStackTrace()
-						} catch (e: NullPointerException) {
-							e.printStackTrace()
-						}
 					}
 				}
 
@@ -375,212 +659,7 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 			})
-	}
 
-	private fun initLayout() {
-		log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
-		if (unipack!!.squareButton) {
-			if (!unipack!!.keyLEDExist) {
-				SCB_LED.setVisibility(View.GONE)
-				SCB_LED.isLocked = true
-			}
-			if (!unipack!!.autoPlayExist) {
-				SCB_autoPlay.setVisibility(View.GONE)
-				SCB_autoPlay.isLocked = true
-			}
-		} else {
-			RL_root.setPadding(0, 0, 0, 0)
-			SCB_feedbackLight.setVisibility(View.GONE)
-			SCB_LED.setVisibility(View.GONE)
-			SCB_autoPlay.setVisibility(View.GONE)
-			SCB_traceLog.setVisibility(View.GONE)
-			SCB_record.setVisibility(View.GONE)
-			SCB_feedbackLight.isLocked = true
-			SCB_LED.isLocked = true
-			SCB_autoPlay.isLocked = true
-			SCB_traceLog.isLocked = true
-			SCB_record.isLocked = true
-		}
-		log("[06] Set CheckBox Checked")
-		if (unipack!!.keyLEDExist) {
-			SCB_feedbackLight.setChecked(false)
-			SCB_LED.setChecked(true)
-		} else SCB_feedbackLight.setChecked(true)
-	}
-
-	private fun initTheme() {
-		val packageName = SelectedTheme.load(this@PlayActivity)
-
-		theme = try {
-			ThemeResources(this@PlayActivity, packageName, true)
-		} catch (e: OutOfMemoryError) {
-			e.printStackTrace()
-			toast("${getString(string.skinMemoryErr)}\n$packageName")
-			requestRestart(this)
-			null
-		} catch (e: Exception) {
-			e.printStackTrace()
-			toast("${getString(string.skinErr)}\n$packageName")
-			SelectedTheme.save(this@PlayActivity, getPackageName())
-			ThemeResources(this@PlayActivity, true)
-		}
-
-
-		/*if (num >= 2) {//하다하다 안되면
-			try {
-				theme = ThemeResources(this@PlayActivity, true)
-			} catch (ignore: Exception) {
-			}
-			return true
-		}
-		return try {
-			theme = ThemeResources(this@PlayActivity, packageName, true)
-			true
-		} catch (e: OutOfMemoryError) {
-			e.printStackTrace()
-			requestRestart(this)
-			toast(getString(string.skinMemoryErr) + "\n" + packageName)
-			false
-		} catch (e: Exception) {
-			e.printStackTrace()
-			toast(getString(string.skinErr) + "\n" + packageName)
-			SelectedTheme.save(this@PlayActivity, getPackageName())
-			initTheme(num + 1)
-		}*/
-	}
-
-
-	@SuppressLint("ClickableViewAccessibility")
-	private fun showUI() {
-		val buttonSizeX: Int
-		val buttonSizeY: Int
-		if (unipack!!.squareButton) {
-			buttonSizeY = Math.min(
-				Scale_PaddingHeight / unipack!!.buttonX,
-				Scale_PaddingWidth / unipack!!.buttonY
-			)
-			buttonSizeX = buttonSizeY
-		} else {
-			buttonSizeX = Scale_Width / unipack!!.buttonY
-			buttonSizeY = Scale_Height / unipack!!.buttonX
-		}
-		purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, b: Boolean ->
-			compoundButton!!.isChecked = false
-			startActivity(Intent(this@PlayActivity, SettingActivity::class.java))
-		}
-		SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				padInit()
-				refreshWatermark()
-			}
-		}
-		SCB_LED.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				if (unipack!!.keyLEDExist) {
-					if (b) {
-						ledRunner?.launch()
-					} else {
-						ledRunner?.stop()
-						LEDInit()
-					}
-				}
-				refreshWatermark()
-			}
-		}
-		SCB_autoPlay.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				if (b) {
-					autoPlayRunner?.launch()
-				} else {
-					autoPlayRunner?.stop()
-					padInit()
-					LEDInit()
-					autoPlay_removeGuide()
-					autoPlayControlView.visibility = View.GONE
-				}
-				refreshWatermark()
-			}
-		}
-		SCB_traceLog.onLongClick = object : OnLongClick {
-			override fun onLongClick() {
-				traceLog_init()
-				toast(string.traceLogClear)
-				refreshWatermark()
-			}
-		}
-		SCB_record.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				if (SCB_record.isChecked()) {
-					rec_prevEventMS = java.lang.System.currentTimeMillis()
-					rec_log = "c " + (chain.value + 1)
-				} else {
-					putClipboard(this@PlayActivity, rec_log!!)
-					toast(string.copied)
-					rec_log = ""
-				}
-				refreshWatermark()
-			}
-		}
-		SCB_hideUI.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				option_view.visibility = if (b) View.GONE else View.VISIBLE
-				refreshWatermark()
-			}
-		}
-		SCB_watermark.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				refreshWatermark()
-			}
-		}
-		SCB_proLightMode.onCheckedChange = object : OnCheckedChange {
-			override fun onCheckedChange(b: Boolean) {
-				proLightMode(b)
-				refreshWatermark()
-			}
-		}
-		prev.setOnClickListener { autoPlay_prev() }
-		play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
-		next.setOnClickListener { autoPlay_next() }
-		option_blur.setOnClickListener {
-			if (bool_toggleOption_window)
-				toggleOption_window(false)
-		}
-		quit.setOnClickListener { finish() }
-		pads.removeAllViews()
-		chainsRight.removeAllViews()
-		chainsLeft.removeAllViews()
-		for (i in 0 until unipack!!.buttonX) {
-			val row = LinearLayout(this)
-			row.layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1F)
-			for (j in 0 until unipack!!.buttonY) {
-				val pad = Pad(this)
-				pad.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
-				pad.setOnTouchListener { _: View?, event: MotionEvent? ->
-					when (event!!.action) {
-						MotionEvent.ACTION_DOWN -> padTouch(i, j, true)
-						MotionEvent.ACTION_UP -> padTouch(i, j, false)
-					}
-					false
-				}
-				U_pads!![i]!![j] = pad
-				row.addView(pad)
-			}
-			pads.addView(row)
-		}
-		for (i in 0..31) {
-			val c = i - 8
-			U_circle!![i] = Chain(this)
-			U_circle!![i]!!.layoutParams = RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY)
-			if (c in 0..7) {
-				U_circle!![i]!!.setOnClickListener { v: View? -> chain.value = c }
-				chainsRight.addView(U_circle!![i])
-			}
-			if (c in 16..23) {
-				U_circle!![i]!!.setOnClickListener { v: View? -> chain.value = c }
-				chainsLeft.addView(U_circle!![i], 0)
-			}
-		}
-		traceLog_init()
 		chain.addObserver { curr: Int, prev: Int ->
 
 			//Log.log("chainChange (" + num + ")");
@@ -609,72 +688,6 @@ class PlayActivity : BaseActivity() {
 				e.printStackTrace()
 			}
 		}
-		proLightMode(SCB_proLightMode.isChecked())
-		themeSet()
-		UILoaded = true
-		UILoaded()
-		controller = midiController
-	}
-
-	private fun themeSet() {
-		log("[12] themeSet")
-		background.setImageDrawable(theme!!.playbg)
-		if (theme!!.custom_logo != null) custom_logo.setImageDrawable(theme!!.custom_logo) else custom_logo.setImageDrawable(null)
-		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
-			U_pads!![i]!![j]!!.setBackgroundImageDrawable(theme!!.btn)
-			U_pads!![i]!![j]!!.setTraceLogTextColor(theme!!.trace_log!!)
-		}
-		if (unipack!!.buttonX < 16 && unipack!!.buttonY < 16) {
-			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) U_pads!![i]!![j]!!.setPhantomImageDrawable(theme!!.phantom)
-			if (unipack!!.buttonX % 2 == 0 && unipack!!.buttonY % 2 == 0 && unipack!!.squareButton && theme!!.phantom_ != null) {
-				val x = unipack!!.buttonX / 2 - 1
-				val y = unipack!!.buttonY / 2 - 1
-				U_pads!![x]!![y]!!.setPhantomImageDrawable(theme!!.phantom_)
-				U_pads!![x + 1]!![y]!!.setPhantomImageDrawable(theme!!.phantom_)
-				U_pads!![x + 1]!![y]!!.setPhantomRotation(270f)
-				U_pads!![x]!![y + 1]!!.setPhantomImageDrawable(theme!!.phantom_)
-				U_pads!![x]!![y + 1]!!.setPhantomRotation(90f)
-				U_pads!![x + 1]!![y + 1]!!.setPhantomImageDrawable(theme!!.phantom_)
-				U_pads!![x + 1]!![y + 1]!!.setPhantomRotation(180f)
-			}
-		}
-		for (i in 0..31) {
-			if (theme!!.isChainLED) {
-				U_circle!![i]!!.setBackgroundImageDrawable(theme!!.btn)
-				U_circle!![i]!!.setPhantomImageDrawable(theme!!.chainled)
-			} else {
-				U_circle!![i]!!.setPhantomImageDrawable(theme!!.chain)
-				U_circle!![i]!!.setLedVisibility(View.GONE)
-			}
-		}
-		prev.background = theme!!.xml_prev
-		play.background = theme!!.xml_play
-		next.background = theme!!.xml_next
-
-
-		for (cb1 in CB1s) {
-			cb1.setTextColor(theme!!.checkbox!!)
-			if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb1.buttonTintList = ColorStateList.valueOf(
-				theme!!.checkbox!!
-			)
-		}
-		for (cb2 in CB2s) {
-			cb2.setTextColor(theme!!.option_window_checkbox!!)
-			if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb2.buttonTintList = ColorStateList.valueOf(
-				theme!!.option_window_checkbox!!
-			)
-		}
-		//RL_option_window.setBackgroundColor(theme.option_window);
-		//IB_option_quit.setBackgroundColor(theme.option_window_btn);
-		//IB_option_quit.setTextColor(theme.option_window_btn_text);
-	}
-
-	private fun UILoaded() {
-		chainBtnsRefresh()
-		updateVolumeUI()
-		if (unipack!!.keyLEDExist)
-			SCB_LED.setChecked(true)
-
 	}
 
 	// pad, chain /////////////////////////////////////////////////////////////////////////////////////////
@@ -895,8 +908,6 @@ class PlayActivity : BaseActivity() {
 		var level = (percent * 7).roundToInt() + 1
 		if (level == 1) level = 0
 		val range = 7 downTo 8 - level
-		Log.test("percent = $volume / $maxVolume    level: $level")
-		Log.test(range.toString())
 		for (c in 0..7) {
 			val y = 8 + c
 			if (c in range)

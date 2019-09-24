@@ -145,12 +145,12 @@ class LedRunner(
 						e.loopProgress++
 						e.index = 0
 					}
-					if (e.ledAnimation.loop != 0 && e.ledAnimation?.loop <= e.loopProgress) {
+					if (e.ledAnimation.loop != 0 && e.ledAnimation.loop <= e.loopProgress) {
 						e.isPlaying = false
 						break
 					}
 					if (e.delay <= currTime) {
-						val element = e.ledAnimation?.elements!![e.index]
+						val element = e.ledAnimation.elements[e.index]
 						try {
 							when (element) {
 								is LedAnimation.Element.On -> {
