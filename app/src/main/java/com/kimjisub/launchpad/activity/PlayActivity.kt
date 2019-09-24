@@ -54,7 +54,6 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
 import com.vungle.warren.LoadAdCallback
@@ -141,12 +140,7 @@ class PlayActivity : BaseActivity() {
 		billingManager = BillingManager(
 			this@PlayActivity,
 			object : BillingEventListener {
-				override fun onProductPurchased(
-					productId: String,
-					details: TransactionDetails?
-				) {
-				}
-
+				override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 				override fun onPurchaseHistoryRestored() {}
 				override fun onBillingError(errorCode: Int, error: Throwable?) {}
 				override fun onBillingInitialized() {}
@@ -190,7 +184,7 @@ class PlayActivity : BaseActivity() {
 			soundRunner = SoundRunner(
 				unipack = unipack!!,
 				chain = chain,
-				listener = object : SoundRunner.Listener {
+				loadingListener = object : SoundRunner.LoadingListener {
 					var progressDialog: ProgressDialog = ProgressDialog(this@PlayActivity)
 					override fun onStart(soundCount: Int) {
 						runOnUiThread {
@@ -597,14 +591,14 @@ class PlayActivity : BaseActivity() {
 			}
 		}
 		proLightMode(SCB_proLightMode.isChecked())
-		skin_set()
+		themeSet()
 		UILoaded = true
 		UILoaded()
 		controller = midiController
 	}
 
-	private fun skin_set() {
-		log("[12] skin_set")
+	private fun themeSet() {
+		log("[12] themeSet")
 		background.setImageDrawable(theme!!.playbg)
 		if (theme!!.custom_logo != null) custom_logo.setImageDrawable(theme!!.custom_logo) else custom_logo.setImageDrawable(null)
 		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
