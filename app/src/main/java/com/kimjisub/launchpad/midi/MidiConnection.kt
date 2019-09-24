@@ -78,19 +78,19 @@ object MidiConnection {
 
 		onGetSignalListener = object : DriverRef.OnGetSignalListener {
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
-				controller!!.onPadTouch(x, y, upDown, velo)
+				controller?.onPadTouch(x, y, upDown, velo)
 			}
 
 			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
-				controller!!.onFunctionkeyTouch(f, upDown)
+				controller?.onFunctionkeyTouch(f, upDown)
 			}
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {
-				controller!!.onChainTouch(c, upDown)
+				controller?.onChainTouch(c, upDown)
 			}
 
 			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				controller!!.onUnknownEvent(cmd, sig, note, velo)
+				controller?.onUnknownEvent(cmd, sig, note, velo)
 			}
 		}
 
