@@ -2,9 +2,7 @@ package com.kimjisub.launchpad.unipack.runner
 
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
-import com.kimjisub.manager.Log
 import kotlinx.coroutines.*
-import java.util.*
 import kotlin.system.measureTimeMillis
 
 class LedRunner(
@@ -13,11 +11,9 @@ class LedRunner(
 	private val chain: ChainObserver,
 	private val delay: Long = 16L
 ) {
-	val coroutineContext = newSingleThreadContext("LedContext")
-
 	private var btnLED: Array<Array<LED?>?>?
 	private var cirLED: Array<LED?>?
-	private var LEDEvents: ArrayList<LEDEvent?>?
+	private var LEDEvents: ArrayList<LEDEvent> = ArrayList()
 
 	private var job: Job? = null
 	val active: Boolean
@@ -35,7 +31,6 @@ class LedRunner(
 	init {
 		btnLED = Array(unipack.buttonX) { arrayOfNulls<LED?>(unipack.buttonY) }
 		cirLED = arrayOfNulls<LED?>(36)
-		LEDEvents = ArrayList()
 	}
 
 	// Event /////////////////////////////////////////////////////////////////////////////////////////
@@ -43,8 +38,7 @@ class LedRunner(
 	fun searchEvent(x: Int, y: Int): LEDEvent? {
 		var res: LEDEvent? = null
 		try {
-			for (i in LEDEvents!!.indices) {
-				val e = LEDEvents!![i]
+			for (e in LEDEvents) {
 				if (e!!.equal(x, y)) {
 					res = e
 					break
@@ -65,7 +59,7 @@ class LedRunner(
 				e!!.isShutdown = true
 			}
 			val e = LEDEvent(x, y)
-			if (e.noError) LEDEvents!!.add(e)
+			if (e.noError) LEDEvents.add(e)
 		}
 	}
 
@@ -91,9 +85,10 @@ class LedRunner(
 
 	inner class LEDEvent(var buttonX: Int, var buttonY: Int) {
 		var index = 0
-		var delay: Long = -1
+		var delay: Long = 0
 		var isPlaying = true
 		var isShutdown = false
+		var remove = false
 		var loopProgress = 0
 
 		val ledAnimation: LedAnimation?
@@ -128,23 +123,19 @@ class LedRunner(
 		}
 	}
 
-	fun stop() {
-		job?.cancel()
-		job = null
-	}
-
-
 	private fun loop() {
 		val currTime = System.currentTimeMillis()
-		for (i in LEDEvents!!.indices) {
-			val e = LEDEvents!![i]
-			if (e != null && e.isPlaying && !e.isShutdown) {
-				if (e.delay == -1L) e.delay = currTime
+		for (e in LEDEvents) {
+			if (e.isPlaying && !e.isShutdown) {
+				// Init if First
+				if (e.delay == 0L) e.delay = currTime
 				while (true) {
+					// Counting Up Loop Progress
 					if (e.index >= e.ledAnimation?.elements!!.size) {
 						e.loopProgress++
 						e.index = 0
 					}
+					// Stop if Loop is Done
 					if (e.ledAnimation.loop != 0 && e.ledAnimation.loop <= e.loopProgress) {
 						e.isPlaying = false
 						break
@@ -184,9 +175,7 @@ class LedRunner(
 									}
 								}
 								is LedAnimation.Element.Delay -> {
-									val delay = element.delay
-
-									e.delay += delay.toLong()
+									e.delay += element.delay.toLong()
 								}
 							}
 						} catch (ee: ArrayIndexOutOfBoundsException) {
@@ -195,9 +184,6 @@ class LedRunner(
 					} else break
 					e.index++
 				}
-			} else if (e == null) {
-				LEDEvents!!.removeAt(i)
-				Log.log("led 오류 e == null")
 			} else if (e.isShutdown) {
 				for (x in 0 until unipack.buttonX) {
 					for (y in 0 until unipack.buttonY) {
@@ -213,10 +199,17 @@ class LedRunner(
 						cirLED!![y] = null
 					}
 				}
-				LEDEvents!!.removeAt(i)
+				e.remove = true
 			} else if (!e.isPlaying) {
-				LEDEvents!!.removeAt(i)
+				e.remove = true
 			}
 		}
+		LEDEvents = LEDEvents.filter { !it.remove } as ArrayList<LEDEvent>
+	}
+
+
+	fun stop() {
+		job?.cancel()
+		job = null
 	}
 }
