@@ -54,7 +54,6 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
 import com.vungle.warren.LoadAdCallback
@@ -64,7 +63,6 @@ import com.vungle.warren.error.VungleException
 import kotlinx.android.synthetic.main.activity_play.*
 import org.jetbrains.anko.toast
 import java.io.File
-import java.util.*
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
@@ -119,7 +117,7 @@ class PlayActivity : BaseActivity() {
 	private var channelManager: ChannelManager? = null
 
 	// ============================================================================================= Manager
-	private var traceLog_table: Array<Array<Array<ArrayList<Int>?>?>?>? = null
+	private var traceLog_table: Array<Array<Array<ArrayList<Int>>>>? = null
 	private var traceLog_nextNum: IntArray? = null
 	private var rec_prevEventMS: Long = 0
 	private var rec_log: String? = ""
@@ -189,51 +187,19 @@ class PlayActivity : BaseActivity() {
 
 	private fun start() {
 		chain.range = 0 until unipack!!.chain
-		log("[03] Init Vars")
-		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY){null} }
-		U_circle = Array(32){null}
+		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY) { null } }
+		U_circle = Array(32) { null }
 		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
 		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
 
-		initLayout()
 		initTheme()
-		if (theme != null)
-			showUI()
-		initRunner()
-	}
-
-
-
-	private fun initLayout() {
-		log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
-		if (unipack!!.squareButton) {
-			if (!unipack!!.keyLEDExist) {
-				SCB_LED.setVisibility(View.GONE)
-				SCB_LED.isLocked = true
-			}
-			if (!unipack!!.autoPlayExist) {
-				SCB_autoPlay.setVisibility(View.GONE)
-				SCB_autoPlay.isLocked = true
-			}
-		} else {
-			RL_root.setPadding(0, 0, 0, 0)
-			SCB_feedbackLight.setVisibility(View.GONE)
-			SCB_LED.setVisibility(View.GONE)
-			SCB_autoPlay.setVisibility(View.GONE)
-			SCB_traceLog.setVisibility(View.GONE)
-			SCB_record.setVisibility(View.GONE)
-			SCB_feedbackLight.isLocked = true
-			SCB_LED.isLocked = true
-			SCB_autoPlay.isLocked = true
-			SCB_traceLog.isLocked = true
-			SCB_record.isLocked = true
+		if (theme != null) {
+			initLayout()
+			initRunner()
+			initSetting()
 		}
-		log("[06] Set CheckBox Checked")
-		if (unipack!!.keyLEDExist) {
-			SCB_feedbackLight.setChecked(false)
-			SCB_LED.setChecked(true)
-		} else SCB_feedbackLight.setChecked(true)
 	}
+
 
 	private fun initTheme() {
 		val packageName = SelectedTheme.load(this@PlayActivity)
@@ -278,8 +244,31 @@ class PlayActivity : BaseActivity() {
 
 
 	@SuppressLint("ClickableViewAccessibility")
-	private fun showUI() {
+	private fun initLayout() {
 		try {
+			log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
+			if (unipack!!.squareButton) {
+				if (!unipack!!.keyLEDExist) {
+					SCB_LED.setVisibility(View.GONE)
+					SCB_LED.isLocked = true
+				}
+				if (!unipack!!.autoPlayExist) {
+					SCB_autoPlay.setVisibility(View.GONE)
+					SCB_autoPlay.isLocked = true
+				}
+			} else {
+				RL_root.setPadding(0, 0, 0, 0)
+				SCB_feedbackLight.setVisibility(View.GONE)
+				SCB_LED.setVisibility(View.GONE)
+				SCB_autoPlay.setVisibility(View.GONE)
+				SCB_traceLog.setVisibility(View.GONE)
+				SCB_record.setVisibility(View.GONE)
+				SCB_feedbackLight.isLocked = true
+				SCB_LED.isLocked = true
+				SCB_autoPlay.isLocked = true
+				SCB_traceLog.isLocked = true
+				SCB_record.isLocked = true
+			}
 
 			// Calc Button size
 			val buttonSizeX: Int
@@ -316,7 +305,7 @@ class PlayActivity : BaseActivity() {
 							ledRunner?.launch()
 						} else {
 							ledRunner?.stop()
-							LEDInit()
+							ledInit()
 						}
 					}
 					refreshWatermark()
@@ -329,7 +318,7 @@ class PlayActivity : BaseActivity() {
 					} else {
 						autoPlayRunner?.stop()
 						padInit()
-						LEDInit()
+						ledInit()
 						autoPlay_removeGuide()
 						autoPlayControlView.visibility = View.GONE
 					}
@@ -487,9 +476,6 @@ class PlayActivity : BaseActivity() {
 	private fun UILoaded() {
 		chainBtnsRefresh()
 		updateVolumeUI()
-		if (unipack!!.keyLEDExist)
-			SCB_LED.setChecked(true)
-
 	}
 
 	private fun initRunner() {
@@ -688,6 +674,15 @@ class PlayActivity : BaseActivity() {
 				e.printStackTrace()
 			}
 		}
+	}
+
+	private fun initSetting(){
+		log("[06] Set CheckBox Checked")
+		if (unipack!!.keyLEDExist) {
+			SCB_feedbackLight.setChecked(false)
+			SCB_LED.setChecked(true)
+		} else
+			SCB_feedbackLight.setChecked(true)
 	}
 
 	// pad, chain /////////////////////////////////////////////////////////////////////////////////////////
@@ -928,14 +923,14 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedUI(x: Int, y: Int) {
-		val Item = channelManager!!.get(x, y)
-		if (Item != null) {
-			when (Item.channel) {
-				Channel.GUIDE -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
-				Channel.PRESSED -> U_pads!![x]!![y]!!.setLedBackground(theme!!.btn_)
-				Channel.LED -> U_pads!![x]!![y]!!.setLedBackgroundColor(Item.color)
+		val item = channelManager!!.get(x, y)
+		if (item != null) {
+			when (item.channel) {
+				Channel.GUIDE -> U_pads!![x][y]!!.setLedBackgroundColor(item.color)
+				Channel.PRESSED -> U_pads!![x][y]!!.setLedBackground(theme!!.btn_)
+				Channel.LED -> U_pads!![x][y]!!.setLedBackgroundColor(item.color)
 			}
-		} else U_pads!![x]!![y]!!.setLedBackgroundColor(0)
+		} else U_pads!![x][y]!!.setLedBackgroundColor(0)
 	}
 
 	private fun setLedLaunchpad(x: Int, y: Int) {
@@ -985,8 +980,8 @@ class PlayActivity : BaseActivity() {
 			driver.sendFunctionkeyLED(c, 0)
 	}
 
-	private fun LEDInit() {
-		log("LEDInit")
+	private fun ledInit() {
+		log("ledInit")
 		if (unipack!!.keyLEDExist) {
 			try {
 				for (i in 0 until unipack!!.buttonX) {
@@ -1072,7 +1067,7 @@ class PlayActivity : BaseActivity() {
 	private fun autoPlay_play() {
 		log("autoPlay_play")
 		padInit()
-		LEDInit()
+		ledInit()
 		autoPlayRunner!!.playmode = true
 		play.background = theme!!.xml_pause
 		if (unipack!!.keyLEDExist) {
@@ -1088,7 +1083,7 @@ class PlayActivity : BaseActivity() {
 		log("autoPlay_stop")
 		autoPlayRunner!!.playmode = false
 		padInit()
-		LEDInit()
+		ledInit()
 		play.background = theme!!.xml_play
 		autoPlayRunner!!.achieve = -1
 		SCB_feedbackLight.setChecked(false)
@@ -1098,7 +1093,7 @@ class PlayActivity : BaseActivity() {
 	private fun autoPlay_prev() {
 		log("autoPlay_prev")
 		padInit()
-		LEDInit()
+		ledInit()
 		autoPlayRunner!!.progressOffset(-40)
 		if (!autoPlayRunner!!.playmode) {
 			autoPlayRunner!!.achieve = -1
@@ -1109,7 +1104,7 @@ class PlayActivity : BaseActivity() {
 	private fun autoPlay_next() {
 		log("autoPlay_next")
 		padInit()
-		LEDInit()
+		ledInit()
 		autoPlayRunner!!.progressOffset(40)
 		if (!autoPlayRunner!!.playmode) {
 			autoPlayRunner!!.achieve = -1
@@ -1199,9 +1194,14 @@ class PlayActivity : BaseActivity() {
 
 	private fun traceLog_init() {
 		log("traceLog_init")
-		traceLog_table = Array(
-			unipack!!.chain
-		) { Array<Array<ArrayList<Int>?>?>(unipack!!.buttonX) { arrayOfNulls<ArrayList<Int>?>(unipack!!.buttonY) } }
+		traceLog_table = Array(unipack!!.chain) {
+			Array(unipack!!.buttonX) {
+				Array(unipack!!.buttonY) {
+					ArrayList<Int>()
+				}
+			}
+		}
+
 		traceLog_nextNum = IntArray(unipack!!.chain)
 		for (i in 0 until unipack!!.chain) {
 			for (j in 0 until unipack!!.buttonX) for (k in 0 until unipack!!.buttonY) if (traceLog_table!![i]!![j]!![k] == null) traceLog_table!![i]!![j]!![k] =
@@ -1209,7 +1209,7 @@ class PlayActivity : BaseActivity() {
 			traceLog_nextNum!![i] = 1
 		}
 		try {
-			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) U_pads!![i]!![j]!!.setTraceLogText("")
+			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) U_pads!![i][j]!!.setTraceLogText("")
 		} catch (e: NullPointerException) {
 			e.printStackTrace()
 		}
@@ -1282,7 +1282,7 @@ class PlayActivity : BaseActivity() {
 		autoPlayRunner?.stop()
 		ledRunner?.stop()
 		soundRunner?.destroy()
-		//LEDInit();
+		//ledInit();
 		//padInit();
 
 		enable = false
