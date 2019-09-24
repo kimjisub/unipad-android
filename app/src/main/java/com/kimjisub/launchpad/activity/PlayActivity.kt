@@ -106,16 +106,16 @@ class PlayActivity : BaseActivity() {
 	// =============================================================================================
 
 	private var U_pads: Array<Array<Pad?>?>? = null
-	private var U_chains: Array<Chain?>? = null
+	private var U_circle: Array<Chain?>? = null
 
-	private var audioManager: AudioManager? = null
-	private var channelManager: ChannelManager? = null
-
-	// Runner /////////////////////////////////////////////////////////////////////////////////////////
+	// Runner, Manager /////////////////////////////////////////////////////////////////////////////////////////
 
 	private var ledRunner: LedRunner? = null
 	private var autoPlayRunner: AutoPlayRunner? = null
 	private var soundRunner: SoundRunner? = null
+
+	private var audioManager: AudioManager? = null
+	private var channelManager: ChannelManager? = null
 
 	// ============================================================================================= Manager
 	private var traceLog_table: Array<Array<Array<ArrayList<Int>?>?>?>? = null
@@ -181,7 +181,7 @@ class PlayActivity : BaseActivity() {
 			chain.range = 0 until unipack!!.chain
 			log("[03] Init Vars")
 			U_pads = Array(unipack!!.buttonX) { arrayOfNulls<Pad?>(unipack!!.buttonY) }
-			U_chains = arrayOfNulls<Chain?>(32)
+			U_circle = arrayOfNulls<Chain?>(32)
 			channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
 			log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
 			initRunner()
@@ -555,15 +555,16 @@ class PlayActivity : BaseActivity() {
 			pads.addView(row)
 		}
 		for (i in 0..31) {
-			U_chains!![i] = Chain(this)
-			U_chains!![i]!!.layoutParams = RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY)
-			if (i in 8..15) {
-				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
-				chainsRight.addView(U_chains!![i])
+			val c = i - 8
+			U_circle!![i] = Chain(this)
+			U_circle!![i]!!.layoutParams = RelativeLayout.LayoutParams(buttonSizeX, buttonSizeY)
+			if (c in 0..7) {
+				U_circle!![i]!!.setOnClickListener { v: View? -> chain.value = c }
+				chainsRight.addView(U_circle!![i])
 			}
-			if (i in 24..31) {
-				U_chains!![i]!!.setOnClickListener { v: View? -> chain.value = i }
-				chainsLeft.addView(U_chains!![i], 0)
+			if (c in 16..23) {
+				U_circle!![i]!!.setOnClickListener { v: View? -> chain.value = c }
+				chainsLeft.addView(U_circle!![i], 0)
 			}
 		}
 		traceLog_init()
@@ -574,10 +575,11 @@ class PlayActivity : BaseActivity() {
 				chainBtnsRefresh()
 
 				// 다중매핑 초기화
-				for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) {
-					unipack!!.Sound_push(curr, i, j, 0)
-					unipack!!.LED_push(curr, i, j, 0)
-				}
+				for (i in 0 until unipack!!.buttonX)
+					for (j in 0 until unipack!!.buttonY) {
+						unipack!!.Sound_push(curr, i, j, 0)
+						unipack!!.LED_push(curr, i, j, 0)
+					}
 
 
 				// 녹음 chain 추가
@@ -589,8 +591,6 @@ class PlayActivity : BaseActivity() {
 				}
 
 				// 순서기록 표시
-
-
 				traceLog_show()
 			} catch (e: ArrayIndexOutOfBoundsException) {
 				e.printStackTrace()
@@ -627,11 +627,11 @@ class PlayActivity : BaseActivity() {
 		}
 		for (i in 0..31) {
 			if (theme!!.isChainLED) {
-				U_chains!![i]!!.setBackgroundImageDrawable(theme!!.btn)
-				U_chains!![i]!!.setPhantomImageDrawable(theme!!.chainled)
+				U_circle!![i]!!.setBackgroundImageDrawable(theme!!.btn)
+				U_circle!![i]!!.setPhantomImageDrawable(theme!!.chainled)
 			} else {
-				U_chains!![i]!!.setPhantomImageDrawable(theme!!.chain)
-				U_chains!![i]!!.setLedVisibility(View.GONE)
+				U_circle!![i]!!.setPhantomImageDrawable(theme!!.chain)
+				U_circle!![i]!!.setLedVisibility(View.GONE)
 			}
 		}
 		chainBtnsRefresh()
@@ -660,6 +660,226 @@ class PlayActivity : BaseActivity() {
 	private fun UILoaded() {
 		if (unipack!!.keyLEDExist)
 			SCB_LED.setChecked(true)
+	}
+
+	// pad, chain /////////////////////////////////////////////////////////////////////////////////////////
+
+	private fun padTouch(x: Int, y: Int, upDown: Boolean) {
+		//Log.log("padTouch (" + buttonX + ", " + buttonY + ", " + upDown + ")");
+
+		try {
+			if (upDown) {
+				soundRunner?.soundOn(x, y)
+				if (SCB_record.isChecked()) {
+					val currTime = java.lang.System.currentTimeMillis()
+					rec_addLog("d " + (currTime - rec_prevEventMS))
+					rec_addLog("t " + (x + 1).toString() + " " + (y + 1))
+					rec_prevEventMS = currTime
+				}
+				if (SCB_traceLog.isChecked())
+					traceLog_log(x, y)
+				if (SCB_feedbackLight.isChecked()) {
+					channelManager!!.add(x, y, Channel.PRESSED, -1, 3)
+					setLed(x, y)
+				}
+				ledRunner?.eventOn(x, y)
+				autoPlay_checkGuide(x, y)
+
+			} else {
+				soundRunner?.soundOff(x, y)
+				channelManager!!.remove(x, y, Channel.PRESSED)
+				setLed(x, y)
+				ledRunner?.eventOff(x, y)
+
+			}
+		} catch (e: ArrayIndexOutOfBoundsException) {
+			e.printStackTrace()
+		} catch (e: NullPointerException) {
+			e.printStackTrace()
+		}
+	}
+
+	private fun padInit() {
+		log("padInit")
+		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) padTouch(i, j, false)
+	}
+
+	private fun chainBtnsRefresh() {
+		log("chainBtnsRefresh")
+		try {
+			// chain
+
+			for (c in 0..23) {
+				val y = 8 + c
+
+				if (c == chain.value)
+					channelManager!!.add(-1, y, Channel.CHAIN, -1, 3)
+				else
+					channelManager!!.remove(-1, y, Channel.CHAIN)
+
+				setLed(y)
+			}
+
+			// volume
+			val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+			val currVolume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+			val currPercent = currVolume / maxVolume
+			var currLevel = Math.round(currPercent * 7) + 1
+			if (currLevel == 1) currLevel = 0
+			for (c in 0..7) {
+				val y = 8 + c
+				if (c <= currLevel)
+					channelManager!!.add(-1, y, Channel.UI, -1, 40)
+				else
+					channelManager!!.remove(-1, y, Channel.UI)
+				setLed(y)
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+	}
+	//  /////////////////////////////////////////////////////////////////////////////////////////
+
+	private fun setProMode(bool: Boolean) {
+		purchase.visibility = if (bool) View.GONE else View.VISIBLE
+		proTools.alpha = if (bool) 1f else 0.3f
+		SCB_hideUI.isLocked = !bool
+		SCB_watermark.isLocked = !bool
+		SCB_proLightMode.isLocked = !bool
+	}
+
+	private fun refreshWatermark() {
+		log("refreshWatermark")
+		val topBar = IntArray(8)
+		val UI: Boolean
+		val UI_UNIPAD: Boolean
+		val CHAIN: Boolean
+		if (!bool_toggleOption_window) {
+			if (SCB_watermark.isChecked()) {
+				UI = false
+				UI_UNIPAD = true
+				CHAIN = true
+			} else {
+				UI = false
+				UI_UNIPAD = false
+				CHAIN = false
+			}
+		} else {
+			if (!SCB_hideUI.isChecked()) {
+				UI = true
+				UI_UNIPAD = false
+				CHAIN = false
+			} else {
+				UI = false
+				UI_UNIPAD = false
+				CHAIN = false
+			}
+		}
+		channelManager!!.setCirIgnore(Channel.UI, !UI)
+		channelManager!!.setCirIgnore(Channel.UI_UNIPAD, !UI_UNIPAD)
+		channelManager!!.setCirIgnore(Channel.CHAIN, !CHAIN)
+		if (!bool_toggleOption_window) {
+			topBar[0] = 0
+			topBar[1] = 0
+			topBar[2] = 0
+			topBar[3] = 0
+			topBar[4] = 61
+			topBar[5] = 40
+			topBar[6] = 61
+			topBar[7] = 40
+			for (i in 0..7) {
+				if (topBar[i] != 0)
+					channelManager!!.add(-1, i, Channel.UI_UNIPAD, -1, topBar[i])
+				else channelManager!!.remove(-1, i, Channel.UI_UNIPAD)
+				setLed(i)
+			}
+		} else {
+			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
+			topBar[1] = if (SCB_LED.isLocked) 0 else if (SCB_LED.isChecked()) 52 else 55
+			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
+			topBar[3] = 0
+			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI!!.isChecked()) 3 else 1
+			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark!!.isChecked()) 61 else 11
+			topBar[6] = if (SCB_proLightMode!!.isLocked) 0 else if (SCB_proLightMode!!.isChecked()) 40 else 43
+			topBar[7] = 5
+			for (i in 0..7) {
+				if (topBar[i] != 0) channelManager!!.add(
+					-1,
+					i,
+					Channel.UI,
+					-1,
+					topBar[i]
+				) else channelManager!!.remove(-1, i, Channel.UI)
+				setLed(i)
+			}
+		}
+		chainBtnsRefresh()
+	}
+
+	private fun proLightMode(bool: Boolean) {
+		if (bool) {
+			for (chain in U_circle!!) {
+				chain!!.visibility = View.VISIBLE
+				//chain.setLedVisibility(View.VISIBLE);
+
+			}
+		} else {
+			if (unipack!!.chain > 1) {
+				for (i in 8..31) {
+					val chain = U_circle!![i]
+					if (i < unipack!!.chain + 8) chain!!.visibility = View.VISIBLE
+
+					//chain.setLedVisibility(View.INVISIBLE);
+					else chain!!.visibility = View.INVISIBLE
+				}
+			} else {
+				for (chain in U_circle!!) chain!!.visibility = View.INVISIBLE
+			}
+		}
+		channelManager!!.setCirIgnore(Channel.LED, !bool)
+		chainBtnsRefresh()
+	}
+
+	private fun toggleOption_window(bool: Boolean = !bool_toggleOption_window) {
+		bool_toggleOption_window = bool
+		refreshWatermark()
+		if (bool) {
+			val a: Animation = object : Animation() {
+				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+					option_blur.alpha = interpolatedTime
+					option_window.alpha = interpolatedTime
+				}
+			}
+			a.duration = 200
+			a.setAnimationListener(object : AnimationListener {
+				override fun onAnimationStart(animation: Animation?) {
+					option_blur.visibility = View.VISIBLE
+					option_window.visibility = View.VISIBLE
+				}
+
+				override fun onAnimationEnd(animation: Animation?) {}
+				override fun onAnimationRepeat(animation: Animation?) {}
+			})
+			option_blur.startAnimation(a)
+		} else {
+			val a: Animation = object : Animation() {
+				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+					option_blur.alpha = 1 - interpolatedTime
+					option_window.alpha = 1 - interpolatedTime
+				}
+			}
+			a.duration = 500
+			a.setAnimationListener(object : AnimationListener {
+				override fun onAnimationStart(animation: Animation?) {}
+				override fun onAnimationEnd(animation: Animation?) {
+					option_blur.visibility = View.INVISIBLE
+					option_window.visibility = View.INVISIBLE
+				}
+
+				override fun onAnimationRepeat(animation: Animation?) {}
+			})
+			option_blur.startAnimation(a)
+		}
 	}
 
 	// Led /////////////////////////////////////////////////////////////////////////////////////////
@@ -697,27 +917,27 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun setLedUI(c: Int) {
-		val Item = channelManager!!.get(-1, c)
-		Log.test("${c} : ${Item}")
-		//val c = c - 8
-		if (c in 0..31)
+	private fun setLedUI(y: Int) {
+		val c = y - 8
+		val Item = channelManager!!.get(-1, y)
+
+		if (c in 0..23)
 			if (theme!!.isChainLED) {
 				if (Item != null) {
 					when (Item.channel) {
-						Channel.GUIDE -> U_chains!![c]!!.setLedBackgroundColor(Item.color)
-						Channel.PRESSED -> U_chains!![c]!!.setLedBackgroundColor(Item.color)
-						Channel.LED -> U_chains!![c]!!.setLedBackgroundColor(Item.color)
+						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
+						Channel.CHAIN -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
+						Channel.LED -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
 					}
-				} else U_chains!![c]!!.setLedBackgroundColor(0)
+				} else U_circle!![y]!!.setLedBackgroundColor(0)
 			} else {
 				if (Item != null) {
 					when (Item.channel) {
-						Channel.GUIDE -> U_chains!![c]!!.setBackgroundImageDrawable(theme!!.chain__)
-						Channel.PRESSED -> U_chains!![c]!!.setBackgroundImageDrawable(theme!!.chain_)
-						Channel.LED -> U_chains!![c]!!.setBackgroundImageDrawable(theme!!.chain)
+						Channel.GUIDE -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain__)
+						Channel.CHAIN -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain_)
+						Channel.LED -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain)
 					}
-				} else U_chains!![c]!!.setBackgroundImageDrawable(theme!!.chain)
+				} else U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain)
 			}
 	}
 
@@ -753,7 +973,72 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	// unishare /////////////////////////////////////////////////////////////////////////////////////////
+
+	// midiController /////////////////////////////////////////////////////////////////////////////////////////
+
+
+	private var midiController: MidiController? =
+		object : MidiController() {
+			override fun onAttach() {
+				updateLP()
+			}
+
+			override fun onDetach() {}
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+				if (!bool_toggleOption_window) {
+					padTouch(x, y, upDown)
+				}
+			}
+
+			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+				if (upDown) {
+					if (!bool_toggleOption_window) {
+						when (f) {
+							0 -> SCB_feedbackLight.toggleChecked()
+							1 -> SCB_LED.toggleChecked()
+							2 -> SCB_autoPlay.toggleChecked()
+							3 -> toggleOption_window()
+							4, 5, 6, 7 -> SCB_watermark.toggleChecked()
+						}
+					} else {
+						if (f in 0..7) when (f) {
+							0 -> SCB_feedbackLight.toggleChecked()
+							1 -> SCB_LED.toggleChecked()
+							2 -> SCB_autoPlay.toggleChecked()
+							3 -> toggleOption_window()
+							4 -> SCB_hideUI.toggleChecked()
+							5 -> SCB_watermark.toggleChecked()
+							6 -> SCB_proLightMode.toggleChecked()
+							7 -> finish()
+						} else if (f in 8..15) {
+							val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+							val currLevel = 8 - (f - 8) - 1
+							val currPercent = currLevel.toFloat() / 7.toFloat()
+							val currVolume = (maxVolume * currPercent).toInt()
+							audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0)
+						}
+					}
+				}
+			}
+
+			override fun onChainTouch(c: Int, upDown: Boolean) {
+				if (!bool_toggleOption_window) {
+					if (upDown && unipack!!.chain > c) chain.value = c
+				}
+			}
+
+			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
+				if (cmd == 7 && sig == 46 && note == 0 && velo == -9) updateLP()
+			}
+		}
+
+	private fun updateLP() {
+		chain.refresh()
+		refreshWatermark()
+	}
+
+
+	// autoPlay /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun autoPlay_play() {
 		log("autoPlay_play")
@@ -860,150 +1145,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun padTouch(x: Int, y: Int, upDown: Boolean) {
-		//Log.log("padTouch (" + buttonX + ", " + buttonY + ", " + upDown + ")");
-
-		try {
-			if (upDown) {
-				soundRunner?.soundOn(x, y)
-				if (SCB_record.isChecked()) {
-					val currTime = java.lang.System.currentTimeMillis()
-					rec_addLog("d " + (currTime - rec_prevEventMS))
-					rec_addLog("t " + (x + 1).toString() + " " + (y + 1))
-					rec_prevEventMS = currTime
-				}
-				if (SCB_traceLog.isChecked())
-					traceLog_log(x, y)
-				if (SCB_feedbackLight.isChecked()) {
-					channelManager!!.add(x, y, Channel.PRESSED, -1, 3)
-					setLed(x, y)
-				}
-				ledRunner?.eventOn(x, y)
-				autoPlay_checkGuide(x, y)
-
-			} else {
-				soundRunner?.soundOff(x, y)
-				channelManager!!.remove(x, y, Channel.PRESSED)
-				setLed(x, y)
-				ledRunner?.eventOff(x, y)
-
-			}
-		} catch (e: ArrayIndexOutOfBoundsException) {
-			e.printStackTrace()
-		} catch (e: NullPointerException) {
-			e.printStackTrace()
-		}
-	}
-
-	// ============================================================================================= Launchpad Connection
-
-
-	private fun padInit() {
-		log("padInit")
-		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) padTouch(i, j, false)
-	}
-
-	// ============================================================================================= Trace Log
-
-
-	private fun chainBtnsRefresh() {
-		log("chainBtnsRefresh")
-		try {
-			// chain
-
-			for (i in 0..7) {
-				val c = 8 + i
-
-				if (i == chain.value)
-					channelManager!!.add(-1, c, Channel.CHAIN, -1, 3)
-				else
-					channelManager!!.remove(-1, c, Channel.CHAIN)
-
-				setLed(c)
-			}
-
-			// volume
-
-
-			val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-			val currVolume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-			val currPercent = currVolume / maxVolume
-			var currLevel = Math.round(currPercent * 7) + 1
-			if (currLevel == 1) currLevel = 0
-			for (i in 0..7) {
-				if (8 - i <= currLevel)
-					channelManager!!.add(-1, i + 8, Channel.UI, -1, 40)
-				else
-					channelManager!!.remove(-1, i + 8, Channel.UI)
-				setLed(i + 8)
-			}
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-	}
-
-	private var midiController: MidiController? =
-		object : MidiController() {
-			override fun onAttach() {
-				updateLP()
-			}
-
-			override fun onDetach() {}
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
-				if (!bool_toggleOption_window) {
-					padTouch(x, y, upDown)
-				}
-			}
-
-			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
-				if (upDown) {
-					if (!bool_toggleOption_window) {
-						when (f) {
-							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
-							2 -> SCB_autoPlay.toggleChecked()
-							3 -> toggleOption_window()
-							4, 5, 6, 7 -> SCB_watermark.toggleChecked()
-						}
-					} else {
-						if (f in 0..7) when (f) {
-							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
-							2 -> SCB_autoPlay.toggleChecked()
-							3 -> toggleOption_window()
-							4 -> SCB_hideUI.toggleChecked()
-							5 -> SCB_watermark.toggleChecked()
-							6 -> SCB_proLightMode.toggleChecked()
-							7 -> finish()
-						} else if (f in 8..15) {
-							val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-							val currLevel = 8 - (f - 8) - 1
-							val currPercent = currLevel.toFloat() / 7.toFloat()
-							val currVolume = (maxVolume * currPercent).toInt()
-							audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0)
-						}
-					}
-				}
-			}
-
-			override fun onChainTouch(c: Int, upDown: Boolean) {
-				if (!bool_toggleOption_window) {
-					if (upDown && unipack!!.chain > c) chain.value = c
-				}
-			}
-
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				if (cmd == 7 && sig == 46 && note == 0 && velo == -9) updateLP()
-			}
-		}
-
-	private fun updateLP() {
-		chain.refresh()
-		refreshWatermark()
-	}
-
 	// TraceLog /////////////////////////////////////////////////////////////////////////////////////////
-
 
 	private fun traceLog_show() {
 		//Log.log("traceLog_show");
@@ -1047,154 +1189,6 @@ class PlayActivity : BaseActivity() {
 	private fun rec_addLog(msg: String?) {
 		rec_log += "\n" + msg
 	}
-
-	private fun setProMode(bool: Boolean) {
-		purchase.visibility = if (bool) View.GONE else View.VISIBLE
-		proTools.alpha = if (bool) 1f else 0.3f
-		SCB_hideUI.isLocked = !bool
-		SCB_watermark.isLocked = !bool
-		SCB_proLightMode.isLocked = !bool
-	}
-
-
-	private fun refreshWatermark() {
-		log("refreshWatermark")
-		val topBar = IntArray(8)
-		val UI: Boolean
-		val UI_UNIPAD: Boolean
-		val CHAIN: Boolean
-		if (!bool_toggleOption_window) {
-			if (SCB_watermark.isChecked()) {
-				UI = false
-				UI_UNIPAD = true
-				CHAIN = true
-			} else {
-				UI = false
-				UI_UNIPAD = false
-				CHAIN = false
-			}
-		} else {
-			if (!SCB_hideUI.isChecked()) {
-				UI = true
-				UI_UNIPAD = false
-				CHAIN = false
-			} else {
-				UI = false
-				UI_UNIPAD = false
-				CHAIN = false
-			}
-		}
-		channelManager!!.setCirIgnore(Channel.UI, !UI)
-		channelManager!!.setCirIgnore(Channel.UI_UNIPAD, !UI_UNIPAD)
-		channelManager!!.setCirIgnore(Channel.CHAIN, !CHAIN)
-		if (!bool_toggleOption_window) {
-			topBar[0] = 0
-			topBar[1] = 0
-			topBar[2] = 0
-			topBar[3] = 0
-			topBar[4] = 61
-			topBar[5] = 40
-			topBar[6] = 61
-			topBar[7] = 40
-			for (i in 0..7) {
-				if (topBar[i] != 0)
-					channelManager!!.add(-1, i, Channel.UI_UNIPAD, -1, topBar[i])
-				else channelManager!!.remove(-1, i, Channel.UI_UNIPAD)
-				setLed(i)
-			}
-		} else {
-			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
-			topBar[1] = if (SCB_LED.isLocked) 0 else if (SCB_LED.isChecked()) 52 else 55
-			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
-			topBar[3] = 0
-			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI!!.isChecked()) 3 else 1
-			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark!!.isChecked()) 61 else 11
-			topBar[6] = if (SCB_proLightMode!!.isLocked) 0 else if (SCB_proLightMode!!.isChecked()) 40 else 43
-			topBar[7] = 5
-			for (i in 0..7) {
-				if (topBar[i] != 0) channelManager!!.add(
-					-1,
-					i,
-					Channel.UI,
-					-1,
-					topBar[i]
-				) else channelManager!!.remove(-1, i, Channel.UI)
-				setLed(i)
-			}
-		}
-		chainBtnsRefresh()
-	}
-
-
-	private fun proLightMode(bool: Boolean) {
-		if (bool) {
-			for (chain in U_chains!!) {
-				chain!!.visibility = View.VISIBLE
-				//chain.setLedVisibility(View.VISIBLE);
-
-			}
-		} else {
-			if (unipack!!.chain > 1) {
-				for (i in 8..31) {
-					val chain = U_chains!![i]
-					if (i < unipack!!.chain+8) chain!!.visibility = View.VISIBLE
-
-					//chain.setLedVisibility(View.INVISIBLE);
-					else chain!!.visibility = View.INVISIBLE
-				}
-			} else {
-				for (chain in U_chains!!) chain!!.visibility = View.INVISIBLE
-			}
-		}
-		channelManager!!.setCirIgnore(Channel.LED, !bool)
-		chainBtnsRefresh()
-	}
-
-	// ============================================================================================= Option Window
-
-	@JvmOverloads
-	private fun toggleOption_window(bool: Boolean = !bool_toggleOption_window) {
-		bool_toggleOption_window = bool
-		refreshWatermark()
-		if (bool) {
-			val a: Animation = object : Animation() {
-				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-					option_blur.alpha = interpolatedTime
-					option_window.alpha = interpolatedTime
-				}
-			}
-			a.duration = 200
-			a.setAnimationListener(object : AnimationListener {
-				override fun onAnimationStart(animation: Animation?) {
-					option_blur.visibility = View.VISIBLE
-					option_window.visibility = View.VISIBLE
-				}
-
-				override fun onAnimationEnd(animation: Animation?) {}
-				override fun onAnimationRepeat(animation: Animation?) {}
-			})
-			option_blur.startAnimation(a)
-		} else {
-			val a: Animation = object : Animation() {
-				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-					option_blur.alpha = 1 - interpolatedTime
-					option_window.alpha = 1 - interpolatedTime
-				}
-			}
-			a.duration = 500
-			a.setAnimationListener(object : AnimationListener {
-				override fun onAnimationStart(animation: Animation?) {}
-				override fun onAnimationEnd(animation: Animation?) {
-					option_blur.visibility = View.INVISIBLE
-					option_window.visibility = View.INVISIBLE
-				}
-
-				override fun onAnimationRepeat(animation: Animation?) {}
-			})
-			option_blur.startAnimation(a)
-		}
-	}
-
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////
 
