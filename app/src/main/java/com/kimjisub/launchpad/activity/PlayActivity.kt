@@ -54,6 +54,7 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import com.kimjisub.manager.Log.vungle
 import com.vungle.warren.LoadAdCallback
@@ -64,6 +65,7 @@ import kotlinx.android.synthetic.main.activity_play.*
 import org.jetbrains.anko.toast
 import java.io.File
 import java.util.*
+import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
 
@@ -634,7 +636,6 @@ class PlayActivity : BaseActivity() {
 				U_circle!![i]!!.setLedVisibility(View.GONE)
 			}
 		}
-		chainBtnsRefresh()
 		prev.background = theme!!.xml_prev
 		play.background = theme!!.xml_play
 		next.background = theme!!.xml_next
@@ -658,8 +659,11 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun UILoaded() {
+		chainBtnsRefresh()
+		updateVolumeUI()
 		if (unipack!!.keyLEDExist)
 			SCB_LED.setChecked(true)
+
 	}
 
 	// pad, chain /////////////////////////////////////////////////////////////////////////////////////////
@@ -707,8 +711,6 @@ class PlayActivity : BaseActivity() {
 	private fun chainBtnsRefresh() {
 		log("chainBtnsRefresh")
 		try {
-			// chain
-
 			for (c in 0..23) {
 				val y = 8 + c
 
@@ -719,25 +721,11 @@ class PlayActivity : BaseActivity() {
 
 				setLed(y)
 			}
-
-			// volume
-			val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-			val currVolume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-			val currPercent = currVolume / maxVolume
-			var currLevel = Math.round(currPercent * 7) + 1
-			if (currLevel == 1) currLevel = 0
-			for (c in 0..7) {
-				val y = 8 + c
-				if (c <= currLevel)
-					channelManager!!.add(-1, y, Channel.UI, -1, 40)
-				else
-					channelManager!!.remove(-1, y, Channel.UI)
-				setLed(y)
-			}
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
+
 	//  /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun setProMode(bool: Boolean) {
@@ -820,20 +808,18 @@ class PlayActivity : BaseActivity() {
 		if (bool) {
 			for (chain in U_circle!!) {
 				chain!!.visibility = View.VISIBLE
-				//chain.setLedVisibility(View.VISIBLE);
-
 			}
 		} else {
-			if (unipack!!.chain > 1) {
-				for (i in 8..31) {
-					val chain = U_circle!![i]
-					if (i < unipack!!.chain + 8) chain!!.visibility = View.VISIBLE
+			val chainRange = 0 until (if (unipack!!.chain > 1) unipack!!.chain else 0)
 
-					//chain.setLedVisibility(View.INVISIBLE);
-					else chain!!.visibility = View.INVISIBLE
-				}
-			} else {
-				for (chain in U_circle!!) chain!!.visibility = View.INVISIBLE
+			for (i in 0..31) {
+				val c = i - 8
+
+				val circleView = U_circle!![i]
+				if (c in chainRange)
+					circleView!!.visibility = View.VISIBLE
+				else
+					circleView!!.visibility = View.INVISIBLE
 			}
 		}
 		channelManager!!.setCirIgnore(Channel.LED, !bool)
@@ -879,6 +865,34 @@ class PlayActivity : BaseActivity() {
 				override fun onAnimationRepeat(animation: Animation?) {}
 			})
 			option_blur.startAnimation(a)
+		}
+	}
+
+	// volume /////////////////////////////////////////////////////////////////////////////////////////
+
+	private fun setVolume(level: Int, maxLevel: Int) {
+		val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val percent = level.toFloat() / maxLevel
+		val volume = (maxVolume * percent).toInt()
+		audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+	}
+
+	private fun updateVolumeUI() {
+		val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val volume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val percent = volume / maxVolume
+		var level = (percent * 7).roundToInt() + 1
+		if (level == 1) level = 0
+		val range = 7 downTo 8 - level
+		Log.test("percent = $volume / $maxVolume    level: $level")
+		Log.test(range.toString())
+		for (c in 0..7) {
+			val y = 8 + c
+			if (c in range)
+				channelManager!!.add(-1, y, Channel.UI, -1, 40)
+			else
+				channelManager!!.remove(-1, y, Channel.UI)
+			setLed(y)
 		}
 	}
 
@@ -973,9 +987,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-
 	// midiController /////////////////////////////////////////////////////////////////////////////////////////
-
 
 	private var midiController: MidiController? =
 		object : MidiController() {
@@ -1011,11 +1023,7 @@ class PlayActivity : BaseActivity() {
 							6 -> SCB_proLightMode.toggleChecked()
 							7 -> finish()
 						} else if (f in 8..15) {
-							val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-							val currLevel = 8 - (f - 8) - 1
-							val currPercent = currLevel.toFloat() / 7.toFloat()
-							val currVolume = (maxVolume * currPercent).toInt()
-							audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, currVolume, 0)
+							setVolume(8 - (f - 8) - 1, 7)
 						}
 					}
 				}
@@ -1036,7 +1044,6 @@ class PlayActivity : BaseActivity() {
 		chain.refresh()
 		refreshWatermark()
 	}
-
 
 	// autoPlay /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1206,19 +1213,15 @@ class PlayActivity : BaseActivity() {
 			System.CONTENT_URI,
 			true,
 			object : ContentObserver(Handler()) {
-				override fun deliverSelfNotifications(): Boolean {
-					return super.deliverSelfNotifications()
-				}
-
 				override fun onChange(selfChange: Boolean) {
 					log("changed volume 1")
-					chainBtnsRefresh()
+					updateVolumeUI()
 					super.onChange(selfChange)
 				}
 
 				override fun onChange(selfChange: Boolean, uri: Uri?) {
 					log("changed volume 2")
-					chainBtnsRefresh()
+					updateVolumeUI()
 					super.onChange(selfChange, uri)
 				}
 			})
