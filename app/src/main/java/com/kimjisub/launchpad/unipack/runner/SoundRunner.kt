@@ -83,7 +83,8 @@ class SoundRunner(
 	}
 
 	fun soundOff(x: Int, y: Int){
-		if (unipack.Sound_get(chain.value, x, y)!!.loop == -1)
+		val e = unipack.Sound_get(chain.value, x, y)
+		if (e != null && e.loop == -1)
 			soundPool!!.stop(stopID!![chain.value][x][y])
 	}
 
