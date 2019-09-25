@@ -6,11 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
+import androidx.databinding.ObservableField
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelStorePackBinding
-import kotlinx.android.synthetic.main.panel_main_pack.view.*
-import kotlinx.android.synthetic.main.panel_store_total.view.*
+import kotlinx.android.synthetic.main.panel_store_pack.view.*
 import java.text.DecimalFormat
 
 class StorePackPanel
@@ -29,7 +29,15 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	val b: PanelStorePackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, false)
+	val b: PanelStorePackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, true)
+	val data = Data()
+
+	class Data {
+		val title: ObservableField<String> = ObservableField()
+		val subtitle: ObservableField<String> = ObservableField()
+		val downloadCount: ObservableField<String> = ObservableField()
+		val path: ObservableField<String> = ObservableField()
+	}
 
 	init {
 		/*val v = LayoutInflater.from(context)
@@ -39,9 +47,9 @@ constructor(
 		attrs?.let {
 			val typedArray = context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
 
-			b.TVTitle.isSelected = true
-			b.TVSubtitle.isSelected = true
-			b.path.isSelected = true
+		//	b.TVTitle.isSelected = true
+		//	b.TVSubtitle.isSelected = true
+		//	b.path.isSelected = true
 			b.youtube.setOnClickListener { v: View ->
 				onEventListener?.onYoutubeClick(v)
 			}
@@ -67,7 +75,7 @@ constructor(
 	}
 
 	fun setDownloadCount(downloadCount: String) {
-		TV_downloadedCount.text = downloadCount
+		TV_downloadCount.text = downloadCount
 	}
 
 	fun setDownloadCount(downloadCount: Long) {
@@ -76,28 +84,28 @@ constructor(
 	}
 
 	fun updateTitle(title: String) {
-		if (TV_title.text != title) {
-			TV_title.alpha = 0f
+		//if (TV_title.text != title) {
+			//TV_title.alpha = 0f
 			setTitle(title)
-			TV_title.animate().alpha(1f).setDuration(500).start()
-		}
+			//TV_title.animate().alpha(1f).setDuration(500).start()
+		//}
 	}
 
 	fun updateSubtitle(subtitle: String) {
-		if (TV_subtitle.text != subtitle) {
-			TV_subtitle.alpha = 0f
+		//if (TV_subtitle.text != subtitle) {
+		//	TV_subtitle.alpha = 0f
 			setSubtitle(subtitle)
-			TV_subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
-		}
+		//	TV_subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+		//}
 	}
 
 	fun updateDownloadCount(downloadCount: Long) {
 		val downloadCountFormatted: String = numberFormatter.format(downloadCount)
-		if (TV_downloadedCount.text != downloadCountFormatted) {
-			TV_downloadedCount.alpha = 0f
+		//if (TV_downloadCount.text != downloadCountFormatted) {
+		//	TV_downloadCount.alpha = 0f
 			setDownloadCount(downloadCountFormatted)
-			TV_downloadedCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
-		}
+		//	TV_downloadCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+		//}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
