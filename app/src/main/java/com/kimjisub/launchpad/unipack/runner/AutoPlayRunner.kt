@@ -77,6 +77,7 @@ class AutoPlayRunner(
 
 	fun launch() {
 		job = CoroutineScope(Dispatchers.IO).launch {
+			progress = 0
 			listener.onStart()
 
 			var delay: Long = 0
