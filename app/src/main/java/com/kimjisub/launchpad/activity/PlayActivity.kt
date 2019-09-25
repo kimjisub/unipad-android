@@ -113,7 +113,7 @@ class PlayActivity : BaseActivity() {
 	private var autoPlayRunner: AutoPlayRunner? = null
 	private var soundRunner: SoundRunner? = null
 
-	private val audioManager: AudioManager by lazy{ getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+	private val audioManager: AudioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 	private var channelManager: ChannelManager? = null
 
 	// ============================================================================================= Manager
@@ -591,15 +591,16 @@ class PlayActivity : BaseActivity() {
 					}
 
 					override fun onEnd() {
-						runOnUiThread { }
-						SCB_autoPlay.setChecked(false)
-						if (unipack!!.ledAnimationTable != null) {
-							SCB_LED.setChecked(true)
-							SCB_feedbackLight.setChecked(false)
-						} else {
-							SCB_feedbackLight.setChecked(true)
+						runOnUiThread {
+							SCB_autoPlay.setChecked(false)
+							if (unipack!!.ledAnimationTable != null) {
+								SCB_LED.setChecked(true)
+								SCB_feedbackLight.setChecked(false)
+							} else {
+								SCB_feedbackLight.setChecked(true)
+							}
+							autoPlayControlView.visibility = View.GONE
 						}
-						autoPlayControlView.visibility = View.GONE
 					}
 				})
 		}
@@ -676,7 +677,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun initSetting(){
+	private fun initSetting() {
 		log("[06] Set CheckBox Checked")
 		if (unipack!!.keyLEDExist) {
 			SCB_feedbackLight.setChecked(false)
