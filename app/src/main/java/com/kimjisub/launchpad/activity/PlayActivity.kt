@@ -113,7 +113,7 @@ class PlayActivity : BaseActivity() {
 	private var autoPlayRunner: AutoPlayRunner? = null
 	private var soundRunner: SoundRunner? = null
 
-	private var audioManager: AudioManager? = null
+	private val audioManager: AudioManager by lazy{ getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 	private var channelManager: ChannelManager? = null
 
 	// ============================================================================================= Manager
@@ -890,15 +890,15 @@ class PlayActivity : BaseActivity() {
 	// volume /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun setVolume(level: Int, maxLevel: Int) {
-		val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
 		val percent = level.toFloat() / maxLevel
 		val volume = (maxVolume * percent).toInt()
-		audioManager!!.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+		audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
 	}
 
 	private fun updateVolumeUI() {
-		val maxVolume = audioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-		val volume = audioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+		val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
 		val percent = volume / maxVolume
 		var level = (percent * 7).roundToInt() + 1
 		if (level == 1) level = 0
@@ -1230,7 +1230,6 @@ class PlayActivity : BaseActivity() {
 		super.onResume()
 		//initVar();
 
-		audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 		contentResolver.registerContentObserver(
 			System.CONTENT_URI,
 			true,

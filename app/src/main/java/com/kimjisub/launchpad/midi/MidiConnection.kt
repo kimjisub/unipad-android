@@ -242,15 +242,7 @@ object MidiConnection {
 								val velocity = byteArray[i + 3].toInt()
 
 								publishProgress(cmd, sig, note, velocity)
-								Log.midi(
-									String.format(
-										"%-7d%-7d%-7d%-7d",
-										cmd,
-										sig,
-										note,
-										velocity
-									)
-								)
+								Log.midi(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity))
 								i += 4
 							}
 						} else if (length == -1) {
