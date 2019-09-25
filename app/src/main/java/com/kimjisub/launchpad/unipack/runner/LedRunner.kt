@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.unipack.runner
 
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
-import kotlinx.coroutines.*
+import com.kimjisub.manager.Log
 import kotlin.system.measureTimeMillis
 
 class LedRunner(
@@ -15,9 +15,9 @@ class LedRunner(
 	private var cirLED: Array<LED?>?
 	private var LEDEvents: ArrayList<LEDEvent> = ArrayList()
 
-	private var job: Job? = null
-	val active: Boolean
-		get() = job?.isActive ?: false
+	private val active: Boolean
+		get() = !(thread?.isInterrupted ?: true)
+	private var thread: Thread? = null
 
 	interface Listener {
 		fun onStart()
@@ -39,7 +39,7 @@ class LedRunner(
 		var res: LEDEvent? = null
 		try {
 			for (e in LEDEvents) {
-				if (e!!.equal(x, y)) {
+				if (e.equal(x, y)) {
 					res = e
 					break
 				}
@@ -76,8 +76,6 @@ class LedRunner(
 		var buttonY: Int,
 		var element: LedAnimation.Element
 	) {
-
-
 		fun equal(buttonX: Int, buttonY: Int): Boolean {
 			return this.buttonX == buttonX && this.buttonY == buttonY
 		}
@@ -109,18 +107,25 @@ class LedRunner(
 
 	// unishare /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun launch() {
-		job = CoroutineScope(Dispatchers.IO).launch {
-			withContext(coroutineContext) {
-				while (isActive) {
-					val millis = measureTimeMillis {
-						loop()
-					}
-
-					delay(delay - millis)
+	private val runnable = java.lang.Runnable {
+		Log.thread("[Led] 2. Start Thread")
+		try {
+			while (!thread!!.isInterrupted) {
+				val millis = measureTimeMillis {
+					loop()
 				}
+				Thread.sleep(delay - millis)
 			}
+		} catch (e: InterruptedException) {
 		}
+		Log.thread("[Led] 4. End Thread")
+		thread = null
+	}
+
+	fun launch() {
+		Log.thread("[Led] 1. Request Thread")
+		thread = Thread(runnable)
+		thread!!.start()
 	}
 
 	private fun loop() {
@@ -209,7 +214,7 @@ class LedRunner(
 
 
 	fun stop() {
-		job?.cancel()
-		job = null
+		Log.thread("[Led] 3. Request Stop")
+		thread?.interrupt()
 	}
 }
