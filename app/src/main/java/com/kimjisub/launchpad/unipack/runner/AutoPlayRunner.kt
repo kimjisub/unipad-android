@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.unipack.runner
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log
-import kotlinx.coroutines.*
 import java.util.*
 
 class AutoPlayRunner(
@@ -25,9 +24,9 @@ class AutoPlayRunner(
 			listener.onProgressUpdate(progress)
 		}
 
-	private var job: Job? = null
+	private var thread: Thread? = null
 	val active: Boolean
-		get() = job?.isActive ?: false
+		get() = !(thread?.isInterrupted ?: true)
 
 	interface Listener {
 		fun onStart()
@@ -44,45 +43,17 @@ class AutoPlayRunner(
 		fun onEnd()
 	}
 
+	// Thread /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun guideCheck() {
-		if (achieve >= guideItems!!.size || achieve == -1) {
-			achieve = 0
-			for (i in guideItems!!.indices) {
-				val e: AutoPlay.Element? = guideItems!![i]
-				when (e) {
-					is AutoPlay.Element.On -> listener.onGuidePadOff(e.x, e.y)
-				}
-			}
-			guideItems!!.clear()
-			var addedDelay = 0
-			var complete = false
-			while (progress < unipack.autoPlayTable!!.elements.size && (addedDelay <= 20 || !complete)) {
-				val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]
-				when (e) {
-					is AutoPlay.Element.On -> {
-						unipack.Sound_push(e.currChain, e.x, e.y, e.num)
-						unipack.LED_push(e.currChain, e.x, e.y, e.num)
-						listener.onGuidePadOn(e.x, e.y)
-						complete = true
-						guideItems!!.add(e)
-						Log.log(e.currChain.toString() + " " + e.x.toString() + " " + e.y)
-					}
-					is AutoPlay.Element.Delay -> if (complete) addedDelay += e.delay
-				}
-				progress++
-			}
-		}
-	}
+	private val runnable = java.lang.Runnable {
+		Log.thread("[AutoPlay] 2. Start Thread")
+		progress = 0
+		listener.onStart()
 
-	fun launch() {
-		job = CoroutineScope(Dispatchers.IO).launch {
-			progress = 0
-			listener.onStart()
-
+		try {
 			var delay: Long = 0
 			val startTime = System.currentTimeMillis()
-			while (progress < unipack.autoPlayTable!!.elements.size && isActive) {
+			while (progress < unipack.autoPlayTable!!.elements.size && active) {
 				val currTime = System.currentTimeMillis()
 				if (playmode) {
 					beforeStartPlaying()
@@ -121,15 +92,29 @@ class AutoPlayRunner(
 						guideCheck()
 					}
 				}
-				try {
-					Thread.sleep(delay_)
-				} catch (e: InterruptedException) {
-					e.printStackTrace()
-				}
+				Thread.sleep(delay_)
 			}
-			listener.onEnd()
+		}catch (e:InterruptedException){
+		}
+		Log.thread("[AutoPlay] 4. End Thread")
+		thread = null
+		listener.onEnd()
+	}
+
+	fun launch() {
+		Log.thread("[AutoPlay] 1. Request Thread")
+		if (thread == null) {
+			thread = Thread(runnable)
+			thread!!.start()
 		}
 	}
+
+	fun stop() {
+		Log.thread("[AutoPlay] 3. Request Stop")
+		thread?.interrupt()
+	}
+
+	// Functions /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun beforeStartPlaying() {
 		if (beforeStartPlaying) {
@@ -166,8 +151,34 @@ class AutoPlayRunner(
 			}
 	}
 
-	fun stop() {
-		job?.cancel()
-		job = null
+
+	fun guideCheck() {
+		if (achieve >= guideItems!!.size || achieve == -1) {
+			achieve = 0
+			for (i in guideItems!!.indices) {
+				val e: AutoPlay.Element? = guideItems!![i]
+				when (e) {
+					is AutoPlay.Element.On -> listener.onGuidePadOff(e.x, e.y)
+				}
+			}
+			guideItems!!.clear()
+			var addedDelay = 0
+			var complete = false
+			while (progress < unipack.autoPlayTable!!.elements.size && (addedDelay <= 20 || !complete)) {
+				val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]
+				when (e) {
+					is AutoPlay.Element.On -> {
+						unipack.Sound_push(e.currChain, e.x, e.y, e.num)
+						unipack.LED_push(e.currChain, e.x, e.y, e.num)
+						listener.onGuidePadOn(e.x, e.y)
+						complete = true
+						guideItems!!.add(e)
+						Log.log(e.currChain.toString() + " " + e.x.toString() + " " + e.y)
+					}
+					is AutoPlay.Element.Delay -> if (complete) addedDelay += e.delay
+				}
+				progress++
+			}
+		}
 	}
 }

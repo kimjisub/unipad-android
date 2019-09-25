@@ -14,7 +14,7 @@ object Log {
 	fun vungle(msg: String) = printLog("com.kimjisub._vungle", msg)
 	fun admob(msg: String) = printLog("com.kimjisub._admob", msg)
 	fun midi(msg: String) = printLog("com.kimjisub._midi", msg)
-	fun thread(msg: String) = printLog("com.kimjisub._thred", msg)
+	fun thread(msg: String) = printLog("com.kimjisub._thread", msg)
 	fun midiDetail(msg: String) = printLog("com.kimjisub._mididetail", msg)
 	fun driver(msg: String) = printLog("com.kimjisub._driver", msg)
 	fun sqlite(msg: String) = printLog("com.kimjisub._sqlite", msg)
