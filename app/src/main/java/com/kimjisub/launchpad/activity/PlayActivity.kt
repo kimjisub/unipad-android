@@ -808,7 +808,7 @@ class PlayActivity : BaseActivity() {
 			topBar[3] = 0
 			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI!!.isChecked()) 3 else 1
 			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark!!.isChecked()) 61 else 11
-			topBar[6] = if (SCB_proLightMode!!.isLocked) 0 else if (SCB_proLightMode!!.isChecked()) 40 else 43
+			topBar[6] = if (SCB_proLightMode.isLocked) 0 else if (SCB_proLightMode!!.isChecked()) 40 else 43
 			topBar[7] = 5
 			for (i in 0..7) {
 				if (topBar[i] != 0) channelManager!!.add(
@@ -935,9 +935,9 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedLaunchpad(x: Int, y: Int) {
-		val Item = channelManager!!.get(x, y)
-		if (Item != null)
-			driver.sendPadLED(x, y, Item.code)
+		val item = channelManager!!.get(x, y)
+		if (item != null)
+			driver.sendPadLED(x, y, item.code)
 		else
 			driver.sendPadLED(x, y, 0)
 	}
@@ -951,20 +951,20 @@ class PlayActivity : BaseActivity() {
 
 	private fun setLedUI(y: Int) {
 		val c = y - 8
-		val Item = channelManager!!.get(-1, y)
+		val item = channelManager!!.get(-1, y)
 
 		if (c in 0..23)
 			if (theme!!.isChainLED) {
-				if (Item != null) {
-					when (Item.channel) {
-						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
-						Channel.CHAIN -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
-						Channel.LED -> U_circle!![y]!!.setLedBackgroundColor(Item.color)
+				if (item != null) {
+					when (item.channel) {
+						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(item.color)
+						Channel.CHAIN -> U_circle!![y]!!.setLedBackgroundColor(item.color)
+						Channel.LED -> U_circle!![y]!!.setLedBackgroundColor(item.color)
 					}
 				} else U_circle!![y]!!.setLedBackgroundColor(0)
 			} else {
-				if (Item != null) {
-					when (Item.channel) {
+				if (item != null) {
+					when (item.channel) {
 						Channel.GUIDE -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain__)
 						Channel.CHAIN -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain_)
 						Channel.LED -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain)
@@ -1177,9 +1177,9 @@ class PlayActivity : BaseActivity() {
 
 		for (i in 0 until unipack!!.buttonX) {
 			for (j in 0 until unipack!!.buttonY) {
-				U_pads!![i]!![j]!!.setTraceLogText("")
-				for (k in traceLog_table!![chain.value]!![i]!![j]!!.indices) U_pads!![i]!![j]!!.appendTraceLog(
-					traceLog_table!![chain.value]!![i]!![j]!![k].toString() + " "
+				U_pads!![i][j]!!.setTraceLogText("")
+				for (k in traceLog_table!![chain.value][i][j].indices) U_pads!![i][j]!!.appendTraceLog(
+					traceLog_table!![chain.value][i][j][k].toString() + " "
 				)
 			}
 		}
@@ -1188,9 +1188,9 @@ class PlayActivity : BaseActivity() {
 	private fun traceLog_log(x: Int, y: Int) {
 		//Log.log("traceLog_log (" + buttonX + ", " + buttonY + ")");
 
-		traceLog_table!![chain.value]!![x]!![y]!!.add(traceLog_nextNum!![chain.value]++)
-		U_pads!![x]!![y]!!.setTraceLogText("")
-		for (i in traceLog_table!![chain.value]!![x]!![y]!!.indices) U_pads!![x]!![y]!!.appendTraceLog(traceLog_table!![chain.value]!![x]!![y]!![i].toString() + " ")
+		traceLog_table!![chain.value][x][y].add(traceLog_nextNum!![chain.value]++)
+		U_pads!![x][y]!!.setTraceLogText("")
+		for (i in traceLog_table!![chain.value][x][y].indices) U_pads!![x][y]!!.appendTraceLog(traceLog_table!![chain.value][x][y][i].toString() + " ")
 	}
 
 	private fun traceLog_init() {
@@ -1205,8 +1205,7 @@ class PlayActivity : BaseActivity() {
 
 		traceLog_nextNum = IntArray(unipack!!.chain)
 		for (i in 0 until unipack!!.chain) {
-			for (j in 0 until unipack!!.buttonX) for (k in 0 until unipack!!.buttonY) if (traceLog_table!![i]!![j]!![k] == null) traceLog_table!![i]!![j]!![k] =
-				ArrayList() else traceLog_table!![i]!![j]!![k]!!.clear()
+			for (j in 0 until unipack!!.buttonX) for (k in 0 until unipack!!.buttonY) traceLog_table!![i][j][k].clear()
 			traceLog_nextNum!![i] = 1
 		}
 		try {
