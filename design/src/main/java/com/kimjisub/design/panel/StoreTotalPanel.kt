@@ -25,7 +25,7 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	val b: PanelStoreTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_total, this, false)
+	val b: PanelStoreTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_total, this, true)
 
 	init {
 		/*val v = LayoutInflater.from(context)
