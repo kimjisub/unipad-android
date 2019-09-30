@@ -358,7 +358,7 @@ class MainActivity : BaseActivity() {
 
 			override fun doInBackground(vararg params: String?): String? {
 				try {
-					for (file: File in uniPackDirList) {
+					for (file: File in getUnipackDirList()) {
 						if (!file.isDirectory) continue
 						val path: String? = file.path
 						val unipack = Unipack(file, false)

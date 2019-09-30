@@ -115,11 +115,10 @@ open class BaseActivity : AppCompatActivity() {
 		Scale_PaddingHeight = LL_paddingScale.height
 	}
 
-	internal val uniPackDirList: Array<File>
-		get() {
-			val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
-			return FileManager.sortByTime(projectFiles)
-		}
+	fun getUnipackDirList():Array<File>{
+		val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
+		return FileManager.sortByTime(projectFiles)
+	}
 
 	// ============================================================================================= Ads
 
