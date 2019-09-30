@@ -33,16 +33,15 @@ import java.io.File
 import java.util.*
 
 class FBStoreActivity : BaseActivity() {
-	internal var firebase_store: FirebaseManager? = null
-	internal var firebase_storeCount: FirebaseManager? = null
-	internal var list: ArrayList<StoreItem>? = null
-	internal var adapter: StoreAdapter? = null
-	internal fun initVar(onFirst: Boolean) {
+	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
+	private val firebase_storeCount: FirebaseManager by lazy {FirebaseManager("storeCount")}
+	private val list: ArrayList<StoreItem> = ArrayList()
+	private var adapter: StoreAdapter? = null
+	private val downloadList: Array<File> by lazy { getUnipackDirList() }
+
+	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
-			firebase_store = FirebaseManager("store")
-			firebase_storeCount = FirebaseManager("storeCount")
-			list = ArrayList()
-			adapter = StoreAdapter(list!!, object : EventListener {
+			adapter = StoreAdapter(list, object : EventListener {
 				override fun onViewClick(item: StoreItem, v: PackView) {
 					togglePlay(item)
 				}
@@ -55,12 +54,12 @@ class FBStoreActivity : BaseActivity() {
 			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
 				override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 					super.onItemRangeInserted(positionStart, itemCount)
-					LL_errItem.visibility = if (list!!.size == 0) View.VISIBLE else View.GONE
+					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 
 				override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 					super.onItemRangeRemoved(positionStart, itemCount)
-					LL_errItem.visibility = if (list!!.size == 0) View.VISIBLE else View.GONE
+					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 			})
 			val divider = DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
@@ -77,8 +76,6 @@ class FBStoreActivity : BaseActivity() {
 
 	// =============================================================================================
 
-	val asdf: Array<File> by lazy { uniPackDirList }
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_store)
@@ -86,20 +83,20 @@ class FBStoreActivity : BaseActivity() {
 
 		P_total.b.IVLogo.setImageResource(drawable.custom_logo)
 		P_total.b.TVVersion.text = BuildConfig.VERSION_NAME
-		P_total.b.TVStoreCount.text = list!!.size.toString()
-		firebase_store!!.setEventListener(object : ChildEventListener {
+		P_total.b.TVStoreCount.text = list.size.toString()
+		firebase_store.setEventListener(object : ChildEventListener {
 			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
 				Log.test("onChildAdded: $s")
 				try {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					var isDownloaded = false
-					for (dir in asdf) {
+					for (dir in downloadList) {
 						if (d.code == dir.name) {
 							isDownloaded = true
 							break
 						}
 					}
-					list!!.add(0, StoreItem(d, isDownloaded))
+					list.add(0, StoreItem(d, isDownloaded))
 					adapter!!.notifyItemInserted(0)
 					updatePanelMain()
 				} catch (e: Exception) {
@@ -114,11 +111,11 @@ class FBStoreActivity : BaseActivity() {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					val item = getPackItemByCode(d.code!!)
 					item!!.storeVO = d
-					adapter!!.notifyItemChanged(list!!.indexOf(item), "update")
+					adapter!!.notifyItemChanged(list.indexOf(item), "update")
 					val selectedIndex = selectedIndex
 					if (selectedIndex != -1) {
 						val changeCode = item.storeVO.code
-						val selectedCode = list!![selectedIndex].storeVO.code
+						val selectedCode = list[selectedIndex].storeVO.code
 						if (changeCode == selectedCode) updatePanelPack(item)
 					}
 				} catch (e: Exception) {
@@ -130,7 +127,7 @@ class FBStoreActivity : BaseActivity() {
 			override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {}
 			override fun onCancelled(databaseError: DatabaseError) {}
 		})
-		firebase_storeCount!!.setEventListener(object : ValueEventListener {
+		firebase_storeCount.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long = dataSnapshot.getValue(Long::class.java)!!
 				PrevStoreCount.save(this@FBStoreActivity, data)
@@ -145,9 +142,12 @@ class FBStoreActivity : BaseActivity() {
 
 	internal fun togglePlay(target: StoreItem?) {
 		try {
-			for (item in list!!) {
+			for (item in list) {
 				val packView = item.packView
-				if (target != null && item.storeVO.code == target.storeVO.code) item.isToggle = !item.isToggle else item.isToggle = false
+				if (target != null && item.storeVO.code == target.storeVO.code)
+					item.isToggle = !item.isToggle
+				else
+					item.isToggle = false
 				packView?.toggle(item.isToggle)
 			}
 			updatePanel()
@@ -160,7 +160,7 @@ class FBStoreActivity : BaseActivity() {
 		internal get() {
 			var index = -1
 			var i = 0
-			for (item in list!!) {
+			for (item in list) {
 				if (item.isToggle) {
 					index = i
 					break
@@ -172,7 +172,7 @@ class FBStoreActivity : BaseActivity() {
 
 	internal fun getPackItemByCode(code: String): StoreItem? {
 		var ret: StoreItem? = null
-		for (item in list!!)
+		for (item in list)
 			if (item.storeVO.code == code) {
 				ret = item
 				break
@@ -183,7 +183,7 @@ class FBStoreActivity : BaseActivity() {
 	internal val downloadingCount: Int
 		internal get() {
 			var count = 0
-			for (item in list!!) {
+			for (item in list) {
 				if (item.downloading) count++
 			}
 			return count
@@ -192,7 +192,7 @@ class FBStoreActivity : BaseActivity() {
 	internal val downloadedCount: Int
 		internal get() {
 			var count = 0
-			for (item in list!!) {
+			for (item in list) {
 				if (item.downloaded) count++
 			}
 			return count
@@ -319,17 +319,17 @@ class FBStoreActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		initVar(false)
-		list!!.clear()
+		list.clear()
 		adapter!!.notifyDataSetChanged()
 		togglePlay(null)
 		updatePanel()
-		firebase_store!!.attachEventListener(true)
-		firebase_storeCount!!.attachEventListener(true)
+		firebase_store.attachEventListener(true)
+		firebase_storeCount.attachEventListener(true)
 	}
 
 	override fun onPause() {
 		super.onPause()
-		firebase_store!!.attachEventListener(false)
-		firebase_storeCount!!.attachEventListener(false)
+		firebase_store.attachEventListener(false)
+		firebase_storeCount.attachEventListener(false)
 	}
 }

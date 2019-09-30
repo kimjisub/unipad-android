@@ -84,28 +84,28 @@ constructor(
 	}
 
 	fun updateTitle(title: String) {
-		//if (TV_title.text != title) {
-			//TV_title.alpha = 0f
+		if (TV_title.text != title) {
+			TV_title.alpha = 0f
 			setTitle(title)
-			//TV_title.animate().alpha(1f).setDuration(500).start()
-		//}
+			TV_title.animate().alpha(1f).setDuration(500).start()
+		}
 	}
 
 	fun updateSubtitle(subtitle: String) {
-		//if (TV_subtitle.text != subtitle) {
-		//	TV_subtitle.alpha = 0f
+		if (TV_subtitle.text != subtitle) {
+			TV_subtitle.alpha = 0f
 			setSubtitle(subtitle)
-		//	TV_subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
-		//}
+			TV_subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+		}
 	}
 
 	fun updateDownloadCount(downloadCount: Long) {
 		val downloadCountFormatted: String = numberFormatter.format(downloadCount)
-		//if (TV_downloadCount.text != downloadCountFormatted) {
-		//	TV_downloadCount.alpha = 0f
+		if (TV_downloadCount.text != downloadCountFormatted) {
+			TV_downloadCount.alpha = 0f
 			setDownloadCount(downloadCountFormatted)
-		//	TV_downloadCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
-		//}
+			TV_downloadCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
