@@ -58,6 +58,7 @@ import com.vungle.warren.PlayAdCallback
 import com.vungle.warren.Vungle
 import com.vungle.warren.error.VungleException
 import kotlinx.android.synthetic.main.activity_play.*
+import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.toast
 import java.io.File
 import kotlin.math.roundToInt
@@ -192,11 +193,6 @@ class PlayActivity : BaseActivity() {
 		initTheme()
 
 		if (theme != null) {
-
-			RL_root.viewTreeObserver.addOnGlobalLayoutListener {
-
-			}
-
 			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object:ViewTreeObserver.OnGlobalLayoutListener{
 				override fun onGlobalLayout() {
 					RL_root.viewTreeObserver.removeOnGlobalLayoutListener(this)
@@ -301,9 +297,9 @@ class PlayActivity : BaseActivity() {
 
 
 			// Setting
-			purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, b: Boolean ->
+			purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
 				compoundButton!!.isChecked = false
-				startActivity(Intent(this@PlayActivity, SettingActivity::class.java))
+				startActivity<SettingActivity>()
 			}
 			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(b: Boolean) {

@@ -19,6 +19,9 @@ import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.Log
+import org.jetbrains.anko.support.v4.browse
+import org.jetbrains.anko.support.v4.intentFor
+import org.jetbrains.anko.support.v4.startActivity
 import org.jetbrains.anko.toast
 import java.util.*
 
@@ -60,7 +63,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 
 		findPreference<Preference>("select_theme")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-			startActivity(Intent(context, ThemeActivity::class.java))
+			startActivity<ThemeActivity>()
 			false
 		}
 		findPreference<Preference>("community")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -209,12 +212,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long ->
-				startActivity(
-					Intent(
-						Intent.ACTION_VIEW,
-						Uri.parse(list[position].url)
-					)
-				)
+				browse(list[position].url)
 			}
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(string.openSourceLicense))

@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import kotlinx.android.synthetic.main.activity_splash.*
+import org.jetbrains.anko.startActivity
 
 class SplashActivity : BaseActivity() {
 	internal var billingManager: BillingManager? = null
@@ -21,8 +22,7 @@ class SplashActivity : BaseActivity() {
 	internal var handler = Handler()
 	internal var runnable = Runnable {
 		finish()
-		val intent = Intent(this@SplashActivity, MainActivity::class.java)
-		startActivity(intent)
+		startActivity<MainActivity>()
 	}
 
 	val orange: Int by lazy { ContextCompat.getColor(this, color.orange) }

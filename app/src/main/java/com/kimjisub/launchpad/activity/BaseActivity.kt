@@ -7,7 +7,6 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Process
-import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.AdListener
@@ -22,6 +21,7 @@ import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import com.vungle.warren.InitCallback
 import com.vungle.warren.Vungle
+import org.jetbrains.anko.startActivity
 import java.io.File
 import java.util.*
 
@@ -33,12 +33,12 @@ open class BaseActivity : AppCompatActivity() {
 
 
 		var activityList = ArrayList<Activity>()
-		internal fun startActivity(activity: Activity) {
+		internal fun onStartActivity(activity: Activity) {
 			activityList.add(activity)
 			printActivityLog(activity.localClassName + " start")
 		}
 
-		internal fun finishActivity(activity: Activity) {
+		internal fun onFinishActivity(activity: Activity) {
 			var exist = false
 			val size = activityList.size
 			for (i in 0 until size) {
@@ -58,7 +58,7 @@ open class BaseActivity : AppCompatActivity() {
 				activityList[i].finish()
 				activityList.removeAt(i)
 			}
-			activity.startActivity(Intent(activity, MainActivity::class.java))
+			activity.startActivity<MainActivity>()
 			printActivityLog(activity.localClassName + " requestRestart")
 			Process.killProcess(Process.myPid())
 		}
@@ -209,7 +209,7 @@ open class BaseActivity : AppCompatActivity() {
 			}
 		});*/
 
-		startActivity(this)
+		onStartActivity(this) 
 	}
 
 	public override fun onStart() {
@@ -242,6 +242,6 @@ open class BaseActivity : AppCompatActivity() {
 	public override fun onDestroy() {
 		Log.activity("onDestroy " + this.localClassName)
 		super.onDestroy()
-		finishActivity(this)
+		onFinishActivity(this)
 	}
 }
