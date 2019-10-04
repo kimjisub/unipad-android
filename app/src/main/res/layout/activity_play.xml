@@ -7,6 +7,14 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
+
+		<View
+			android:layout_margin="8dp"
+			android:id="@+id/V_paddingScale"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="vertical" />
+
 		<ImageView
 			android:id="@+id/background"
 			android:layout_width="match_parent"

@@ -30,10 +30,6 @@ open class BaseActivity : AppCompatActivity() {
 	companion object {
 
 		private var interstitialAd: InterstitialAd? = null
-		var Scale_Width = 0
-		var Scale_Height = 0
-		var Scale_PaddingWidth = 0
-		var Scale_PaddingHeight = 0
 
 
 		var activityList = ArrayList<Activity>()
@@ -107,13 +103,6 @@ open class BaseActivity : AppCompatActivity() {
 	}
 
 	// ============================================================================================= Function
-
-	internal fun rescanScale(LL_scale: LinearLayout, LL_paddingScale: LinearLayout) {
-		Scale_Width = LL_scale.width
-		Scale_Height = LL_scale.height
-		Scale_PaddingWidth = LL_paddingScale.width
-		Scale_PaddingHeight = LL_paddingScale.height
-	}
 
 	fun getUnipackDirList():Array<File>{
 		val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()

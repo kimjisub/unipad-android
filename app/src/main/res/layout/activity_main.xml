@@ -8,20 +8,6 @@
 		android:layout_height="match_parent">
 
 		<LinearLayout
-			android:id="@+id/LL_scale"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:padding="8dp">
-
-			<LinearLayout
-				android:id="@+id/LL_paddingScale"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:orientation="vertical" />
-
-		</LinearLayout>
-
-		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:orientation="horizontal"
