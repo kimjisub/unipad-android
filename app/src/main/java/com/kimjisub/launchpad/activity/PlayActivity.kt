@@ -15,10 +15,7 @@ import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
 import android.provider.Settings.System
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.Transformation
@@ -193,10 +190,21 @@ class PlayActivity : BaseActivity() {
 		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
 
 		initTheme()
+
 		if (theme != null) {
-			initLayout()
-			initRunner()
-			initSetting()
+
+			RL_root.viewTreeObserver.addOnGlobalLayoutListener {
+
+			}
+
+			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object:ViewTreeObserver.OnGlobalLayoutListener{
+				override fun onGlobalLayout() {
+					RL_root.viewTreeObserver.removeOnGlobalLayoutListener(this)
+					initLayout()
+					initRunner()
+					initSetting()
+				}
+			})
 		}
 	}
 
@@ -257,7 +265,6 @@ class PlayActivity : BaseActivity() {
 					SCB_autoPlay.isLocked = true
 				}
 			} else {
-				RL_root.setPadding(0, 0, 0, 0)
 				SCB_feedbackLight.setVisibility(View.GONE)
 				SCB_LED.setVisibility(View.GONE)
 				SCB_autoPlay.setVisibility(View.GONE)
@@ -274,15 +281,21 @@ class PlayActivity : BaseActivity() {
 			val buttonSizeX: Int
 			val buttonSizeY: Int
 			val buttonSizeMin: Int
+
+			val screenWidth = RL_root.width
+			val screenHeight = RL_root.height
+			val paddingWidth = V_paddingScale.width
+			val paddingheight = V_paddingScale.height
+
 			if (unipack!!.squareButton) {
-				val xSize = Scale_PaddingHeight / unipack!!.buttonX
-				val ySize = Scale_PaddingWidth / unipack!!.buttonY
+				val xSize = paddingWidth / unipack!!.buttonX
+				val ySize = paddingheight / unipack!!.buttonY
 
 				buttonSizeY = xSize.coerceAtMost(ySize)
 				buttonSizeX = buttonSizeY
 			} else {
-				buttonSizeX = Scale_Width / unipack!!.buttonY
-				buttonSizeY = Scale_Height / unipack!!.buttonX
+				buttonSizeX = screenWidth / unipack!!.buttonY
+				buttonSizeY = screenHeight / unipack!!.buttonX
 			}
 			buttonSizeMin = buttonSizeX.coerceAtMost(buttonSizeY)
 
@@ -1248,10 +1261,6 @@ class PlayActivity : BaseActivity() {
 			})
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		if (UILoaded) controller = midiController
-		if (Scale_PaddingHeight == 0) {
-			log("padding 크기값들이 잘못되었습니다.")
-			requestRestart(this@PlayActivity)
-		}
 		if (billingManager!!.showAds) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/

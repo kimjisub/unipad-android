@@ -213,7 +213,6 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("StaticFieldLeak")
 	private fun startMain() {
-		rescanScale(LL_scale, LL_paddingScale)
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
 		FAB_reconnectLaunchpad.setOnClickListener { startActivity(Intent(this@MainActivity, LaunchpadActivity::class.java)) }
 		FAB_loadUniPack.setOnClickListener {
@@ -549,7 +548,6 @@ class MainActivity : BaseActivity() {
 	}
 
 	fun pressPlay(item: UnipackItem) {
-		rescanScale(LL_scale, LL_paddingScale)
 		Thread(Runnable { db.unipackOpenDAO()!!.insert(UnipackOpenENT(item.unipack.F_project.name, Date())) }).start()
 		val intent = Intent(this@MainActivity, PlayActivity::class.java)
 		intent.putExtra("path", item.path)
