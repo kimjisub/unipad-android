@@ -15,6 +15,7 @@ import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_theme.*
+import org.jetbrains.anko.browse
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
@@ -51,7 +52,7 @@ class ThemeActivity : BaseActivity() {
 		if (list.size != i)
 			SelectedTheme.save(this@ThemeActivity, list[i].package_name)
 		else
-			startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")))
+			browse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")
 	}
 
 	private fun getSavedTheme(): Int {

@@ -47,17 +47,17 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
 import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
-import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.tool.UnipackAutoMapper
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.alert
+import org.jetbrains.anko.*
 import org.jetbrains.anko.design.snackbar
 import java.io.File
 import java.util.*
@@ -214,7 +214,9 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	private fun startMain() {
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
-		FAB_reconnectLaunchpad.setOnClickListener { startActivity(Intent(this@MainActivity, LaunchpadActivity::class.java)) }
+		FAB_reconnectLaunchpad.setOnClickListener {
+			startActivity<LaunchpadActivity>()
+		}
 		FAB_loadUniPack.setOnClickListener {
 			FileExplorerDialog(this@MainActivity, PreferenceManager.FileExplorerPath.load(this@MainActivity),
 				object : OnEventListener {
@@ -228,9 +230,9 @@ class MainActivity : BaseActivity() {
 				})
 				.show()
 		}
-		FAB_store.setOnClickListener { startActivityForResult(Intent(this@MainActivity, FBStoreActivity::class.java), 0) }
+		FAB_store.setOnClickListener { startActivityForResult<FBStoreActivity>(0) }
 		FAB_store.setOnLongClickListener { false }
-		FAB_setting.setOnClickListener { startActivity(Intent(this@MainActivity, SettingActivity::class.java)) }
+		FAB_setting.setOnClickListener { startActivity<SettingActivity>() }
 		FAM_floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
 			var runnable: Runnable = Runnable { FAM_floatingMenu.close(true) }
@@ -291,17 +293,16 @@ class MainActivity : BaseActivity() {
 
 			override fun onYoutubeClick(v: View) {
 				val item = selected
-				if (item != null) {
-					val website = "https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title
-					startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(website)))
-				}
+				if (item != null)
+					browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title)
 			}
 
 			override fun onWebsiteClick(v: View) {
 				val item = selected
 				if (item != null) {
 					val website: String? = item.unipack.website
-					if (website != null) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(website)))
+					if (website != null)
+						browse(website)
 				}
 			}
 
@@ -329,7 +330,7 @@ class MainActivity : BaseActivity() {
 					.show()
 			}
 		}
-		LL_errItem.setOnClickListener { startActivity(Intent(this@MainActivity, FBStoreActivity::class.java)) }
+		LL_errItem.setOnClickListener { startActivity<FBStoreActivity>() }
 		checkThings()
 		update(false)
 	}
@@ -549,9 +550,7 @@ class MainActivity : BaseActivity() {
 
 	fun pressPlay(item: UnipackItem) {
 		Thread(Runnable { db.unipackOpenDAO()!!.insert(UnipackOpenENT(item.unipack.F_project.name, Date())) }).start()
-		val intent = Intent(this@MainActivity, PlayActivity::class.java)
-		intent.putExtra("path", item.path)
-		startActivity(intent)
+		startActivity<PlayActivity>("path" to item.path)
 		removeController((midiController))
 	}
 
@@ -695,7 +694,7 @@ class MainActivity : BaseActivity() {
 			val currVersionList: List<String> = gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
 				CL_root.snackbar("${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", getString(string.update)) {
-					startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+					browse("https://play.google.com/store/apps/details?id=$packageName")
 				}
 		}
 	}
