@@ -12,9 +12,8 @@ class UnipackENT(
 	@PrimaryKey var path: String,
 	var padTouch: Int,
 	var bookmark: Boolean,
-	var pin: Boolean,
 	var created_at: Date
 ) {
 
-	override fun toString(): String = "UnipackENT(path='$path', padTouch=$padTouch, bookmark=$bookmark, pin=$pin, created_at=$created_at)"
+	override fun toString(): String = "UnipackENT(path='$path', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
 }
