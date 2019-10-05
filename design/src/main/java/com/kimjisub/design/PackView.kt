@@ -173,6 +173,13 @@ class PackView : RelativeLayout {
 				animateFlagColor(value)
 		}
 
+	var bookmark: Boolean = false
+		set(value){
+			field = value
+			IV_bookmark_front.visibility = if(field) View.VISIBLE else View.INVISIBLE
+			IV_bookmark_back.visibility = if(field) View.VISIBLE else View.INVISIBLE
+		}
+
 
 	fun showPlayImage(bool: Boolean) {
 		IV_playImg!!.visibility = if (bool) View.VISIBLE else View.GONE
@@ -227,6 +234,9 @@ class PackView : RelativeLayout {
 			RL_flagSize.layoutParams = params
 		}
 	}
+
+
+
 	//============================================================================================== Toggle
 
 	fun toggle(): PackView {

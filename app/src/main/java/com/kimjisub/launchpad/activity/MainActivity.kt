@@ -633,10 +633,8 @@ class MainActivity : BaseActivity() {
 	private fun updatePanelPack(item: UnipackItem) {
 		val unipack = item.unipack
 		Thread(Runnable {
-			var unipackENT: UnipackENT? = db.unipackDAO()!!.find(item.unipack.F_project.name)
-			var flagColor: Int
-			flagColor = if (unipack.criticalError) colors.red else colors.skyblue
-			if (unipackENT!!.bookmark) flagColor = colors.orange
+			var unipackENT: UnipackENT = db.unipackDAO()!!.find(item.unipack.F_project.name)!!
+			var flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
 			item.flagColor = flagColor
 
 			P_pack.data.star.set(unipackENT.pin)

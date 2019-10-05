@@ -63,8 +63,6 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			viewingSubtitle = item.path
 		} else
 			item.flagColor = ContextCompat.getColor(context, color.skyblue)
-		if (item.bookmark)
-			item.flagColor = ContextCompat.getColor(context, color.orange)
 
 		packView.apply {
 			animate = false
@@ -76,6 +74,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			option1 = item.unipack.keyLEDExist
 			option2Name = context.getString(string.autoPlay_)
 			option2 = item.unipack.autoPlayExist
+			bookmark = item.bookmark
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)
