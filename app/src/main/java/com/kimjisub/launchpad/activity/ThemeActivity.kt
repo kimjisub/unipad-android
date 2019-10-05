@@ -47,14 +47,14 @@ class ThemeActivity : BaseActivity() {
 
 	private fun selectTheme(i: Int) {
 		if (list.size != i)
-			preference.SelectedTheme = list[i].package_name
+			preference.selectedTheme = list[i].package_name
 		else
 			browse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")
 	}
 
 	private fun getSavedTheme(): Int {
 		var ret = 0
-		val selectedThemePackageName: String = preference.SelectedTheme
+		val selectedThemePackageName: String = preference.selectedTheme
 		var i = 0
 		for (themeItem in list) {
 			Log.log(selectedThemePackageName + ", " + themeItem.package_name)

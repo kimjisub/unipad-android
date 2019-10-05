@@ -5,7 +5,6 @@ import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.database.ContentObserver
 import android.media.AudioManager
@@ -205,7 +204,7 @@ class PlayActivity : BaseActivity() {
 
 
 	private fun initTheme() {
-		val packageName = preference.SelectedTheme
+		val packageName = preference.selectedTheme
 
 		theme = try {
 			ThemeResources(this@PlayActivity, packageName, true)
@@ -217,7 +216,7 @@ class PlayActivity : BaseActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			toast("${getString(string.skinErr)}\n$packageName")
-			preference.SelectedTheme = getPackageName()
+			preference.selectedTheme = getPackageName()
 			ThemeResources(this@PlayActivity, true)
 		}
 
@@ -240,7 +239,7 @@ class PlayActivity : BaseActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			toast(getString(string.skinErr) + "\n" + packageName)
-			SelectedTheme.save(this@PlayActivity, getPackageName())
+			preference.SelectedTheme = getPackageName()
 			initTheme(num + 1)
 		}*/
 	}

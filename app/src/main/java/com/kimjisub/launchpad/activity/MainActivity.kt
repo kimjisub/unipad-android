@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
@@ -116,7 +115,7 @@ class MainActivity : BaseActivity() {
 		firebaseManager.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long? = dataSnapshot.getValue(Long::class.java)
-				val prev = preference.PrevStoreCount
+				val prev = preference.prevStoreCount
 				runOnUiThread { blink(data != prev) }
 			}
 
@@ -215,14 +214,14 @@ class MainActivity : BaseActivity() {
 			startActivity<LaunchpadActivity>()
 		}
 		FAB_loadUniPack.setOnClickListener {
-			FileExplorerDialog(this@MainActivity, preference.FileExplorerPath,
+			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
 						loadUnipack(File(filePath))
 					}
 
 					override fun onPathChanged(folderPath: String) {
-						preference.FileExplorerPath = folderPath
+						preference.fileExplorerPath = folderPath
 					}
 				})
 				.show()
@@ -610,7 +609,7 @@ class MainActivity : BaseActivity() {
 		P_total.data.unipackCount.set(list.size.toString())
 		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
 		P_total.data.padTouchCount.set(getString(string.measuring))
-		val packageName: String? = preference.SelectedTheme
+		val packageName: String? = preference.selectedTheme
 		try {
 			val resources = ThemeResources(this@MainActivity, packageName, false)
 			P_total.data.selectedTheme.set(resources.name)

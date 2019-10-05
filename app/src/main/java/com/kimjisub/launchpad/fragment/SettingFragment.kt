@@ -236,7 +236,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 
 	override fun onResume() {
-		findPreference<Preference>("select_theme")?.summary = preference.SelectedTheme
+		findPreference<Preference>("select_theme")?.summary = preference.selectedTheme
 		findPreference<Preference>("FCMToken")?.summary = FirebaseInstanceId.getInstance().token
 		val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 		val displayCountry: String = systemLocale.displayCountry //국가출력

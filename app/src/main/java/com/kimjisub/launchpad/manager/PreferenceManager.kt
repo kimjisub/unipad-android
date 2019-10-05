@@ -13,7 +13,7 @@ class PreferenceManager (
 	private val DATA = "data"
 
 	private val LaunchpadConnectMethodTag = "LaunchpadConnectMethod"
-	var LaunchpadConnectMethod: Int
+	var launchpadConnectMethod: Int
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
 			return pref.getInt(LaunchpadConnectMethodTag, 0)
@@ -25,7 +25,7 @@ class PreferenceManager (
 		}
 
 	private val FileExplorerPathTag = "FileExplorerPath"
-	var FileExplorerPath: String
+	var fileExplorerPath: String
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
 			var url: String = pref.getString(FileExplorerPathTag, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
@@ -40,7 +40,7 @@ class PreferenceManager (
 		}
 
 	private val PrevAdsShowTimeTag = "PrevAdsShowTime"
-	var PrevAdsShowTime: Long
+	var prevAdsShowTime: Long
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
 			return pref.getLong(PrevAdsShowTimeTag, 0)
@@ -52,7 +52,7 @@ class PreferenceManager (
 		}
 
 	private val SelectedThemeTag = "SelectedTheme"
-	var SelectedTheme: String
+	var selectedTheme: String
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
 			return pref.getString(SelectedThemeTag, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
@@ -64,7 +64,7 @@ class PreferenceManager (
 		}
 
 	private val PrevStoreCountTag = "PrevStoreCount"
-	var PrevStoreCount: Long
+	var prevStoreCount: Long
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
 			return pref.getLong(PrevStoreCountTag, 0)
