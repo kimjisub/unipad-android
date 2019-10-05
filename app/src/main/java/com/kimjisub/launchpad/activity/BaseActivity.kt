@@ -16,7 +16,7 @@ import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant
-import com.kimjisub.launchpad.manager.PreferenceManager.PrevAdsShowTime
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import com.vungle.warren.InitCallback
@@ -89,6 +89,8 @@ open class BaseActivity : AppCompatActivity() {
 		}
 	}
 
+	val preference: PreferenceManager by lazy { PreferenceManager(applicationContext) }
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	val F_UniPackRootExt: File by lazy {
 		val externalPath = FileManager.getExternalUniPackRoot()
@@ -104,7 +106,7 @@ open class BaseActivity : AppCompatActivity() {
 
 	// ============================================================================================= Function
 
-	fun getUnipackDirList():Array<File>{
+	fun getUnipackDirList(): Array<File> {
 		val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 		return FileManager.sortByTime(projectFiles)
 	}
@@ -113,14 +115,14 @@ open class BaseActivity : AppCompatActivity() {
 
 
 	fun checkAdsCooltime(): Boolean {
-		val prevTime = PrevAdsShowTime.load(this)
+		val prevTime = preference.PrevAdsShowTime
 		val currTime = System.currentTimeMillis()
 		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
 	}
 
 	fun updateAdsCooltime() {
 		val currTime = System.currentTimeMillis()
-		PrevAdsShowTime.save(this, currTime)
+		preference.PrevAdsShowTime = currTime
 	}
 
 	fun initVungle() {
@@ -209,7 +211,7 @@ open class BaseActivity : AppCompatActivity() {
 			}
 		});*/
 
-		onStartActivity(this) 
+		onStartActivity(this)
 	}
 
 	public override fun onStart() {

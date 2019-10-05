@@ -1,10 +1,8 @@
 package com.kimjisub.launchpad.activity
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import com.azoft.carousellayoutmanager.CarouselLayoutManager
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener
@@ -12,7 +10,6 @@ import com.azoft.carousellayoutmanager.CenterScrollListener
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.ThemeAdapter
 import com.kimjisub.launchpad.adapter.ThemeItem
-import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_theme.*
 import org.jetbrains.anko.browse
@@ -50,14 +47,14 @@ class ThemeActivity : BaseActivity() {
 
 	private fun selectTheme(i: Int) {
 		if (list.size != i)
-			SelectedTheme.save(this@ThemeActivity, list[i].package_name)
+			preference.SelectedTheme = list[i].package_name
 		else
 			browse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")
 	}
 
 	private fun getSavedTheme(): Int {
 		var ret = 0
-		val selectedThemePackageName: String = SelectedTheme.load(this@ThemeActivity)
+		val selectedThemePackageName: String = preference.SelectedTheme
 		var i = 0
 		for (themeItem in list) {
 			Log.log(selectedThemePackageName + ", " + themeItem.package_name)

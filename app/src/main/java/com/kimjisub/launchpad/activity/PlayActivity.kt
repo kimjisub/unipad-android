@@ -39,7 +39,6 @@ import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.Constant.VUNGLE
 import com.kimjisub.launchpad.manager.Functions.putClipboard
-import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -206,7 +205,7 @@ class PlayActivity : BaseActivity() {
 
 
 	private fun initTheme() {
-		val packageName = SelectedTheme.load(this@PlayActivity)
+		val packageName = preference.SelectedTheme
 
 		theme = try {
 			ThemeResources(this@PlayActivity, packageName, true)
@@ -218,7 +217,7 @@ class PlayActivity : BaseActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			toast("${getString(string.skinErr)}\n$packageName")
-			SelectedTheme.save(this@PlayActivity, getPackageName())
+			preference.SelectedTheme = getPackageName()
 			ThemeResources(this@PlayActivity, true)
 		}
 

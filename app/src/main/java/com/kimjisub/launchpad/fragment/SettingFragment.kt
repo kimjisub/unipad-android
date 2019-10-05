@@ -2,13 +2,12 @@ package com.kimjisub.launchpad.fragment
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
+import androidx.core.net.toUri
 import androidx.preference.*
-import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.firebase.iid.FirebaseInstanceId
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.activity.ThemeActivity
@@ -20,13 +19,13 @@ import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.Log
 import org.jetbrains.anko.support.v4.browse
-import org.jetbrains.anko.support.v4.intentFor
 import org.jetbrains.anko.support.v4.startActivity
 import org.jetbrains.anko.toast
 import java.util.*
 
 class SettingFragment : PreferenceFragmentCompat() {
 	private var billingManager: BillingManager? = null
+	private val preference: PreferenceManager by lazy { PreferenceManager(context!!) }
 
 	override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
 		super.setPreferenceScreen(preferenceScreen)
@@ -120,7 +119,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-				startActivity(Intent(list[position].action, Uri.parse(list[position].url)))
+				startActivity(Intent(list[position].action, list[position].url.toUri()))
 			}
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(string.community))
@@ -237,7 +236,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 
 	override fun onResume() {
-		findPreference<Preference>("select_theme")?.summary = PreferenceManager.SelectedTheme.load(context!!)
+		findPreference<Preference>("select_theme")?.summary = preference.SelectedTheme
 		findPreference<Preference>("FCMToken")?.summary = FirebaseInstanceId.getInstance().token
 		val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 		val displayCountry: String = systemLocale.displayCountry //국가출력

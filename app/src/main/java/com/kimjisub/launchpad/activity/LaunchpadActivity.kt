@@ -12,7 +12,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
-import com.kimjisub.launchpad.manager.PreferenceManager.LaunchpadConnectMethod
 import com.kimjisub.launchpad.midi.MidiConnection.Listener
 import com.kimjisub.launchpad.midi.MidiConnection.initConnection
 import com.kimjisub.launchpad.midi.MidiConnection.setListener
@@ -58,7 +57,7 @@ class LaunchpadActivity : BaseActivity() {
 				TV_log.append(log + "\n")
 			}
 		})
-		setMode(LaunchpadConnectMethod.load(this@LaunchpadActivity))
+		setMode(preference.LaunchpadConnectMethod)
 		val intent: Intent? = intent
 		initConnection(intent!!, (getSystemService(Context.USB_SERVICE) as UsbManager))
 		Handler().postDelayed({ finish() }, 2000)
@@ -113,7 +112,7 @@ class LaunchpadActivity : BaseActivity() {
 			else
 				changeViewColor(LL_mode[i], color.background1, color.gray1)
 		}
-		LaunchpadConnectMethod.save(this@LaunchpadActivity, mode)
+		preference.LaunchpadConnectMethod = mode
 	}
 
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////

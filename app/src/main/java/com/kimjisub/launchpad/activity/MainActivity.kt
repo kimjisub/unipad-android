@@ -43,9 +43,6 @@ import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
-import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
-import com.kimjisub.launchpad.manager.PreferenceManager.SelectedTheme
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -119,7 +116,7 @@ class MainActivity : BaseActivity() {
 		firebaseManager.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long? = dataSnapshot.getValue(Long::class.java)
-				val prev = PrevStoreCount.load(this@MainActivity)
+				val prev = preference.PrevStoreCount
 				runOnUiThread { blink(data != prev) }
 			}
 
@@ -218,14 +215,14 @@ class MainActivity : BaseActivity() {
 			startActivity<LaunchpadActivity>()
 		}
 		FAB_loadUniPack.setOnClickListener {
-			FileExplorerDialog(this@MainActivity, PreferenceManager.FileExplorerPath.load(this@MainActivity),
+			FileExplorerDialog(this@MainActivity, preference.FileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
 						loadUnipack(File(filePath))
 					}
 
 					override fun onPathChanged(folderPath: String) {
-						PreferenceManager.FileExplorerPath.save(this@MainActivity, folderPath)
+						preference.FileExplorerPath = folderPath
 					}
 				})
 				.show()
@@ -613,7 +610,7 @@ class MainActivity : BaseActivity() {
 		P_total.data.unipackCount.set(list.size.toString())
 		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
 		P_total.data.padTouchCount.set(getString(string.measuring))
-		val packageName: String? = SelectedTheme.load(this@MainActivity)
+		val packageName: String? = preference.SelectedTheme
 		try {
 			val resources = ThemeResources(this@MainActivity, packageName, false)
 			P_total.data.selectedTheme.set(resources.name)
