@@ -238,16 +238,6 @@ class MainActivity : BaseActivity() {
 			}
 		})
 		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
-			override fun onStarClick(v: View) {
-				val item = selected
-				if (item != null) {
-					Thread(Runnable {
-						val unipackENT: UnipackENT? = db.unipackDAO()!!.find(item.unipack.F_project.name)
-						unipackENT!!.pin = !unipackENT.pin
-						db.unipackDAO()!!.update(unipackENT)
-					}).start()
-				}
-			}
 
 			override fun onBookmarkClick(v: View) {
 				val item = selected
@@ -637,7 +627,6 @@ class MainActivity : BaseActivity() {
 			var flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
 			item.flagColor = flagColor
 
-			P_pack.data.star.set(unipackENT.pin)
 			P_pack.data.bookmark.set(unipackENT.bookmark)
 		}).start()
 		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(

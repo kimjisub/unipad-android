@@ -22,7 +22,7 @@ abstract class UnipackDAO {
 	fun getOrCreate(path: String): UnipackENT {
 		var item = find(path)
 		if (item == null) {
-			item = UnipackENT(path, 0, false, false, Date())
+			item = UnipackENT(path, 0, false, Date())
 			insert(item)
 		}
 		return item

@@ -31,7 +31,6 @@ constructor(
 	val data = Data()
 
 	class Data {
-		val star: ObservableField<Boolean> = ObservableField()
 		val bookmark: ObservableField<Boolean> = ObservableField()
 		val storage: ObservableField<Boolean> = ObservableField()
 		val moving: ObservableField<Boolean> = ObservableField()
@@ -61,9 +60,6 @@ constructor(
 			TV_title.isSelected = true
 			TV_subtitle.isSelected = true
 			IV_path.isSelected = true
-			IV_star.setOnClickListener { v: View ->
-				onEventListener?.onStarClick(v)
-			}
 			IV_bookmark.setOnClickListener { v: View ->
 				onEventListener?.onBookmarkClick(v)
 			}
@@ -94,12 +90,9 @@ constructor(
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	fun setStar(star: Boolean) {
-		IV_star.setImageResource(if (star) drawable.ic_star_24dp else drawable.ic_star_border_24dp)
-	}
 
 	fun setBookmark(bookmark: Boolean) {
-		IV_star.setImageResource(if (bookmark) drawable.ic_bookmark_24dp else drawable.ic_bookmark_border_24dp)
+		IV_bookmark.setImageResource(if (bookmark) drawable.ic_bookmark_24dp else drawable.ic_bookmark_border_24dp)
 	}
 
 	fun setStorage(external: Boolean) {
@@ -119,7 +112,6 @@ constructor(
 	var onEventListener: OnEventListener? = null
 
 	interface OnEventListener {
-		fun onStarClick(v: View)
 		fun onBookmarkClick(v: View)
 		fun onEditClick(v: View)
 		fun onStorageClick(v: View)
