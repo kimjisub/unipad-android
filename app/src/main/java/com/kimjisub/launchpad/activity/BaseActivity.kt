@@ -115,14 +115,14 @@ open class BaseActivity : AppCompatActivity() {
 
 
 	fun checkAdsCooltime(): Boolean {
-		val prevTime = preference.PrevAdsShowTime
+		val prevTime = preference.prevAdsShowTime
 		val currTime = System.currentTimeMillis()
 		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
 	}
 
 	fun updateAdsCooltime() {
 		val currTime = System.currentTimeMillis()
-		preference.PrevAdsShowTime = currTime
+		preference.prevAdsShowTime = currTime
 	}
 
 	fun initVungle() {
