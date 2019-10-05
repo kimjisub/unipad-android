@@ -19,12 +19,11 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
-import com.kimjisub.launchpad.manager.PreferenceManager.PrevStoreCount
-import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.network.Networks
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UnipackInstaller
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_store.*
@@ -34,7 +33,7 @@ import java.util.*
 
 class FBStoreActivity : BaseActivity() {
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
-	private val firebase_storeCount: FirebaseManager by lazy {FirebaseManager("storeCount")}
+	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
 	private val downloadList: Array<File> by lazy { getUnipackDirList() }
@@ -130,7 +129,7 @@ class FBStoreActivity : BaseActivity() {
 		firebase_storeCount.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long = dataSnapshot.getValue(Long::class.java)!!
-				PrevStoreCount.save(this@FBStoreActivity, data)
+				preference.PrevStoreCount = data
 			}
 
 			override fun onCancelled(databaseError: DatabaseError) {}

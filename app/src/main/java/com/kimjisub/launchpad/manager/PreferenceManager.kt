@@ -3,89 +3,75 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.content.SharedPreferences.Editor
 import android.os.Environment
+import androidx.core.content.edit
 import java.io.File
 
-object PreferenceManager {
-	//todo change to kotlin getter setter style
+class PreferenceManager (
+	val context: Context
+){
 	private val DATA = "data"
 
-	object LaunchpadConnectMethod {
-		private val TAG = "LaunchpadConnectMethod"
-		fun save(context: Context, value: Int) {
+	private val LaunchpadConnectMethodTag = "LaunchpadConnectMethod"
+	var LaunchpadConnectMethod: Int
+		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			val editor: Editor = pref.edit()
-			editor.putInt(TAG, value)
-			editor.apply()
+			return pref.getInt(LaunchpadConnectMethodTag, 0)
+		}
+		set(value) {
+			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
+				putInt(LaunchpadConnectMethodTag, value)
+			}
 		}
 
-		fun load(context: Context): Int {
+	private val FileExplorerPathTag = "FileExplorerPath"
+	var FileExplorerPath: String
+		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getInt(TAG, 0)
-		}
-	}
-
-	object FileExplorerPath {
-		private val TAG = "FileExplorerPath"
-		fun save(context: Context, value: String) {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			val editor: Editor = pref.edit()
-			editor.putString(TAG, value)
-			editor.apply()
-		}
-
-		fun load(context: Context): String {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			var url: String = pref.getString(TAG, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
+			var url: String = pref.getString(FileExplorerPathTag, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
 			if (!File(url).isDirectory) url = Environment.getExternalStorageDirectory().path
 			if (!File(url).isDirectory) url = "/"
 			return url
 		}
-	}
-
-	object PrevAdsShowTime {
-		private val TAG = "PrevAdsShowTime"
-		fun save(context: Context, value: Long) {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			val editor: Editor = pref.edit()
-			editor.putLong(TAG, value)
-			editor.apply()
+		set(value) {
+			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
+				putString(FileExplorerPathTag, value)
+			}
 		}
 
-		fun load(context: Context): Long {
+	private val PrevAdsShowTimeTag = "PrevAdsShowTime"
+	var PrevAdsShowTime: Long
+		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getLong(TAG, 0)
+			return pref.getLong(PrevAdsShowTimeTag, 0)
 		}
-	}
-
-	object SelectedTheme {
-		private val TAG = "SelectedTheme"
-		fun save(context: Context, value: String) {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			val editor: Editor = pref.edit()
-			editor.putString(TAG, value)
-			editor.apply()
+		set(value) {
+			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
+				putLong(PrevAdsShowTimeTag, value)
+			}
 		}
 
-		fun load(context: Context): String {
+	private val SelectedThemeTag = "SelectedTheme"
+	var SelectedTheme: String
+		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getString(TAG, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
+			return pref.getString(SelectedThemeTag, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
 		}
-	}
-
-	object PrevStoreCount {
-		private val TAG = "PrevStoreCount"
-		fun save(context: Context, value: Long) {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			val editor: Editor = pref.edit()
-			editor.putLong(TAG, value)
-			editor.apply()
+		set(value) {
+			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
+				putString(SelectedThemeTag, value)
+			}
 		}
 
-		fun load(context: Context): Long {
+	private val PrevStoreCountTag = "PrevStoreCount"
+	var PrevStoreCount: Long
+		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getLong(TAG, 0)
+			return pref.getLong(PrevStoreCountTag, 0)
 		}
-	}
+		set(value) {
+			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
+				putLong(PrevStoreCountTag, value)
+			}
+		}
 }
