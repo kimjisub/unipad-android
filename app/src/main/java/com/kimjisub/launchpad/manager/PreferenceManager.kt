@@ -10,68 +10,68 @@ import java.io.File
 class PreferenceManager (
 	val context: Context
 ){
-	private val DATA = "data"
+	private val name = "data"
 
-	private val LaunchpadConnectMethodTag = "LaunchpadConnectMethod"
+	private val launchpadConnectMethodTag = "LaunchpadConnectMethod"
 	var launchpadConnectMethod: Int
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getInt(LaunchpadConnectMethodTag, 0)
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getInt(launchpadConnectMethodTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
-				putInt(LaunchpadConnectMethodTag, value)
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putInt(launchpadConnectMethodTag, value)
 			}
 		}
 
-	private val FileExplorerPathTag = "FileExplorerPath"
+	private val fileExplorerPathTag = "FileExplorerPath"
 	var fileExplorerPath: String
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			var url: String = pref.getString(FileExplorerPathTag, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			var url: String = pref.getString(fileExplorerPathTag, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
 			if (!File(url).isDirectory) url = Environment.getExternalStorageDirectory().path
 			if (!File(url).isDirectory) url = "/"
 			return url
 		}
 		set(value) {
-			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
-				putString(FileExplorerPathTag, value)
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putString(fileExplorerPathTag, value)
 			}
 		}
 
-	private val PrevAdsShowTimeTag = "PrevAdsShowTime"
+	private val prevAdsShowTimeTag = "PrevAdsShowTime"
 	var prevAdsShowTime: Long
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getLong(PrevAdsShowTimeTag, 0)
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getLong(prevAdsShowTimeTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
-				putLong(PrevAdsShowTimeTag, value)
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putLong(prevAdsShowTimeTag, value)
 			}
 		}
 
-	private val SelectedThemeTag = "SelectedTheme"
+	private val selectedThemeTag = "SelectedTheme"
 	var selectedTheme: String
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getString(SelectedThemeTag, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getString(selectedThemeTag, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
 		}
 		set(value) {
-			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
-				putString(SelectedThemeTag, value)
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putString(selectedThemeTag, value)
 			}
 		}
 
-	private val PrevStoreCountTag = "PrevStoreCount"
+	private val prevStoreCountTag = "PrevStoreCount"
 	var prevStoreCount: Long
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(DATA, MODE_PRIVATE)
-			return pref.getLong(PrevStoreCountTag, 0)
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getLong(prevStoreCountTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(DATA, MODE_PRIVATE).edit {
-				putLong(PrevStoreCountTag, value)
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putLong(prevStoreCountTag, value)
 			}
 		}
 }
