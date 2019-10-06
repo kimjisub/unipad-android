@@ -398,10 +398,10 @@ class MainActivity : BaseActivity() {
 					}
 					list.add(i, F_added)
 					adapter.notifyItemInserted(i)
-					F_added.unipackENTObserver = Observer {
+					F_added.unipackENTObserverAdapter = Observer {
 						adapter.notifyItemChanged(i)
 					}
-					F_added.unipackENT.observe(this@MainActivity, F_added.unipackENTObserver!!)
+					F_added.unipackENT.observe(this@MainActivity, F_added.unipackENTObserverAdapter!!)
 
 					P_total.data.unipackCapacity.set(list.size.toString())
 				}
@@ -412,8 +412,8 @@ class MainActivity : BaseActivity() {
 							val I = i
 							list.removeAt(I)
 							adapter.notifyItemRemoved(I)
-							F_removed.unipackENT.removeObserver(F_removed.unipackENTObserver!!)
-							F_removed.unipackENTObserver = null
+							F_removed.unipackENT.removeObserver(F_removed.unipackENTObserverAdapter!!)
+							F_removed.unipackENTObserverAdapter = null
 							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}
