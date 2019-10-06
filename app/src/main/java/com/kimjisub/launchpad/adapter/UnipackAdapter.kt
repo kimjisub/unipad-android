@@ -31,28 +31,8 @@ data class UnipackItem(
 
 class UnipackHolder(
 	var packView: PackView
-) : RecyclerView.ViewHolder(packView), LifecycleOwner {
-
+) : RecyclerView.ViewHolder(packView) {
 	var realPosition = -1
-
-
-	private val lifecycleRegistry = LifecycleRegistry(this)
-
-	init {
-		lifecycleRegistry.currentState = Lifecycle.State.INITIALIZED
-	}
-
-	fun onAppear() {
-		lifecycleRegistry.currentState = Lifecycle.State.STARTED
-	}
-
-
-	fun onDisappear() {
-		lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
-	}
-
-
-	override fun getLifecycle(): Lifecycle = lifecycleRegistry
 }
 
 class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
@@ -144,20 +124,6 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			}
 		})*/
 	}
-
-	override fun onViewAttachedToWindow(holder: UnipackHolder) {
-		super.onViewAttachedToWindow(holder)
-		Log.test("attached: ${holder.realPosition}")
-		holder.onAppear()
-	}
-
-	override fun onViewDetachedFromWindow(holder: UnipackHolder) {
-		super.onViewDetachedFromWindow(holder)
-		Log.test("detached: ${holder.realPosition}")
-		holder.onDisappear()
-	}
-
-
 
 	override fun getItemCount() = list.size
 
