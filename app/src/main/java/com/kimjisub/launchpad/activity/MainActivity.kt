@@ -53,8 +53,14 @@ import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.browse
 import org.jetbrains.anko.design.snackbar
+import org.jetbrains.anko.startActivity
+import org.jetbrains.anko.startActivityForResult
 import java.io.File
 import java.util.*
 
@@ -242,11 +248,18 @@ class MainActivity : BaseActivity() {
 			override fun onBookmarkClick(v: View) {
 				val item = selected
 				if (item != null) {
-					Thread(Runnable {
-						val unipackENT: UnipackENT? = db.unipackDAO()!!.find(item.unipack.F_project.name)
-						unipackENT!!.bookmark = !unipackENT.bookmark
-						db.unipackDAO()!!.update(unipackENT)
-					}).start()
+					val unipackENT = db.unipackDAO()!!.getOrCreate(item.unipack.F_project.name)
+					unipackENT.observe(this@MainActivity, object : Observer<UnipackENT>{
+						override fun onChanged(it: UnipackENT?) {
+							unipackENT.removeObserver(this)
+							CoroutineScope(Dispatchers.IO).launch {
+								it!!.bookmark = !it.bookmark
+								db.unipackDAO()!!.update(it)
+							}
+
+							adapter.notifyItemChanged(selectedIndex)
+						}
+					})
 				}
 			}
 
@@ -255,7 +268,7 @@ class MainActivity : BaseActivity() {
 				val item = selected
 				if (item != null) {
 					item.moving = true
-					val source = File(item.path)
+					val source = File(item.unipack.F_project.path)
 					val isInternal = FileManager.isInternalFile(this@MainActivity, source)
 					val target = File(if (isInternal) F_UniPackRootExt else F_UniPackRootInt, source.name)
 					(object : AsyncTask<String?, String?, String?>() {
@@ -346,23 +359,26 @@ class MainActivity : BaseActivity() {
 				try {
 					for (file: File in getUnipackDirList()) {
 						if (!file.isDirectory) continue
-						val path: String? = file.path
 						val unipack = Unipack(file, false)
 						val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
-						val packItem = UnipackItem(unipack, (path)!!, unipackENT.bookmark, animateNew)
+
+						val packItem = UnipackItem(unipack, unipackENT, animateNew)
 						I_curr.add(packItem)
 					}
 					for (item: UnipackItem in I_curr) {
 						var index = -1
 						var i = 0
 						for (item2: UnipackItem in I_removed) {
-							if ((item2.path == item.path)) {
+							if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
 								index = i
 								break
 							}
 							i++
 						}
-						if (index != -1) I_removed.removeAt(index) else I_added.add(0, item)
+						if (index != -1)
+							I_removed.removeAt(index)
+						else
+							I_added.add(0, item)
 					}
 				} catch (e: Exception) {
 					e.printStackTrace()
@@ -382,15 +398,22 @@ class MainActivity : BaseActivity() {
 					}
 					list.add(i, F_added)
 					adapter.notifyItemInserted(i)
+					F_added.unipackENTObserver = Observer {
+						adapter.notifyItemChanged(i)
+					}
+					F_added.unipackENT.observe(this@MainActivity, F_added.unipackENTObserver!!)
+
 					P_total.data.unipackCapacity.set(list.size.toString())
 				}
 				for (F_removed: UnipackItem in I_removed) {
 					var i = 0
 					for (item: UnipackItem in list) {
-						if ((item.path == F_removed.path)) {
+						if ((item.unipack.F_project.path == F_removed.unipack.F_project.path)) {
 							val I = i
 							list.removeAt(I)
 							adapter.notifyItemRemoved(I)
+							F_removed.unipackENT.removeObserver(F_removed.unipackENTObserver!!)
+							F_removed.unipackENTObserver = null
 							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}
@@ -520,7 +543,7 @@ class MainActivity : BaseActivity() {
 			var i = 0
 			for (item: UnipackItem in list) {
 				val packView = item.packView
-				if (target != null && (item.path == target.path)) {
+				if (target != null && (item.unipack.F_project.path == target.unipack.F_project.path)) {
 					item.toggle = !item.toggle
 					lastPlayIndex = i
 				} else item.toggle = false
@@ -536,7 +559,7 @@ class MainActivity : BaseActivity() {
 
 	fun pressPlay(item: UnipackItem) {
 		Thread(Runnable { db.unipackOpenDAO()!!.insert(UnipackOpenENT(item.unipack.F_project.name, Date())) }).start()
-		startActivity<PlayActivity>("path" to item.path)
+		startActivity<PlayActivity>("path" to item.unipack.F_project.path)
 		removeController((midiController))
 	}
 
@@ -597,7 +620,7 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
 		P_total.data.unipackCount.set(list.size.toString())
-		db.unipackOpenDAO()!!.count!!.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
+		db.unipackOpenDAO()!!.count.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
 		P_total.data.padTouchCount.set(getString(string.measuring))
 		val packageName: String? = preference.selectedTheme
 		try {
@@ -622,20 +645,20 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak", "SetTextI18n")
 	private fun updatePanelPack(item: UnipackItem) {
 		val unipack = item.unipack
-		Thread(Runnable {
-			var unipackENT: UnipackENT = db.unipackDAO()!!.find(item.unipack.F_project.name)!!
-			var flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
-			item.flagColor = flagColor
+		val flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
+		item.flagColor = flagColor
 
-			P_pack.data.bookmark.set(unipackENT.bookmark)
-		}).start()
-		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(
-			this,
+		val unipackENT = db.unipackDAO()!!.getOrCreate(item.unipack.F_project.name)
+		unipackENT.observe(this@MainActivity, Observer {
+			P_pack.data.bookmark.set(unipackENT.value!!.bookmark)
+		})
+
+		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(this,
 			Observer { integer: Int? -> P_pack.data.openCount.set(integer.toString()) })
 		P_pack.data.storage.set(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
 		P_pack.data.title.set(unipack.title)
 		P_pack.data.subtitle.set(unipack.producerName)
-		P_pack.data.path.set(item.path)
+		P_pack.data.path.set(item.unipack.F_project.path)
 		P_pack.data.scale.set("${unipack.buttonX} × ${unipack.buttonY}")
 		P_pack.data.chainCount.set(unipack.chain.toString())
 		P_pack.data.soundCount.set(getString(string.measuring))
@@ -647,13 +670,13 @@ class MainActivity : BaseActivity() {
 			var handler = Handler()
 			override fun doInBackground(vararg params: String?): String? {
 				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
-				handler.post { if ((P_pack.data.path.get() == item.path)) P_pack.data.fileSize.set(fileSize) }
+				handler.post { if ((P_pack.data.path.get() == item.unipack.F_project.path)) P_pack.data.fileSize.set(fileSize) }
 				try {
 					val unipackDetail = Unipack(item.unipack.F_project, true)
 					item.unipack = unipackDetail
 					publishProgress(fileSize)
 					handler.post {
-						if ((P_pack.data.path.get() == item.path)) {
+						if ((P_pack.data.path.get() == item.unipack.F_project.path)) {
 							P_pack.data.soundCount.set(unipackDetail.soundCount.toString())
 							P_pack.data.ledCount.set(unipackDetail.ledTableCount.toString())
 						}

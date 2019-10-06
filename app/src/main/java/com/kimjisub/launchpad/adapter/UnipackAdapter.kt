@@ -5,33 +5,62 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout.LayoutParams
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.PackView
 import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.unipack.Unipack
-import java.util.*
+import com.kimjisub.manager.Log
 
 data class UnipackItem(
 	var unipack: Unipack,
-	var path: String,
-	var bookmark: Boolean,
+	val unipackENT: LiveData<UnipackENT>,
 	var isNew: Boolean
 ) {
+	var unipackENTObserver: Observer<UnipackENT>? = null
+
 	var packView: PackView? = null
 	var flagColor: Int = 0
 	var toggle: Boolean = false
 	var moving: Boolean = false
 }
 
-class UnipackHolder(internal var packView: PackView) : RecyclerView.ViewHolder(packView) {
+class UnipackHolder(
+	var packView: PackView
+) : RecyclerView.ViewHolder(packView), LifecycleOwner {
+
 	var realPosition = -1
+
+
+	private val lifecycleRegistry = LifecycleRegistry(this)
+
+	init {
+		lifecycleRegistry.currentState = Lifecycle.State.INITIALIZED
+	}
+
+	fun onAppear() {
+		Log.test("onAppear")
+		lifecycleRegistry.currentState = Lifecycle.State.STARTED
+	}
+
+
+	fun onDisappear() {
+		Log.test("onDisappear")
+		lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+	}
+
+
+	override fun getLifecycle(): Lifecycle = lifecycleRegistry
 }
 
 class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
+	var i =0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
 		val packView = PackView(parent.context)
+		packView.debug = "${i++}"
 		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 		packView.layoutParams = lp
 		return UnipackHolder(packView)
@@ -60,7 +89,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 		if (item.unipack.criticalError) {
 			item.flagColor = ContextCompat.getColor(context, color.red)
 			viewingTitle = context.getString(string.errOccur)
-			viewingSubtitle = item.path
+			viewingSubtitle = item.unipack.F_project.path
 		} else
 			item.flagColor = ContextCompat.getColor(context, color.skyblue)
 
@@ -74,7 +103,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			option1 = item.unipack.keyLEDExist
 			option2Name = context.getString(string.autoPlay_)
 			option2 = item.unipack.autoPlayExist
-			bookmark = item.bookmark
+
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)
@@ -95,7 +124,27 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			item.isNew = false
 			animation = a
 		}
+
+		Log.test("set ${item.unipack.title}")
+		item.unipackENT.observe(holder, Observer {
+			packView.apply {
+				Log.test("${item.unipack.title}: ${it!!.bookmark}")
+				bookmark = it!!.bookmark
+			}
+		})
 	}
+
+	override fun onViewAttachedToWindow(holder: UnipackHolder) {
+		super.onViewAttachedToWindow(holder)
+		holder.onAppear()
+	}
+
+	override fun onViewDetachedFromWindow(holder: UnipackHolder) {
+		super.onViewDetachedFromWindow(holder)
+		holder.onDisappear()
+	}
+
+
 
 	override fun getItemCount() = list.size
 

@@ -12,8 +12,8 @@ abstract class UnipackOpenDAO {
 	abstract fun insert(item: UnipackOpenENT?)
 
 	@get:Query("SELECT COUNT(*) FROM UnipackOpenENT")
-	abstract val count: LiveData<Int?>?
+	abstract val count: LiveData<Int>
 
 	@Query("SELECT COUNT(*) FROM UnipackOpenENT WHERE path=:path")
-	abstract fun getCount(path: String?): LiveData<Int?>?
+	abstract fun getCount(path: String?): LiveData<Int>
 }

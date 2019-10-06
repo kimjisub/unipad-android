@@ -9,7 +9,8 @@ import java.util.*
 @Entity
 @TypeConverters(DateConverter::class)
 class UnipackENT(
-	@PrimaryKey var path: String,
+	@PrimaryKey
+	var path: String,
 	var padTouch: Int,
 	var bookmark: Boolean,
 	var created_at: Date
