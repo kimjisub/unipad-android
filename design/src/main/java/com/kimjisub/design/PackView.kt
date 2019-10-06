@@ -123,6 +123,12 @@ class PackView : RelativeLayout {
 		typedArray.recycle()
 	}
 
+	var debug: String
+		get() = TV_debug.text.toString()
+		set(value){
+			TV_debug.text = value
+		}
+
 	var title: String
 		get() = TV_title.text.toString()
 		set(value) {
