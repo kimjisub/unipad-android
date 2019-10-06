@@ -20,7 +20,8 @@ data class UnipackItem(
 	val unipackENT: LiveData<UnipackENT>,
 	var isNew: Boolean
 ) {
-	var unipackENTObserver: Observer<UnipackENT>? = null
+	var unipackENTObserverAdapter: Observer<UnipackENT>? = null
+	var unipackENTObserverBookmark: Observer<UnipackENT>? = null
 
 	var packView: PackView? = null
 	var flagColor: Int = 0
@@ -42,13 +43,11 @@ class UnipackHolder(
 	}
 
 	fun onAppear() {
-		Log.test("onAppear")
 		lifecycleRegistry.currentState = Lifecycle.State.STARTED
 	}
 
 
 	fun onDisappear() {
-		Log.test("onDisappear")
 		lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
 	}
 
@@ -67,6 +66,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 	}
 
 	override fun onBindViewHolder(holder: UnipackHolder, position: Int) {
+		Log.test("onBindViewHolder: $position")
 		val context = holder.packView.context
 
 		val item = list[holder.adapterPosition]
@@ -103,6 +103,7 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			option1 = item.unipack.keyLEDExist
 			option2Name = context.getString(string.autoPlay_)
 			option2 = item.unipack.autoPlayExist
+			bookmark = false
 
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
@@ -126,21 +127,33 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 		}
 
 		Log.test("set ${item.unipack.title}")
-		item.unipackENT.observe(holder, Observer {
-			packView.apply {
-				Log.test("${item.unipack.title}: ${it!!.bookmark}")
+		item.unipackENT.observeForever {
+			item.packView?.apply {
+				Log.test("bookmark: ${item.unipack.title}: ${it!!.bookmark}")
+				packView.debug = "${item.unipack.title}"
 				bookmark = it!!.bookmark
+
 			}
-		})
+		}
+		/*item.unipackENT.observe(holder, Observer {
+			packView.apply {
+				Log.test("bookmark: ${item.unipack.title}: ${it!!.bookmark}")
+				packView.debug = "${item.unipack.title}"
+				bookmark = it!!.bookmark
+
+			}
+		})*/
 	}
 
 	override fun onViewAttachedToWindow(holder: UnipackHolder) {
 		super.onViewAttachedToWindow(holder)
+		Log.test("attached: ${holder.realPosition}")
 		holder.onAppear()
 	}
 
 	override fun onViewDetachedFromWindow(holder: UnipackHolder) {
 		super.onViewDetachedFromWindow(holder)
+		Log.test("detached: ${holder.realPosition}")
 		holder.onDisappear()
 	}
 
