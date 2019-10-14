@@ -86,26 +86,6 @@ constructor(
 		}
 	}
 
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-	fun setBookmark(bookmark: Boolean) {
-		IV_bookmark.setImageResource(if (bookmark) drawable.ic_bookmark_24dp else drawable.ic_bookmark_border_24dp)
-	}
-
-	fun setStorage(external: Boolean) {
-		IV_storage.setImageResource(if (external) drawable.ic_public_24dp else drawable.ic_lock_24dp)
-		IV_storage.isClickable = true
-	}
-
-	fun setStorageMoving() {
-		IV_storage.setImageResource(drawable.ic_copy_24dp)
-		IV_storage.isClickable = false
-	}
-
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 
