@@ -362,8 +362,6 @@ class MainActivity : BaseActivity() {
 		if (updateProcessing) return
 		SRL_swipeRefreshLayout.isRefreshing = true
 		updateProcessing = true
-		togglePlay(null)
-		updatePanel(true)
 		(object : AsyncTask<String?, String?, String?>() {
 			var I_curr = ArrayList<UnipackItem>()
 			var I_added = ArrayList<UnipackItem>()
@@ -434,6 +432,8 @@ class MainActivity : BaseActivity() {
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
 				SRL_swipeRefreshLayout.isRefreshing = false
 				updateProcessing = false
+
+				updatePanel(true)
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
 	}
