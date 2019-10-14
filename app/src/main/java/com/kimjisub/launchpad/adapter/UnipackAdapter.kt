@@ -20,8 +20,8 @@ data class UnipackItem(
 	val unipackENT: LiveData<UnipackENT>,
 	var isNew: Boolean
 ) {
-	var unipackENTObserverAdapter: Observer<UnipackENT>? = null
-	var unipackENTObserverBookmark: Observer<UnipackENT>? = null
+	var unipackENTObserver: Observer<UnipackENT>? = null
+	//var unipackENTObserverBookmark: Observer<UnipackENT>? = null
 
 	var packView: PackView? = null
 	var flagColor: Int = 0
@@ -39,7 +39,6 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 	var i =0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
 		val packView = PackView(parent.context)
-		packView.debug = "${i++}"
 		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 		packView.layoutParams = lp
 		return UnipackHolder(packView)
@@ -106,23 +105,12 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			animation = a
 		}
 
-		Log.test("set ${item.unipack.title}")
-		item.unipackENT.observeForever {
-			item.packView?.apply {
-				Log.test("bookmark: ${item.unipack.title}: ${it!!.bookmark}")
-				packView.debug = "${item.unipack.title}"
+		item.unipackENT.observeOnce(Observer {
+			packView?.apply {
 				bookmark = it!!.bookmark
-
 			}
-		}
-		/*item.unipackENT.observe(holder, Observer {
-			packView.apply {
-				Log.test("bookmark: ${item.unipack.title}: ${it!!.bookmark}")
-				packView.debug = "${item.unipack.title}"
-				bookmark = it!!.bookmark
+		})
 
-			}
-		})*/
 	}
 
 	override fun getItemCount() = list.size
@@ -131,6 +119,24 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 		fun onViewClick(item: UnipackItem, v: PackView)
 		fun onViewLongClick(item: UnipackItem, v: PackView)
 		fun onPlayClick(item: UnipackItem, v: PackView)
+	}
+
+	fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
+		observeForever(object : Observer<T> {
+			override fun onChanged(t: T?) {
+				observer.onChanged(t)
+				removeObserver(this)
+			}
+		})
+
+		/*
+		observeForever(object : Observer<T> {
+			override fun onChanged(t: T?) {
+				observer.onChanged(t)
+				removeObserver(this)
+			}
+		})
+		 */
 	}
 
 }
