@@ -42,7 +42,7 @@ class LedRunner(
 				val millis = measureTimeMillis {
 					loop()
 				}
-				Thread.sleep(delay - millis)
+				Thread.sleep((delay - millis).coerceAtLeast(0))
 			}
 		} catch (e: InterruptedException) {
 		}

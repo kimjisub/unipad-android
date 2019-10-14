@@ -53,15 +53,14 @@ import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.design.snackbar
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import java.io.File
+import java.lang.Runnable
 import java.util.*
 
 class MainActivity : BaseActivity() {
@@ -249,7 +248,7 @@ class MainActivity : BaseActivity() {
 				val item = selected
 				if (item != null) {
 					val unipackENT = db.unipackDAO()!!.getOrCreate(item.unipack.F_project.name)
-					unipackENT.observe(this@MainActivity, object : Observer<UnipackENT>{
+					unipackENT.observe(this@MainActivity, object : Observer<UnipackENT> {
 						override fun onChanged(it: UnipackENT?) {
 							unipackENT.removeObserver(this)
 							CoroutineScope(Dispatchers.IO).launch {
@@ -257,7 +256,9 @@ class MainActivity : BaseActivity() {
 								db.unipackDAO()!!.update(it)
 							}
 
-							adapter.notifyItemChanged(selectedIndex)
+
+							//todo
+							//adapter.notifyItemChanged(selectedIndex)
 						}
 					})
 				}
@@ -267,10 +268,21 @@ class MainActivity : BaseActivity() {
 			override fun onStorageClick(v: View) {
 				val item = selected
 				if (item != null) {
-					item.moving = true
 					val source = File(item.unipack.F_project.path)
 					val isInternal = FileManager.isInternalFile(this@MainActivity, source)
 					val target = File(if (isInternal) F_UniPackRootExt else F_UniPackRootInt, source.name)
+					CoroutineScope(Dispatchers.IO).launch {
+						withContext(Dispatchers.Main) {
+							item.moving = true
+							P_pack.data.moving.set(item.moving)
+						}
+						FileManager.moveDirectory(source, target)
+						withContext(Dispatchers.Main) {
+							item.moving = false
+							P_pack.data.moving.set(item.moving)
+						}
+					}
+
 					(object : AsyncTask<String?, String?, String?>() {
 						override fun onPreExecute() {
 							super.onPreExecute()
@@ -284,6 +296,8 @@ class MainActivity : BaseActivity() {
 
 						override fun onPostExecute(result: String?) {
 							super.onPostExecute(result)
+							item.moving = false
+							P_pack.data.moving.set(false)
 							update()
 						}
 					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
@@ -367,13 +381,11 @@ class MainActivity : BaseActivity() {
 					}
 					for (item: UnipackItem in I_curr) {
 						var index = -1
-						var i = 0
-						for (item2: UnipackItem in I_removed) {
+						for ((i,item2: UnipackItem )in I_removed.withIndex()) {
 							if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
 								index = i
 								break
 							}
-							i++
 						}
 						if (index != -1)
 							I_removed.removeAt(index)
@@ -399,15 +411,16 @@ class MainActivity : BaseActivity() {
 					list.add(i, F_added)
 					adapter.notifyItemInserted(i)
 					F_added.unipackENTObserver = Observer {
-						adapter.notifyItemChanged(i)
+						val index = list.indexOf(F_added)
+						adapter.notifyItemChanged(index)
+						Log.test("$index")
 					}
 					F_added.unipackENT.observe(this@MainActivity, F_added.unipackENTObserver!!)
 
 					P_total.data.unipackCapacity.set(list.size.toString())
 				}
 				for (F_removed: UnipackItem in I_removed) {
-					var i = 0
-					for (item: UnipackItem in list) {
+					for ((i, item: UnipackItem) in list.withIndex()) {
 						if ((item.unipack.F_project.path == F_removed.unipack.F_project.path)) {
 							val I = i
 							list.removeAt(I)
@@ -416,7 +429,6 @@ class MainActivity : BaseActivity() {
 							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}
-						i++
 					}
 				}
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
@@ -539,15 +551,14 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("SetTextI18n")
 	fun togglePlay(target: UnipackItem?) {
 		try {
-			var i = 0
-			for (item: UnipackItem in list) {
+			for ((i, item: UnipackItem) in list.withIndex()) {
 				val packView = item.packView
 				if (target != null && (item.unipack.F_project.path == target.unipack.F_project.path)) {
+
 					item.toggle = !item.toggle
 					lastPlayIndex = i
 				} else item.toggle = false
 				packView?.toggle(item.toggle)
-				i++
 			}
 			showSelectLPUI()
 			updatePanel(false)

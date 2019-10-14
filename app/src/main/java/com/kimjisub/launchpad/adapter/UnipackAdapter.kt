@@ -14,6 +14,10 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class UnipackItem(
 	var unipack: Unipack,
@@ -21,7 +25,6 @@ data class UnipackItem(
 	var isNew: Boolean
 ) {
 	var unipackENTObserver: Observer<UnipackENT>? = null
-	//var unipackENTObserverBookmark: Observer<UnipackENT>? = null
 
 	var packView: PackView? = null
 	var flagColor: Int = 0
@@ -45,7 +48,6 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 	}
 
 	override fun onBindViewHolder(holder: UnipackHolder, position: Int) {
-		Log.test("onBindViewHolder: $position")
 		val context = holder.packView.context
 
 		val item = list[holder.adapterPosition]
@@ -84,6 +86,10 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			option2 = item.unipack.autoPlayExist
 			bookmark = false
 
+			item.unipackENT.observeOnce(Observer {
+				bookmark = it.bookmark
+			})
+
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
 					eventListener.onViewClick(item, v)
@@ -105,11 +111,6 @@ class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val event
 			animation = a
 		}
 
-		item.unipackENT.observeOnce(Observer {
-			packView?.apply {
-				bookmark = it!!.bookmark
-			}
-		})
 
 	}
 
