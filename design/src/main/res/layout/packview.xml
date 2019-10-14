@@ -174,11 +174,5 @@
 			android:layout_marginTop="3dp"
 			app:srcCompat="@drawable/ic_bookmark_front" />
 
-		<TextView
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:textColor="@color/white"
-			android:id="@+id/TV_debug"/>
-
 	</RelativeLayout>
 </layout>
