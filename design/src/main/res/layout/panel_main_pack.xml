@@ -123,27 +123,27 @@
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/scale" />
+								android:text="@string/MPP_padSize" />
 
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/chainCount" />
+								android:text="@string/MPP_chainCount" />
 
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/sound_count" />
+								android:text="@string/MPP_soundCount" />
 
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/led_count" />
+								android:text="@string/MPP_ledCount" />
 
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/fileSize" />
+								android:text="@string/MPP_fileSize" />
 
 							<TextView
 								android:layout_width="wrap_content"
@@ -152,13 +152,18 @@
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/open_count" />
+								android:text="@string/MPT_playCount" />
 
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/padtouch_count"
+								android:text="@string/MPP_padTouchCount"
 								android:visibility="gone" />
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@string/MPP_lastOpened"/>
 
 						</LinearLayout>
 
@@ -217,6 +222,13 @@
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.padTouchCount}"
+								android:visibility="gone" />
+
+							<TextView
+								android:id="@+id/TV_lastOpened"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@{data.lastOpenedDate}"
 								android:visibility="gone" />
 
 						</LinearLayout>

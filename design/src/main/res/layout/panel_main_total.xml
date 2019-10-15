@@ -66,25 +66,25 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/unipack_count"
+							android:text="@string/MTP_count"
 							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/unipack_capacity"
+							android:text="@string/MTP_size"
 							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/open_count"
+							android:text="@string/MPT_playCount"
 							android:textColor="@color/text" />
 
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/padtouch_count"
+							android:text="@string/MPP_padTouchCount"
 							android:textColor="@color/text"
 							android:visibility="gone" />
 
@@ -95,7 +95,7 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@string/selected_theme"
+							android:text="@string/MPT_theme"
 							android:textColor="@color/text" />
 
 					</LinearLayout>

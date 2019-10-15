@@ -1,165 +1,29 @@
 <resources>
-	<string name="languageCode">ko</string>
-	<string name="language">Korean</string>
-	<string name="translator">Kimjisub</string>
-	<string name="translatedBy">Translated by %1$s</string>
+	<!--Main Total Panel-->
+	<string name="MTP_count">유니팩 개수</string>
+	<string name="MTP_size">유니팩 용량</string>
+	<string name="MPT_playCount">플레이 횟수</string>
+	<string name="MPT_theme">테마</string>
 
-	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">패드 크기</string>
+	<string name="MPP_chainCount">체인 개수</string>
+	<string name="MPP_soundCount">사운드 개수</string>
+	<string name="MPP_ledCount">LED 이벤트 개수</string>
+	<string name="MPP_fileSize">용량</string>
+	<string name="MPP_playCount">유니팩 실행 횟수</string>
+	<string name="MPP_padTouchCount">패드 터치 횟수</string>
+	<string name="MPP_lastOpened">최근 연 날짜</string>
 
-	<!--Word-->
-	<string name="accept">확인</string>
-	<string name="cancel">취소</string>
-	<string name="warning">경고</string>
-	<string name="error">에러</string>
-	<string name="errOccur">문제가 발생하였습니다.</string>
-	<string name="wait_a_sec">잠시만 기다려주세요…</string>
-	<string name="analyzing">분석중</string>
-	<string name="loading">로딩중</string>
-	<string name="download">다운로드</string>
-	<string name="downloadWaiting">다운로드 대기중</string>
-	<string name="downloading">다운로드 중</string>
-	<string name="downloaded">다운로드 됨</string>
-	<string name="success">성공</string>
-	<string name="failed">실패</string>
-	<string name="delete">삭제</string>
-	<string name="edit">수정</string>
-	<string name="update">업데이트</string>
-	<string name="ignore">무시</string>
-	<string name="apply">적용</string>
-	<string name="restart">재시작</string>
-	<string name="using">사용중</string>
-	<string name="path">경로</string>
-	<string name="quit">나가기</string>
-	<string name="website">웹사이트</string>
-	<string name="measuring">측정중…</string>
-	<string name="general">일반</string>
-	<string name="notice">공지</string>
-	<string name="newUnipack">새로운 유니팩</string>
-	<string name="notFound">찾을 수 없습니다.</string>
-	<string name="exceptionOccurred">예외 오류 발생</string>
+	<!--Store Total Panel-->
+	<string name="STP_count">유니팩 개수</string>
+	<string name="STP_downloadedCount">다운로드 </string>
 
-	<!--Panel-->
-	<string name="unipack_count">유니팩 개수</string>
-	<string name="unipack_store_count">유니팩 개수</string>
-	<string name="unipack_downloaded_count">다운로드 된 유니팩 개수</string>
-	<string name="unipack_capacity">유니팩 용량</string>
-	<string name="open_count">유니팩 실행 횟수</string>
-	<string name="padtouch_count">패드 터치 횟수</string>
-	<string name="LED_count">LED 이벤트 개수</string>
-	<string name="sound_count">사운드 개수</string>
-	<string name="selected_theme">선택된 테마</string>
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">다운로드 수</string>
 
-	<!--Menu-->
-	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
-	<string name="list_refresh">목록 새로고침</string>
-	<string name="import_unipack">유니팩 불러오기</string>
-	<string name="store">스토어</string>
-
-	<!--Setting-->
-	<string name="setting">설정</string>
-	<string name="information">정보</string>
-	<string name="payment">결제</string>
-	<string name="select_theme">테마 선택</string>
-	<string name="use_sd_card">SD 카드 사용</string>
-	<string name="plan_restorePurchases">구입항목 복원하기</string>
-	<string name="plan_restorePurchases_">결제 후에 앱을 재시작해주세요.</string>
-	<string name="plan_removeAds">Remove Ads</string>
-	<string name="plan_removeAds_">광고 제거</string>
-	<string name="plan_proTools">Professional Tools</string>
-	<string name="plan_proTools_">전문가 기능 무제한 사용</string>
-	<string name="donation">Donate to UniPad</string>
-	<string name="donation_">Donate for the better UniPad.</string>
-	<string name="purchase">구매하기</string>
-	<string name="purchaseComplete">결제가 완료되었습니다.</string>
-	<string name="openSourceLicense">오픈소스 라이선스</string>
-	<string name="FCMToken">FCM 토큰</string>
-	<string name="copyright">ⓒ 2016–2019. (UniPad) All rights reserved.</string>
-
-	<!--Community-->
-	<string name="community">커뮤니티</string>
-	<string name="officialHomepage">공식 웹사이트</string>
-	<string name="officialHomepage_">유니패드 공식 웹사이트</string>
-	<string name="officialFacebook">공식 페이스북</string>
-	<string name="officialFacebook_">기술 지원</string>
-	<string name="facebookCommunity">페이스북 커뮤니티</string>
-	<string name="facebookCommunity_">영어</string>
-	<string name="naverCafe">네이버 카페</string>
-	<string name="naverCafe_">한국어</string>
-	<string name="discord">디스코드</string>
-	<string name="discord_">Discord</string>
-	<string name="kakaotalk">카카오톡 (김지섭)</string>
-	<string name="kakaotalk_">기술 지원 외의 문의</string>
-	<string name="email">0226unipad@gmail.com</string>
-	<string name="email_">기술 지원 외의 문의</string>
-
-	<!--Unipack Info-->
-	<string name="title">제목</string>
-	<string name="producerName">제작자</string>
-	<string name="scale">크기</string>
-	<string name="chainCount">체인 개수</string>
-	<string name="fileSize">용량</string>
-
-	<!--Unipack Function-->
-	<string name="LED">LED</string>
-	<string name="autoPlay">자동재생</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
-	<string name="feedbackLight">피드백 표시</string>
-	<string name="traceLog">순서 기록</string>
-	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
-	<string name="record">녹음</string>
-	<string name="hideUI">UI 숨기기</string>
-	<string name="watermark">워터마크</string>
-	<string name="proLightMode">프로 라이트 모드</string>
-
-	<!--Version-->
-	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
-	<string name="currentVersion">현재 버전</string>
-	<string name="newVersion">최신 버전</string>
-
-	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
-	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
-	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
-	<string name="clickToAddUnipack">유니팩을 추가하려면 클릭하세요.</string>
-	<string name="doYouWantToDeleteProject">프로젝트를 삭제하시겠습니까?</string>
-	<string name="doYouWantToRemapProject">자동재생을 자동매핑 하시겠습니까?</string>
-	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
-	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
-	<string name="cantReadFolder">폴더를 읽을 수 없습니다.</string>
-	<string name="cantReadFile">파일을 읽을 수 없습니다.</string>
-	<string name="analyzeComplete">분석 성공!</string>
-	<string name="analyzeFailed">분석 실패…</string>
-	<string name="isNotAnUniPack">유니팩이 아닙니다.</string>
-	<string name="pressAgainToGoBack">종료하시려면\n한번 더 눌러주세요</string>
-	<string name="copied">클립보드에 복사되었습니다.</string>
-	<string name="skinMemoryErr">스킨을 불러오는 도중 메모리 문제가 발생하였습니다.\n앱을 재시작합니다.</string>
-	<string name="skinErr">스킨에 문제가 있습니다.\n스킨을 초기화합니다.</string>
-
-	<string name="outOfMemory">메모리 공간이 부족합니다.\n메모리 확보 후 다시 시도해주세요.</string>
-	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
-	<string name="doNotSee">더이상 보지 않기</string>
-
-	<!--Launchpad Connection-->
-	<string name="launchpadConnecting">런치패드 연결중…</string>
-	<string name="midiDevicesNotDetected">MIDI 장치가 감지되지 않았습니다.</string>
-	<string name="signal_SpeedFirst">속도 우선</string>
-	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
-
-	<!--Store-->
-	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
-	<string name="downloadCount">다운로드 수</string>
-	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
-
-	<!--Theme-->
-	<string name="theme">Theme</string>
-	<string name="themeDownload">테마 다운로드</string>
-	<string name="requireRestart">앱 재시작이 필요합니다.</string>
-	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
-
-	<!--ThemePack-->
-	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
-	<string name="theme_author">UniPad dev.</string>
-
+	<!--File Explorer-->
+	<string name="FE_accept">확인</string>
+	<string name="FE_folderErr">폴더를 읽을 수 없습니다.</string>
+	<string name="FE_fileErr">파일을 읽을 수 없습니다.</string>
 </resources>
