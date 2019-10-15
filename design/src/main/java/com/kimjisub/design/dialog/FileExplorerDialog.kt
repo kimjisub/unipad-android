@@ -31,12 +31,12 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 				if (file.canRead())
 					moveDir(mPath[position])
 				else
-					showDialog(file.name, getString(string.cantReadFolder))
+					showDialog(file.name, getString(string.FE_folderErr))
 			} else {
 				if (file.canRead())
 					onFileSelected(file.path)
 				else
-					showDialog(file.name, getString(string.cantReadFile))
+					showDialog(file.name, getString(string.FE_fileErr))
 			}
 		}
 		moveDir(path)
@@ -98,7 +98,7 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 		Builder(context)
 			.setTitle(title)
 			.setMessage(content)
-			.setPositiveButton(getString(string.accept), null)
+			.setPositiveButton(getString(string.FE_accept), null)
 			.show()
 	}
 

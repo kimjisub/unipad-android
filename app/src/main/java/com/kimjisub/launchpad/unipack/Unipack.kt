@@ -522,7 +522,7 @@ class Unipack(val F_project: File, val loadDetail: Boolean) {
 	fun toString(context: Context): String {
 		return context.resources.getString(string.title) + " : " + title + "\n" +
 				context.resources.getString(string.producerName) + " : " + producerName + "\n" +
-				context.resources.getString(string.scale) + " : " + buttonX.toString() + " x " + buttonY.toString() + "\n" +
+				context.resources.getString(string.padSize) + " : " + buttonX.toString() + " x " + buttonY.toString() + "\n" +
 				context.resources.getString(string.chainCount) + " : " + chain.toString() + "\n" +
 				context.resources.getString(string.fileSize) + " : " + byteToMB(
 			getFolderSize(

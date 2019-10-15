@@ -43,6 +43,7 @@ constructor(
 		val fileSize: ObservableField<String> = ObservableField()
 		val openCount: ObservableField<String> = ObservableField()
 		val padTouchCount: ObservableField<String> = ObservableField()
+		val lastOpenedDate: ObservableField<String> = ObservableField()
 		val websiteExist: ObservableField<Boolean> = ObservableField()
 		val path: ObservableField<String> = ObservableField()
 	}
