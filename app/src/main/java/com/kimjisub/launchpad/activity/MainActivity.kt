@@ -40,6 +40,9 @@ import com.kimjisub.launchpad.adapter.UnipackItem
 import com.kimjisub.launchpad.db.AppDataBase
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
+import com.kimjisub.launchpad.db.util.ObserverPrev
+import com.kimjisub.launchpad.db.util.observePrev
+import com.kimjisub.launchpad.db.util.removeObserverPrev
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.ThemeResources
@@ -53,14 +56,16 @@ import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.design.snackbar
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import java.io.File
-import java.lang.Runnable
 import java.util.*
 
 class MainActivity : BaseActivity() {
@@ -379,7 +384,7 @@ class MainActivity : BaseActivity() {
 					}
 					for (item: UnipackItem in I_curr) {
 						var index = -1
-						for ((i,item2: UnipackItem )in I_removed.withIndex()) {
+						for ((i, item2: UnipackItem) in I_removed.withIndex()) {
 							if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
 								index = i
 								break
@@ -408,13 +413,19 @@ class MainActivity : BaseActivity() {
 					}
 					list.add(i, F_added)
 					adapter.notifyItemInserted(i)
-					F_added.unipackENTObserver = Observer {
-						val index = list.indexOf(F_added)
-						adapter.notifyItemChanged(index)
-						Log.test("$index")
-					}
-					F_added.unipackENT.observe(this@MainActivity, F_added.unipackENTObserver!!)
+					F_added.unipackENTObserver = object : ObserverPrev<UnipackENT> {
+						override var observer: Observer<UnipackENT>? = null
 
+						override fun onChanged(curr: UnipackENT, prev: UnipackENT?) {
+							if(curr != prev) {
+								val index = list.indexOf(F_added)
+								adapter.notifyItemChanged(index)
+								Log.test("$index")
+							}
+						}
+					}
+
+					F_added.unipackENT.observePrev(this@MainActivity, F_added.unipackENTObserver!!)
 					P_total.data.unipackCapacity.set(list.size.toString())
 				}
 				for (F_removed: UnipackItem in I_removed) {
@@ -423,7 +434,7 @@ class MainActivity : BaseActivity() {
 							val I = i
 							list.removeAt(I)
 							adapter.notifyItemRemoved(I)
-							F_removed.unipackENT.removeObserver(F_removed.unipackENTObserver!!)
+							F_removed.unipackENT.removeObserverPrev(F_removed.unipackENTObserver!!)
 							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}

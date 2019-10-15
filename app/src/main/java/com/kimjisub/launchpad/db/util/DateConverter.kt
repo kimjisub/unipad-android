@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.db.converter
+package com.kimjisub.launchpad.db.util
 
 import androidx.room.TypeConverter
 import java.util.*
