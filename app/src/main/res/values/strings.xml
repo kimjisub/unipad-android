@@ -7,6 +7,9 @@
 	<string name="app_name">UniPad</string>
 	<string name="app_name_test">UniPad Test</string>
 
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
 	<!--Word-->
 	<string name="accept">Accept</string>
 	<string name="cancel">Cancel</string>
@@ -38,17 +41,6 @@
 	<string name="newUnipack">New UniPack</string>
 	<string name="notFound">Not Found</string>
 	<string name="exceptionOccurred">Exception Occurred</string>
-
-	<!--Panel-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_store_count">Number of UniPacks</string>
-	<string name="unipack_downloaded_count">Number of Downloaded UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
-	<string name="selected_theme">Selected Theme</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
@@ -96,7 +88,7 @@
 	<!--Unipack Info-->
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
-	<string name="scale">Scale</string>
+	<string name="padSize">Pad Size</string>
 	<string name="chainCount">Chain Count</string>
 	<string name="fileSize">File Size</string>
 
@@ -126,8 +118,6 @@
 	<string name="doYouWantToRemapProject">Do you want to remap AutoPlay of this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>
-	<string name="cantReadFolder">Couldn\'t read the folder.</string>
-	<string name="cantReadFile">Couldn\'t read the file.</string>
 	<string name="analyzeComplete">Analysis complete!</string>
 	<string name="analyzeFailed">Failed to analyze…</string>
 	<string name="isNotAnUniPack">is not an Unipack</string>
@@ -148,7 +138,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Can\'t quit while downloading the pack</string>
-	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Unable to access server.</string>
 
 	<!--Theme-->

@@ -7,6 +7,9 @@
 	<string name="app_name">UniPad</string>
 	<string name="app_name_test">UniPad Test</string>
 
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
 	<!--Word-->
 	<string name="accept">확인</string>
 	<string name="cancel">취소</string>
@@ -38,17 +41,6 @@
 	<string name="newUnipack">새로운 유니팩</string>
 	<string name="notFound">찾을 수 없습니다.</string>
 	<string name="exceptionOccurred">예외 오류 발생</string>
-
-	<!--Panel-->
-	<string name="unipack_count">유니팩 개수</string>
-	<string name="unipack_store_count">유니팩 개수</string>
-	<string name="unipack_downloaded_count">다운로드 된 유니팩 개수</string>
-	<string name="unipack_capacity">유니팩 용량</string>
-	<string name="open_count">유니팩 실행 횟수</string>
-	<string name="padtouch_count">패드 터치 횟수</string>
-	<string name="LED_count">LED 이벤트 개수</string>
-	<string name="sound_count">사운드 개수</string>
-	<string name="selected_theme">선택된 테마</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
@@ -96,7 +88,7 @@
 	<!--Unipack Info-->
 	<string name="title">제목</string>
 	<string name="producerName">제작자</string>
-	<string name="scale">크기</string>
+	<string name="padSize">패드 크기</string>
 	<string name="chainCount">체인 개수</string>
 	<string name="fileSize">용량</string>
 
@@ -126,8 +118,6 @@
 	<string name="doYouWantToRemapProject">자동재생을 자동매핑 하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
-	<string name="cantReadFolder">폴더를 읽을 수 없습니다.</string>
-	<string name="cantReadFile">파일을 읽을 수 없습니다.</string>
 	<string name="analyzeComplete">분석 성공!</string>
 	<string name="analyzeFailed">분석 실패…</string>
 	<string name="isNotAnUniPack">유니팩이 아닙니다.</string>
@@ -148,7 +138,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
-	<string name="downloadCount">다운로드 수</string>
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
 
 	<!--Theme-->
