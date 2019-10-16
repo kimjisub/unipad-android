@@ -17,6 +17,6 @@ abstract class UnipackOpenDAO {
 	@Query("SELECT COUNT(*) FROM UnipackOpenENT WHERE path=:path")
 	abstract fun getCount(path: String?): LiveData<Int>
 
-	@Query("SELECT created_at FROM UnipackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
-	abstract fun getLastOpenedDate(path: String?): LiveData<Int>
+	@Query("SELECT * FROM UnipackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
+	abstract fun getLastOpenedDate(path: String?): LiveData<UnipackOpenENT>
 }

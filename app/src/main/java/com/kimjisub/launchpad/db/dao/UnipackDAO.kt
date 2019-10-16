@@ -17,6 +17,9 @@ abstract class UnipackDAO {
 	@Query("SELECT * FROM UnipackENT WHERE path=:path LIMIT 1")
 	abstract fun find(path: String): LiveData<UnipackENT>
 
+	@Query("SELECT * FROM UnipackENT WHERE path=:path LIMIT 1")
+	abstract fun findTest(path: String): LiveData<UnipackENT>?
+
 	/*fun findasdf(id: String):
 			LiveData<UnipackENT?> = find_(id).getDistinct()*/
 
@@ -28,7 +31,7 @@ abstract class UnipackDAO {
 
 	fun getOrCreate(path: String): LiveData<UnipackENT> {
 		var item = find(path)
-		if (item == null) {
+		if (item.value == null) {
 			Log.test("item.value is null")
 			insert(UnipackENT(path, 0, false, Date()))
 			item = find(path)

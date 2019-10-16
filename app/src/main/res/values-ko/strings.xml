@@ -7,9 +7,6 @@
 	<string name="app_name">UniPad</string>
 	<string name="app_name_test">UniPad Test</string>
 
-	<!--String Format-->
-	<string name="date_format">%1$td/%1$tm/%1$tY</string>
-
 	<!--Word-->
 	<string name="accept">확인</string>
 	<string name="cancel">취소</string>

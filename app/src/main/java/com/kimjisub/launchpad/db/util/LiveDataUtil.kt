@@ -16,7 +16,7 @@ fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 interface ObserverPrev<T> {
 	var observer:Observer<T>?
 
-	fun onChanged(curr: T, prev: T?)
+	fun onChanged(curr: T?, prev: T?)
 }
 
 fun <T> LiveData<T>.observePrev(owner: LifecycleOwner, observerPrev: ObserverPrev<T>) {

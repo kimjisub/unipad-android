@@ -1,4 +1,7 @@
 <resources>
+	<!--String Format-->
+	<string name="date_format">%1$tY/%1$tm/%1$td %1$tH:%1$tM:%1$tS</string>
+
 	<!--Main Total Panel-->
 	<string name="MTP_count">유니팩 개수</string>
 	<string name="MTP_size">유니팩 용량</string>
@@ -13,7 +16,8 @@
 	<string name="MPP_fileSize">용량</string>
 	<string name="MPP_playCount">유니팩 실행 횟수</string>
 	<string name="MPP_padTouchCount">패드 터치 횟수</string>
-	<string name="MPP_lastOpened">최근 연 날짜</string>
+	<string name="MPP_lastPlayed">최근 플레이</string>
+	<string name="MPP_notPlayedYet">플레이하지 않았습니다.</string>
 
 	<!--Store Total Panel-->
 	<string name="STP_count">유니팩 개수</string>

@@ -1,4 +1,7 @@
 <resources>
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY %1$tH:%1$tM:%1$tS</string>
+
 	<!--Main Total Panel-->
 	<string name="MTP_count">UniPacks Count</string>
 	<string name="MTP_size">UniPacks Size</string>
@@ -13,7 +16,8 @@
 	<string name="MPP_fileSize">File Size</string>
 	<string name="MPP_playCount">Play Count</string>
 	<string name="MPP_padTouchCount">Pad Touch</string>
-	<string name="MPP_lastOpened">Last Opened</string>
+	<string name="MPP_lastPlayed">Last Played</string>
+	<string name="MPP_notPlayedYet">Not Played Yet</string>
 
 	<!--Store Total Panel-->
 	<string name="STP_count">Store UniPacks</string>
