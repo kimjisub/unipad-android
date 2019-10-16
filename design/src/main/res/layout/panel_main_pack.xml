@@ -163,7 +163,7 @@
 							<TextView
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@string/MPP_lastOpened"/>
+								android:text="@string/MPP_lastPlayed"/>
 
 						</LinearLayout>
 
@@ -175,61 +175,49 @@
 							android:paddingLeft="32dp">
 
 							<TextView
-								android:id="@+id/TV_scale"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@{data.scale}" />
-
+								android:text="@{data.padSize}" />
 
 							<TextView
-								android:id="@+id/TV_chainCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.chainCount}" />
 
 							<TextView
-								android:id="@+id/TV_soundCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.soundCount}" />
 
 							<TextView
-								android:id="@+id/TV_ledCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.ledCount}" />
 
 							<TextView
-								android:id="@+id/TV_fileSize"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.fileSize}" />
 
 							<TextView
 								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="88.88 MB"
-								android:visibility="invisible" />
+								android:layout_height="wrap_content"/>
 
 							<TextView
-								android:id="@+id/TV_openCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@{data.openCount}" />
+								android:text="@{data.playCount}" />
 
 							<TextView
-								android:id="@+id/TV_padTouchCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.padTouchCount}"
 								android:visibility="gone" />
 
 							<TextView
-								android:id="@+id/TV_lastOpened"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
-								android:text="@{data.lastOpenedDate}"
-								android:visibility="gone" />
+								android:text="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}" />
 
 						</LinearLayout>
 

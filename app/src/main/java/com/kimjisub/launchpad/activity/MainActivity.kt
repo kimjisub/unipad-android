@@ -41,6 +41,7 @@ import com.kimjisub.launchpad.db.AppDataBase
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.db.util.ObserverPrev
+import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observePrev
 import com.kimjisub.launchpad.db.util.removeObserverPrev
 import com.kimjisub.launchpad.manager.BillingManager
@@ -181,6 +182,10 @@ class MainActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_main)
 
+		db.unipackDAO()?.findTest("vwef")?.observeOnce(Observer {
+			Log.test("$it")
+		})
+
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		divider.setDrawable(resources.getDrawable(drawable.border_divider))
@@ -252,7 +257,7 @@ class MainActivity : BaseActivity() {
 			override fun onBookmarkClick(v: View) {
 				val item = selected
 				if (item != null) {
-					val unipackENT = db.unipackDAO()!!.getOrCreate(item.unipack.F_project.name)
+					val unipackENT = item.unipackENT
 					unipackENT.observe(this@MainActivity, object : Observer<UnipackENT> {
 						override fun onChanged(it: UnipackENT?) {
 							unipackENT.removeObserver(this)
@@ -416,8 +421,8 @@ class MainActivity : BaseActivity() {
 					F_added.unipackENTObserver = object : ObserverPrev<UnipackENT> {
 						override var observer: Observer<UnipackENT>? = null
 
-						override fun onChanged(curr: UnipackENT, prev: UnipackENT?) {
-							if(curr != prev) {
+						override fun onChanged(curr: UnipackENT?, prev: UnipackENT?) {
+							if (curr != prev) {
 								val index = list.indexOf(F_added)
 								adapter.notifyItemChanged(index)
 								Log.test("$index")
@@ -669,45 +674,50 @@ class MainActivity : BaseActivity() {
 		val flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
 		item.flagColor = flagColor
 
-		val unipackENT = db.unipackDAO()!!.getOrCreate(item.unipack.F_project.name)
-		unipackENT.observe(this@MainActivity, Observer {
-			P_pack.data.bookmark.set(unipackENT.value!!.bookmark)
-		})
+		P_pack.data.apply {
 
-		db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)!!.observe(this,
-			Observer { integer: Int? -> P_pack.data.openCount.set(integer.toString()) })
-		P_pack.data.storage.set(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
-		P_pack.data.title.set(unipack.title)
-		P_pack.data.subtitle.set(unipack.producerName)
-		P_pack.data.path.set(item.unipack.F_project.path)
-		P_pack.data.scale.set("${unipack.buttonX} × ${unipack.buttonY}")
-		P_pack.data.chainCount.set(unipack.chain.toString())
-		P_pack.data.soundCount.set(getString(string.measuring))
-		P_pack.data.ledCount.set(getString(string.measuring))
-		P_pack.data.fileSize.set(getString(string.measuring))
-		P_pack.data.padTouchCount.set(getString(string.measuring))
-		P_pack.data.websiteExist.set(unipack.website != null)
-		(object : AsyncTask<String?, String?, String?>() {
-			var handler = Handler()
-			override fun doInBackground(vararg params: String?): String? {
-				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
-				handler.post { if ((P_pack.data.path.get() == item.unipack.F_project.path)) P_pack.data.fileSize.set(fileSize) }
-				try {
-					val unipackDetail = Unipack(item.unipack.F_project, true)
-					item.unipack = unipackDetail
-					publishProgress(fileSize)
-					handler.post {
-						if ((P_pack.data.path.get() == item.unipack.F_project.path)) {
-							P_pack.data.soundCount.set(unipackDetail.soundCount.toString())
-							P_pack.data.ledCount.set(unipackDetail.ledTableCount.toString())
-						}
-					}
-				} catch (e: Exception) {
-					e.printStackTrace()
+			storage.set(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
+			title.set(unipack.title)
+			subtitle.set(unipack.producerName)
+			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
+			chainCount.set(unipack.chain.toString())
+			websiteExist.set(unipack.website != null)
+			path.set(item.unipack.F_project.path)
+
+
+			soundCount.set(getString(string.measuring))
+			ledCount.set(getString(string.measuring))
+			fileSize.set(getString(string.measuring))
+			padTouchCount.set(getString(string.measuring))
+
+			item.unipackENT.observeOnce(Observer {
+				bookmark.set(it.bookmark)
+			})
+			db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name).observe(this@MainActivity, Observer {
+				playCount.set(it.toString())
+			})
+			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.F_project.name).observe(this@MainActivity, Observer {
+				lastPlayed.set(it?.created_at)
+			})
+
+			CoroutineScope(Dispatchers.IO).launch {
+				val fileSizeString = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
+				withContext(Dispatchers.Main) {
+					if ((path.get() == item.unipack.F_project.path))
+						fileSize.set(fileSizeString)
 				}
-				return null
 			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+
+			CoroutineScope(Dispatchers.IO).launch {
+				item.unipack = Unipack(item.unipack.F_project, true)
+				withContext(Dispatchers.Main) {
+					if ((path.get() == item.unipack.F_project.path)) {
+						soundCount.set(item.unipack.soundCount.toString())
+						ledCount.set(item.unipack.ledTableCount.toString())
+					}
+				}
+			}
+		}
 	}
 
 	// ============================================================================================= Check

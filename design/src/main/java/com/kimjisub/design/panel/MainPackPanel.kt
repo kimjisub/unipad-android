@@ -10,6 +10,7 @@ import androidx.databinding.ObservableField
 import com.kimjisub.design.R.*
 import com.kimjisub.design.databinding.PanelMainPackBinding
 import kotlinx.android.synthetic.main.panel_main_pack.view.*
+import java.util.*
 
 class MainPackPanel
 @JvmOverloads
@@ -31,19 +32,20 @@ constructor(
 	val data = Data()
 
 	class Data {
+		// Static
 		val bookmark: ObservableField<Boolean> = ObservableField()
 		val storage: ObservableField<Boolean> = ObservableField()
 		val moving: ObservableField<Boolean> = ObservableField()
 		val title: ObservableField<String> = ObservableField()
 		val subtitle: ObservableField<String> = ObservableField()
-		val scale: ObservableField<String> = ObservableField()
+		val padSize: ObservableField<String> = ObservableField()
 		val chainCount: ObservableField<String> = ObservableField()
 		val soundCount: ObservableField<String> = ObservableField()
 		val ledCount: ObservableField<String> = ObservableField()
 		val fileSize: ObservableField<String> = ObservableField()
-		val openCount: ObservableField<String> = ObservableField()
+		val playCount: ObservableField<String> = ObservableField()
 		val padTouchCount: ObservableField<String> = ObservableField()
-		val lastOpenedDate: ObservableField<String> = ObservableField()
+		val lastPlayed: ObservableField<Date> = ObservableField()
 		val websiteExist: ObservableField<Boolean> = ObservableField()
 		val path: ObservableField<String> = ObservableField()
 	}
