@@ -13,7 +13,6 @@ import com.kimjisub.design.PackView
 import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.db.ent.UnipackENT
-import com.kimjisub.launchpad.db.util.ObserverPrev
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.unipack.Unipack
 
@@ -22,7 +21,7 @@ data class UnipackItem(
 	val unipackENT: LiveData<UnipackENT>,
 	var isNew: Boolean
 ) {
-	var unipackENTObserver: ObserverPrev<UnipackENT>? = null
+	var unipackENTObserver: Observer<UnipackENT>? = null
 
 	var packView: PackView? = null
 	var flagColor: Int = 0
@@ -37,7 +36,7 @@ class UnipackHolder(
 }
 
 class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
-	var i =0
+	var i = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
 		val packView = PackView(parent.context)
 		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

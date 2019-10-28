@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.db.util
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import com.kimjisub.launchpad.db.ent.UnipackENT
+import com.kimjisub.manager.Log
 
 fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 	observeForever(object : Observer<T> {
@@ -13,21 +15,18 @@ fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 	})
 }
 
-interface ObserverPrev<T> {
-	var observer:Observer<T>?
+fun <T> LiveData<T>.observeRealChange(owner: LifecycleOwner, realChangeObserver: Observer<T>, clone: (T) -> T): Observer<T> {
+	val observer = object : Observer<T> {
+		var prev: T? = null
 
-	fun onChanged(curr: T?, prev: T?)
-}
-
-fun <T> LiveData<T>.observePrev(owner: LifecycleOwner, observerPrev: ObserverPrev<T>) {
-	var prev : T? = null
-	observerPrev.observer = Observer {
-		observerPrev.onChanged(it, prev)
-		prev = it
+		override fun onChanged(it: T) {
+			if (prev != it) {
+				realChangeObserver.onChanged(it)
+				prev = clone(it)
+			}
+		}
 	}
-	observe(owner, observerPrev.observer!!)
-}
+	observe(owner, observer)
 
-fun <T> LiveData<T>.removeObserverPrev(observerPrev: ObserverPrev<T>) {
-	removeObserver(observerPrev.observer!!)
+	return observer
 }
