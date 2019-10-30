@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.binding
+package com.kimjisub.design.binding
 
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
