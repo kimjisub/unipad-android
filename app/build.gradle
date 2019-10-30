@@ -100,20 +100,20 @@ dependencies {
 	kapt "android.arch.persistence.room:compiler:1.1.1"
 
 	// Firebase
-	implementation 'com.google.firebase:firebase-core:17.2.0'
-	implementation 'com.google.firebase:firebase-firestore:21.1.0'
-	implementation 'com.google.firebase:firebase-database:19.1.0'
+	implementation 'com.google.firebase:firebase-core:17.2.1'
+	implementation 'com.google.firebase:firebase-firestore:21.2.1'
+	implementation 'com.google.firebase:firebase-database:19.2.0'
 	implementation 'com.google.firebase:firebase-messaging:20.0.0'
 	implementation 'com.google.firebase:firebase-ads:18.2.0'
-	implementation 'com.google.firebase:firebase-perf:19.0.0'
-	implementation 'com.google.firebase:firebase-config:19.0.1'
+	implementation 'com.google.firebase:firebase-perf:19.0.1'
+	implementation 'com.google.firebase:firebase-config:19.0.3'
 	implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
 	// Retrofit 2
-	implementation 'com.squareup.retrofit2:retrofit:2.6.1'
-	implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
-	implementation 'com.squareup.okhttp3:logging-interceptor:4.1.1'
-	implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.1.1'
+	implementation 'com.squareup.retrofit2:retrofit:2.6.2'
+	implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
+	implementation 'com.squareup.okhttp3:logging-interceptor:4.2.2'
+	implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.2.2'
 
 	// Admob
 	implementation 'com.google.android.gms:play-services-ads:18.2.0'
@@ -122,7 +122,7 @@ dependencies {
 
 	// Vungle SDK
 	implementation 'com.github.vungle:vungle-android-sdk:6.3.17'
-	implementation 'com.google.android.gms:play-services-basement:17.1.0'
+	implementation 'com.google.android.gms:play-services-basement:17.1.1'
 	implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0'
 	implementation 'com.google.android.gms:play-services-location:17.0.0'
 
