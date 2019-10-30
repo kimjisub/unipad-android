@@ -94,7 +94,7 @@ class AutoPlayRunner(
 				}
 				Thread.sleep(delay_)
 			}
-		}catch (e:InterruptedException){
+		} catch (e: InterruptedException) {
 		}
 		Log.thread("[AutoPlay] 4. End Thread")
 		thread = null

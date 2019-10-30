@@ -1,9 +1,6 @@
 package com.kimjisub.launchpad.db
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.Observer
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase

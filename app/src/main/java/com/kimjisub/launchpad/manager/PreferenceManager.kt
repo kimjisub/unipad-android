@@ -7,9 +7,9 @@ import android.os.Environment
 import androidx.core.content.edit
 import java.io.File
 
-class PreferenceManager (
+class PreferenceManager(
 	val context: Context
-){
+) {
 	private val name = "data"
 
 	private val launchpadConnectMethodTag = "LaunchpadConnectMethod"

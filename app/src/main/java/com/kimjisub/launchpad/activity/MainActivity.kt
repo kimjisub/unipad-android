@@ -411,7 +411,7 @@ class MainActivity : BaseActivity() {
 						val index = list.indexOf(F_added)
 						adapter.notifyItemChanged(index)
 
-						if(selectedIndex == index)
+						if (selectedIndex == index)
 							updatePanel(false)
 					}) { it.clone() }
 					P_total.data.unipackCapacity.set(list.size.toString())

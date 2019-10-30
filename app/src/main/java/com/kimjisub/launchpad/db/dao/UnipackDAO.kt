@@ -1,11 +1,8 @@
 package com.kimjisub.launchpad.db.dao
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.Observer
 import androidx.room.*
 import com.kimjisub.launchpad.db.ent.UnipackENT
-import com.kimjisub.manager.Log
 import java.util.*
 
 @Dao

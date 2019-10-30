@@ -3,8 +3,6 @@ package com.kimjisub.launchpad.db.util
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.kimjisub.launchpad.db.ent.UnipackENT
-import com.kimjisub.manager.Log
 
 fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 	observeForever(object : Observer<T> {

@@ -191,7 +191,7 @@ class PlayActivity : BaseActivity() {
 		initTheme()
 
 		if (theme != null) {
-			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object:ViewTreeObserver.OnGlobalLayoutListener{
+			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
 				override fun onGlobalLayout() {
 					RL_root.viewTreeObserver.removeOnGlobalLayoutListener(this)
 					initLayout()
@@ -813,9 +813,9 @@ class PlayActivity : BaseActivity() {
 			topBar[1] = if (SCB_LED.isLocked) 0 else if (SCB_LED.isChecked()) 52 else 55
 			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
 			topBar[3] = 0
-			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI!!.isChecked()) 3 else 1
-			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark!!.isChecked()) 61 else 11
-			topBar[6] = if (SCB_proLightMode.isLocked) 0 else if (SCB_proLightMode!!.isChecked()) 40 else 43
+			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI.isChecked()) 3 else 1
+			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark.isChecked()) 61 else 11
+			topBar[6] = if (SCB_proLightMode.isLocked) 0 else if (SCB_proLightMode.isChecked()) 40 else 43
 			topBar[7] = 5
 			for (i in 0..7) {
 				if (topBar[i] != 0) channelManager!!.add(

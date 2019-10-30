@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.activity
 
 import android.Manifest.permission
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import androidx.core.content.ContextCompat
