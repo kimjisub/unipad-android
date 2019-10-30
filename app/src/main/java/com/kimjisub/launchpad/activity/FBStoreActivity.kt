@@ -286,7 +286,7 @@ class FBStoreActivity : BaseActivity() {
 
 			override fun onAnimationRepeat(animation: Animation?) {}
 		})
-		if (playIndex == -1) updatePanelMain() else updatePanelPack(list!![playIndex])
+		if (playIndex == -1) updatePanelMain() else updatePanelPack(list[playIndex])
 		val visibility = P_pack.visibility
 		if (visibility == View.VISIBLE && playIndex == -1
 			|| visibility == View.INVISIBLE && playIndex != -1

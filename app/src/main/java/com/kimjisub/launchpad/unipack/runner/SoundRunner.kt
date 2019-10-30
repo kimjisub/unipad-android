@@ -82,17 +82,17 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOff(x: Int, y: Int){
+	fun soundOff(x: Int, y: Int) {
 		val e = unipack.Sound_get(chain.value, x, y)
 		if (e != null && e.loop == -1)
 			soundPool!!.stop(stopID!![chain.value][x][y])
 	}
 
-	fun destroy(){
+	fun destroy() {
 		if (soundPool != null) {
 			for (i in unipack.soundTable!!)
-				for(j in i)
-					for(arrayList in j){
+				for (j in i)
+					for (arrayList in j) {
 						if (arrayList != null) {
 							for (sound in arrayList) {
 								try {

@@ -1,9 +1,9 @@
 package com.kimjisub.launchpad.unipack.struct
 
-class AutoPlay (
+class AutoPlay(
 	val elements: ArrayList<Element>
-){
-	interface Element{
+) {
+	interface Element {
 		class On(
 			val x: Int,
 			val y: Int,

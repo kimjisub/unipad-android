@@ -4,8 +4,8 @@ import android.os.Bundle
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
-import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.launchpad.tool.UnipackInstaller
+import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*

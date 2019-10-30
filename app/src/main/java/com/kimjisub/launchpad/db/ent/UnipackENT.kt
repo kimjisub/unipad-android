@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.kimjisub.launchpad.db.util.DateConverter
-import com.kimjisub.launchpad.unipack.Unipack
 import java.util.*
 
 @Entity
@@ -33,7 +32,7 @@ class UnipackENT(
 		return true
 	}
 
-	fun clone():UnipackENT{
+	fun clone(): UnipackENT {
 		return UnipackENT(path, padTouch, bookmark, created_at)
 	}
 

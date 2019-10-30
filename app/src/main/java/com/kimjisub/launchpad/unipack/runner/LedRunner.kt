@@ -137,7 +137,7 @@ class LedRunner(
 
 	fun launch() {
 		Log.thread("[Led] 1. Request Thread")
-		if(thread == null) {
+		if (thread == null) {
 			thread = Thread(runnable)
 			thread!!.start()
 		}
