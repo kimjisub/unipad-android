@@ -19,7 +19,7 @@ import retrofit2.http.Path
 class UniPadApi : BaseApiService() {
 
 	companion object {
-		private const val URL = "https://api.unipad.kr"
+		private const val URL = "https://api.unipad.io"
 
 		val service: UniPadApiService by lazy {
 			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {
