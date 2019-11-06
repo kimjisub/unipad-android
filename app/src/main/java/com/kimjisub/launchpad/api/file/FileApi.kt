@@ -18,7 +18,7 @@ import retrofit2.http.Url
 class FileApi : BaseApiService() {
 
 	companion object {
-		private const val URL = "https://api.unipad.kr"
+		private const val URL = "https://api.unipad.io"
 
 		val service: FileService by lazy {
 			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {

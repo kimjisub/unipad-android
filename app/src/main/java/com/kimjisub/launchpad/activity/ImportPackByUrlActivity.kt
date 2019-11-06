@@ -67,7 +67,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 		UnipackInstaller(
 			context = this,
 			title = "${unishare.title} #${unishare._id}",
-			url = "https://api.unipad.kr/unishare/${unishare._id}/download",
+			url = "https://api.unipad.io/unishare/${unishare._id}/download",
 			workspace = F_UniPackRootExt,
 			folderName = "${unishare.title} #${unishare._id}",
 			listener = object : UnipackInstaller.Listener {
