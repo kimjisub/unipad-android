@@ -4,12 +4,15 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View.OnClickListener
+import android.widget.RadioButton
 import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
+import kotlinx.android.synthetic.main.panel_main_total.view.*
 
 class MainTotalPanel
 @JvmOverloads
@@ -40,6 +43,8 @@ constructor(
 		val openCount: ObservableField<String> = ObservableField()
 		val padTouchCount: ObservableField<String> = ObservableField()
 		val selectedTheme: ObservableField<String> = ObservableField()
+
+		val sortingMethod: ObservableField<Int> = ObservableField(0) // 0~5
 	}
 
 
@@ -56,6 +61,10 @@ constructor(
 			// code
 
 			typedArray.recycle()
+		}
+
+		radioButtonGroupTableLayout.onCheckedChangeListener = {
+			data.sortingMethod.set((it.tag as String).toInt())
 		}
 	}
 

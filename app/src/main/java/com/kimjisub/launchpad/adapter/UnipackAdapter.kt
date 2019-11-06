@@ -35,7 +35,7 @@ class UnipackHolder(
 	var realPosition = -1
 }
 
-class UnipackAdapter(private val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
+class UnipackAdapter(val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
 	var i = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
 		val packView = PackView(parent.context)
