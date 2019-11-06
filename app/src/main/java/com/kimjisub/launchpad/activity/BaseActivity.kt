@@ -107,8 +107,7 @@ open class BaseActivity : AppCompatActivity() {
 	// ============================================================================================= Function
 
 	fun getUnipackDirList(): Array<File> {
-		val projectFiles: Array<File> = F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
-		return FileManager.sortByTime(projectFiles)
+		return F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 	}
 
 	// ============================================================================================= Ads

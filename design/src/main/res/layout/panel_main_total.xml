@@ -4,8 +4,14 @@
 	<data>
 
 		<variable
+			name="activity"
+			type="com.kimjisub.design.panel.MainTotalPanel"/>
+
+		<variable
 			name="data"
 			type="com.kimjisub.design.panel.MainTotalPanel.Data" />
+
+
 
 	</data>
 
@@ -53,9 +59,9 @@
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:layout_gravity="center"
-					android:layout_marginTop="64dp"
-					android:layout_marginBottom="64dp"
 					android:orientation="horizontal">
+					<!--android:layout_marginTop="64dp"
+					android:layout_marginBottom="64dp"-->
 
 					<LinearLayout
 						android:layout_width="wrap_content"
@@ -144,6 +150,99 @@
 					</LinearLayout>
 
 				</LinearLayout>
+
+				<com.kimjisub.design.layout.RadioButtonGroupTableLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:padding="16dp"
+					android:id="@+id/radioButtonGroupTableLayout"
+					android:layout_gravity="center">
+
+					<TableRow>
+						<TextView
+							android:text="@{data.sortingMethod.toString()}" />
+
+						<TextView
+							android:layout_column="1"
+							android:text="내림차" />
+
+						<TextView android:text="오름차" />
+
+					</TableRow>
+
+					<TableRow>
+
+						<TextView android:text="다운로드 날짜" />
+
+						<RadioButton
+							android:tag="0"
+							android:checked="@{data.sortingMethod==0}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+						<RadioButton
+							android:tag="1"
+							android:checked="@{data.sortingMethod==1}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+					</TableRow>
+
+					<TableRow>
+
+						<TextView android:text="실행 횟수" />
+
+						<RadioButton
+							android:tag="2"
+							android:checked="@{data.sortingMethod==2}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+						<RadioButton
+							android:tag="3"
+							android:checked="@{data.sortingMethod==3}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+					</TableRow>
+
+					<TableRow>
+
+						<TextView android:text="최근 연 날짜" />
+
+						<RadioButton
+							android:tag="4"
+							android:checked="@{data.sortingMethod==4}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+						<RadioButton
+							android:tag="5"
+							android:checked="@{data.sortingMethod==5}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+					</TableRow>
+
+					<TableRow>
+
+						<TextView android:text="이름" />
+
+						<RadioButton
+							android:tag="6"
+							android:checked="@{data.sortingMethod==6}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+						<RadioButton
+							android:tag="7"
+							android:checked="@{data.sortingMethod==7}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+					</TableRow>
+
+				</com.kimjisub.design.layout.RadioButtonGroupTableLayout>
 
 			</LinearLayout>
 

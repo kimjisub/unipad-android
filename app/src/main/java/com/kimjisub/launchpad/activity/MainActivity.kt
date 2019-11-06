@@ -15,6 +15,7 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.databinding.Observable
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -53,6 +54,7 @@ import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.tool.UnipackAutoMapper
 import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
+import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
@@ -74,6 +76,7 @@ class MainActivity : BaseActivity() {
 
 
 	private var list: ArrayList<UnipackItem> = ArrayList()
+	private var sortingMethod: Int = 0
 
 	private var lastPlayIndex = -1
 	private var updateProcessing = false
@@ -341,6 +344,15 @@ class MainActivity : BaseActivity() {
 					.show()
 			}
 		}
+		P_total.data.sortingMethod.addOnPropertyChanged {
+			sortingMethod = it.get()!!
+			update()
+		}
+		P_total.data.sortingMethod.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+			override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+
+			}
+		})
 		LL_errItem.setOnClickListener { startActivity<FBStoreActivity>() }
 		checkThings()
 		update(false)
@@ -361,7 +373,7 @@ class MainActivity : BaseActivity() {
 		SRL_swipeRefreshLayout.isRefreshing = true
 		updateProcessing = true
 		(object : AsyncTask<String?, String?, String?>() {
-			var I_curr = ArrayList<UnipackItem>()
+			var I_list = ArrayList<UnipackItem>()
 			var I_added = ArrayList<UnipackItem>()
 			var I_removed = ArrayList(list)
 
@@ -373,9 +385,24 @@ class MainActivity : BaseActivity() {
 						val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
 
 						val packItem = UnipackItem(unipack, unipackENT, animateNew)
-						I_curr.add(packItem)
+						I_list.add(packItem)
 					}
-					for (item: UnipackItem in I_curr) {
+
+					val sortingBy: Int = sortingMethod / 2
+					val sortingOrder: Int = sortingMethod % 2
+
+					I_list = when (sortingBy) {
+						0 -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
+
+						//1 -> FileManager.sortByTime(unipackList)
+						//2 -> FileManager.sortByTime(unipackList)
+						3 -> ArrayList(I_list.sortedBy { it.unipack.title })
+						else -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
+					}
+
+
+
+					for (item: UnipackItem in I_list) {
 						var index = -1
 						for ((i, item2: UnipackItem) in I_removed.withIndex()) {
 							if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
@@ -388,6 +415,9 @@ class MainActivity : BaseActivity() {
 						else
 							I_added.add(0, item)
 					}
+
+
+
 				} catch (e: Exception) {
 					e.printStackTrace()
 				}
@@ -396,19 +426,19 @@ class MainActivity : BaseActivity() {
 
 			override fun onPostExecute(result: String?) {
 				super.onPostExecute(result)
-				for (F_added: UnipackItem in I_added) {
+				for (added: UnipackItem in I_added) {
 					var i = 0
-					val targetTime = FileManager.getInnerFileLastModified(F_added.unipack.F_project)
+					val targetTime = FileManager.getInnerFileLastModified(added.unipack.F_project)
 					for (item: UnipackItem in list) {
 						val testTime = FileManager.getInnerFileLastModified(item.unipack.F_project)
 						if (targetTime > testTime) break
 						i++
 					}
-					list.add(i, F_added)
+					list.add(i, added)
 					adapter.notifyItemInserted(i)
 
-					F_added.unipackENTObserver = F_added.unipackENT.observeRealChange(this@MainActivity, Observer {
-						val index = list.indexOf(F_added)
+					added.unipackENTObserver = added.unipackENT.observeRealChange(this@MainActivity, Observer {
+						val index = list.indexOf(added)
 						adapter.notifyItemChanged(index)
 
 						if (selectedIndex == index)
@@ -416,17 +446,29 @@ class MainActivity : BaseActivity() {
 					}) { it.clone() }
 					P_total.data.unipackCapacity.set(list.size.toString())
 				}
-				for (F_removed: UnipackItem in I_removed) {
+				for (removed: UnipackItem in I_removed) {
 					for ((i, item: UnipackItem) in list.withIndex()) {
-						if ((item.unipack.F_project.path == F_removed.unipack.F_project.path)) {
+						if ((item.unipack.F_project.path == removed.unipack.F_project.path)) {
 							list.removeAt(i)
 							adapter.notifyItemRemoved(i)
-							F_removed.unipackENT.removeObserver(F_removed.unipackENTObserver!!)
+							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
 							P_total.data.unipackCount.set(list.size.toString())
 							break
 						}
 					}
 				}
+
+				for ((to, item: UnipackItem) in I_list.withIndex()) {
+					val from = findIndex(item)
+
+					Log.test("adapter: $from -> $to")
+
+					if (from != -1) {
+						Collections.swap(adapter.list, from, to)
+						adapter.notifyItemMoved(from, to)
+					}
+				}
+
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
 				SRL_swipeRefreshLayout.isRefreshing = false
 				updateProcessing = false
@@ -434,6 +476,13 @@ class MainActivity : BaseActivity() {
 				updatePanel(true)
 			}
 		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+	}
+
+	fun findIndex(target: UnipackItem): Int {
+		for ((i, item) in adapter.list.withIndex())
+			if (target.unipack.F_project.path == item.unipack.F_project.path)
+				return i
+		return -1
 	}
 
 	// ============================================================================================= UniPack Work
@@ -789,4 +838,13 @@ class MainActivity : BaseActivity() {
 		super.onDestroy()
 		removeController(midiController)
 	}
+
+	fun <T : Observable> T.addOnPropertyChanged(callback: (T) -> Unit) =
+		addOnPropertyChangedCallback(
+			object : Observable.OnPropertyChangedCallback() {
+				override fun onPropertyChanged(
+					observable: Observable?, i: Int
+				) =
+					callback(observable as T)
+			})
 }

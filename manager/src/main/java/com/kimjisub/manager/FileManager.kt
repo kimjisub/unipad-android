@@ -93,6 +93,16 @@ object FileManager {
 		return files
 	}
 
+	fun sortByName(files: Array<File>): Array<File> {
+		Arrays.sort(
+			files,
+			Comparator { object1: Any, object2: Any ->
+				(object1 as File).name.toLowerCase().compareTo((object2 as File).name.toLowerCase())
+			} as Comparator<Any>
+		)
+		return files
+	}
+
 	fun getInnerFileLastModified(target: File): Long {
 		var time: Long = 0
 		if (target.isDirectory) for (file in target.listFiles()) {
@@ -102,16 +112,6 @@ object FileManager {
 			}
 		}
 		return time
-	}
-
-	fun sortByName(files: Array<File>): Array<File> {
-		Arrays.sort(
-			files,
-			Comparator { object1: Any, object2: Any ->
-				(object1 as File).name.toLowerCase().compareTo((object2 as File).name.toLowerCase())
-			} as Comparator<Any>
-		)
-		return files
 	}
 
 	fun makeNextPath(dir: File?, name: String, extension: String): File {
