@@ -164,9 +164,9 @@
 
 						<TextView
 							android:layout_column="1"
-							android:text="내림차" />
+							android:text="오름차" />
 
-						<TextView android:text="오름차" />
+						<TextView android:text="내림차" />
 
 					</TableRow>
 

@@ -253,6 +253,7 @@ class FBStoreActivity : BaseActivity() {
 					packView.setPlayText(getString(string.downloaded))
 					packView.toggleColor = colors.green
 					packView.untoggleColor = colors.green
+					item.downloading = false
 					item.downloaded = true
 					updatePanel()
 				}
@@ -261,6 +262,7 @@ class FBStoreActivity : BaseActivity() {
 					packView.setPlayText(getString(string.failed))
 					packView.toggleColor = colors.red
 					packView.untoggleColor = colors.red
+					item.downloading = false
 				}
 
 			})
