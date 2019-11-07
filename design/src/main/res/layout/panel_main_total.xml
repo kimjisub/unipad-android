@@ -242,6 +242,24 @@
 
 					</TableRow>
 
+					<TableRow>
+
+						<TextView android:text="제작자" />
+
+						<RadioButton
+							android:tag="8"
+							android:checked="@{data.sortingMethod==8}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+						<RadioButton
+							android:tag="9"
+							android:checked="@{data.sortingMethod==9}"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" />
+
+					</TableRow>
+
 				</com.kimjisub.design.layout.RadioButtonGroupTableLayout>
 
 			</LinearLayout>
