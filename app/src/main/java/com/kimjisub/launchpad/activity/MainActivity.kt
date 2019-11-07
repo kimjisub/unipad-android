@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
@@ -39,7 +38,6 @@ import com.kimjisub.launchpad.adapter.UnipackAdapter
 import com.kimjisub.launchpad.adapter.UnipackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UnipackItem
 import com.kimjisub.launchpad.db.AppDataBase
-import com.kimjisub.launchpad.db.dao.UnipackOpenDAO
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
@@ -58,16 +56,14 @@ import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.design.snackbar
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import java.io.File
+import java.lang.Runnable
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -77,18 +73,17 @@ class MainActivity : BaseActivity() {
 	private var billingManager: BillingManager? = null
 
 
-	private var list: ArrayList<UnipackItem> = ArrayList()
+	private var unipackList: ArrayList<UnipackItem> = ArrayList()
 	private var sortingMethod: Int = 0
 
 	private var lastPlayIndex = -1
 	private var updateProcessing = false
 
 	private val adapter: UnipackAdapter by lazy {
-		val adapter = UnipackAdapter(list, object : EventListener {
+		val adapter = UnipackAdapter(unipackList, object : EventListener {
 			override fun onViewClick(item: UnipackItem, v: PackView) {
 				if (!item.moving) togglePlay(item)
 			}
-
 			override fun onViewLongClick(item: UnipackItem, v: PackView) {}
 			override fun onPlayClick(item: UnipackItem, v: PackView) {
 				if (!item.moving) pressPlay(item)
@@ -97,12 +92,12 @@ class MainActivity : BaseActivity() {
 		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
 			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 				super.onItemRangeInserted(positionStart, itemCount)
-				LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+				LL_errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 
 			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 				super.onItemRangeRemoved(positionStart, itemCount)
-				LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+				LL_errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 		})
 
@@ -167,7 +162,7 @@ class MainActivity : BaseActivity() {
 						RV_recyclerView.smoothScrollToPosition(lastPlayIndex)
 					} else showSelectLPUI()
 				} else if (f == 2 && upDown) {
-					if (haveNow()) list[lastPlayIndex].packView!!.onPlayClick()
+					if (haveNow()) unipackList[lastPlayIndex].playClick?.invoke()
 				}
 			}
 
@@ -230,7 +225,7 @@ class MainActivity : BaseActivity() {
 			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
-						loadUnipack(File(filePath))
+						importUnipack(File(filePath))
 					}
 
 					override fun onPathChanged(folderPath: String) {
@@ -283,27 +278,9 @@ class MainActivity : BaseActivity() {
 						withContext(Dispatchers.Main) {
 							item.moving = false
 							P_pack.data.moving.set(item.moving)
-						}
-					}
-
-					(object : AsyncTask<String?, String?, String?>() {
-						override fun onPreExecute() {
-							super.onPreExecute()
-							P_pack.data.moving.set(true)
-						}
-
-						override fun doInBackground(vararg params: String?): String? {
-							FileManager.moveDirectory(source, target)
-							return null
-						}
-
-						override fun onPostExecute(result: String?) {
-							super.onPostExecute(result)
-							item.moving = false
-							P_pack.data.moving.set(false)
 							update()
 						}
-					}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+					}
 				}
 			}
 
@@ -374,88 +351,84 @@ class MainActivity : BaseActivity() {
 		if (updateProcessing) return
 		SRL_swipeRefreshLayout.isRefreshing = true
 		updateProcessing = true
-		(object : AsyncTask<String?, String?, String?>() {
+
+		CoroutineScope(Dispatchers.IO).launch {
 			var I_list = ArrayList<UnipackItem>()
-			var I_added = ArrayList<UnipackItem>()
-			var I_removed = ArrayList(list)
-
-			override fun doInBackground(vararg params: String?): String? {
-				try {
-					for (file: File in getUnipackDirList()) {
-						if (!file.isDirectory) continue
-						val unipack = Unipack(file, false)
-						val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
-
-						val packItem = UnipackItem(unipack, unipackENT, animateNew)
-						I_list.add(packItem)
-					}
-
-					val sortingBy: Int = sortingMethod / 2
-					val sortingOrder: Int = sortingMethod % 2
-
-					I_list = when (sortingBy) {
-						0 -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
-						1 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getCountSync(it.unipack.F_project.name) })
-						2 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getLastOpenedDateSync(it.unipack.F_project.name)?.created_at ?: Date(0) })
-						3 -> ArrayList(I_list.sortedBy { it.unipack.title })
-						4 -> ArrayList(I_list.sortedBy { it.unipack.producerName })
-						else -> I_list
-					}
-
-					if (sortingOrder == 1) I_list = ArrayList(I_list.reversed())
+			val I_added = ArrayList<UnipackItem>()
+			val I_removed = ArrayList(unipackList)
 
 
+			try {
+				for (file: File in getUnipackDirList()) {
+					if (!file.isDirectory) continue
+					val unipack = Unipack(file, false)
+					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
 
-					for (item: UnipackItem in I_list) {
-						var index = -1
-						for ((i, item2: UnipackItem) in I_removed.withIndex()) {
-							if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
-								index = i
-								break
-							}
-						}
-						if (index != -1)
-							I_removed.removeAt(index)
-						else
-							I_added.add(0, item)
-					}
-
-
-				} catch (e: Exception) {
-					e.printStackTrace()
+					val packItem = UnipackItem(unipack, unipackENT, animateNew)
+					I_list.add(packItem)
 				}
-				return null
+
+				val sortingBy: Int = sortingMethod / 2
+				val sortingOrder: Int = sortingMethod % 2
+
+				I_list = when (sortingBy) {
+					0 -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
+					1 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getCountSync(it.unipack.F_project.name) })
+					2 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getLastOpenedDateSync(it.unipack.F_project.name)?.created_at ?: Date(0) })
+					3 -> ArrayList(I_list.sortedBy { it.unipack.title })
+					4 -> ArrayList(I_list.sortedBy { it.unipack.producerName })
+					else -> I_list
+				}
+
+				if (sortingOrder == 1) I_list = ArrayList(I_list.reversed())
+
+				for (item: UnipackItem in I_list) {
+					var index = -1
+					for ((i, item2: UnipackItem) in I_removed.withIndex()) {
+						if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
+							index = i
+							break
+						}
+					}
+					if (index != -1)
+						I_removed.removeAt(index)
+					else
+						I_added.add(0, item)
+				}
+
+
+			} catch (e: Exception) {
+				e.printStackTrace()
 			}
 
-			override fun onPostExecute(result: String?) {
-				super.onPostExecute(result)
+			withContext(Dispatchers.Main) {
 				for (added: UnipackItem in I_added) {
 					var i = 0
-					val targetTime = FileManager.getInnerFileLastModified(added.unipack.F_project)
-					for (item: UnipackItem in list) {
-						val testTime = FileManager.getInnerFileLastModified(item.unipack.F_project)
+					val targetTime = getInnerFileLastModified(added.unipack.F_project)
+					for (item: UnipackItem in unipackList) {
+						val testTime = getInnerFileLastModified(item.unipack.F_project)
 						if (targetTime > testTime) break
 						i++
 					}
-					list.add(i, added)
+					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
 					added.unipackENTObserver = added.unipackENT.observeRealChange(this@MainActivity, Observer {
-						val index = list.indexOf(added)
+						val index = unipackList.indexOf(added)
 						adapter.notifyItemChanged(index)
 
 						if (selectedIndex == index)
 							updatePanel(false)
 					}) { it.clone() }
-					P_total.data.unipackCapacity.set(list.size.toString())
+					P_total.data.unipackCapacity.set(unipackList.size.toString())
 				}
 				for (removed: UnipackItem in I_removed) {
-					for ((i, item: UnipackItem) in list.withIndex()) {
+					for ((i, item: UnipackItem) in unipackList.withIndex()) {
 						if ((item.unipack.F_project.path == removed.unipack.F_project.path)) {
-							list.removeAt(i)
+							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
-							P_total.data.unipackCount.set(list.size.toString())
+							P_total.data.unipackCount.set(unipackList.size.toString())
 							break
 						}
 					}
@@ -463,14 +436,10 @@ class MainActivity : BaseActivity() {
 
 				for ((to, item: UnipackItem) in I_list.withIndex()) {
 					val from = findIndex(item)
-
-					Log.test("adapter: $from -> $to")
-
-					if (from != -1) {
+					if (from != -1)
 						Collections.swap(adapter.list, from, to)
-						adapter.notifyItemMoved(from, to)
-					}
 				}
+				adapter.notifyDataSetChanged()
 
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
 				SRL_swipeRefreshLayout.isRefreshing = false
@@ -478,10 +447,10 @@ class MainActivity : BaseActivity() {
 
 				updatePanel(true)
 			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+		}
 	}
 
-	fun findIndex(target: UnipackItem): Int {
+	private fun findIndex(target: UnipackItem): Int {
 		for ((i, item) in adapter.list.withIndex())
 			if (target.unipack.F_project.path == item.unipack.F_project.path)
 				return i
@@ -540,75 +509,79 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun loadUnipack(F_UniPackZip: File) {
-		(object : AsyncTask<String?, String?, String?>() {
+	private fun importUnipack(F_UniPackZip: File) {
+		CoroutineScope(Dispatchers.IO).launch {
+
 			var progressDialog = ProgressDialog(this@MainActivity)
 			var msg1: String? = null
 			var msg2: String? = null
-			override fun onPreExecute() {
+
+			withContext(Dispatchers.Main) {
 				progressDialog.setTitle(getString(string.analyzing))
 				progressDialog.setMessage(getString(string.wait_a_sec))
 				progressDialog.setCancelable(false)
 				progressDialog.show()
-				super.onPreExecute()
 			}
 
-			override fun doInBackground(vararg params: String?): String? {
-				val name: String = F_UniPackZip.name
-				val name_ = name.substring(0, name.lastIndexOf("."))
-				val F_UniPack: File = FileManager.makeNextPath(F_UniPackRootExt, name_, "/")
-				try {
-					FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
-					val unipack = Unipack(F_UniPack, true)
-					if (unipack.errorDetail == null) {
+			val name: String = F_UniPackZip.name
+			val name_ = name.substring(0, name.lastIndexOf("."))
+			val F_UniPack: File = FileManager.makeNextPath(F_UniPackRootExt, name_, "/")
+			try {
+				FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
+				val unipack = Unipack(F_UniPack, true)
+				when {
+					unipack.errorDetail == null -> {
 						msg1 = getString(string.analyzeComplete)
 						msg2 = unipack.toString(this@MainActivity)
-					} else if (unipack.criticalError) {
+					}
+					unipack.criticalError -> {
 						msg1 = getString(string.analyzeFailed)
 						msg2 = unipack.errorDetail
 						FileManager.deleteDirectory(F_UniPack)
-					} else {
+					}
+					else -> {
 						msg1 = getString(string.warning)
 						msg2 = unipack.errorDetail
 					}
-				} catch (e: Exception) {
-					msg1 = getString(string.analyzeFailed)
-					msg2 = e.toString()
-					FileManager.deleteDirectory(F_UniPack)
 				}
-				return null
+			} catch (e: Exception) {
+				msg1 = getString(string.analyzeFailed)
+				msg2 = e.toString()
+				FileManager.deleteDirectory(F_UniPack)
 			}
 
-			override fun onProgressUpdate(vararg progress: String?) {}
-			override fun onPostExecute(result: String?) {
+			withContext(Dispatchers.Main) {
 				update()
 				alert(msg1!!, msg2!!) {
 					positiveButton(string.accept) { it.dismiss() }
 				}.show()
 				progressDialog.dismiss()
-				super.onPostExecute(result)
 			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+		}
 	}
 
 	// ============================================================================================= List Manage
 
 
 	private fun togglePlay(i: Int) {
-		togglePlay(list[i])
+		togglePlay(unipackList[i])
 	}
 
 	@SuppressLint("SetTextI18n")
 	fun togglePlay(target: UnipackItem?) {
 		try {
-			for ((i, item: UnipackItem) in list.withIndex()) {
-				val packView = item.packView
+			for ((i, item: UnipackItem) in unipackList.withIndex()) {
+				//val packView = item.packView
 				if (target != null && (item.unipack.F_project.path == target.unipack.F_project.path)) {
 
 					item.toggle = !item.toggle
 					lastPlayIndex = i
-				} else item.toggle = false
-				packView?.toggle(item.toggle)
+					item.togglea?.invoke(item.toggle)
+				} else if(item.toggle) {
+					item.toggle = false
+					item.togglea?.invoke(item.toggle)
+				}
+
 			}
 			showSelectLPUI()
 			updatePanel(false)
@@ -627,7 +600,7 @@ class MainActivity : BaseActivity() {
 		get() {
 			var index = -1
 			var i = 0
-			for (item: UnipackItem in list) {
+			for (item: UnipackItem in unipackList) {
 				if (item.toggle) {
 					index = i
 					break
@@ -641,7 +614,7 @@ class MainActivity : BaseActivity() {
 		get() {
 			var ret: UnipackItem? = null
 			val playIndex = selectedIndex
-			if (playIndex != -1) ret = list[playIndex]
+			if (playIndex != -1) ret = unipackList[playIndex]
 			return ret
 		}
 
@@ -670,7 +643,7 @@ class MainActivity : BaseActivity() {
 
 			override fun onAnimationRepeat(animation: Animation?) {}
 		})
-		if (selectedIndex == -1) updatePanelMain(hardWork) else updatePanelPack(list[selectedIndex])
+		if (selectedIndex == -1) updatePanelMain(hardWork) else updatePanelPack(unipackList[selectedIndex])
 		val visibility = P_pack.visibility
 		if (((visibility == View.VISIBLE && selectedIndex == -1)
 					|| (visibility == View.INVISIBLE && selectedIndex != -1))
@@ -679,7 +652,7 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
-		P_total.data.unipackCount.set(list.size.toString())
+		P_total.data.unipackCount.set(unipackList.size.toString())
 		db.unipackOpenDAO()!!.count.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
 		P_total.data.padTouchCount.set(getString(string.measuring))
 		val packageName: String? = preference.selectedTheme
@@ -689,17 +662,13 @@ class MainActivity : BaseActivity() {
 		} catch (e: Exception) {
 			P_total.data.selectedTheme.set(getString(string.theme_name))
 		}
-		if (hardWork) (object : AsyncTask<String?, String?, String?>() {
-			override fun doInBackground(vararg params: String?): String? {
+		if (hardWork)
+			CoroutineScope(Dispatchers.IO).launch {
 				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt)) + " MB"
-				publishProgress(fileSize)
-				return null
+				withContext(Dispatchers.Main) {
+					P_total.data.unipackCapacity.set(fileSize)
+				}
 			}
-
-			override fun onProgressUpdate(vararg values: String?) {
-				P_total.data.unipackCapacity.set(values[0])
-			}
-		}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
 	}
 
 	@SuppressLint("StaticFieldLeak", "SetTextI18n")
@@ -783,11 +752,11 @@ class MainActivity : BaseActivity() {
 	}
 
 	private fun haveNow(): Boolean {
-		return 0 <= lastPlayIndex && lastPlayIndex <= list.size - 1
+		return 0 <= lastPlayIndex && lastPlayIndex <= unipackList.size - 1
 	}
 
 	private fun haveNext(): Boolean {
-		return lastPlayIndex < list.size - 1
+		return lastPlayIndex < unipackList.size - 1
 	}
 
 	private fun havePrev(): Boolean {

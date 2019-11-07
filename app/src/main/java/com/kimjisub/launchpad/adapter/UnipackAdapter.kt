@@ -15,6 +15,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.manager.Log
 
 data class UnipackItem(
 	var unipack: Unipack,
@@ -23,19 +24,20 @@ data class UnipackItem(
 ) {
 	var unipackENTObserver: Observer<UnipackENT>? = null
 
-	var packView: PackView? = null
+	//var packView: PackView? = null
 	var flagColor: Int = 0
 	var toggle: Boolean = false
 	var moving: Boolean = false
+
+	var togglea: ((toggle:Boolean) -> Unit)? = null
+	var playClick: (() -> Unit)? = null
 }
 
 class UnipackHolder(
 	var packView: PackView
-) : RecyclerView.ViewHolder(packView) {
-	var realPosition = -1
-}
+) : RecyclerView.ViewHolder(packView)
 
-class UnipackAdapter(val list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
+class UnipackAdapter(var list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
 	var i = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
 		val packView = PackView(parent.context)
@@ -47,18 +49,15 @@ class UnipackAdapter(val list: ArrayList<UnipackItem>, private val eventListener
 	override fun onBindViewHolder(holder: UnipackHolder, position: Int) {
 		val context = holder.packView.context
 
-		val item = list[holder.adapterPosition]
+		val item = list[position]
 		val packView = holder.packView
 
-		// 이전 데이터에 매핑된 뷰를 제거합니다.
-		try {
-			list[holder.realPosition].packView = null
-		} catch (ignored: Exception) {
+		item.togglea = {
+			packView.toggle(it)
 		}
-
-		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.
-		item.packView = packView
-		holder.realPosition = holder.adapterPosition
+		item.playClick = {
+			packView.onPlayClick()
+		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
