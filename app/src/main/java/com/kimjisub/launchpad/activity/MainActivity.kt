@@ -39,6 +39,7 @@ import com.kimjisub.launchpad.adapter.UnipackAdapter
 import com.kimjisub.launchpad.adapter.UnipackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UnipackItem
 import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.db.dao.UnipackOpenDAO
 import com.kimjisub.launchpad.db.ent.UnipackENT
 import com.kimjisub.launchpad.db.ent.UnipackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
@@ -68,6 +69,7 @@ import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : BaseActivity() {
 
@@ -393,12 +395,14 @@ class MainActivity : BaseActivity() {
 
 					I_list = when (sortingBy) {
 						0 -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
-
-						//1 -> FileManager.sortByTime(unipackList)
-						//2 -> FileManager.sortByTime(unipackList)
+						1 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getCountSync(it.unipack.F_project.name) })
+						2 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getLastOpenedDateSync(it.unipack.F_project.name)?.created_at ?: Date(0) })
 						3 -> ArrayList(I_list.sortedBy { it.unipack.title })
-						else -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
+						4 -> ArrayList(I_list.sortedBy { it.unipack.producerName })
+						else -> I_list
 					}
+
+					if (sortingOrder == 1) I_list = ArrayList(I_list.reversed())
 
 
 
@@ -415,7 +419,6 @@ class MainActivity : BaseActivity() {
 						else
 							I_added.add(0, item)
 					}
-
 
 
 				} catch (e: Exception) {
