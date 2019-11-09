@@ -34,12 +34,12 @@ import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.design.panel.MainPackPanel
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.adapter.UnipackAdapter
-import com.kimjisub.launchpad.adapter.UnipackAdapter.EventListener
-import com.kimjisub.launchpad.adapter.UnipackItem
+import com.kimjisub.launchpad.adapter.UniPackAdapter
+import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
+import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.db.AppDataBase
-import com.kimjisub.launchpad.db.ent.UnipackENT
-import com.kimjisub.launchpad.db.ent.UnipackOpenENT
+import com.kimjisub.launchpad.db.ent.UniPackENT
+import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
@@ -50,8 +50,8 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
-import com.kimjisub.launchpad.tool.UnipackAutoMapper
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.tool.UniPackAutoMapper
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
@@ -76,20 +76,20 @@ class MainActivity : BaseActivity() {
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
 
-	//
-	private var unipackList: ArrayList<UnipackItem> = ArrayList()
-	private var unipackListSortMethod: Int = 0
+	// List Management
+	private var unipackList: ArrayList<UniPackItem> = ArrayList()
+	private var sortMethod: Int = 0
 	private var lastPlayIndex = -1
-	private var isRefreshing = false
-	private val adapter: UnipackAdapter by lazy {
-		val adapter = UnipackAdapter(unipackList, object : EventListener {
-			override fun onViewClick(item: UnipackItem, v: PackView) {
+	private var listRefreshing = false
+	private val adapter: UniPackAdapter by lazy {
+		val adapter = UniPackAdapter(unipackList, object : EventListener {
+			override fun onViewClick(item: UniPackItem, v: PackView) {
 				if (!item.moving) togglePlay(item)
 			}
 
-			override fun onViewLongClick(item: UnipackItem, v: PackView) {}
+			override fun onViewLongClick(item: UniPackItem, v: PackView) {}
 
-			override fun onPlayClick(item: UnipackItem, v: PackView) {
+			override fun onPlayClick(item: UniPackItem, v: PackView) {
 				if (!item.moving) pressPlay(item)
 			}
 		})
@@ -230,7 +230,7 @@ class MainActivity : BaseActivity() {
 			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
-						importUnipack(File(filePath))
+						importUniPack(File(filePath))
 					}
 
 					override fun onPathChanged(folderPath: String) {
@@ -255,8 +255,8 @@ class MainActivity : BaseActivity() {
 				val item = selected
 				if (item != null) {
 					val unipackENT = item.unipackENT
-					unipackENT.observe(this@MainActivity, object : Observer<UnipackENT> {
-						override fun onChanged(it: UnipackENT?) {
+					unipackENT.observe(this@MainActivity, object : Observer<UniPackENT> {
+						override fun onChanged(it: UniPackENT?) {
 							unipackENT.removeObserver(this)
 							CoroutineScope(Dispatchers.IO).launch {
 								it!!.bookmark = !it.bookmark
@@ -322,7 +322,7 @@ class MainActivity : BaseActivity() {
 				if (item != null) Builder(this@MainActivity)
 					.setTitle(getString(string.warning))
 					.setMessage(getString(string.doYouWantToDeleteProject))
-					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUnipack(item.unipack) }.setNegativeButton(
+					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUniPack(item.unipack) }.setNegativeButton(
 						getString(string.cancel),
 						null
 					)
@@ -330,7 +330,7 @@ class MainActivity : BaseActivity() {
 			}
 		}
 		P_total.data.sortingMethod.addOnPropertyChanged {
-			unipackListSortMethod = it.get()!!
+			sortMethod = it.get()!!
 			update()
 		}
 		P_total.data.sortingMethod.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -350,11 +350,11 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	private fun update(animateNew: Boolean = true) {
 		lastPlayIndex = -1
-		if (isRefreshing) return
+		if (listRefreshing) return
 		SRL_swipeRefreshLayout.isRefreshing = true
-		isRefreshing = true
+		listRefreshing = true
 
-		val sortMethods: Array<Comparator<UnipackItem>> = arrayOf(
+		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
 			Comparator{ a,b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
 			Comparator{ a,b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project) )},
 			Comparator{ a,b -> db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
@@ -366,26 +366,26 @@ class MainActivity : BaseActivity() {
 		)
 
 		CoroutineScope(Dispatchers.IO).launch {
-			var I_list = ArrayList<UnipackItem>()
-			val I_added = ArrayList<UnipackItem>()
+			var I_list = ArrayList<UniPackItem>()
+			val I_added = ArrayList<UniPackItem>()
 			val I_removed = ArrayList(unipackList)
 
 
 			try {
-				for (file: File in getUnipackDirList()) {
+				for (file: File in getUniPackDirList()) {
 					if (!file.isDirectory) continue
-					val unipack = Unipack(file, false)
+					val unipack = UniPack(file, false)
 					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
 
-					val packItem = UnipackItem(unipack, unipackENT, animateNew)
+					val packItem = UniPackItem(unipack, unipackENT, animateNew)
 					I_list.add(packItem)
 				}
 
-				I_list = ArrayList(I_list.sortedWith(sortMethods[unipackListSortMethod]))
+				I_list = ArrayList(I_list.sortedWith(sortMethods[sortMethod]))
 
-				for (item: UnipackItem in I_list) {
+				for (item: UniPackItem in I_list) {
 					var index = -1
-					for ((i, item2: UnipackItem) in I_removed.withIndex()) {
+					for ((i, item2: UniPackItem) in I_removed.withIndex()) {
 						if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
 							index = i
 							break
@@ -402,7 +402,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			withContext(Dispatchers.Main) {
-				for (added: UnipackItem in I_added) {
+				for (added: UniPackItem in I_added) {
 
 					val i = unipackList.getVirtualIndexFormSorted(Comparator{a,b->
 						getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project))
@@ -421,8 +421,8 @@ class MainActivity : BaseActivity() {
 					}) { it.clone() }
 					P_total.data.unipackCapacity.set(unipackList.size.toString())
 				}
-				for (removed: UnipackItem in I_removed) {
-					for ((i, item: UnipackItem) in unipackList.withIndex()) {
+				for (removed: UniPackItem in I_removed) {
+					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack.F_project.path == removed.unipack.F_project.path)) {
 							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
@@ -435,7 +435,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				var changed = false
-				for ((to, item: UnipackItem) in I_list.withIndex()) {
+				for ((to, item: UniPackItem) in I_list.withIndex()) {
 					val from = findIndex(item)
 					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
@@ -448,14 +448,14 @@ class MainActivity : BaseActivity() {
 
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
 				SRL_swipeRefreshLayout.isRefreshing = false
-				isRefreshing = false
+				listRefreshing = false
 
 				updatePanel(true)
 			}
 		}
 	}
 
-	private fun findIndex(target: UnipackItem): Int {
+	private fun findIndex(target: UniPackItem): Int {
 		for ((i, item) in adapter.list.withIndex())
 			if (target.unipack.F_project.path == item.unipack.F_project.path)
 				return i
@@ -465,14 +465,14 @@ class MainActivity : BaseActivity() {
 	// UniPack /////////////////////////////////////////////////////////////////////////////////////////
 
 
-	private fun deleteUnipack(unipack: Unipack) {
+	private fun deleteUniPack(unipack: UniPack) {
 		FileManager.deleteDirectory(unipack.F_project)
 		update()
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun autoMapping(unipack: Unipack) {
-		UnipackAutoMapper(unipack, object : UnipackAutoMapper.Listener {
+	private fun autoMapping(unipack: UniPack) {
+		UniPackAutoMapper(unipack, object : UniPackAutoMapper.Listener {
 			val progressDialog: ProgressDialog = ProgressDialog(this@MainActivity)
 			override fun onStart() {
 				progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
@@ -514,7 +514,7 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun importUnipack(F_UniPackZip: File) {
+	private fun importUniPack(F_UniPackZip: File) {
 		CoroutineScope(Dispatchers.IO).launch {
 
 			var progressDialog = ProgressDialog(this@MainActivity)
@@ -533,7 +533,7 @@ class MainActivity : BaseActivity() {
 			val F_UniPack: File = FileManager.makeNextPath(F_UniPackRootExt, name_, "/")
 			try {
 				FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
-				val unipack = Unipack(F_UniPack, true)
+				val unipack = UniPack(F_UniPack, true)
 				when {
 					unipack.errorDetail == null -> {
 						msg1 = getString(string.analyzeComplete)
@@ -573,9 +573,9 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("SetTextI18n")
-	fun togglePlay(target: UnipackItem?) {
+	fun togglePlay(target: UniPackItem?) {
 		try {
-			for ((i, item: UnipackItem) in unipackList.withIndex()) {
+			for ((i, item: UniPackItem) in unipackList.withIndex()) {
 				//val packView = item.packView
 				if (target != null && (item.unipack.F_project.path == target.unipack.F_project.path)) {
 
@@ -586,7 +586,6 @@ class MainActivity : BaseActivity() {
 					item.toggle = false
 					item.togglea?.invoke(item.toggle)
 				}
-
 			}
 			showSelectLPUI()
 			updatePanel(false)
@@ -595,8 +594,8 @@ class MainActivity : BaseActivity() {
 		}
 	}
 
-	fun pressPlay(item: UnipackItem) {
-		Thread(Runnable { db.unipackOpenDAO()!!.insert(UnipackOpenENT(item.unipack.F_project.name, Date())) }).start()
+	fun pressPlay(item: UniPackItem) {
+		Thread(Runnable { db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date())) }).start()
 		startActivity<PlayActivity>("path" to item.unipack.F_project.path)
 		removeController((midiController))
 	}
@@ -605,7 +604,7 @@ class MainActivity : BaseActivity() {
 		get() {
 			var index = -1
 			var i = 0
-			for (item: UnipackItem in unipackList) {
+			for (item: UniPackItem in unipackList) {
 				if (item.toggle) {
 					index = i
 					break
@@ -615,9 +614,9 @@ class MainActivity : BaseActivity() {
 			return index
 		}
 
-	private val selected: UnipackItem?
+	private val selected: UniPackItem?
 		get() {
-			var ret: UnipackItem? = null
+			var ret: UniPackItem? = null
 			val playIndex = selectedIndex
 			if (playIndex != -1) ret = unipackList[playIndex]
 			return ret
@@ -677,7 +676,7 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak", "SetTextI18n")
-	private fun updatePanelPack(item: UnipackItem) {
+	private fun updatePanelPack(item: UniPackItem) {
 		val unipack = item.unipack
 		val flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
 		item.flagColor = flagColor
@@ -717,7 +716,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			CoroutineScope(Dispatchers.IO).launch {
-				item.unipack = Unipack(item.unipack.F_project, true)
+				item.unipack = UniPack(item.unipack.F_project, true)
 				withContext(Dispatchers.Main) {
 					if ((path.get() == item.unipack.F_project.path)) {
 						soundCount.set(item.unipack.soundCount.toString())

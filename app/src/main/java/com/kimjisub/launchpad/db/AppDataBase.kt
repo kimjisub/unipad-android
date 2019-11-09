@@ -4,15 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.kimjisub.launchpad.db.dao.UnipackDAO
-import com.kimjisub.launchpad.db.dao.UnipackOpenDAO
-import com.kimjisub.launchpad.db.ent.UnipackENT
-import com.kimjisub.launchpad.db.ent.UnipackOpenENT
+import com.kimjisub.launchpad.db.dao.UniPackDAO
+import com.kimjisub.launchpad.db.dao.UniPackOpenDAO
+import com.kimjisub.launchpad.db.ent.UniPackENT
+import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 
-@Database(entities = [UnipackENT::class, UnipackOpenENT::class], version = 1)
+@Database(entities = [UniPackENT::class, UniPackOpenENT::class], version = 1)
 abstract class AppDataBase : RoomDatabase() {
-	abstract fun unipackDAO(): UnipackDAO?
-	abstract fun unipackOpenDAO(): UnipackOpenDAO?
+	abstract fun unipackDAO(): UniPackDAO?
+	abstract fun unipackOpenDAO(): UniPackOpenDAO?
 
 	companion object {
 		private var INSTANCE: AppDataBase? = null

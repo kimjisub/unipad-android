@@ -8,7 +8,7 @@ import java.util.*
 
 @Entity
 @TypeConverters(DateConverter::class)
-class UnipackOpenENT(
+class UniPackOpenENT(
 	var path: String,
 	var created_at: Date
 ) {
@@ -16,5 +16,5 @@ class UnipackOpenENT(
 	var id: Long = 0
 
 
-	override fun toString(): String = "UnipackOpenENT(id=$id, path='$path', created_at=$created_at)"
+	override fun toString(): String = "UniPackOpenENT(id=$id, path='$path', created_at=$created_at)"
 }

@@ -51,6 +51,6 @@ object NotificationManager {
 	enum class Channel(val titleId: Int, val group: Group, val colorId: Int) {
 		Download(string.download, Group.General, Color.GREEN),
 		Notice(string.notice, Group.Notice, Color.BLUE),
-		NewPack(string.newUnipack, Group.Notice, Color.BLUE)
+		NewPack(string.newUniPack, Group.Notice, Color.BLUE)
 	}
 }

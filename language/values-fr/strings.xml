@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Autre discussion que le support technique</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Titre</string>
 	<string name="producerName">Producteur</string>
 	<string name="scale">Taille</string>
 	<string name="chainCount">Nombre de pages</string>
 	<string name="fileSize">Taille du fichier</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
@@ -108,7 +108,7 @@
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Pack introuvable.</string>
-	<string name="clickToAddUnipack">Ajouter un pack.</string>
+	<string name="clickToAddUniPack">Ajouter un pack.</string>
 	<string name="doYouWantToDeleteProject">Supprimer ce pack ?</string>
 	<string name="doYouWantToRemapProject">Remapper l\'autoplay du pack ?</string>
 	<string name="remapDone">L\'autoPlay a bien été remmappé.</string>

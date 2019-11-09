@@ -40,7 +40,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>
 	<string name="list_refresh">Memuat semula senarai</string>
-	<string name="import_unipack">Memuat Unipack</string>
+	<string name="import_unipack">Memuat UniPack</string>
 	<string name="store">Kedai</string>
 
 	<!--Setting-->
@@ -80,7 +80,7 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Lain Daripada Bantuan Sokongan</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Tajuk</string>
 	<string name="producerName">Pemilik</string>
 	<string name="scale">Saiz</string>

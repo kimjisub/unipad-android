@@ -40,7 +40,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Ikabit uli ang Launchpad</string>
 	<string name="list_refresh">I-refresh ang Listahan</string>
-	<string name="import_unipack">I-load ang Unipack</string>
+	<string name="import_unipack">I-load ang UniPack</string>
 	<string name="store">Store</string>
 
 	<!--Setting-->
@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Maliban sa Teknikal na Suporta</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Pamagat</string>
 	<string name="producerName">Tagagawa</string>
 	<string name="scale">Sukat</string>
 	<string name="chainCount">Bilang ng Chain</string>
 	<string name="fileSize">Sukat ng File</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Awtoplay</string>
 	<string name="LED_">LED ●</string>
@@ -107,8 +107,8 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Walang nahanap na Unipack.</string>
-	<string name="clickToAddUnipack">Pindutin para magdagdag ng mga Unipack.</string>
+	<string name="unipackNotFound">Walang nahanap na UniPack.</string>
+	<string name="clickToAddUniPack">Pindutin para magdagdag ng mga UniPack.</string>
 	<string name="doYouWantToDeleteProject">Gusto mo bang tanggalin ang proyekto?</string>
 	<string name="doYouWantToRemapProject">Gusto mo bang i-remap ang proyekto?</string>
 	<string name="remapDone">Matagumpay na natapos ang pagri-remap ng AutoPlay.</string>
@@ -117,7 +117,7 @@
 	<string name="cantReadFile">Hindi mabasa ang file.</string>
 	<string name="analyzeComplete">Tapos na ang Pagsusuri!</string>
 	<string name="analyzeFailed">Nabigo ang Pagsusuri…</string>
-	<string name="isNotAnUniPack">hindi ito Unipack</string>
+	<string name="isNotAnUniPack">hindi ito UniPack</string>
 	<string name="pressAgainToGoBack">Pindutin uli \npara lumabas.</string>
 	<string name="copied">Nakopya na sa clipboard.</string>
 	<string name="skinMemoryErr">Nabigong ilagay ang skin.\nUlitin ang app.</string>

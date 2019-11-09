@@ -2,29 +2,29 @@ package com.kimjisub.launchpad.db.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.kimjisub.launchpad.db.ent.UnipackENT
+import com.kimjisub.launchpad.db.ent.UniPackENT
 import java.util.*
 
 @Dao
-abstract class UnipackDAO {
+abstract class UniPackDAO {
 
-	/*@Query("SELECT * FROM UnipackENT")
-	public abstract List<UnipackENT> getAll();*/
+	/*@Query("SELECT * FROM UniPackENT")
+	public abstract List<UniPackENT> getAll();*/
 
-	@Query("SELECT * FROM UnipackENT WHERE path=:path LIMIT 1")
-	abstract fun find(path: String): LiveData<UnipackENT>
+	@Query("SELECT * FROM UniPackENT WHERE path=:path LIMIT 1")
+	abstract fun find(path: String): LiveData<UniPackENT>
 
 	/*fun findasdf(id: String):
-			LiveData<UnipackENT?> = find_(id).getDistinct()*/
+			LiveData<UniPackENT?> = find_(id).getDistinct()*/
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
-	abstract fun insert(item: UnipackENT)
+	abstract fun insert(item: UniPackENT)
 
 	@Update
-	abstract fun update(item: UnipackENT?)
+	abstract fun update(item: UniPackENT?)
 
-	fun getOrCreate(path: String): LiveData<UnipackENT> {
-		insert(UnipackENT(path, 0, false, Date()))
+	fun getOrCreate(path: String): LiveData<UniPackENT> {
+		insert(UniPackENT(path, 0, false, Date()))
 		return find(path)
 	}
 }

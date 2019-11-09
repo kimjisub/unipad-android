@@ -35,7 +35,7 @@
 	<string name="measuring">측정중…</string>
 	<string name="general">일반</string>
 	<string name="notice">공지</string>
-	<string name="newUnipack">새로운 유니팩</string>
+	<string name="newUniPack">새로운 유니팩</string>
 	<string name="notFound">찾을 수 없습니다.</string>
 	<string name="exceptionOccurred">예외 오류 발생</string>
 
@@ -82,14 +82,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">기술 지원 외의 문의</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">제목</string>
 	<string name="producerName">제작자</string>
 	<string name="padSize">패드 크기</string>
 	<string name="chainCount">체인 개수</string>
 	<string name="fileSize">용량</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">자동재생</string>
 	<string name="LED_">LED ●</string>
@@ -110,7 +110,7 @@
 	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
 	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
-	<string name="clickToAddUnipack">유니팩을 추가하려면 클릭하세요.</string>
+	<string name="clickToAddUniPack">유니팩을 추가하려면 클릭하세요.</string>
 	<string name="doYouWantToDeleteProject">프로젝트를 삭제하시겠습니까?</string>
 	<string name="doYouWantToRemapProject">자동재생을 자동매핑 하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>

@@ -43,7 +43,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
 
-	private var unipack: Unipack? = null
+	private var unipack: UniPack? = null
 	private var unipackLoaded = false
 	private var UILoaded = false
 	private var enable = true
@@ -156,7 +156,7 @@ class PlayActivity : BaseActivity() {
 		val path: String? = intent.getStringExtra("path")
 
 		try {
-			unipack = Unipack(File(path), true)
+			unipack = UniPack(File(path), true)
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
 					.setTitle(if (unipack!!.criticalError) getString(string.error) else getString(string.warning))

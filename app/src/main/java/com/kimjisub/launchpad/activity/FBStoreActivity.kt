@@ -22,8 +22,8 @@ import com.kimjisub.launchpad.adapter.StoreItem
 import com.kimjisub.launchpad.network.Networks
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
-import com.kimjisub.launchpad.tool.UnipackInstaller
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.tool.UniPackInstaller
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_store.*
@@ -36,7 +36,7 @@ class FBStoreActivity : BaseActivity() {
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
-	private val downloadList: Array<File> by lazy { getUnipackDirList() }
+	private val downloadList: Array<File> by lazy { getUniPackDirList() }
 
 	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
@@ -215,13 +215,13 @@ class FBStoreActivity : BaseActivity() {
 		Networks.sendGet("https://us-central1-unipad-e41ab.cloudfunctions.net/increaseDownloadCount/$code")
 
 
-		UnipackInstaller(
+		UniPackInstaller(
 			context = this,
 			title = item.storeVO.title!!,
 			url = item.storeVO.URL!!,
 			workspace = F_UniPackRootExt,
 			folderName = item.storeVO.code!!,
-			listener = object : UnipackInstaller.Listener {
+			listener = object : UniPackInstaller.Listener {
 				override fun onInstallStart() {
 				}
 
@@ -249,7 +249,7 @@ class FBStoreActivity : BaseActivity() {
 					packView.untoggleColor = colors.orange
 				}
 
-				override fun onInstallComplete(folder: File, unipack: Unipack) {
+				override fun onInstallComplete(folder: File, unipack: UniPack) {
 					packView.setPlayText(getString(string.downloaded))
 					packView.toggleColor = colors.green
 					packView.untoggleColor = colors.green
@@ -264,7 +264,6 @@ class FBStoreActivity : BaseActivity() {
 					packView.untoggleColor = colors.red
 					item.downloading = false
 				}
-
 			})
 	}
 

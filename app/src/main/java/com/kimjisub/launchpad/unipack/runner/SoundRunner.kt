@@ -3,7 +3,7 @@ package com.kimjisub.launchpad.unipack.runner
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Handler
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.manager.Log
 import kotlinx.coroutines.CoroutineScope
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class SoundRunner(
-	private val unipack: Unipack,
+	private val unipack: UniPack,
 	private val chain: ChainObserver,
 	private val loadingListener: LoadingListener
 ) {

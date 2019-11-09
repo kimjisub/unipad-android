@@ -35,14 +35,14 @@
 	<string name="measuring">Measuring…</string>
 	<string name="general">General</string>
 	<string name="notice">Notice</string>
-	<string name="newUnipack">New UniPack</string>
+	<string name="newUniPack">New UniPack</string>
 	<string name="notFound">Not Found</string>
 	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
 	<string name="list_refresh">Refresh List</string>
-	<string name="import_unipack">Load Unipack</string>
+	<string name="import_unipack">Load UniPack</string>
 	<string name="store">Store</string>
 
 	<!--Setting-->
@@ -82,14 +82,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
 	<string name="padSize">Pad Size</string>
 	<string name="chainCount">Chain Count</string>
 	<string name="fileSize">File Size</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
@@ -109,15 +109,15 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Unipack not found.</string>
-	<string name="clickToAddUnipack">Click to add Unipacks.</string>
+	<string name="unipackNotFound">UniPack not found.</string>
+	<string name="clickToAddUniPack">Click to add UniPacks.</string>
 	<string name="doYouWantToDeleteProject">Do you want to delete this project?</string>
 	<string name="doYouWantToRemapProject">Do you want to remap AutoPlay of this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>
 	<string name="analyzeComplete">Analysis complete!</string>
 	<string name="analyzeFailed">Failed to analyze…</string>
-	<string name="isNotAnUniPack">is not an Unipack</string>
+	<string name="isNotAnUniPack">is not an UniPack</string>
 	<string name="pressAgainToGoBack">Press again\nto exit.</string>
 	<string name="copied">Copied to clipboard.</string>
 	<string name="skinMemoryErr">Failed to apply skin.\nRestart app.</string>

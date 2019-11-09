@@ -5,7 +5,7 @@ import androidx.core.app.NotificationCompat
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.NotificationManager
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class UnipackInstaller(
+class UniPackInstaller(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
@@ -44,7 +44,7 @@ class UnipackInstaller(
 		fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
 		fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
 		fun onAnalyzeStart(zip: File)
-		fun onInstallComplete(folder: File, unipack: Unipack)
+		fun onInstallComplete(folder: File, unipack: UniPack)
 
 		fun onException(throwable: Throwable)
 	}
@@ -93,7 +93,7 @@ class UnipackInstaller(
 				withContext(Dispatchers.Main) { onAnalyzeStart(zip) }
 
 				FileManager.unZipFile(zip.path, folder.path)
-				val unipack = Unipack(folder, true)
+				val unipack = UniPack(folder, true)
 				if (unipack.criticalError) {
 					Log.err(unipack.errorDetail!!)
 					FileManager.deleteDirectory(folder)
@@ -155,7 +155,7 @@ class UnipackInstaller(
 		listener.onAnalyzeStart(zip)
 	}
 
-	private fun onInstallComplete(folder: File, unipack: Unipack) {
+	private fun onInstallComplete(folder: File, unipack: UniPack) {
 		notificationBuilder.apply {
 			setContentTitle(title)
 			setContentText(context.getString(R.string.success))

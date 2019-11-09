@@ -40,7 +40,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Launchpad neu abschließen</string>
 	<string name="list_refresh">Liste Aktualisieren</string>
-	<string name="import_unipack">Unipack Laden</string>
+	<string name="import_unipack">UniPack Laden</string>
 	<string name="store">Store</string>
 
 	<!--Setting-->
@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">anderes als Technischer Support</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Titel</string>
 	<string name="producerName">Produzent</string>
 	<string name="scale">Größe</string>
 	<string name="chainCount">Seiten Anzahl</string>
 	<string name="fileSize">Datei Größe</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
@@ -107,8 +107,8 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Unipack nicht gefunden.</string>
-	<string name="clickToAddUnipack">Drück um UniPack Hinzuzufügen.</string>
+	<string name="unipackNotFound">UniPack nicht gefunden.</string>
+	<string name="clickToAddUniPack">Drück um UniPack Hinzuzufügen.</string>
 	<string name="doYouWantToDeleteProject">UniPack Löschen?</string>
 	<string name="doYouWantToRemapProject">Willst du die Autoplay Re-Mappen?</string>
 	<string name="remapDone">AutoPlay remapping war erfolgreich.</string>
@@ -124,7 +124,7 @@
 	<string name="skinErr">Skin Übernehmen Fehlgeschlagen. Skin Zurücksetzen.</string>
 
 	<string name="outOfMemory">Kein Speicherplatz…\nLöschen sie sachen und versuchen sie es nochmal.</string>
-	<string name="outOfCPU">konnte Unipack nicht Starten\nWegen Handy Spec\'s\nApp Neustarten und nochmal Versuchen.</string>
+	<string name="outOfCPU">konnte UniPack nicht Starten\nWegen Handy Spec\'s\nApp Neustarten und nochmal Versuchen.</string>
 	<string name="doNotSee">Kann nicht sehen</string>
 
 	<!--Launchpad Connection-->

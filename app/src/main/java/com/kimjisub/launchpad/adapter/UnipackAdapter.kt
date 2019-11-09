@@ -12,17 +12,17 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.PackView
 import com.kimjisub.design.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.db.ent.UnipackENT
+import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.util.observeOnce
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.Log
 
-data class UnipackItem(
-	var unipack: Unipack,
-	val unipackENT: LiveData<UnipackENT>,
+data class UniPackItem(
+	var unipack: UniPack,
+	val unipackENT: LiveData<UniPackENT>,
 	var isNew: Boolean
 ) {
-	var unipackENTObserver: Observer<UnipackENT>? = null
+	var unipackENTObserver: Observer<UniPackENT>? = null
 
 	//var packView: PackView? = null
 	var flagColor: Int = 0
@@ -33,20 +33,20 @@ data class UnipackItem(
 	var playClick: (() -> Unit)? = null
 }
 
-class UnipackHolder(
+class UniPackHolder(
 	var packView: PackView
 ) : RecyclerView.ViewHolder(packView)
 
-class UnipackAdapter(var list: ArrayList<UnipackItem>, private val eventListener: EventListener) : Adapter<UnipackHolder>() {
+class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener: EventListener) : Adapter<UniPackHolder>() {
 	var i = 0
-	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UnipackHolder {
+	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UniPackHolder {
 		val packView = PackView(parent.context)
 		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 		packView.layoutParams = lp
-		return UnipackHolder(packView)
+		return UniPackHolder(packView)
 	}
 
-	override fun onBindViewHolder(holder: UnipackHolder, position: Int) {
+	override fun onBindViewHolder(holder: UniPackHolder, position: Int) {
 		val context = holder.packView.context
 
 		val item = list[position]
@@ -113,8 +113,8 @@ class UnipackAdapter(var list: ArrayList<UnipackItem>, private val eventListener
 	override fun getItemCount() = list.size
 
 	interface EventListener {
-		fun onViewClick(item: UnipackItem, v: PackView)
-		fun onViewLongClick(item: UnipackItem, v: PackView)
-		fun onPlayClick(item: UnipackItem, v: PackView)
+		fun onViewClick(item: UniPackItem, v: PackView)
+		fun onViewLongClick(item: UniPackItem, v: PackView)
+		fun onPlayClick(item: UniPackItem, v: PackView)
 	}
 }
