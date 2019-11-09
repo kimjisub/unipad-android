@@ -40,7 +40,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconectar Launchpad</string>
 	<string name="list_refresh">Refrescar Lista</string>
-	<string name="import_unipack">Cargar Unipack</string>
+	<string name="import_unipack">Cargar UniPack</string>
 	<string name="store">Tienda</string>
 
 	<!--Setting-->
@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Ajeno a Soporte Técnico.</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Título</string>
 	<string name="producerName">Autor</string>
 	<string name="scale">tamaño</string>
 	<string name="chainCount">Número de Cadenas</string>
 	<string name="fileSize">Tamaño del Archivo</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
@@ -107,8 +107,8 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Unipack no encontrado.</string>
-	<string name="clickToAddUnipack">Click para añadir Unipacks.</string>
+	<string name="unipackNotFound">UniPack no encontrado.</string>
+	<string name="clickToAddUniPack">Click para añadir UniPacks.</string>
 	<string name="doYouWantToDeleteProject">Quieres eliminar este proyecto?</string>
 	<string name="doYouWantToRemapProject">Quieres remapear el AutoPlay de este proyecto?</string>
 	<string name="remapDone">El remapeado del AutoPlay ha sido satisfactorio.</string>
@@ -117,7 +117,7 @@
 	<string name="cantReadFile">No se ha podido leer el archivo.</string>
 	<string name="analyzeComplete">Análisis completado!</string>
 	<string name="analyzeFailed">Fallo al analizar…</string>
-	<string name="isNotAnUniPack">no es un Unipack</string>
+	<string name="isNotAnUniPack">no es un UniPack</string>
 	<string name="pressAgainToGoBack">Presiona de nuevo para salir.</string>
 	<string name="copied">Copiado al portapapeles.</string>
 	<string name="skinMemoryErr">Fallo al aplicar la skin. Reinicia la app.</string>

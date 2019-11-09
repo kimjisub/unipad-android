@@ -40,7 +40,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Menghubungkan kembali ke Launchpad</string>
 	<string name="list_refresh">Segarkan Daftar</string>
-	<string name="import_unipack">Muat Unipack</string>
+	<string name="import_unipack">Muat UniPack</string>
 	<string name="store">Toko</string>
 
 	<!--Setting-->
@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Dukungan Teknis Lainnya</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Judul</string>
 	<string name="producerName">Pembuat</string>
 	<string name="scale">ukuran</string>
 	<string name="chainCount">Banyaknya Chain</string>
 	<string name="fileSize">Ukuran file</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Putar Otomatis</string>
 	<string name="LED_">LED ●</string>
@@ -107,8 +107,8 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Unipack tidak ditemukan.</string>
-	<string name="clickToAddUnipack">Klik Untuk Menambahkan Unipacks.</string>
+	<string name="unipackNotFound">UniPack tidak ditemukan.</string>
+	<string name="clickToAddUniPack">Klik Untuk Menambahkan UniPacks.</string>
 	<string name="doYouWantToDeleteProject">Apakah Anda ingin menghapus proyek ini?</string>
 	<string name="doYouWantToRemapProject">Apakah Anda ingin memetakan ulang Putar Otomatis ini?</string>
 	<string name="remapDone">Pemetakan ulang Putar Otomatis telah berhasil diselesaikan.</string>
@@ -117,7 +117,7 @@
 	<string name="cantReadFile">Tidak dapat membaca file.</string>
 	<string name="analyzeComplete">Analisis berhasil!</string>
 	<string name="analyzeFailed">Analisis gagal…</string>
-	<string name="isNotAnUniPack">Ini bukan Unipack</string>
+	<string name="isNotAnUniPack">Ini bukan UniPack</string>
 	<string name="pressAgainToGoBack">Tekan lagi untuk keluar.</string>
 	<string name="copied">Disalin ke clipboard.</string>
 	<string name="skinMemoryErr">Gagal menerapkan skin.\nRestart app.</string>

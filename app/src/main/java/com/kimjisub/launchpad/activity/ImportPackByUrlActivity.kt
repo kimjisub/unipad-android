@@ -4,8 +4,8 @@ import android.os.Bundle
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
-import com.kimjisub.launchpad.tool.UnipackInstaller
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.tool.UniPackInstaller
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_importpack.*
@@ -64,13 +64,13 @@ class ImportPackByUrlActivity : BaseActivity() {
 	}
 
 	fun startInstall(unishare: UnishareVO) {
-		UnipackInstaller(
+		UniPackInstaller(
 			context = this,
 			title = "${unishare.title} #${unishare._id}",
 			url = "https://api.unipad.io/unishare/${unishare._id}/download",
 			workspace = F_UniPackRootExt,
 			folderName = "${unishare.title} #${unishare._id}",
-			listener = object : UnipackInstaller.Listener {
+			listener = object : UniPackInstaller.Listener {
 				override fun onInstallStart() {
 					log("Install start")
 					TV_title.setText(string.downloadWaiting)
@@ -99,7 +99,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
 
-				override fun onInstallComplete(folder: File, unipack: Unipack) {
+				override fun onInstallComplete(folder: File, unipack: UniPack) {
 					log("Install Success")
 
 					TV_title.setText(string.success)

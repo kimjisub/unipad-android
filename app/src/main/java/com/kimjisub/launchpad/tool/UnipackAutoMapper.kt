@@ -3,7 +3,7 @@ package com.kimjisub.launchpad.tool
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import com.kimjisub.launchpad.manager.Constant
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.FileManager
 import kotlinx.coroutines.CoroutineScope
@@ -14,8 +14,8 @@ import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class UnipackAutoMapper(
-	private val unipack: Unipack,
+class UniPackAutoMapper(
+	private val unipack: UniPack,
 	private var listener: Listener
 ) {
 	private var autoplay1: ArrayList<AutoPlay.Element> = ArrayList()

@@ -106,7 +106,7 @@ open class BaseActivity : AppCompatActivity() {
 
 	// ============================================================================================= Function
 
-	fun getUnipackDirList(): Array<File> {
+	fun getUniPackDirList(): Array<File> {
 		return F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 	}
 

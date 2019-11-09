@@ -1,12 +1,12 @@
 package com.kimjisub.launchpad.unipack.runner
 
-import com.kimjisub.launchpad.unipack.Unipack
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log
 import java.util.*
 
 class AutoPlayRunner(
-	private val unipack: Unipack,
+	private val unipack: UniPack,
 	private val listener: Listener,
 	private val chain: ChainObserver,
 	private val delay_: Long = 1L

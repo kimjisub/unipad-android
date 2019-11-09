@@ -80,14 +80,14 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Other than Technical Support</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">शीर्षक</string>
 	<string name="producerName">उत्पादक</string>
 	<string name="scale">साइज़</string>
 	<string name="chainCount">चैन संख्या</string>
 	<string name="fileSize">फ़ाइल साइज़</string>
 
-	<!--Unipack Function-->
+	<!--UniPack Function-->
 	<string name="LED">LED</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="LED_">LED ●</string>
@@ -108,7 +108,7 @@
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">युनिपैक नहीं मिला।</string>
-	<string name="clickToAddUnipack">युनिपैक लाने के लिए दबाए</string>
+	<string name="clickToAddUniPack">युनिपैक लाने के लिए दबाए</string>
 	<string name="doYouWantToDeleteProject">क्या आप इस परियोजना को मिटाना चाहते हैं?</string>
 	<string name="doYouWantToRemapProject">क्या आप इस ऑटोप्ले को रीमेप करना चाहते हैं?</string>
 	<string name="remapDone">ऑटोप्ले रीमेपिंग सफलतापूर्वक पूरा हो चुका है?</string>

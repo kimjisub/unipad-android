@@ -16,7 +16,7 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 
 
-class Unipack(val F_project: File, val loadDetail: Boolean) {
+class UniPack(val F_project: File, val loadDetail: Boolean) {
 	var errorDetail: String? = null
 	var criticalError = false
 
