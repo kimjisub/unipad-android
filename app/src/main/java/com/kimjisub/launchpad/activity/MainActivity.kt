@@ -55,15 +55,19 @@ import com.kimjisub.launchpad.unipack.Unipack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
+import com.kimjisub.manager.extra.addOnPropertyChanged
+import com.kimjisub.manager.extra.getVirtualIndexFormSorted
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.design.snackbar
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startActivityForResult
 import java.io.File
-import java.lang.Runnable
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -72,19 +76,19 @@ class MainActivity : BaseActivity() {
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
 
-
+	//
 	private var unipackList: ArrayList<UnipackItem> = ArrayList()
-	private var sortingMethod: Int = 0
-
+	private var unipackListSortMethod: Int = 0
 	private var lastPlayIndex = -1
-	private var updateProcessing = false
-
+	private var isRefreshing = false
 	private val adapter: UnipackAdapter by lazy {
 		val adapter = UnipackAdapter(unipackList, object : EventListener {
 			override fun onViewClick(item: UnipackItem, v: PackView) {
 				if (!item.moving) togglePlay(item)
 			}
+
 			override fun onViewLongClick(item: UnipackItem, v: PackView) {}
+
 			override fun onPlayClick(item: UnipackItem, v: PackView) {
 				if (!item.moving) pressPlay(item)
 			}
@@ -119,7 +123,7 @@ class MainActivity : BaseActivity() {
 		animator
 	}
 
-	private val firebase_storeCount: FirebaseManager by lazy {
+	private val fbStoreCount: FirebaseManager by lazy {
 		val firebaseManager = FirebaseManager("storeCount")
 		firebaseManager.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -167,13 +171,14 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {}
+
 			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
 				if ((cmd == 7) && (sig == 46) && (note == 0) && (velo == -9)) updateLP()
 			}
 		}
 	}
 
-	// =============================================================================================
+	////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -263,6 +268,7 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onEditClick(v: View) {}
+
 			override fun onStorageClick(v: View) {
 				val item = selected
 				if (item != null) {
@@ -324,7 +330,7 @@ class MainActivity : BaseActivity() {
 			}
 		}
 		P_total.data.sortingMethod.addOnPropertyChanged {
-			sortingMethod = it.get()!!
+			unipackListSortMethod = it.get()!!
 			update()
 		}
 		P_total.data.sortingMethod.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -341,16 +347,23 @@ class MainActivity : BaseActivity() {
 		versionCheck()
 	}
 
-	private fun update() {
-		update(true)
-	}
-
 	@SuppressLint("StaticFieldLeak")
-	private fun update(animateNew: Boolean) {
+	private fun update(animateNew: Boolean = true) {
 		lastPlayIndex = -1
-		if (updateProcessing) return
+		if (isRefreshing) return
 		SRL_swipeRefreshLayout.isRefreshing = true
-		updateProcessing = true
+		isRefreshing = true
+
+		val sortMethods: Array<Comparator<UnipackItem>> = arrayOf(
+			Comparator{ a,b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
+			Comparator{ a,b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project) )},
+			Comparator{ a,b -> db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
+			Comparator{ a,b -> -db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
+			Comparator{ a,b -> (db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
+			Comparator{ a,b -> -(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
+			Comparator{ a,b -> a.unipack.title!!.compareTo(b.unipack.title!!) },
+			Comparator{ a,b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) }
+		)
 
 		CoroutineScope(Dispatchers.IO).launch {
 			var I_list = ArrayList<UnipackItem>()
@@ -368,19 +381,7 @@ class MainActivity : BaseActivity() {
 					I_list.add(packItem)
 				}
 
-				val sortingBy: Int = sortingMethod / 2
-				val sortingOrder: Int = sortingMethod % 2
-
-				I_list = when (sortingBy) {
-					0 -> ArrayList(I_list.sortedBy { getInnerFileLastModified(it.unipack.F_project) })
-					1 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getCountSync(it.unipack.F_project.name) })
-					2 -> ArrayList(I_list.sortedBy { db.unipackOpenDAO()!!.getLastOpenedDateSync(it.unipack.F_project.name)?.created_at ?: Date(0) })
-					3 -> ArrayList(I_list.sortedBy { it.unipack.title })
-					4 -> ArrayList(I_list.sortedBy { it.unipack.producerName })
-					else -> I_list
-				}
-
-				if (sortingOrder == 1) I_list = ArrayList(I_list.reversed())
+				I_list = ArrayList(I_list.sortedWith(sortMethods[unipackListSortMethod]))
 
 				for (item: UnipackItem in I_list) {
 					var index = -1
@@ -396,20 +397,18 @@ class MainActivity : BaseActivity() {
 						I_added.add(0, item)
 				}
 
-
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 
 			withContext(Dispatchers.Main) {
 				for (added: UnipackItem in I_added) {
-					var i = 0
-					val targetTime = getInnerFileLastModified(added.unipack.F_project)
-					for (item: UnipackItem in unipackList) {
-						val testTime = getInnerFileLastModified(item.unipack.F_project)
-						if (targetTime > testTime) break
-						i++
-					}
+
+					val i = unipackList.getVirtualIndexFormSorted(Comparator{a,b->
+						getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project))
+					}, added)
+
+
 					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
@@ -425,6 +424,7 @@ class MainActivity : BaseActivity() {
 				for (removed: UnipackItem in I_removed) {
 					for ((i, item: UnipackItem) in unipackList.withIndex()) {
 						if ((item.unipack.F_project.path == removed.unipack.F_project.path)) {
+							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
@@ -434,16 +434,21 @@ class MainActivity : BaseActivity() {
 					}
 				}
 
+				var changed = false
 				for ((to, item: UnipackItem) in I_list.withIndex()) {
 					val from = findIndex(item)
-					if (from != -1)
+					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
+						Log.test("swap: $from -> $to")
+						changed = true
+					}
 				}
-				adapter.notifyDataSetChanged()
+				if (changed)
+					adapter.notifyDataSetChanged()
 
 				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
 				SRL_swipeRefreshLayout.isRefreshing = false
-				updateProcessing = false
+				isRefreshing = false
 
 				updatePanel(true)
 			}
@@ -457,7 +462,7 @@ class MainActivity : BaseActivity() {
 		return -1
 	}
 
-	// ============================================================================================= UniPack Work
+	// UniPack /////////////////////////////////////////////////////////////////////////////////////////
 
 
 	private fun deleteUnipack(unipack: Unipack) {
@@ -513,8 +518,8 @@ class MainActivity : BaseActivity() {
 		CoroutineScope(Dispatchers.IO).launch {
 
 			var progressDialog = ProgressDialog(this@MainActivity)
-			var msg1: String? = null
-			var msg2: String? = null
+			var msg1: String?
+			var msg2: String?
 
 			withContext(Dispatchers.Main) {
 				progressDialog.setTitle(getString(string.analyzing))
@@ -577,7 +582,7 @@ class MainActivity : BaseActivity() {
 					item.toggle = !item.toggle
 					lastPlayIndex = i
 					item.togglea?.invoke(item.toggle)
-				} else if(item.toggle) {
+				} else if (item.toggle) {
 					item.toggle = false
 					item.togglea?.invoke(item.toggle)
 				}
@@ -788,7 +793,7 @@ class MainActivity : BaseActivity() {
 		checkThings()
 		Handler().postDelayed({ update() }, 1000)
 		controller = midiController
-		firebase_storeCount.attachEventListener(true)
+		fbStoreCount.attachEventListener(true)
 	}
 
 	public override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -803,20 +808,11 @@ class MainActivity : BaseActivity() {
 	override fun onPause() {
 		super.onPause()
 		controller = midiController
-		firebase_storeCount.attachEventListener(false)
+		fbStoreCount.attachEventListener(false)
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
 		removeController(midiController)
 	}
-
-	fun <T : Observable> T.addOnPropertyChanged(callback: (T) -> Unit) =
-		addOnPropertyChangedCallback(
-			object : Observable.OnPropertyChangedCallback() {
-				override fun onPropertyChanged(
-					observable: Observable?, i: Int
-				) =
-					callback(observable as T)
-			})
 }
