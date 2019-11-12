@@ -2,10 +2,18 @@
 <resources>
 	<!--normal-->
 	<color name="background1">#161e2b</color>
-	<color name="gray1">#a6b4c9</color>
+	<color name="ugray1">#a6b4c9</color>
 	<color name="background2">#414F66</color>
-	<color name="gray2">#808A99</color>
+	<color name="ugray2">#808A99</color>
 	<color name="white">#FFFFFF</color>
+	<color name="ugray3">#f5f5f5</color>
+
+	<color name="wb0">#FFFFFF</color>
+	<color name="wb1">#f5f5f5</color>
+	<color name="wb2">#9E9E9E</color>
+	<color name="wb3">#838383</color>
+	<color name="wb4">#535353</color>
+	<color name="wb5">#444444</color>
 
 	<!--text-->
 	<color name="text">#767d89</color>

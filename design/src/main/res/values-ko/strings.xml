@@ -10,14 +10,13 @@
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>
-	<string name="MPP_chainCount">체인 개수</string>
-	<string name="MPP_soundCount">사운드 개수</string>
-	<string name="MPP_ledCount">LED 이벤트 개수</string>
+	<string name="MPP_chain">체인</string>
+	<string name="MPP_soundFiles">사운드 파일</string>
+	<string name="MPP_ledEvents">LED 이벤트</string>
 	<string name="MPP_fileSize">용량</string>
-	<string name="MPP_playCount">유니팩 실행 횟수</string>
-	<string name="MPP_padTouchCount">패드 터치 횟수</string>
+	<string name="MPP_playCount">플레이 횟수</string>
 	<string name="MPP_lastPlayed">최근 플레이</string>
-	<string name="MPP_notPlayedYet">플레이하지 않았습니다.</string>
+	<string name="MPP_notPlayedYet">-</string>
 
 	<!--Store Total Panel-->
 	<string name="STP_count">유니팩 개수</string>

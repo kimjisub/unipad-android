@@ -17,7 +17,7 @@ import android.view.animation.Transformation
 import android.widget.RelativeLayout
 import com.kimjisub.design.R.*
 import com.kimjisub.manager.UIManager
-import kotlinx.android.synthetic.main.packview.view.*
+import kotlinx.android.synthetic.main.view_pack.view.*
 
 class PackView : RelativeLayout {
 
@@ -40,7 +40,7 @@ class PackView : RelativeLayout {
 
 	init {
 		LayoutInflater.from(context)
-			.inflate(layout.packview, this, true)
+			.inflate(layout.view_pack, this, true)
 
 		// set listener
 		LL_touchView.setOnClickListener { onViewClick() }

@@ -1,9 +1,9 @@
 <resources>
 
 	<style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-		<item name="colorPrimary">@color/gray1</item>
-		<item name="colorPrimaryDark">@color/gray1</item>
-		<item name="colorAccent">@color/gray1</item>
+		<item name="colorPrimary">@color/ugray1</item>
+		<item name="colorPrimaryDark">@color/ugray1</item>
+		<item name="colorAccent">@color/ugray1</item>
 
 		<item name="android:fontFamily">@font/montserrat_regular</item>
 
