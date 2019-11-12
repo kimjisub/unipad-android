@@ -45,7 +45,7 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text="@string/copyright"
-				android:textColor="@color/gray1"
+				android:textColor="@color/ugray1"
 				android:textSize="10dp" />
 		</LinearLayout>
 	</androidx.constraintlayout.widget.ConstraintLayout>

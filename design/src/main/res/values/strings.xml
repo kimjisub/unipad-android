@@ -10,14 +10,13 @@
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Size</string>
-	<string name="MPP_chainCount">Chain Count</string>
-	<string name="MPP_soundCount">Sound files</string>
-	<string name="MPP_ledCount">Led Events</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">Sound files</string>
+	<string name="MPP_ledEvents">Led Events</string>
 	<string name="MPP_fileSize">File Size</string>
 	<string name="MPP_playCount">Play Count</string>
-	<string name="MPP_padTouchCount">Pad Touch</string>
 	<string name="MPP_lastPlayed">Last Played</string>
-	<string name="MPP_notPlayedYet">Not Played Yet</string>
+	<string name="MPP_notPlayedYet">-</string>
 
 	<!--Store Total Panel-->
 	<string name="STP_count">Store UniPacks</string>

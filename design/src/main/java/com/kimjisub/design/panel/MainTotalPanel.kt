@@ -41,10 +41,9 @@ constructor(
 		val unipackCount: ObservableField<String> = ObservableField()
 		val unipackCapacity: ObservableField<String> = ObservableField()
 		val openCount: ObservableField<String> = ObservableField()
-		val padTouchCount: ObservableField<String> = ObservableField()
 		val selectedTheme: ObservableField<String> = ObservableField()
 
-		val sortingMethod: ObservableField<Int> = ObservableField(0) // 0~5
+		val sortingMethod: ObservableField<Int> = ObservableField(1) // 0~5
 	}
 
 

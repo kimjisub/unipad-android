@@ -53,7 +53,7 @@
 						android:paddingTop="16dp"
 						android:paddingRight="16dp"
 						android:paddingBottom="6dp"
-						android:scrollbarThumbVertical="@color/gray2" />
+						android:scrollbarThumbVertical="@color/ugray2" />
 
 				</androidx.core.widget.NestedScrollView>
 
@@ -83,7 +83,7 @@
 						android:layout_height="wrap_content"
 						android:layout_gravity="center_horizontal"
 						android:text="@string/UnableToAccessServer"
-						android:textColor="@color/gray1" />
+						android:textColor="@color/ugray1" />
 				</LinearLayout>
 
 			</RelativeLayout>

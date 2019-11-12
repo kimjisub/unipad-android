@@ -89,13 +89,6 @@
 
 						<TextView
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@string/MPP_padTouchCount"
-							android:textColor="@color/text"
-							android:visibility="gone" />
-
-						<TextView
-							android:layout_width="wrap_content"
 							android:layout_height="wrap_content" />
 
 						<TextView
@@ -130,12 +123,6 @@
 							android:layout_height="wrap_content"
 							android:text="@{data.openCount}"
 							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@{data.padTouchCount}"
-							android:visibility="gone" />
 
 						<TextView
 							android:layout_width="wrap_content"

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tool="http://schemas.android.com/tools">
 
 	<data>
 
@@ -65,8 +66,8 @@
 						android:layout_width="40dp"
 						android:layout_height="40dp"
 						android:background="@drawable/border_icon"
-						android:padding="4dp"
 						android:clickable="@{!data.moving}"
+						android:padding="4dp"
 						app:imgRes="@{data.moving ? @drawable/ic_copy_24dp : (data.storage? @drawable/ic_public_24dp: @drawable/ic_lock_24dp)}" />
 				</LinearLayout>
 
@@ -93,7 +94,8 @@
 						android:marqueeRepeatLimit="marquee_forever"
 						android:singleLine="true"
 						android:text="@{data.title}"
-						android:textSize="25dp" />
+						android:textSize="25dp"
+						tool:text="Title" />
 
 					<TextView
 						android:id="@+id/TV_subtitle"
@@ -104,120 +106,86 @@
 						android:marqueeRepeatLimit="marquee_forever"
 						android:singleLine="true"
 						android:text="@{data.subtitle}"
-						android:textSize="15dp" />
+						android:textSize="15dp"
+						tool:text="Subtitle" />
 
 					<LinearLayout
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:layout_gravity="center"
-						android:orientation="horizontal"
-						android:paddingTop="16dp">
+						android:layout_marginTop="16dp"
+						android:orientation="horizontal">
+
+						<include
+							layout="@layout/include_property1"
+							app:title="@{@string/MPP_fileSize}"
+							app:value="@{data.fileSize}"/>
+
+						<include
+							layout="@layout/include_property1"
+							app:title="@{@string/MPT_playCount}"
+							app:value="@{data.playCount}" />
+
+						<include
+							layout="@layout/include_property1"
+							app:title="@{@string/MPP_lastPlayed}"
+							app:value="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}" />
+
+					</LinearLayout>
+
+					<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="170dp"
+						android:orientation="vertical">
 
 						<LinearLayout
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="right"
-							android:orientation="vertical">
+							android:layout_width="match_parent"
+							android:layout_height="0dp"
+							android:layout_weight="1"
+							android:orientation="horizontal">
 
+							<include
+								layout="@layout/include_property2"
+								android:layout_width="0dp"
+								android:layout_height="match_parent"
+								android:layout_weight="1"
+								app:icon="@{@drawable/ic_pad_24dp}"
+								app:title="@{@string/MPP_padSize}"
+								app:value="@{data.padSize}" />
 
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_padSize" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_chainCount" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_soundCount" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_ledCount" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_fileSize" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPT_playCount" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_padTouchCount"
-								android:visibility="gone" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@string/MPP_lastPlayed"/>
+							<include
+								layout="@layout/include_property2"
+								android:layout_width="0dp"
+								android:layout_height="match_parent"
+								android:layout_weight="1"
+								app:icon="@{@drawable/ic_chain_24dp}"
+								app:title="@{@string/MPP_chain}"
+								app:value="@{data.chainCount}" />
 
 						</LinearLayout>
 
 						<LinearLayout
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="left"
-							android:orientation="vertical"
-							android:paddingLeft="32dp">
+							android:layout_width="match_parent"
+							android:layout_height="0dp"
+							android:layout_weight="1"
+							android:orientation="horizontal">
 
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.padSize}" />
+							<include
+								layout="@layout/include_property2"
+								android:layout_width="0dp"
+								android:layout_height="match_parent"
+								android:layout_weight="1"
+								app:icon="@{@drawable/ic_music_note_24dp}"
+								app:title="@{@string/MPP_soundFiles}"
+								app:value="@{data.soundCount}" />
 
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.chainCount}" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.soundCount}" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.ledCount}" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.fileSize}" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"/>
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.playCount}" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.padTouchCount}"
-								android:visibility="gone" />
-
-							<TextView
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:text="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}" />
+							<include
+								layout="@layout/include_property2"
+								android:layout_width="0dp"
+								android:layout_height="match_parent"
+								android:layout_weight="1"
+								app:icon="@{@drawable/ic_led_event_24dp}"
+								app:title="@{@string/MPP_ledEvents}"
+								app:value="@{data.ledCount}" />
 
 						</LinearLayout>
 
