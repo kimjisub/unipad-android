@@ -15,6 +15,7 @@
 	<string name="MPP_ledEvents">Led Events</string>
 	<string name="MPP_fileSize">File Size</string>
 	<string name="MPP_playCount">Play Count</string>
+	<string name="MPP_downloadedDate">Downloaded Date</string>
 	<string name="MPP_lastPlayed">Last Played</string>
 	<string name="MPP_notPlayedYet">-</string>
 
