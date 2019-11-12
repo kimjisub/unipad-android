@@ -679,6 +679,7 @@ class MainActivity : BaseActivity() {
 			chainCount.set(unipack.chain.toString())
 			websiteExist.set(unipack.website != null)
 			path.set(item.unipack.F_project.path)
+			downloadedDate.set(Date(getInnerFileLastModified(item.unipack.F_project)))
 
 
 			soundCount.set(getString(string.measuring))

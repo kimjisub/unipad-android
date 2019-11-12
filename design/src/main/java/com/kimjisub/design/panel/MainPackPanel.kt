@@ -44,6 +44,7 @@ constructor(
 		val ledCount: ObservableField<String> = ObservableField()
 		val fileSize: ObservableField<String> = ObservableField()
 		val playCount: ObservableField<String> = ObservableField()
+		val downloadedDate: ObservableField<Date> = ObservableField()
 		val lastPlayed: ObservableField<Date> = ObservableField()
 		val websiteExist: ObservableField<Boolean> = ObservableField()
 		val path: ObservableField<String> = ObservableField()

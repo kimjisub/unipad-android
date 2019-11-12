@@ -15,6 +15,7 @@
 	<string name="MPP_ledEvents">LED 이벤트</string>
 	<string name="MPP_fileSize">용량</string>
 	<string name="MPP_playCount">플레이 횟수</string>
+	<string name="MPP_downloadedDate">다운로드한 날짜</string>
 	<string name="MPP_lastPlayed">최근 플레이</string>
 	<string name="MPP_notPlayedYet">-</string>
 

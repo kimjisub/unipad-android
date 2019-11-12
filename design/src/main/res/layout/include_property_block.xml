@@ -39,7 +39,7 @@
 				android:layout_marginTop="4dp"
 				android:text="@{title}"
 				android:textColor="@color/wb2"
-				android:textSize="10dp"
+				android:textSize="@dimen/text_small"
 				app:layout_constraintLeft_toLeftOf="parent"
 				app:layout_constraintTop_toTopOf="parent"
 				tool:text="Title" />
@@ -51,6 +51,7 @@
 				android:orientation="vertical"
 				app:layout_constraintBottom_toBottomOf="parent"
 				app:layout_constraintLeft_toLeftOf="parent"
+				android:layout_marginBottom="2dp"
 				app:layout_constraintRight_toRightOf="parent">
 
 				<ImageView
@@ -61,6 +62,7 @@
 					android:tint="@color/wb2" />
 
 				<TextView
+					android:textSize="@dimen/text"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@{value}"
