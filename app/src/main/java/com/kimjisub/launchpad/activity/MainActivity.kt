@@ -264,18 +264,10 @@ class MainActivity : BaseActivity() {
 		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
 			Comparator { a, b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
 			Comparator { a, b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
-			Comparator { a, b ->
-				db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name))
-			},
+			Comparator { a, b -> db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
 			Comparator { a, b -> -db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
-			Comparator { a, b ->
-				(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
-					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
-			},
-			Comparator { a, b ->
-				-(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
-					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
-			},
+			Comparator { a, b -> (db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
+			Comparator { a, b -> -(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
 			Comparator { a, b -> a.unipack.title!!.compareTo(b.unipack.title!!) },
 			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) }
 		)

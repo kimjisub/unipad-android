@@ -13,7 +13,8 @@
 	<color name="wb2">#9E9E9E</color>
 	<color name="wb3">#838383</color>
 	<color name="wb4">#535353</color>
-	<color name="wb5">#444444</color>
+	<color name="wb5">#333</color>
+	<color name="wb6">#000</color>
 
 	<!--text-->
 	<color name="text">#767d89</color>

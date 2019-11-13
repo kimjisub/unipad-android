@@ -14,7 +14,7 @@
 			android:layout_marginLeft="10dp"
 			android:visibility="invisible"
 			android:layout_marginTop="3dp"
-			app:srcCompat="@drawable/ic_bookmark_back" />
+			app:srcCompat="@drawable/ic_bookmark_clip_back" />
 
 		<RelativeLayout
 			android:layout_width="match_parent"
@@ -172,7 +172,7 @@
 			android:visibility="invisible"
 			android:layout_marginLeft="10dp"
 			android:layout_marginTop="3dp"
-			app:srcCompat="@drawable/ic_bookmark_front" />
+			app:srcCompat="@drawable/ic_bookmark_clip_front" />
 
 	</RelativeLayout>
 </layout>
