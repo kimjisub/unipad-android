@@ -41,7 +41,7 @@ class LaunchpadS : DriverRef() {
 	}
 
 	override fun sendPadLED(x: Int, y: Int, velo: Int) {
-		send09Signal(x * 16 + y, LaunchpadColor.SCode[velo])
+		sendSignal(9, -112, x * 16 + y, LaunchpadColor.SCode[velo])
 	}
 
 	override fun sendChainLED(c: Int, velo: Int) {

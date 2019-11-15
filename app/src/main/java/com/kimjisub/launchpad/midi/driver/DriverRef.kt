@@ -46,22 +46,22 @@ abstract class DriverRef {
 	abstract fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int)
 	internal fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
 		Log.midiDetail("onPadTouch($x, $y, $upDown, $velo)")
-		if (onGetSignalListener != null) onGetSignalListener!!.onPadTouch(x, y, upDown, velo)
+		onGetSignalListener?.onPadTouch(x, y, upDown, velo)
 	}
 
 	internal fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
 		Log.midiDetail("onFunctionkeyTouch($f, $upDown)")
-		if (onGetSignalListener != null) onGetSignalListener!!.onFunctionkeyTouch(f, upDown)
+		onGetSignalListener?.onFunctionkeyTouch(f, upDown)
 	}
 
 	internal fun onChainTouch(c: Int, upDown: Boolean) {
 		Log.midiDetail("onChainTouch($c, $upDown)")
-		if (onGetSignalListener != null) onGetSignalListener!!.onChainTouch(c, upDown)
+		onGetSignalListener?.onChainTouch(c, upDown)
 	}
 
 	internal fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
 		Log.midiDetail("onUnknownEvent($cmd, $sig, $note, $velo)")
-		if (onGetSignalListener != null) onGetSignalListener!!.onUnknownEvent(cmd, sig, note, velo)
+		onGetSignalListener?.onUnknownEvent(cmd, sig, note, velo)
 	}
 
 	// OnSendSignalListener /////////////////////////////////////////////////////////////////////////////////////////
@@ -78,21 +78,12 @@ abstract class DriverRef {
 
 	////
 
-
 	internal fun sendSignal(cmd: Byte, sig: Byte, note: Byte, velo: Byte) {
-		if (onSendSignalListener != null) onSendSignalListener!!.onSend(cmd, sig, note, velo)
+		onSendSignalListener?.onSend(cmd, sig, note, velo)
 	}
 
 	internal fun sendSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
 		sendSignal(cmd.toByte(), sig.toByte(), note.toByte(), velo.toByte())
-	}
-
-	internal fun send09Signal(note: Int, velo: Int) {
-		sendSignal(9, -112, note, velo)
-	}
-
-	internal fun send11Signal(note: Int, velo: Int) {
-		sendSignal(11, -80, note, velo)
 	}
 
 	abstract fun sendPadLED(x: Int, y: Int, velo: Int)

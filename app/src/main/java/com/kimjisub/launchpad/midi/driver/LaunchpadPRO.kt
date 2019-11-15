@@ -80,7 +80,7 @@ class LaunchpadPRO : DriverRef() {
 	}
 
 	override fun sendPadLED(x: Int, y: Int, velo: Int) {
-		send09Signal(10 * (8 - x) + y + 1, velo)
+		sendSignal(9, -112, 10 * (8 - x) + y + 1, velo)
 	}
 
 	override fun sendChainLED(c: Int, velo: Int) {
