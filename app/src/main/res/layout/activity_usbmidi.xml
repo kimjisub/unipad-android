@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tool="http://schemas.android.com/tools">
 
 	<RelativeLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
+		android:background="@color/background1"
 		android:orientation="vertical">
-
-		<TextView
-			android:id="@+id/TV_log"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentStart="true"
-			android:layout_alignParentLeft="true"
-			android:layout_alignParentTop="true"
-			android:textColor="@color/ugray1"
-			android:textSize="10dp" />
 
 		<LinearLayout
 			android:layout_width="wrap_content"
@@ -92,6 +84,33 @@
 						android:onClick="selectDriver"
 						android:orientation="vertical"
 						android:tag="2">
+
+						<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:gravity="center"
+							android:text="Pro"
+							android:textColor="@color/ugray1"
+							android:textSize="30dp" />
+
+						<TextView
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:gravity="center"
+							android:text="(Live mode)"
+							android:textColor="@color/ugray1"
+							android:textSize="15dp" />
+
+					</LinearLayout>
+
+					<LinearLayout
+						android:id="@+id/BTN_X"
+						android:layout_width="120dp"
+						android:layout_height="100dp"
+						android:gravity="center"
+						android:onClick="selectDriver"
+						android:orientation="vertical"
+						android:tag="5">
 
 						<TextView
 							android:layout_width="wrap_content"
@@ -230,6 +249,19 @@
 				android:textColor="@color/ugray1"
 				android:textSize="30dp" />
 		</RelativeLayout>
+
+
+
+		<TextView
+			android:id="@+id/TV_log"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentStart="true"
+			tool:text="Log\nLog"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentTop="true"
+			android:textColor="@color/ugray1"
+			android:textSize="10dp" />
 
 	</RelativeLayout>
 </layout>

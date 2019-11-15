@@ -21,11 +21,33 @@ object MidiConnection {
 	private var onSendSignalListener: DriverRef.OnSendSignalListener? = null
 
 	var driver: DriverRef = Noting()
+		set(value) {
+			field.sendClearLED()
+			field.onDisconnected()
+
+			try {
+				field = value
+				setDriverListener()
+				if (isRun)
+					field.onConnected()
+			} catch (e: IllegalAccessException) {
+				e.printStackTrace()
+			} catch (e: InstantiationException) {
+				e.printStackTrace()
+			}
+
+			listener?.onChangeDriver(value)
+		}
 	var controller: MidiController? = null
 
 
 	private var isRun = false
-	private var mode = 0
+	var mode = 0
+		set(value) {
+			field = value
+
+			listener?.onChangeMode(field)
+		}
 
 	// Listener /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -119,40 +141,44 @@ object MidiConnection {
 
 		try {
 			Log.midiDetail("ProductId : " + device.productId)
-			onUiLog("ProductId : " + device.productId + "\n")
-			val driver: Class<*>
+			listener?.onUiLog("ProductId : " + device.productId + "\n")
+			val driver_: DriverRef
 			when (device.productId) {
 				8 -> {
-					driver = MidiFighter::class.java
-					onUiLog("prediction : MidiFighter\n")
+					driver_ = MidiFighter()
+					listener?.onUiLog("prediction : MidiFighter\n")
 				}
 				105 -> {
-					driver = LaunchpadMK2::class.java
-					onUiLog("prediction : MK2\n")
+					driver_ = LaunchpadMK2()
+					listener?.onUiLog("prediction : Launchpad MK2\n")
 				}
 				81 -> {
-					driver = LaunchpadPRO::class.java
-					onUiLog("prediction : Pro\n")
+					driver_ = LaunchpadPRO()
+					listener?.onUiLog("prediction : Launchpad Pro\n")
 				}
 				54 -> {
-					driver = LaunchpadS::class.java
-					onUiLog("prediction : mk2 mini\n")
+					driver_ = LaunchpadS()
+					listener?.onUiLog("prediction : Launchpad mk2 mini\n")
+				}
+				259 -> {
+					driver_ = LaunchpadX()
+					listener?.onUiLog("prediction : Launchpad X\n")
 				}
 				8211 -> {
-					driver = MasterKeyboard::class.java
-					onUiLog("prediction : LX 61 piano\n")
+					driver_ = MasterKeyboard()
+					listener?.onUiLog("prediction : LX 61 piano\n")
 				}
 				32822 -> {
-					driver = LaunchpadPRO::class.java
-					onUiLog("prediction : Arduino Leonardo midi\n")
+					driver_ = LaunchpadPRO()
+					listener?.onUiLog("prediction : Arduino Leonardo midi\n")
 					interfaceNum = 3
 				}
 				else -> {
-					driver = MasterKeyboard::class.java
-					onUiLog("prediction : unknown\n")
+					driver_ = MasterKeyboard()
+					listener?.onUiLog("prediction : unknown\n")
 				}
 			}
-			setDriver(driver)
+			driver = driver_
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
@@ -161,20 +187,20 @@ object MidiConnection {
 			val ui = device.getInterface(i)
 			if (ui.endpointCount > 0) {
 				usbInterface = ui
-				onUiLog("Interface : (" + (i + 1) + "/" + device.interfaceCount + ")\n")
+				listener?.onUiLog("Interface : (" + (i + 1) + "/" + device.interfaceCount + ")\n")
 				break
 			}
 		}
 		for (i in 0 until usbInterface!!.endpointCount) {
 			val ep = usbInterface!!.getEndpoint(i)
 			if (ep.direction == UsbConstants.USB_DIR_IN) {
-				onUiLog("Endpoint_In : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_In : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
 				usbEndpoint_in = ep
 			} else if (ep.direction == UsbConstants.USB_DIR_OUT) {
-				onUiLog("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
 				usbEndpoint_out = ep
 			} else {
-				onUiLog("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
 			}
 		}
 		usbDeviceConnection = usbManager!!.openDevice(device)
@@ -188,16 +214,9 @@ object MidiConnection {
 			Log.midiDetail("USB 에러 : usbDeviceConnection.claimInterface(usbInterface, true)")
 		}
 
-		onConnectedListener()
+		listener?.onConnectedListener()
 
 		return
-	}
-
-
-	fun setMode(mode_: Int) {
-		mode = mode_
-
-		onChangeMode(mode)
 	}
 
 	internal fun sendBuffer(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
@@ -280,27 +299,6 @@ object MidiConnection {
 
 	// Driver /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun setDriver(cls: Class<*>) {
-		if (driver != null) {
-			driver.sendClearLED()
-			driver.onDisconnected()
-			driver = Noting()
-		}
-
-		try {
-			driver = cls.newInstance() as DriverRef
-			setDriverListener()
-			if (isRun)
-				driver.onConnected()
-		} catch (e: IllegalAccessException) {
-			e.printStackTrace()
-		} catch (e: InstantiationException) {
-			e.printStackTrace()
-		}
-
-		onChangeDriver(cls)
-	}
-
 	fun setDriverListener() {
 		driver.setOnCycleListener(onCycleListener)
 		driver.setOnGetSignalListener(onGetSignalListener)
@@ -317,7 +315,7 @@ object MidiConnection {
 	interface Listener {
 		fun onConnectedListener()
 
-		fun onChangeDriver(cls: Class<*>)
+		fun onChangeDriver(driverRef: DriverRef)
 
 		fun onChangeMode(mode: Int)
 
@@ -327,31 +325,11 @@ object MidiConnection {
 	fun setListener(listener_: Listener) {
 		listener = listener_
 
-		onChangeDriver(driver.javaClass)
-		onChangeMode(mode)
+		listener?.onChangeDriver(driver)
+		listener?.onChangeMode(mode)
 	}
 
 	fun removeListener() {
 		listener = null
-	}
-
-	private fun onConnectedListener() {
-		if (listener != null)
-			listener!!.onConnectedListener()
-	}
-
-	private fun onChangeDriver(cls: Class<*>) {
-		if (listener != null)
-			listener!!.onChangeDriver(cls)
-	}
-
-	private fun onChangeMode(mode: Int) {
-		if (listener != null)
-			listener!!.onChangeMode(mode)
-	}
-
-	private fun onUiLog(log: String) {
-		if (listener != null)
-			listener!!.onUiLog(log)
 	}
 }

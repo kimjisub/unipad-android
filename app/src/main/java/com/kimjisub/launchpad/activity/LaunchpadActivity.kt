@@ -12,10 +12,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
-import com.kimjisub.launchpad.midi.MidiConnection.Listener
-import com.kimjisub.launchpad.midi.MidiConnection.initConnection
-import com.kimjisub.launchpad.midi.MidiConnection.setListener
-import com.kimjisub.launchpad.midi.MidiConnection.setMode
+import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
 import kotlinx.android.synthetic.main.activity_usbmidi.*
 
@@ -40,26 +37,26 @@ class LaunchpadActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_usbmidi)
-		setListener(object : Listener {
+		MidiConnection.setListener(object : MidiConnection.Listener {
 			override fun onConnectedListener() {
 				RL_err.visibility = View.GONE
 			}
 
-			override fun onChangeDriver(cls: Class<*>) {
-				selectDriver(cls)
+			override fun onChangeDriver(driverRef: DriverRef) {
+				showDriver(driverRef)
 			}
 
 			override fun onChangeMode(mode: Int) {
-				selectMode(mode)
+				showMode(mode)
 			}
 
 			override fun onUiLog(log: String) {
 				TV_log.append(log + "\n")
 			}
 		})
-		setMode(preference.launchpadConnectMethod)
+		MidiConnection.mode = preference.launchpadConnectMethod
 		val intent: Intent? = intent
-		initConnection(intent!!, (getSystemService(Context.USB_SERVICE) as UsbManager))
+		MidiConnection.initConnection(intent!!, (getSystemService(Context.USB_SERVICE) as UsbManager))
 		Handler().postDelayed({ finish() }, 2000)
 	}
 
@@ -68,44 +65,43 @@ class LaunchpadActivity : BaseActivity() {
 
 	fun selectDriver(v: View) {
 		val index = Integer.parseInt(v.tag as String)
-		selectDriver(
-			arrayOf<Class<*>>(
-				LaunchpadS::class.java,
-				LaunchpadMK2::class.java,
-				LaunchpadPRO::class.java,
-				MidiFighter::class.java,
-				MasterKeyboard::class.java
-			)[index]
-		)
+
+		MidiConnection.driver = when (index) {
+			0 -> LaunchpadS()
+			1 -> LaunchpadMK2()
+			2 -> LaunchpadPRO()
+			3 -> MidiFighter()
+			4 -> MasterKeyboard()
+			5 -> LaunchpadX()
+			else -> MasterKeyboard()
+		}
 	}
 
-	fun selectDriver(cls: Class<*>) {
+	fun showDriver(driverRef: DriverRef) {
 		var index = 0
-		when (cls.simpleName) {
+		when (driverRef.javaClass.simpleName) {
 			"LaunchpadS" -> index = 0
 			"LaunchpadMK2" -> index = 1
 			"LaunchpadPRO" -> index = 2
 			"MidiFighter" -> index = 3
 			"MasterKeyboard" -> index = 4
+			"LaunchpadX" -> index = 5
 		}
 		for (i in LL_Launchpad.indices) {
 			if (index == i)
 				changeViewColor(LL_Launchpad[i], color.ugray1, color.background1)
 			else
 				changeViewColor(LL_Launchpad[i], color.background1, color.ugray1)
-
 		}
 	}
 
-
 	// Select Mode /////////////////////////////////////////////////////////////////////////////////////////
 
-
 	fun selectModeXml(v: View) {
-		selectMode(Integer.parseInt(v.tag as String))
+		MidiConnection.mode = Integer.parseInt(v.tag as String)
 	}
 
-	fun selectMode(mode: Int) {
+	fun showMode(mode: Int) {
 		for (i in LL_mode.indices) {
 			if (mode == i)
 				changeViewColor(LL_mode[i], color.ugray1, color.background1)
