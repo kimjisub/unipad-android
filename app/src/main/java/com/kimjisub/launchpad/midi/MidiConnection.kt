@@ -7,6 +7,9 @@ import android.os.AsyncTask
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.manager.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 
 object MidiConnection {
@@ -17,7 +20,7 @@ object MidiConnection {
 	private var usbDeviceConnection: UsbDeviceConnection? = null
 
 	private var onCycleListener: DriverRef.OnCycleListener? = null
-	private var onGetSignalListener: DriverRef.OnGetSignalListener? = null
+	private var onReceiveSignalListener: DriverRef.OnReceiveSignalListener? = null
 	private var onSendSignalListener: DriverRef.OnSendSignalListener? = null
 
 	var driver: DriverRef = Noting()
@@ -38,6 +41,7 @@ object MidiConnection {
 
 			listener?.onChangeDriver(value)
 		}
+
 	var controller: MidiController? = null
 
 
@@ -51,15 +55,15 @@ object MidiConnection {
 
 	// Listener /////////////////////////////////////////////////////////////////////////////////////////
 
-	internal var listener: Listener? = null
 
-	fun initConnection(intent: Intent, usbManager_: UsbManager) {
-		usbManager = usbManager_
+	fun initConnection(intent: Intent, usbManager: UsbManager) {
+		this.usbManager = usbManager
+
 		val usbDevice = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
 		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED" == intent.action)
 			initDevice(usbDevice)
 		else {
-			val deviceIterator = Objects.requireNonNull(usbManager_).deviceList.values.iterator()
+			val deviceIterator = Objects.requireNonNull(usbManager).deviceList.values.iterator()
 			if (deviceIterator.hasNext())
 				initDevice(deviceIterator.next())
 		}
@@ -79,14 +83,9 @@ object MidiConnection {
 				if (usbDeviceConnection != null) {
 					if (mode == 0) {
 						try {
-
-							// todo switch to coroutine
-							object : AsyncTask<String, Int, String>() {
-								override fun doInBackground(vararg params: String): String? {
-									sendBuffer(cmd, sig, note, velo)
-									return null
-								}
-							}.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+							CoroutineScope(Dispatchers.IO).launch {
+								sendBuffer(cmd, sig, note, velo)
+							}
 						} catch (ignore: Exception) {
 							//Log.midiDetail("MIDI send thread execute fail");
 						}
@@ -98,7 +97,12 @@ object MidiConnection {
 
 		}
 
-		onGetSignalListener = object : DriverRef.OnGetSignalListener {
+		onReceiveSignalListener = object : DriverRef.OnReceiveSignalListener {
+			override fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velo: Int) {
+				controller?.onUnknownEvent(cmd, sig, note, velo)
+				//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+			}
+
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
 				controller?.onPadTouch(x, y, upDown, velo)
 			}
@@ -111,7 +115,7 @@ object MidiConnection {
 				controller?.onChainTouch(c, upDown)
 			}
 
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
+			override fun onReceived(cmd: Int, sig: Int, note: Int, velo: Int) {
 				controller?.onUnknownEvent(cmd, sig, note, velo)
 			}
 		}
@@ -301,7 +305,7 @@ object MidiConnection {
 
 	fun setDriverListener() {
 		driver.setOnCycleListener(onCycleListener)
-		driver.setOnGetSignalListener(onGetSignalListener)
+		driver.setOnGetSignalListener(onReceiveSignalListener)
 		driver.setOnSendSignalListener(onSendSignalListener)
 	}
 
@@ -312,6 +316,17 @@ object MidiConnection {
 			controller = null
 	}
 
+
+	internal var listener: Listener? = null
+		set(value) {
+			field = value
+
+			if (field != null) {
+				field?.onChangeDriver(driver)
+				field?.onChangeMode(mode)
+			}
+		}
+
 	interface Listener {
 		fun onConnectedListener()
 
@@ -320,16 +335,5 @@ object MidiConnection {
 		fun onChangeMode(mode: Int)
 
 		fun onUiLog(log: String)
-	}
-
-	fun setListener(listener_: Listener) {
-		listener = listener_
-
-		listener?.onChangeDriver(driver)
-		listener?.onChangeMode(mode)
-	}
-
-	fun removeListener() {
-		listener = null
 	}
 }

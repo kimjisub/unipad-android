@@ -19,49 +19,53 @@ abstract class DriverRef {
 
 	////
 
-
 	fun onConnected() = onCycleListener?.onConnected()
 
 	fun onDisconnected() = onCycleListener?.onDisconnected()
 
+	// OnReceiveSignalListener /////////////////////////////////////////////////////////////////////////////////////////
 
-	// OnGetSignalListener /////////////////////////////////////////////////////////////////////////////////////////
-
-	private var onGetSignalListener: OnGetSignalListener? = null
-	fun setOnGetSignalListener(listener: OnGetSignalListener?): DriverRef {
-		onGetSignalListener = listener
+	private var onReceiveSignalListener: OnReceiveSignalListener? = null
+	fun setOnGetSignalListener(listener: OnReceiveSignalListener?): DriverRef {
+		onReceiveSignalListener = listener
 		return this
 	}
 
-	interface OnGetSignalListener {
+	interface OnReceiveSignalListener {
+		fun onReceived(cmd: Int, sig: Int, note: Int, velo: Int)
+		fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velo: Int)
+
 		fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int)
-		fun onFunctionkeyTouch(f: Int, upDown: Boolean)
 		fun onChainTouch(c: Int, upDown: Boolean)
-		fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int)
+		fun onFunctionkeyTouch(f: Int, upDown: Boolean)
 	}
 
 	////
 
 
-	abstract fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int)
-	internal fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+	open fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
+		Log.midiDetail("onReceived($cmd, $sig, $note, $velo)")
+		onReceiveSignalListener?.onReceived(cmd, sig, note, velo)
+	}
+
+	fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
 		Log.midiDetail("onPadTouch($x, $y, $upDown, $velo)")
-		onGetSignalListener?.onPadTouch(x, y, upDown, velo)
+		onReceiveSignalListener?.onPadTouch(x, y, upDown, velo)
 	}
 
-	internal fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
-		Log.midiDetail("onFunctionkeyTouch($f, $upDown)")
-		onGetSignalListener?.onFunctionkeyTouch(f, upDown)
-	}
-
-	internal fun onChainTouch(c: Int, upDown: Boolean) {
+	fun onChainTouch(c: Int, upDown: Boolean) {
 		Log.midiDetail("onChainTouch($c, $upDown)")
-		onGetSignalListener?.onChainTouch(c, upDown)
+		onReceiveSignalListener?.onChainTouch(c, upDown)
 	}
 
-	internal fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-		Log.midiDetail("onUnknownEvent($cmd, $sig, $note, $velo)")
-		onGetSignalListener?.onUnknownEvent(cmd, sig, note, velo)
+	fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+		Log.midiDetail("onFunctionkeyTouch($f, $upDown)")
+		onReceiveSignalListener?.onFunctionkeyTouch(f, upDown)
+	}
+
+	fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velo: Int) {
+		Log.midiDetail("onUnknownReceived($cmd, $sig, $note, $velo)")
+		onReceiveSignalListener?.onUnknownReceived(cmd, sig, note, velo)
 	}
 
 	// OnSendSignalListener /////////////////////////////////////////////////////////////////////////////////////////

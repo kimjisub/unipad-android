@@ -217,7 +217,7 @@ class MainActivity : BaseActivity() {
 
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
 		FAB_reconnectLaunchpad.setOnClickListener {
-			startActivity<LaunchpadActivity>()
+			startActivity<MidiSelectActivity>()
 		}
 		FAB_loadUniPack.setOnClickListener {
 			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tool="http://schemas.android.com/tools">
+	xmlns:tool="http://schemas.android.com/tools"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<RelativeLayout
 		android:layout_width="match_parent"
@@ -34,7 +35,16 @@
 					android:layout_height="wrap_content"
 					android:layout_centerHorizontal="true"
 					android:layout_centerVertical="true"
-					android:orientation="horizontal">
+					android:orientation="vertical">
+
+					<include
+						layout="@layout/include_midi_item"
+						app:title="@{`asdf`}"/>
+
+					<include
+						layout="@layout/include_midi_item"
+						app:title="@{@string/loading}"
+						app:subscription="@{@string/loading}"/>
 
 					<LinearLayout
 						android:id="@+id/BTN_S"
@@ -233,6 +243,7 @@
 
 		<RelativeLayout
 			android:id="@+id/RL_err"
+			android:visibility="gone"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:background="@color/background1"

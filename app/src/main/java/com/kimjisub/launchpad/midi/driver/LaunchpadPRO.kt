@@ -65,7 +65,7 @@ class LaunchpadPRO : DriverRef() {
 				onFunctionkeyTouch(note / 10 - 1 + 24, velo != 0)
 			}
 		} else {
-			onUnknownEvent(cmd, sig, note, velo)
+			onUnknownReceived(cmd, sig, note, velo)
 			if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
 				Log.midiDetail("PRO > Live Mode")
 			else if (cmd == 23 && sig == 47 && note == 0 && velo == -9)
