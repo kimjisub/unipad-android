@@ -34,6 +34,11 @@
 					android:alpha="0"
 					android:visibility="invisible" />
 
+				<include
+					layout="@layout/include_midi_item"
+					app:title="@{@string/unipackNotFound}"
+					app:subscription="@{@string/loading}"/>
+
 			</RelativeLayout>
 
 			<RelativeLayout
@@ -52,7 +57,6 @@
 						android:layout_height="match_parent"
 						android:clipToPadding="false"
 						android:orientation="vertical"
-
 						android:paddingTop="16dp"
 						android:paddingBottom="6dp"
 						android:scrollbarThumbVertical="@color/ugray2" />

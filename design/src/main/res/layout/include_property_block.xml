@@ -47,11 +47,11 @@
 			<LinearLayout
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
+				android:layout_marginBottom="2dp"
 				android:gravity="center"
 				android:orientation="vertical"
 				app:layout_constraintBottom_toBottomOf="parent"
 				app:layout_constraintLeft_toLeftOf="parent"
-				android:layout_marginBottom="2dp"
 				app:layout_constraintRight_toRightOf="parent">
 
 				<ImageView
@@ -62,11 +62,11 @@
 					android:tint="@color/wb2" />
 
 				<TextView
-					android:textSize="@dimen/text"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@{value}"
 					android:textColor="@color/wb2"
+					android:textSize="@dimen/text"
 					tool:text="Value" />
 
 			</LinearLayout>

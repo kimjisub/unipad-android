@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.os.Handler
@@ -14,9 +13,9 @@ import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
-import kotlinx.android.synthetic.main.activity_usbmidi.*
+import kotlinx.android.synthetic.main.activity_midi_select.*
 
-class LaunchpadActivity : BaseActivity() {
+class MidiSelectActivity : BaseActivity() {
 	private val LL_Launchpad: Array<LinearLayout> by lazy {
 		arrayOf(
 			BTN_S,
@@ -36,8 +35,13 @@ class LaunchpadActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_usbmidi)
-		MidiConnection.setListener(object : MidiConnection.Listener {
+		setContentView(layout.activity_midi_select)
+
+
+		val service = (getSystemService(Context.USB_SERVICE) as UsbManager)
+
+
+		MidiConnection.listener = object : MidiConnection.Listener {
 			override fun onConnectedListener() {
 				RL_err.visibility = View.GONE
 			}
@@ -53,15 +57,14 @@ class LaunchpadActivity : BaseActivity() {
 			override fun onUiLog(log: String) {
 				TV_log.append(log + "\n")
 			}
-		})
+		}
 		MidiConnection.mode = preference.launchpadConnectMethod
-		val intent: Intent? = intent
-		MidiConnection.initConnection(intent!!, (getSystemService(Context.USB_SERVICE) as UsbManager))
-		Handler().postDelayed({ finish() }, 2000)
+		MidiConnection.initConnection(intent, service)
+
+		Handler().postDelayed({ finish() }, 5000)
 	}
 
 	// Select Driver /////////////////////////////////////////////////////////////////////////////////////////
-
 
 	fun selectDriver(v: View) {
 		val index = Integer.parseInt(v.tag as String)

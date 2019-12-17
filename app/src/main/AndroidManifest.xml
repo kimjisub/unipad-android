@@ -65,7 +65,7 @@
 			android:screenOrientation="portrait"
 			android:theme="@style/SettingTheme" />
 		<activity
-			android:name=".activity.LaunchpadActivity"
+			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
 			android:theme="@style/PopupTheme">

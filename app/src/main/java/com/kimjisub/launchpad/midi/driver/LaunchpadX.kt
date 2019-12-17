@@ -62,7 +62,7 @@ class LaunchpadX : DriverRef() {
 				onFunctionkeyTouch(note / 10 - 1 + 24, velo != 0)
 			}
 		} else {
-			onUnknownEvent(cmd, sig, note, velo)
+			onUnknownReceived(cmd, sig, note, velo)
 		}
 	}
 
