@@ -34,11 +34,6 @@
 					android:alpha="0"
 					android:visibility="invisible" />
 
-				<include
-					layout="@layout/include_midi_item"
-					app:title="@{@string/unipackNotFound}"
-					app:subscription="@{@string/loading}"/>
-
 			</RelativeLayout>
 
 			<RelativeLayout

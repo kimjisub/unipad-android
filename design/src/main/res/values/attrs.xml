@@ -5,6 +5,7 @@
 
 	<attr name="title" format="string" />
 	<attr name="subtitle" format="string" />
+	<attr name="subscription" format="string" />
 
 	<attr name="option1Name" format="string" />
 	<attr name="option2Name" format="string" />
@@ -32,5 +33,10 @@
 	<declare-styleable name="MainPackPanel" />
 
 	<declare-styleable name="StorePackPanel" />
+
+	<declare-styleable name="MidiItemView">
+		<attr name="title" />
+		<attr name="subscription" />
+	</declare-styleable>
 
 </resources>

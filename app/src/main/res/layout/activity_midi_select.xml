@@ -37,14 +37,11 @@
 					android:layout_centerVertical="true"
 					android:orientation="vertical">
 
-					<include
-						layout="@layout/include_midi_item"
-						app:title="@{`asdf`}"/>
-
-					<include
-						layout="@layout/include_midi_item"
-						app:title="@{@string/loading}"
-						app:subscription="@{@string/loading}"/>
+					<com.kimjisub.design.MidiItemView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						app:title="asdf"
+						app:subscription="asdf"/>
 
 					<LinearLayout
 						android:id="@+id/BTN_S"
