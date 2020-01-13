@@ -288,6 +288,7 @@ class MainActivity : BaseActivity() {
 					I_list.add(packItem)
 				}
 
+				I_list = ArrayList(I_list.sortedWith(sortMethods[6]))
 				I_list = ArrayList(I_list.sortedWith(sortMethods[sortMethod]))
 
 				for (item: UniPackItem in I_list) {
