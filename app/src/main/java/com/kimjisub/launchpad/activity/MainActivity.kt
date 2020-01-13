@@ -324,7 +324,6 @@ class MainActivity : BaseActivity() {
 						if (selectedIndex == index)
 							updatePanel(false)
 					}) { it.clone() }
-					P_total.data.unipackCapacity.set(unipackList.size.toString())
 				}
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
@@ -649,7 +648,7 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt)) + " MB"
+				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt), "%.0f")
 				withContext(Dispatchers.Main) {
 					P_total.data.unipackCapacity.set(fileSize)
 				}

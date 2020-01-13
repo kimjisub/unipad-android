@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tool="http://schemas.android.com/tools">
 
 	<data>
 
 		<variable
 			name="activity"
-			type="com.kimjisub.design.panel.MainTotalPanel"/>
+			type="com.kimjisub.design.panel.MainTotalPanel" />
 
 		<variable
 			name="data"
 			type="com.kimjisub.design.panel.MainTotalPanel.Data" />
-
 
 
 	</data>
@@ -55,41 +56,143 @@
 
 				</RelativeLayout>
 
+
+				<RelativeLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:background="#f5f5f5">
+
+					<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="horizontal">
+
+						<LinearLayout
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_weight="1"
+							android:orientation="vertical">
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:text="@string/MTP_count"
+								android:textColor="@color/wb2"
+								android:textSize="@dimen/text_small" />
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:paddingTop="8dp"
+								android:singleLine="true"
+								android:text="@{data.unipackCount}"
+								android:textSize="@dimen/text_17"
+								android:textStyle="bold"
+								tool:text="123" />
+						</LinearLayout>
+
+						<View
+							android:layout_width="1dp"
+							android:layout_height="match_parent"
+							android:layout_marginTop="8dp"
+							android:layout_marginBottom="8dp"
+							android:background="@color/wb2" />
+
+						<LinearLayout
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_weight="1"
+							android:orientation="vertical">
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:text="@string/MTP_size"
+								android:textColor="@color/wb2"
+								android:textSize="@dimen/text_small" />
+
+							<androidx.constraintlayout.widget.ConstraintLayout
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:orientation="horizontal"
+								android:paddingTop="8dp">
+
+								<TextView
+									android:id="@+id/TV_capacity"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:singleLine="true"
+									android:text="@{data.unipackCapacity}"
+									android:textSize="@dimen/text_17"
+									android:textStyle="bold"
+									app:layout_constraintLeft_toLeftOf="parent"
+									app:layout_constraintTop_toTopOf="parent" />
+
+								<TextView
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:layout_gravity="bottom"
+									android:text="@string/mb"
+									android:textSize="@dimen/text_small"
+									android:textStyle="bold"
+									app:layout_constraintBaseline_toBaselineOf="@+id/TV_capacity"
+									app:layout_constraintLeft_toRightOf="@+id/TV_capacity" />
+
+							</androidx.constraintlayout.widget.ConstraintLayout>
+						</LinearLayout>
+
+						<View
+							android:layout_width="1dp"
+							android:layout_height="match_parent"
+							android:layout_marginTop="8dp"
+							android:layout_marginBottom="8dp"
+							android:background="@color/wb2" />
+
+						<LinearLayout
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_weight="1"
+							android:orientation="vertical">
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:text="@string/MPT_playCount"
+								android:textColor="@color/wb2"
+								android:textSize="@dimen/text_small" />
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:layout_gravity="center"
+								android:paddingTop="8dp"
+								android:singleLine="true"
+								android:text="@{data.openCount}"
+								android:textSize="@dimen/text_17"
+								android:textStyle="bold" />
+						</LinearLayout>
+					</LinearLayout>
+				</RelativeLayout>
+
 				<LinearLayout
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:layout_gravity="center"
 					android:orientation="horizontal">
-					<!--android:layout_marginTop="64dp"
-					android:layout_marginBottom="64dp"-->
 
 					<LinearLayout
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:gravity="right"
 						android:orientation="vertical">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@string/MTP_count"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@string/MTP_size"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@string/MPT_playCount"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
 
 						<TextView
 							android:layout_width="wrap_content"
@@ -109,28 +212,6 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:text="@{data.unipackCount}"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@{data.unipackCapacity}"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@{data.openCount}"
-							android:textColor="@color/text" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
 							android:text="@{data.selectedTheme}"
 							android:textColor="@color/text" />
 
@@ -139,15 +220,13 @@
 				</LinearLayout>
 
 				<com.kimjisub.design.layout.RadioButtonGroupTableLayout
+					android:id="@+id/radioButtonGroupTableLayout"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:padding="16dp"
-					android:id="@+id/radioButtonGroupTableLayout"
-					android:layout_gravity="center">
+					android:layout_gravity="center"
+					android:padding="16dp">
 
 					<TableRow>
-						<TextView
-							android:text="@{data.sortingMethod.toString()}" />
 
 						<TextView
 							android:layout_column="1"
@@ -162,16 +241,16 @@
 						<TextView android:text="다운로드 날짜" />
 
 						<RadioButton
-							android:tag="0"
-							android:checked="@{data.sortingMethod==0}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==0}"
+							android:tag="0" />
 
 						<RadioButton
-							android:tag="1"
-							android:checked="@{data.sortingMethod==1}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==1}"
+							android:tag="1" />
 
 					</TableRow>
 
@@ -180,16 +259,16 @@
 						<TextView android:text="실행 횟수" />
 
 						<RadioButton
-							android:tag="2"
-							android:checked="@{data.sortingMethod==2}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==2}"
+							android:tag="2" />
 
 						<RadioButton
-							android:tag="3"
-							android:checked="@{data.sortingMethod==3}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==3}"
+							android:tag="3" />
 
 					</TableRow>
 
@@ -198,16 +277,16 @@
 						<TextView android:text="최근 연 날짜" />
 
 						<RadioButton
-							android:tag="4"
-							android:checked="@{data.sortingMethod==4}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==4}"
+							android:tag="4" />
 
 						<RadioButton
-							android:tag="5"
-							android:checked="@{data.sortingMethod==5}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==5}"
+							android:tag="5" />
 
 					</TableRow>
 
@@ -216,16 +295,16 @@
 						<TextView android:text="이름" />
 
 						<RadioButton
-							android:tag="6"
-							android:checked="@{data.sortingMethod==6}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==6}"
+							android:tag="6" />
 
 						<RadioButton
-							android:tag="7"
-							android:checked="@{data.sortingMethod==7}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==7}"
+							android:tag="7" />
 
 					</TableRow>
 
@@ -234,16 +313,16 @@
 						<TextView android:text="제작자" />
 
 						<RadioButton
-							android:tag="8"
-							android:checked="@{data.sortingMethod==8}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==8}"
+							android:tag="8" />
 
 						<RadioButton
-							android:tag="9"
-							android:checked="@{data.sortingMethod==9}"
 							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" />
+							android:layout_height="wrap_content"
+							android:checked="@{data.sortingMethod==9}"
+							android:tag="9" />
 
 					</TableRow>
 

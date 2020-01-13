@@ -30,4 +30,5 @@
 	<string name="FE_accept">Accept</string>
 	<string name="FE_folderErr">Couldn\'t read the folder.</string>
 	<string name="FE_fileErr">Couldn\'t read the file.</string>
+	<string name="mb">MB</string>
 </resources>

@@ -30,4 +30,5 @@
 	<string name="FE_accept">확인</string>
 	<string name="FE_folderErr">폴더를 읽을 수 없습니다.</string>
 	<string name="FE_fileErr">파일을 읽을 수 없습니다.</string>
+	<string name="mb">MB</string>
 </resources>

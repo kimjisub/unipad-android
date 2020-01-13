@@ -217,8 +217,8 @@ object FileManager {
 	}
 
 	@SuppressLint("DefaultLocale")
-	fun byteToMB(b: Long): String {
-		return String.format("%.2f", b.toFloat() / 1024 / 1024)
+	fun byteToMB(b: Long, format:String="%.2f"): String {
+		return String.format(format, b.toFloat() / 1024 / 1024)
 	}
 
 	fun getFolderSize(file: File): Long {
