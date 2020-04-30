@@ -5,13 +5,16 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View.OnClickListener
+import android.widget.ArrayAdapter
 import android.widget.RadioButton
 import android.widget.RelativeLayout
+import android.widget.SpinnerAdapter
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
+import com.kimjisub.manager.extra.addOnPropertyChanged
 import kotlinx.android.synthetic.main.panel_main_total.view.*
 
 class MainTotalPanel
@@ -41,7 +44,8 @@ constructor(
 		val unipackCount: ObservableField<String> = ObservableField()
 		val unipackCapacity: ObservableField<String> = ObservableField()
 		val openCount: ObservableField<String> = ObservableField()
-		val selectedTheme: ObservableField<String> = ObservableField()
+		val themeList : ObservableField<ArrayList<String>> = ObservableField()
+		val selectedTheme: ObservableField<Int> = ObservableField()
 
 		val sortingMethod: ObservableField<Int> = ObservableField(1) // 0~5
 	}
@@ -65,6 +69,12 @@ constructor(
 		radioButtonGroupTableLayout.onCheckedChangeListener = {
 			data.sortingMethod.set((it.tag as String).toInt())
 		}
+
+		/*spinner.onItemSelectedListener { parent, view, position, id ->
+			data.selectedTheme.set(position)
+		}
+
+		spinner.setItem*/
 	}
 
 }

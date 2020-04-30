@@ -33,6 +33,8 @@ import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.design.panel.MainPackPanel
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.adapter.ThemeItem
+import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -264,10 +266,18 @@ class MainActivity : BaseActivity() {
 		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
 			Comparator { a, b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
 			Comparator { a, b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
-			Comparator { a, b -> db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
+			Comparator { a, b ->
+				db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name))
+			},
 			Comparator { a, b -> -db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
-			Comparator { a, b -> (db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
-			Comparator { a, b -> -(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)) },
+			Comparator { a, b ->
+				(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
+					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
+			},
+			Comparator { a, b ->
+				-(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
+					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
+			},
 			Comparator { a, b -> a.unipack.title!!.compareTo(b.unipack.title!!) },
 			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) }
 		)
@@ -531,6 +541,9 @@ class MainActivity : BaseActivity() {
 			sortMethod = it.get()!!
 			update()
 		}
+		P_total.data.selectedTheme.addOnPropertyChanged {
+
+		}
 
 		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
 			override fun onBookmarkClick(v: View) {
@@ -640,12 +653,18 @@ class MainActivity : BaseActivity() {
 	private fun updatePanelMain(hardWork: Boolean) {
 		P_total.data.unipackCount.set(unipackList.size.toString())
 		db.unipackOpenDAO()!!.count.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
-		val packageName: String? = preference.selectedTheme
+
+		val themeItemList = ThemeTool.getThemePackList(applicationContext)
+		val themeNameList = ArrayList<String>()
+		for(item:ThemeItem in themeItemList)
+			themeNameList.add(item.name)
+		P_total.data.themeList.set(themeNameList)
+
 		try {
-			val resources = ThemeResources(this@MainActivity, packageName, false)
-			P_total.data.selectedTheme.set(resources.name)
+			val index = themeItemList.indexOfFirst { it.package_name == preference.selectedTheme }
+			P_total.data.selectedTheme.set(index)
 		} catch (e: Exception) {
-			P_total.data.selectedTheme.set(getString(string.theme_name))
+			P_total.data.selectedTheme.set(0)
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {

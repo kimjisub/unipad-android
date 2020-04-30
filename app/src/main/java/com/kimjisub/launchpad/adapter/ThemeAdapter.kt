@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.adapter
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
@@ -49,3 +51,25 @@ class ThemeAdapter(val list: ArrayList<ThemeItem>) : RecyclerView.Adapter<ThemeH
 	override fun getItemCount(): Int = list.size + 1
 }
 
+object ThemeTool{
+	fun getThemePackList(context: Context): ArrayList<ThemeItem> {
+		val ret = ArrayList<ThemeItem>()
+		try {
+			ret.add(ThemeItem(context, context.packageName))
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+		val packages: List<ApplicationInfo> = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+		for (applicationInfo in packages) {
+			val packageName: String = applicationInfo.packageName
+			if (packageName.startsWith("com.kimjisub.launchpad.theme.")) {
+				try {
+					ret.add(ThemeItem(context, packageName))
+				} catch (e: Exception) {
+					e.printStackTrace()
+				}
+			}
+		}
+		return ret
+	}
+}

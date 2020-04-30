@@ -56,6 +56,13 @@
 
 				</RelativeLayout>
 
+				<Spinner
+					android:id="@+id/spinner"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:entries="@{data.themeList}"
+					android:theme="@style/UniPadSpinner" />
+
 				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
@@ -174,43 +181,6 @@
 
 						</androidx.constraintlayout.widget.ConstraintLayout>
 					</LinearLayout>
-				</LinearLayout>
-
-				<LinearLayout
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_gravity="center"
-					android:orientation="horizontal">
-
-					<LinearLayout
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:gravity="right"
-						android:orientation="vertical">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@string/MPT_theme"
-							android:textColor="@color/text" />
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:gravity="left"
-						android:orientation="vertical"
-						android:paddingLeft="32dp">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:text="@{data.selectedTheme}"
-							android:textColor="@color/text" />
-
-					</LinearLayout>
-
 				</LinearLayout>
 
 				<com.kimjisub.design.layout.RadioButtonGroupTableLayout
