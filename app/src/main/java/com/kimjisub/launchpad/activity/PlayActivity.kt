@@ -25,6 +25,7 @@ import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
 import com.anjlab.android.iab.v3.TransactionDetails
+import com.bumptech.glide.Glide
 import com.kimjisub.design.Chain
 import com.kimjisub.design.Pad
 import com.kimjisub.design.manage.SyncCheckBox
@@ -382,7 +383,7 @@ class PlayActivity : BaseActivity() {
 			chainsLeft.removeAllViews()
 
 			// Image Resources
-			background.setImageDrawable(theme!!.playbg)
+			Glide.with(this).load(theme!!.playbg).into(background)	//glide 테스트
 			custom_logo.setImageDrawable(theme!!.custom_logo)
 			prev.background = theme!!.xml_prev
 			play.background = theme!!.xml_play

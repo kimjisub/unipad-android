@@ -23,6 +23,7 @@
 	<application
 		android:name=".BaseApplication"
 		android:allowBackup="true"
+		android:largeHeap="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
 		android:supportsRtl="true"
