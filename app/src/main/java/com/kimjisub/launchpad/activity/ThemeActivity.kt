@@ -1,8 +1,5 @@
 package com.kimjisub.launchpad.activity
 
-import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Bundle
 import com.azoft.carousellayoutmanager.CarouselLayoutManager
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener
@@ -10,13 +7,14 @@ import com.azoft.carousellayoutmanager.CenterScrollListener
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.ThemeAdapter
 import com.kimjisub.launchpad.adapter.ThemeItem
+import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_theme.*
 import org.jetbrains.anko.browse
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
-	val list: ArrayList<ThemeItem> by lazy { getThemePackList(applicationContext) }
+	val list: ArrayList<ThemeItem> by lazy { ThemeTool.getThemePackList(applicationContext) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -63,27 +61,6 @@ class ThemeActivity : BaseActivity() {
 				break
 			}
 			i++
-		}
-		return ret
-	}
-
-	private fun getThemePackList(context: Context): ArrayList<ThemeItem> {
-		val ret = ArrayList<ThemeItem>()
-		try {
-			ret.add(ThemeItem(context, context.packageName))
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-		val packages: List<ApplicationInfo> = context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-		for (applicationInfo in packages) {
-			val packageName: String = applicationInfo.packageName
-			if (packageName.startsWith("com.kimjisub.launchpad.theme.")) {
-				try {
-					ret.add(ThemeItem(context, packageName))
-				} catch (e: Exception) {
-					e.printStackTrace()
-				}
-			}
 		}
 		return ret
 	}
