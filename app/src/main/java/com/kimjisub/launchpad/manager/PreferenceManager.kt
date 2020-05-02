@@ -74,4 +74,16 @@ class PreferenceManager(
 				putLong(prevStoreCountTag, value)
 			}
 		}
+
+	private val defaultSortTag = "DefaultSort"
+	var defaultSort: Int
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getInt(defaultSortTag, 1)
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putInt(defaultSortTag, value)
+			}
+		}
 }
