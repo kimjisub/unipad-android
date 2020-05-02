@@ -45,6 +45,7 @@ import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -76,10 +77,10 @@ class MainActivity : BaseActivity() {
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
+	private val preferenceManager: PreferenceManager by lazy {PreferenceManager(this)}
 
 	// List Management
 	private var unipackList: ArrayList<UniPackItem> = ArrayList()
-	private var sortMethod: Int = 0
 	private var lastPlayIndex = -1
 	private var listRefreshing = false
 	private val adapter: UniPackAdapter by lazy {
@@ -264,8 +265,8 @@ class MainActivity : BaseActivity() {
 		listRefreshing = true
 
 		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
-			Comparator { a, b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
 			Comparator { a, b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
+			Comparator { a, b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
 			Comparator { a, b ->
 				db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name))
 			},
@@ -299,7 +300,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				I_list = ArrayList(I_list.sortedWith(sortMethods[6]))
-				I_list = ArrayList(I_list.sortedWith(sortMethods[sortMethod]))
+				I_list = ArrayList(I_list.sortedWith(sortMethods[preferenceManager.defaultSort]))
 
 				for (item: UniPackItem in I_list) {
 					var index = -1
@@ -535,10 +536,11 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
+		P_total.data.sortingMethod.set(preferenceManager.defaultSort)
 		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		P_total.data.version.set(BuildConfig.VERSION_NAME)
 		P_total.data.sortingMethod.addOnPropertyChanged {
-			sortMethod = it.get()!!
+			preferenceManager.defaultSort = it.get()!!
 			update()
 		}
 		P_total.data.selectedTheme.addOnPropertyChanged {
