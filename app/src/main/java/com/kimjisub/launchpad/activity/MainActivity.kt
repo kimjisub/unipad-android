@@ -280,6 +280,8 @@ class MainActivity : BaseActivity() {
 					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
 			},
 			Comparator { a, b -> a.unipack.title!!.compareTo(b.unipack.title!!) },
+			Comparator { a, b -> -a.unipack.title!!.compareTo(b.unipack.title!!) },
+			Comparator { a, b -> a.unipack.producerName!!.compareTo(b.unipack.producerName!!) },
 			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) }
 		)
 
