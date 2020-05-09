@@ -104,7 +104,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 						"squareButton" -> squareButton = value == "true"
 						"website" -> website = value
 					}
-				} catch (e: ArrayIndexOutOfBoundsException) {
+				} catch (e: IndexOutOfBoundsException) {
 					e.printStackTrace()
 					addErr("info : [$s] format is not found")
 				}
