@@ -16,15 +16,17 @@ import com.kimjisub.launchpad.midi.driver.*
 import kotlinx.android.synthetic.main.activity_midi_select.*
 
 class MidiSelectActivity : BaseActivity() {
-	private val LL_Launchpad: Array<LinearLayout> by lazy {
-		arrayOf(
-			BTN_S,
-			BTN_Mk2,
-			BTN_Pro,
-			BTN_Midifighter,
-			BTN_Piano
-		)
-	}
+
+	private val userInteract = false;
+
+	private val midiDeviceList = arrayListOf(
+		"Launchpad S",
+		"Launchpad MK2",
+		"Launchpad PRO",
+		"Midi Fighter",
+		"Master Keyboard",
+		"Launchpad X"
+	)
 
 	private val LL_mode: Array<LinearLayout> by lazy {
 		arrayOf(
@@ -36,6 +38,11 @@ class MidiSelectActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_midi_select)
+
+		picker.data = midiDeviceList
+		picker.setOnItemSelectedListener { picker, data, position ->
+			selectDriver(position)
+		}
 
 
 		val service = (getSystemService(Context.USB_SERVICE) as UsbManager)
@@ -61,13 +68,14 @@ class MidiSelectActivity : BaseActivity() {
 		MidiConnection.mode = preference.launchpadConnectMethod
 		MidiConnection.initConnection(intent, service)
 
-		Handler().postDelayed({ finish() }, 5000)
+		Handler().postDelayed({
+			if (!userInteract) finish()
+		}, 50000)
 	}
 
 	// Select Driver /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun selectDriver(v: View) {
-		val index = Integer.parseInt(v.tag as String)
+	private fun selectDriver(index: Int) {
 
 		MidiConnection.driver = when (index) {
 			0 -> LaunchpadS()
@@ -90,12 +98,8 @@ class MidiSelectActivity : BaseActivity() {
 			"MasterKeyboard" -> index = 4
 			"LaunchpadX" -> index = 5
 		}
-		for (i in LL_Launchpad.indices) {
-			if (index == i)
-				changeViewColor(LL_Launchpad[i], color.ugray1, color.background1)
-			else
-				changeViewColor(LL_Launchpad[i], color.background1, color.ugray1)
-		}
+
+		picker.setSelectedItemPosition(index, true)
 	}
 
 	// Select Mode /////////////////////////////////////////////////////////////////////////////////////////
