@@ -49,9 +49,7 @@
 						android:layout_height="match_parent"
 						android:clipToPadding="false"
 						android:orientation="vertical"
-						android:paddingLeft="16dp"
 						android:paddingTop="16dp"
-						android:paddingRight="16dp"
 						android:paddingBottom="6dp"
 						android:scrollbarThumbVertical="@color/ugray2" />
 
