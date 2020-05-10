@@ -18,14 +18,6 @@ android {
 		renderscriptTargetApi 19
 		renderscriptSupportModeEnabled true
 	}
-	signingConfigs {
-		release {
-			storeFile file('/Users/kimjisub/Github/UniPad-Android/etc/asdf.jks')
-			storePassword 'asdfasdf'
-			keyAlias "asdf"
-			keyPassword 'asdfasdf'
-		}
-	}
 	buildTypes {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
