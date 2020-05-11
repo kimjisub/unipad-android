@@ -99,6 +99,8 @@ class ThemeResources {
 
 		// Drawable
 
+
+
 		playbg = defaultRes.getDrawable(drawable.playbg)
 		custom_logo = defaultRes.getDrawable(drawable.custom_logo)
 		btn = defaultRes.getDrawable(drawable.btn)
