@@ -22,10 +22,9 @@
 
 	<application
 		android:name=".BaseApplication"
-		android:allowBackup="true"
-		android:largeHeap="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
+		android:largeHeap="true"
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme"
 		android:usesCleartextTraffic="true"
@@ -33,7 +32,7 @@
 		<activity
 			android:name=".activity.SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape">
+			android:screenOrientation="fullSensor">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 
@@ -43,27 +42,32 @@
 		<activity
 			android:name=".activity.MainActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"></activity>
+			android:screenOrientation="fullSensor" />
 		<activity
 			android:name=".activity.FBStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.FSStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.PlayActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity"/>
 		<activity
 			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity"/>
 		<activity
 			android:name=".activity.SettingActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="portrait"
+			tools:ignore="LockedOrientationActivity"
 			android:theme="@style/SettingTheme" />
 		<activity
 			android:name=".activity.MidiSelectActivity"
