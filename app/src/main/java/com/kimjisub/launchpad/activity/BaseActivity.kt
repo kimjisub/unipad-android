@@ -19,8 +19,6 @@ import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
-import com.vungle.warren.InitCallback
-import com.vungle.warren.Vungle
 import org.jetbrains.anko.startActivity
 import java.io.File
 import java.util.*
@@ -124,37 +122,6 @@ open class BaseActivity : AppCompatActivity() {
 		preference.prevAdsShowTime = currTime
 	}
 
-	fun initVungle() {
-		if (!Vungle.isInitialized()) {
-			Log.vungle("isInitialized() == false")
-			Log.vungle("init start")
-			Vungle.init(Constant.VUNGLE.APPID, applicationContext, object : InitCallback {
-				override fun onSuccess() {
-					// Initialization has succeeded and SDK is ready to load an ad or play one if there
-					// is one pre-cached already
-
-					Log.vungle("init onSuccess()")
-				}
-
-				override fun onError(throwable: Throwable) {
-					// Initialization error occurred - throwable.getLocalizedMessage() contains error message
-
-					Log.vungle("init onError() == " + throwable.localizedMessage)
-				}
-
-				override fun onAutoCacheAdAvailable(placementId: String?) {
-					// Callback to notify when an ad becomes available for the auto-cached placement
-					// NOTE: This callback works only for the auto-cached placement. Otherwise, please use
-					// LoadAdCallback with loadAd API for loading placements.
-
-					Log.vungle("init onAutoCacheAdAvailable()")
-				}
-			})
-		} else {
-			Log.vungle("isInitialized() == true")
-		}
-	}
-
 	fun showAdmob() {
 		Log.admob("showAdmob ================================")
 		val isLoaded = interstitialAd!!.isLoaded
@@ -222,7 +189,6 @@ open class BaseActivity : AppCompatActivity() {
 		Log.activity("onResume " + this.localClassName)
 		super.onResume()
 		this.volumeControlStream = AudioManager.STREAM_MUSIC
-		initVungle()
 	}
 
 	public override fun onPause() {

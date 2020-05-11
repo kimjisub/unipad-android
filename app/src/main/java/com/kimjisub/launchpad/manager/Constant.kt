@@ -21,10 +21,4 @@ object Constant {
 		const val MAIN_LIST = "ca-app-pub-1077445788578961/6318023505"
 		const val PLAY_END = "ca-app-pub-1077445788578961/6242001881"
 	}
-
-	object VUNGLE {
-		const val APPID = "5bb765239e0522795b6641af"
-		const val MAIN_INFEED = "18426-4958348"
-		const val PLAY_END = "44597-8583205"
-	}
 }
