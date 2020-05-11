@@ -29,7 +29,6 @@ android {
 			proguardFile 'proguard-firebase.pro'
 			proguardFile 'proguard-okhttp3.pro'
 			proguardFile 'proguard-retrofit2.pro'
-			proguardFile 'proguard-vungle.pro'
 		}
 		debug {
 			manifestPlaceholders = [appName: "@string/app_name_test"]
@@ -115,12 +114,6 @@ dependencies {
 	implementation 'com.google.android.gms:play-services-ads:19.1.0'
 	implementation 'com.google.android.gms:play-services-identity:17.0.0'
 	implementation 'com.google.android.gms:play-services-gcm:17.0.0'
-
-	// Vungle SDK
-	implementation 'com.github.vungle:vungle-android-sdk:6.3.17'
-	implementation 'com.google.android.gms:play-services-basement:17.2.1'
-	implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0'
-	implementation 'com.google.android.gms:play-services-location:17.0.0'
 
 	// etc
 	implementation 'com.github.bumptech.glide:glide:4.9.0'

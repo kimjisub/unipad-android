@@ -37,7 +37,6 @@ import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
-import com.kimjisub.launchpad.manager.Constant.VUNGLE
 import com.kimjisub.launchpad.manager.Functions.putClipboard
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
@@ -51,11 +50,6 @@ import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log.log
-import com.kimjisub.manager.Log.vungle
-import com.vungle.warren.LoadAdCallback
-import com.vungle.warren.PlayAdCallback
-import com.vungle.warren.Vungle
-import com.vungle.warren.error.VungleException
 import kotlinx.android.synthetic.main.activity_play.*
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.toast
@@ -1259,24 +1253,6 @@ class PlayActivity : BaseActivity() {
 		if (billingManager!!.showAds) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/
-
-			if (Vungle.isInitialized()) {
-				Vungle.loadAd(VUNGLE.PLAY_END, object : LoadAdCallback {
-					override fun onAdLoad(placementReferenceId: String?) {
-						vungle("PLAY_END loadAd : placementReferenceId == $placementReferenceId")
-					}
-
-					override fun onError(placementReferenceId: String?, throwable: Throwable?) {
-						vungle("PLAY_END loadAd : getLocalizedMessage() == " + throwable!!.localizedMessage)
-						try {
-							val ex = throwable as VungleException?
-							if (ex!!.exceptionCode == VungleException.VUNGLE_NOT_INTIALIZED) initVungle()
-						} catch (cex: ClassCastException) {
-							vungle(cex.message!!)
-						}
-					}
-				})
-			} else vungle("PLAY_END loadAd : isInitialized() == false")
 		}
 	}
 
@@ -1294,36 +1270,7 @@ class PlayActivity : BaseActivity() {
 			if (billingManager!!.showAds) {
 				if (checkAdsCooltime()) {
 					updateAdsCooltime()
-					if (Math.random() * 10 > 3) showAdmob() else {
-						if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
-							Vungle.playAd(
-								VUNGLE.PLAY_END,
-								null,
-								object : PlayAdCallback {
-									override fun onAdStart(placementReferenceId: String?) {
-										vungle("PLAY_END playAd : onAdStart()")
-									}
-
-									override fun onAdEnd(
-										placementReferenceId: String?,
-										completed: Boolean,
-										isCTAClicked: Boolean
-									) {
-										vungle("PLAY_END onAdEnd : onAdEnd()")
-									}
-
-									override fun onError(placementReferenceId: String?, throwable: Throwable?) {
-										vungle("PLAY_END onError : onError() == " + throwable!!.localizedMessage)
-										try {
-											val ex = throwable as VungleException?
-											if (ex!!.exceptionCode == VungleException.VUNGLE_NOT_INTIALIZED) initVungle()
-										} catch (cex: ClassCastException) {
-											vungle(cex.message!!)
-										}
-									}
-								})
-						}
-					}
+					showAdmob()
 				}
 			}
 		}
