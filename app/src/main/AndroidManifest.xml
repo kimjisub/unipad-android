@@ -22,6 +22,8 @@
 
 	<application
 		android:name=".BaseApplication"
+		android:allowBackup="true"
+		android:fullBackupContent="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
 		android:largeHeap="true"
@@ -57,18 +59,18 @@
 			android:name=".activity.PlayActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity"/>
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity"/>
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.SettingActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="portrait"
-			tools:ignore="LockedOrientationActivity"
-			android:theme="@style/SettingTheme" />
+			android:theme="@style/SettingTheme"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
