@@ -74,7 +74,6 @@ dependencies {
 	implementation 'androidx.browser:browser:1.2.0'
 	implementation 'androidx.preference:preference:1.1.1'
 	implementation 'androidx.work:work-runtime:2.3.4'
-	kapt 'com.android.databinding:compiler:3.5.0'
 
 	implementation 'com.google.guava:guava:29.0-android'
 
