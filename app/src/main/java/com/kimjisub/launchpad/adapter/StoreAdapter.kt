@@ -58,9 +58,9 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 			untoggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 			title = item.storeVO.title!!
 			subtitle = item.storeVO.producerName!!
-			option1Name = context.getString(string.LED_)
+			option1Name = context.getString(string.led).toUpperCase() + " ●"
 			option1 = item.storeVO.isLED
-			option2Name = context.getString(string.autoPlay_)
+			option2Name = context.getString(string.autoPlay).toUpperCase() + " ●"
 			option2 = item.storeVO.isAutoPlay
 			showPlayImage(false)
 			setPlayText(context.getString(if (item.downloaded) string.downloaded else string.download))

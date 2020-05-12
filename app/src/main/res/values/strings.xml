@@ -13,7 +13,7 @@
 	<string name="warning">Warning</string>
 	<string name="error">ERROR</string>
 	<string name="errOccur">An error has occurred.</string>
-	<string name="wait_a_sec">Just wait a sec…</string>
+	<string name="wait_a_sec">Just wait a moment…</string>
 	<string name="analyzing">Analyzing</string>
 	<string name="loading">Loading</string>
 	<string name="download">Download</string>
@@ -90,10 +90,8 @@
 	<string name="fileSize">File Size</string>
 
 	<!--UniPack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">Feedback light</string>
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>

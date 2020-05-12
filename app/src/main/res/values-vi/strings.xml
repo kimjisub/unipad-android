@@ -5,6 +5,7 @@
 	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Đồng ý</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Chú ý</string>
 	<string name="error">Lỗi</string>
 	<string name="errOccur">Phát hiện có lỗi</string>
-	<string name="wait">Đợi một lúc… </string>
+	<string name="wait_a_sec">Đợi một lúc… </string>
 	<string name="analyzing">Đang xử lý… </string>
 	<string name="loading">Đang tải… </string>
-	<string name="downloading">Đang tải xuống… </string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Thành công</string>
 	<string name="failed">Thất bại</string>
 	<string name="delete">Xóa</string>
@@ -28,14 +32,12 @@
 	<string name="path">Đường dẫn</string>
 	<string name="quit">Thoát</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Kết nối lại với Launchpad</string>
@@ -83,15 +85,12 @@
 	<!--Unipack Info-->
 	<string name="title">Tên bài hát</string>
 	<string name="producerName">Người làm</string>
-	<string name="scale">Kích cỡ</string>
 	<string name="chainCount">Số chain</string>
 	<string name="fileSize">Kích cỡ file</string>
 
 	<!--Unipack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">Hiện nút</string>
 	<string name="traceLog">Đánh số thứ tự</string>
 	<string name="traceLogClear">Số thứ tự đã được cài lại</string>
@@ -108,13 +107,10 @@
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack không tìm thấy được. </string>
-	<string name="clickToAddUnipack">Nhấn để thêm Unipacks.</string>
 	<string name="doYouWantToDeleteProject">Bạn có muốn xóa Unipack này không?</string>
 	<string name="doYouWantToRemapProject">Bạn có muốn cài lại autoplay của Unipack này không?</string>
 	<string name="remapDone">Cài lại autoplay thành công.</string>
 	<string name="remapFail">Không tồn tại autoplay</string>
-	<string name="cantReadFolder">Không đọc được thư mục</string>
-	<string name="cantReadFile">Không đọc được file.</string>
 	<string name="analyzeComplete">Phân tích hoàn thành!</string>
 	<string name="analyzeFailed">Không thể xác định</string>
 	<string name="isNotAnUniPack">Đây không phải một Unipack</string>
@@ -135,7 +131,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Không thể thoát ra khi đang tải</string>
-	<string name="downloadCount">Download count</string>
 	<string name="UnableToAccessServer">Không thể kích hoạt máy chủ.</string>
 
 	<!--Theme-->
@@ -147,5 +142,8 @@
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="clickToAddUniPack">Click to add UniPacks.</string>
+	<string name="theme">Theme</string>
 
 </resources>

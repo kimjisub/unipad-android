@@ -5,6 +5,7 @@
 	<string name="translatedBy">%1$s द्वारा अनुवाद किया गया है।</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">स्वीकार</string>
@@ -12,10 +13,13 @@
 	<string name="warning">चेतावनी</string>
 	<string name="error">भूल</string>
 	<string name="errOccur">एक भूल हौ गई है</string>
-	<string name="wait">ज़रा इंतजार करें</string>
+	<string name="wait_a_sec">ज़रा इंतजार करें</string>
 	<string name="analyzing">जांच हो रही है</string>
 	<string name="loading">लोड हो रहा है</string>
-	<string name="downloading">डाउन्लोड हो रही है</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">सफल</string>
 	<string name="failed">असफल</string>
 	<string name="delete">डिलिट</string>
@@ -28,14 +32,12 @@
 	<string name="path">रास्ता</string>
 	<string name="quit">बंद</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">फिर से कनेक्ट करें लोंच-पैड</string>
@@ -83,15 +85,12 @@
 	<!--UniPack Info-->
 	<string name="title">शीर्षक</string>
 	<string name="producerName">उत्पादक</string>
-	<string name="scale">साइज़</string>
 	<string name="chainCount">चैन संख्या</string>
 	<string name="fileSize">फ़ाइल साइज़</string>
 
 	<!--UniPack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">दबाया दिखाओ</string>
 	<string name="traceLog">ट्रेस लॉग</string>
 	<string name="traceLogClear">ट्रेस लॉग रीसेट कर दिया गया  है।</string>
@@ -113,8 +112,6 @@
 	<string name="doYouWantToRemapProject">क्या आप इस ऑटोप्ले को रीमेप करना चाहते हैं?</string>
 	<string name="remapDone">ऑटोप्ले रीमेपिंग सफलतापूर्वक पूरा हो चुका है?</string>
 	<string name="remapFail">ऑटोप्ले मौजूद नहीं है।</string>
-	<string name="cantReadFolder">फ़ोल्डर नहीं पढ़ सका।</string>
-	<string name="cantReadFile">फ़ाइल नहीं पढ़ सका।</string>
 	<string name="analyzeComplete">विश्लेषण पूरा हो गया!</string>
 	<string name="analyzeFailed">विश्लेषण करने में असफल …</string>
 	<string name="isNotAnUniPack">एक यूनिपैक नहीं है</string>
@@ -135,7 +132,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">पैक डाउनलोड करते समय छोड़ नहीं सकते हैं।</string>
-	<string name="downloadCount">डाउनलोड कि संख्या</string>
 	<string name="UnableToAccessServer">सर्वर तक पहुंचने में असमर्थ।</string>
 
 	<!--Theme-->
@@ -147,5 +143,7 @@
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="theme">Theme</string>
 
 </resources>
