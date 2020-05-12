@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.bumptech.glide.Glide
 import com.kimjisub.design.Chain
@@ -33,6 +34,7 @@ import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.databinding.ActivityPlayBinding
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.ChannelManager
@@ -57,6 +59,7 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
+	private lateinit var binding : ActivityPlayBinding
 
 	private var unipack: UniPack? = null
 	private var unipackLoaded = false
@@ -142,10 +145,15 @@ class PlayActivity : BaseActivity() {
 			})
 	}
 
+	fun <T> getValueOrDefault(value: T?, defaultValue: T): T {
+		return value ?: defaultValue
+	}
+
 	@SuppressLint("StaticFieldLeak")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_play)
+		binding = DataBindingUtil.setContentView(this, layout.activity_play)
+
 		initVar()
 
 		val path: String? = intent.getStringExtra("path")
@@ -184,6 +192,7 @@ class PlayActivity : BaseActivity() {
 		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
 
 		initTheme()
+		binding.themeResources = theme
 
 		if (theme != null) {
 			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -376,12 +385,6 @@ class PlayActivity : BaseActivity() {
 			chainsRight.removeAllViews()
 			chainsLeft.removeAllViews()
 
-			// Image Resources
-			Glide.with(this).load(theme!!.playbg).into(background)	//glide 테스트
-			custom_logo.setImageDrawable(theme!!.custom_logo)
-			prev.background = theme!!.xml_prev
-			play.background = theme!!.xml_play
-			next.background = theme!!.xml_next
 
 			// Setup Pads
 			for (x in 0 until unipack!!.buttonX) {
