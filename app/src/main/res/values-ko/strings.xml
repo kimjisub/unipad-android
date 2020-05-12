@@ -90,10 +90,8 @@
 	<string name="fileSize">용량</string>
 
 	<!--UniPack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">자동재생</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">피드백 표시</string>
 	<string name="traceLog">순서 기록</string>
 	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>

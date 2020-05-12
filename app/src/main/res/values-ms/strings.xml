@@ -5,6 +5,7 @@
 	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Terima</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Amaran</string>
 	<string name="error">RALAT</string>
 	<string name="errOccur">Sesuatu Ralat dikesan…</string>
-	<string name="wait">Sila tunggu sebentar…</string>
+	<string name="wait_a_sec">Sila tunggu sebentar…</string>
 	<string name="analyzing">Menganalisis</string>
 	<string name="loading">Memuat</string>
-	<string name="downloading">Memuat Turun</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Berjaya</string>
 	<string name="failed">Gagal</string>
 	<string name="delete">Padam</string>
@@ -28,14 +32,12 @@
 	<string name="path">Jalan</string>
 	<string name="quit">Keluar</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Sambung ke Launchpad semula</string>
@@ -83,15 +85,12 @@
 	<!--UniPack Info-->
 	<string name="title">Tajuk</string>
 	<string name="producerName">Pemilik</string>
-	<string name="scale">Saiz</string>
 	<string name="chainCount">Bilangan Chain</string>
 	<string name="fileSize">Saiz Fail</string>
 
 	<!--Unipack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Auto Main</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOMAIN ●</string>
 	<string name="feedbackLight">Tunjuk Tekanan</string>
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Trace Log Telah di padam.</string>
@@ -108,13 +107,10 @@
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack Tidak Dijumpai.</string>
-	<string name="clickToAddUnipack">Tekan Untuk Tambah Unipack.</string>
 	<string name="doYouWantToDeleteProject">Adakah anda mahu membuang unipack ini?</string>
 	<string name="doYouWantToRemapProject">Adakah anda mahu membetulkan automain?</string>
 	<string name="remapDone">Pembetulan Automain telah berjaya.</string>
 	<string name="remapFail">Tiada Automain</string>
-	<string name="cantReadFolder">Tidak boleh membaca folder ini.</string>
-	<string name="cantReadFile">Tidak boleh membaca fail ini.</string>
 	<string name="analyzeComplete">Analisis Selesai!</string>
 	<string name="analyzeFailed">Gagal Untuk Menganalisis…</string>
 	<string name="isNotAnUniPack">Ini bukan Unipack</string>
@@ -135,7 +131,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Tidak boleh keluar semasa memuat turun unipack</string>
-	<string name="downloadCount">Bilangan muat turun</string>
 	<string name="UnableToAccessServer">Tidak boleh mengakses Pelayar.</string>
 
 	<!--Theme-->
@@ -147,5 +142,8 @@
 	<string name="theme_name">Kulit Lalai</string>
 	<string name="theme_description">Ini adalah kulit lalai Unipad</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="clickToAddUniPack">Click to add UniPacks.</string>
+	<string name="theme">Theme</string>
 
 </resources>

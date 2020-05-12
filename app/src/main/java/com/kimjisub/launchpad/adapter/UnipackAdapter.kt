@@ -15,7 +15,6 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.Log
 
 data class UniPackItem(
 	var unipack: UniPack,
@@ -76,9 +75,9 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 			untoggleColor = item.flagColor
 			title = viewingTitle
 			subtitle = viewingSubtitle
-			option1Name = context.getString(string.LED_)
+			option1Name = context.getString(string.led).toUpperCase() + " ●"
 			option1 = item.unipack.keyLEDExist
-			option2Name = context.getString(string.autoPlay_)
+			option2Name = context.getString(string.autoPlay).toUpperCase() + " ●"
 			option2 = item.unipack.autoPlayExist
 			bookmark = false
 

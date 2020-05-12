@@ -5,6 +5,7 @@
 	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Acceptera</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Varning</string>
 	<string name="error">FEL</string>
 	<string name="errOccur">Ett fel har uppstått.</string>
-	<string name="wait">Vänta en sekund.</string>
+	<string name="wait_a_sec">Vänta en sekund.</string>
 	<string name="analyzing">Analyserar</string>
 	<string name="loading">Laddar</string>
-	<string name="downloading">Laddar ner</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Succé</string>
 	<string name="failed">Misslyckades</string>
 	<string name="delete">Ta bort</string>
@@ -28,14 +32,12 @@
 	<string name="path">Sökväg</string>
 	<string name="quit">Avsluta</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Återanslut Launchpad</string>
@@ -83,15 +85,12 @@
 	<!--Unipack Info-->
 	<string name="title">Titel</string>
 	<string name="producerName">Producent</string>
-	<string name="scale">storlek</string>
 	<string name="chainCount">Kedjemängd </string>
 	<string name="fileSize">Filstorlek</string>
 
 	<!--Unipack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">Visa tryckta</string>
 	<string name="traceLog">Spårlogg</string>
 	<string name="traceLogClear">Spårlogg har raderats</string>
@@ -108,13 +107,10 @@
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Unipack ej hittad.</string>
-	<string name="clickToAddUnipack">Tryck för att ladda Unipack</string>
 	<string name="doYouWantToDeleteProject">Vill du ta bort detta??</string>
 	<string name="doYouWantToRemapProject">Vill du mappa autoplay?</string>
 	<string name="remapDone">Autoplay-mappning är färdig!</string>
 	<string name="remapFail">Autoplay finns inte</string>
-	<string name="cantReadFolder">Kan inte läsa mappen</string>
-	<string name="cantReadFile">Kan inte läsa filen.</string>
 	<string name="analyzeComplete">Analysering är färdig!</string>
 	<string name="analyzeFailed">Misslyckades att analysera.</string>
 	<string name="isNotAnUniPack">Detta är inte ett Unipack</string>
@@ -135,7 +131,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Du kan inte lämna sidan tills allt har laddats ned.</string>
-	<string name="downloadCount">Nedladdningsräkning</string>
 	<string name="UnableToAccessServer">kunde inte ansluta till servern.</string>
 
 	<!--Theme-->
@@ -147,5 +142,8 @@
 	<string name="theme_name">Standardtema</string>
 	<string name="theme_description">Detta är det nuvarande Unipadtemat.</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="clickToAddUniPack">Click to add UniPacks.</string>
+	<string name="theme">Theme</string>
 
 </resources>

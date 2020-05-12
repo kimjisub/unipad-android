@@ -5,6 +5,7 @@
 	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Terima</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Peringatan</string>
 	<string name="error">ERROR</string>
 	<string name="errOccur">Terjadi Masalah.</string>
-	<string name="wait">Tunggu sebentar…</string>
+	<string name="wait_a_sec">Tunggu sebentar…</string>
 	<string name="analyzing">Menganalisis</string>
 	<string name="loading">Memuat</string>
-	<string name="downloading">Mengunduh</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Sukses</string>
 	<string name="failed">Gagal</string>
 	<string name="delete">Hapus</string>
@@ -28,14 +32,12 @@
 	<string name="path">Path</string>
 	<string name="quit">Berhenti</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Menghubungkan kembali ke Launchpad</string>
@@ -83,15 +85,12 @@
 	<!--UniPack Info-->
 	<string name="title">Judul</string>
 	<string name="producerName">Pembuat</string>
-	<string name="scale">ukuran</string>
 	<string name="chainCount">Banyaknya Chain</string>
 	<string name="fileSize">Ukuran file</string>
 
 	<!--UniPack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Putar Otomatis</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">PUTAR OTOMATIS ●</string>
 	<string name="feedbackLight">Tampilkan Sentuhan</string>
 	<string name="traceLog">Jejak Sentuhan</string>
 	<string name="traceLogClear">Jejak sentuhan di ulangi.</string>
@@ -113,8 +112,6 @@
 	<string name="doYouWantToRemapProject">Apakah Anda ingin memetakan ulang Putar Otomatis ini?</string>
 	<string name="remapDone">Pemetakan ulang Putar Otomatis telah berhasil diselesaikan.</string>
 	<string name="remapFail">Putar Otomatis tidak ada</string>
-	<string name="cantReadFolder">Tidak dapat membaca folder.</string>
-	<string name="cantReadFile">Tidak dapat membaca file.</string>
 	<string name="analyzeComplete">Analisis berhasil!</string>
 	<string name="analyzeFailed">Analisis gagal…</string>
 	<string name="isNotAnUniPack">Ini bukan UniPack</string>
@@ -135,7 +132,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Tidak dapat kembali saat unduhan berlangsung</string>
-	<string name="downloadCount">Unduh count</string>
 	<string name="UnableToAccessServer">Server tidak dapat diakses.</string>
 
 	<!--Theme-->
@@ -147,5 +143,7 @@
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="theme">Theme</string>
 
 </resources>
