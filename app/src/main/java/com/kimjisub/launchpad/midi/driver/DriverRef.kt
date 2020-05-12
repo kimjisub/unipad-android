@@ -90,8 +90,8 @@ abstract class DriverRef {
 		sendSignal(cmd.toByte(), sig.toByte(), note.toByte(), velo.toByte())
 	}
 
-	abstract fun sendPadLED(x: Int, y: Int, velo: Int)
-	abstract fun sendChainLED(c: Int, velo: Int)
-	abstract fun sendFunctionkeyLED(f: Int, velo: Int)
-	abstract fun sendClearLED()
+	abstract fun sendPadLed(x: Int, y: Int, velo: Int)
+	abstract fun sendChainLed(c: Int, velo: Int)
+	abstract fun sendFunctionkeyLed(f: Int, velo: Int)
+	abstract fun sendClearLed()
 }

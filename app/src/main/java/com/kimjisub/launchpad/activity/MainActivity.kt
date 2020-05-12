@@ -46,7 +46,6 @@ import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -152,7 +151,7 @@ class MainActivity : BaseActivity() {
 
 			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
 				if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
-					if (upDown) driver.sendPadLED(x, y, intArrayOf(40, 61)[(Math.random() * 2).toInt()]) else driver.sendPadLED(x, y, 0)
+					if (upDown) driver.sendPadLed(x, y, intArrayOf(40, 61)[(Math.random() * 2).toInt()]) else driver.sendPadLed(x, y, 0)
 				}
 			}
 
@@ -770,16 +769,16 @@ class MainActivity : BaseActivity() {
 	}
 
 	private fun showSelectLPUI() {
-		if (havePrev()) driver.sendFunctionkeyLED(0, 63) else driver.sendFunctionkeyLED(0, 5)
-		if (haveNow()) driver.sendFunctionkeyLED(2, 61) else driver.sendFunctionkeyLED(2, 0)
-		if (haveNext()) driver.sendFunctionkeyLED(1, 63) else driver.sendFunctionkeyLED(1, 5)
+		if (havePrev()) driver.sendFunctionkeyLed(0, 63) else driver.sendFunctionkeyLed(0, 5)
+		if (haveNow()) driver.sendFunctionkeyLed(2, 61) else driver.sendFunctionkeyLed(2, 0)
+		if (haveNext()) driver.sendFunctionkeyLed(1, 63) else driver.sendFunctionkeyLed(1, 5)
 	}
 
 	private fun showWatermark() {
-		driver.sendPadLED(3, 3, 61)
-		driver.sendPadLED(3, 4, 40)
-		driver.sendPadLED(4, 3, 40)
-		driver.sendPadLED(4, 4, 61)
+		driver.sendPadLed(3, 3, 61)
+		driver.sendPadLed(3, 4, 40)
+		driver.sendPadLed(4, 3, 40)
+		driver.sendPadLed(4, 4, 61)
 	}
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////

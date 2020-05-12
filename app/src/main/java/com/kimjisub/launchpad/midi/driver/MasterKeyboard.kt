@@ -27,8 +27,8 @@ class MasterKeyboard : DriverRef() {
 		}
 	}
 
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {}
-	override fun sendChainLED(c: Int, velo: Int) {}
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {}
-	override fun sendClearLED() {}
+	override fun sendPadLed(x: Int, y: Int, velo: Int) {}
+	override fun sendChainLed(c: Int, velo: Int) {}
+	override fun sendFunctionkeyLed(f: Int, velo: Int) {}
+	override fun sendClearLed() {}
 }

@@ -38,7 +38,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	var F_info: File? = null
 	var F_sounds: File? = null
 	var F_keySound: File? = null
-	var F_keyLED: File? = null
+	var F_keyLed: File? = null
 	var F_autoPlay: File? = null
 
 	val infoExist
@@ -47,8 +47,8 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		get() = F_sounds != null
 	val keySoundExist
 		get() = F_keySound != null
-	val keyLEDExist
-		get() = F_keyLED != null
+	val keyLedExist
+		get() = F_keyLed != null
 	val autoPlayExist
 		get() = F_autoPlay != null
 
@@ -72,7 +72,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				"info" -> F_info = if (item.isFile) item else null
 				"sounds" -> F_sounds = if (item.isDirectory) item else null
 				"keysound" -> F_keySound = if (item.isFile) item else null
-				"keyled" -> F_keyLED = if (item.isDirectory) item else null
+				"keyled" -> F_keyLed = if (item.isDirectory) item else null
 				"autoplay" -> F_autoPlay = if (item.isFile) item else null
 			}
 		}
@@ -182,14 +182,14 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	}
 
 	private fun keyLed() {
-		if (F_keyLED != null) {
+		if (F_keyLed != null) {
 			ledAnimationTable = Array(chain) {
 				Array(buttonX) {
 					arrayOfNulls<ArrayList<LedAnimation>?>(buttonY)
 				}
 			}
 			ledTableCount = 0
-			val fileList = sortByName(F_keyLED!!.listFiles())
+			val fileList = sortByName(F_keyLed!!.listFiles())
 			for (file in fileList) {
 				if (file.isFile) {
 					val fileName: String = file.name
@@ -205,23 +205,23 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 						y = Integer.parseInt(split1[2]) - 1
 						if (split1.size >= 4) loop = Integer.parseInt(split1[3])
 						if (c < 0 || c >= chain) {
-							addErr("keyLED : [$fileName] chain is incorrect")
+							addErr("keyLed : [$fileName] chain is incorrect")
 							continue
 						} else if (x < 0 || x >= buttonX) {
-							addErr("keyLED : [$fileName] x is incorrect")
+							addErr("keyLed : [$fileName] x is incorrect")
 							continue
 						} else if (y < 0 || y >= buttonY) {
-							addErr("keyLED : [$fileName] y is incorrect")
+							addErr("keyLed : [$fileName] y is incorrect")
 							continue
 						} else if (loop < 0) {
-							addErr("keyLED : [$fileName] loop is incorrect")
+							addErr("keyLed : [$fileName] loop is incorrect")
 							continue
 						}
 					} catch (e: NumberFormatException) {
-						addErr("keyLED : [$fileName] format is incorrect")
+						addErr("keyLed : [$fileName] format is incorrect")
 						continue
 					} catch (e: IndexOutOfBoundsException) {
-						addErr("keyLED : [$fileName] format is incorrect")
+						addErr("keyLed : [$fileName] format is incorrect")
 						continue
 					}
 					val ledList = ArrayList<LedAnimation.Element>()
@@ -255,7 +255,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 											_color = Integer.parseInt(split2[3], 16) + -0x1000000
 										}
 									} else {
-										addErr("keyLED : [$fileName].[$s] format is incorrect")
+										addErr("keyLed : [$fileName].[$s] format is incorrect")
 										continue@loop
 									}
 								}
@@ -268,15 +268,15 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 								}
 								"delay", "d" -> _delay = Integer.parseInt(split2[1])
 								else -> {
-									addErr("keyLED : [$fileName].[$s] format is incorrect")
+									addErr("keyLed : [$fileName].[$s] format is incorrect")
 									continue@loop
 								}
 							}
 						} catch (e: NumberFormatException) {
-							addErr("keyLED : [$fileName].[$s] format is incorrect")
+							addErr("keyLed : [$fileName].[$s] format is incorrect")
 							continue
 						} catch (e: IndexOutOfBoundsException) {
-							addErr("keyLED : [$fileName].[$s] format is incorrect")
+							addErr("keyLed : [$fileName].[$s] format is incorrect")
 							continue
 						}
 						when (option) {
@@ -290,7 +290,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 					ledAnimationTable!![c][x][y]!!.add(LedAnimation(ledList, loop, ledAnimationTable!![c][x][y]!!.size))
 					ledTableCount++
 					reader.close()
-				} else addErr("keyLED : " + file.name + " is not file")
+				} else addErr("keyLed : " + file.name + " is not file")
 			}
 		}
 	}
@@ -470,7 +470,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	}
 
 
-	fun LED_get(c: Int, x: Int, y: Int): LedAnimation? {
+	fun led_get(c: Int, x: Int, y: Int): LedAnimation? {
 		return try {
 			ledAnimationTable!![c][x][y]!![0]
 		} catch (ignored: NullPointerException) {
@@ -482,7 +482,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	fun LED_push(c: Int, x: Int, y: Int) {
+	fun led_push(c: Int, x: Int, y: Int) {
 		try {
 			val item = ledAnimationTable!![c][x][y]!!.removeAt(0)
 			ledAnimationTable!![c][x][y]!!.add(item)
@@ -493,7 +493,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		}
 	}
 
-	fun LED_push(c: Int, x: Int, y: Int, num: Int) {
+	fun led_push(c: Int, x: Int, y: Int, num: Int) {
 		try {
 			val e: ArrayList<LedAnimation>? = ledAnimationTable!![c][x][y]
 			if (e!![0].num != num)

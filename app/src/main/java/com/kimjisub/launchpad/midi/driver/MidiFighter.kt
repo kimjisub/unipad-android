@@ -27,7 +27,7 @@ class MidiFighter : DriverRef() {
 		}
 	}
 
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {
+	override fun sendPadLed(x: Int, y: Int, velo: Int) {
 		var x = x
 		var y = y
 		x += 1
@@ -36,11 +36,11 @@ class MidiFighter : DriverRef() {
 			sendSignal(9, -110, -4 * x + y + 67, velo) else if (y in 5..8) sendSignal(9, -110, -4 * x + y + 95, velo)
 	}
 
-	override fun sendChainLED(c: Int, velo: Int) {}
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {}
-	override fun sendClearLED() {
+	override fun sendChainLed(c: Int, velo: Int) {}
+	override fun sendFunctionkeyLed(f: Int, velo: Int) {}
+	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)
-				sendPadLED(i, j, 0)
+				sendPadLed(i, j, 0)
 	}
 }

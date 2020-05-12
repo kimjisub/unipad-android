@@ -102,7 +102,7 @@ class PackView : RelativeLayout {
 		String subtitle = typedArray.getString(R.styleable.PackView_subtitle);
 		//setSubtitle(subtitle);
 
-		Boolean LED = typedArray.getBoolean(R.styleable.PackView_LED, false);
+		Boolean led = typedArray.getBoolean(R.styleable.PackView_led, false);
 		//setLED(LED);
 
 		Boolean autoPlay = typedArray.getBoolean(R.styleable.PackView_AutoPlay, false);

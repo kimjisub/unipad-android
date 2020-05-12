@@ -25,7 +25,7 @@ object MidiConnection {
 
 	var driver: DriverRef = Noting()
 		set(value) {
-			field.sendClearLED()
+			field.sendClearLed()
 			field.onDisconnected()
 
 			try {
