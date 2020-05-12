@@ -26,7 +26,6 @@ import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.TransactionDetails
-import com.bumptech.glide.Glide
 import com.kimjisub.design.Chain
 import com.kimjisub.design.Pad
 import com.kimjisub.design.manage.SyncCheckBox
@@ -71,11 +70,11 @@ class PlayActivity : BaseActivity() {
 
 	private var theme: ThemeResources? = null
 
-	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record) }
+	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_led, CB1_autoPlay, CB1_traceLog, CB1_record) }
 	private val CB2s: Array<CheckBox> by lazy {
 		arrayOf(
 			CB2_feedbackLight,
-			CB2_LED,
+			CB2_led,
 			CB2_autoPlay,
 			CB2_traceLog,
 			CB2_record,
@@ -85,7 +84,7 @@ class PlayActivity : BaseActivity() {
 		)
 	}
 	private val SCB_feedbackLight: SyncCheckBox = SyncCheckBox()
-	private val SCB_LED: SyncCheckBox = SyncCheckBox()
+	private val SCB_led: SyncCheckBox = SyncCheckBox()
 	private val SCB_autoPlay: SyncCheckBox = SyncCheckBox()
 	private val SCB_traceLog: SyncCheckBox = SyncCheckBox()
 	private val SCB_record: SyncCheckBox = SyncCheckBox()
@@ -119,7 +118,7 @@ class PlayActivity : BaseActivity() {
 
 	private fun initVar() {
 		SCB_feedbackLight.addCheckBox(CB1_feedbackLight, CB2_feedbackLight)
-		SCB_LED.addCheckBox(CB1_LED, CB2_LED)
+		SCB_led.addCheckBox(CB1_led, CB2_led)
 		SCB_autoPlay.addCheckBox(CB1_autoPlay, CB2_autoPlay)
 		SCB_traceLog.addCheckBox(CB1_traceLog, CB2_traceLog)
 		SCB_record.addCheckBox(CB1_record, CB2_record)
@@ -189,7 +188,7 @@ class PlayActivity : BaseActivity() {
 		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY) { null } }
 		U_circle = Array(32) { null }
 		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
-		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
+		log("[04] Start ledTask (isKeyLed = " + unipack!!.keyLedExist.toString() + ")")
 
 		initTheme()
 		binding.themeResources = theme
@@ -254,9 +253,9 @@ class PlayActivity : BaseActivity() {
 		try {
 			log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
 			if (unipack!!.squareButton) {
-				if (!unipack!!.keyLEDExist) {
-					SCB_LED.setVisibility(View.GONE)
-					SCB_LED.isLocked = true
+				if (!unipack!!.keyLedExist) {
+					SCB_led.setVisibility(View.GONE)
+					SCB_led.isLocked = true
 				}
 				if (!unipack!!.autoPlayExist) {
 					SCB_autoPlay.setVisibility(View.GONE)
@@ -264,12 +263,12 @@ class PlayActivity : BaseActivity() {
 				}
 			} else {
 				SCB_feedbackLight.setVisibility(View.GONE)
-				SCB_LED.setVisibility(View.GONE)
+				SCB_led.setVisibility(View.GONE)
 				SCB_autoPlay.setVisibility(View.GONE)
 				SCB_traceLog.setVisibility(View.GONE)
 				SCB_record.setVisibility(View.GONE)
 				SCB_feedbackLight.isLocked = true
-				SCB_LED.isLocked = true
+				SCB_led.isLocked = true
 				SCB_autoPlay.isLocked = true
 				SCB_traceLog.isLocked = true
 				SCB_record.isLocked = true
@@ -309,9 +308,9 @@ class PlayActivity : BaseActivity() {
 					refreshWatermark()
 				}
 			}
-			SCB_LED.onCheckedChange = object : OnCheckedChange {
+			SCB_led.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(b: Boolean) {
-					if (unipack!!.keyLEDExist) {
+					if (unipack!!.keyLedExist) {
 						if (b) {
 							ledRunner?.launch()
 						} else {
@@ -429,7 +428,7 @@ class PlayActivity : BaseActivity() {
 				val c = i - 8
 				val view = Chain(this)
 				view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
-				if (theme!!.isChainLED) {
+				if (theme!!.isChainLed) {
 					view.setBackgroundImageDrawable(theme!!.btn)
 					view.setPhantomImageDrawable(theme!!.chainled)
 				} else {
@@ -484,7 +483,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun initRunner() {
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			ledRunner = LedRunner(
 				unipack = unipack!!,
 				chain = chain,
@@ -599,7 +598,7 @@ class PlayActivity : BaseActivity() {
 						runOnUiThread {
 							SCB_autoPlay.setChecked(false)
 							if (unipack!!.ledAnimationTable != null) {
-								SCB_LED.setChecked(true)
+								SCB_led.setChecked(true)
 								SCB_feedbackLight.setChecked(false)
 							} else {
 								SCB_feedbackLight.setChecked(true)
@@ -662,7 +661,7 @@ class PlayActivity : BaseActivity() {
 				for (i in 0 until unipack!!.buttonX)
 					for (j in 0 until unipack!!.buttonY) {
 						unipack!!.Sound_push(curr, i, j, 0)
-						unipack!!.LED_push(curr, i, j, 0)
+						unipack!!.led_push(curr, i, j, 0)
 					}
 
 
@@ -684,9 +683,9 @@ class PlayActivity : BaseActivity() {
 
 	private fun initSetting() {
 		log("[06] Set CheckBox Checked")
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			SCB_feedbackLight.setChecked(false)
-			SCB_LED.setChecked(true)
+			SCB_led.setChecked(true)
 		} else
 			SCB_feedbackLight.setChecked(true)
 	}
@@ -808,7 +807,7 @@ class PlayActivity : BaseActivity() {
 			}
 		} else {
 			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
-			topBar[1] = if (SCB_LED.isLocked) 0 else if (SCB_LED.isChecked()) 52 else 55
+			topBar[1] = if (SCB_led.isLocked) 0 else if (SCB_led.isChecked()) 52 else 55
 			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
 			topBar[3] = 0
 			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI.isChecked()) 3 else 1
@@ -942,9 +941,9 @@ class PlayActivity : BaseActivity() {
 	private fun setLedLaunchpad(x: Int, y: Int) {
 		val item = channelManager!!.get(x, y)
 		if (item != null)
-			driver.sendPadLED(x, y, item.code)
+			driver.sendPadLed(x, y, item.code)
 		else
-			driver.sendPadLED(x, y, 0)
+			driver.sendPadLed(x, y, 0)
 	}
 
 	private fun setLed(c: Int) {
@@ -959,7 +958,7 @@ class PlayActivity : BaseActivity() {
 		val item = channelManager!!.get(-1, y)
 
 		if (c in 0..23)
-			if (theme!!.isChainLED) {
+			if (theme!!.isChainLed) {
 				if (item != null) {
 					when (item.channel) {
 						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(item.color)
@@ -981,14 +980,14 @@ class PlayActivity : BaseActivity() {
 	private fun setLedLaunchpad(c: Int) {
 		val Item = channelManager!!.get(-1, c)
 		if (Item != null)
-			driver.sendFunctionkeyLED(c, Item.code)
+			driver.sendFunctionkeyLed(c, Item.code)
 		else
-			driver.sendFunctionkeyLED(c, 0)
+			driver.sendFunctionkeyLed(c, 0)
 	}
 
 	private fun ledInit() {
 		log("ledInit")
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			try {
 				for (i in 0 until unipack!!.buttonX) {
 					for (j in 0 until unipack!!.buttonY) {
@@ -1030,7 +1029,7 @@ class PlayActivity : BaseActivity() {
 					if (!bool_toggleOption_window) {
 						when (f) {
 							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
+							1 -> SCB_led.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
 							4, 5, 6, 7 -> SCB_watermark.toggleChecked()
@@ -1038,7 +1037,7 @@ class PlayActivity : BaseActivity() {
 					} else {
 						if (f in 0..7) when (f) {
 							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
+							1 -> SCB_led.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
 							4 -> SCB_hideUI.toggleChecked()
@@ -1076,8 +1075,8 @@ class PlayActivity : BaseActivity() {
 		ledInit()
 		autoPlayRunner!!.playmode = true
 		play.background = theme!!.xml_pause
-		if (unipack!!.keyLEDExist) {
-			SCB_LED.setChecked(true)
+		if (unipack!!.keyLedExist) {
+			SCB_led.setChecked(true)
 			SCB_feedbackLight.setChecked(false)
 		} else {
 			SCB_feedbackLight.setChecked(true)
@@ -1093,7 +1092,7 @@ class PlayActivity : BaseActivity() {
 		play.background = theme!!.xml_play
 		autoPlayRunner!!.achieve = -1
 		SCB_feedbackLight.setChecked(false)
-		SCB_LED.setChecked(false)
+		SCB_led.setChecked(false)
 	}
 
 	private fun autoPlay_prev() {

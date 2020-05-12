@@ -38,24 +38,24 @@ class LaunchpadMK2 : DriverRef() {
 		}
 	}
 
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {
+	override fun sendPadLed(x: Int, y: Int, velo: Int) {
 		sendSignal(9, -112, 10 * (8 - x) + y + 1, velo)
 	}
 
-	override fun sendChainLED(c: Int, velo: Int) {
+	override fun sendChainLed(c: Int, velo: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLED(c + 8, velo)
+			sendFunctionkeyLed(c + 8, velo)
 	}
 
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {
+	override fun sendFunctionkeyLed(f: Int, velo: Int) {
 		if (f in 0..15)
 			sendSignal(circleCode[f][0], circleCode[f][1], circleCode[f][2], velo)
 	}
 
-	override fun sendClearLED() {
+	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)
-				sendPadLED(i, j, 0)
-		for (i in 0..15) sendFunctionkeyLED(i, 0)
+				sendPadLed(i, j, 0)
+		for (i in 0..15) sendFunctionkeyLed(i, 0)
 	}
 }

@@ -39,7 +39,7 @@ class ThemeResources {
 	var option_window_checkbox: Int? = null
 	var option_window_btn: Int? = null
 	var option_window_btn_text: Int? = null
-	var isChainLED = true
+	var isChainLed = true
 
 	constructor(context: Context, packageName: String? = null, fullLoad: Boolean = false) {
 		this.packageName = packageName
@@ -68,7 +68,7 @@ class ThemeResources {
 		try {
 			chainled = getCustomDrawable("chainled")
 		} catch (e: Exception) {
-			isChainLED = false
+			isChainLed = false
 			chain = getCustomDrawable("chain")
 			chain_ = getCustomDrawable("chain_")
 			chain__ = getCustomDrawable("chain__")

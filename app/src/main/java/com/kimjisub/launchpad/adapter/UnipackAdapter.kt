@@ -76,7 +76,7 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 			title = viewingTitle
 			subtitle = viewingSubtitle
 			option1Name = context.getString(string.led).toUpperCase() + " ●"
-			option1 = item.unipack.keyLEDExist
+			option1 = item.unipack.keyLedExist
 			option2Name = context.getString(string.autoPlay).toUpperCase() + " ●"
 			option2 = item.unipack.autoPlayExist
 			bookmark = false

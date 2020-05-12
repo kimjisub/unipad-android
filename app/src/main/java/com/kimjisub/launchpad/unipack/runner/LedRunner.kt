@@ -11,9 +11,9 @@ class LedRunner(
 	private val chain: ChainObserver,
 	private val delay: Long = 16L
 ) {
-	private var btnLED: Array<Array<LED?>?>?
-	private var cirLED: Array<LED?>?
-	private var LEDEvents: ArrayList<LEDEvent> = ArrayList()
+	private var btnLed: Array<Array<Led?>?>?
+	private var cirLed: Array<Led?>?
+	private var ledEvents: ArrayList<LedEvent> = ArrayList()
 
 	private var thread: Thread? = null
 	val active: Boolean
@@ -29,8 +29,8 @@ class LedRunner(
 	}
 
 	init {
-		btnLED = Array(unipack.buttonX) { arrayOfNulls<LED?>(unipack.buttonY) }
-		cirLED = arrayOfNulls<LED?>(36)
+		btnLed = Array(unipack.buttonX) { arrayOfNulls<Led?>(unipack.buttonY) }
+		cirLed = arrayOfNulls<Led?>(36)
 	}
 
 	// Thread /////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ class LedRunner(
 
 	private fun loop() {
 		val currTime = System.currentTimeMillis()
-		for (e in LEDEvents) {
+		for (e in ledEvents) {
 			if (e.isPlaying && !e.isShutdown) {
 				// Init if First
 				if (e.delay == 0L) e.delay = currTime
@@ -79,10 +79,10 @@ class LedRunner(
 
 									if (x != -1) {
 										listener.onPadLedTurnOn(x, y, color, velo)
-										btnLED!![x]!![y] = LED(e.buttonX, e.buttonY, element)
+										btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, element)
 									} else {
 										listener.onChainLedTurnOn(y, color, velo)
-										cirLED!![y] = LED(e.buttonX, e.buttonY, element)
+										cirLed!![y] = Led(e.buttonX, e.buttonY, element)
 									}
 								}
 								is LedAnimation.Element.Off -> {
@@ -90,14 +90,14 @@ class LedRunner(
 									val y = element.y
 
 									if (x != -1) {
-										if (btnLED!![x]!![y] != null && btnLED!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
+										if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
 											listener.onPadLedTurnOff(x, y)
-											btnLED!![x]!![y] = null
+											btnLed!![x]!![y] = null
 										}
 									} else {
-										if (cirLED!![y] != null && cirLED!![y]!!.equal(e.buttonX, e.buttonY)) {
+										if (cirLed!![y] != null && cirLed!![y]!!.equal(e.buttonX, e.buttonY)) {
 											listener.onChainLedTurnOff(y)
-											cirLED!![y] = null
+											cirLed!![y] = null
 										}
 									}
 								}
@@ -114,16 +114,16 @@ class LedRunner(
 			} else if (e.isShutdown) {
 				for (x in 0 until unipack.buttonX) {
 					for (y in 0 until unipack.buttonY) {
-						if (btnLED!![x]!![y] != null && btnLED!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
+						if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
 							listener.onPadLedTurnOff(x, y)
-							btnLED!![x]!![y] = null
+							btnLed!![x]!![y] = null
 						}
 					}
 				}
-				for (y in cirLED!!.indices) {
-					if (cirLED!![y] != null && cirLED!![y]!!.equal(e.buttonX, e.buttonY)) {
+				for (y in cirLed!!.indices) {
+					if (cirLed!![y] != null && cirLed!![y]!!.equal(e.buttonX, e.buttonY)) {
 						listener.onChainLedTurnOff(y)
-						cirLED!![y] = null
+						cirLed!![y] = null
 					}
 				}
 				e.remove = true
@@ -131,7 +131,7 @@ class LedRunner(
 				e.remove = true
 			}
 		}
-		LEDEvents = LEDEvents.filter { !it.remove } as ArrayList<LEDEvent>
+		ledEvents = ledEvents.filter { !it.remove } as ArrayList<LedEvent>
 	}
 
 
@@ -150,10 +150,10 @@ class LedRunner(
 
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun searchEvent(x: Int, y: Int): LEDEvent? {
-		var res: LEDEvent? = null
+	fun searchEvent(x: Int, y: Int): LedEvent? {
+		var res: LedEvent? = null
 		try {
-			for (e in LEDEvents) {
+			for (e in ledEvents) {
 				if (e.equal(x, y)) {
 					res = e
 					break
@@ -173,8 +173,8 @@ class LedRunner(
 				val e = searchEvent(x, y)
 				e!!.isShutdown = true
 			}
-			val e = LEDEvent(x, y)
-			if (e.noError) LEDEvents.add(e)
+			val e = LedEvent(x, y)
+			if (e.noError) ledEvents.add(e)
 		}
 	}
 
@@ -186,7 +186,7 @@ class LedRunner(
 		}
 	}
 
-	inner class LED(
+	inner class Led(
 		var buttonX: Int,
 		var buttonY: Int,
 		var element: LedAnimation.Element
@@ -196,7 +196,7 @@ class LedRunner(
 		}
 	}
 
-	inner class LEDEvent(var buttonX: Int, var buttonY: Int) {
+	inner class LedEvent(var buttonX: Int, var buttonY: Int) {
 		var index = 0
 		var delay: Long = 0
 		var isPlaying = true
@@ -213,8 +213,8 @@ class LedRunner(
 		}
 
 		init {
-			val e: LedAnimation? = unipack.LED_get(chain.value, buttonX, buttonY)
-			unipack.LED_push(chain.value, buttonX, buttonY)
+			val e: LedAnimation? = unipack.led_get(chain.value, buttonX, buttonY)
+			unipack.led_push(chain.value, buttonX, buttonY)
 
 			ledAnimation = e
 		}

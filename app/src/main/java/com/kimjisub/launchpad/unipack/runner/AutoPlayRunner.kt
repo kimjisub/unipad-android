@@ -64,7 +64,7 @@ class AutoPlayRunner(
 							is AutoPlay.Element.On -> {
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								unipack.Sound_push(e.currChain, e.x, e.y, e.num)
-								unipack.LED_push(e.currChain, e.x, e.y, e.num)
+								unipack.led_push(e.currChain, e.x, e.y, e.num)
 								listener.onPadTouchOn(e.x, e.y)
 							}
 							is AutoPlay.Element.Off -> {
@@ -169,7 +169,7 @@ class AutoPlayRunner(
 				when (e) {
 					is AutoPlay.Element.On -> {
 						unipack.Sound_push(e.currChain, e.x, e.y, e.num)
-						unipack.LED_push(e.currChain, e.x, e.y, e.num)
+						unipack.led_push(e.currChain, e.x, e.y, e.num)
 						listener.onGuidePadOn(e.x, e.y)
 						complete = true
 						guideItems!!.add(e)

@@ -53,12 +53,12 @@ class Pad : RelativeLayout {
 
 
 	fun setLedBackground(drawable: Drawable?): Pad {
-		IV_LED.background = drawable
+		IV_led.background = drawable
 		return this
 	}
 
 	fun setLedBackgroundColor(color: Int): Pad {
-		IV_LED.setBackgroundColor(color)
+		IV_led.setBackgroundColor(color)
 		return this
 	}
 
