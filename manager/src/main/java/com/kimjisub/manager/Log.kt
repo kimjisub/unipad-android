@@ -3,7 +3,7 @@ package com.kimjisub.manager
 import android.util.Log
 
 object Log {
-	const val DEBUG = true
+	private const val DEBUG = true
 	fun log(msg: String) = printLog("com.kimjisub._log", msg)
 	fun fbmsg(msg: String) = printLog("com.kimjisub._fbmsg", msg)
 	fun test(msg: String) = printLog("com.kimjisub._test", msg)
@@ -11,13 +11,11 @@ object Log {
 	fun network(msg: String) = printLog("com.kimjisub._network", msg)
 	fun activity(msg: String) = printLog("com.kimjisub._activity", msg)
 	fun firebase(msg: String) = printLog("com.kimjisub._firebase", msg)
-	fun vungle(msg: String) = printLog("com.kimjisub._vungle", msg)
 	fun admob(msg: String) = printLog("com.kimjisub._admob", msg)
 	fun midi(msg: String) = printLog("com.kimjisub._midi", msg)
 	fun thread(msg: String) = printLog("com.kimjisub._thread", msg)
 	fun midiDetail(msg: String) = printLog("com.kimjisub._mididetail", msg)
 	fun driver(msg: String) = printLog("com.kimjisub._driver", msg)
-	fun sqlite(msg: String) = printLog("com.kimjisub._sqlite", msg)
 	fun driverCycle(msg: String) = printLog("com.kimjisub._cycle", msg)
 	fun err(msg: String) = printLog("com.kimjisub._err", msg)
 
