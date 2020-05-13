@@ -34,7 +34,7 @@ class Chain : RelativeLayout {
 			.inflate(layout.chain, this, true)
 	}
 
-	override fun setOnClickListener(listener: OnClickListener) {
+	override fun setOnClickListener(listener: OnClickListener?) {
 		V_touchView.setOnClickListener(listener)
 	}
 
