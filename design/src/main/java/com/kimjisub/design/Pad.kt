@@ -34,7 +34,7 @@ class Pad : RelativeLayout {
 			.inflate(layout.pad, this, true)
 	}
 
-	override fun setOnClickListener(listener: OnClickListener) {
+	override fun setOnClickListener(listener: OnClickListener?) {
 		V_touchView.setOnClickListener(listener)
 	}
 
