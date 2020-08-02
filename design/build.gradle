@@ -23,8 +23,8 @@ android {
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
 		}
 	}
-	dataBinding {
-		enabled = true
+	buildFeatures {
+		dataBinding = true
 	}
 	compileOptions {
 		sourceCompatibility = '1.8'
@@ -35,8 +35,8 @@ android {
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 	implementation 'androidx.appcompat:appcompat:1.1.0'
-	implementation "androidx.constraintlayout:constraintlayout:2.0.0-beta5"
-	testImplementation 'junit:junit:4.12'
+	implementation 'androidx.constraintlayout:constraintlayout:2.0.0-rc1'
+	testImplementation 'junit:junit:4.13'
 	androidTestImplementation 'androidx.test:runner:1.2.0'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 

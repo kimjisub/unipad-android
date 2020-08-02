@@ -41,7 +41,7 @@ class ThemeResources {
 	var option_window_btn_text: Int? = null
 	var isChainLed = true
 
-	constructor(context: Context, packageName: String? = null, fullLoad: Boolean = false) {
+	constructor(context: Context, packageName: String, fullLoad: Boolean = false) {
 		this.packageName = packageName
 		customRes = context.packageManager.getResourcesForApplication(packageName)
 		defaultRes = context.resources
