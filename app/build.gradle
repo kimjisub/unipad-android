@@ -6,11 +6,11 @@ apply plugin: 'io.fabric'
 apply plugin: 'com.google.firebase.firebase-perf'
 
 android {
-	compileSdkVersion 29
+	compileSdkVersion 30
 	defaultConfig {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
-		targetSdkVersion 29
+		targetSdkVersion 30
 		versionCode 82
 		versionName "4.0.0b1"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
