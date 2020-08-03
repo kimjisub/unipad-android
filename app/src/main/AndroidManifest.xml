@@ -54,7 +54,7 @@
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="LockedOrientationActivity" />
 		<activity
-			android:name=".activity.FSStoreActivity"
+			android:name=".activity.StoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="LockedOrientationActivity" />
