@@ -202,7 +202,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 				Item("CarouselLayoutManager", "Apache License 2.0", "https://github.com/Azoft/CarouselLayoutManager"),
 				Item("FloatingActionButton", "Apache License 2.0", "https://github.com/Clans/FloatingActionButton"),
 				Item("TedPermission", "Apache License 2.0", "https://github.com/ParkSangGwon/TedPermission"),
-				Item("RealtimeBlurView", "Apache License 2.0", "https://github.com/mmin18/RealtimeBlurView"),
 				Item("Android In-App Billing v3 Library", "Apache License 2.0", "https://github.com/anjlab/android-inapp-billing-v3"),
 				Item("Retrofit", "Apache License 2.0", "https://github.com/square/retrofit")
 			)

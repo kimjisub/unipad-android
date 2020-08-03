@@ -4,6 +4,7 @@
 	xmlns:tools="http://schemas.android.com/tools">
 
 	<data>
+
 		<variable
 			name="themeResources"
 			type="com.kimjisub.launchpad.manager.ThemeResources" />
@@ -39,7 +40,7 @@
 			android:layout_margin="16dp"
 			android:scaleType="fitStart"
 			android:src="@{themeResources.custom_logo}"
-			tools:src="@drawable/custom_logo"/>
+			tools:src="@drawable/custom_logo" />
 
 		<RelativeLayout
 			android:layout_width="match_parent"
@@ -127,11 +128,11 @@
 
 								<ImageView
 									android:id="@+id/pause"
-									android:visibility="gone"
 									android:layout_width="32dp"
 									android:layout_height="32dp"
 									android:background="@{themeResources.xml_pause}"
 									android:clickable="true"
+									android:visibility="gone"
 									tools:background="@drawable/xml_pause" />
 
 							</RelativeLayout>
@@ -201,171 +202,169 @@
 				android:orientation="vertical" />
 		</RelativeLayout>
 
-		<com.github.mmin18.widget.RealtimeBlurView
+		<RelativeLayout
 			android:id="@+id/option_blur"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:alpha="0"
-			android:visibility="invisible"
-			app:realtimeBlurRadius="5dp"
-			app:realtimeOverlayColor="#0000" />
+			android:visibility="invisible">
 
-		<LinearLayout
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:background="#7000" />
+		</RelativeLayout>
+
+		<RelativeLayout
+			android:id="@+id/option_window"
+			android:layout_width="400dp"
+			android:layout_height="wrap_content"
 			android:layout_centerInParent="true"
-			android:gravity="center"
-			android:orientation="horizontal">
+			android:clickable="true"
+			android:focusable="true"
+			android:padding="8dp"
+			android:visibility="invisible"
+			android:background="@drawable/border_settings">
 
-			<RelativeLayout
-				android:id="@+id/option_window"
-				android:layout_width="400dp"
+			<LinearLayout
+				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				tools:background="@drawable/border_settings"
-				android:clickable="true"
-				android:focusable="true"
-				android:padding="8dp"
-				android:visibility="invisible">
+				android:orientation="vertical">
+
+				<!--<com.google.android.gms.ads.AdView
+					xmlns:ads="http://schemas.android.com/apk/res-auto"
+					android:id="@+id/adView"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					ads:adSize="BANNER"
+					ads:adUnitId="ca-app-pub-1077445788578961/2748397864"/>-->
 
 				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
-					android:orientation="vertical">
-
-					<!--<com.google.android.gms.ads.AdView
-						xmlns:ads="http://schemas.android.com/apk/res-auto"
-						android:id="@+id/adView"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						ads:adSize="BANNER"
-						ads:adUnitId="ca-app-pub-1077445788578961/2748397864"/>-->
+					android:layout_gravity="center"
+					android:orientation="horizontal"
+					android:weightSum="2">
 
 					<LinearLayout
-						android:layout_width="match_parent"
+						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:layout_gravity="center"
-						android:orientation="horizontal"
-						android:weightSum="2">
+						android:layout_weight="1"
+						android:orientation="vertical">
+
+						<CheckBox
+							android:id="@+id/CB2_feedbackLight"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/feedbackLight"
+							android:textColor="@color/option_window_checkbox" />
+
+						<CheckBox
+							android:id="@+id/CB2_led"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/led"
+							android:textColor="@color/option_window_checkbox" />
+
+
+						<CheckBox
+							android:id="@+id/CB2_autoPlay"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/autoPlay"
+							android:textColor="@color/option_window_checkbox" />
+
+						<CheckBox
+							android:id="@+id/CB2_traceLog"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/traceLog"
+							android:textColor="@color/option_window_checkbox" />
+
+						<CheckBox
+							android:id="@+id/CB2_record"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/record"
+							android:textColor="@color/option_window_checkbox" />
+
+					</LinearLayout>
+
+					<RelativeLayout
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1">
 
 						<LinearLayout
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:layout_weight="1"
 							android:orientation="vertical">
 
+							<LinearLayout
+								android:id="@+id/proTools"
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:alpha="0.3"
+								android:orientation="vertical">
+
+								<CheckBox
+									android:id="@+id/CB2_hideUI"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:buttonTint="@color/option_window_checkbox"
+									android:text="@string/hideUI"
+									android:textColor="@color/option_window_checkbox" />
+
+								<CheckBox
+									android:id="@+id/CB2_watermark"
+									android:layout_width="wrap_content"
+									android:layout_height="wrap_content"
+									android:buttonTint="@color/option_window_checkbox"
+									android:text="@string/watermark"
+									android:textColor="@color/option_window_checkbox" />
+
+							</LinearLayout>
+
 							<CheckBox
-								android:id="@+id/CB2_feedbackLight"
+								android:id="@+id/CB2_proLightMode"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/feedbackLight"
+								android:text="@string/proLightMode"
 								android:textColor="@color/option_window_checkbox" />
 
 							<CheckBox
-								android:id="@+id/CB2_led"
+								android:id="@+id/purchase"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/led"
-								android:textColor="@color/option_window_checkbox" />
-
-
-							<CheckBox
-								android:id="@+id/CB2_autoPlay"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/autoPlay"
-								android:textColor="@color/option_window_checkbox" />
-
-							<CheckBox
-								android:id="@+id/CB2_traceLog"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/traceLog"
-								android:textColor="@color/option_window_checkbox" />
-
-							<CheckBox
-								android:id="@+id/CB2_record"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/record"
+								android:text="@string/purchase"
 								android:textColor="@color/option_window_checkbox" />
 
 						</LinearLayout>
 
-						<RelativeLayout
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:layout_weight="1">
 
-							<LinearLayout
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:orientation="vertical">
-
-								<LinearLayout
-									android:id="@+id/proTools"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:alpha="0.3"
-									android:orientation="vertical">
-
-									<CheckBox
-										android:id="@+id/CB2_hideUI"
-										android:layout_width="wrap_content"
-										android:layout_height="wrap_content"
-										android:buttonTint="@color/option_window_checkbox"
-										android:text="@string/hideUI"
-										android:textColor="@color/option_window_checkbox" />
-
-									<CheckBox
-										android:id="@+id/CB2_watermark"
-										android:layout_width="wrap_content"
-										android:layout_height="wrap_content"
-										android:buttonTint="@color/option_window_checkbox"
-										android:text="@string/watermark"
-										android:textColor="@color/option_window_checkbox" />
-
-								</LinearLayout>
-
-								<CheckBox
-									android:id="@+id/CB2_proLightMode"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:buttonTint="@color/option_window_checkbox"
-									android:text="@string/proLightMode"
-									android:textColor="@color/option_window_checkbox" />
-
-								<CheckBox
-									android:id="@+id/purchase"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="@string/purchase" />
-
-							</LinearLayout>
-
-
-						</RelativeLayout>
-
-					</LinearLayout>
-
-					<ImageButton
-						android:id="@+id/quit"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="end"
-						android:layout_marginTop="-40dp"
-						android:padding="20dp"
-						android:src="@drawable/ic_exit_to_app_24dp" />
+					</RelativeLayout>
 
 				</LinearLayout>
 
-			</RelativeLayout>
+				<ImageButton
+					android:id="@+id/quit"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_gravity="end"
+					android:layout_marginTop="-40dp"
+					android:padding="20dp"
+					android:src="@drawable/ic_exit_to_app_24dp" />
 
-		</LinearLayout>
+			</LinearLayout>
+
+		</RelativeLayout>
 
 	</RelativeLayout>
 </layout>
