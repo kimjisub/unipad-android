@@ -123,6 +123,7 @@ dependencies {
 	implementation 'com.anjlab.android.iab.v3:library:1.1.0'
 	implementation 'com.orhanobut:logger:2.2.0'
 	implementation 'cn.aigestudio.wheelpicker:WheelPicker:1.1.3'
+	implementation 'com.yarolegovich:discrete-scrollview:1.5.1'
 
 	api project(':design')
 	api project(':manager')

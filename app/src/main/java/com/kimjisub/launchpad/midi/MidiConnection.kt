@@ -145,44 +145,42 @@ object MidiConnection {
 
 		try {
 			Log.midiDetail("ProductId : " + device.productId)
-			listener?.onUiLog("ProductId : " + device.productId + "\n")
-			val driver_: DriverRef
-			when (device.productId) {
+			listener?.onUiLog("ProductId : " + device.productId + "")
+			driver = when (device.productId) {
 				8 -> {
-					driver_ = MidiFighter()
-					listener?.onUiLog("prediction : MidiFighter\n")
+					listener?.onUiLog("prediction : MidiFighter")
+					MidiFighter()
 				}
 				105 -> {
-					driver_ = LaunchpadMK2()
-					listener?.onUiLog("prediction : Launchpad MK2\n")
+					listener?.onUiLog("prediction : Launchpad MK2")
+					LaunchpadMK2()
 				}
 				81 -> {
-					driver_ = LaunchpadPRO()
-					listener?.onUiLog("prediction : Launchpad Pro\n")
+					listener?.onUiLog("prediction : Launchpad Pro")
+					LaunchpadPRO()
 				}
 				54 -> {
-					driver_ = LaunchpadS()
-					listener?.onUiLog("prediction : Launchpad mk2 mini\n")
+					listener?.onUiLog("prediction : Launchpad mk2 mini")
+					LaunchpadS()
 				}
 				259 -> {
-					driver_ = LaunchpadX()
-					listener?.onUiLog("prediction : Launchpad X\n")
+					listener?.onUiLog("prediction : Launchpad X")
+					LaunchpadX()
 				}
 				8211 -> {
-					driver_ = MasterKeyboard()
-					listener?.onUiLog("prediction : LX 61 piano\n")
+					listener?.onUiLog("prediction : LX 61 piano")
+					MasterKeyboard()
 				}
 				32822 -> {
-					driver_ = LaunchpadPRO()
-					listener?.onUiLog("prediction : Arduino Leonardo midi\n")
+					listener?.onUiLog("prediction : Arduino Leonardo midi")
 					interfaceNum = 3
+					LaunchpadPRO()
 				}
 				else -> {
-					driver_ = MasterKeyboard()
-					listener?.onUiLog("prediction : unknown\n")
+					listener?.onUiLog("prediction : unknown")
+					MasterKeyboard()
 				}
 			}
-			driver = driver_
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
@@ -191,20 +189,20 @@ object MidiConnection {
 			val ui = device.getInterface(i)
 			if (ui.endpointCount > 0) {
 				usbInterface = ui
-				listener?.onUiLog("Interface : (" + (i + 1) + "/" + device.interfaceCount + ")\n")
+				listener?.onUiLog("Interface : (" + (i + 1) + "/" + device.interfaceCount + ")")
 				break
 			}
 		}
 		for (i in 0 until usbInterface!!.endpointCount) {
 			val ep = usbInterface!!.getEndpoint(i)
 			if (ep.direction == UsbConstants.USB_DIR_IN) {
-				listener?.onUiLog("Endpoint_In : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_In : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")")
 				usbEndpoint_in = ep
 			} else if (ep.direction == UsbConstants.USB_DIR_OUT) {
-				listener?.onUiLog("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_OUT : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")")
 				usbEndpoint_out = ep
 			} else {
-				listener?.onUiLog("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")\n")
+				listener?.onUiLog("Endpoint_Unknown : (" + (i + 1) + "/" + usbInterface!!.endpointCount + ")")
 			}
 		}
 		usbDeviceConnection = usbManager!!.openDevice(device)
@@ -265,7 +263,15 @@ object MidiConnection {
 								val velocity = byteArray[i + 3].toInt()
 
 								publishProgress(cmd, sig, note, velocity)
-								Log.midi(String.format("%-7d%-7d%-7d%-7d", cmd, sig, note, velocity))
+								Log.midi(
+									String.format(
+										"%-7d%-7d%-7d%-7d",
+										cmd,
+										sig,
+										note,
+										velocity
+									)
+								)
 								i += 4
 							}
 						} else if (length == -1) {

@@ -203,7 +203,8 @@ class SettingFragment : PreferenceFragmentCompat() {
 				Item("FloatingActionButton", "Apache License 2.0", "https://github.com/Clans/FloatingActionButton"),
 				Item("TedPermission", "Apache License 2.0", "https://github.com/ParkSangGwon/TedPermission"),
 				Item("Android In-App Billing v3 Library", "Apache License 2.0", "https://github.com/anjlab/android-inapp-billing-v3"),
-				Item("Retrofit", "Apache License 2.0", "https://github.com/square/retrofit")
+				Item("Retrofit", "Apache License 2.0", "https://github.com/square/retrofit"),
+				Item("Carousel View", "Apache License 2.0", "https://github.com/alirezat775/carousel-view")
 			)
 			val listView = ListView(context)
 			val data = ArrayList<DialogListItem>()

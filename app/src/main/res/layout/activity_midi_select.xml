@@ -10,8 +10,8 @@
 		android:orientation="vertical">
 
 		<LinearLayout
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
 			android:layout_centerHorizontal="true"
 			android:layout_centerVertical="true"
 			android:orientation="vertical">
@@ -26,16 +26,23 @@
 				android:textColor="@color/ugray1"
 				android:textSize="30dp" />
 
-			<com.aigestudio.wheelpicker.WheelPicker
-				android:id="@+id/picker"
-				app:wheel_item_text_size="60dp"
-				app:wheel_item_text_color="#a7a7db"
-				app:wheel_selected_item_text_color="#536d8a"
-				app:wheel_curtain="true"
-				app:wheel_curved="true"
-				app:wheel_atmospheric="true"
+			<TextView
+				android:id="@+id/timer"
 				android:layout_width="wrap_content"
-				android:layout_height="wrap_content" />
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal"
+				android:layout_marginBottom="10dp"
+				android:gravity="center"
+				tool:text="5"
+				android:textColor="@color/ugray1"
+				android:textSize="30dp" />
+
+			<com.yarolegovich.discretescrollview.DiscreteScrollView
+				android:id="@+id/picker"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				app:dsv_orientation="horizontal" />
+
 
 		</LinearLayout>
 
