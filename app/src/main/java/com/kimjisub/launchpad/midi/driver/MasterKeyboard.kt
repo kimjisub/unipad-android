@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.midi.driver
 
 class MasterKeyboard : DriverRef() {
+	companion object {}
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
 		val x: Int
 		val y: Int
