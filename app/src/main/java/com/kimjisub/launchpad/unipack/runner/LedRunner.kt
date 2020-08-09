@@ -13,7 +13,7 @@ class LedRunner(
 ) {
 	private var btnLed: Array<Array<Led?>?>?
 	private var cirLed: Array<Led?>?
-	private var ledEvents: ArrayList<LedEvent> = ArrayList()
+	private var ledAnimationStates: ArrayList<LedAnimationState> = ArrayList()
 
 	private var thread: Thread? = null
 	val active: Boolean
@@ -51,87 +51,101 @@ class LedRunner(
 	}
 
 	private fun loop() {
-		val currTime = System.currentTimeMillis()
-		for (e in ledEvents) {
-			if (e.isPlaying && !e.isShutdown) {
-				// Init if First
-				if (e.delay == 0L) e.delay = currTime
-				while (true) {
-					// Counting Up Loop Progress
-					if (e.index >= e.ledAnimation?.elements!!.size) {
-						e.loopProgress++
-						e.index = 0
-					}
-					// Stop if Loop is Done
-					if (e.ledAnimation.loop != 0 && e.ledAnimation.loop <= e.loopProgress) {
-						e.isPlaying = false
-						break
-					}
-					if (e.delay <= currTime) {
-						try {
-							val element = e.ledAnimation.elements[e.index]//todo
-							when (element) {
-								is LedAnimation.Element.On -> {
-									val x = element.x
-									val y = element.y
-									val color = element.color
-									val velo = element.velo
+		synchronized(this) {
+			val currTime = System.currentTimeMillis()
+			for (e in ledAnimationStates) {
+				if (e.isPlaying && !e.isShutdown) {
+					// Init if First
+					if (e.delay == 0L) e.delay = currTime
+					while (true) {
+						// Counting Up Loop Progress
+						if (e.index >= e.ledAnimation?.ledEvents!!.size) {
+							e.loopProgress++
+							e.index = 0
+						}
+						// Stop if Loop is Done
+						if (e.ledAnimation.loop != 0 && e.ledAnimation.loop <= e.loopProgress) {
+							e.isPlaying = false
+							break
+						}
+						if (e.delay <= currTime) {
+							try {
+								val element = e.ledAnimation.ledEvents[e.index]//todo
+								when (element) {
+									is LedAnimation.LedEvent.On -> {
+										val x = element.x
+										val y = element.y
+										val color = element.color
+										val velo = element.velo
 
-									if (x != -1) {
-										listener.onPadLedTurnOn(x, y, color, velo)
-										btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, element)
-									} else {
-										listener.onChainLedTurnOn(y, color, velo)
-										cirLed!![y] = Led(e.buttonX, e.buttonY, element)
-									}
-								}
-								is LedAnimation.Element.Off -> {
-									val x = element.x
-									val y = element.y
-
-									if (x != -1) {
-										if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
-											listener.onPadLedTurnOff(x, y)
-											btnLed!![x]!![y] = null
-										}
-									} else {
-										if (cirLed!![y] != null && cirLed!![y]!!.equal(e.buttonX, e.buttonY)) {
-											listener.onChainLedTurnOff(y)
-											cirLed!![y] = null
+										if (x != -1) {
+											listener.onPadLedTurnOn(x, y, color, velo)
+											btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, element)
+										} else {
+											listener.onChainLedTurnOn(y, color, velo)
+											cirLed!![y] = Led(e.buttonX, e.buttonY, element)
 										}
 									}
+									is LedAnimation.LedEvent.Off -> {
+										val x = element.x
+										val y = element.y
+
+										if (x != -1) {
+											if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(
+													e.buttonX,
+													e.buttonY
+												)
+											) {
+												listener.onPadLedTurnOff(x, y)
+												btnLed!![x]!![y] = null
+											}
+										} else {
+											if (cirLed!![y] != null && cirLed!![y]!!.equal(
+													e.buttonX,
+													e.buttonY
+												)
+											) {
+												listener.onChainLedTurnOff(y)
+												cirLed!![y] = null
+											}
+										}
+									}
+									is LedAnimation.LedEvent.Delay -> {
+										e.delay += element.delay.toLong()
+									}
 								}
-								is LedAnimation.Element.Delay -> {
-									e.delay += element.delay.toLong()
-								}
+							} catch (ee: ArrayIndexOutOfBoundsException) {
+								ee.printStackTrace()
 							}
-						} catch (ee: ArrayIndexOutOfBoundsException) {
-							ee.printStackTrace()
-						}
-					} else break
-					e.index++
-				}
-			} else if (e.isShutdown) {
-				for (x in 0 until unipack.buttonX) {
-					for (y in 0 until unipack.buttonY) {
-						if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(e.buttonX, e.buttonY)) {
-							listener.onPadLedTurnOff(x, y)
-							btnLed!![x]!![y] = null
+						} else break
+						e.index++
+					}
+				} else if (e.isShutdown) {
+					for (x in 0 until unipack.buttonX) {
+						for (y in 0 until unipack.buttonY) {
+							if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(
+									e.buttonX,
+									e.buttonY
+								)
+							) {
+								listener.onPadLedTurnOff(x, y)
+								btnLed!![x]!![y] = null
+							}
 						}
 					}
-				}
-				for (y in cirLed!!.indices) {
-					if (cirLed!![y] != null && cirLed!![y]!!.equal(e.buttonX, e.buttonY)) {
-						listener.onChainLedTurnOff(y)
-						cirLed!![y] = null
+					for (y in cirLed!!.indices) {
+						if (cirLed!![y] != null && cirLed!![y]!!.equal(e.buttonX, e.buttonY)) {
+							listener.onChainLedTurnOff(y)
+							cirLed!![y] = null
+						}
 					}
+					e.remove = true
+				} else if (!e.isPlaying) {
+					e.remove = true
 				}
-				e.remove = true
-			} else if (!e.isPlaying) {
-				e.remove = true
 			}
+			ledAnimationStates = ledAnimationStates.filter { !it.remove } as ArrayList<LedAnimationState>
 		}
-		ledEvents = ledEvents.filter { !it.remove } as ArrayList<LedEvent>
 	}
 
 
@@ -150,10 +164,10 @@ class LedRunner(
 
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun searchEvent(x: Int, y: Int): LedEvent? {
-		var res: LedEvent? = null
+	fun searchEvent(x: Int, y: Int): LedAnimationState? {
+		var res: LedAnimationState? = null
 		try {
-			for (e in ledEvents) {
+			for (e in ledAnimationStates) {
 				if (e.equal(x, y)) {
 					res = e
 					break
@@ -173,8 +187,8 @@ class LedRunner(
 				val e = searchEvent(x, y)
 				e!!.isShutdown = true
 			}
-			val e = LedEvent(x, y)
-			if (e.noError) ledEvents.add(e)
+			val e = LedAnimationState(x, y)
+			if (e.noError) ledAnimationStates.add(e)
 		}
 	}
 
@@ -186,17 +200,19 @@ class LedRunner(
 		}
 	}
 
+	// 점등되는 하나의 Led 를 의미합니다.
 	inner class Led(
 		var buttonX: Int,
 		var buttonY: Int,
-		var element: LedAnimation.Element
+		var ledEvent: LedAnimation.LedEvent
 	) {
 		fun equal(buttonX: Int, buttonY: Int): Boolean {
 			return this.buttonX == buttonX && this.buttonY == buttonY
 		}
 	}
 
-	inner class LedEvent(var buttonX: Int, var buttonY: Int) {
+	// Led 이벤트들의 모음인 LedAnimation 의 실행 상황을 기록합니다.
+	inner class LedAnimationState(var buttonX: Int, var buttonY: Int) {
 		var index = 0
 		var delay: Long = 0
 		var isPlaying = true

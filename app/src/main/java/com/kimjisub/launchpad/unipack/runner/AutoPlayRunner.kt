@@ -54,13 +54,13 @@ class AutoPlayRunner(
 			var delay: Long = 0
 			val startTime = System.currentTimeMillis()
 			while (progress < unipack.autoPlayTable!!.elements.size && active) {
+				Log.test("$progress")
 				val currTime = System.currentTimeMillis()
 				if (playmode) {
 					beforeStartPlaying()
 					if (delay <= currTime - startTime) {
-						val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]
 
-						when (e) {
+						when (val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]) {
 							is AutoPlay.Element.On -> {
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								unipack.Sound_push(e.currChain, e.x, e.y, e.num)

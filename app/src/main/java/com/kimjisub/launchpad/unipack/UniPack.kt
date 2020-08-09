@@ -223,7 +223,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 						addErr("keyLed : [$fileName] format is incorrect")
 						continue
 					}
-					val ledList = ArrayList<LedAnimation.Element>()
+					val ledList = ArrayList<LedAnimation.LedEvent>()
 					val reader = BufferedReader(InputStreamReader(FileInputStream(file)))
 					loop@ while (true) {
 						val s = reader.readLine() ?: break
@@ -279,9 +279,9 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 							continue
 						}
 						when (option) {
-							"on", "o" -> ledList.add(LedAnimation.Element.On(_x, _y, _color, _velo))
-							"off", "f" -> ledList.add(LedAnimation.Element.Off(_x, _y))
-							"delay", "d" -> ledList.add(LedAnimation.Element.Delay(_delay))
+							"on", "o" -> ledList.add(LedAnimation.LedEvent.On(_x, _y, _color, _velo))
+							"off", "f" -> ledList.add(LedAnimation.LedEvent.Off(_x, _y))
+							"delay", "d" -> ledList.add(LedAnimation.LedEvent.Delay(_delay))
 						}
 					}
 					if (ledAnimationTable!![c][x][y] == null)
