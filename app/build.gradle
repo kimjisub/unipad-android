@@ -12,9 +12,9 @@ android {
 		minSdkVersion 21
 		targetSdkVersion 30
 		versionCode 82
-		versionName "4.0.0b1"
+		versionName "4.0.0b3p1_concurrent"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-		vectorDrawables.useSupportLibrary = true
+		vectorDrawables.useSupportLibrary true
 		renderscriptTargetApi 19
 		renderscriptSupportModeEnabled true
 	}
@@ -43,7 +43,7 @@ android {
 		javaMaxHeapSize "4g"
 	}
 	buildFeatures {
-		dataBinding = true
+		dataBinding true
 	}
 	compileOptions {
 		sourceCompatibility = '1.8'
