@@ -38,46 +38,46 @@ class LaunchpadX : DriverRef() {
 		)
 	}
 
-	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
+	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		if (cmd == 25) {
 			val x = 9 - note / 10
 			val y = note % 10
 			if (y in 1..8)
-				onPadTouch(x - 1, y - 1, velo != 0, velo)
+				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 		} else if (cmd == 27 && sig == -80) {
 			if (note in 91..98) {
-				onFunctionkeyTouch(note - 91, velo != 0)
+				onFunctionkeyTouch(note - 91, velocity != 0)
 			}
 			if (note in 19..89 && note % 10 == 9) {
 				val c = 9 - note / 10 - 1
-				onChainTouch(c, velo != 0)
-				onFunctionkeyTouch(c + 8, velo != 0)
+				onChainTouch(c, velocity != 0)
+				onFunctionkeyTouch(c + 8, velocity != 0)
 			}
 			if (note in 1..8) {
-				onChainTouch(8 - note + 16 - 8, velo != 0)
-				onFunctionkeyTouch(8 - note + 16, velo != 0)
+				onChainTouch(8 - note + 16 - 8, velocity != 0)
+				onFunctionkeyTouch(8 - note + 16, velocity != 0)
 			}
 			if (note in 10..80 && note % 10 == 0) {
-				onChainTouch(note / 10 - 1 + 24 - 8, velo != 0)
-				onFunctionkeyTouch(note / 10 - 1 + 24, velo != 0)
+				onChainTouch(note / 10 - 1 + 24 - 8, velocity != 0)
+				onFunctionkeyTouch(note / 10 - 1 + 24, velocity != 0)
 			}
 		} else {
-			onUnknownReceived(cmd, sig, note, velo)
+			onUnknownReceived(cmd, sig, note, velocity)
 		}
 	}
 
-	override fun sendPadLed(x: Int, y: Int, velo: Int) {
-		sendSignal(25, -112, 10 * (8 - x) + y + 1, velo)
+	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		sendSignal(25, -112, 10 * (8 - x) + y + 1, velocity)
 	}
 
-	override fun sendChainLed(c: Int, velo: Int) {
+	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLed(c + 8, velo)
+			sendFunctionkeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLed(f: Int, velo: Int) {
+	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
 		if (f in 0..31)
-			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), velo.toByte())
+			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), velocity.toByte())
 	}
 
 

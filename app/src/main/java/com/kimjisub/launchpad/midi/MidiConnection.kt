@@ -79,32 +79,32 @@ object MidiConnection {
 		}
 
 		onSendSignalListener = object : DriverRef.OnSendSignalListener {
-			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velo: Byte) {
+			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
 				if (usbDeviceConnection != null) {
 					if (mode == 0) {
 						try {
 							CoroutineScope(Dispatchers.IO).launch {
-								sendBuffer(cmd, sig, note, velo)
+								sendBuffer(cmd, sig, note, velocity)
 							}
 						} catch (ignore: Exception) {
 							//Log.midiDetail("MIDI send thread execute fail");
 						}
 
 					} else if (mode == 1)
-						sendBuffer(cmd, sig, note, velo)
+						sendBuffer(cmd, sig, note, velocity)
 				}
 			}
 
 		}
 
 		onReceiveSignalListener = object : DriverRef.OnReceiveSignalListener {
-			override fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velo: Int) {
-				controller?.onUnknownEvent(cmd, sig, note, velo)
+			override fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				controller?.onUnknownEvent(cmd, sig, note, velocity)
 				//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 			}
 
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
-				controller?.onPadTouch(x, y, upDown, velo)
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
+				controller?.onPadTouch(x, y, upDown, velocity)
 			}
 
 			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
@@ -115,8 +115,8 @@ object MidiConnection {
 				controller?.onChainTouch(c, upDown)
 			}
 
-			override fun onReceived(cmd: Int, sig: Int, note: Int, velo: Int) {
-				controller?.onUnknownEvent(cmd, sig, note, velo)
+			override fun onReceived(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				controller?.onUnknownEvent(cmd, sig, note, velocity)
 			}
 		}
 

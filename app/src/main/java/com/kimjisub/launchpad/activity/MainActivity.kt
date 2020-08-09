@@ -149,7 +149,7 @@ class MainActivity : BaseActivity() {
 				Log.driverCycle("MainActivity onDisconnected()")
 			}
 
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
 				if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
 					if (upDown) driver.sendPadLed(x, y, intArrayOf(40, 61)[(Math.random() * 2).toInt()]) else driver.sendPadLed(x, y, 0)
 				}
@@ -173,8 +173,8 @@ class MainActivity : BaseActivity() {
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {}
 
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				if ((cmd == 7) && (sig == 46) && (note == 0) && (velo == -9)) updateLP()
+			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				if ((cmd == 7) && (sig == 46) && (note == 0) && (velocity == -9)) updateLP()
 			}
 		}
 	}

@@ -21,9 +21,9 @@ class LedRunner(
 
 	interface Listener {
 		fun onStart()
-		fun onPadLedTurnOn(x: Int, y: Int, color: Int, velo: Int)
+		fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int)
 		fun onPadLedTurnOff(x: Int, y: Int)
-		fun onChainLedTurnOn(c: Int, color: Int, velo: Int)
+		fun onChainLedTurnOn(c: Int, color: Int, velocity: Int)
 		fun onChainLedTurnOff(c: Int)
 		fun onEnd()
 	}
@@ -76,13 +76,13 @@ class LedRunner(
 										val x = element.x
 										val y = element.y
 										val color = element.color
-										val velo = element.velo
+										val velocity = element.velocity
 
 										if (x != -1) {
-											listener.onPadLedTurnOn(x, y, color, velo)
+											listener.onPadLedTurnOn(x, y, color, velocity)
 											btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, element)
 										} else {
-											listener.onChainLedTurnOn(y, color, velo)
+											listener.onChainLedTurnOn(y, color, velocity)
 											cirLed!![y] = Led(e.buttonX, e.buttonY, element)
 										}
 									}
