@@ -12,7 +12,7 @@ class LedAnimation(
 			val x: Int,
 			val y: Int,
 			val color: Int = -1,
-			val velo: Int = 4
+			val velocity: Int = 4
 		) : LedEvent
 
 		class Off(

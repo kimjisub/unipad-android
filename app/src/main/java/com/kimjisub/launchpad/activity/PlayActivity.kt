@@ -489,8 +489,8 @@ class PlayActivity : BaseActivity() {
 						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
-					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
-						channelManager!!.add(x, y, Channel.LED, color, velo)
+					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
+						channelManager!!.add(x, y, Channel.LED, color, velocity)
 						setLed(x, y)
 					}
 
@@ -499,8 +499,8 @@ class PlayActivity : BaseActivity() {
 						setLed(x, y)
 					}
 
-					override fun onChainLedTurnOn(c: Int, color: Int, velo: Int) {
-						channelManager!!.add(-1, c, Channel.LED, color, velo)
+					override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) {
+						channelManager!!.add(-1, c, Channel.LED, color, velocity)
 						setLed(c)
 					}
 
@@ -1014,7 +1014,7 @@ class PlayActivity : BaseActivity() {
 			}
 
 			override fun onDetach() {}
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
 				if (!bool_toggleOption_window) {
 					padTouch(x, y, upDown)
 				}
@@ -1053,8 +1053,8 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				if (cmd == 7 && sig == 46 && note == 0 && velo == -9) updateLP()
+			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) updateLP()
 			}
 		}
 
