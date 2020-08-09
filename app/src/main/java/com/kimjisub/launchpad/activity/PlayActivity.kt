@@ -62,7 +62,7 @@ class PlayActivity : BaseActivity() {
 
 	private var unipack: UniPack? = null
 	private var unipackLoaded = false
-	private var UILoaded = false
+	private var uiLoaded = false
 	private var enable = true
 	private var chain: ChainObserver = ChainObserver()
 
@@ -129,7 +129,7 @@ class PlayActivity : BaseActivity() {
 		SCB_watermark.forceSetChecked(true)
 
 		/*if (!BillingManager.showAds())
-			AV_adview.setVisibility(View.GONE);*/
+			AV_adview.setVisibility(View.GONE);*///todo ads
 		billingManager = BillingManager(
 			this@PlayActivity,
 			object : BillingEventListener {
@@ -142,10 +142,6 @@ class PlayActivity : BaseActivity() {
 					setProMode(true)
 				}
 			})
-	}
-
-	fun <T> getValueOrDefault(value: T?, defaultValue: T): T {
-		return value ?: defaultValue
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -469,7 +465,7 @@ class PlayActivity : BaseActivity() {
 			}
 
 
-			UILoaded = true
+			uiLoaded = true
 			UILoaded()
 			controller = midiController
 		} catch (e: Exception) {
@@ -1251,7 +1247,7 @@ class PlayActivity : BaseActivity() {
 				}
 			})
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-		if (UILoaded) controller = midiController
+		if (uiLoaded) controller = midiController
 		if (billingManager!!.showAds) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/

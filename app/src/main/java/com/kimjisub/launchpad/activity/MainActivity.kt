@@ -359,7 +359,6 @@ class MainActivity : BaseActivity() {
 							from = i
 					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
-						Log.test("swap: $from -> $to")
 						changed = true
 					}
 				}

@@ -105,7 +105,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 						"website" -> website = value
 					}
 				} catch (e: IndexOutOfBoundsException) {
-					e.printStackTrace()
 					addErr("info : [$s] format is not found")
 				}
 			}
@@ -419,7 +418,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 			null
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_get ($c, $x, $y)")
-			ee.printStackTrace()
 			null
 		}
 	}
@@ -432,7 +430,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 			null
 		} catch (e: IndexOutOfBoundsException) {
 			err("Sound_get ($c, $x, $y)")
-			e.printStackTrace()
 			null
 		}
 	}
@@ -444,7 +441,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		} catch (ignored: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_push ($c, $x, $y)")
-			ee.printStackTrace()
 		}
 	}
 
@@ -462,10 +458,8 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		} catch (ignored: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_push ($c, $x, $y, $num)")
-			ee.printStackTrace()
 		} catch (ee: ArithmeticException) {
 			err("ArithmeticException : Sound_push ($c, $x, $y, $num)")
-			ee.printStackTrace()
 		}
 	}
 
@@ -477,7 +471,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 			null
 		} catch (ee: IndexOutOfBoundsException) {
 			err("LED_get ($c, $x, $y)")
-			ee.printStackTrace()
 			null
 		}
 	}
@@ -489,7 +482,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		} catch (ignored: NullPointerException) {
 		} catch (e: IndexOutOfBoundsException) {
 			err("LED_push ($c, $x, $y)")
-			e.printStackTrace()
 		}
 	}
 
@@ -505,7 +497,6 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		} catch (ignored: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("LED_push ($c, $x, $y, $num)")
-			ee.printStackTrace()
 		}
 	}
 

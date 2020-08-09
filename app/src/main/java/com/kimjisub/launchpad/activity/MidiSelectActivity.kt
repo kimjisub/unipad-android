@@ -99,8 +99,6 @@ class MidiSelectActivity : BaseActivity() {
 		picker.setSlideOnFling(true)
 		picker.adapter = adapter
 		picker.addOnItemChangedListener { _, adapterPosition ->
-			Log.test("currentPosition: $adapterPosition")
-
 			val item = midiDeviceList.value[adapterPosition]
 			MidiConnection.driver = item.driver.java.newInstance() as DriverRef
 		}
@@ -122,8 +120,6 @@ class MidiSelectActivity : BaseActivity() {
 
 			override fun onChangeDriver(driverRef: DriverRef) {
 				for ((i, item) in midiDeviceList.value.withIndex()) {
-					Log.test(item.driver::class.simpleName!!)
-					Log.test(driverRef::class.simpleName!!)
 					if (item.driver == driverRef::class)
 						picker.scrollToPosition(i)
 				}
