@@ -733,6 +733,8 @@ class MainActivity : BaseActivity() {
 
 	private fun versionCheck() {
 		val thisVersion = BuildConfig.VERSION_NAME
+		if(thisVersion.contains('b'))
+			return
 		val currVersionJson = FirebaseRemoteConfig.getInstance().getString("android_version")
 		if (currVersionJson.isNotEmpty()) {
 			val gson: Gson = GsonBuilder().create()

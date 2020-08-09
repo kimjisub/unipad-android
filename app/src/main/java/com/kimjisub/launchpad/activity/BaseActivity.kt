@@ -75,11 +75,11 @@ open class BaseActivity : AppCompatActivity() {
 			AlertDialog.Builder(context)
 				.setTitle(context.getString(string.requireRestart))
 				.setMessage(context.getString(string.doYouWantToRestartApp))
-				.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, which: Int ->
+				.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, _: Int ->
 					restartApp(context as Activity)
 					dialog.dismiss()
 				}
-				.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, which: Int ->
+				.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, _: Int ->
 					dialog.dismiss()
 					(context as Activity).finish()
 				}
