@@ -155,7 +155,7 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+			override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 				if (f == 0 && upDown) {
 					if (havePrev()) {
 						togglePlay(lastPlayIndex - 1)
