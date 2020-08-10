@@ -54,7 +54,6 @@ class AutoPlayRunner(
 			var delay: Long = 0
 			val startTime = System.currentTimeMillis()
 			while (progress < unipack.autoPlayTable!!.elements.size && active) {
-				Log.test("$progress")
 				val currTime = System.currentTimeMillis()
 				if (playmode) {
 					beforeStartPlaying()

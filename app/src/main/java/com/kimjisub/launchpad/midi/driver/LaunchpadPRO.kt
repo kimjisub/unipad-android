@@ -49,20 +49,20 @@ class LaunchpadPRO : DriverRef() {
 		}
 		if (cmd == 11 && sig == -80) {
 			if (note in 91..98) {
-				onFunctionkeyTouch(note - 91, velocity != 0)
+				onFunctionKeyTouch(note - 91, velocity != 0)
 			}
 			if (note in 19..89 && note % 10 == 9) {
 				val c = 9 - note / 10 - 1
 				onChainTouch(c, velocity != 0)
-				onFunctionkeyTouch(c + 8, velocity != 0)
+				onFunctionKeyTouch(c + 8, velocity != 0)
 			}
 			if (note in 1..8) {
 				onChainTouch(8 - note + 16 - 8, velocity != 0)
-				onFunctionkeyTouch(8 - note + 16, velocity != 0)
+				onFunctionKeyTouch(8 - note + 16, velocity != 0)
 			}
 			if (note in 10..80 && note % 10 == 0) {
 				onChainTouch(note / 10 - 1 + 24 - 8, velocity != 0)
-				onFunctionkeyTouch(note / 10 - 1 + 24, velocity != 0)
+				onFunctionKeyTouch(note / 10 - 1 + 24, velocity != 0)
 			}
 		} else {
 			onUnknownReceived(cmd, sig, note, velocity)
