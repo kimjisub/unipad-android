@@ -30,11 +30,11 @@ class LaunchpadMK2 : DriverRef() {
 				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 			else if (y == 9) {
 				onChainTouch(x - 1, velocity != 0)
-				onFunctionkeyTouch(x - 1 + 8, velocity != 0)
+				onFunctionKeyTouch(x - 1 + 8, velocity != 0)
 			}
 		} else if (cmd == 11) {
 			if (note in 104..111)
-				onFunctionkeyTouch(note - 104, velocity != 0)
+				onFunctionKeyTouch(note - 104, velocity != 0)
 		}
 	}
 

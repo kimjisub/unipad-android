@@ -58,8 +58,8 @@ abstract class DriverRef {
 		onReceiveSignalListener?.onChainTouch(c, upDown)
 	}
 
-	fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
-		Log.midiDetail("onFunctionkeyTouch($f, $upDown)")
+	fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
+		Log.midiDetail("onFunctionKeyTouch($f, $upDown)")
 		onReceiveSignalListener?.onFunctionkeyTouch(f, upDown)
 	}
 

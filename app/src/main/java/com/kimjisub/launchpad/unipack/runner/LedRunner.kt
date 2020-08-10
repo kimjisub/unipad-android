@@ -14,6 +14,7 @@ class LedRunner(
 	private var btnLed: Array<Array<Led?>?>?
 	private var cirLed: Array<Led?>?
 	private var ledAnimationStates: ArrayList<LedAnimationState> = ArrayList()
+	private var ledAnimationStatesAdd: ArrayList<LedAnimationState> = ArrayList()
 
 	private var thread: Thread? = null
 	val active: Boolean
@@ -70,25 +71,24 @@ class LedRunner(
 						}
 						if (e.delay <= currTime) {
 							try {
-								val element = e.ledAnimation.ledEvents[e.index]//todo
-								when (element) {
+								when (val event = e.ledAnimation.ledEvents[e.index]) {
 									is LedAnimation.LedEvent.On -> {
-										val x = element.x
-										val y = element.y
-										val color = element.color
-										val velocity = element.velocity
+										val x = event.x
+										val y = event.y
+										val color = event.color
+										val velocity = event.velocity
 
 										if (x != -1) {
 											listener.onPadLedTurnOn(x, y, color, velocity)
-											btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, element)
+											btnLed!![x]!![y] = Led(e.buttonX, e.buttonY, event)
 										} else {
 											listener.onChainLedTurnOn(y, color, velocity)
-											cirLed!![y] = Led(e.buttonX, e.buttonY, element)
+											cirLed!![y] = Led(e.buttonX, e.buttonY, event)
 										}
 									}
 									is LedAnimation.LedEvent.Off -> {
-										val x = element.x
-										val y = element.y
+										val x = event.x
+										val y = event.y
 
 										if (x != -1) {
 											if (btnLed!![x]!![y] != null && btnLed!![x]!![y]!!.equal(
@@ -111,7 +111,7 @@ class LedRunner(
 										}
 									}
 									is LedAnimation.LedEvent.Delay -> {
-										e.delay += element.delay.toLong()
+										e.delay += event.delay.toLong()
 									}
 								}
 							} catch (ee: ArrayIndexOutOfBoundsException) {
@@ -144,7 +144,11 @@ class LedRunner(
 					e.remove = true
 				}
 			}
-			ledAnimationStates = ledAnimationStates.filter { !it.remove } as ArrayList<LedAnimationState>
+			for(item in ledAnimationStatesAdd)
+				ledAnimationStates.add(item)
+			ledAnimationStatesAdd.clear()
+			ledAnimationStates =
+				ledAnimationStates.filter { !it.remove } as ArrayList<LedAnimationState>
 		}
 	}
 
@@ -164,7 +168,7 @@ class LedRunner(
 
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////
 
-	fun searchEvent(x: Int, y: Int): LedAnimationState? {
+	private fun searchEvent(x: Int, y: Int): LedAnimationState? {
 		var res: LedAnimationState? = null
 		try {
 			for (e in ledAnimationStates) {
@@ -188,7 +192,7 @@ class LedRunner(
 				e!!.isShutdown = true
 			}
 			val e = LedAnimationState(x, y)
-			if (e.noError) ledAnimationStates.add(e)
+			if (e.noError) ledAnimationStatesAdd.add(e)
 		}
 	}
 
