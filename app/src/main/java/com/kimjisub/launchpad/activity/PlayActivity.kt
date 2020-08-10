@@ -1020,7 +1020,7 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 
-			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+			override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 				if (upDown) {
 					if (!bool_toggleOption_window) {
 						when (f) {

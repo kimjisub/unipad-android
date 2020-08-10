@@ -70,11 +70,11 @@ object MidiConnection {
 
 		onCycleListener = object : DriverRef.OnCycleListener {
 			override fun onConnected() {
-				controller!!.onAttach()
+				controller?.onAttach()
 			}
 
 			override fun onDisconnected() {
-				controller!!.onDetach()
+				controller?.onDetach()
 			}
 		}
 
@@ -108,7 +108,7 @@ object MidiConnection {
 			}
 
 			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
-				controller?.onFunctionkeyTouch(f, upDown)
+				controller?.onFunctionKeyTouch(f, upDown)
 			}
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {

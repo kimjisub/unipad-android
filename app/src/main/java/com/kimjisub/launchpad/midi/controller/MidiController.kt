@@ -8,7 +8,7 @@ abstract class MidiController {
 
 	abstract fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int)
 
-	abstract fun onFunctionkeyTouch(f: Int, upDown: Boolean)
+	abstract fun onFunctionKeyTouch(f: Int, upDown: Boolean)
 
 	abstract fun onChainTouch(c: Int, upDown: Boolean)
 
