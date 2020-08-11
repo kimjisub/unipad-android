@@ -78,6 +78,7 @@
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
+			android:screenOrientation="sensorLandscape"
 			android:theme="@style/PopupTheme">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
