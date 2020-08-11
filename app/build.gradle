@@ -12,7 +12,7 @@ android {
 		minSdkVersion 21
 		targetSdkVersion 30
 		versionCode 82
-		versionName "4.0.0b3p2"
+		versionName "4.0.0b3p3"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		renderscriptTargetApi 19

@@ -9,7 +9,7 @@ class LedRunner(
 	private val unipack: UniPack,
 	private val listener: Listener,
 	private val chain: ChainObserver,
-	private val delay: Long = 16L
+	private val loopDelay: Long = 4L
 ) {
 	private var btnLed: Array<Array<Led?>?>?
 	private var cirLed: Array<Led?>?
@@ -43,7 +43,7 @@ class LedRunner(
 				val millis = measureTimeMillis {
 					loop()
 				}
-				Thread.sleep((delay - millis).coerceAtLeast(0))
+				Thread.sleep((loopDelay - millis).coerceAtLeast(0))
 			}
 		} catch (e: InterruptedException) {
 		}
