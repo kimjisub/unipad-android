@@ -70,7 +70,7 @@ class AutoPlayRunner(
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								listener.onPadTouchOff(e.x, e.y)
 							}
-							is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
+							//is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
 							is AutoPlay.Element.Delay -> delay += e.delay.toLong()
 						}
 						progress++
