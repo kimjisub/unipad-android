@@ -9,9 +9,9 @@ class AutoPlayRunner(
 	private val unipack: UniPack,
 	private val listener: Listener,
 	private val chain: ChainObserver,
-	private val delay_: Long = 1L
+	private val loopDelay: Long = 1L
 ) {
-	var playmode = false
+	var playmode = true
 	var beforeStartPlaying = true
 	var afterMatchChain = false
 	var beforeChain = -1
@@ -58,20 +58,25 @@ class AutoPlayRunner(
 				if (playmode) {
 					beforeStartPlaying()
 					if (delay <= currTime - startTime) {
-
+						Log.test("[AutoPlay] progress $progress")
 						when (val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]) {
 							is AutoPlay.Element.On -> {
+								Log.test("[AutoPlay] on ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								unipack.Sound_push(e.currChain, e.x, e.y, e.num)
 								unipack.led_push(e.currChain, e.x, e.y, e.num)
 								listener.onPadTouchOn(e.x, e.y)
 							}
 							is AutoPlay.Element.Off -> {
+								Log.test("[AutoPlay] off ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								listener.onPadTouchOff(e.x, e.y)
 							}
 							//is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
-							is AutoPlay.Element.Delay -> delay += e.delay.toLong()
+							is AutoPlay.Element.Delay -> {
+								Log.test("[AutoPlay] delay ${e.delay}")
+								delay += e.delay.toLong()
+							}
 						}
 						progress++
 					}
@@ -91,7 +96,7 @@ class AutoPlayRunner(
 						guideCheck()
 					}
 				}
-				Thread.sleep(delay_)
+				Thread.sleep(loopDelay)
 			}
 		} catch (e: InterruptedException) {
 		}
