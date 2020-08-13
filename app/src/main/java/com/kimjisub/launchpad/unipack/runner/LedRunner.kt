@@ -171,7 +171,7 @@ class LedRunner(
 	private fun searchEvent(x: Int, y: Int): LedAnimationState? {
 		var res: LedAnimationState? = null
 		try {
-			for (e in ledAnimationStates) {
+			for (e in ledAnimationStates) { //todo concurrent
 				if (e.equal(x, y)) {
 					res = e
 					break
