@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.RelativeLayout
+import androidx.core.content.ContextCompat
 import com.kimjisub.design.R.*
 import com.kimjisub.manager.UIManager
 import kotlinx.android.synthetic.main.view_pack.view.*
@@ -51,8 +52,8 @@ class PackView : RelativeLayout {
 	}
 
 
-	private val green = resources.getColor(color.green)
-	private val pink = resources.getColor(color.pink)
+	private val green = ContextCompat.getColor(context, color.green)
+	private val pink = ContextCompat.getColor(context, color.pink)
 
 
 	private var flagColor: Int = 0
@@ -101,7 +102,7 @@ class PackView : RelativeLayout {
 		String subtitle = typedArray.getString(R.styleable.PackView_subtitle);
 		//setSubtitle(subtitle);
 
-		Boolean LED = typedArray.getBoolean(R.styleable.PackView_LED, false);
+		Boolean led = typedArray.getBoolean(R.styleable.PackView_led, false);
 		//setLED(LED);
 
 		Boolean autoPlay = typedArray.getBoolean(R.styleable.PackView_AutoPlay, false);
@@ -197,7 +198,7 @@ class PackView : RelativeLayout {
 		if (animate) {
 			val colorPrev = flagColor
 
-			val flagBackground = resources.getDrawable(drawable.border_all_round) as GradientDrawable
+			val flagBackground = ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
 			flagAnimator = ObjectAnimator.ofObject(ArgbEvaluator(), colorPrev, colorNext)
 			flagAnimator?.duration = 500
 			flagAnimator?.addUpdateListener { valueAnimator: ValueAnimator ->
@@ -207,7 +208,7 @@ class PackView : RelativeLayout {
 			}
 			flagAnimator?.start()
 		} else {
-			val flagBackground = resources.getDrawable(drawable.border_all_round) as GradientDrawable
+			val flagBackground = ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
 			flagColor = colorNext
 			flagBackground.setColor(colorNext)
 			RL_flag!!.background = flagBackground

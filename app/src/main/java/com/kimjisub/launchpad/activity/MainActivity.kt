@@ -45,7 +45,7 @@ import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
-import com.kimjisub.launchpad.manager.ThemeResources
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -76,10 +76,10 @@ class MainActivity : BaseActivity() {
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private var billingManager: BillingManager? = null
+	private val preferenceManager: PreferenceManager by lazy { PreferenceManager(this) }
 
 	// List Management
 	private var unipackList: ArrayList<UniPackItem> = ArrayList()
-	private var sortMethod: Int = 0
 	private var lastPlayIndex = -1
 	private var listRefreshing = false
 	private val adapter: UniPackAdapter by lazy {
@@ -149,13 +149,17 @@ class MainActivity : BaseActivity() {
 				Log.driverCycle("MainActivity onDisconnected()")
 			}
 
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
 				if (!((x == 3 || x == 4) && (y == 3 || y == 4))) {
-					if (upDown) driver.sendPadLED(x, y, intArrayOf(40, 61)[(Math.random() * 2).toInt()]) else driver.sendPadLED(x, y, 0)
+					if (upDown) driver.sendPadLed(
+						x,
+						y,
+						intArrayOf(40, 61)[(Math.random() * 2).toInt()]
+					) else driver.sendPadLed(x, y, 0)
 				}
 			}
 
-			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+			override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 				if (f == 0 && upDown) {
 					if (havePrev()) {
 						togglePlay(lastPlayIndex - 1)
@@ -173,8 +177,8 @@ class MainActivity : BaseActivity() {
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {}
 
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				if ((cmd == 7) && (sig == 46) && (note == 0) && (velo == -9)) updateLP()
+			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				if ((cmd == 7) && (sig == 46) && (note == 0) && (velocity == -9)) updateLP()
 			}
 		}
 	}
@@ -242,7 +246,9 @@ class MainActivity : BaseActivity() {
 			var runnable: Runnable = Runnable { FAM_floatingMenu.close(true) }
 
 			override fun onMenuToggle(opened: Boolean) {
-				if (opened) handler.postDelayed(runnable, 5000) else handler.removeCallbacks(runnable)
+				if (opened) handler.postDelayed(runnable, 5000) else handler.removeCallbacks(
+					runnable
+				)
 			}
 		})
 		LL_errItem.setOnClickListener { startActivity<FBStoreActivity>() }
@@ -264,22 +270,25 @@ class MainActivity : BaseActivity() {
 		listRefreshing = true
 
 		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
-			Comparator { a, b -> getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
-			Comparator { a, b -> -getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project)) },
+			Comparator { a, b -> -a.unipack.title!!.compareTo(b.unipack.title!!) },
+			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) },
 			Comparator { a, b ->
-				db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name))
-			},
-			Comparator { a, b -> -db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name).compareTo(db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)) },
-			Comparator { a, b ->
-				(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
-					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
+				val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name)
+				val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)
+				-aCount.compareTo(bCount)
 			},
 			Comparator { a, b ->
-				-(db.unipackOpenDAO()!!.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at
-					?: Date(0)).compareTo(db.unipackOpenDAO()!!.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0))
+				val aDate = db.unipackOpenDAO()!!
+					.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)
+				val bDate = db.unipackOpenDAO()!!
+					.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)
+				-aDate.compareTo(bDate)
 			},
-			Comparator { a, b -> a.unipack.title!!.compareTo(b.unipack.title!!) },
-			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) }
+			Comparator { a, b ->
+				val aDate = getInnerFileLastModified(a.unipack.F_project)
+				val bDate = getInnerFileLastModified(b.unipack.F_project)
+				-aDate.compareTo(bDate)
+			}
 		)
 
 		CoroutineScope(Dispatchers.IO).launch {
@@ -298,8 +307,14 @@ class MainActivity : BaseActivity() {
 					I_list.add(packItem)
 				}
 
-				I_list = ArrayList(I_list.sortedWith(sortMethods[6]))
-				I_list = ArrayList(I_list.sortedWith(sortMethods[sortMethod]))
+				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
+				I_list =
+					ArrayList(I_list.sortedWith(Comparator { a, b ->
+						sortMethods[preferenceManager.sortMethod].compare(
+							a,
+							b
+						) * if (preferenceManager.sortType) -1 else 1
+					}))
 
 				for (item: UniPackItem in I_list) {
 					var index = -1
@@ -322,19 +337,22 @@ class MainActivity : BaseActivity() {
 			withContext(Dispatchers.Main) {
 				for (added: UniPackItem in I_added) {
 					val i = unipackList.getVirtualIndexFormSorted(Comparator { a, b ->
-						getInnerFileLastModified(a.unipack.F_project).compareTo(getInnerFileLastModified(b.unipack.F_project))
+						getInnerFileLastModified(a.unipack.F_project).compareTo(
+							getInnerFileLastModified(b.unipack.F_project)
+						)
 					}, added)
 
 					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
-					added.unipackENTObserver = added.unipackENT.observeRealChange(this@MainActivity, Observer {
-						val index = unipackList.indexOf(added)
-						adapter.notifyItemChanged(index)
+					added.unipackENTObserver =
+						added.unipackENT.observeRealChange(this@MainActivity, Observer {
+							val index = unipackList.indexOf(added)
+							adapter.notifyItemChanged(index)
 
-						if (selectedIndex == index)
-							updatePanel(false)
-					}) { it.clone() }
+							if (selectedIndex == index)
+								updatePanel(false)
+						}) { it.clone() }
 				}
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
@@ -357,7 +375,6 @@ class MainActivity : BaseActivity() {
 							from = i
 					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
-						Log.test("swap: $from -> $to")
 						changed = true
 					}
 				}
@@ -504,7 +521,9 @@ class MainActivity : BaseActivity() {
 	}
 
 	fun pressPlay(item: UniPackItem) {
-		Thread(Runnable { db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date())) }).start()
+		Thread(Runnable {
+			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date()))
+		}).start()
 		startActivity<PlayActivity>("path" to item.unipack.F_project.path)
 		removeController((midiController))
 	}
@@ -535,10 +554,14 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
+		P_total.data.sortMethod.set(preferenceManager.sortMethod)
+		P_total.data.sortType.set(preferenceManager.sortType)
 		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		P_total.data.version.set(BuildConfig.VERSION_NAME)
-		P_total.data.sortingMethod.addOnPropertyChanged {
-			sortMethod = it.get()!!
+		P_total.data.sort.addOnPropertyChanged {
+			val sort = it.get()!!
+			preferenceManager.sortMethod = sort / 2
+			preferenceManager.sortType = sort % 2 == 1
 			update()
 		}
 		P_total.data.selectedTheme.addOnPropertyChanged {
@@ -569,7 +592,8 @@ class MainActivity : BaseActivity() {
 				if (item != null) {
 					val source = File(item.unipack.F_project.path)
 					val isInternal = FileManager.isInternalFile(this@MainActivity, source)
-					val target = File(if (isInternal) F_UniPackRootExt else F_UniPackRootInt, source.name)
+					val target =
+						File(if (isInternal) F_UniPackRootExt else F_UniPackRootInt, source.name)
 					CoroutineScope(Dispatchers.IO).launch {
 						withContext(Dispatchers.Main) {
 							item.moving = true
@@ -605,7 +629,11 @@ class MainActivity : BaseActivity() {
 				if (item != null) Builder(this@MainActivity)
 					.setTitle(getString(string.warning))
 					.setMessage(getString(string.doYouWantToRemapProject))
-					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> autoMapping(item.unipack) }.setNegativeButton(
+					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
+						autoMapping(
+							item.unipack
+						)
+					}.setNegativeButton(
 						getString(string.cancel),
 						null
 					)
@@ -617,7 +645,11 @@ class MainActivity : BaseActivity() {
 				if (item != null) Builder(this@MainActivity)
 					.setTitle(getString(string.warning))
 					.setMessage(getString(string.doYouWantToDeleteProject))
-					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int -> deleteUniPack(item.unipack) }.setNegativeButton(
+					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
+						deleteUniPack(
+							item.unipack
+						)
+					}.setNegativeButton(
 						getString(string.cancel),
 						null
 					)
@@ -628,7 +660,10 @@ class MainActivity : BaseActivity() {
 
 	private fun updatePanel(hardWork: Boolean) {
 		val selectedIndex = selectedIndex
-		val animation: Animation = AnimationUtils.loadAnimation(this@MainActivity, if (selectedIndex != -1) anim.panel_in else anim.panel_out)
+		val animation: Animation = AnimationUtils.loadAnimation(
+			this@MainActivity,
+			if (selectedIndex != -1) anim.panel_in else anim.panel_out
+		)
 		animation.setAnimationListener(object : AnimationListener {
 			override fun onAnimationStart(animation: Animation?) {
 				P_pack.visibility = View.VISIBLE
@@ -652,11 +687,13 @@ class MainActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
 		P_total.data.unipackCount.set(unipackList.size.toString())
-		db.unipackOpenDAO()!!.count.observe(this, Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
+		db.unipackOpenDAO()!!.count.observe(
+			this,
+			Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
 
 		val themeItemList = ThemeTool.getThemePackList(applicationContext)
 		val themeNameList = ArrayList<String>()
-		for(item:ThemeItem in themeItemList)
+		for (item: ThemeItem in themeItemList)
 			themeNameList.add(item.name)
 		P_total.data.themeList.set(themeNameList)
 
@@ -668,7 +705,8 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val fileSize = FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt), "%.0f")
+				val fileSize =
+					FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt), "%.0f")
 				withContext(Dispatchers.Main) {
 					P_total.data.unipackCapacity.set(fileSize)
 				}
@@ -700,15 +738,18 @@ class MainActivity : BaseActivity() {
 			item.unipackENT.observeOnce(Observer {
 				bookmark.set(it.bookmark)
 			})
-			db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name).observe(this@MainActivity, Observer {
-				playCount.set(it.toString())
-			})
-			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.F_project.name).observe(this@MainActivity, Observer {
-				lastPlayed.set(it?.created_at)
-			})
+			db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)
+				.observe(this@MainActivity, Observer {
+					playCount.set(it.toString())
+				})
+			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.F_project.name)
+				.observe(this@MainActivity, Observer {
+					lastPlayed.set(it?.created_at)
+				})
 
 			CoroutineScope(Dispatchers.IO).launch {
-				val fileSizeString = FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
+				val fileSizeString =
+					FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
 				withContext(Dispatchers.Main) {
 					if ((path.get() == item.unipack.F_project.path))
 						fileSize.set(fileSizeString)
@@ -731,12 +772,18 @@ class MainActivity : BaseActivity() {
 
 	private fun versionCheck() {
 		val thisVersion = BuildConfig.VERSION_NAME
+		if (thisVersion.contains('b'))
+			return
 		val currVersionJson = FirebaseRemoteConfig.getInstance().getString("android_version")
 		if (currVersionJson.isNotEmpty()) {
 			val gson: Gson = GsonBuilder().create()
-			val currVersionList: List<String> = gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
+			val currVersionList: List<String> =
+				gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
-				CL_root.snackbar("${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}", getString(string.update)) {
+				CL_root.snackbar(
+					"${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}",
+					getString(string.update)
+				) {
 					browse("https://play.google.com/store/apps/details?id=$packageName")
 				}
 		}
@@ -766,16 +813,16 @@ class MainActivity : BaseActivity() {
 	}
 
 	private fun showSelectLPUI() {
-		if (havePrev()) driver.sendFunctionkeyLED(0, 63) else driver.sendFunctionkeyLED(0, 5)
-		if (haveNow()) driver.sendFunctionkeyLED(2, 61) else driver.sendFunctionkeyLED(2, 0)
-		if (haveNext()) driver.sendFunctionkeyLED(1, 63) else driver.sendFunctionkeyLED(1, 5)
+		if (havePrev()) driver.sendFunctionkeyLed(0, 63) else driver.sendFunctionkeyLed(0, 5)
+		if (haveNow()) driver.sendFunctionkeyLed(2, 61) else driver.sendFunctionkeyLed(2, 0)
+		if (haveNext()) driver.sendFunctionkeyLed(1, 63) else driver.sendFunctionkeyLed(1, 5)
 	}
 
 	private fun showWatermark() {
-		driver.sendPadLED(3, 3, 61)
-		driver.sendPadLED(3, 4, 40)
-		driver.sendPadLED(4, 3, 40)
-		driver.sendPadLED(4, 4, 61)
+		driver.sendPadLed(3, 3, 61)
+		driver.sendPadLed(3, 4, 40)
+		driver.sendPadLed(4, 3, 40)
+		driver.sendPadLed(4, 4, 61)
 	}
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////

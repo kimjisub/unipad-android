@@ -1,10 +1,11 @@
 <resources>
-	<string name="languageCode">tl</string>
-	<string name="language">Tagalog</string>
+	<string name="languageCode">fil</string>
+	<string name="language">Filipino</string>
 	<string name="translator">Joshtine Nel Tubon (Black Spx)</string>
 	<string name="translatedBy">Translated by %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Tanggapin</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Babala</string>
 	<string name="error">ERROR</string>
 	<string name="errOccur">Nagkaroon ng Error.</string>
-	<string name="wait">Maghintay ng ilang segundo…</string>
+	<string name="wait_a_sec">Maghintay ng ilang segundo…</string>
 	<string name="analyzing">Sinusuri</string>
 	<string name="loading">Naglo-loading</string>
-	<string name="downloading">Nagda-download</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Tagumpay</string>
 	<string name="failed">Nabigo</string>
 	<string name="delete">Tanggalin</string>
@@ -28,19 +32,17 @@
 	<string name="path">Path</string>
 	<string name="quit">Umalis</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Ikabit uli ang Launchpad</string>
 	<string name="list_refresh">I-refresh ang Listahan</string>
-	<string name="import_unipack">I-load ang Unipack</string>
+	<string name="import_unipack">I-load ang UniPack</string>
 	<string name="store">Store</string>
 
 	<!--Setting-->
@@ -80,18 +82,15 @@
 	<string name="email">0226unipad@gmail.com</string>
 	<string name="email_">Maliban sa Teknikal na Suporta</string>
 
-	<!--Unipack Info-->
+	<!--UniPack Info-->
 	<string name="title">Pamagat</string>
 	<string name="producerName">Tagagawa</string>
-	<string name="scale">Sukat</string>
 	<string name="chainCount">Bilang ng Chain</string>
 	<string name="fileSize">Sukat ng File</string>
 
-	<!--Unipack Function-->
-	<string name="LED">LED</string>
+	<!--UniPack Function-->
+	<string name="led">Led</string>
 	<string name="autoPlay">Awtoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AWTOPLAY ●</string>
 	<string name="feedbackLight">Ipakita ang napindot</string>
 	<string name="traceLog">Bakas Talaan</string>
 	<string name="traceLogClear">Ang Bakas Talaan ay umulit.</string>
@@ -107,17 +106,15 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Walang nahanap na Unipack.</string>
-	<string name="clickToAddUnipack">Pindutin para magdagdag ng mga Unipack.</string>
+	<string name="unipackNotFound">Walang nahanap na UniPack.</string>
+	<string name="clickToAddUniPack">Pindutin para magdagdag ng mga UniPack.</string>
 	<string name="doYouWantToDeleteProject">Gusto mo bang tanggalin ang proyekto?</string>
 	<string name="doYouWantToRemapProject">Gusto mo bang i-remap ang proyekto?</string>
 	<string name="remapDone">Matagumpay na natapos ang pagri-remap ng AutoPlay.</string>
 	<string name="remapFail">Ang AutoPlay ay hindi umiiral</string>
-	<string name="cantReadFolder">Hindi mabasa ang folder.</string>
-	<string name="cantReadFile">Hindi mabasa ang file.</string>
 	<string name="analyzeComplete">Tapos na ang Pagsusuri!</string>
 	<string name="analyzeFailed">Nabigo ang Pagsusuri…</string>
-	<string name="isNotAnUniPack">hindi ito Unipack</string>
+	<string name="isNotAnUniPack">hindi ito UniPack</string>
 	<string name="pressAgainToGoBack">Pindutin uli \npara lumabas.</string>
 	<string name="copied">Nakopya na sa clipboard.</string>
 	<string name="skinMemoryErr">Nabigong ilagay ang skin.\nUlitin ang app.</string>
@@ -135,7 +132,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Hindi makakaalis habang nagda-download ang pack</string>
-	<string name="downloadCount">Bilang ng Download</string>
 	<string name="UnableToAccessServer">Hindi kayang makapasok sa server.</string>
 
 	<!--Theme-->
@@ -147,5 +143,7 @@
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="theme">Theme</string>
 
 </resources>

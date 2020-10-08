@@ -7,8 +7,8 @@ import android.content.Context
 
 object Functions {
 	fun putClipboard(activity: Activity, text: String) {
-		val clipboardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
-		val clipData: ClipData? = ClipData.newPlainText("LABEL", text)
-		clipboardManager?.primaryClip = clipData
+		val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+		val clip: ClipData = ClipData.newPlainText("UniPad", text)
+		clipboard.setPrimaryClip(clip)
 	}
 }

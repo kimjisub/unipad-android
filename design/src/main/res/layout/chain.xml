@@ -9,7 +9,7 @@
 			android:layout_height="match_parent" />
 
 		<ImageView
-			android:id="@+id/IV_LED"
+			android:id="@+id/IV_led"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
 

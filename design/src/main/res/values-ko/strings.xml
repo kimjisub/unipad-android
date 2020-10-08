@@ -7,12 +7,19 @@
 	<string name="MTP_size">유니팩 용량</string>
 	<string name="MPT_playCount">플레이 횟수</string>
 	<string name="MPT_theme">테마</string>
+	<array name="packSortMethod">
+		<item>이름</item>
+		<item>제작자</item>
+		<item>플레이 횟수</item>
+		<item>최근 연 날짜</item>
+		<item>다운로드 날짜</item>
+	</array>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>
 	<string name="MPP_chain">체인</string>
 	<string name="MPP_soundFiles">사운드 파일</string>
-	<string name="MPP_ledEvents">LED 이벤트</string>
+	<string name="MPP_ledEvents">Led 이벤트</string>
 	<string name="MPP_fileSize">용량</string>
 	<string name="MPP_playCount">플레이 횟수</string>
 	<string name="MPP_downloadedDate">다운로드한 날짜</string>

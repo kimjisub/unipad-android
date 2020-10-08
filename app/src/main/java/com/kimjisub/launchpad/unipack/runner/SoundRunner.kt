@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Handler
@@ -35,7 +36,17 @@ class SoundRunner(
 					for (k in 0 until unipack.buttonY)
 						if (unipack.soundTable!![i][j][k] != null)
 							soundCount += unipack.soundTable!![i][j][k]!!.size
-			soundPool = SoundPool(soundCount, AudioManager.STREAM_MUSIC, 0)
+
+			val aa = AudioAttributes.Builder()
+				.setUsage(AudioAttributes.USAGE_GAME)
+				.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+				//.setAllowedCapturePolicy(AudioAttributes.ALLOW_CAPTURE_BY_ALL)
+				.build()
+			soundPool = SoundPool.Builder()
+				.setMaxStreams(soundCount)
+				.setAudioAttributes(aa)
+				.build()
+			SoundPool(soundCount, AudioManager.STREAM_MUSIC, 0)
 			stopID = Array(unipack.chain) {
 				Array(unipack.buttonX) {
 					Array(unipack.buttonY) {

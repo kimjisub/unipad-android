@@ -1,9 +1,9 @@
 package com.kimjisub.launchpad.midi.driver
 
 class Noting : DriverRef() {
-	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {}
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {}
-	override fun sendChainLED(c: Int, velo: Int) {}
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {}
-	override fun sendClearLED() {}
+	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {}
+	override fun sendPadLed(x: Int, y: Int, velocity: Int) {}
+	override fun sendChainLed(c: Int, velocity: Int) {}
+	override fun sendFunctionkeyLed(f: Int, velocity: Int) {}
+	override fun sendClearLed() {}
 }

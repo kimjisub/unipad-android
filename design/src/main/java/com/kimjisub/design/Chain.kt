@@ -34,7 +34,7 @@ class Chain : RelativeLayout {
 			.inflate(layout.chain, this, true)
 	}
 
-	override fun setOnClickListener(listener: OnClickListener) {
+	override fun setOnClickListener(listener: OnClickListener?) {
 		V_touchView.setOnClickListener(listener)
 	}
 
@@ -53,17 +53,17 @@ class Chain : RelativeLayout {
 
 
 	fun setLedBackground(drawable: Drawable?): Chain {
-		IV_LED!!.background = drawable
+		IV_led!!.background = drawable
 		return this
 	}
 
 	fun setLedBackgroundColor(color: Int): Chain {
-		IV_LED!!.setBackgroundColor(color)
+		IV_led!!.setBackgroundColor(color)
 		return this
 	}
 
 	fun setLedVisibility(visibility: Int): Chain {
-		IV_LED!!.visibility = visibility
+		IV_led!!.visibility = visibility
 		return this
 	}
 

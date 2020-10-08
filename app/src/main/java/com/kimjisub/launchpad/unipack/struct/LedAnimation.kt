@@ -3,25 +3,25 @@ package com.kimjisub.launchpad.unipack.struct
 import java.util.*
 
 class LedAnimation(
-	val elements: ArrayList<Element>,
+	val ledEvents: ArrayList<LedEvent>,
 	val loop: Int,
 	val num: Int
 ) {
-	interface Element {
+	interface LedEvent {
 		class On(
 			val x: Int,
 			val y: Int,
 			val color: Int = -1,
-			val velo: Int = 4
-		) : Element
+			val velocity: Int = 4
+		) : LedEvent
 
 		class Off(
 			val x: Int,
 			val y: Int
-		) : Element
+		) : LedEvent
 
 		class Delay(
 			val delay: Int
-		) : Element
+		) : LedEvent
 	}
 }
