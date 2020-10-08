@@ -4,16 +4,14 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View.OnClickListener
-import android.widget.ArrayAdapter
-import android.widget.RadioButton
-import android.widget.RelativeLayout
-import android.widget.SpinnerAdapter
+import android.view.View
+import android.widget.*
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import kotlinx.android.synthetic.main.panel_main_total.view.*
 
@@ -47,7 +45,9 @@ constructor(
 		val themeList : ObservableField<ArrayList<String>> = ObservableField()
 		val selectedTheme: ObservableField<Int> = ObservableField()
 
-		val sortingMethod: ObservableField<Int> = ObservableField(1) // 0~5
+		val sortMethod: ObservableField<Int> = ObservableField(0) // 0~5
+		val sortType: ObservableField<Boolean> = ObservableField(false)
+		val sort: ObservableField<Int> = ObservableField(0)
 	}
 
 
@@ -66,15 +66,46 @@ constructor(
 			typedArray.recycle()
 		}
 
-		radioButtonGroupTableLayout.onCheckedChangeListener = {
-			data.sortingMethod.set((it.tag as String).toInt())
+		spinner_sort_method.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+			override fun onItemSelected(p0: AdapterView<*>?, p1: View?, sortMethod: Int, p3: Long) {
+				setSort(sortMethod)
+			}
+
+			override fun onNothingSelected(p0: AdapterView<*>?) {
+			}
+
 		}
 
-		/*spinner.onItemSelectedListener { parent, view, position, id ->
+		switch_sort_type.setOnCheckedChangeListener { _, b -> setSort(spinner_sort_method.selectedItemPosition, b) }
+
+		data.sortMethod.addOnPropertyChanged {
+			Log.test("method changed : ${it.get()}")
+
+		}
+		data.sortType.addOnPropertyChanged {
+			Log.test("type changed : ${it.get()}")
+		}
+
+//		radioButtonGroupTableLayout.onCheckedChangeListener = {
+//			data.sortingMethod.set((it.tag as String).toInt())
+//		}
+
+		/*themeSpinner.onItemSelectedListener { parent, view, position, id ->
 			data.selectedTheme.set(position)
 		}
 
-		spinner.setItem*/
+		themeSpinner.setItem*/
+	}
+
+	private fun setSort(sortMethod: Int){
+		val defaultSortTypes = arrayOf(true, true, true, false, false)
+		val sortType = defaultSortTypes[sortMethod]
+		setSort(sortMethod, sortType)
+	}
+	private fun setSort(sortMethod: Int, sortType:Boolean){
+		data.sortMethod.set(sortMethod)
+		data.sortType.set(sortType)
+		data.sort.set(sortMethod * 2 + if (sortType) 0 else 1)
 	}
 
 }

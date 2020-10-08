@@ -75,15 +75,27 @@ class PreferenceManager(
 			}
 		}
 
-	private val defaultSortTag = "DefaultSort"
-	var defaultSort: Int
+	private val sortMethodTag = "SortMethod"
+	var sortMethod: Int
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getInt(defaultSortTag, 1)
+			return pref.getInt(sortMethodTag, 1)
 		}
 		set(value) {
 			context.getSharedPreferences(name, MODE_PRIVATE).edit {
-				putInt(defaultSortTag, value)
+				putInt(sortMethodTag, value)
+			}
+		}
+
+	private val sortTypeTag = "SortType"
+	var sortType: Boolean
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getBoolean(sortTypeTag, false)
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putBoolean(sortTypeTag, value)
 			}
 		}
 }
