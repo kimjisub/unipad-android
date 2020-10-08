@@ -23,17 +23,20 @@
 	<application
 		android:name=".BaseApplication"
 		android:allowBackup="true"
-		android:largeHeap="true"
+		android:fullBackupContent="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
+		android:largeHeap="true"
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme"
 		android:usesCleartextTraffic="true"
 		tools:replace="android:label">
+		<!-- Todo network cleartext traffic -->
 		<activity
 			android:name=".activity.SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape">
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 
@@ -43,33 +46,39 @@
 		<activity
 			android:name=".activity.MainActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"></activity>
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.FBStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
-			android:name=".activity.FSStoreActivity"
+			android:name=".activity.StoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.PlayActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape" />
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.SettingActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="portrait"
-			android:theme="@style/SettingTheme" />
+			android:theme="@style/SettingTheme"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
-			android:theme="@style/PopupTheme">
+			android:screenOrientation="sensorLandscape">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 			</intent-filter>
@@ -125,17 +134,6 @@
 			android:name="com.google.android.gms.ads.AdActivity"
 			android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
 			android:theme="@android:style/Theme.Translucent" />
-		<activity
-			android:name="com.vungle.warren.ui.VungleActivity"
-			android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
-			android:launchMode="singleTop"
-			android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
-		<activity
-			android:name="com.vungle.warren.ui.VungleFlexViewActivity"
-			android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
-			android:hardwareAccelerated="true"
-			android:launchMode="singleTop"
-			android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_icon"

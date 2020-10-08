@@ -24,8 +24,8 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.TransactionDetails
-import com.bumptech.glide.Glide
 import com.kimjisub.design.Chain
 import com.kimjisub.design.Pad
 import com.kimjisub.design.manage.SyncCheckBox
@@ -33,11 +33,11 @@ import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.databinding.ActivityPlayBinding
 import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
-import com.kimjisub.launchpad.manager.Constant.VUNGLE
 import com.kimjisub.launchpad.manager.Functions.putClipboard
 import com.kimjisub.launchpad.manager.ThemeResources
 import com.kimjisub.launchpad.midi.MidiConnection.controller
@@ -51,11 +51,6 @@ import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log.log
-import com.kimjisub.manager.Log.vungle
-import com.vungle.warren.LoadAdCallback
-import com.vungle.warren.PlayAdCallback
-import com.vungle.warren.Vungle
-import com.vungle.warren.error.VungleException
 import kotlinx.android.synthetic.main.activity_play.*
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.toast
@@ -63,10 +58,11 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
+	private lateinit var binding : ActivityPlayBinding
 
 	private var unipack: UniPack? = null
 	private var unipackLoaded = false
-	private var UILoaded = false
+	private var uiLoaded = false
 	private var enable = true
 	private var chain: ChainObserver = ChainObserver()
 
@@ -74,11 +70,11 @@ class PlayActivity : BaseActivity() {
 
 	private var theme: ThemeResources? = null
 
-	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_LED, CB1_autoPlay, CB1_traceLog, CB1_record) }
+	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_led, CB1_autoPlay, CB1_traceLog, CB1_record) }
 	private val CB2s: Array<CheckBox> by lazy {
 		arrayOf(
 			CB2_feedbackLight,
-			CB2_LED,
+			CB2_led,
 			CB2_autoPlay,
 			CB2_traceLog,
 			CB2_record,
@@ -88,7 +84,7 @@ class PlayActivity : BaseActivity() {
 		)
 	}
 	private val SCB_feedbackLight: SyncCheckBox = SyncCheckBox()
-	private val SCB_LED: SyncCheckBox = SyncCheckBox()
+	private val SCB_led: SyncCheckBox = SyncCheckBox()
 	private val SCB_autoPlay: SyncCheckBox = SyncCheckBox()
 	private val SCB_traceLog: SyncCheckBox = SyncCheckBox()
 	private val SCB_record: SyncCheckBox = SyncCheckBox()
@@ -122,7 +118,7 @@ class PlayActivity : BaseActivity() {
 
 	private fun initVar() {
 		SCB_feedbackLight.addCheckBox(CB1_feedbackLight, CB2_feedbackLight)
-		SCB_LED.addCheckBox(CB1_LED, CB2_LED)
+		SCB_led.addCheckBox(CB1_led, CB2_led)
 		SCB_autoPlay.addCheckBox(CB1_autoPlay, CB2_autoPlay)
 		SCB_traceLog.addCheckBox(CB1_traceLog, CB2_traceLog)
 		SCB_record.addCheckBox(CB1_record, CB2_record)
@@ -133,7 +129,7 @@ class PlayActivity : BaseActivity() {
 		SCB_watermark.forceSetChecked(true)
 
 		/*if (!BillingManager.showAds())
-			AV_adview.setVisibility(View.GONE);*/
+			AV_adview.setVisibility(View.GONE);*///todo ads
 		billingManager = BillingManager(
 			this@PlayActivity,
 			object : BillingEventListener {
@@ -151,7 +147,8 @@ class PlayActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_play)
+		binding = DataBindingUtil.setContentView(this, layout.activity_play)
+
 		initVar()
 
 		val path: String? = intent.getStringExtra("path")
@@ -187,9 +184,10 @@ class PlayActivity : BaseActivity() {
 		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY) { null } }
 		U_circle = Array(32) { null }
 		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
-		log("[04] Start LEDTask (isKeyLED = " + unipack!!.keyLEDExist.toString() + ")")
+		log("[04] Start ledTask (isKeyLed = " + unipack!!.keyLedExist.toString() + ")")
 
 		initTheme()
+		binding.themeResources = theme
 
 		if (theme != null) {
 			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
@@ -251,9 +249,9 @@ class PlayActivity : BaseActivity() {
 		try {
 			log("[05] Set Button Layout (squareButton = " + unipack!!.squareButton + ")")
 			if (unipack!!.squareButton) {
-				if (!unipack!!.keyLEDExist) {
-					SCB_LED.setVisibility(View.GONE)
-					SCB_LED.isLocked = true
+				if (!unipack!!.keyLedExist) {
+					SCB_led.setVisibility(View.GONE)
+					SCB_led.isLocked = true
 				}
 				if (!unipack!!.autoPlayExist) {
 					SCB_autoPlay.setVisibility(View.GONE)
@@ -261,12 +259,12 @@ class PlayActivity : BaseActivity() {
 				}
 			} else {
 				SCB_feedbackLight.setVisibility(View.GONE)
-				SCB_LED.setVisibility(View.GONE)
+				SCB_led.setVisibility(View.GONE)
 				SCB_autoPlay.setVisibility(View.GONE)
 				SCB_traceLog.setVisibility(View.GONE)
 				SCB_record.setVisibility(View.GONE)
 				SCB_feedbackLight.isLocked = true
-				SCB_LED.isLocked = true
+				SCB_led.isLocked = true
 				SCB_autoPlay.isLocked = true
 				SCB_traceLog.isLocked = true
 				SCB_record.isLocked = true
@@ -306,9 +304,9 @@ class PlayActivity : BaseActivity() {
 					refreshWatermark()
 				}
 			}
-			SCB_LED.onCheckedChange = object : OnCheckedChange {
+			SCB_led.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(b: Boolean) {
-					if (unipack!!.keyLEDExist) {
+					if (unipack!!.keyLedExist) {
 						if (b) {
 							ledRunner?.launch()
 						} else {
@@ -382,12 +380,6 @@ class PlayActivity : BaseActivity() {
 			chainsRight.removeAllViews()
 			chainsLeft.removeAllViews()
 
-			// Image Resources
-			Glide.with(this).load(theme!!.playbg).into(background)	//glide 테스트
-			custom_logo.setImageDrawable(theme!!.custom_logo)
-			prev.background = theme!!.xml_prev
-			play.background = theme!!.xml_play
-			next.background = theme!!.xml_next
 
 			// Setup Pads
 			for (x in 0 until unipack!!.buttonX) {
@@ -432,7 +424,7 @@ class PlayActivity : BaseActivity() {
 				val c = i - 8
 				val view = Chain(this)
 				view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
-				if (theme!!.isChainLED) {
+				if (theme!!.isChainLed) {
 					view.setBackgroundImageDrawable(theme!!.btn)
 					view.setPhantomImageDrawable(theme!!.chainled)
 				} else {
@@ -473,7 +465,7 @@ class PlayActivity : BaseActivity() {
 			}
 
 
-			UILoaded = true
+			uiLoaded = true
 			UILoaded()
 			controller = midiController
 		} catch (e: Exception) {
@@ -487,7 +479,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun initRunner() {
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			ledRunner = LedRunner(
 				unipack = unipack!!,
 				chain = chain,
@@ -497,8 +489,8 @@ class PlayActivity : BaseActivity() {
 						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
-					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velo: Int) {
-						channelManager!!.add(x, y, Channel.LED, color, velo)
+					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
+						channelManager!!.add(x, y, Channel.LED, color, velocity)
 						setLed(x, y)
 					}
 
@@ -507,8 +499,8 @@ class PlayActivity : BaseActivity() {
 						setLed(x, y)
 					}
 
-					override fun onChainLedTurnOn(c: Int, color: Int, velo: Int) {
-						channelManager!!.add(-1, c, Channel.LED, color, velo)
+					override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) {
+						channelManager!!.add(-1, c, Channel.LED, color, velocity)
 						setLed(c)
 					}
 
@@ -602,7 +594,7 @@ class PlayActivity : BaseActivity() {
 						runOnUiThread {
 							SCB_autoPlay.setChecked(false)
 							if (unipack!!.ledAnimationTable != null) {
-								SCB_LED.setChecked(true)
+								SCB_led.setChecked(true)
 								SCB_feedbackLight.setChecked(false)
 							} else {
 								SCB_feedbackLight.setChecked(true)
@@ -665,7 +657,7 @@ class PlayActivity : BaseActivity() {
 				for (i in 0 until unipack!!.buttonX)
 					for (j in 0 until unipack!!.buttonY) {
 						unipack!!.Sound_push(curr, i, j, 0)
-						unipack!!.LED_push(curr, i, j, 0)
+						unipack!!.led_push(curr, i, j, 0)
 					}
 
 
@@ -687,9 +679,9 @@ class PlayActivity : BaseActivity() {
 
 	private fun initSetting() {
 		log("[06] Set CheckBox Checked")
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			SCB_feedbackLight.setChecked(false)
-			SCB_LED.setChecked(true)
+			SCB_led.setChecked(true)
 		} else
 			SCB_feedbackLight.setChecked(true)
 	}
@@ -811,7 +803,7 @@ class PlayActivity : BaseActivity() {
 			}
 		} else {
 			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
-			topBar[1] = if (SCB_LED.isLocked) 0 else if (SCB_LED.isChecked()) 52 else 55
+			topBar[1] = if (SCB_led.isLocked) 0 else if (SCB_led.isChecked()) 52 else 55
 			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
 			topBar[3] = 0
 			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI.isChecked()) 3 else 1
@@ -945,9 +937,9 @@ class PlayActivity : BaseActivity() {
 	private fun setLedLaunchpad(x: Int, y: Int) {
 		val item = channelManager!!.get(x, y)
 		if (item != null)
-			driver.sendPadLED(x, y, item.code)
+			driver.sendPadLed(x, y, item.code)
 		else
-			driver.sendPadLED(x, y, 0)
+			driver.sendPadLed(x, y, 0)
 	}
 
 	private fun setLed(c: Int) {
@@ -962,7 +954,7 @@ class PlayActivity : BaseActivity() {
 		val item = channelManager!!.get(-1, y)
 
 		if (c in 0..23)
-			if (theme!!.isChainLED) {
+			if (theme!!.isChainLed) {
 				if (item != null) {
 					when (item.channel) {
 						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(item.color)
@@ -984,14 +976,14 @@ class PlayActivity : BaseActivity() {
 	private fun setLedLaunchpad(c: Int) {
 		val Item = channelManager!!.get(-1, c)
 		if (Item != null)
-			driver.sendFunctionkeyLED(c, Item.code)
+			driver.sendFunctionkeyLed(c, Item.code)
 		else
-			driver.sendFunctionkeyLED(c, 0)
+			driver.sendFunctionkeyLed(c, 0)
 	}
 
 	private fun ledInit() {
 		log("ledInit")
-		if (unipack!!.keyLEDExist) {
+		if (unipack!!.keyLedExist) {
 			try {
 				for (i in 0 until unipack!!.buttonX) {
 					for (j in 0 until unipack!!.buttonY) {
@@ -1022,18 +1014,18 @@ class PlayActivity : BaseActivity() {
 			}
 
 			override fun onDetach() {}
-			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int) {
+			override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
 				if (!bool_toggleOption_window) {
 					padTouch(x, y, upDown)
 				}
 			}
 
-			override fun onFunctionkeyTouch(f: Int, upDown: Boolean) {
+			override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 				if (upDown) {
 					if (!bool_toggleOption_window) {
 						when (f) {
 							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
+							1 -> SCB_led.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
 							4, 5, 6, 7 -> SCB_watermark.toggleChecked()
@@ -1041,7 +1033,7 @@ class PlayActivity : BaseActivity() {
 					} else {
 						if (f in 0..7) when (f) {
 							0 -> SCB_feedbackLight.toggleChecked()
-							1 -> SCB_LED.toggleChecked()
+							1 -> SCB_led.toggleChecked()
 							2 -> SCB_autoPlay.toggleChecked()
 							3 -> toggleOption_window()
 							4 -> SCB_hideUI.toggleChecked()
@@ -1061,8 +1053,8 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 
-			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int) {
-				if (cmd == 7 && sig == 46 && note == 0 && velo == -9) updateLP()
+			override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
+				if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) updateLP()
 			}
 		}
 
@@ -1079,8 +1071,8 @@ class PlayActivity : BaseActivity() {
 		ledInit()
 		autoPlayRunner!!.playmode = true
 		play.background = theme!!.xml_pause
-		if (unipack!!.keyLEDExist) {
-			SCB_LED.setChecked(true)
+		if (unipack!!.keyLedExist) {
+			SCB_led.setChecked(true)
 			SCB_feedbackLight.setChecked(false)
 		} else {
 			SCB_feedbackLight.setChecked(true)
@@ -1096,7 +1088,7 @@ class PlayActivity : BaseActivity() {
 		play.background = theme!!.xml_play
 		autoPlayRunner!!.achieve = -1
 		SCB_feedbackLight.setChecked(false)
-		SCB_LED.setChecked(false)
+		SCB_led.setChecked(false)
 	}
 
 	private fun autoPlay_prev() {
@@ -1255,28 +1247,10 @@ class PlayActivity : BaseActivity() {
 				}
 			})
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-		if (UILoaded) controller = midiController
+		if (uiLoaded) controller = midiController
 		if (billingManager!!.showAds) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/
-
-			if (Vungle.isInitialized()) {
-				Vungle.loadAd(VUNGLE.PLAY_END, object : LoadAdCallback {
-					override fun onAdLoad(placementReferenceId: String?) {
-						vungle("PLAY_END loadAd : placementReferenceId == $placementReferenceId")
-					}
-
-					override fun onError(placementReferenceId: String?, throwable: Throwable?) {
-						vungle("PLAY_END loadAd : getLocalizedMessage() == " + throwable!!.localizedMessage)
-						try {
-							val ex = throwable as VungleException?
-							if (ex!!.exceptionCode == VungleException.VUNGLE_NOT_INTIALIZED) initVungle()
-						} catch (cex: ClassCastException) {
-							vungle(cex.message!!)
-						}
-					}
-				})
-			} else vungle("PLAY_END loadAd : isInitialized() == false")
 		}
 	}
 
@@ -1294,36 +1268,7 @@ class PlayActivity : BaseActivity() {
 			if (billingManager!!.showAds) {
 				if (checkAdsCooltime()) {
 					updateAdsCooltime()
-					if (Math.random() * 10 > 3) showAdmob() else {
-						if (Vungle.canPlayAd(VUNGLE.PLAY_END)) {
-							Vungle.playAd(
-								VUNGLE.PLAY_END,
-								null,
-								object : PlayAdCallback {
-									override fun onAdStart(placementReferenceId: String?) {
-										vungle("PLAY_END playAd : onAdStart()")
-									}
-
-									override fun onAdEnd(
-										placementReferenceId: String?,
-										completed: Boolean,
-										isCTAClicked: Boolean
-									) {
-										vungle("PLAY_END onAdEnd : onAdEnd()")
-									}
-
-									override fun onError(placementReferenceId: String?, throwable: Throwable?) {
-										vungle("PLAY_END onError : onError() == " + throwable!!.localizedMessage)
-										try {
-											val ex = throwable as VungleException?
-											if (ex!!.exceptionCode == VungleException.VUNGLE_NOT_INTIALIZED) initVungle()
-										} catch (cex: ClassCastException) {
-											vungle(cex.message!!)
-										}
-									}
-								})
-						}
-					}
+					showAdmob()
 				}
 			}
 		}

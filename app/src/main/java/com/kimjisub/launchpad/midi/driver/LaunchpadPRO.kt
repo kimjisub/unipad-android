@@ -40,65 +40,65 @@ class LaunchpadPRO : DriverRef() {
 		)
 	}
 
-	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
+	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		if (cmd == 9) {
 			val x = 9 - note / 10
 			val y = note % 10
 			if (y in 1..8)
-				onPadTouch(x - 1, y - 1, velo != 0, velo)
+				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 		}
 		if (cmd == 11 && sig == -80) {
 			if (note in 91..98) {
-				onFunctionkeyTouch(note - 91, velo != 0)
+				onFunctionKeyTouch(note - 91, velocity != 0)
 			}
 			if (note in 19..89 && note % 10 == 9) {
 				val c = 9 - note / 10 - 1
-				onChainTouch(c, velo != 0)
-				onFunctionkeyTouch(c + 8, velo != 0)
+				onChainTouch(c, velocity != 0)
+				onFunctionKeyTouch(c + 8, velocity != 0)
 			}
 			if (note in 1..8) {
-				onChainTouch(8 - note + 16 - 8, velo != 0)
-				onFunctionkeyTouch(8 - note + 16, velo != 0)
+				onChainTouch(8 - note + 16 - 8, velocity != 0)
+				onFunctionKeyTouch(8 - note + 16, velocity != 0)
 			}
 			if (note in 10..80 && note % 10 == 0) {
-				onChainTouch(note / 10 - 1 + 24 - 8, velo != 0)
-				onFunctionkeyTouch(note / 10 - 1 + 24, velo != 0)
+				onChainTouch(note / 10 - 1 + 24 - 8, velocity != 0)
+				onFunctionKeyTouch(note / 10 - 1 + 24, velocity != 0)
 			}
 		} else {
-			onUnknownReceived(cmd, sig, note, velo)
-			if (cmd == 7 && sig == 46 && note == 0 && velo == -9)
+			onUnknownReceived(cmd, sig, note, velocity)
+			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9)
 				Log.midiDetail("PRO > Live Mode")
-			else if (cmd == 23 && sig == 47 && note == 0 && velo == -9)
+			else if (cmd == 23 && sig == 47 && note == 0 && velocity == -9)
 				Log.midiDetail("PRO > Note Mode")
-			else if (cmd == 23 && sig == 47 && note == 1 && velo == -9)
+			else if (cmd == 23 && sig == 47 && note == 1 && velocity == -9)
 				Log.midiDetail("PRO > Drum Mode")
-			else if (cmd == 23 && sig == 47 && note == 2 && velo == -9)
+			else if (cmd == 23 && sig == 47 && note == 2 && velocity == -9)
 				Log.midiDetail("PRO > Fade Mode")
-			else if (cmd == 23 && sig == 47 && note == 3 && velo == -9)
+			else if (cmd == 23 && sig == 47 && note == 3 && velocity == -9)
 				Log.midiDetail("PRO > Programmer Mode")
 		}
 	}
 
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {
-		sendSignal(9, -112, 10 * (8 - x) + y + 1, velo)
+	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		sendSignal(9, -112, 10 * (8 - x) + y + 1, velocity)
 	}
 
-	override fun sendChainLED(c: Int, velo: Int) {
+	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLED(c + 8, velo)
+			sendFunctionkeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {
+	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
 		if (f in 0..31)
-			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), velo.toByte())
+			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), velocity.toByte())
 	}
 
 
-	override fun sendClearLED() {
+	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)
-				sendPadLED(i, j, 0)
+				sendPadLed(i, j, 0)
 		for (i in 0..31)
-			sendFunctionkeyLED(i, 0)
+			sendFunctionkeyLed(i, 0)
 	}
 }

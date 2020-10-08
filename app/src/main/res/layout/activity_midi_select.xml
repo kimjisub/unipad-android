@@ -10,8 +10,8 @@
 		android:orientation="vertical">
 
 		<LinearLayout
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
 			android:layout_centerHorizontal="true"
 			android:layout_centerVertical="true"
 			android:orientation="vertical">
@@ -26,161 +26,22 @@
 				android:textColor="@color/ugray1"
 				android:textSize="30dp" />
 
-			<HorizontalScrollView
+			<TextView
+				android:id="@+id/timer"
 				android:layout_width="wrap_content"
-				android:layout_height="wrap_content">
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal"
+				android:layout_marginBottom="10dp"
+				android:gravity="center"
+				tool:text="5"
+				android:textColor="@color/ugray1"
+				android:textSize="30dp" />
 
-				<LinearLayout
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_centerHorizontal="true"
-					android:layout_centerVertical="true"
-					android:orientation="vertical">
-
-					<com.kimjisub.design.MidiItemView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						app:title="asdf"
-						app:subscription="asdf"/>
-
-					<LinearLayout
-						android:id="@+id/BTN_S"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="0">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="S\nmini"
-							android:textColor="@color/ugray1"
-							android:textSize="30dp" />
-
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:id="@+id/BTN_Mk2"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="1">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="MK2"
-							android:textColor="@color/ugray1"
-							android:textSize="30dp" />
-
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:id="@+id/BTN_Pro"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="2">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="Pro"
-							android:textColor="@color/ugray1"
-							android:textSize="30dp" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="(Live mode)"
-							android:textColor="@color/ugray1"
-							android:textSize="15dp" />
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:id="@+id/BTN_X"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="5">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="Pro"
-							android:textColor="@color/ugray1"
-							android:textSize="30dp" />
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="(Live mode)"
-							android:textColor="@color/ugray1"
-							android:textSize="15dp" />
-
-					</LinearLayout>
-
-
-					<LinearLayout
-						android:id="@+id/BTN_Midifighter"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="3">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="Midi\nFighter"
-							android:textColor="@color/ugray1"
-							android:textSize="25dp" />
-
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:id="@+id/BTN_Piano"
-						android:layout_width="120dp"
-						android:layout_height="100dp"
-						android:gravity="center"
-						android:onClick="selectDriver"
-						android:orientation="vertical"
-						android:tag="4">
-
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:gravity="center"
-							android:text="Piano"
-							android:textColor="@color/ugray1"
-							android:textSize="30dp" />
-
-
-					</LinearLayout>
-
-				</LinearLayout>
-
-			</HorizontalScrollView>
+			<com.yarolegovich.discretescrollview.DiscreteScrollView
+				android:id="@+id/picker"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				app:dsv_orientation="horizontal" />
 
 
 		</LinearLayout>

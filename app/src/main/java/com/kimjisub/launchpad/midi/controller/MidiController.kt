@@ -6,11 +6,11 @@ abstract class MidiController {
 
 	abstract fun onDetach()
 
-	abstract fun onPadTouch(x: Int, y: Int, upDown: Boolean, velo: Int)
+	abstract fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int)
 
-	abstract fun onFunctionkeyTouch(f: Int, upDown: Boolean)
+	abstract fun onFunctionKeyTouch(f: Int, upDown: Boolean)
 
 	abstract fun onChainTouch(c: Int, upDown: Boolean)
 
-	abstract fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velo: Int)
+	abstract fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int)
 }

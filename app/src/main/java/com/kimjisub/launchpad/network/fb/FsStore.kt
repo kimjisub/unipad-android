@@ -13,7 +13,7 @@ class FsStore {
 	@JvmField
 	var isAutoPlay = false
 	@JvmField
-	var isLED = false
+	var isLed = false
 	@JvmField
 	var isNew = false
 	@JvmField

@@ -24,41 +24,41 @@ class LaunchpadS : DriverRef() {
 		)
 	}
 
-	override fun getSignal(cmd: Int, sig: Int, note: Int, velo: Int) {
+	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		if (cmd == 9) {
 			val x = note / 16 + 1
 			val y = note % 16 + 1
 			if (y in 1..8)
-				onPadTouch(x - 1, y - 1, velo != 0, velo)
+				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 			else if (y == 9) {
-				onChainTouch(x - 1, velo != 0)
-				onFunctionkeyTouch(x - 1 + 8, velo != 0)
+				onChainTouch(x - 1, velocity != 0)
+				onFunctionKeyTouch(x - 1 + 8, velocity != 0)
 			}
 		} else if (cmd == 11) {
 			if (note in 104..111)
-				onFunctionkeyTouch(note - 104, velo != 0)
+				onFunctionKeyTouch(note - 104, velocity != 0)
 		}
 	}
 
-	override fun sendPadLED(x: Int, y: Int, velo: Int) {
-		sendSignal(9, -112, x * 16 + y, LaunchpadColor.SCode[velo])
+	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		sendSignal(9, -112, x * 16 + y, LaunchpadColor.SCode[velocity])
 	}
 
-	override fun sendChainLED(c: Int, velo: Int) {
+	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLED(c + 8, velo)
+			sendFunctionkeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLED(f: Int, velo: Int) {
+	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
 		if (f in 0..15)
-			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), LaunchpadColor.SCode[velo].toByte())
+			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), LaunchpadColor.SCode[velocity].toByte())
 	}
 
-	override fun sendClearLED() {
+	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)
-				sendPadLED(i, j, 0)
+				sendPadLed(i, j, 0)
 		for (i in 0..15)
-			sendFunctionkeyLED(i, 0)
+			sendFunctionkeyLed(i, 0)
 	}
 }

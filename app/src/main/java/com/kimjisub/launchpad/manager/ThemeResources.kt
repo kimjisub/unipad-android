@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
+import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 
@@ -10,6 +11,8 @@ class ThemeResources {
 	var packageName: String? = null
 	var customRes: Resources? = null
 	var defaultRes: Resources
+	var resources: Resources
+
 	var icon: Drawable
 	var name: String
 	var description: String
@@ -36,12 +39,13 @@ class ThemeResources {
 	var option_window_checkbox: Int? = null
 	var option_window_btn: Int? = null
 	var option_window_btn_text: Int? = null
-	var isChainLED = true
+	var isChainLed = true
 
-	constructor(context: Context, packageName: String?, fullLoad: Boolean) {
+	constructor(context: Context, packageName: String, fullLoad: Boolean = false) {
 		this.packageName = packageName
 		customRes = context.packageManager.getResourcesForApplication(packageName)
 		defaultRes = context.resources
+		resources = context.packageManager.getResourcesForApplication(packageName)
 		icon = getCustomDrawable("theme_ic", drawable.theme_ic)
 		version = context.packageManager.getPackageInfo(packageName, 0).versionName
 		name = getCustomString("theme_name", string.theme_name)
@@ -64,7 +68,7 @@ class ThemeResources {
 		try {
 			chainled = getCustomDrawable("chainled")
 		} catch (e: Exception) {
-			isChainLED = false
+			isChainLed = false
 			chain = getCustomDrawable("chain")
 			chain_ = getCustomDrawable("chain_")
 			chain__ = getCustomDrawable("chain__")
@@ -88,6 +92,7 @@ class ThemeResources {
 
 	constructor(context: Context, fullLoad: Boolean) {
 		defaultRes = context.resources
+		resources = context.resources
 		icon = defaultRes.getDrawable(drawable.theme_ic)
 		version = BuildConfig.VERSION_NAME
 		name = defaultRes.getString(string.theme_name)
@@ -99,23 +104,27 @@ class ThemeResources {
 
 		// Drawable
 
-		playbg = defaultRes.getDrawable(drawable.playbg)
-		custom_logo = defaultRes.getDrawable(drawable.custom_logo)
-		btn = defaultRes.getDrawable(drawable.btn)
-		btn_ = defaultRes.getDrawable(drawable.btn_)
-		chainled = defaultRes.getDrawable(drawable.chainled)
-		phantom = defaultRes.getDrawable(drawable.phantom)
-		phantom_ = defaultRes.getDrawable(drawable.phantom_)
-		xml_prev = defaultRes.getDrawable(drawable.xml_prev)
-		xml_play = defaultRes.getDrawable(drawable.xml_play)
-		xml_pause = defaultRes.getDrawable(drawable.xml_pause)
-		xml_next = defaultRes.getDrawable(drawable.xml_next)
-		checkbox = defaultRes.getColor(color.checkbox)
-		trace_log = defaultRes.getColor(color.trace_log)
-		option_window = defaultRes.getColor(color.option_window)
-		option_window_checkbox = defaultRes.getColor(color.option_window_checkbox)
-		option_window_btn = defaultRes.getColor(color.option_window_btn)
-		option_window_btn_text = defaultRes.getColor(color.option_window_btn_text)
+		playbg = ResourcesCompat.getDrawable(defaultRes, drawable.playbg, null)
+		custom_logo = ResourcesCompat.getDrawable(defaultRes, drawable.custom_logo, null)
+		btn = ResourcesCompat.getDrawable(defaultRes, drawable.btn, null)
+		btn_ = ResourcesCompat.getDrawable(defaultRes, drawable.btn_, null)
+		chainled = ResourcesCompat.getDrawable(defaultRes, drawable.chainled, null)
+		phantom = ResourcesCompat.getDrawable(defaultRes, drawable.phantom, null)
+		phantom_ = ResourcesCompat.getDrawable(defaultRes, drawable.phantom_, null)
+		xml_prev = ResourcesCompat.getDrawable(defaultRes, drawable.xml_prev, null)
+		xml_play = ResourcesCompat.getDrawable(defaultRes, drawable.xml_play, null)
+		xml_pause = ResourcesCompat.getDrawable(defaultRes, drawable.xml_pause, null)
+		xml_next = ResourcesCompat.getDrawable(defaultRes, drawable.xml_next, null)
+		checkbox = ResourcesCompat.getColor(defaultRes, color.checkbox, null)
+		trace_log = ResourcesCompat.getColor(defaultRes, color.trace_log, null)
+		option_window = ResourcesCompat.getColor(defaultRes, color.option_window, null)
+		option_window_checkbox = ResourcesCompat.getColor(defaultRes, color.option_window_checkbox, null)
+		option_window_btn = ResourcesCompat.getColor(defaultRes, color.option_window_btn, null)
+		option_window_btn_text = ResourcesCompat.getColor(defaultRes, color.option_window_btn_text, null)
+	}
+
+	private fun init(){
+
 	}
 
 	@Throws(Exception::class)

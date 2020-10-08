@@ -5,6 +5,7 @@
 	<string name="translatedBy">Traduit par %1$s</string>
 
 	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Accepter</string>
@@ -12,10 +13,13 @@
 	<string name="warning">Attention</string>
 	<string name="error">ERREUR</string>
 	<string name="errOccur">Une erreur est survenue.</string>
-	<string name="wait">Veuillez patienter…</string>
+	<string name="wait_a_sec">Veuillez patienter…</string>
 	<string name="analyzing">Analyse</string>
 	<string name="loading">Chargement</string>
-	<string name="downloading">Téléchargement</string>
+	<string name="download">Download</string>
+	<string name="downloadWaiting">Download Waiting</string>
+	<string name="downloading">Downloading</string>
+	<string name="downloaded">Downloaded</string>
 	<string name="success">Succés</string>
 	<string name="failed">Échec</string>
 	<string name="delete">Supprimer</string>
@@ -28,14 +32,12 @@
 	<string name="path">Chemin</string>
 	<string name="quit">Quitter</string>
 	<string name="website">Website</string>
-
-	<!--Main-->
-	<string name="unipack_count">Number of UniPacks</string>
-	<string name="unipack_capacity">Capacity of All UniPacks</string>
-	<string name="open_count">Count of Opened</string>
-	<string name="padtouch_count">Count of Pad Touch</string>
-	<string name="LED_count">Count of LED Event</string>
-	<string name="sound_count">Count of Sound</string>
+	<string name="measuring">Measuring…</string>
+	<string name="general">General</string>
+	<string name="notice">Notice</string>
+	<string name="newUniPack">New UniPack</string>
+	<string name="notFound">Not Found</string>
+	<string name="exceptionOccurred">Exception Occurred</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnecter le Launchpad</string>
@@ -83,15 +85,12 @@
 	<!--UniPack Info-->
 	<string name="title">Titre</string>
 	<string name="producerName">Producteur</string>
-	<string name="scale">Taille</string>
 	<string name="chainCount">Nombre de pages</string>
 	<string name="fileSize">Taille du fichier</string>
 
 	<!--UniPack Function-->
-	<string name="LED">LED</string>
+	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="LED_">LED ●</string>
-	<string name="autoPlay_">AUTOPLAY ●</string>
 	<string name="feedbackLight">Montrer la touche active</string>
 	<string name="traceLog">Log touches</string>
 	<string name="traceLogClear">Le Log des touches à été réinitialisé.</string>
@@ -113,8 +112,6 @@
 	<string name="doYouWantToRemapProject">Remapper l\'autoplay du pack ?</string>
 	<string name="remapDone">L\'autoPlay a bien été remmappé.</string>
 	<string name="remapFail">L\'AutoPlay n\'existe pas</string>
-	<string name="cantReadFolder">Dossier illisible.</string>
-	<string name="cantReadFile">Fichier illisible.</string>
 	<string name="analyzeComplete">Analyse terminée!</string>
 	<string name="analyzeFailed">Échec de l\'analyse…</string>
 	<string name="isNotAnUniPack">Ce n\'est pas un pack</string>
@@ -135,7 +132,6 @@
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Impossible de quitter en plein téléchargement</string>
-	<string name="downloadCount">Nombre de téléchargements</string>
 	<string name="UnableToAccessServer">Serveur inaccessible.</string>
 
 	<!--Theme-->
@@ -147,5 +143,7 @@
 	<string name="theme_name">Default Skin</string>
 	<string name="theme_description">This is Default UniPad Skin</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="padSize">Pad Size</string>
+	<string name="theme">Theme</string>
 
 </resources>

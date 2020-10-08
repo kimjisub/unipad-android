@@ -4,25 +4,57 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.usb.UsbManager
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
+import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
+import com.kimjisub.launchpad.adapter.MidiDeviceItem
+import com.kimjisub.launchpad.adapter.MidiDeviceViewHolder
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
+import com.kimjisub.manager.AutorunTimer
+import com.kimjisub.manager.Log
+import com.yarolegovich.discretescrollview.DiscreteScrollView
+import com.yarolegovich.discretescrollview.transform.Pivot
+import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 import kotlinx.android.synthetic.main.activity_midi_select.*
+import kotlin.math.abs
+
 
 class MidiSelectActivity : BaseActivity() {
-	private val LL_Launchpad: Array<LinearLayout> by lazy {
-		arrayOf(
-			BTN_S,
-			BTN_Mk2,
-			BTN_Pro,
-			BTN_Midifighter,
-			BTN_Piano
+	private val midiDeviceList = lazy {
+		arrayListOf(
+			MidiDeviceItem(getDrawable(R.drawable.midi_lp_s), "Launchpad S", LaunchpadS::class),
+			MidiDeviceItem(
+				getDrawable(R.drawable.midi_lp_mk2),
+				"Launchpad MK2",
+				LaunchpadMK2::class
+			),
+			MidiDeviceItem(
+				getDrawable(R.drawable.midi_lp_pro),
+				"Launchpad PRO",
+				LaunchpadPRO::class
+			),
+			MidiDeviceItem(
+				getDrawable(R.drawable.midi_lp_x),
+				"Launchpad X",
+				LaunchpadX::class
+			),
+			MidiDeviceItem(
+				getDrawable(R.drawable.midi_midifighter),
+				"Midi Fighter",
+				MidiFighter::class
+			),
+			MidiDeviceItem(
+				getDrawable(R.drawable.midi_master_keyboard),
+				"Master Keyboard",
+				MasterKeyboard::class
+			)
 		)
 	}
 
@@ -33,9 +65,49 @@ class MidiSelectActivity : BaseActivity() {
 		)
 	}
 
+	private fun userInteract() {
+		autorunTimer.cancel()
+	}
+
+	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
+		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
+			runOnUiThread {
+				timer.text = (leftTime / 1000 - 1).toString()
+			}
+		}
+
+		override fun onTimeOut() {
+			runOnUiThread {
+				finish()
+			}
+		}
+
+		override fun onCanceled() {
+			runOnUiThread {
+				timer.text = ""
+			}
+		}
+
+	}, 60000)
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_midi_select)
+		autorunTimer.start()
+
+		val adapter = MidiDeviceAdapter(midiDeviceList.value)
+		picker.setSlideOnFling(true)
+		picker.adapter = adapter
+		picker.addOnItemChangedListener { _, adapterPosition ->
+			val item = midiDeviceList.value[adapterPosition]
+			MidiConnection.driver = item.driver.java.newInstance() as DriverRef
+		}
+		picker.setItemTransitionTimeMillis(50)
+		picker.setItemTransformer(
+			ScaleTransformer.Builder()
+				.setMinScale(0.7f)
+				.build()
+		)
 
 
 		val service = (getSystemService(Context.USB_SERVICE) as UsbManager)
@@ -47,7 +119,10 @@ class MidiSelectActivity : BaseActivity() {
 			}
 
 			override fun onChangeDriver(driverRef: DriverRef) {
-				showDriver(driverRef)
+				for ((i, item) in midiDeviceList.value.withIndex()) {
+					if (item.driver == driverRef::class)
+						picker.scrollToPosition(i)
+				}
 			}
 
 			override fun onChangeMode(mode: Int) {
@@ -61,41 +136,7 @@ class MidiSelectActivity : BaseActivity() {
 		MidiConnection.mode = preference.launchpadConnectMethod
 		MidiConnection.initConnection(intent, service)
 
-		Handler().postDelayed({ finish() }, 5000)
-	}
 
-	// Select Driver /////////////////////////////////////////////////////////////////////////////////////////
-
-	fun selectDriver(v: View) {
-		val index = Integer.parseInt(v.tag as String)
-
-		MidiConnection.driver = when (index) {
-			0 -> LaunchpadS()
-			1 -> LaunchpadMK2()
-			2 -> LaunchpadPRO()
-			3 -> MidiFighter()
-			4 -> MasterKeyboard()
-			5 -> LaunchpadX()
-			else -> MasterKeyboard()
-		}
-	}
-
-	fun showDriver(driverRef: DriverRef) {
-		var index = 0
-		when (driverRef.javaClass.simpleName) {
-			"LaunchpadS" -> index = 0
-			"LaunchpadMK2" -> index = 1
-			"LaunchpadPRO" -> index = 2
-			"MidiFighter" -> index = 3
-			"MasterKeyboard" -> index = 4
-			"LaunchpadX" -> index = 5
-		}
-		for (i in LL_Launchpad.indices) {
-			if (index == i)
-				changeViewColor(LL_Launchpad[i], color.ugray1, color.background1)
-			else
-				changeViewColor(LL_Launchpad[i], color.background1, color.ugray1)
-		}
 	}
 
 	// Select Mode /////////////////////////////////////////////////////////////////////////////////////////
