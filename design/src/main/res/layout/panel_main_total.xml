@@ -56,8 +56,8 @@
 
 				</RelativeLayout>
 
-				<Spinner
-					android:id="@+id/spinner"
+				<androidx.appcompat.widget.AppCompatSpinner
+					android:id="@+id/themeSpinner"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:entries="@{data.themeList}"
@@ -183,114 +183,31 @@
 					</LinearLayout>
 				</LinearLayout>
 
-				<com.kimjisub.design.layout.RadioButtonGroupTableLayout
-					android:id="@+id/radioButtonGroupTableLayout"
+				<LinearLayout
+					android:layout_gravity="center_vertical"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:layout_gravity="center"
-					android:padding="16dp">
+					android:gravity="center"
+					android:orientation="horizontal">
 
-					<TableRow>
+					<androidx.appcompat.widget.AppCompatSpinner
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:theme="@style/UniPadSpinner"
+						android:id="@+id/spinner_sort_method"
+						android:selectedItemPosition="@{data.sortMethod}"
+						android:entries="@array/packSortMethod" />
 
-						<TextView
-							android:layout_column="1"
-							android:text="오름차" />
+					<com.kimjisub.design.TextSwitch
+						android:textOff="asc"
+						android:textOn="desc"
+						android:id="@+id/switch_sort_type"
+						android:checked="@{data.sortType}"
+						app:switchMinWidth="100dp"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"/>
 
-						<TextView android:text="내림차" />
-
-					</TableRow>
-
-					<TableRow>
-
-						<TextView android:text="다운로드 날짜" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==0}"
-							android:tag="0" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==1}"
-							android:tag="1" />
-
-					</TableRow>
-
-					<TableRow>
-
-						<TextView android:text="실행 횟수" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==2}"
-							android:tag="2" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==3}"
-							android:tag="3" />
-
-					</TableRow>
-
-					<TableRow>
-
-						<TextView android:text="최근 연 날짜" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==4}"
-							android:tag="4" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==5}"
-							android:tag="5" />
-
-					</TableRow>
-
-					<TableRow>
-
-						<TextView android:text="이름" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==6}"
-							android:tag="6" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==7}"
-							android:tag="7" />
-
-					</TableRow>
-
-					<TableRow>
-
-						<TextView android:text="제작자" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==8}"
-							android:tag="8" />
-
-						<RadioButton
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:checked="@{data.sortingMethod==9}"
-							android:tag="9" />
-
-					</TableRow>
-
-				</com.kimjisub.design.layout.RadioButtonGroupTableLayout>
+				</LinearLayout>
 
 			</LinearLayout>
 
