@@ -50,10 +50,10 @@ class FileExplorerDialog(internal var context: Context, internal var path: Strin
 		mItem.clear()
 		mPath.clear()
 		val f = File(dirPath)
-		val files: Array<File> = f.listFiles()!!
+		val files: Array<File> = f.listFiles()
 		if (dirPath != "/") {
 			mItem.add("../")
-			mPath.add(f.parent!!)
+			mPath.add(f.parent)
 		}
 		for (file in files) {
 			val name: String = file.name
