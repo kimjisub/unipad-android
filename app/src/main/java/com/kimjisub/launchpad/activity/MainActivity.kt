@@ -58,16 +58,20 @@ import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import com.kimjisub.manager.extra.getVirtualIndexFormSorted
+import com.kimjisub.manager.splitties.browse
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.browse
-import org.jetbrains.anko.design.snackbar
-import org.jetbrains.anko.startActivity
-import org.jetbrains.anko.startActivityForResult
+import splitties.activities.start
+import splitties.alertdialog.alertDialog
+import splitties.alertdialog.message
+import splitties.alertdialog.okButton
+import splitties.alertdialog.title
+import splitties.snackbar.action
+import splitties.snackbar.longSnack
+import splitties.snackbar.snack
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -223,7 +227,7 @@ class MainActivity : BaseActivity() {
 
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
 		FAB_reconnectLaunchpad.setOnClickListener {
-			startActivity<MidiSelectActivity>()
+			start<MidiSelectActivity>()
 		}
 		FAB_loadUniPack.setOnClickListener {
 			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,
@@ -238,9 +242,12 @@ class MainActivity : BaseActivity() {
 				})
 				.show()
 		}
-		FAB_store.setOnClickListener { startActivityForResult<FBStoreActivity>(0) }
+		FAB_store.setOnClickListener {
+			val intent = Intent(applicationContext, FBStoreActivity::class.java)
+			startActivityForResult(intent, REQUEST_FB_STORE)
+		}
 		FAB_store.setOnLongClickListener { false }
-		FAB_setting.setOnClickListener { startActivity<SettingActivity>() }
+		FAB_setting.setOnClickListener { start<SettingActivity>() }
 		FAM_floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
 			var runnable: Runnable = Runnable { FAM_floatingMenu.close(true) }
@@ -251,7 +258,7 @@ class MainActivity : BaseActivity() {
 				)
 			}
 		})
-		LL_errItem.setOnClickListener { startActivity<FBStoreActivity>() }
+		LL_errItem.setOnClickListener { start<FBStoreActivity>() }
 		checkThings()
 		update(false)
 
@@ -445,8 +452,8 @@ class MainActivity : BaseActivity() {
 		CoroutineScope(Dispatchers.IO).launch {
 
 			var progressDialog = ProgressDialog(this@MainActivity)
-			var msg1: String?
-			var msg2: String?
+			var msg1 = "(null)"
+			var msg2 = "(null)"
 
 			withContext(Dispatchers.Main) {
 				progressDialog.setTitle(getString(string.analyzing))
@@ -468,12 +475,12 @@ class MainActivity : BaseActivity() {
 					}
 					unipack.criticalError -> {
 						msg1 = getString(string.analyzeFailed)
-						msg2 = unipack.errorDetail
+						msg2 = unipack.errorDetail!!
 						FileManager.deleteDirectory(F_UniPack)
 					}
 					else -> {
 						msg1 = getString(string.warning)
-						msg2 = unipack.errorDetail
+						msg2 = unipack.errorDetail!!
 					}
 				}
 			} catch (e: Exception) {
@@ -484,8 +491,10 @@ class MainActivity : BaseActivity() {
 
 			withContext(Dispatchers.Main) {
 				update()
-				alert(msg1!!, msg2!!) {
-					positiveButton(string.accept) { it.dismiss() }
+				alertDialog {
+					title = msg1
+					message = msg2
+					okButton()
 				}.show()
 				progressDialog.dismiss()
 			}
@@ -524,7 +533,9 @@ class MainActivity : BaseActivity() {
 		Thread(Runnable {
 			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date()))
 		}).start()
-		startActivity<PlayActivity>("path" to item.unipack.F_project.path)
+		start<PlayActivity> {
+			putExtra("path", item.unipack.F_project.path)
+		}
 		removeController((midiController))
 	}
 
@@ -610,6 +621,9 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onYoutubeClick(v: View) {
+				Intent()
+				Intent(Intent.ACTION_VIEW)
+
 				val item = selected
 				if (item != null)
 					browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title)
@@ -780,11 +794,12 @@ class MainActivity : BaseActivity() {
 			val currVersionList: List<String> =
 				gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
-				CL_root.snackbar(
-					"${getString(string.newVersionFound)}\n$thisVersion → ${currVersionList[0]}",
-					getString(string.update)
+				CL_root.longSnack(
+					"${getString(string.newVersionFound)}"
 				) {
-					browse("https://play.google.com/store/apps/details?id=$packageName")
+					action(getString(string.update)) {
+						browse("https://play.google.com/store/apps/details?id=$packageName")
+					}
 				}
 		}
 	}
@@ -842,7 +857,7 @@ class MainActivity : BaseActivity() {
 	override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
 		super.onActivityResult(requestCode, resultCode, intent)
 		when (requestCode) {
-			0 -> checkThings()
+			REQUEST_FB_STORE -> checkThings()
 			else -> {
 			}
 		}
@@ -857,5 +872,10 @@ class MainActivity : BaseActivity() {
 	override fun onDestroy() {
 		super.onDestroy()
 		removeController(midiController)
+	}
+
+
+	companion object {
+		private const val REQUEST_FB_STORE = 100
 	}
 }

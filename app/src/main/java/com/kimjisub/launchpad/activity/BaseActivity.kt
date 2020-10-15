@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
@@ -19,7 +20,7 @@ import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
-import org.jetbrains.anko.startActivity
+import splitties.activities.start
 import java.io.File
 import java.util.*
 
@@ -56,7 +57,7 @@ open class BaseActivity : AppCompatActivity() {
 				activityList[i].finish()
 				activityList.removeAt(i)
 			}
-			activity.startActivity<MainActivity>()
+			activity.start<MainActivity>()
 			printActivityLog(activity.localClassName + " requestRestart")
 			Process.killProcess(Process.myPid())
 		}

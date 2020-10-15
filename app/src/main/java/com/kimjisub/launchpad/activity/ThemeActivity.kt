@@ -9,8 +9,8 @@ import com.kimjisub.launchpad.adapter.ThemeAdapter
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.manager.Log
+import com.kimjisub.manager.splitties.browse
 import kotlinx.android.synthetic.main.activity_theme.*
-import org.jetbrains.anko.browse
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
