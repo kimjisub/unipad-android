@@ -27,7 +27,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.activity_store.*
-import org.jetbrains.anko.toast
+import splitties.toast.toast
 import java.io.File
 import java.util.*
 

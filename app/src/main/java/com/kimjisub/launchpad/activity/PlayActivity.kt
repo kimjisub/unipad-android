@@ -52,8 +52,8 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log.log
 import kotlinx.android.synthetic.main.activity_play.*
-import org.jetbrains.anko.startActivity
-import org.jetbrains.anko.toast
+import splitties.activities.start
+import splitties.toast.toast
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -296,7 +296,7 @@ class PlayActivity : BaseActivity() {
 			// Setting
 			purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
 				compoundButton!!.isChecked = false
-				startActivity<SettingActivity>()
+				start<SettingActivity>()
 			}
 			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(b: Boolean) {

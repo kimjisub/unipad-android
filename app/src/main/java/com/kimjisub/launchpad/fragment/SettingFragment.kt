@@ -18,14 +18,14 @@ import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.manager.Log
-import org.jetbrains.anko.support.v4.browse
-import org.jetbrains.anko.support.v4.startActivity
-import org.jetbrains.anko.toast
+import splitties.activities.start
+import splitties.toast.toast
 import java.util.*
+import com.kimjisub.manager.splitties.browse
 
 class SettingFragment : PreferenceFragmentCompat() {
 	private var billingManager: BillingManager? = null
-	private val preference: PreferenceManager by lazy { PreferenceManager(context!!) }
+	private val preference: PreferenceManager by lazy { PreferenceManager(requireContext()) }
 
 	override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
 		super.setPreferenceScreen(preferenceScreen)
@@ -62,7 +62,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 
 		findPreference<Preference>("select_theme")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-			startActivity<ThemeActivity>()
+			requireContext().start<ThemeActivity>()
 			false
 		}
 		findPreference<Preference>("community")?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -211,7 +211,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data)
 			listView.onItemClickListener = AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long ->
-				browse(list[position].url)
+				requireContext().browse(list[position].url)
 			}
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(string.openSourceLicense))
@@ -221,7 +221,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 		}
 		findPreference<Preference>("FCMToken")?.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
 			try {
-				Functions.putClipboard(activity!!, FirebaseInstanceId.getInstance().token!!)
+				Functions.putClipboard(requireContext(), FirebaseInstanceId.getInstance().token!!)
 				context?.toast(string.copied)
 			} catch (ignore: Exception) {
 			}
