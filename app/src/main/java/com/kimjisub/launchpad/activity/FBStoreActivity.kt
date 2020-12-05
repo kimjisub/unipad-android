@@ -61,7 +61,8 @@ class FBStoreActivity : BaseActivity() {
 					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 			})
-			val divider = DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
+			val divider =
+				DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
 			divider.setDrawable(resources.getDrawable(drawable.border_divider))
 			RV_recyclerView.addItemDecoration(divider)
 			RV_recyclerView.setHasFixedSize(false)
@@ -225,7 +226,11 @@ class FBStoreActivity : BaseActivity() {
 				override fun onInstallStart() {
 				}
 
-				override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+				override fun onGetFileSize(
+					fileSize: Long,
+					contentLength: Long,
+					preKnownFileSize: Long
+				) {
 					val percent = 0
 					val downloadedMB: String = FileManager.byteToMB(0)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
@@ -233,14 +238,22 @@ class FBStoreActivity : BaseActivity() {
 					packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
 				}
 
-				override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+				override fun onDownloadProgress(
+					percent: Int,
+					downloadedSize: Long,
+					fileSize: Long
+				) {
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
 					packView.setPlayText("${percent}%\n${downloadedMB} / $fileSizeMB MB")
 				}
 
-				override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+				override fun onDownloadProgressPercent(
+					percent: Int,
+					downloadedSize: Long,
+					fileSize: Long
+				) {
 				}
 
 				override fun onAnalyzeStart(zip: File) {
@@ -273,7 +286,10 @@ class FBStoreActivity : BaseActivity() {
 	internal fun updatePanel() {
 		Log.test("panel")
 		val playIndex = selectedIndex
-		val animation: Animation = AnimationUtils.loadAnimation(this@FBStoreActivity, if (playIndex != -1) anim.panel_in else anim.panel_out)
+		val animation: Animation = AnimationUtils.loadAnimation(
+			this@FBStoreActivity,
+			if (playIndex != -1) anim.panel_in else anim.panel_out
+		)
 		animation.setAnimationListener(object : AnimationListener {
 			override fun onAnimationStart(animation: Animation?) {
 				P_pack.visibility = View.VISIBLE

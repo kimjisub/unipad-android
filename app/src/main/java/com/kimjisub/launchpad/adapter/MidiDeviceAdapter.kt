@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.databinding.ItemMidiDeviceBinding
-import com.kimjisub.launchpad.midi.driver.DriverRef
 import kotlin.reflect.KClass
 
 data class MidiDeviceItem(val icon: Drawable?, val name: String, val driver: KClass<*>)

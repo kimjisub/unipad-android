@@ -10,14 +10,19 @@ class FsStore {
 	var description: String? = null
 	var difficulty: Long = 0
 	var downloadCount: Long = 0
+
 	@JvmField
 	var isAutoPlay = false
+
 	@JvmField
 	var isLed = false
+
 	@JvmField
 	var isNew = false
+
 	@JvmField
 	var isProLight = false
+
 	@JvmField
 	var isWormhole = false
 	var playTime: Long = 0

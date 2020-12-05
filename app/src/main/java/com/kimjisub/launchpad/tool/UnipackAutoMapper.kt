@@ -57,7 +57,8 @@ class UniPackAutoMapper(
 							autoplay2.add(e)
 						}
 						is AutoPlay.Element.Chain -> autoplay2.add(e)
-						is AutoPlay.Element.Delay -> if (prevDelay != null) prevDelay.delay += e.delay else prevDelay = e
+						is AutoPlay.Element.Delay -> if (prevDelay != null) prevDelay.delay += e.delay else prevDelay =
+							e
 					}
 				}
 
@@ -71,7 +72,10 @@ class UniPackAutoMapper(
 						when (e) {
 							is AutoPlay.Element.On -> {
 								val num = e.num % unipack.soundTable!![e.currChain][e.x][e.y]!!.size
-								nextDuration = FileManager.wavDuration(mplayer, unipack.soundTable!![e.currChain][e.x][e.y]!![num].file.path)
+								nextDuration = FileManager.wavDuration(
+									mplayer,
+									unipack.soundTable!![e.currChain][e.x][e.y]!![num].file.path
+								)
 								autoplay3.add(e)
 							}
 							is AutoPlay.Element.Chain -> autoplay3.add(e)
@@ -90,9 +94,12 @@ class UniPackAutoMapper(
 				for (e: AutoPlay.Element in autoplay3) {
 					when (e) {
 						is AutoPlay.Element.On -> //int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
-							stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n")
-						is AutoPlay.Element.Chain -> stringBuilder.append("c ").append(e.c + 1).append("\n")
-						is AutoPlay.Element.Delay -> stringBuilder.append("d ").append(e.delay).append("\n")
+							stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1)
+								.append("\n")
+						is AutoPlay.Element.Chain -> stringBuilder.append("c ").append(e.c + 1)
+							.append("\n")
+						is AutoPlay.Element.Delay -> stringBuilder.append("d ").append(e.delay)
+							.append("\n")
 					}
 				}
 				try {
@@ -102,7 +109,8 @@ class UniPackAutoMapper(
 						"autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date(System.currentTimeMillis()))
 					)
 					filePre.renameTo(fileNow)
-					val writer = BufferedWriter(OutputStreamWriter(FileOutputStream(unipack.F_autoPlay)))
+					val writer =
+						BufferedWriter(OutputStreamWriter(FileOutputStream(unipack.F_autoPlay)))
 					writer.write(stringBuilder.toString())
 					writer.close()
 				} catch (e: FileNotFoundException) {

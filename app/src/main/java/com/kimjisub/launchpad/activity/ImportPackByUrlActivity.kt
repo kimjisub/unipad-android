@@ -77,14 +77,26 @@ class ImportPackByUrlActivity : BaseActivity() {
 					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
 
-				override fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long) {
+				override fun onGetFileSize(
+					fileSize: Long,
+					contentLength: Long,
+					preKnownFileSize: Long
+				) {
 					log("fileSize: $contentLength → $fileSize")
 				}
 
-				override fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long) {
+				override fun onDownloadProgress(
+					percent: Int,
+					downloadedSize: Long,
+					fileSize: Long
+				) {
 				}
 
-				override fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
+				override fun onDownloadProgressPercent(
+					percent: Int,
+					downloadedSize: Long,
+					fileSize: Long
+				) {
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 

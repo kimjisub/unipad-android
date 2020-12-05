@@ -12,33 +12,39 @@ import androidx.appcompat.app.AlertDialog.Builder
 import com.kimjisub.design.R
 import com.kimjisub.design.R.string
 import com.kimjisub.design.databinding.FileExplorerBinding
-import com.kimjisub.manager.FileManager
 import java.io.File
 import java.util.*
 
-class FileExplorerDialog(internal var context: Context, internal var path: String, private val onEventListener: OnEventListener) {
+class FileExplorerDialog(
+	internal var context: Context,
+	internal var path: String,
+	private val onEventListener: OnEventListener
+) {
 	private val dialog = Builder(context).create()
-	private var b = FileExplorerBinding.bind(LayoutInflater.from(context).inflate(R.layout.file_explorer, null) as LinearLayout)
+	private var b = FileExplorerBinding.bind(
+		LayoutInflater.from(context).inflate(R.layout.file_explorer, null) as LinearLayout
+	)
 
 	private var mItem: MutableList<String> = ArrayList()
 	private var mPath: MutableList<String> = ArrayList()
 
 
 	fun show() {
-		b.LVList.onItemClickListener = OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-			val file = File(mPath[position])
-			if (file.isDirectory) {
-				if (file.canRead())
-					moveDir(mPath[position])
-				else
-					showDialog(file.name, getString(string.FE_folderErr))
-			} else {
-				if (file.canRead())
-					onFileSelected(file.path)
-				else
-					showDialog(file.name, getString(string.FE_fileErr))
+		b.LVList.onItemClickListener =
+			OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
+				val file = File(mPath[position])
+				if (file.isDirectory) {
+					if (file.canRead())
+						moveDir(mPath[position])
+					else
+						showDialog(file.name, getString(string.FE_folderErr))
+				} else {
+					if (file.canRead())
+						onFileSelected(file.path)
+					else
+						showDialog(file.name, getString(string.FE_fileErr))
+				}
 			}
-		}
 		moveDir(path)
 		dialog.setView(b.root)
 		dialog.show()

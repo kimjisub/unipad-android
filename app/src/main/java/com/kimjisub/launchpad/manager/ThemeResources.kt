@@ -85,9 +85,11 @@ class ThemeResources {
 		checkbox = getCustomColor("checkbox", color.checkbox)
 		trace_log = getCustomColor("trace_log", color.trace_log)
 		option_window = getCustomColor("option_window", color.option_window)
-		option_window_checkbox = getCustomColor("option_window_checkbox", color.option_window_checkbox)
+		option_window_checkbox =
+			getCustomColor("option_window_checkbox", color.option_window_checkbox)
 		option_window_btn = getCustomColor("option_window_btn", color.option_window_btn)
-		option_window_btn_text = getCustomColor("option_window_btn_text", color.option_window_btn_text)
+		option_window_btn_text =
+			getCustomColor("option_window_btn_text", color.option_window_btn_text)
 	}
 
 	constructor(context: Context, fullLoad: Boolean) {
@@ -118,12 +120,14 @@ class ThemeResources {
 		checkbox = ResourcesCompat.getColor(defaultRes, color.checkbox, null)
 		trace_log = ResourcesCompat.getColor(defaultRes, color.trace_log, null)
 		option_window = ResourcesCompat.getColor(defaultRes, color.option_window, null)
-		option_window_checkbox = ResourcesCompat.getColor(defaultRes, color.option_window_checkbox, null)
+		option_window_checkbox =
+			ResourcesCompat.getColor(defaultRes, color.option_window_checkbox, null)
 		option_window_btn = ResourcesCompat.getColor(defaultRes, color.option_window_btn, null)
-		option_window_btn_text = ResourcesCompat.getColor(defaultRes, color.option_window_btn_text, null)
+		option_window_btn_text =
+			ResourcesCompat.getColor(defaultRes, color.option_window_btn_text, null)
 	}
 
-	private fun init(){
+	private fun init() {
 
 	}
 

@@ -59,7 +59,8 @@ class AutoPlayRunner(
 					beforeStartPlaying()
 					if (delay <= currTime - startTime) {
 						Log.test("[AutoPlay] progress $progress")
-						when (val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]) {
+						when (val e: AutoPlay.Element =
+							unipack.autoPlayTable!!.elements[progress]) {
 							is AutoPlay.Element.On -> {
 								Log.test("[AutoPlay] on ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)

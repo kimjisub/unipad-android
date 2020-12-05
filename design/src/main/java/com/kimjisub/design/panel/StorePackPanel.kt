@@ -29,7 +29,8 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	val b: PanelStorePackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, true)
+	val b: PanelStorePackBinding =
+		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, true)
 	val data = Data()
 
 	class Data {
@@ -45,11 +46,12 @@ constructor(
 		b = PanelStorePackBinding.bind(v)*/
 
 		attrs?.let {
-			val typedArray = context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
+			val typedArray =
+				context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
 
-		//	b.TVTitle.isSelected = true
-		//	b.TVSubtitle.isSelected = true
-		//	b.path.isSelected = true
+			//	b.TVTitle.isSelected = true
+			//	b.TVSubtitle.isSelected = true
+			//	b.path.isSelected = true
 			b.youtube.setOnClickListener { v: View ->
 				onEventListener?.onYoutubeClick(v)
 			}

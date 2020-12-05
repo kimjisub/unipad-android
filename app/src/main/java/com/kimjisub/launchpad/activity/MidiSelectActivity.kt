@@ -8,22 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
 import com.kimjisub.launchpad.adapter.MidiDeviceItem
-import com.kimjisub.launchpad.adapter.MidiDeviceViewHolder
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.manager.AutorunTimer
-import com.kimjisub.manager.Log
-import com.yarolegovich.discretescrollview.DiscreteScrollView
-import com.yarolegovich.discretescrollview.transform.Pivot
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 import kotlinx.android.synthetic.main.activity_midi_select.*
-import kotlin.math.abs
 
 
 class MidiSelectActivity : BaseActivity() {

@@ -29,13 +29,13 @@
 				android:layout_height="wrap_content"
 				android:orientation="horizontal">
 
-					<ImageView
-						android:id="@+id/IV_bookmark"
-						android:layout_marginLeft="16dp"
-						android:layout_width="@dimen/imgbtn"
-						android:layout_height="@dimen/imgbtn"
-						android:background="@drawable/border_icon"
-						app:imgRes="@{data.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
+				<ImageView
+					android:id="@+id/IV_bookmark"
+					android:layout_width="@dimen/imgbtn"
+					android:layout_height="@dimen/imgbtn"
+					android:layout_marginLeft="16dp"
+					android:background="@drawable/border_icon"
+					app:imgRes="@{data.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
 
 
 				<RelativeLayout

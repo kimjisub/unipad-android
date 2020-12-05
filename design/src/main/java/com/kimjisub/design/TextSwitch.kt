@@ -27,10 +27,12 @@ class TextSwitch : SwitchCompat {
 		val THUMB_LABEL_COLOR = 0xFFFFFFFF.toInt()
 		val THUMB_LABEL_SIZE = 14f.sp2Px
 
-		fun drawLabel(canvas: Canvas,
-		              bounds: Rect,
-		              paint: Paint,
-		              text: CharSequence?) {
+		fun drawLabel(
+			canvas: Canvas,
+			bounds: Rect,
+			paint: Paint,
+			text: CharSequence?
+		) {
 			text ?: return
 
 			val tb = RectF();
@@ -46,12 +48,15 @@ class TextSwitch : SwitchCompat {
 			get() = TypedValue.applyDimension(
 				TypedValue.COMPLEX_UNIT_SP,
 				this,
-				Resources.getSystem().displayMetrics)
+				Resources.getSystem().displayMetrics
+			)
 
 		private inline val Float.dp2Px
-			get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+			get() = TypedValue.applyDimension(
+				TypedValue.COMPLEX_UNIT_DIP,
 				this,
-				Resources.getSystem().displayMetrics)
+				Resources.getSystem().displayMetrics
+			)
 	}
 
 	private val trackLabelPaint = Paint().apply {
@@ -67,11 +72,15 @@ class TextSwitch : SwitchCompat {
 	}
 
 	private val thumbLabel
-		get () = if (isChecked) textOn else textOff
+		get() = if (isChecked) textOn else textOff
 
 	constructor(context: Context) : super(context)
 	constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-	constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+	constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+		context,
+		attrs,
+		defStyleAttr
+	)
 
 	init {
 		background = null
@@ -81,10 +90,12 @@ class TextSwitch : SwitchCompat {
 		isChecked = isChecked
 	}
 
-	override fun onSizeChanged(w: Int,
-	                           h: Int,
-	                           oldw: Int,
-	                           oldh: Int) {
+	override fun onSizeChanged(
+		w: Int,
+		h: Int,
+		oldw: Int,
+		oldh: Int
+	) {
 		super.onSizeChanged(w, h, oldw, oldh)
 
 		(trackDrawable as GradientDrawable).setSize(w, h)

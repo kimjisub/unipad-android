@@ -15,7 +15,7 @@
 
 	<declare-styleable name="PackView">
 		<attr name="flagColor" />
-		<attr name="toggle"/>
+		<attr name="toggle" />
 
 		<attr name="title" />
 		<attr name="subtitle" />

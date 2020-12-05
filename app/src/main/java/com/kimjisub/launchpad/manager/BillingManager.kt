@@ -95,7 +95,10 @@ class BillingManager(internal var activity: Activity) {
 	}
 
 	internal fun _onProductPurchased(productId: String, details: TransactionDetails?) {
-		if (billingEventListener != null) billingEventListener!!.onProductPurchased(productId, details)
+		if (billingEventListener != null) billingEventListener!!.onProductPurchased(
+			productId,
+			details
+		)
 	}
 
 	internal fun _onPurchaseHistoryRestored() {

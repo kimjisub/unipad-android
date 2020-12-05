@@ -17,7 +17,7 @@ class RadioButtonGroupTableLayout : TableLayout, View.OnClickListener {
 
 	private var activeRadioButton: RadioButton? = null
 
-	var onCheckedChangeListener: ((radioButton:RadioButton) -> Unit)? = null
+	var onCheckedChangeListener: ((radioButton: RadioButton) -> Unit)? = null
 
 	constructor(context: Context?) : super(context)
 

@@ -16,6 +16,7 @@ import splitties.activities.start
 
 class SplashActivity : BaseActivity() {
 	internal var billingManager: BillingManager? = null
+
 	// Timer
 	var startTime: Long? = null
 	internal var handler = Handler()

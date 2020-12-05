@@ -32,7 +32,7 @@ class AutorunTimer(val listener: OnListener, val timeout: Long) {
 	}
 
 	fun cancel() {
-		if(running){
+		if (running) {
 			running = false
 			timeoutTimer.cancel()
 			everySecTimer.cancel()
@@ -41,7 +41,7 @@ class AutorunTimer(val listener: OnListener, val timeout: Long) {
 	}
 
 	fun timeout() {
-		if(running) {
+		if (running) {
 			running = false
 			timeoutTimer.cancel()
 			everySecTimer.cancel()

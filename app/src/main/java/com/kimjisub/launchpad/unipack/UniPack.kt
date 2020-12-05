@@ -164,7 +164,8 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				else if (y < 0 || y >= buttonY) addErr(
 					"keySound : [$s] y is incorrect"
 				) else {
-					val sound = Sound(File(F_sounds!!.absolutePath + "/" + soundURL), loop, wormhole)
+					val sound =
+						Sound(File(F_sounds!!.absolutePath + "/" + soundURL), loop, wormhole)
 					if (!sound.file.isFile) {
 						addErr("keySound : [$s] sound was not found")
 						continue
@@ -245,7 +246,10 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 									}
 									_y = Integer.parseInt(split2[2]) - 1
 									if (split2.size == 4) _color =
-										Integer.parseInt(split2[3], 16) + -0x1000000 else if (split2.size == 5) {
+										Integer.parseInt(
+											split2[3],
+											16
+										) + -0x1000000 else if (split2.size == 5) {
 										if (split2[3] == "auto" || split2[3] == "a") {
 											_velo = Integer.parseInt(split2[4])
 											_color = ARGB[_velo].toInt()
@@ -279,14 +283,27 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 							continue
 						}
 						when (option) {
-							"on", "o" -> ledList.add(LedAnimation.LedEvent.On(_x, _y, _color, _velo))
+							"on", "o" -> ledList.add(
+								LedAnimation.LedEvent.On(
+									_x,
+									_y,
+									_color,
+									_velo
+								)
+							)
 							"off", "f" -> ledList.add(LedAnimation.LedEvent.Off(_x, _y))
 							"delay", "d" -> ledList.add(LedAnimation.LedEvent.Delay(_delay))
 						}
 					}
 					if (ledAnimationTable!![c][x][y] == null)
 						ledAnimationTable!![c][x][y] = ArrayList()
-					ledAnimationTable!![c][x][y]!!.add(LedAnimation(ledList, loop, ledAnimationTable!![c][x][y]!!.size))
+					ledAnimationTable!![c][x][y]!!.add(
+						LedAnimation(
+							ledList,
+							loop,
+							ledAnimationTable!![c][x][y]!!.size
+						)
+					)
 					ledTableCount++
 					reader.close()
 				} else addErr("keyLed : " + file.name + " is not file")
@@ -368,11 +385,20 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				}
 				when (option) {
 					"on", "o" -> {
-						autoPlayTable!!.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
+						autoPlayTable!!.elements.add(
+							AutoPlay.Element.On(
+								x,
+								y,
+								currChain,
+								map[x][y]
+							)
+						)
 						val sound = Sound_get(currChain, x, y, map[x][y])
 						map[x][y]++
 						if (sound != null && sound.wormhole != -1) {
-							autoPlayTable!!.elements.add(AutoPlay.Element.Chain(sound.wormhole.also { currChain = it }))
+							autoPlayTable!!.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
+								currChain = it
+							}))
 							var i = 0
 							while (i < buttonX) {
 								var j = 0
@@ -384,14 +410,29 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 							}
 						}
 					}
-					"off", "f" -> autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
+					"off", "f" -> autoPlayTable!!.elements.add(
+						AutoPlay.Element.Off(
+							x,
+							y,
+							currChain
+						)
+					)
 					"touch", "t" -> {
-						autoPlayTable!!.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
+						autoPlayTable!!.elements.add(
+							AutoPlay.Element.On(
+								x,
+								y,
+								currChain,
+								map[x][y]
+							)
+						)
 						autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
 						map[x][y]++
 					}
 					"chain", "c" -> {
-						autoPlayTable!!.elements.add(AutoPlay.Element.Chain(chain.also { currChain = it }))
+						autoPlayTable!!.elements.add(AutoPlay.Element.Chain(chain.also {
+							currChain = it
+						}))
 						var i = 0
 						while (i < buttonX) {
 							var j = 0
@@ -402,7 +443,12 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 							i++
 						}
 					}
-					"delay", "d" -> autoPlayTable!!.elements.add(AutoPlay.Element.Delay(delay, currChain))
+					"delay", "d" -> autoPlayTable!!.elements.add(
+						AutoPlay.Element.Delay(
+							delay,
+							currChain
+						)
+					)
 				}
 			}
 			reader.close()

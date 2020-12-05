@@ -16,7 +16,8 @@ class UniPackENT(
 	var created_at: Date
 ) {
 
-	override fun toString(): String = "UniPackENT(path='$path', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
+	override fun toString(): String =
+		"UniPackENT(path='$path', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
 
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true

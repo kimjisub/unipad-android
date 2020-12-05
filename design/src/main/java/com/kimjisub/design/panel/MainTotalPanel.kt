@@ -5,7 +5,8 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R.layout
@@ -31,7 +32,8 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	private val b: PanelMainTotalBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_total, this, true)
+	private val b: PanelMainTotalBinding =
+		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_total, this, true)
 	val data = Data()
 
 	class Data {
@@ -42,7 +44,7 @@ constructor(
 		val unipackCount: ObservableField<String> = ObservableField()
 		val unipackCapacity: ObservableField<String> = ObservableField()
 		val openCount: ObservableField<String> = ObservableField()
-		val themeList : ObservableField<ArrayList<String>> = ObservableField()
+		val themeList: ObservableField<ArrayList<String>> = ObservableField()
 		val selectedTheme: ObservableField<Int> = ObservableField()
 
 		val sortMethod: ObservableField<Int> = ObservableField(0) // 0~5
@@ -59,7 +61,8 @@ constructor(
 		b.data = data
 
 		attrs?.let {
-			val typedArray = context.obtainStyledAttributes(it, styleable.TotalPanel, defStyleAttr, 0)
+			val typedArray =
+				context.obtainStyledAttributes(it, styleable.TotalPanel, defStyleAttr, 0)
 
 			// code
 
@@ -76,7 +79,12 @@ constructor(
 
 		}
 
-		switch_sort_type.setOnCheckedChangeListener { _, b -> setSort(spinner_sort_method.selectedItemPosition, b) }
+		switch_sort_type.setOnCheckedChangeListener { _, b ->
+			setSort(
+				spinner_sort_method.selectedItemPosition,
+				b
+			)
+		}
 
 		data.sortMethod.addOnPropertyChanged {
 			Log.test("method changed : ${it.get()}")
@@ -97,12 +105,13 @@ constructor(
 		themeSpinner.setItem*/
 	}
 
-	private fun setSort(sortMethod: Int){
+	private fun setSort(sortMethod: Int) {
 		val defaultSortTypes = arrayOf(true, true, true, false, false)
 		val sortType = defaultSortTypes[sortMethod]
 		setSort(sortMethod, sortType)
 	}
-	private fun setSort(sortMethod: Int, sortType:Boolean){
+
+	private fun setSort(sortMethod: Int, sortType: Boolean) {
 		data.sortMethod.set(sortMethod)
 		data.sortType.set(sortType)
 		data.sort.set(sortMethod * 2 + if (sortType) 0 else 1)

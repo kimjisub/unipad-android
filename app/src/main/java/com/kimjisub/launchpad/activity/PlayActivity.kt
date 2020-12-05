@@ -58,7 +58,7 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
-	private lateinit var binding : ActivityPlayBinding
+	private lateinit var binding: ActivityPlayBinding
 
 	private var unipack: UniPack? = null
 	private var unipackLoaded = false
@@ -70,7 +70,15 @@ class PlayActivity : BaseActivity() {
 
 	private var theme: ThemeResources? = null
 
-	private val CB1s: Array<CheckBox> by lazy { arrayOf(CB1_feedbackLight, CB1_led, CB1_autoPlay, CB1_traceLog, CB1_record) }
+	private val CB1s: Array<CheckBox> by lazy {
+		arrayOf(
+			CB1_feedbackLight,
+			CB1_led,
+			CB1_autoPlay,
+			CB1_traceLog,
+			CB1_record
+		)
+	}
 	private val CB2s: Array<CheckBox> by lazy {
 		arrayOf(
 			CB2_feedbackLight,
@@ -157,7 +165,11 @@ class PlayActivity : BaseActivity() {
 			unipack = UniPack(File(path), true)
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
-					.setTitle(if (unipack!!.criticalError) getString(string.error) else getString(string.warning))
+					.setTitle(
+						if (unipack!!.criticalError) getString(string.error) else getString(
+							string.warning
+						)
+					)
 					.setMessage(unipack!!.errorDetail)
 					.setPositiveButton(
 						if (unipack!!.criticalError) getString(string.quit) else getString(string.accept),
@@ -190,7 +202,8 @@ class PlayActivity : BaseActivity() {
 		binding.themeResources = theme
 
 		if (theme != null) {
-			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object :
+				ViewTreeObserver.OnGlobalLayoutListener {
 				override fun onGlobalLayout() {
 					RL_root.viewTreeObserver.removeOnGlobalLayoutListener(this)
 					initLayout()
@@ -384,7 +397,11 @@ class PlayActivity : BaseActivity() {
 			// Setup Pads
 			for (x in 0 until unipack!!.buttonX) {
 				val row = LinearLayout(this)
-				row.layoutParams = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1F)
+				row.layoutParams = LayoutParams(
+					ViewGroup.LayoutParams.WRAP_CONTENT,
+					ViewGroup.LayoutParams.WRAP_CONTENT,
+					1F
+				)
 				for (y in 0 until unipack!!.buttonY) {
 					val view = Pad(this)
 					view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
@@ -453,15 +470,17 @@ class PlayActivity : BaseActivity() {
 
 			for (cb1 in CB1s) {
 				cb1.setTextColor(theme!!.checkbox!!)
-				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb1.buttonTintList = ColorStateList.valueOf(
-					theme!!.checkbox!!
-				)
+				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb1.buttonTintList =
+					ColorStateList.valueOf(
+						theme!!.checkbox!!
+					)
 			}
 			for (cb2 in CB2s) {
 				cb2.setTextColor(theme!!.option_window_checkbox!!)
-				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb2.buttonTintList = ColorStateList.valueOf(
-					theme!!.option_window_checkbox!!
-				)
+				if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) cb2.buttonTintList =
+					ColorStateList.valueOf(
+						theme!!.option_window_checkbox!!
+					)
 			}
 
 
@@ -523,7 +542,8 @@ class PlayActivity : BaseActivity() {
 				listener = object : AutoPlayRunner.Listener {
 					override fun onStart() {
 						runOnUiThread {
-							if (unipack!!.squareButton) autoPlayControlView.visibility = View.VISIBLE
+							if (unipack!!.squareButton) autoPlayControlView.visibility =
+								View.VISIBLE
 							autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
 							autoPlayProgressBar.progress = 0
 							autoPlay_play()
@@ -725,7 +745,11 @@ class PlayActivity : BaseActivity() {
 
 	private fun padInit() {
 		log("padInit")
-		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) padTouch(i, j, false)
+		for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) padTouch(
+			i,
+			j,
+			false
+		)
 	}
 
 	private fun chainBtnsRefresh() {
@@ -802,13 +826,15 @@ class PlayActivity : BaseActivity() {
 				setLed(i)
 			}
 		} else {
-			topBar[0] = if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
+			topBar[0] =
+				if (SCB_feedbackLight.isLocked) 0 else if (SCB_feedbackLight.isChecked()) 3 else 1
 			topBar[1] = if (SCB_led.isLocked) 0 else if (SCB_led.isChecked()) 52 else 55
 			topBar[2] = if (SCB_autoPlay.isLocked) 0 else if (SCB_autoPlay.isChecked()) 17 else 19
 			topBar[3] = 0
 			topBar[4] = if (SCB_hideUI.isLocked) 0 else if (SCB_hideUI.isChecked()) 3 else 1
 			topBar[5] = if (SCB_watermark.isLocked) 0 else if (SCB_watermark.isChecked()) 61 else 11
-			topBar[6] = if (SCB_proLightMode.isLocked) 0 else if (SCB_proLightMode.isChecked()) 40 else 43
+			topBar[6] =
+				if (SCB_proLightMode.isLocked) 0 else if (SCB_proLightMode.isChecked()) 40 else 43
 			topBar[7] = 5
 			for (i in 0..7) {
 				if (topBar[i] != 0) channelManager!!.add(
@@ -1190,7 +1216,9 @@ class PlayActivity : BaseActivity() {
 
 		traceLog_table!![chain.value][x][y].add(traceLog_nextNum!![chain.value]++)
 		U_pads!![x][y]!!.setTraceLogText("")
-		for (i in traceLog_table!![chain.value][x][y].indices) U_pads!![x][y]!!.appendTraceLog(traceLog_table!![chain.value][x][y][i].toString() + " ")
+		for (i in traceLog_table!![chain.value][x][y].indices) U_pads!![x][y]!!.appendTraceLog(
+			traceLog_table!![chain.value][x][y][i].toString() + " "
+		)
 	}
 
 	private fun traceLog_init() {
@@ -1209,7 +1237,9 @@ class PlayActivity : BaseActivity() {
 			traceLog_nextNum!![i] = 1
 		}
 		try {
-			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) U_pads!![i][j]!!.setTraceLogText("")
+			for (i in 0 until unipack!!.buttonX) for (j in 0 until unipack!!.buttonY) U_pads!![i][j]!!.setTraceLogText(
+				""
+			)
 		} catch (e: NullPointerException) {
 			e.printStackTrace()
 		}
