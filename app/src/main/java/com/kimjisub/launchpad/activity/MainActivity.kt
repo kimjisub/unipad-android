@@ -712,6 +712,7 @@ class MainActivity : BaseActivity() {
 
 		try {
 			val index = themeItemList.indexOfFirst { it.package_name == preference.selectedTheme }
+
 			P_total.data.selectedTheme.set(index)
 		} catch (e: Exception) {
 			P_total.data.selectedTheme.set(0)
