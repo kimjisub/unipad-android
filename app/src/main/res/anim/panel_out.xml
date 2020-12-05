@@ -10,8 +10,8 @@
 		android:duration="300"
 		android:fromXScale="100%p"
 		android:fromYScale="100%p"
-		android:toXScale="90%p"
 		android:pivotX="50%"
 		android:pivotY="50%"
+		android:toXScale="90%p"
 		android:toYScale="90%p" />
 </set>

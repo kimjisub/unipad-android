@@ -7,7 +7,8 @@ import android.view.View
 import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.kimjisub.design.R.*
+import com.kimjisub.design.R.layout
+import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainPackBinding
 import kotlinx.android.synthetic.main.panel_main_pack.view.*
 import java.util.*
@@ -28,7 +29,8 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	private val b: PanelMainPackBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_pack, this, true)
+	private val b: PanelMainPackBinding =
+		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_pack, this, true)
 	val data = Data()
 
 	class Data {
@@ -58,7 +60,8 @@ constructor(
 		b.data = data
 
 		attrs?.let {
-			val typedArray = context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
+			val typedArray =
+				context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
 
 			TV_title.isSelected = true
 			TV_subtitle.isSelected = true

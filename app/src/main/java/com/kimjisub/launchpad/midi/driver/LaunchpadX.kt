@@ -77,7 +77,12 @@ class LaunchpadX : DriverRef() {
 
 	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
 		if (f in 0..31)
-			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), velocity.toByte())
+			sendSignal(
+				circleCode[f][0].toByte(),
+				circleCode[f][1].toByte(),
+				circleCode[f][2].toByte(),
+				velocity.toByte()
+			)
 	}
 
 

@@ -28,7 +28,7 @@ data class UniPackItem(
 	var toggle: Boolean = false
 	var moving: Boolean = false
 
-	var togglea: ((toggle:Boolean) -> Unit)? = null
+	var togglea: ((toggle: Boolean) -> Unit)? = null
 	var playClick: (() -> Unit)? = null
 }
 
@@ -36,11 +36,13 @@ class UniPackHolder(
 	var packView: PackView
 ) : RecyclerView.ViewHolder(packView)
 
-class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener: EventListener) : Adapter<UniPackHolder>() {
+class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener: EventListener) :
+	Adapter<UniPackHolder>() {
 	var i = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UniPackHolder {
 		val packView = PackView(parent.context)
-		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+		val lp =
+			LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 		packView.layoutParams = lp
 		return UniPackHolder(packView)
 	}

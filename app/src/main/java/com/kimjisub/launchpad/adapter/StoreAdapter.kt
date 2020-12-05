@@ -25,12 +25,16 @@ class StoreHolder(val packView: PackView) : RecyclerView.ViewHolder(packView) {
 	var realPosition = -1
 }
 
-class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventListener: EventListener) : Adapter<StoreHolder>() {
+class StoreAdapter(
+	private val list: ArrayList<StoreItem>,
+	private val eventListener: EventListener
+) : Adapter<StoreHolder>() {
 	private var viewHolderCount = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoreHolder {
 		Log.test("onCreateViewHolder: " + viewHolderCount++)
 		val packView = PackView(parent.context)
-		val lp = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+		val lp =
+			LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 		packView.layoutParams = lp
 		return StoreHolder(packView)
 	}
@@ -54,8 +58,10 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 		////////////////////////////////////////////////////////////////////////////////////////////////
 		packView.apply {
 			animate = false
-			toggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
-			untoggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
+			toggleColor =
+				ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
+			untoggleColor =
+				ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 			title = item.storeVO.title!!
 			subtitle = item.storeVO.producerName!!
 			option1Name = context.getString(string.led).toUpperCase() + " ●"
@@ -97,8 +103,14 @@ class StoreAdapter(private val list: ArrayList<StoreItem>, private val eventList
 					"update" -> {
 						Log.test("update")
 						packView.apply {
-							toggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
-							untoggleColor = ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
+							toggleColor = ContextCompat.getColor(
+								context,
+								if (item.downloaded) color.green else color.red
+							)
+							untoggleColor = ContextCompat.getColor(
+								context,
+								if (item.downloaded) color.green else color.red
+							)
 							title = item.storeVO.title!!
 							subtitle = item.storeVO.producerName!!
 							option1 = item.storeVO.isLED

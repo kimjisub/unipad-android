@@ -28,7 +28,10 @@ class PreferenceManager(
 	var fileExplorerPath: String
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			var url: String = pref.getString(fileExplorerPathTag, "${System.getenv("SECONDARY_STORAGE")}/Download") ?: ""
+			var url: String = pref.getString(
+				fileExplorerPathTag,
+				"${System.getenv("SECONDARY_STORAGE")}/Download"
+			) ?: ""
 			if (!File(url).isDirectory) url = Environment.getExternalStorageDirectory().path
 			if (!File(url).isDirectory) url = "/"
 			return url
@@ -55,7 +58,8 @@ class PreferenceManager(
 	var selectedTheme: String
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getString(selectedThemeTag, "com.kimjisub.launchpad") ?: "com.kimjisub.launchpad"
+			return pref.getString(selectedThemeTag, "com.kimjisub.launchpad")
+				?: "com.kimjisub.launchpad"
 		}
 		set(value) {
 			context.getSharedPreferences(name, MODE_PRIVATE).edit {

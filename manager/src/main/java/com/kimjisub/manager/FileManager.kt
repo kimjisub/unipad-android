@@ -119,7 +119,8 @@ object FileManager {
 		val newName = filterFilename(name)
 		var i = 1
 		while (true) {
-			ret = if (i == 1) File(dir, newName + extension) else File(dir, "$newName ($i)$extension")
+			ret =
+				if (i == 1) File(dir, newName + extension) else File(dir, "$newName ($i)$extension")
 			if (!ret.exists()) break
 			i++
 		}
@@ -217,7 +218,7 @@ object FileManager {
 	}
 
 	@SuppressLint("DefaultLocale")
-	fun byteToMB(b: Long, format:String="%.2f"): String {
+	fun byteToMB(b: Long, format: String = "%.2f"): String {
 		return String.format(format, b.toFloat() / 1024 / 1024)
 	}
 

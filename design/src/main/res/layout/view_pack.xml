@@ -12,16 +12,16 @@
 			android:layout_width="30dp"
 			android:layout_height="27dp"
 			android:layout_marginLeft="10dp"
-			android:visibility="invisible"
 			android:layout_marginTop="3dp"
+			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_bookmark_clip_back" />
 
 		<RelativeLayout
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			android:gravity="center"
 			android:paddingLeft="16dp"
-			android:paddingRight="16dp"
-			android:gravity="center">
+			android:paddingRight="16dp">
 
 			<RelativeLayout
 				android:layout_width="150dp"
@@ -169,9 +169,9 @@
 			android:id="@+id/IV_bookmark_front"
 			android:layout_width="30dp"
 			android:layout_height="27dp"
-			android:visibility="invisible"
 			android:layout_marginLeft="10dp"
 			android:layout_marginTop="3dp"
+			android:visibility="invisible"
 			app:srcCompat="@drawable/ic_bookmark_clip_front" />
 
 	</RelativeLayout>

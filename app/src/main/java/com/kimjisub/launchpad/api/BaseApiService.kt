@@ -28,10 +28,16 @@ open class BaseApiService {
 
 				val trustAllCerts = arrayOf<TrustManager>(
 					object : X509TrustManager {
-						override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+						override fun checkClientTrusted(
+							chain: Array<out X509Certificate>?,
+							authType: String?
+						) {
 						}
 
-						override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+						override fun checkServerTrusted(
+							chain: Array<out X509Certificate>?,
+							authType: String?
+						) {
 						}
 
 						override fun getAcceptedIssuers(): Array<out X509Certificate>? {
@@ -50,17 +56,23 @@ open class BaseApiService {
 
 		val gson: Gson?
 			get() {
-				return GsonBuilder().registerTypeAdapter(Date::class.java, object : JsonDeserializer<Date?> {
-					@Throws(JsonParseException::class)
-					override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Date? {
-						return try {
-							df.parse(json.asString)
-						} catch (e: ParseException) {
-							e.printStackTrace()
-							null
+				return GsonBuilder().registerTypeAdapter(
+					Date::class.java,
+					object : JsonDeserializer<Date?> {
+						@Throws(JsonParseException::class)
+						override fun deserialize(
+							json: JsonElement,
+							typeOfT: Type?,
+							context: JsonDeserializationContext?
+						): Date? {
+							return try {
+								df.parse(json.asString)
+							} catch (e: ParseException) {
+								e.printStackTrace()
+								null
+							}
 						}
-					}
-				}).create()
+					}).create()
 			}
 
 	}

@@ -144,7 +144,7 @@ class LedRunner(
 					e.remove = true
 				}
 			}
-			for(item in ledAnimationStatesAdd)
+			for (item in ledAnimationStatesAdd)
 				ledAnimationStates.add(item)
 			ledAnimationStatesAdd.clear()
 			ledAnimationStates =

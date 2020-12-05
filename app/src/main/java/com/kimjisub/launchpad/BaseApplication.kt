@@ -39,7 +39,7 @@ class BaseApplication : Application() {
 
 		val configSettings = FirebaseRemoteConfigSettings.Builder().apply {
 			if (BuildConfig.DEBUG)
-				setMinimumFetchIntervalInSeconds(60)
+				minimumFetchIntervalInSeconds = 60
 		}.build()
 
 		remoteConfig.setConfigSettingsAsync(configSettings)

@@ -33,10 +33,10 @@
 		<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
+			android:layout_marginLeft="8dp"
 			android:text="@{value}"
 			android:textColor="@color/wb5"
 			android:textSize="@dimen/text_small"
-			android:layout_marginLeft="8dp"
 			tool:text="Value" />
 
 	</LinearLayout>

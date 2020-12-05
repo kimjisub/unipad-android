@@ -11,6 +11,7 @@ object Functions {
 		val clip: ClipData = ClipData.newPlainText("UniPad", text)
 		clipboard.setPrimaryClip(clip)
 	}
+
 	fun putClipboard(context: Context, text: String) {
 		val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 		val clip: ClipData = ClipData.newPlainText("UniPad", text)

@@ -87,7 +87,8 @@ class PackView : RelativeLayout {
 	}
 
 	private fun getAttrs(attrs: AttributeSet, defStyle: Int) {
-		val typedArray: TypedArray = context.obtainStyledAttributes(attrs, styleable.PackView, defStyle, 0)
+		val typedArray: TypedArray =
+			context.obtainStyledAttributes(attrs, styleable.PackView, defStyle, 0)
 		setTypeArray(typedArray)
 	}
 
@@ -175,10 +176,10 @@ class PackView : RelativeLayout {
 		}
 
 	var bookmark: Boolean = false
-		set(value){
+		set(value) {
 			field = value
-			IV_bookmark_front.visibility = if(field) View.VISIBLE else View.INVISIBLE
-			IV_bookmark_back.visibility = if(field) View.VISIBLE else View.INVISIBLE
+			IV_bookmark_front.visibility = if (field) View.VISIBLE else View.INVISIBLE
+			IV_bookmark_back.visibility = if (field) View.VISIBLE else View.INVISIBLE
 		}
 
 
@@ -198,7 +199,8 @@ class PackView : RelativeLayout {
 		if (animate) {
 			val colorPrev = flagColor
 
-			val flagBackground = ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
+			val flagBackground =
+				ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
 			flagAnimator = ObjectAnimator.ofObject(ArgbEvaluator(), colorPrev, colorNext)
 			flagAnimator?.duration = 500
 			flagAnimator?.addUpdateListener { valueAnimator: ValueAnimator ->
@@ -208,7 +210,8 @@ class PackView : RelativeLayout {
 			}
 			flagAnimator?.start()
 		} else {
-			val flagBackground = ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
+			val flagBackground =
+				ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
 			flagColor = colorNext
 			flagBackground.setColor(colorNext)
 			RL_flag!!.background = flagBackground
@@ -235,7 +238,6 @@ class PackView : RelativeLayout {
 			RL_flagSize.layoutParams = params
 		}
 	}
-
 
 
 	//============================================================================================== Toggle

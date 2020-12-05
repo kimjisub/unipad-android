@@ -25,11 +25,13 @@ constructor(
 		defStyleRes: Int)
 			: super(context, attrs, defStyleAttr, defStyleRes)*/
 
-	private val b: ViewMidiItemBinding = DataBindingUtil.inflate(LayoutInflater.from(context), layout.view_midi_item, this, true)
+	private val b: ViewMidiItemBinding =
+		DataBindingUtil.inflate(LayoutInflater.from(context), layout.view_midi_item, this, true)
 
 	init {
 		attrs?.let {
-			val typedArray = context.obtainStyledAttributes(it, styleable.MidiItemView, defStyleAttr, 0)
+			val typedArray =
+				context.obtainStyledAttributes(it, styleable.MidiItemView, defStyleAttr, 0)
 
 			b.title = typedArray.getString(styleable.MidiItemView_title)
 			b.subscription = typedArray.getString(styleable.MidiItemView_subscription)

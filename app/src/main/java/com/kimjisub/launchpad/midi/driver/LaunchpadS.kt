@@ -51,7 +51,12 @@ class LaunchpadS : DriverRef() {
 
 	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
 		if (f in 0..15)
-			sendSignal(circleCode[f][0].toByte(), circleCode[f][1].toByte(), circleCode[f][2].toByte(), LaunchpadColor.SCode[velocity].toByte())
+			sendSignal(
+				circleCode[f][0].toByte(),
+				circleCode[f][1].toByte(),
+				circleCode[f][2].toByte(),
+				LaunchpadColor.SCode[velocity].toByte()
+			)
 	}
 
 	override fun sendClearLed() {

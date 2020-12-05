@@ -58,7 +58,13 @@ class UniPackInstaller(
 				val responseBody = call.execute().body()!!
 				val contentLength = responseBody.contentLength()
 				val fileSize = contentLength.coerceAtLeast(preKnownFileSize)
-				withContext(Dispatchers.Main) { onGetFileSize(fileSize, contentLength, preKnownFileSize) }
+				withContext(Dispatchers.Main) {
+					onGetFileSize(
+						fileSize,
+						contentLength,
+						preKnownFileSize
+					)
+				}
 
 				val inputStream = responseBody.byteStream()
 				val outputStream = FileOutputStream(zip)
@@ -77,12 +83,30 @@ class UniPackInstaller(
 					val millis = System.currentTimeMillis()
 					if (millis - prevMillis > 20) {
 						val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-						Log.test("${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB")
-						withContext(Dispatchers.Main) { onDownloadProgress(percent, downloadedSize, fileSize) }
+						Log.test(
+							"${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${
+								FileManager.byteToMB(
+									fileSize
+								)
+							} MB"
+						)
+						withContext(Dispatchers.Main) {
+							onDownloadProgress(
+								percent,
+								downloadedSize,
+								fileSize
+							)
+						}
 						prevMillis = millis
 
 						if (prevPercent != percent) {
-							withContext(Dispatchers.Main) { onDownloadProgressPercent(percent, downloadedSize, fileSize) }
+							withContext(Dispatchers.Main) {
+								onDownloadProgressPercent(
+									percent,
+									downloadedSize,
+									fileSize
+								)
+							}
 							prevPercent = percent
 						}
 					}
@@ -134,7 +158,13 @@ class UniPackInstaller(
 	private fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
 		notificationBuilder.apply {
 			setContentTitle(title)
-			setContentText("${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB")
+			setContentText(
+				"${FileManager.byteToMB(downloadedSize)} / ${
+					FileManager.byteToMB(
+						fileSize
+					)
+				} MB"
+			)
 			setProgress(100, percent, false)
 			setOngoing(true)
 		}

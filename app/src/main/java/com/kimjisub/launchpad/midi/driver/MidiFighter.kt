@@ -1,7 +1,8 @@
 package com.kimjisub.launchpad.midi.driver
 
 class MidiFighter : DriverRef() {
-	companion object {}
+	companion object;
+
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		val x: Int
 		val y: Int
@@ -34,7 +35,12 @@ class MidiFighter : DriverRef() {
 		x += 1
 		y += 1
 		if (y in 1..4)
-			sendSignal(9, -110, -4 * x + y + 67, velocity) else if (y in 5..8) sendSignal(9, -110, -4 * x + y + 95, velocity)
+			sendSignal(9, -110, -4 * x + y + 67, velocity) else if (y in 5..8) sendSignal(
+			9,
+			-110,
+			-4 * x + y + 95,
+			velocity
+		)
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {}
