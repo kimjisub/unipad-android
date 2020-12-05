@@ -61,6 +61,7 @@
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:entries="@{data.themeList}"
+					android:selectedItemPosition="@{data.selectedTheme}"
 					android:theme="@style/UniPadSpinner" />
 
 				<LinearLayout
@@ -184,28 +185,28 @@
 				</LinearLayout>
 
 				<LinearLayout
-					android:layout_gravity="center_vertical"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:layout_gravity="center_vertical"
 					android:gravity="center"
 					android:orientation="horizontal">
 
 					<androidx.appcompat.widget.AppCompatSpinner
+						android:id="@+id/spinner_sort_method"
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
-						android:theme="@style/UniPadSpinner"
-						android:id="@+id/spinner_sort_method"
+						android:entries="@array/packSortMethod"
 						android:selectedItemPosition="@{data.sortMethod}"
-						android:entries="@array/packSortMethod" />
+						android:theme="@style/UniPadSpinner" />
 
 					<com.kimjisub.design.TextSwitch
+						android:id="@+id/switch_sort_type"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:checked="@{data.sortType}"
 						android:textOff="asc"
 						android:textOn="desc"
-						android:id="@+id/switch_sort_type"
-						android:checked="@{data.sortType}"
-						app:switchMinWidth="100dp"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"/>
+						app:switchMinWidth="100dp" />
 
 				</LinearLayout>
 
