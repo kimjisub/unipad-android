@@ -96,7 +96,8 @@ object FileManager {
 		Arrays.sort(
 			files,
 			Comparator { object1: Any, object2: Any ->
-				(object1 as File).name.toLowerCase().compareTo((object2 as File).name.toLowerCase())
+				(object1 as File).name.toLowerCase(Locale.getDefault())
+					.compareTo((object2 as File).name.toLowerCase(Locale.getDefault()))
 			} as Comparator<Any>
 		)
 		return files

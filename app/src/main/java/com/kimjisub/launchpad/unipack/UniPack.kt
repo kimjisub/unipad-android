@@ -14,6 +14,8 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class UniPack(val F_project: File, val loadDetail: Boolean) {
@@ -68,7 +70,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 
 	private fun checkFile() {
 		for (item in F_project.listFiles()) {
-			when (item.name.toLowerCase()) {
+			when (item.name.toLowerCase(Locale.getDefault())) {
 				"info" -> F_info = if (item.isFile) item else null
 				"sounds" -> F_sounds = if (item.isDirectory) item else null
 				"keysound" -> F_keySound = if (item.isFile) item else null

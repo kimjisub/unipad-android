@@ -64,9 +64,9 @@ class StoreAdapter(
 				ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 			title = item.storeVO.title!!
 			subtitle = item.storeVO.producerName!!
-			option1Name = context.getString(string.led).toUpperCase() + " ●"
+			option1Name = context.getString(string.led).toUpperCase(Locale.getDefault()) + " ●"
 			option1 = item.storeVO.isLED
-			option2Name = context.getString(string.autoPlay).toUpperCase() + " ●"
+			option2Name = context.getString(string.autoPlay).toUpperCase(Locale.getDefault()) + " ●"
 			option2 = item.storeVO.isAutoPlay
 			showPlayImage(false)
 			setPlayText(context.getString(if (item.downloaded) string.downloaded else string.download))
