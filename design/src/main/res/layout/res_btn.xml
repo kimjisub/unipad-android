@@ -8,6 +8,7 @@
 		android:id="@+id/btn"
 		android:layout_width="wrap_content"
 		android:layout_height="match_parent"
+		android:layout_marginEnd="5dp"
 		android:layout_marginRight="5dp"
 		android:background="@drawable/border_all_round"
 		android:gravity="center"

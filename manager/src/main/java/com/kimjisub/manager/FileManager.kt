@@ -11,7 +11,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 object FileManager {
-	@Throws(IOException::class)
 	fun unZipFile(zipFileURL: String?, location: String) {
 		var location = location
 		val zipFile: InputStream = FileInputStream(zipFileURL)
