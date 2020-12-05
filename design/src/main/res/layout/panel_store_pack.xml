@@ -41,6 +41,7 @@
 					android:id="@+id/IV_bookmark"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
+					android:layout_toEndOf="@id/IV_star"
 					android:layout_toRightOf="@id/IV_star"
 					android:background="@drawable/border_icon"
 					android:padding="4dp" />
@@ -49,6 +50,7 @@
 					android:id="@+id/IV_edit"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
+					android:layout_alignParentEnd="true"
 					android:layout_alignParentRight="true"
 					android:background="@drawable/border_icon"
 					android:padding="4dp"
@@ -103,7 +105,7 @@
 						<LinearLayout
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:gravity="right"
+							android:gravity="end"
 							android:orientation="vertical">
 
 							<TextView
@@ -116,8 +118,9 @@
 						<LinearLayout
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
-							android:gravity="left"
+							android:gravity="start"
 							android:orientation="vertical"
+							android:paddingStart="32dp"
 							android:paddingLeft="32dp">
 
 							<TextView
@@ -145,6 +148,7 @@
 						<LinearLayout
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
+							android:layout_alignParentStart="true"
 							android:layout_alignParentLeft="true"
 							android:orientation="horizontal">
 

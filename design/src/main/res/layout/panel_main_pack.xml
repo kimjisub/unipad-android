@@ -33,6 +33,7 @@
 					android:id="@+id/IV_bookmark"
 					android:layout_width="@dimen/imgbtn"
 					android:layout_height="@dimen/imgbtn"
+					android:layout_marginStart="16dp"
 					android:layout_marginLeft="16dp"
 					android:background="@drawable/border_icon"
 					app:imgRes="@{data.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
@@ -321,6 +322,7 @@
 						<TextView
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
+							android:layout_marginStart="4dp"
 							android:layout_marginLeft="4dp"
 							android:text="@{data.fileSize}"
 							android:textSize="@dimen/text_small"

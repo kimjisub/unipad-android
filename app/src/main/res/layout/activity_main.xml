@@ -17,7 +17,6 @@
 				android:layout_width="0dp"
 				android:layout_height="match_parent"
 				android:layout_marginStart="16dp"
-				android:layout_marginLeft="16dp"
 				android:layout_marginTop="16dp"
 				android:layout_marginBottom="16dp"
 				android:layout_weight="2">
@@ -70,8 +69,8 @@
 						android:layout_width="100dp"
 						android:layout_height="100dp"
 						android:contentDescription="@string/unipackNotFound"
-						app:tint="@color/white"
-						app:srcCompat="@drawable/ic_error_outline_24dp" />
+						app:srcCompat="@drawable/ic_error_outline_24dp"
+						app:tint="@color/white" />
 
 					<TextView
 						android:layout_width="wrap_content"
@@ -95,7 +94,6 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentEnd="true"
-			android:layout_alignParentRight="true"
 			android:layout_alignParentBottom="true"
 			android:layout_margin="10dp"
 			app:layout_constraintBottom_toBottomOf="parent"
