@@ -22,7 +22,7 @@
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentTop="true"
 				android:alpha="0.5"
-				android:textColor="@color/ugray1"
+				android:textColor="@color/gray1"
 				android:textSize="10dp" />
 
 			<ScrollView
@@ -42,7 +42,7 @@
 						android:layout_height="wrap_content"
 						android:layout_gravity="center"
 						android:text="@string/wait_a_sec"
-						android:textColor="@color/ugray1"
+						android:textColor="@color/gray1"
 						android:textSize="25dp" />
 
 					<TextView
@@ -51,7 +51,7 @@
 						android:layout_height="wrap_content"
 						android:layout_gravity="center"
 						android:gravity="center"
-						android:textColor="@color/ugray1"
+						android:textColor="@color/gray1"
 						android:textSize="18dp" />
 
 				</LinearLayout>

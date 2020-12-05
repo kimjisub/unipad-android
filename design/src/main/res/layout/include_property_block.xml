@@ -59,7 +59,7 @@
 					android:layout_height="36dp"
 					android:padding="4dp"
 					android:src="@{icon}"
-					android:tint="@color/wb2" />
+					app:tint="@color/wb2" />
 
 				<TextView
 					android:layout_width="wrap_content"

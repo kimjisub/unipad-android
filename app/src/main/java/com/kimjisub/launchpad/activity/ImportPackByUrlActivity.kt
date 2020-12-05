@@ -34,7 +34,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 		TV_title.setText(string.wait_a_sec)
 		TV_message.text = identifyCode
-		service.unishare_get(code)!!.enqueue(object : Callback<UnishareVO?> {
+		service.getUnishare(code)!!.enqueue(object : Callback<UnishareVO?> {
 			override fun onResponse(call: Call<UnishareVO?>, response: Response<UnishareVO?>) {
 				if (response.isSuccessful) {
 					val unishare = response.body()!!

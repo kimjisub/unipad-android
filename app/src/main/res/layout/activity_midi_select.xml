@@ -23,7 +23,7 @@
 				android:layout_marginBottom="10dp"
 				android:gravity="center"
 				android:text="@string/launchpadConnecting"
-				android:textColor="@color/ugray1"
+				android:textColor="@color/gray1"
 				android:textSize="30dp" />
 
 			<TextView
@@ -33,7 +33,7 @@
 				android:layout_gravity="center_horizontal"
 				android:layout_marginBottom="10dp"
 				android:gravity="center"
-				android:textColor="@color/ugray1"
+				android:textColor="@color/gray1"
 				android:textSize="30dp"
 				tool:text="5" />
 
@@ -70,7 +70,7 @@
 					android:gravity="center"
 					android:padding="10dp"
 					android:text="@string/signal_SpeedFirst"
-					android:textColor="@color/ugray1"
+					android:textColor="@color/gray1"
 					android:textSize="15dp" />
 
 
@@ -91,7 +91,7 @@
 					android:gravity="center"
 					android:padding="10dp"
 					android:text="@string/signal_avoidAfterimage"
-					android:textColor="@color/ugray1"
+					android:textColor="@color/gray1"
 					android:textSize="15dp" />
 
 
@@ -115,7 +115,7 @@
 				android:layout_marginBottom="10dp"
 				android:gravity="center"
 				android:text="@string/midiDevicesNotDetected"
-				android:textColor="@color/ugray1"
+				android:textColor="@color/gray1"
 				android:textSize="30dp" />
 		</RelativeLayout>
 
@@ -127,7 +127,7 @@
 			android:layout_alignParentStart="true"
 			android:layout_alignParentLeft="true"
 			android:layout_alignParentTop="true"
-			android:textColor="@color/ugray1"
+			android:textColor="@color/gray1"
 			android:textSize="10dp"
 			tool:text="Log\nLog" />
 

@@ -44,13 +44,13 @@ class UniPadApi : BaseApiService() {
 			// unishare /////////////////////////////////////////////////////////////////////////////////////////
 
 			@GET("/unishare")
-			fun unishare_list(): Call<List<UnishareVO?>?>?
+			fun getUnishares(): Call<List<UnishareVO?>?>?
 
 			@POST("/unishare")
-			fun unishare_make(@Body item: UnishareVO?): Call<UnishareVO?>?
+			fun createUnishare(@Body item: UnishareVO?): Call<UnishareVO?>?
 
 			@GET("/unishare/{code}")
-			fun unishare_get(@Path("code") code: String?): Call<UnishareVO?>?
+			fun getUnishare(@Path("code") code: String?): Call<UnishareVO?>?
 		}
 	}
 }

@@ -2,12 +2,13 @@
 <resources>
 	<!--normal-->
 	<color name="background1">#161e2b</color>
-	<color name="ugray1">#a6b4c9</color>
 	<color name="background2">#414F66</color>
-	<color name="ugray2">#808A99</color>
+	<color name="gray1">#a6b4c9</color>
+	<color name="gray2">#808A99</color>
+	<color name="gray3">#f5f5f5</color>
 	<color name="white">#FFFFFF</color>
-	<color name="ugray3">#f5f5f5</color>
 
+	<!--wb-->
 	<color name="wb0">#FFFFFF</color>
 	<color name="wb1">#f5f5f5</color>
 	<color name="wb2">#9E9E9E</color>
@@ -31,10 +32,15 @@
 
 	<!--color-->
 	<color name="skyblue">#00bcda</color>
+	<color name="blue">#4283e6</color>
 	<color name="green">#66bb6a</color>
 	<color name="orange">#ffa726</color>
 	<color name="red">#ff6b4e</color>
 	<color name="pink">#ffa5a5</color>
+
+	<!--ect-->
+	<color name="border_icon_on_background">#ccc</color>
+	<color name="popup_background">#3000</color>
 
 	<!--app color-->
 	<color name="app_orange">#ff8f00</color>

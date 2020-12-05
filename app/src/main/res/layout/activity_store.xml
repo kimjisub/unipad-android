@@ -51,7 +51,7 @@
 						android:orientation="vertical"
 						android:paddingTop="16dp"
 						android:paddingBottom="6dp"
-						android:scrollbarThumbVertical="@color/ugray2" />
+						android:scrollbarThumbVertical="@color/gray2" />
 
 				</androidx.core.widget.NestedScrollView>
 
@@ -66,7 +66,7 @@
 					<ImageView
 						android:layout_width="100dp"
 						android:layout_height="100dp"
-						android:tint="@color/white"
+						app:tint="@color/white"
 						app:srcCompat="@drawable/ic_error_outline_24dp" />
 
 					<TextView
@@ -81,7 +81,7 @@
 						android:layout_height="wrap_content"
 						android:layout_gravity="center_horizontal"
 						android:text="@string/UnableToAccessServer"
-						android:textColor="@color/ugray1" />
+						android:textColor="@color/gray1" />
 				</LinearLayout>
 
 			</RelativeLayout>
