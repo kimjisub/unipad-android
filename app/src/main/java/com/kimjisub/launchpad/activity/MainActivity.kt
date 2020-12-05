@@ -71,7 +71,6 @@ import splitties.alertdialog.okButton
 import splitties.alertdialog.title
 import splitties.snackbar.action
 import splitties.snackbar.longSnack
-import splitties.snackbar.snack
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -719,10 +718,12 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val fileSize =
-					FileManager.byteToMB(FileManager.getFolderSize(F_UniPackRootExt), "%.0f")
+				val size = FileManager.getFolderSize(F_UniPackRootExt) + FileManager.getFolderSize(
+					F_UniPackRootInt
+				)
+
 				withContext(Dispatchers.Main) {
-					P_total.data.unipackCapacity.set(fileSize)
+					P_total.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
 				}
 			}
 	}
