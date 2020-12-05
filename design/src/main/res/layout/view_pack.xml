@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<RelativeLayout
 		android:layout_width="match_parent"
@@ -105,9 +106,9 @@
 								android:layout_height="wrap_content"
 								android:ellipsize="end"
 								android:maxLines="1"
-								android:text="Title"
 								android:textColor="@color/title"
-								android:textSize="15dp" />
+								android:textSize="15dp"
+								tools:text="Title" />
 
 							<TextView
 								android:id="@+id/TV_subtitle"
@@ -116,9 +117,9 @@
 								android:layout_marginTop="3dp"
 								android:ellipsize="end"
 								android:maxLines="1"
-								android:text="Producer"
 								android:textColor="@color/subtitle"
-								android:textSize="10dp" />
+								android:textSize="10dp"
+								tools:text="Producer" />
 
 						</LinearLayout>
 					</LinearLayout>

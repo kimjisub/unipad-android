@@ -7,5 +7,4 @@
 	<dimen name="text_small">10sp</dimen>
 
 	<dimen name="imgbtn">40dp</dimen>
-	<dimen name="imgbtn_small">30dp</dimen>
 </resources>

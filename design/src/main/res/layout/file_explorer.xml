@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -14,7 +15,7 @@
 			android:paddingTop="20dp"
 			android:paddingRight="20dp"
 			android:paddingBottom="15dp"
-			android:text="path/path/path"
+			tools:text="path/path/path"
 			android:textColor="#DD000000"
 			android:textSize="15dp" />
 

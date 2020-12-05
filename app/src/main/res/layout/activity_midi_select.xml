@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tool="http://schemas.android.com/tools">
+	xmlns:tools="http://schemas.android.com/toolss">
 
 	<RelativeLayout
 		android:layout_width="match_parent"
@@ -35,7 +35,7 @@
 				android:gravity="center"
 				android:textColor="@color/gray1"
 				android:textSize="30dp"
-				tool:text="5" />
+				tools:text="5" />
 
 			<com.yarolegovich.discretescrollview.DiscreteScrollView
 				android:id="@+id/picker"
@@ -127,7 +127,7 @@
 			android:layout_alignParentTop="true"
 			android:textColor="@color/gray1"
 			android:textSize="10dp"
-			tool:text="Log\nLog" />
+			tools:text="Log\nLog" />
 
 	</RelativeLayout>
 </layout>

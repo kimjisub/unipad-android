@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tool="http://schemas.android.com/tools">
+	xmlns:tools="http://schemas.android.com/tools">
 
 	<data>
 
@@ -15,230 +15,256 @@
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:clickable="true"
-		android:focusable="true">
+		android:background="@drawable/border_panel_pack"
+		android:orientation="vertical">
 
 		<LinearLayout
 			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal">
+
+			<ImageView
+				android:id="@+id/IV_bookmark"
+				android:layout_width="@dimen/imgbtn"
+				android:layout_height="@dimen/imgbtn"
+				android:layout_marginStart="16dp"
+				android:layout_marginLeft="16dp"
+				android:background="@drawable/border_icon"
+				app:imgRes="@{data.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
+
+
+			<RelativeLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:paddingLeft="8dp"
+				android:paddingTop="8dp"
+				android:paddingRight="8dp">
+
+
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignParentEnd="true"
+					android:layout_alignParentRight="true">
+
+					<ImageView
+						android:id="@+id/IV_edit"
+						android:layout_width="@dimen/imgbtn"
+						android:layout_height="@dimen/imgbtn"
+						android:background="@drawable/border_icon"
+						android:padding="4dp"
+						android:visibility="gone"
+						app:srcCompat="@drawable/ic_edit_24dp" />
+
+					<ImageView
+						android:id="@+id/IV_storage"
+						android:layout_width="@dimen/imgbtn"
+						android:layout_height="@dimen/imgbtn"
+						android:background="@drawable/border_icon"
+						android:clickable="@{!data.moving}"
+						android:padding="4dp"
+						app:imgRes="@{data.moving ? @drawable/ic_copy_24dp : (data.storage? @drawable/ic_public_24dp: @drawable/ic_lock_24dp)}" />
+
+
+					<ImageView
+						android:id="@+id/IV_func"
+						android:layout_width="@dimen/imgbtn"
+						android:layout_height="@dimen/imgbtn"
+						android:background="@drawable/border_icon"
+						android:padding="4dp"
+						app:srcCompat="@drawable/ic_edit_24dp" />
+
+					<ImageView
+						android:id="@+id/IV_delete"
+						android:layout_width="@dimen/imgbtn"
+						android:layout_height="@dimen/imgbtn"
+						android:background="@drawable/border_icon"
+						android:padding="4dp"
+						app:srcCompat="@drawable/ic_delete_24dp" />
+				</LinearLayout>
+
+			</RelativeLayout>
+
+		</LinearLayout>
+
+		<RelativeLayout
+			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:background="@drawable/border_panel_pack"
-			android:orientation="vertical">
+			android:paddingLeft="16dp"
+			android:paddingRight="16dp"
+			android:paddingBottom="16dp">
 
 			<LinearLayout
 				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:orientation="horizontal">
-
-				<ImageView
-					android:id="@+id/IV_bookmark"
-					android:layout_width="@dimen/imgbtn"
-					android:layout_height="@dimen/imgbtn"
-					android:layout_marginStart="16dp"
-					android:layout_marginLeft="16dp"
-					android:background="@drawable/border_icon"
-					app:imgRes="@{data.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
-
-
-				<RelativeLayout
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:paddingLeft="8dp"
-					android:paddingTop="8dp"
-					android:paddingRight="8dp">
-
-
-					<LinearLayout
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_alignParentEnd="true"
-						android:layout_alignParentRight="true">
-
-						<ImageView
-							android:id="@+id/IV_edit"
-							android:layout_width="@dimen/imgbtn"
-							android:layout_height="@dimen/imgbtn"
-							android:background="@drawable/border_icon"
-							android:padding="4dp"
-							android:visibility="gone"
-							app:srcCompat="@drawable/ic_edit_24dp" />
-
-						<ImageView
-							android:id="@+id/IV_storage"
-							android:layout_width="@dimen/imgbtn"
-							android:layout_height="@dimen/imgbtn"
-							android:background="@drawable/border_icon"
-							android:clickable="@{!data.moving}"
-							android:padding="4dp"
-							app:imgRes="@{data.moving ? @drawable/ic_copy_24dp : (data.storage? @drawable/ic_public_24dp: @drawable/ic_lock_24dp)}" />
-
-
-						<ImageView
-							android:id="@+id/IV_func"
-							android:layout_width="@dimen/imgbtn"
-							android:layout_height="@dimen/imgbtn"
-							android:background="@drawable/border_icon"
-							android:padding="4dp"
-							app:srcCompat="@drawable/ic_edit_24dp" />
-
-						<ImageView
-							android:id="@+id/IV_delete"
-							android:layout_width="@dimen/imgbtn"
-							android:layout_height="@dimen/imgbtn"
-							android:background="@drawable/border_icon"
-							android:padding="4dp"
-							app:srcCompat="@drawable/ic_delete_24dp" />
-					</LinearLayout>
-
-				</RelativeLayout>
-
-			</LinearLayout>
-
-			<RelativeLayout
-				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:paddingLeft="16dp"
-				android:paddingRight="16dp"
-				android:paddingBottom="16dp">
+				android:orientation="vertical">
+
+				<TextView
+					android:id="@+id/TV_title"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:ellipsize="marquee"
+					android:focusable="true"
+					android:marqueeRepeatLimit="marquee_forever"
+					android:singleLine="true"
+					android:text="@{data.title}"
+					android:textSize="@dimen/text_big"
+					tools:text="Title" />
 
 				<LinearLayout
 					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:orientation="vertical">
+					android:layout_height="wrap_content"
+					android:orientation="horizontal">
 
 					<TextView
-						android:id="@+id/TV_title"
-						android:layout_width="match_parent"
+						android:id="@+id/TV_subtitle"
+						android:layout_width="0dp"
 						android:layout_height="wrap_content"
+						android:layout_weight="1"
 						android:ellipsize="marquee"
 						android:focusable="true"
 						android:marqueeRepeatLimit="marquee_forever"
 						android:singleLine="true"
-						android:text="@{data.title}"
-						android:textSize="@dimen/text_big"
-						tool:text="Title" />
+						android:text="@{data.subtitle}"
+						android:textSize="@dimen/text"
+						tools:text="Subtitle" />
+
+					<ImageView
+						android:id="@+id/IV_youtube"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:background="@drawable/border_icon"
+						app:srcCompat="@drawable/ic_youtube_24dp" />
+
+					<ImageView
+						android:id="@+id/IV_website"
+						android:layout_width="wrap_content"
+						android:layout_height="match_parent"
+						android:background="@drawable/border_icon"
+						android:visibility="@{data.websiteExist ? View.VISIBLE : View.GONE}"
+						app:srcCompat="@drawable/ic_web_24dp" />
+				</LinearLayout>
+
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="8dp"
+					android:gravity="center"
+					android:orientation="horizontal">
+
+					<include
+						layout="@layout/include_property_verticle"
+						app:title="@{@string/MPT_playCount}"
+						app:value="@{data.playCount}" />
 
 					<LinearLayout
-						android:layout_width="match_parent"
+						android:layout_width="0dp"
 						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:gravity="end"
 						android:orientation="horizontal">
 
-						<TextView
-							android:id="@+id/TV_subtitle"
-							android:layout_width="0dp"
+
+						<LinearLayout
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:gravity="end"
+							android:orientation="vertical">
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@{@string/MPP_downloadedDate}"
+								android:textColor="@color/wb2"
+								android:textSize="@dimen/text_small"
+								tools:text="Title" />
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@{@string/MPP_lastPlayed}"
+								android:textColor="@color/wb2"
+								android:textSize="@dimen/text_small"
+								tools:text="Title" />
+
+						</LinearLayout>
+
+						<LinearLayout
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginStart="8dp"
+							android:layout_marginLeft="8dp"
+							android:gravity="center"
+							android:orientation="vertical">
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@{@string/date_format(data.downloadedDate)}"
+								android:textColor="@color/wb5"
+								android:textSize="@dimen/text_small"
+								tools:text="Value" />
+
+							<TextView
+								android:layout_width="wrap_content"
+								android:layout_height="wrap_content"
+								android:text="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}"
+								android:textColor="@color/wb5"
+								android:textSize="@dimen/text_small"
+								tools:text="Value" />
+
+						</LinearLayout>
+
+						<!--<include
+							layout="@layout/include_property_horizontal"
+							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_weight="1"
-							android:ellipsize="marquee"
-							android:focusable="true"
-							android:marqueeRepeatLimit="marquee_forever"
-							android:singleLine="true"
-							android:text="@{data.subtitle}"
-							android:textSize="@dimen/text"
-							tool:text="Subtitle" />
+							app:title="@{@string/MPP_downloadedDate}"
+							app:value="@{@string/date_format(data.downloadedDate)}" />
 
-						<ImageView
-							android:id="@+id/IV_youtube"
+						<include
+							layout="@layout/include_property_horizontal"
 							android:layout_width="wrap_content"
-							android:layout_height="match_parent"
-							android:background="@drawable/border_icon"
-							app:srcCompat="@drawable/ic_youtube_24dp" />
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							app:title="@{@string/MPP_lastPlayed}"
+							app:value="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}" />-->
 
-						<ImageView
-							android:id="@+id/IV_website"
-							android:layout_width="wrap_content"
-							android:layout_height="match_parent"
-							android:background="@drawable/border_icon"
-							android:visibility="@{data.websiteExist ? View.VISIBLE : View.GONE}"
-							app:srcCompat="@drawable/ic_web_24dp" />
 					</LinearLayout>
 
+				</LinearLayout>
+
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="0dp"
+					android:layout_weight="1"
+					android:orientation="vertical">
 
 					<LinearLayout
 						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						android:layout_marginTop="8dp"
-						android:gravity="center"
+						android:layout_height="0dp"
+						android:layout_weight="1"
 						android:orientation="horizontal">
 
 						<include
-							layout="@layout/include_property_verticle"
-							app:title="@{@string/MPT_playCount}"
-							app:value="@{data.playCount}" />
-
-						<LinearLayout
+							layout="@layout/include_property_block"
 							android:layout_width="0dp"
-							android:layout_height="wrap_content"
+							android:layout_height="match_parent"
 							android:layout_weight="1"
-							android:gravity="end"
-							android:orientation="horizontal">
+							app:icon="@{@drawable/ic_pad_24dp}"
+							app:title="@{@string/MPP_padSize}"
+							app:value="@{data.padSize}" />
 
-
-							<LinearLayout
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:gravity="end"
-								android:orientation="vertical">
-
-								<TextView
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="@{@string/MPP_downloadedDate}"
-									android:textColor="@color/wb2"
-									android:textSize="@dimen/text_small"
-									tool:text="Title" />
-
-								<TextView
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="@{@string/MPP_lastPlayed}"
-									android:textColor="@color/wb2"
-									android:textSize="@dimen/text_small"
-									tool:text="Title" />
-
-							</LinearLayout>
-
-							<LinearLayout
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_marginStart="8dp"
-								android:layout_marginLeft="8dp"
-								android:gravity="center"
-								android:orientation="vertical">
-
-								<TextView
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="@{@string/date_format(data.downloadedDate)}"
-									android:textColor="@color/wb5"
-									android:textSize="@dimen/text_small"
-									tool:text="Value" />
-
-								<TextView
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:text="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}"
-									android:textColor="@color/wb5"
-									android:textSize="@dimen/text_small"
-									tool:text="Value" />
-
-							</LinearLayout>
-
-							<!--<include
-								layout="@layout/include_property_horizontal"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_weight="1"
-								app:title="@{@string/MPP_downloadedDate}"
-								app:value="@{@string/date_format(data.downloadedDate)}" />
-
-							<include
-								layout="@layout/include_property_horizontal"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:layout_weight="1"
-								app:title="@{@string/MPP_lastPlayed}"
-								app:value="@{data.lastPlayed != null ? @string/date_format(data.lastPlayed) : @string/MPP_notPlayedYet}" />-->
-
-						</LinearLayout>
+						<include
+							layout="@layout/include_property_block"
+							android:layout_width="0dp"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							app:icon="@{@drawable/ic_chain_24dp}"
+							app:title="@{@string/MPP_chain}"
+							app:value="@{data.chainCount}" />
 
 					</LinearLayout>
 
@@ -246,95 +272,62 @@
 						android:layout_width="match_parent"
 						android:layout_height="0dp"
 						android:layout_weight="1"
-						android:orientation="vertical">
+						android:orientation="horizontal">
 
-						<LinearLayout
-							android:layout_width="match_parent"
-							android:layout_height="0dp"
-							android:layout_weight="1"
-							android:orientation="horizontal">
-
-							<include
-								layout="@layout/include_property_block"
-								android:layout_width="0dp"
-								android:layout_height="match_parent"
-								android:layout_weight="1"
-								app:icon="@{@drawable/ic_pad_24dp}"
-								app:title="@{@string/MPP_padSize}"
-								app:value="@{data.padSize}" />
-
-							<include
-								layout="@layout/include_property_block"
-								android:layout_width="0dp"
-								android:layout_height="match_parent"
-								android:layout_weight="1"
-								app:icon="@{@drawable/ic_chain_24dp}"
-								app:title="@{@string/MPP_chain}"
-								app:value="@{data.chainCount}" />
-
-						</LinearLayout>
-
-						<LinearLayout
-							android:layout_width="match_parent"
-							android:layout_height="0dp"
-							android:layout_weight="1"
-							android:orientation="horizontal">
-
-							<include
-								layout="@layout/include_property_block"
-								android:layout_width="0dp"
-								android:layout_height="match_parent"
-								android:layout_weight="1"
-								app:icon="@{@drawable/ic_music_note_24dp}"
-								app:title="@{@string/MPP_soundFiles}"
-								app:value="@{data.soundCount}" />
-
-							<include
-								layout="@layout/include_property_block"
-								android:layout_width="0dp"
-								android:layout_height="match_parent"
-								android:layout_weight="1"
-								app:icon="@{@drawable/ic_led_event_24dp}"
-								app:title="@{@string/MPP_ledEvents}"
-								app:value="@{data.ledCount}" />
-
-						</LinearLayout>
-
-					</LinearLayout>
-
-					<LinearLayout
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content">
-
-						<TextView
-							android:id="@+id/IV_path"
+						<include
+							layout="@layout/include_property_block"
 							android:layout_width="0dp"
-							android:layout_height="wrap_content"
+							android:layout_height="match_parent"
 							android:layout_weight="1"
-							android:ellipsize="marquee"
-							android:focusable="true"
-							android:marqueeRepeatLimit="marquee_forever"
-							android:singleLine="true"
-							android:text="@{data.path}"
-							android:textSize="@dimen/text_small"
-							tool:text="/path/to/unipack" />
+							app:icon="@{@drawable/ic_music_note_24dp}"
+							app:title="@{@string/MPP_soundFiles}"
+							app:value="@{data.soundCount}" />
 
-						<TextView
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:layout_marginStart="4dp"
-							android:layout_marginLeft="4dp"
-							android:text="@{data.fileSize}"
-							android:textSize="@dimen/text_small"
-							tool:text="12.34MB" />
+						<include
+							layout="@layout/include_property_block"
+							android:layout_width="0dp"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							app:icon="@{@drawable/ic_led_event_24dp}"
+							app:title="@{@string/MPP_ledEvents}"
+							app:value="@{data.ledCount}" />
 
 					</LinearLayout>
 
 				</LinearLayout>
 
-			</RelativeLayout>
+				<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content">
 
-		</LinearLayout>
+					<TextView
+						android:id="@+id/IV_path"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:ellipsize="marquee"
+						android:focusable="true"
+						android:marqueeRepeatLimit="marquee_forever"
+						android:singleLine="true"
+						android:text="@{data.path}"
+						android:textSize="@dimen/text_small"
+						tools:text="/path/to/unipack" />
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginStart="4dp"
+						android:layout_marginLeft="4dp"
+						android:text="@{data.fileSize}"
+						android:textSize="@dimen/text_small"
+						tools:text="12.34MB" />
+
+				</LinearLayout>
+
+			</LinearLayout>
+
+		</RelativeLayout>
+
 
 	</LinearLayout>
 </layout>
