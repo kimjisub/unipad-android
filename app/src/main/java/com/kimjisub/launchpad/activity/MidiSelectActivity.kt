@@ -142,9 +142,9 @@ class MidiSelectActivity : BaseActivity() {
 	fun showMode(mode: Int) {
 		for (i in LL_mode.indices) {
 			if (mode == i)
-				changeViewColor(LL_mode[i], color.ugray1, color.background1)
+				changeViewColor(LL_mode[i], color.gray1, color.background1)
 			else
-				changeViewColor(LL_mode[i], color.background1, color.ugray1)
+				changeViewColor(LL_mode[i], color.background1, color.gray1)
 		}
 		preference.launchpadConnectMethod = mode
 	}

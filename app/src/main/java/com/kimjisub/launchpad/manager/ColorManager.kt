@@ -9,9 +9,9 @@ class ColorManager(val context: Context) {
 	private fun getLazy(id: Int) = lazy { get(id) }
 
 	val background1 by getLazy(color.background1)
-	val gray1 by getLazy(color.ugray1)
+	val gray1 by getLazy(color.gray1)
 	val background2 by getLazy(color.background2)
-	val gray2 by getLazy(color.ugray2)
+	val gray2 by getLazy(color.gray2)
 	val white by getLazy(color.white)
 
 

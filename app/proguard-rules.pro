@@ -31,6 +31,6 @@
 #-keep class com.android.vending.billing.**
 
 # Coroutine
--keepclassmembernames class kotlinx.** {
+-keepclassmembernames class kotlinx.* {
     volatile <fields>;
 }

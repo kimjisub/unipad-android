@@ -111,6 +111,7 @@
 								android:layout_height="32dp"
 								android:background="@{themeResources.xml_prev}"
 								android:clickable="true"
+								android:focusable="true"
 								tools:background="@drawable/xml_prev" />
 
 							<RelativeLayout
@@ -123,6 +124,7 @@
 									android:layout_height="32dp"
 									android:background="@{themeResources.xml_play}"
 									android:clickable="true"
+									android:focusable="true"
 									tools:background="@drawable/xml_play" />
 
 								<ImageView
@@ -131,6 +133,7 @@
 									android:layout_height="32dp"
 									android:background="@{themeResources.xml_pause}"
 									android:clickable="true"
+									android:focusable="true"
 									android:visibility="gone"
 									tools:background="@drawable/xml_pause" />
 
@@ -142,6 +145,7 @@
 								android:layout_height="32dp"
 								android:background="@{themeResources.xml_next}"
 								android:clickable="true"
+								android:focusable="true"
 								tools:background="@drawable/xml_next" />
 						</LinearLayout>
 
