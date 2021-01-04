@@ -86,23 +86,20 @@ constructor(
 			)
 		}
 
-		data.sortMethod.addOnPropertyChanged {
-			Log.test("method changed : ${it.get()}")
+		themeSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+			override fun onItemSelected(
+				parent: AdapterView<*>?,
+				view: View?,
+				position: Int,
+				id: Long
+			) {
+				data.selectedTheme.set(position)
+			}
+
+			override fun onNothingSelected(parent: AdapterView<*>?) {
+			}
 
 		}
-		data.sortType.addOnPropertyChanged {
-			Log.test("type changed : ${it.get()}")
-		}
-
-//		radioButtonGroupTableLayout.onCheckedChangeListener = {
-//			data.sortingMethod.set((it.tag as String).toInt())
-//		}
-
-		/*themeSpinner.onItemSelectedListener { parent, view, position, id ->
-			data.selectedTheme.set(position)
-		}
-
-		themeSpinner.setItem*/
 	}
 
 	private fun setSort(sortMethod: Int) {
