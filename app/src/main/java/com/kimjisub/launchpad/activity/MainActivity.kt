@@ -575,7 +575,8 @@ class MainActivity : BaseActivity() {
 			update()
 		}
 		P_total.data.selectedTheme.addOnPropertyChanged {
-
+			val selectedThemeIndex = it.get()!!
+			preference.selectedTheme = themeItemList!![selectedThemeIndex].package_name
 		}
 
 		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
@@ -697,22 +698,27 @@ class MainActivity : BaseActivity() {
 		) P_pack.startAnimation(animation)
 	}
 
+	var themeItemList: ArrayList<ThemeItem>? = null
+	var themeNameList: ArrayList<String>? = null
+	private fun updateThemeList() {
+		themeItemList = ThemeTool.getThemePackList(applicationContext)
+		themeNameList = ArrayList()
+		for (item: ThemeItem in themeItemList!!)
+			themeNameList!!.add(item.name)
+	}
+
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
 		P_total.data.unipackCount.set(unipackList.size.toString())
 		db.unipackOpenDAO()!!.count.observe(
 			this,
 			Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
+		updateThemeList()
 
-		val themeItemList = ThemeTool.getThemePackList(applicationContext)
-		val themeNameList = ArrayList<String>()
-		for (item: ThemeItem in themeItemList)
-			themeNameList.add(item.name)
 		P_total.data.themeList.set(themeNameList)
 
 		try {
-			val index = themeItemList.indexOfFirst { it.package_name == preference.selectedTheme }
-
+			val index = themeItemList!!.indexOfFirst { it.package_name == preference.selectedTheme }
 			P_total.data.selectedTheme.set(index)
 		} catch (e: Exception) {
 			P_total.data.selectedTheme.set(0)
