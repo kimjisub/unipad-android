@@ -14,13 +14,9 @@
 			android:summary="@string/donation_"
 			android:title="@string/donation" />
 		<CheckBoxPreference
-			android:key="removeAds"
-			android:summary="@string/plan_removeAds_"
-			android:title="@string/plan_removeAds" />
-		<CheckBoxPreference
-			android:key="proTools"
-			android:summary="@string/plan_proTools_"
-			android:title="@string/plan_proTools" />
+			android:key="pro"
+			android:summary="@string/plan_pro_"
+			android:title="@string/plan_pro" />
 		<Preference
 			android:key="restoreBilling"
 			android:summary="@string/plan_restorePurchases_"

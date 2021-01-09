@@ -4,18 +4,18 @@ import android.Manifest.permission
 import android.os.Bundle
 import android.os.Handler
 import androidx.core.content.ContextCompat
+import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.manager.BillingManager
-import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import kotlinx.android.synthetic.main.activity_splash.*
 import splitties.activities.start
 
 class SplashActivity : BaseActivity() {
-	internal var billingManager: BillingManager? = null
+	internal lateinit var bm: BillingManager
 
 	// Timer
 	var startTime: Long? = null
@@ -34,17 +34,19 @@ class SplashActivity : BaseActivity() {
 
 		TV_version.text = BuildConfig.VERSION_NAME
 
-		val billingEventListener = object : BillingEventListener {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
+		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
+			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
+				//updateBilling()
+			}
+
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
-			override fun onBillingInitialized() {}
-			override fun onRefresh() {
-				if (billingManager!!.purchaseRemoveAds || billingManager!!.purchaseProTools)
+			override fun onBillingInitialized() {
+				if (bm.isPro)
 					TV_version.setTextColor(orange)
 			}
-		}
-		billingManager = BillingManager(this@SplashActivity, billingEventListener)
+		})
+		bm.initialize()
 
 		TedPermission.with(this)
 			.setPermissionListener(object : PermissionListener {
@@ -71,5 +73,10 @@ class SplashActivity : BaseActivity() {
 		super.onStop()
 		handler.removeCallbacks(runnable)
 		finish()
+	}
+
+	override fun onDestroy() {
+		super.onDestroy()
+		bm.release()
 	}
 }

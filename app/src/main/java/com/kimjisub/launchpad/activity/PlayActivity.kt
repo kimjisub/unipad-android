@@ -25,6 +25,7 @@ import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.databinding.DataBindingUtil
+import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.kimjisub.design.Chain
 import com.kimjisub.design.Pad
@@ -35,7 +36,6 @@ import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding
 import com.kimjisub.launchpad.manager.BillingManager
-import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.Functions.putClipboard
@@ -101,7 +101,7 @@ class PlayActivity : BaseActivity() {
 	private val SCB_proLightMode: SyncCheckBox = SyncCheckBox()
 
 
-	private var billingManager: BillingManager? = null
+	private lateinit var bm: BillingManager
 
 	// =============================================================================================
 
@@ -138,18 +138,21 @@ class PlayActivity : BaseActivity() {
 
 		/*if (!BillingManager.showAds())
 			AV_adview.setVisibility(View.GONE);*///todo ads
-		billingManager = BillingManager(
-			this@PlayActivity,
-			object : BillingEventListener {
-				override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
-				override fun onPurchaseHistoryRestored() {}
-				override fun onBillingError(errorCode: Int, error: Throwable?) {}
-				override fun onBillingInitialized() {}
-				override fun onRefresh() {
-					//todo setProMode(billingManager!!.unlockProTools)
-					setProMode(true)
-				}
-			})
+
+		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
+			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
+
+			}
+
+			override fun onPurchaseHistoryRestored() {}
+			override fun onBillingError(errorCode: Int, error: Throwable?) {}
+			override fun onBillingInitialized() {
+				//todo setProMode(billingManager!!.unlockProTools)
+				setProMode(true)
+			}
+		})
+		bm.initialize()
+
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -1278,7 +1281,7 @@ class PlayActivity : BaseActivity() {
 			})
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		if (uiLoaded) controller = midiController
-		if (billingManager!!.showAds) {
+		if (!bm.isPro) {
 			/*AdRequest adRequest = new AdRequest.Builder().build();
 			AV_adview.loadAd(adRequest);*/
 		}
@@ -1295,12 +1298,13 @@ class PlayActivity : BaseActivity() {
 		enable = false
 		removeController(midiController!!)
 		if (unipackLoaded) {
-			if (billingManager!!.showAds) {
+			if (!bm.isPro) {
 				if (checkAdsCooltime()) {
 					updateAdsCooltime()
 					showAdmob()
 				}
 			}
 		}
+		bm.release()
 	}
 }

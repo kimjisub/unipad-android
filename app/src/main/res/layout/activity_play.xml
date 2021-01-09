@@ -298,53 +298,53 @@
 
 					</LinearLayout>
 
+					<LinearLayout
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:orientation="vertical">
+
 						<LinearLayout
+							android:id="@+id/proTools"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
+							android:alpha="0.3"
 							android:orientation="vertical">
 
-							<LinearLayout
-								android:id="@+id/proTools"
-								android:layout_width="wrap_content"
-								android:layout_height="wrap_content"
-								android:alpha="0.3"
-								android:orientation="vertical">
-
-								<CheckBox
-									android:id="@+id/CB2_hideUI"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:buttonTint="@color/option_window_checkbox"
-									android:text="@string/hideUI"
-									android:textColor="@color/option_window_checkbox" />
-
-								<CheckBox
-									android:id="@+id/CB2_watermark"
-									android:layout_width="wrap_content"
-									android:layout_height="wrap_content"
-									android:buttonTint="@color/option_window_checkbox"
-									android:text="@string/watermark"
-									android:textColor="@color/option_window_checkbox" />
-
-							</LinearLayout>
-
 							<CheckBox
-								android:id="@+id/CB2_proLightMode"
+								android:id="@+id/CB2_hideUI"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/proLightMode"
+								android:text="@string/hideUI"
 								android:textColor="@color/option_window_checkbox" />
 
 							<CheckBox
-								android:id="@+id/purchase"
+								android:id="@+id/CB2_watermark"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:buttonTint="@color/option_window_checkbox"
-								android:text="@string/purchase"
+								android:text="@string/watermark"
 								android:textColor="@color/option_window_checkbox" />
 
 						</LinearLayout>
+
+						<CheckBox
+							android:id="@+id/CB2_proLightMode"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/proLightMode"
+							android:textColor="@color/option_window_checkbox" />
+
+						<CheckBox
+							android:id="@+id/purchase"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:buttonTint="@color/option_window_checkbox"
+							android:text="@string/purchase"
+							android:textColor="@color/option_window_checkbox" />
+
+					</LinearLayout>
 
 				</LinearLayout>
 

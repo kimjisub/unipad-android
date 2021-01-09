@@ -8,6 +8,8 @@ import android.widget.AdapterView
 import android.widget.ListView
 import androidx.core.net.toUri
 import androidx.preference.*
+import com.anjlab.android.iab.v3.BillingProcessor
+import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.firebase.iid.FirebaseInstanceId
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.activity.ThemeActivity
@@ -24,7 +26,7 @@ import splitties.toast.toast
 import java.util.*
 
 class SettingFragment : PreferenceFragmentCompat() {
-	private var billingManager: BillingManager? = null
+	private lateinit var bm: BillingManager
 	private val preference: PreferenceManager by lazy { PreferenceManager(requireContext()) }
 
 	override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
@@ -47,19 +49,18 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		addPreferencesFromResource(xml.setting)
-
-		// todo setting billingmanager
-		// activity!!.parent must not be null
-		/*billingManager = BillingManager(activity!!.parent, object : BillingManager.BillingEventListener {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
-			override fun onPurchaseHistoryRestored() {}
-			override fun onBillingError(errorCode: Int, error: Throwable?) {}
-			override fun onBillingInitialized() {}
-			override fun onRefresh() {
+		bm = BillingManager(requireActivity(), object : BillingProcessor.IBillingHandler {
+			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 				updateBilling()
 			}
-		})*/
 
+			override fun onPurchaseHistoryRestored() {}
+			override fun onBillingError(errorCode: Int, error: Throwable?) {}
+			override fun onBillingInitialized() {
+				updateBilling()
+			}
+		})
+		bm.initialize()
 
 		findPreference<Preference>("select_theme")?.onPreferenceClickListener =
 			Preference.OnPreferenceClickListener {
@@ -186,7 +187,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 				listView.adapter = DialogListAdapter(data)
 				listView.onItemClickListener =
 					AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-						billingManager!!.purchase(
+						bm.purchase(
 							list[position].purchaseId
 						)
 					}
@@ -196,25 +197,19 @@ class SettingFragment : PreferenceFragmentCompat() {
 				builder.show()
 				false
 			}
-		findPreference<CheckBoxPreference>("removeAds")?.onPreferenceClickListener =
+		findPreference<Preference>("pro")?.onPreferenceClickListener =
 			Preference.OnPreferenceClickListener { preference: Preference ->
-				(preference as CheckBoxPreference).isChecked = billingManager!!.purchaseRemoveAds
-				billingManager!!.subscribe_removeAds()
-				false
-			}
-		findPreference<Preference>("proTools")?.onPreferenceClickListener =
-			Preference.OnPreferenceClickListener { preference: Preference ->
-				(preference as CheckBoxPreference).isChecked = billingManager!!.purchaseProTools
-				billingManager!!.subscribe_proTools()
+				(preference as CheckBoxPreference).isChecked = bm.isPro
+				bm.subscribePro()
 				false
 			}
 		findPreference<Preference>("restoreBilling")?.onPreferenceClickListener =
-			Preference.OnPreferenceClickListener { preference: Preference? ->
-				billingManager!!.refresh()
+			Preference.OnPreferenceClickListener {
+				bm.loadOwnedPurchasesFromGoogle()
 				false
 			}
 		findPreference<Preference>("OpenSourceLicense")?.onPreferenceClickListener =
-			Preference.OnPreferenceClickListener { preference: Preference? ->
+			Preference.OnPreferenceClickListener {
 				class Item(
 					val title: String,
 					val subtitle: String,
@@ -291,10 +286,8 @@ class SettingFragment : PreferenceFragmentCompat() {
 	}
 
 	internal fun updateBilling() {
-		(findPreference<Preference>("removeAds") as CheckBoxPreference).isChecked =
-			billingManager!!.purchaseRemoveAds
-		(findPreference<Preference>("proTools") as CheckBoxPreference).isChecked =
-			billingManager!!.purchaseProTools
+		(findPreference<Preference>("pro") as CheckBoxPreference).isChecked =
+			bm.isPro
 	}
 
 
@@ -318,6 +311,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 	override fun onDestroy() {
 		super.onDestroy()
-		billingManager?.release()
+		bm.release()
 	}
 }
