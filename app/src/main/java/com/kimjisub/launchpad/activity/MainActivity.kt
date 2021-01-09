@@ -18,6 +18,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
 import com.google.firebase.database.DataSnapshot
@@ -44,7 +45,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
-import com.kimjisub.launchpad.manager.BillingManager.BillingEventListener
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -78,7 +78,7 @@ import kotlin.collections.ArrayList
 class MainActivity : BaseActivity() {
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
-	private var billingManager: BillingManager? = null
+	private lateinit var bm: BillingManager
 	private val preferenceManager: PreferenceManager by lazy { PreferenceManager(this) }
 
 	// List Management
@@ -202,14 +202,16 @@ class MainActivity : BaseActivity() {
 
 		initPanel()
 		loadAdmob()
-		billingManager = BillingManager(this@MainActivity, object : BillingEventListener {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
+		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
+			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
+				//updateBilling()
+			}
+
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
-			override fun onBillingInitialized() {}
-			override fun onRefresh() {
-				P_total.data.premium.set(billingManager!!.purchaseRemoveAds || billingManager!!.purchaseProTools)
-				if (billingManager!!.showAds) {
+			override fun onBillingInitialized() {
+				P_total.data.premium.set(bm.isPro)
+				if (!bm.isPro) {
 					if (checkAdsCooltime()) {
 						updateAdsCooltime()
 						showAdmob()
@@ -223,6 +225,7 @@ class MainActivity : BaseActivity() {
 					b.adView.setVisibility(View.GONE);*/
 			}
 		})
+		bm.initialize()
 
 		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
 		FAB_reconnectLaunchpad.setOnClickListener {

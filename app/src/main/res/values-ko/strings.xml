@@ -53,10 +53,8 @@
 	<string name="use_sd_card">SD 카드 사용</string>
 	<string name="plan_restorePurchases">구입항목 복원하기</string>
 	<string name="plan_restorePurchases_">결제 후에 앱을 재시작해주세요.</string>
-	<string name="plan_removeAds">Remove Ads</string>
-	<string name="plan_removeAds_">광고 제거</string>
-	<string name="plan_proTools">Professional Tools</string>
-	<string name="plan_proTools_">전문가 기능 무제한 사용</string>
+	<string name="plan_pro">UniPad Pro</string>
+	<string name="plan_pro_">전문가 기능</string>
 	<string name="donation">Donate to UniPad</string>
 	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">구매하기</string>
