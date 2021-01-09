@@ -212,10 +212,6 @@ class MainActivity : BaseActivity() {
 			override fun onBillingInitialized() {
 				P_total.data.premium.set(bm.isPro)
 				if (!bm.isPro) {
-					if (checkAdsCooltime()) {
-						updateAdsCooltime()
-						showAdmob()
-					}
 					/*todo ad
 					AdRequest adRequest = new AdRequest.Builder().build();
 					b.adView.loadAd(adRequest);*/
