@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
+import com.google.android.gms.ads.AdRequest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -189,8 +190,8 @@ class MainActivity : BaseActivity() {
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
 		setContentView(layout.activity_main)
+		super.onCreate(savedInstanceState)
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		divider.setDrawable(resources.getDrawable(drawable.border_divider))
@@ -201,7 +202,6 @@ class MainActivity : BaseActivity() {
 
 
 		initPanel()
-		loadAdmob()
 		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 				//updateBilling()
@@ -212,13 +212,10 @@ class MainActivity : BaseActivity() {
 			override fun onBillingInitialized() {
 				P_total.data.premium.set(bm.isPro)
 				if (!bm.isPro) {
-					/*todo ad
-					AdRequest adRequest = new AdRequest.Builder().build();
-					b.adView.loadAd(adRequest);*/
-				}
-				/*todo ad
-				 else
-					b.adView.setVisibility(View.GONE);*/
+					val adRequest = AdRequest.Builder().build()
+					adView.loadAd(adRequest)
+				} else
+					adView.visibility = View.GONE
 			}
 		})
 		bm.initialize()
