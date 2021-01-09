@@ -10,8 +10,8 @@ import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest.Builder
 import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.MobileAds
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
@@ -128,28 +128,29 @@ open class BaseActivity : AppCompatActivity() {
 		Log.admob("isLoaded: $isLoaded")
 		if (isLoaded) {
 			interstitialAd!!.show()
-			loadAdmob()
+			initAdmob()
 			Log.admob("show!")
 		} else {
 			interstitialAd!!.adListener = object : AdListener() {
 				override fun onAdLoaded() {
 					interstitialAd!!.show()
-					loadAdmob()
+					initAdmob()
 					Log.admob("show!")
 				}
 			}
 		}
 	}
 
-	internal fun loadAdmob() {
+	open fun initAdmob() {
 		Log.admob("loadAdmob ================================")
-		interstitialAd = InterstitialAd(this)
-		interstitialAd!!.adUnitId = Constant.ADMOB.MAIN_START
-		interstitialAd!!.loadAd(
-			Builder()
-				.addTestDevice("36C3684AAD25CDF5A6360640B20DC084")
-				.build()
-		)
+		MobileAds.initialize(this) {}
+//
+//		interstitialAd = InterstitialAd(this)
+//		interstitialAd!!.adUnitId = Constant.ADMOB.MAIN_START
+//		interstitialAd!!.loadAd(
+//			Builder()
+//				.build()
+//		)
 	}
 
 	// ============================================================================================= Show Things, Get Resources
@@ -178,6 +179,8 @@ open class BaseActivity : AppCompatActivity() {
 		});*/
 
 		onStartActivity(this)
+
+		initAdmob()
 	}
 
 	public override fun onStart() {

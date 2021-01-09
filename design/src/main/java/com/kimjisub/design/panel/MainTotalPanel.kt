@@ -5,16 +5,18 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.RelativeLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
+import com.kimjisub.design.R
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
 import com.kimjisub.manager.Log
-import com.kimjisub.manager.extra.addOnPropertyChanged
 import kotlinx.android.synthetic.main.panel_main_total.view.*
+import java.lang.Exception
 
 class MainTotalPanel
 @JvmOverloads
@@ -86,7 +88,7 @@ constructor(
 			)
 		}
 
-		themeSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+		themeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 			override fun onItemSelected(
 				parent: AdapterView<*>?,
 				view: View?,
@@ -100,6 +102,25 @@ constructor(
 			}
 
 		}
+	}
+
+	override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
+		Log.test(child?.id.toString() + " / " + R.id.rootView)
+		when(child?.id){
+			R.id.rootView -> {
+				super.addView(child, index, params)
+			}
+			else->{
+				b.contentRoot.addView(child, index, params)
+			}
+		}
+		//super.addView(child, index, params)
+	//		try{
+//
+//			b.rootView.addView(child, index, params)
+//		}catch (e:Exception){
+//			super.addView(child, index, params)
+//		}
 	}
 
 	private fun setSort(sortMethod: Int) {

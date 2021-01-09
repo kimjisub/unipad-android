@@ -17,13 +17,16 @@
 	</data>
 
 	<LinearLayout
+		android:id="@+id/rootView"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+		android:layout_height="match_parent"
+		android:background="@drawable/border_panel_total"
+		android:orientation="vertical">
 
 		<RelativeLayout
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:background="@drawable/border_panel_total"
+			android:layout_height="0dp"
+			android:layout_weight="1"
 			android:padding="16dp">
 
 			<LinearLayout
@@ -211,9 +214,16 @@
 
 				</LinearLayout>
 
+
 			</LinearLayout>
 
+
 		</RelativeLayout>
+
+		<RelativeLayout
+			android:id="@+id/contentRoot"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
 
 	</LinearLayout>
 </layout>
