@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.activity
 
-import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -26,17 +25,13 @@ import java.util.*
 open class BaseActivity : AppCompatActivity() {
 
 	companion object {
-
-		private var interstitialAd: InterstitialAd? = null
-
-
-		var activityList = ArrayList<Activity>()
-		internal fun onStartActivity(activity: Activity) {
+		var activityList = ArrayList<BaseActivity>()
+		internal fun onStartActivity(activity: BaseActivity) {
 			activityList.add(activity)
-			printActivityLog(activity.localClassName + " start")
+			printActivityLog(activity.getActivityName() + " start")
 		}
 
-		internal fun onFinishActivity(activity: Activity) {
+		internal fun onFinishActivity(activity: BaseActivity) {
 			var exist = false
 			val size = activityList.size
 			for (i in 0 until size) {
@@ -47,17 +42,17 @@ open class BaseActivity : AppCompatActivity() {
 					break
 				}
 			}
-			printActivityLog(activity.localClassName + " finish" + if (exist) "" else " error")
+			printActivityLog(activity.getActivityName() + " finish" + if (exist) "" else " error")
 		}
 
-		internal fun restartApp(activity: Activity) {
+		internal fun restartApp(activity: BaseActivity) {
 			val size = activityList.size
 			for (i in size - 1 downTo 0) {
 				activityList[i].finish()
 				activityList.removeAt(i)
 			}
 			activity.start<MainActivity>()
-			printActivityLog(activity.localClassName + " requestRestart")
+			printActivityLog(activity.getActivityName() + " requestRestart")
 			Process.killProcess(Process.myPid())
 		}
 
@@ -66,7 +61,7 @@ open class BaseActivity : AppCompatActivity() {
 			val size = activityList.size
 			for (i in 0 until size) {
 				val activity = activityList[i]
-				str.append(", ").append(activity.localClassName)
+				str.append(", ").append(activity.getActivityName())
 			}
 			Log.activity("$str]")
 		}
@@ -76,12 +71,12 @@ open class BaseActivity : AppCompatActivity() {
 				.setTitle(context.getString(string.requireRestart))
 				.setMessage(context.getString(string.doYouWantToRestartApp))
 				.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, _: Int ->
-					restartApp(context as Activity)
+					restartApp(context as BaseActivity)
 					dialog.dismiss()
 				}
 				.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, _: Int ->
 					dialog.dismiss()
-					(context as Activity).finish()
+					(context as BaseActivity).finish()
 				}
 				.show()
 		}
@@ -108,49 +103,48 @@ open class BaseActivity : AppCompatActivity() {
 		return F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 	}
 
+	fun getActivityName():String{
+		return this.localClassName.split('.').last()
+	}
+
 	// ============================================================================================= Ads
 
 
-	fun checkAdsCooltime(): Boolean {
+	private fun checkAdsCooltime(): Boolean {
 		val prevTime = preference.prevAdsShowTime
 		val currTime = System.currentTimeMillis()
 		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
 	}
 
-	fun updateAdsCooltime() {
+	private fun updateAdsCooltime() {
 		val currTime = System.currentTimeMillis()
 		preference.prevAdsShowTime = currTime
 	}
 
-	fun showAdmob() {
-		Log.admob("showAdmob ================================")
-		val isLoaded = interstitialAd!!.isLoaded
-		Log.admob("isLoaded: $isLoaded")
-		if (isLoaded) {
-			interstitialAd!!.show()
-			initAdmob()
-			Log.admob("show!")
-		} else {
-			interstitialAd!!.adListener = object : AdListener() {
-				override fun onAdLoaded() {
-					interstitialAd!!.show()
-					initAdmob()
-					Log.admob("show!")
+	fun showAdmob(interstitialAd: InterstitialAd) {
+		Log.admob("showAdmob " + getActivityName())
+		if (checkAdsCooltime()) {
+			updateAdsCooltime()
+			val isLoaded = interstitialAd.isLoaded
+			Log.admob("isLoaded: $isLoaded")
+			if (isLoaded) {
+				interstitialAd.show()
+				Log.admob("ad showed")
+			} else {
+				interstitialAd.adListener = object : AdListener() {
+					override fun onAdLoaded() {
+						interstitialAd.show()
+						Log.admob("ad late showed!")
+					}
 				}
 			}
-		}
+		} else
+			Log.admob("skipped!")
 	}
 
 	open fun initAdmob() {
-		Log.admob("loadAdmob ================================")
+		Log.admob("initAdmob " + getActivityName())
 		MobileAds.initialize(this) {}
-//
-//		interstitialAd = InterstitialAd(this)
-//		interstitialAd!!.adUnitId = Constant.ADMOB.MAIN_START
-//		interstitialAd!!.loadAd(
-//			Builder()
-//				.build()
-//		)
 	}
 
 	// ============================================================================================= Show Things, Get Resources
@@ -168,7 +162,7 @@ open class BaseActivity : AppCompatActivity() {
 	}
 
 	public override fun onCreate(savedInstanceState: Bundle?) {
-		Log.activity("onCreate " + this.localClassName)
+		Log.activity("onCreate " + getActivityName())
 		super.onCreate(savedInstanceState)
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -184,33 +178,33 @@ open class BaseActivity : AppCompatActivity() {
 	}
 
 	public override fun onStart() {
-		Log.activity("onStart " + this.localClassName)
+		Log.activity("onStart " + getActivityName())
 		super.onStart()
 	}
 
 	public override fun onResume() {
-		Log.activity("onResume " + this.localClassName)
+		Log.activity("onResume " + getActivityName())
 		super.onResume()
 		this.volumeControlStream = AudioManager.STREAM_MUSIC
 	}
 
 	public override fun onPause() {
-		Log.activity("onPause " + this.localClassName)
+		Log.activity("onPause " + getActivityName())
 		super.onPause()
 	}
 
 	public override fun onStop() {
-		Log.activity("onStop " + this.localClassName)
+		Log.activity("onStop " + getActivityName())
 		super.onStop()
 	}
 
 	public override fun onRestart() {
-		Log.activity("onRestart " + this.localClassName)
+		Log.activity("onRestart " + getActivityName())
 		super.onRestart()
 	}
 
 	public override fun onDestroy() {
-		Log.activity("onDestroy " + this.localClassName)
+		Log.activity("onDestroy " + getActivityName())
 		super.onDestroy()
 		onFinishActivity(this)
 	}

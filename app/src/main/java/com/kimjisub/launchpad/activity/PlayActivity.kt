@@ -27,6 +27,9 @@ import androidx.appcompat.app.AlertDialog.Builder
 import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.InterstitialAd
 import com.kimjisub.design.Chain
 import com.kimjisub.design.Pad
 import com.kimjisub.design.manage.SyncCheckBox
@@ -50,6 +53,7 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import kotlinx.android.synthetic.main.activity_play.*
 import splitties.activities.start
@@ -136,19 +140,14 @@ class PlayActivity : BaseActivity() {
 
 		SCB_watermark.forceSetChecked(true)
 
-		/*if (!BillingManager.showAds())
-			AV_adview.setVisibility(View.GONE);*///todo ads
-
 		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
-
-			}
-
+			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {
-				//todo setProMode(billingManager!!.unlockProTools)
-				setProMode(true)
+				Log.test("onBillingInitialized")
+				proMode = bm.isPro
+				Log.test("proMode: $proMode")
 			}
 		})
 		bm.initialize()
@@ -508,7 +507,7 @@ class PlayActivity : BaseActivity() {
 				listener = object : LedRunner.Listener {
 
 					override fun onStart() {
-						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+						// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
 					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
@@ -532,7 +531,7 @@ class PlayActivity : BaseActivity() {
 					}
 
 					override fun onEnd() {
-						TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+						// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
 				})
@@ -775,13 +774,21 @@ class PlayActivity : BaseActivity() {
 
 	//  /////////////////////////////////////////////////////////////////////////////////////////
 
-	private fun setProMode(bool: Boolean) {
-		purchase.visibility = if (bool) View.GONE else View.VISIBLE
-		proTools.alpha = if (bool) 1f else 0.3f
-		SCB_hideUI.isLocked = !bool
-		SCB_watermark.isLocked = !bool
-		SCB_proLightMode.isLocked = !bool
-	}
+	var proMode = false
+		set(value) {
+			field = value
+			purchase.visibility = if (field) View.GONE else View.VISIBLE
+			proTools.alpha = if (field) 1f else 0.3f
+			SCB_hideUI.isLocked = !field
+			SCB_watermark.isLocked = !field
+			SCB_proLightMode.isLocked = !field
+
+			if (!field) {
+				if (!adsPlayEnd.isLoaded)
+					adsPlayEnd.loadAd(AdRequest.Builder().build())
+			}
+		}
+
 
 	private fun refreshWatermark() {
 		log("refreshWatermark")
@@ -1254,6 +1261,12 @@ class PlayActivity : BaseActivity() {
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////
 
+	lateinit var adsPlayEnd: InterstitialAd
+	override fun initAdmob() {
+		super.initAdmob()
+		adsPlayEnd = InterstitialAd(this)
+		adsPlayEnd.adUnitId = getString(string.admob_play_end)
+	}
 
 	override fun onBackPressed() {
 		toggleOption_window()
@@ -1299,10 +1312,7 @@ class PlayActivity : BaseActivity() {
 		removeController(midiController!!)
 		if (unipackLoaded) {
 			if (!bm.isPro) {
-				if (checkAdsCooltime()) {
-					updateAdsCooltime()
-					showAdmob()
-				}
+				showAdmob(adsPlayEnd)
 			}
 		}
 		bm.release()

@@ -14,10 +14,4 @@ object Constant {
 		const val DONATE_50 = "donation_50"
 		const val DONATE_100 = "donation_100"
 	}
-
-	object ADMOB {
-		const val MAIN_START = "ca-app-pub-1077445788578961/6843593938"
-		const val MAIN_LIST = "ca-app-pub-1077445788578961/6318023505"
-		const val PLAY_END = "ca-app-pub-1077445788578961/6242001881"
-	}
 }

@@ -105,7 +105,6 @@ constructor(
 	}
 
 	override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
-		Log.test(child?.id.toString() + " / " + R.id.rootView)
 		when(child?.id){
 			R.id.rootView -> {
 				super.addView(child, index, params)
