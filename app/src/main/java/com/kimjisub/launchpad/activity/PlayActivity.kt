@@ -27,7 +27,6 @@ import androidx.appcompat.app.AlertDialog.Builder
 import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
-import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.InterstitialAd
 import com.kimjisub.design.Chain

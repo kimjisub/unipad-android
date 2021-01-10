@@ -61,7 +61,7 @@
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
-	<string name="copyright">ⓒ 2016–2019. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2021. (UniPad) All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">커뮤니티</string>

@@ -626,7 +626,7 @@ class MainActivity : BaseActivity() {
 
 				val item = selected
 				if (item != null)
-					browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title)
+					browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title + "+" + item.unipack.producerName)
 			}
 
 			override fun onWebsiteClick(v: View) {
@@ -855,7 +855,7 @@ class MainActivity : BaseActivity() {
 		super.initAdmob()
 		adsPlayStart = InterstitialAd(this)
 		adsPlayStart.adUnitId = getString(string.admob_play_start)
-		adsPlayStart.adListener = object :AdListener(){
+		adsPlayStart.adListener = object : AdListener() {
 			override fun onAdClosed() {
 				adsPlayStart.loadAd(AdRequest.Builder().build())
 			}

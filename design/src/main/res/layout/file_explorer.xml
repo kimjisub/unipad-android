@@ -15,9 +15,9 @@
 			android:paddingTop="20dp"
 			android:paddingRight="20dp"
 			android:paddingBottom="15dp"
-			tools:text="path/path/path"
 			android:textColor="#DD000000"
-			android:textSize="15dp" />
+			android:textSize="15dp"
+			tools:text="path/path/path" />
 
 		<ListView
 			android:id="@+id/LV_list"
