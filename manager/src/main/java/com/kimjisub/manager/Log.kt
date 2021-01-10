@@ -7,6 +7,7 @@ object Log {
 	fun log(msg: String) = printLog("com.kimjisub._log", msg)
 	fun fbmsg(msg: String) = printLog("com.kimjisub._fbmsg", msg)
 	fun test(msg: String) = printLog("com.kimjisub._test", msg)
+	fun play(msg: String) = printLog("com.kimjisub._play", msg)
 	fun download(msg: String) = printLog("com.kimjisub._download", msg)
 	fun network(msg: String) = printLog("com.kimjisub._network", msg)
 	fun activity(msg: String) = printLog("com.kimjisub._activity", msg)
