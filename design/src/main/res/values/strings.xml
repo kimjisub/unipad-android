@@ -8,11 +8,11 @@
 	<string name="MPT_playCount">Play Count</string>
 	<string name="MPT_theme">Theme</string>
 	<array name="packSortMethod">
-		<item>이름</item>
-		<item>제작자</item>
-		<item>플레이 횟수</item>
-		<item>최근 연 날짜</item>
-		<item>다운로드 날짜</item>
+		<item>Title</item>
+		<item>Producer</item>
+		<item>Play Count</item>
+		<item>Last Opened Date</item>
+		<item>Download Date</item>
 	</array>
 
 	<!--Main Pack Panel-->

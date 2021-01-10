@@ -5,6 +5,8 @@
 
 	<data>
 
+		<import type="com.polyak.iconswitch.IconSwitch.Checked" />
+
 		<variable
 			name="activity"
 			type="com.kimjisub.design.panel.MainTotalPanel" />
@@ -195,6 +197,13 @@
 					android:gravity="center"
 					android:orientation="horizontal">
 
+					<com.polyak.iconswitch.IconSwitch
+						android:id="@+id/sortTypeSwitch"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						app:isw_icon_left="@drawable/ic_sort_asc"
+						app:isw_icon_right="@drawable/ic_sort_desc" />
+
 					<androidx.appcompat.widget.AppCompatSpinner
 						android:id="@+id/spinner_sort_method"
 						android:layout_width="wrap_content"
@@ -202,15 +211,6 @@
 						android:entries="@array/packSortMethod"
 						android:selectedItemPosition="@{data.sortMethod}"
 						android:theme="@style/UniPadSpinner" />
-
-					<com.kimjisub.design.TextSwitch
-						android:id="@+id/switch_sort_type"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:checked="@{data.sortType}"
-						android:textOff="asc"
-						android:textOn="desc"
-						app:switchMinWidth="100dp" />
 
 				</LinearLayout>
 
