@@ -107,8 +107,8 @@
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
 	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
 	<string name="clickToAddUniPack">유니팩을 추가하려면 클릭하세요.</string>
-	<string name="doYouWantToDeleteProject">프로젝트를 삭제하시겠습니까?</string>
-	<string name="doYouWantToRemapProject">자동재생을 자동매핑 하시겠습니까?</string>
+	<string name="doYouWantToDeleteUniPack">유니팩을 삭제하시겠습니까?</string>
+	<string name="doYouWantToRemapUniPack">이 유니팩의 자동재생을 자동매핑 하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="analyzeComplete">분석 성공!</string>

@@ -107,8 +107,8 @@
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">UniPack not found.</string>
 	<string name="clickToAddUniPack">Click to add UniPacks.</string>
-	<string name="doYouWantToDeleteProject">Do you want to delete this project?</string>
-	<string name="doYouWantToRemapProject">Do you want to remap AutoPlay of this project?</string>
+	<string name="doYouWantToDeleteUniPack">Do you want to delete this project?</string>
+	<string name="doYouWantToRemapUniPack">Do you want to remap AutoPlay of this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>
 	<string name="analyzeComplete">Analysis complete!</string>

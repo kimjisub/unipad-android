@@ -642,7 +642,7 @@ class MainActivity : BaseActivity() {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
 					.setTitle(getString(string.warning))
-					.setMessage(getString(string.doYouWantToRemapProject))
+					.setMessage(getString(string.doYouWantToRemapUniPack))
 					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
 						autoMapping(
 							item.unipack
@@ -658,7 +658,7 @@ class MainActivity : BaseActivity() {
 				val item = selected
 				if (item != null) Builder(this@MainActivity)
 					.setTitle(getString(string.warning))
-					.setMessage(getString(string.doYouWantToDeleteProject))
+					.setMessage(getString(string.doYouWantToDeleteUniPack))
 					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
 						deleteUniPack(
 							item.unipack
