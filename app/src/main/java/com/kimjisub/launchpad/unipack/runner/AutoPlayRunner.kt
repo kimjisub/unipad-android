@@ -58,24 +58,24 @@ class AutoPlayRunner(
 				if (playmode) {
 					beforeStartPlaying()
 					if (delay <= currTime - startTime) {
-						Log.test("[AutoPlay] progress $progress")
+						Log.play("[AutoPlay] progress $progress")
 						when (val e: AutoPlay.Element =
 							unipack.autoPlayTable!!.elements[progress]) {
 							is AutoPlay.Element.On -> {
-								Log.test("[AutoPlay] on ${e.x} ${e.y}")
+								Log.play("[AutoPlay] on ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								unipack.Sound_push(e.currChain, e.x, e.y, e.num)
 								unipack.led_push(e.currChain, e.x, e.y, e.num)
 								listener.onPadTouchOn(e.x, e.y)
 							}
 							is AutoPlay.Element.Off -> {
-								Log.test("[AutoPlay] off ${e.x} ${e.y}")
+								Log.play("[AutoPlay] off ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
 								listener.onPadTouchOff(e.x, e.y)
 							}
 							//is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
 							is AutoPlay.Element.Delay -> {
-								Log.test("[AutoPlay] delay ${e.delay}")
+								Log.play("[AutoPlay] delay ${e.delay}")
 								delay += e.delay.toLong()
 							}
 						}

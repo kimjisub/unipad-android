@@ -83,9 +83,6 @@ class SettingFragment : PreferenceFragmentCompat() {
 			}
 		findPreference<Preference>("community")?.onPreferenceClickListener =
 			Preference.OnPreferenceClickListener {
-
-				Log.test("test: ${getString(string.officialFacebook)}")
-
 				class Item(
 					val title: String,
 					val subtitle: String,

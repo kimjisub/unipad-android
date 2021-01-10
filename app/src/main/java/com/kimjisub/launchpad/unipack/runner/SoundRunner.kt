@@ -40,7 +40,7 @@ class SoundRunner(
 			.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
 			//.setAllowedCapturePolicy(AudioAttributes.ALLOW_CAPTURE_BY_ALL)
 			.build()
-		Log.test("soundCount: $soundCount")
+		Log.play("soundCount: $soundCount")
 		soundPool = SoundPool.Builder()
 			.setMaxStreams(soundCount.coerceAtLeast(1))
 			.setAudioAttributes(aa)
@@ -82,8 +82,8 @@ class SoundRunner(
 	}
 
 	fun soundOn(x: Int, y: Int) {
-		Log.test("soundPool is null? " + if (soundPool == null) "null" else "not null")
-		Log.test("stopID[chain.value][x][y] is null? " + if (stopID[chain.value][x][y] == null) "null" else "not null")
+		Log.play("soundPool is null? " + if (soundPool == null) "null" else "not null")
+		Log.play("stopID[chain.value][x][y] is null? " + if (stopID[chain.value][x][y] == null) "null" else "not null")
 		soundPool.stop(stopID[chain.value][x][y])
 		val e: Sound? = unipack.Sound_get(chain.value, x, y)
 		if (e != null) {

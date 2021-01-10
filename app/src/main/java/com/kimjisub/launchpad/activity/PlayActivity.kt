@@ -145,9 +145,17 @@ class PlayActivity : BaseActivity() {
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {
-				Log.test("onBillingInitialized")
-				proMode = bm.isPro
-				Log.test("proMode: $proMode")
+				val proMode = bm.isPro
+
+				CB2_purchase.visibility = if (proMode) View.GONE else View.VISIBLE
+				SCB_hideUI.isLocked = !proMode
+				SCB_watermark.isLocked = !proMode
+				SCB_proLightMode.isLocked = !proMode
+
+				if (!proMode) {
+					if (!adsPlayEnd.isLoaded)
+						adsPlayEnd.loadAd(AdRequest.Builder().build())
+				}
 			}
 		})
 		bm.initialize()
@@ -773,21 +781,6 @@ class PlayActivity : BaseActivity() {
 	}
 
 	//  /////////////////////////////////////////////////////////////////////////////////////////
-
-	var proMode = false
-		set(value) {
-			field = value
-			CB2_purchase.visibility = if (field) View.GONE else View.VISIBLE
-			SCB_hideUI.isLocked = !field
-			SCB_watermark.isLocked = !field
-			SCB_proLightMode.isLocked = !field
-
-			if (!field) {
-				if (!adsPlayEnd.isLoaded)
-					adsPlayEnd.loadAd(AdRequest.Builder().build())
-			}
-		}
-
 
 	private fun refreshWatermark() {
 		log("refreshWatermark")
