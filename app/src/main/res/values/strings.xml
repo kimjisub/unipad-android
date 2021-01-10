@@ -14,7 +14,7 @@
 	<string name="error">ERROR</string>
 	<string name="errOccur">An error has occurred.</string>
 	<string name="wait_a_sec">Just wait a moment…</string>
-	<string name="analyzing">Analyzing</string>
+	<string name="importing">Importing</string>
 	<string name="loading">Loading</string>
 	<string name="download">Download</string>
 	<string name="downloadWaiting">Download Waiting</string>
@@ -42,7 +42,7 @@
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>
 	<string name="list_refresh">Refresh List</string>
-	<string name="import_unipack">Load UniPack</string>
+	<string name="import_unipack">Import UniPack</string>
 	<string name="store">Store</string>
 
 	<!--Setting-->
@@ -112,8 +112,8 @@
 	<string name="doYouWantToRemapUniPack">Do you want to remap AutoPlay of this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>
-	<string name="analyzeComplete">Analysis complete!</string>
-	<string name="analyzeFailed">Failed to analyze…</string>
+	<string name="importComplete">Analysis complete!</string>
+	<string name="importFailed">Failed to analyze…</string>
 	<string name="isNotAnUniPack">is not an UniPack</string>
 	<string name="pressAgainToGoBack">Press again\nto exit.</string>
 	<string name="copied">Copied to clipboard.</string>

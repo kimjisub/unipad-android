@@ -107,7 +107,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				override fun onAnalyzeStart(zip: File) {
 					log("Analyzing Start")
 
-					TV_title.setText(string.analyzing)
+					TV_title.setText(string.importing)
 					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
 

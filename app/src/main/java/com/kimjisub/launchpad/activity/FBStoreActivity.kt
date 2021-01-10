@@ -257,7 +257,7 @@ class FBStoreActivity : BaseActivity() {
 				}
 
 				override fun onAnalyzeStart(zip: File) {
-					packView.setPlayText(getString(string.analyzing))
+					packView.setPlayText(getString(string.importing))
 					packView.toggleColor = colors.orange
 					packView.untoggleColor = colors.orange
 				}

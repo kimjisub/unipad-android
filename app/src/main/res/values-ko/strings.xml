@@ -14,7 +14,7 @@
 	<string name="error">에러</string>
 	<string name="errOccur">문제가 발생하였습니다.</string>
 	<string name="wait_a_sec">잠시만 기다려주세요…</string>
-	<string name="analyzing">분석중</string>
+	<string name="importing">가져오는 중</string>
 	<string name="loading">로딩중</string>
 	<string name="download">다운로드</string>
 	<string name="downloadWaiting">다운로드 대기중</string>
@@ -112,8 +112,8 @@
 	<string name="doYouWantToRemapUniPack">이 유니팩의 자동재생을 자동매핑 하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
-	<string name="analyzeComplete">분석 성공!</string>
-	<string name="analyzeFailed">분석 실패…</string>
+	<string name="importComplete">불러오기 성공!</string>
+	<string name="importFailed">불러오기 실패…</string>
 	<string name="isNotAnUniPack">유니팩이 아닙니다.</string>
 	<string name="pressAgainToGoBack">종료하시려면\n한번 더 눌러주세요</string>
 	<string name="copied">클립보드에 복사되었습니다.</string>
