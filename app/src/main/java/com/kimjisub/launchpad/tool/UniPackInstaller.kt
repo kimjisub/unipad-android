@@ -176,7 +176,7 @@ class UniPackInstaller(
 	private fun onAnalyzeStart(zip: File) {
 		notificationBuilder.apply {
 			setContentTitle(title)
-			setContentText(context.getString(R.string.analyzing))
+			setContentText(context.getString(R.string.importing))
 			setProgress(100, 0, true)
 			setOngoing(true)
 		}

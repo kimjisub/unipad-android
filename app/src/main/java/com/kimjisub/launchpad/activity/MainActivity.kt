@@ -407,7 +407,7 @@ class MainActivity : BaseActivity() {
 			val progressDialog: ProgressDialog = ProgressDialog(this@MainActivity)
 			override fun onStart() {
 				progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-				progressDialog.setTitle(getString(string.analyzing))
+				progressDialog.setTitle(getString(string.importing))
 				progressDialog.setMessage(getString(string.wait_a_sec))
 				progressDialog.setCancelable(false)
 				progressDialog.show()
@@ -453,7 +453,7 @@ class MainActivity : BaseActivity() {
 			var msg2 = "(null)"
 
 			withContext(Dispatchers.Main) {
-				progressDialog.setTitle(getString(string.analyzing))
+				progressDialog.setTitle(getString(string.importing))
 				progressDialog.setMessage(getString(string.wait_a_sec))
 				progressDialog.setCancelable(false)
 				progressDialog.show()
@@ -467,11 +467,11 @@ class MainActivity : BaseActivity() {
 				val unipack = UniPack(F_UniPack, true)
 				when {
 					unipack.errorDetail == null -> {
-						msg1 = getString(string.analyzeComplete)
+						msg1 = getString(string.importComplete)
 						msg2 = unipack.toString(this@MainActivity)
 					}
 					unipack.criticalError -> {
-						msg1 = getString(string.analyzeFailed)
+						msg1 = getString(string.importFailed)
 						msg2 = unipack.errorDetail!!
 						FileManager.deleteDirectory(F_UniPack)
 					}
@@ -481,7 +481,7 @@ class MainActivity : BaseActivity() {
 					}
 				}
 			} catch (e: Exception) {
-				msg1 = getString(string.analyzeFailed)
+				msg1 = getString(string.importFailed)
 				msg2 = e.toString()
 				FileManager.deleteDirectory(F_UniPack)
 			}
