@@ -445,25 +445,26 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun importUniPack(F_UniPackZip: File) {
+	private fun importUniPack(zip: File) {
 		CoroutineScope(Dispatchers.IO).launch {
 
-			var progressDialog = ProgressDialog(this@MainActivity)
+			lateinit var progressDialog: ProgressDialog
 			var msg1 = "(null)"
 			var msg2 = "(null)"
 
 			withContext(Dispatchers.Main) {
+				progressDialog = ProgressDialog(this@MainActivity)
 				progressDialog.setTitle(getString(string.importing))
 				progressDialog.setMessage(getString(string.wait_a_sec))
 				progressDialog.setCancelable(false)
 				progressDialog.show()
 			}
 
-			val name: String = F_UniPackZip.name
+			val name: String = zip.name
 			val name_ = name.substring(0, name.lastIndexOf("."))
 			val F_UniPack: File = FileManager.makeNextPath(F_UniPackRootExt, name_, "/")
 			try {
-				FileManager.unZipFile(F_UniPackZip.path, F_UniPack.path)
+				FileManager.unZipFile(zip.path, F_UniPack.path)
 				val unipack = UniPack(F_UniPack, true)
 				when {
 					unipack.errorDetail == null -> {
