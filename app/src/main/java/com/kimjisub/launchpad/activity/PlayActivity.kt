@@ -91,7 +91,8 @@ class PlayActivity : BaseActivity() {
 			CB2_record,
 			CB2_hideUI,
 			CB2_watermark,
-			CB2_proLightMode
+			CB2_proLightMode,
+			CB2_purchase
 		)
 	}
 	private val SCB_feedbackLight: SyncCheckBox = SyncCheckBox()
@@ -308,7 +309,7 @@ class PlayActivity : BaseActivity() {
 
 
 			// Setting
-			purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
+			CB2_purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
 				compoundButton!!.isChecked = false
 				start<SettingActivity>()
 			}
@@ -776,8 +777,7 @@ class PlayActivity : BaseActivity() {
 	var proMode = false
 		set(value) {
 			field = value
-			purchase.visibility = if (field) View.GONE else View.VISIBLE
-			proTools.alpha = if (field) 1f else 0.3f
+			CB2_purchase.visibility = if (field) View.GONE else View.VISIBLE
 			SCB_hideUI.isLocked = !field
 			SCB_watermark.isLocked = !field
 			SCB_proLightMode.isLocked = !field
@@ -1293,10 +1293,6 @@ class PlayActivity : BaseActivity() {
 			})
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		if (uiLoaded) controller = midiController
-		if (!bm.isPro) {
-			/*AdRequest adRequest = new AdRequest.Builder().build();
-			AV_adview.loadAd(adRequest);*/
-		}
 	}
 
 	override fun onDestroy() {

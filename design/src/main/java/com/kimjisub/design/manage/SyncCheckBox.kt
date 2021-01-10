@@ -29,8 +29,10 @@ class SyncCheckBox(vararg cbs: CheckBox) {
 	var isLocked: Boolean = false
 		set(value) {
 			field = value
-			for (checkBox in checkBoxes)
+			for (checkBox in checkBoxes) {
 				checkBox.isEnabled = !field
+				checkBox.alpha = if (!field) 1f else 0.3f
+			}
 		}
 
 	fun isChecked() = isChecked
