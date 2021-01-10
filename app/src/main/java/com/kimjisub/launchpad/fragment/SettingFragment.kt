@@ -2,7 +2,9 @@ package com.kimjisub.launchpad.fragment
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
@@ -65,6 +67,18 @@ class SettingFragment : PreferenceFragmentCompat() {
 		findPreference<Preference>("select_theme")?.onPreferenceClickListener =
 			Preference.OnPreferenceClickListener {
 				requireContext().start<ThemeActivity>()
+				false
+			}
+		findPreference<Preference>("change_storage_location")?.onPreferenceClickListener =
+			Preference.OnPreferenceClickListener {
+				val i = Intent()
+				i.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+				i.addCategory(Intent.CATEGORY_DEFAULT)
+				i.data = Uri.parse("package:" + requireContext().packageName)
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+				i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+				i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+				startActivity(i)
 				false
 			}
 		findPreference<Preference>("community")?.onPreferenceClickListener =
