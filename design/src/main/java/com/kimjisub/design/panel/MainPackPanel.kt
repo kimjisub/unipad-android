@@ -65,7 +65,7 @@ constructor(
 
 			TV_title.isSelected = true
 			TV_subtitle.isSelected = true
-			IV_path.isSelected = true
+			TV_path.isSelected = true
 			IV_bookmark.setOnClickListener { v: View ->
 				onEventListener?.onBookmarkClick(v)
 			}
@@ -87,6 +87,9 @@ constructor(
 			IV_delete.setOnClickListener { v: View ->
 				onEventListener?.onDeleteClick(v)
 			}
+			TV_path.setOnClickListener { v: View ->
+				onEventListener?.onPathClick(v)
+			}
 
 			typedArray.recycle()
 		}
@@ -105,6 +108,7 @@ constructor(
 		fun onWebsiteClick(v: View)
 		fun onFuncClick(v: View)
 		fun onDeleteClick(v: View)
+		fun onPathClick(v: View)
 	}
 }
 

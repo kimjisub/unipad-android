@@ -38,6 +38,7 @@
 	<string name="newUniPack">새로운 유니팩</string>
 	<string name="notFound">찾을 수 없습니다.</string>
 	<string name="exceptionOccurred">예외 오류 발생</string>
+	<string name="openDirectory">폴더 열기</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
