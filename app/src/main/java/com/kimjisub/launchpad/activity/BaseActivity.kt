@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.InterstitialAd
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
@@ -144,6 +145,12 @@ open class BaseActivity : AppCompatActivity() {
 
 	open fun initAdmob() {
 		Log.admob("initAdmob " + getActivityName())
+
+		// todo remove
+		val testDeviceIds = listOf("A86032885B9C7CDBD0BB88119118E85D")
+		val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
+		MobileAds.setRequestConfiguration(configuration)
+
 		MobileAds.initialize(this) {}
 	}
 
