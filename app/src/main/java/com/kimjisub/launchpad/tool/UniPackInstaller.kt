@@ -43,7 +43,7 @@ class UniPackInstaller(
 		fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
 		fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
 		fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
-		fun onAnalyzeStart(zip: File)
+		fun onImportStart(zip: File)
 		fun onInstallComplete(folder: File, unipack: UniPack)
 
 		fun onException(throwable: Throwable)
@@ -114,7 +114,7 @@ class UniPackInstaller(
 				inputStream.close()
 				outputStream.close()
 
-				withContext(Dispatchers.Main) { onAnalyzeStart(zip) }
+				withContext(Dispatchers.Main) { onImportStart(zip) }
 
 				FileManager.unZipFile(zip.path, folder.path)
 				val unipack = UniPack(folder, true)
@@ -173,7 +173,7 @@ class UniPackInstaller(
 		listener.onDownloadProgressPercent(percent, downloadedSize, fileSize)
 	}
 
-	private fun onAnalyzeStart(zip: File) {
+	private fun onImportStart(zip: File) {
 		notificationBuilder.apply {
 			setContentTitle(title)
 			setContentText(context.getString(R.string.importing))
@@ -182,7 +182,7 @@ class UniPackInstaller(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		listener.onAnalyzeStart(zip)
+		listener.onImportStart(zip)
 	}
 
 	private fun onInstallComplete(folder: File, unipack: UniPack) {
