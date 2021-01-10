@@ -14,9 +14,7 @@ import com.kimjisub.design.R
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
-import com.kimjisub.manager.Log
 import kotlinx.android.synthetic.main.panel_main_total.view.*
-import java.lang.Exception
 
 class MainTotalPanel
 @JvmOverloads
@@ -105,16 +103,16 @@ constructor(
 	}
 
 	override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
-		when(child?.id){
+		when (child?.id) {
 			R.id.rootView -> {
 				super.addView(child, index, params)
 			}
-			else->{
+			else -> {
 				b.contentRoot.addView(child, index, params)
 			}
 		}
 		//super.addView(child, index, params)
-	//		try{
+		//		try{
 //
 //			b.rootView.addView(child, index, params)
 //		}catch (e:Exception){

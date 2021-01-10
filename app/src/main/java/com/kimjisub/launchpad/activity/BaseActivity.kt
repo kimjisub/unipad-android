@@ -103,7 +103,7 @@ open class BaseActivity : AppCompatActivity() {
 		return F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
 	}
 
-	fun getActivityName():String{
+	fun getActivityName(): String {
 		return this.localClassName.split('.').last()
 	}
 
