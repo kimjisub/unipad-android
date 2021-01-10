@@ -21,7 +21,6 @@ import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.manager.Log
 import com.kimjisub.manager.splitties.browse
 import splitties.activities.start
 import splitties.toast.toast

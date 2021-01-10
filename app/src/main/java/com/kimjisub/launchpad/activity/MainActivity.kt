@@ -670,6 +670,17 @@ class MainActivity : BaseActivity() {
 					)
 					.show()
 			}
+
+			override fun onPathClick(v: View) {
+				val item = selected
+				if (item != null) {
+//					todo
+//					val intent = Intent(Intent.ACTION_GET_CONTENT)
+//					val uri: Uri = Uri.parse(item.unipack.F_project.path)
+//					intent.setDataAndType(uri, "file/*") //specify your type
+//					startActivity(Intent.createChooser(intent, getString(string.openDirectory)))
+				}
+			}
 		}
 	}
 

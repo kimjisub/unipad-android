@@ -38,6 +38,7 @@
 	<string name="newUniPack">New UniPack</string>
 	<string name="notFound">Not Found</string>
 	<string name="exceptionOccurred">Exception Occurred</string>
+	<string name="openDirectory">Open Directory</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">Reconnect Launchpad</string>

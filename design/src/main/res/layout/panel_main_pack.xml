@@ -301,7 +301,7 @@
 					android:layout_height="wrap_content">
 
 					<TextView
-						android:id="@+id/IV_path"
+						android:id="@+id/TV_path"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"

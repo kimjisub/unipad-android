@@ -52,7 +52,6 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import kotlinx.android.synthetic.main.activity_play.*
 import splitties.activities.start
