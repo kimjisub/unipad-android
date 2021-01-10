@@ -192,8 +192,8 @@ class MainActivity : BaseActivity() {
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	override fun onCreate(savedInstanceState: Bundle?) {
-		setContentView(layout.activity_main)
 		super.onCreate(savedInstanceState)
+		setContentView(layout.activity_main)
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		divider.setDrawable(resources.getDrawable(drawable.border_divider))
