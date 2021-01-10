@@ -8,7 +8,7 @@
 	<string name="MPT_playCount">플레이 횟수</string>
 	<string name="MPT_theme">테마</string>
 	<array name="packSortMethod">
-		<item>이름</item>
+		<item>제목</item>
 		<item>제작자</item>
 		<item>플레이 횟수</item>
 		<item>최근 연 날짜</item>

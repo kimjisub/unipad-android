@@ -14,6 +14,8 @@ import com.kimjisub.design.R
 import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
+import com.kimjisub.manager.extra.addOnPropertyChanged
+import com.polyak.iconswitch.IconSwitch
 import kotlinx.android.synthetic.main.panel_main_total.view.*
 
 class MainTotalPanel
@@ -79,11 +81,16 @@ constructor(
 
 		}
 
-		switch_sort_type.setOnCheckedChangeListener { _, b ->
+		sortTypeSwitch.setCheckedChangeListener { current ->
 			setSort(
 				spinner_sort_method.selectedItemPosition,
-				b
+				current == IconSwitch.Checked.RIGHT
 			)
+		}
+
+		data.sortType.addOnPropertyChanged {
+			sortTypeSwitch.checked =
+				if (it.get() == true) IconSwitch.Checked.RIGHT else IconSwitch.Checked.LEFT
 		}
 
 		themeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -121,7 +128,7 @@ constructor(
 	}
 
 	private fun setSort(sortMethod: Int) {
-		val defaultSortTypes = arrayOf(true, true, true, false, false)
+		val defaultSortTypes = arrayOf(false, false, true, true, true)
 		val sortType = defaultSortTypes[sortMethod]
 		setSort(sortMethod, sortType)
 	}
