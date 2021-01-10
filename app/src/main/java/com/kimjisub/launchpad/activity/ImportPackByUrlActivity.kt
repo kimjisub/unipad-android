@@ -104,8 +104,8 @@ class ImportPackByUrlActivity : BaseActivity() {
 					TV_message.text = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
 				}
 
-				override fun onAnalyzeStart(zip: File) {
-					log("Analyzing Start")
+				override fun onImportStart(zip: File) {
+					log("Import Start")
 
 					TV_title.setText(string.importing)
 					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
