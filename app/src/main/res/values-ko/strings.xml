@@ -14,7 +14,7 @@
 	<string name="error">에러</string>
 	<string name="errOccur">문제가 발생하였습니다.</string>
 	<string name="wait_a_sec">잠시만 기다려주세요…</string>
-	<string name="importing">가져오는 중</string>
+	<string name="importing">불러오는 중</string>
 	<string name="loading">로딩중</string>
 	<string name="download">다운로드</string>
 	<string name="downloadWaiting">다운로드 대기중</string>
