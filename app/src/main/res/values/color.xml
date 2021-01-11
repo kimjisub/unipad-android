@@ -45,4 +45,5 @@
 	<color name="app_orange">#ff8f00</color>
 	<color name="app_blue">#00b8d4</color>
 	<color name="app_blue_dark">#009db5</color>
+	<color name="ic_launcher_background">#F5F5F5</color>
 </resources>

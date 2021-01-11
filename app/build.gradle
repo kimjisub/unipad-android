@@ -11,12 +11,12 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 30
-		versionCode 85
-		versionName "4.0.0b4"
+		versionCode 87
+		versionName "4.0.0b6"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
-		renderscriptTargetApi 19
-		renderscriptSupportModeEnabled true
+		// renderscriptTargetApi 19
+		// renderscriptSupportModeEnabled true
 	}
 	buildTypes {
 		release {
