@@ -1,8 +1,11 @@
 package com.kimjisub.launchpad.tool
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
@@ -34,6 +37,13 @@ class UniPackInstaller(
 		builder.apply {
 			setAutoCancel(true)
 			setSmallIcon(R.mipmap.ic_launcher)
+
+			val intent = Intent(context, SplashActivity::class.java)
+			intent.action = Intent.ACTION_MAIN
+			intent.addCategory(Intent.CATEGORY_LAUNCHER)
+			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+			val pIntent: PendingIntent = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+			setContentIntent(pIntent)
 		}
 		builder
 	}
