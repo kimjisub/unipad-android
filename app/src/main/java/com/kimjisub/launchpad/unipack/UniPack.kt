@@ -14,6 +14,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -166,17 +167,23 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				else if (y < 0 || y >= buttonY) addErr(
 					"keySound : [$s] y is incorrect"
 				) else {
-					val sound =
-						Sound(File(F_sounds!!.absolutePath + "/" + soundURL), loop, wormhole)
-					if (!sound.file.isFile) {
+					try {
+						val soundFile = File(F_sounds!!.absolutePath + "/" + soundURL)
+						val sound = Sound(soundFile, loop, wormhole)
+						if (!sound.file.isFile) {
+							addErr("keySound : [$s] sound was not found")
+							continue
+						}
+						if (soundTable!![c][x][y] == null)
+							soundTable!![c][x][y] = ArrayList()
+						sound.num = soundTable!![c][x][y]!!.size
+						soundTable!![c][x][y]!!.add(sound)
+						soundCount++
+					} catch (e: Exception) {
+						e.printStackTrace()
 						addErr("keySound : [$s] sound was not found")
 						continue
 					}
-					if (soundTable!![c][x][y] == null)
-						soundTable!![c][x][y] = ArrayList()
-					sound.num = soundTable!![c][x][y]!!.size
-					soundTable!![c][x][y]!!.add(sound)
-					soundCount++
 				}
 			}
 			reader.close()
