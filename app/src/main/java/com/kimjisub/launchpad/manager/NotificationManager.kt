@@ -4,7 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
-import android.app.NotificationManager.IMPORTANCE_DEFAULT
+import android.app.NotificationManager.*
 import android.content.Context
 import android.graphics.Color
 import android.os.Build.VERSION
@@ -23,7 +23,7 @@ object NotificationManager {
 
 			enumValues<Channel>().forEach {
 				val channel =
-					NotificationChannel(it.name, context.getString(it.titleId), IMPORTANCE_DEFAULT)
+					NotificationChannel(it.name, context.getString(it.titleId), IMPORTANCE_HIGH)
 				channel.apply {
 					description = context.getString(it.titleId) + " disc"
 					group = it.group.name
