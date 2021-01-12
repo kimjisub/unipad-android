@@ -203,8 +203,8 @@ class FBStoreActivity : BaseActivity() {
 		val (code, title, producerName, isAutoPlay, isLED, downloadCount, URL) = item.storeVO
 
 		val packView = item.packView!!
-		val F_UniPackZip: File = FileManager.makeNextPath(F_UniPackRootExt, code!!, ".zip")
-		val F_UniPack = File(F_UniPackRootExt, code)
+		val F_UniPackZip: File = FileManager.makeNextPath(uniPackExt, code!!, ".zip")
+		val F_UniPack = File(uniPackExt, code)
 		packView.toggleColor = colors.gray1
 		packView.untoggleColor = colors.gray1
 		packView.setPlayText("0%")
@@ -220,7 +220,7 @@ class FBStoreActivity : BaseActivity() {
 			context = this,
 			title = item.storeVO.title!!,
 			url = item.storeVO.URL!!,
-			workspace = F_UniPackRootExt,
+			workspace = uniPackExt,
 			folderName = item.storeVO.code!!,
 			listener = object : UniPackInstaller.Listener {
 				override fun onInstallStart() {

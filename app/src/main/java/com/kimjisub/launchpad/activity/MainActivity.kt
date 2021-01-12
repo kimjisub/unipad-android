@@ -462,7 +462,7 @@ class MainActivity : BaseActivity() {
 
 			val name: String = zip.name
 			val name_ = name.substring(0, name.lastIndexOf("."))
-			val F_UniPack: File = FileManager.makeNextPath(F_UniPackRootExt, name_, "/")
+			val F_UniPack: File = FileManager.makeNextPath(uniPackExt, name_, "/")
 			try {
 				FileManager.unZipFile(zip.path, F_UniPack.path)
 				val unipack = UniPack(F_UniPack, true)
@@ -605,7 +605,7 @@ class MainActivity : BaseActivity() {
 					val source = File(item.unipack.F_project.path)
 					val isInternal = FileManager.isInternalFile(this@MainActivity, source)
 					val target =
-						File(if (isInternal) F_UniPackRootExt else F_UniPackRootInt, source.name)
+						File(if (isInternal) uniPackExt else uniPackInt, source.name)
 					CoroutineScope(Dispatchers.IO).launch {
 						withContext(Dispatchers.Main) {
 							item.moving = true
@@ -737,8 +737,8 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val size = FileManager.getFolderSize(F_UniPackRootExt) + FileManager.getFolderSize(
-					F_UniPackRootInt
+				val size = FileManager.getFolderSize(uniPackExt) + FileManager.getFolderSize(
+					uniPackInt
 				)
 
 				withContext(Dispatchers.Main) {
