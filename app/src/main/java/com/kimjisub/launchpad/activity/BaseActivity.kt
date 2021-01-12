@@ -86,7 +86,7 @@ open class BaseActivity : AppCompatActivity() {
 	val preference: PreferenceManager by lazy { PreferenceManager(applicationContext) }
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
-	val F_UniPackRootExt: File by lazy {
+	val uniPackExt: File by lazy {
 		val externalPath = FileManager.getExternalUniPackRoot()
 
 		//todo thread
@@ -94,14 +94,14 @@ open class BaseActivity : AppCompatActivity() {
 		FileManager.makeNomedia(externalPath)
 		externalPath
 	}
-	val F_UniPackRootInt: File by lazy {
+	val uniPackInt: File by lazy {
 		FileManager.getInternalUniPackRoot(applicationContext)
 	}
 
 	// ============================================================================================= Function
 
 	fun getUniPackDirList(): Array<File> {
-		return F_UniPackRootExt.listFiles() + F_UniPackRootInt.listFiles()
+		return uniPackExt.listFiles() + uniPackInt.listFiles()
 	}
 
 	fun getActivityName(): String {

@@ -22,7 +22,7 @@ class UniPackImporter(
 	workspace: File,
 	private val listener: Listener? = null
 ) {
-	private val zipNameWithoutExt = zip.name.split('.').last()
+	private val zipNameWithoutExt = zip.name.split('.').first()
 	private val folder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")
 
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
