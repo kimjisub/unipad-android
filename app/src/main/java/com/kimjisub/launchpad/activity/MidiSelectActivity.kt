@@ -40,6 +40,11 @@ class MidiSelectActivity : BaseActivity() {
 				LaunchpadX::class
 			),
 			MidiDeviceItem(
+				getDrawable(R.drawable.midi_lp_mk3),
+				"Launchpad MK3",
+				LaunchpadMK3::class
+			),
+			MidiDeviceItem(
 				getDrawable(R.drawable.midi_midifighter),
 				"Midi Fighter",
 				MidiFighter::class
