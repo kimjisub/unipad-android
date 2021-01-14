@@ -167,6 +167,10 @@ object MidiConnection {
 					listener?.onUiLog("prediction : Launchpad X")
 					LaunchpadX()
 				}
+				291 -> {
+					listener?.onUiLog("prediction : Launchpad MK3")
+					LaunchpadMK3()
+				}
 				8211 -> {
 					listener?.onUiLog("prediction : LX 61 piano")
 					MasterKeyboard()
