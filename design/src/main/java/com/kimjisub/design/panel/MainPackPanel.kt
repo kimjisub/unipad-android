@@ -36,8 +36,6 @@ constructor(
 	class Data {
 		// Static
 		val bookmark: ObservableField<Boolean> = ObservableField()
-		val storage: ObservableField<Boolean> = ObservableField()
-		val moving: ObservableField<Boolean> = ObservableField()
 		val title: ObservableField<String> = ObservableField()
 		val subtitle: ObservableField<String> = ObservableField()
 		val padSize: ObservableField<String> = ObservableField()
@@ -72,9 +70,6 @@ constructor(
 			IV_edit.setOnClickListener { v: View ->
 				onEventListener?.onEditClick(v)
 			}
-			IV_storage.setOnClickListener { v: View ->
-				onEventListener?.onStorageClick(v)
-			}
 			IV_youtube.setOnClickListener { v: View ->
 				onEventListener?.onYoutubeClick(v)
 			}
@@ -103,7 +98,6 @@ constructor(
 	interface OnEventListener {
 		fun onBookmarkClick(v: View)
 		fun onEditClick(v: View)
-		fun onStorageClick(v: View)
 		fun onYoutubeClick(v: View)
 		fun onWebsiteClick(v: View)
 		fun onFuncClick(v: View)

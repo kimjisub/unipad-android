@@ -42,6 +42,21 @@ class PreferenceManager(
 			}
 		}
 
+	private val storageIndexTag = "StorageIndex"
+	var storageIndex: Int
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getInt(
+				storageIndexTag,
+				0
+			)
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putInt(storageIndexTag, value)
+			}
+		}
+
 	private val prevAdsShowTimeTag = "PrevAdsShowTime"
 	var prevAdsShowTime: Long
 		get() {

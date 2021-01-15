@@ -27,7 +27,6 @@ data class UniPackItem(
 	//var packView: PackView? = null
 	var flagColor: Int = 0
 	var toggle: Boolean = false
-	var moving: Boolean = false
 
 	var togglea: ((toggle: Boolean) -> Unit)? = null
 	var playClick: (() -> Unit)? = null

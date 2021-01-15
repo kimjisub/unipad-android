@@ -5,9 +5,10 @@
 		<Preference
 			android:key="select_theme"
 			android:title="@string/select_theme" />
-		<Preference
-			android:key="change_storage_location"
-			android:title="@string/change_storage_location" />
+
+<!--		<DropDownPreference-->
+<!--			android:key="storage_location"-->
+<!--			android:title="@string/storage_location"/>-->
 
 	</PreferenceCategory>
 
