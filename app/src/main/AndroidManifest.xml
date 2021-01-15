@@ -25,6 +25,7 @@
 		android:name=".BaseApplication"
 		android:allowBackup="true"
 		android:fullBackupContent="true"
+		android:hardwareAccelerated="true"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
 		android:largeHeap="true"
