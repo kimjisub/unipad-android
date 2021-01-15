@@ -7,8 +7,7 @@
 		android:layout_height="match_parent">
 
 		<androidx.fragment.app.FragmentContainerView
-			android:id="@+id/Fragment"
-			android:name="com.kimjisub.launchpad.fragment.SettingFragment"
+			android:id="@+id/frame"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			app:layout_constraintBottom_toBottomOf="parent"
