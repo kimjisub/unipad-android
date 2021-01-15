@@ -16,7 +16,7 @@ data class DialogListItem(
 
 
 class DialogListAdapter(
-	private val list: ArrayList<DialogListItem>
+	private val list: Array<DialogListItem>
 ) : BaseAdapter() {
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

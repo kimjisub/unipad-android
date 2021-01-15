@@ -48,7 +48,7 @@ class PreferenceManager(
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getInt(
 				storageIndexTag,
-				0
+				-1
 			)
 		}
 		set(value) {
@@ -98,7 +98,7 @@ class PreferenceManager(
 	var sortMethod: Int
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getInt(sortMethodTag, 1)
+			return pref.getInt(sortMethodTag, 4)
 		}
 		set(value) {
 			context.getSharedPreferences(name, MODE_PRIVATE).edit {
@@ -110,7 +110,7 @@ class PreferenceManager(
 	var sortType: Boolean
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getBoolean(sortTypeTag, false)
+			return pref.getBoolean(sortTypeTag, true)
 		}
 		set(value) {
 			context.getSharedPreferences(name, MODE_PRIVATE).edit {

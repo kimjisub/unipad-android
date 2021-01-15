@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.preference.*
 import com.anjlab.android.iab.v3.BillingProcessor
@@ -42,29 +41,15 @@ class SettingActivity : BaseActivity() {
 	}
 
 	class SettingsFragment : PreferenceFragmentCompat() {
+		private lateinit var settingActivity: SettingActivity
+		private lateinit var p: PreferenceManager
 		private lateinit var bm: BillingManager
-		private val preference: PreferenceManager by lazy { PreferenceManager(requireContext()) }
 
-		override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
-			super.setPreferenceScreen(preferenceScreen)
-
-			if (preferenceScreen != null) {
-				for (i in 0 until preferenceScreen.preferenceCount)
-					removeIconSpace(preferenceScreen.getPreference(i))
-			}
-		}
-
-		private fun removeIconSpace(preference: Preference?) {
-			if (preference != null) {
-				preference.isIconSpaceReserved = false
-				if (preference is PreferenceCategory)
-					for (i in 0 until preference.preferenceCount)
-						removeIconSpace(preference.getPreference(i))
-			}
-		}
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
+			settingActivity = activity as SettingActivity
+			p = settingActivity.p
 			bm = BillingManager(requireActivity(), object : BillingProcessor.IBillingHandler {
 				override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 					updateBilling()
@@ -78,22 +63,70 @@ class SettingActivity : BaseActivity() {
 			})
 			bm.initialize()
 
+			addPreferenceListener()
+		}
+
+		override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
+			super.setPreferenceScreen(preferenceScreen)
+
+			if (preferenceScreen != null) {
+				for (i in 0 until preferenceScreen.preferenceCount)
+					removeIconSpace(preferenceScreen.getPreference(i))
+			}
+		}
+
+		override fun onResume() {
+			setPreferenceValues()
+			super.onResume()
+		}
+
+		override fun onDestroy() {
+			super.onDestroy()
+			bm.release()
+		}
+
+		private fun addPreferenceListener() {
 			findPreference<Preference>("select_theme")?.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					requireContext().start<ThemeActivity>()
 					false
 				}
-//		findPreference<DropDownPreference>("storage_location")?.onPreferenceChangeListener =
-//			Preference.OnPreferenceChangeListener { preference, newValue ->
-//				Log.test(newValue.toString())
-//				false
-//			}
 
-//		.onPreferenceClickListener =
-//			Preference.OnPreferenceClickListener {
-//
-//				false
-//			}
+
+			findPreference<Preference>("storage_location")?.onPreferenceClickListener =
+				Preference.OnPreferenceClickListener {
+					val list = settingActivity.getUniPackWorkspaces()
+					val listView = ListView(context)
+					val data = list
+						.map { DialogListItem(it.name, it.file.absolutePath) }
+						.toTypedArray()
+
+					listView.adapter = DialogListAdapter(data)
+					listView.onItemClickListener =
+						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
+							p.storageIndex = list[position].index
+							findPreference<Preference>("storage_location")?.summary =
+								settingActivity.uniPackWorkspace.absolutePath
+							// todo 다이얼로그 닫히게
+							// todo 유니팩 복사 진행
+						}
+					val builder = AlertDialog.Builder(context)
+					builder.setTitle(getString(R.string.storage_location))
+					builder.setView(listView)
+					builder.show()
+					false
+				}
+
+			findPreference<Preference>("storage_location")?.onPreferenceChangeListener =
+				Preference.OnPreferenceChangeListener { _, newValue ->
+					false
+				}
+
+			//		.onPreferenceClickListener =
+			//			Preference.OnPreferenceClickListener {
+			//
+			//				false
+			//			}
 			findPreference<Preference>("community")?.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					class Item(
@@ -168,7 +201,7 @@ class SettingActivity : BaseActivity() {
 					val listView = ListView(context)
 					val data = ArrayList<DialogListItem>()
 					for (i in list.indices) data.add(list[i].toListItem())
-					listView.adapter = DialogListAdapter(data)
+					listView.adapter = DialogListAdapter(data.toTypedArray())
 					listView.onItemClickListener =
 						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
 							startActivity(Intent(list[position].action, list[position].url.toUri()))
@@ -208,7 +241,7 @@ class SettingActivity : BaseActivity() {
 					val listView = ListView(context)
 					val data = ArrayList<DialogListItem>()
 					for (i in list.indices) data.add(list[i].toListItem())
-					listView.adapter = DialogListAdapter(data)
+					listView.adapter = DialogListAdapter(data.toTypedArray())
 					listView.onItemClickListener =
 						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
 							bm.purchase(
@@ -288,7 +321,7 @@ class SettingActivity : BaseActivity() {
 					val listView = ListView(context)
 					val data = ArrayList<DialogListItem>()
 					for (i in list.indices) data.add(list[i].toListItem())
-					listView.adapter = DialogListAdapter(data)
+					listView.adapter = DialogListAdapter(data.toTypedArray())
 					listView.onItemClickListener =
 						AdapterView.OnItemClickListener { parent: AdapterView<*>?, view: View?, position: Int, id: Long ->
 							requireContext().browse(list[position].url)
@@ -313,20 +346,11 @@ class SettingActivity : BaseActivity() {
 				}
 		}
 
-		internal fun updateBilling() {
-			(findPreference<Preference>("pro") as CheckBoxPreference).isChecked =
-				bm.isPro
-		}
+		private fun setPreferenceValues() {
+			findPreference<Preference>("select_theme")?.summary = p.selectedTheme
+			findPreference<Preference>("storage_location")?.summary =
+				settingActivity.uniPackWorkspace.absolutePath
 
-
-		override fun onResume() {
-			findPreference<Preference>("select_theme")?.summary = preference.selectedTheme
-
-			val filesDirs = ContextCompat.getExternalFilesDirs(requireContext(), "UniPack")
-			val filesDirsName = filesDirs.map { it.path }.toTypedArray()
-			filesDirsName.plus("Legacy")
-			filesDirsName.forEach { Log.test(it) }
-			findPreference<DropDownPreference>("storage_location")?.entries = filesDirsName
 			findPreference<Preference>("FCMToken")?.summary = FirebaseInstanceId.getInstance().token
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력
@@ -341,19 +365,27 @@ class SettingActivity : BaseActivity() {
 				"$displayCountry ($country) - $language"
 			findPreference<Preference>("copyright")?.summary =
 				String.format(getString(R.string.translatedBy), getString(R.string.translator))
-			super.onResume()
 		}
 
-		override fun onDestroy() {
-			super.onDestroy()
-			bm.release()
+		private fun removeIconSpace(preference: Preference?) {
+			if (preference != null) {
+				preference.isIconSpaceReserved = false
+				if (preference is PreferenceCategory)
+					for (i in 0 until preference.preferenceCount)
+						removeIconSpace(preference.getPreference(i))
+			}
+		}
+
+		internal fun updateBilling() {
+			(findPreference<Preference>("pro") as CheckBoxPreference).isChecked =
+				bm.isPro
 		}
 
 		companion object {
-
-			fun newInstance(rootKey: String = "root") = SettingsFragment().apply {
-				arguments = Bundle().apply { putString(ARG_PREFERENCE_ROOT, rootKey) }
-			}
+			fun newInstance(rootKey: String = "root") =
+				SettingsFragment().apply {
+					arguments = Bundle().apply { putString(ARG_PREFERENCE_ROOT, rootKey) }
+				}
 		}
 	}
 }
