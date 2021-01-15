@@ -83,7 +83,7 @@ open class BaseActivity : AppCompatActivity() {
 		}
 	}
 
-	lateinit var preference: PreferenceManager
+	lateinit var p: PreferenceManager
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +96,7 @@ open class BaseActivity : AppCompatActivity() {
 			return ContextCompat.getExternalFilesDirs(
 				applicationContext,
 				"UniPack"
-			)[preference.storageIndex]
+			)[p.storageIndex]
 		}
 
 	fun getUniPackDirList(): Array<File> {
@@ -111,14 +111,14 @@ open class BaseActivity : AppCompatActivity() {
 
 
 	private fun checkAdsCooltime(): Boolean {
-		val prevTime = preference.prevAdsShowTime
+		val prevTime = p.prevAdsShowTime
 		val currTime = System.currentTimeMillis()
 		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
 	}
 
 	private fun updateAdsCooltime() {
 		val currTime = System.currentTimeMillis()
-		preference.prevAdsShowTime = currTime
+		p.prevAdsShowTime = currTime
 	}
 
 	fun showAdmob(interstitialAd: InterstitialAd) {
@@ -170,7 +170,7 @@ open class BaseActivity : AppCompatActivity() {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		Log.activity("onCreate " + getActivityName())
 		super.onCreate(savedInstanceState)
-		preference = PreferenceManager(applicationContext)
+		p = PreferenceManager(applicationContext)
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
