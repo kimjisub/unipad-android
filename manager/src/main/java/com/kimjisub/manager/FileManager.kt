@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.media.MediaPlayer
 import android.os.Environment
+import android.preference.PreferenceManager
+import androidx.core.content.ContextCompat
 import java.io.*
 import java.util.*
 import java.util.zip.ZipEntry
@@ -135,12 +137,6 @@ object FileManager {
 
 	}
 
-	fun isInternalFile(context: Context, file: File): Boolean {
-		val target: String? = getInternalUniPackRoot(context).path
-		val source: String = file.path
-		return source.contains(target!!)
-	}
-
 	// ============================================================================================= Make, Move, Copy, Delete
 
 
@@ -232,60 +228,6 @@ object FileManager {
 			return totalMemory
 		} else return 0
 	}
-
-	fun getExternalUniPackRoot(): File = File(Environment.getExternalStorageDirectory(), "Unipad")
-
-
-	fun getInternalUniPackRoot(context: Context): File = context.getDir("UniPack", MODE_PRIVATE)
-
-
-	/*public static String getInternalStoragePath() {
-		return Environment.getExternalStorageDirectory().getPath();
-	}
-
-	public static String getExternalSDCardPath() {
-		HashSet<String> hs = getExternalMounts();
-		for (String extSDCardPath : hs) {
-			return extSDCardPath;
-		}
-		return null;
-	}
-
-	public static HashSet<String> getExternalMounts() {
-		final HashSet<String> out = new HashSet<String>();
-		String reg = "(?i).*media_rw.*(storage).*(sdcardfs).*rw.*";
-		String s = "";
-		try {
-			final Process process = new ProcessBuilder().command("mount").redirectErrorStream(true).start();
-			process.waitFor();
-			final InputStream is = process.getInputStream();
-			final byte[] buffer = new byte[1024];
-			while (is.read(buffer) != -1) {
-				s = s + new String(buffer);
-			}
-			is.close();
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-
-		final String[] lines = s.split("\n");
-		for (String line : lines) {
-			if (!line.toLowerCase(Locale.US).contains("asec")) {
-				if (line.matches(reg)) {
-					String[] parts = line.split(" ");
-					for (String part : parts) {
-						if (part.startsWith("/")) {
-							if (!part.toLowerCase(Locale.US).contains("vold") && !part.toLowerCase(Locale.US).contains("/mnt/")) {
-								out.add(part);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return out;
-	}*/
 
 	// ============================================================================================= Etc
 

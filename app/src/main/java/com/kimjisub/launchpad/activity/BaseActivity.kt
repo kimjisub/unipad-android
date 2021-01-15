@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.InterstitialAd
 import com.google.android.gms.ads.MobileAds
@@ -17,7 +18,6 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import splitties.activities.start
 import java.io.File
@@ -83,32 +83,31 @@ open class BaseActivity : AppCompatActivity() {
 		}
 	}
 
-	val preference: PreferenceManager by lazy { PreferenceManager(applicationContext) }
+	lateinit var preference: PreferenceManager
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
-	val uniPackExt: File by lazy {
-		val externalPath = FileManager.getExternalUniPackRoot()
 
-		//todo thread
-		FileManager.makeDirWhenNotExist(externalPath)
-		FileManager.makeNomedia(externalPath)
-		externalPath
-	}
-	val uniPackInt: File by lazy {
-		FileManager.getInternalUniPackRoot(applicationContext)
-	}
+	val uniPackWorkspace: File
+		get() {
+			val filesDirs = ContextCompat.getExternalFilesDirs(applicationContext, "UniPack")
+			if (filesDirs.size <= preference.storageIndex)
+				preference.storageIndex = 0
 
-	// ============================================================================================= Function
+			return ContextCompat.getExternalFilesDirs(
+				applicationContext,
+				"UniPack"
+			)[preference.storageIndex]
+		}
 
 	fun getUniPackDirList(): Array<File> {
-		return uniPackExt.listFiles() + uniPackInt.listFiles()
+		return uniPackWorkspace.listFiles()!!
 	}
 
 	fun getActivityName(): String {
 		return this.localClassName.split('.').last()
 	}
 
-	// ============================================================================================= Ads
+	// Ads /////////////////////////////////////////////////////////////////////////////////////////
 
 
 	private fun checkAdsCooltime(): Boolean {
@@ -171,6 +170,7 @@ open class BaseActivity : AppCompatActivity() {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		Log.activity("onCreate " + getActivityName())
 		super.onCreate(savedInstanceState)
+		preference = PreferenceManager(applicationContext)
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override

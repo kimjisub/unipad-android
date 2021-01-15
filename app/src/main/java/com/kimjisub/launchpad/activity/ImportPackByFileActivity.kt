@@ -14,7 +14,7 @@ class ImportPackByFileActivity : BaseActivity() {
 		UniPackImporter(
 			context = this,
 			File(intent?.data?.path!!),
-			uniPackExt
+			uniPackWorkspace
 		)
 		finish()
 	}

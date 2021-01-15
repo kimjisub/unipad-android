@@ -2,12 +2,11 @@ package com.kimjisub.launchpad.fragment
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.preference.*
 import com.anjlab.android.iab.v3.BillingProcessor
@@ -21,6 +20,7 @@ import com.kimjisub.launchpad.manager.BillingManager
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.splitties.browse
 import splitties.activities.start
 import splitties.toast.toast
@@ -68,18 +68,17 @@ class SettingFragment : PreferenceFragmentCompat() {
 				requireContext().start<ThemeActivity>()
 				false
 			}
-		findPreference<Preference>("change_storage_location")?.onPreferenceClickListener =
-			Preference.OnPreferenceClickListener {
-				val i = Intent()
-				i.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-				i.addCategory(Intent.CATEGORY_DEFAULT)
-				i.data = Uri.parse("package:" + requireContext().packageName)
-				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-				i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-				i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-				startActivity(i)
-				false
-			}
+//		findPreference<DropDownPreference>("storage_location")?.onPreferenceChangeListener =
+//			Preference.OnPreferenceChangeListener { preference, newValue ->
+//				Log.test(newValue.toString())
+//				false
+//			}
+
+//		.onPreferenceClickListener =
+//			Preference.OnPreferenceClickListener {
+//
+//				false
+//			}
 		findPreference<Preference>("community")?.onPreferenceClickListener =
 			Preference.OnPreferenceClickListener {
 				class Item(
@@ -303,6 +302,12 @@ class SettingFragment : PreferenceFragmentCompat() {
 
 	override fun onResume() {
 		findPreference<Preference>("select_theme")?.summary = preference.selectedTheme
+
+		val filesDirs = ContextCompat.getExternalFilesDirs(requireContext(), "UniPack")
+		val filesDirsName = filesDirs.map { it.path }.toTypedArray()
+		filesDirsName.plus("Legacy")
+		filesDirsName.forEach { Log.test(it) }
+		findPreference<DropDownPreference>("storage_location")?.entries = filesDirsName
 		findPreference<Preference>("FCMToken")?.summary = FirebaseInstanceId.getInstance().token
 		val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 		val displayCountry: String = systemLocale.displayCountry //국가출력

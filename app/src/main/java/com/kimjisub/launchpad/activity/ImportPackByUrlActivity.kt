@@ -68,7 +68,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 			context = this,
 			title = "${unishare.title} #${unishare._id}",
 			url = "https://api.unipad.io/unishare/${unishare._id}/download",
-			workspace = uniPackExt,
+			workspace = uniPackWorkspace,
 			folderName = "${unishare.title} #${unishare._id}",
 			listener = object : UniPackInstaller.Listener {
 				override fun onInstallStart() {

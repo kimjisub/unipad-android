@@ -14,6 +14,7 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -48,7 +49,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.BillingManager
-import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -82,7 +82,6 @@ class MainActivity : BaseActivity() {
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private lateinit var bm: BillingManager
-	private val preferenceManager: PreferenceManager by lazy { PreferenceManager(this) }
 
 	// List Management
 	private var unipackList: ArrayList<UniPackItem> = ArrayList()
@@ -91,13 +90,13 @@ class MainActivity : BaseActivity() {
 	private val adapter: UniPackAdapter by lazy {
 		val adapter = UniPackAdapter(unipackList, object : EventListener {
 			override fun onViewClick(item: UniPackItem, v: PackView) {
-				if (!item.moving) togglePlay(item)
+				togglePlay(item)
 			}
 
 			override fun onViewLongClick(item: UniPackItem, v: PackView) {}
 
 			override fun onPlayClick(item: UniPackItem, v: PackView) {
-				if (!item.moving) pressPlay(item)
+				pressPlay(item)
 			}
 		})
 		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
@@ -314,10 +313,10 @@ class MainActivity : BaseActivity() {
 				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
 				I_list =
 					ArrayList(I_list.sortedWith(Comparator { a, b ->
-						sortMethods[preferenceManager.sortMethod].compare(
+						sortMethods[preference.sortMethod].compare(
 							a,
 							b
-						) * if (preferenceManager.sortType) -1 else 1
+						) * if (preference.sortType) -1 else 1
 					}))
 
 				for (item: UniPackItem in I_list) {
@@ -462,7 +461,7 @@ class MainActivity : BaseActivity() {
 
 			val name: String = zip.name
 			val name_ = name.substring(0, name.lastIndexOf("."))
-			val F_UniPack: File = FileManager.makeNextPath(uniPackExt, name_, "/")
+			val F_UniPack: File = FileManager.makeNextPath(uniPackWorkspace, name_, "/")
 			try {
 				FileManager.unZipFile(zip.path, F_UniPack.path)
 				val unipack = UniPack(F_UniPack, true)
@@ -565,14 +564,14 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		P_total.data.sortMethod.set(preferenceManager.sortMethod)
-		P_total.data.sortType.set(preferenceManager.sortType)
+		P_total.data.sortMethod.set(preference.sortMethod)
+		P_total.data.sortType.set(preference.sortType)
 		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		P_total.data.version.set(BuildConfig.VERSION_NAME)
 		P_total.data.sort.addOnPropertyChanged {
 			val sort = it.get()!!
-			preferenceManager.sortMethod = sort / 2
-			preferenceManager.sortType = sort % 2 == 1
+			preference.sortMethod = sort / 2
+			preference.sortType = sort % 2 == 1
 			update()
 		}
 		P_total.data.selectedTheme.addOnPropertyChanged {
@@ -598,28 +597,6 @@ class MainActivity : BaseActivity() {
 			}
 
 			override fun onEditClick(v: View) {}
-
-			override fun onStorageClick(v: View) {
-				val item = selected
-				if (item != null) {
-					val source = File(item.unipack.F_project.path)
-					val isInternal = FileManager.isInternalFile(this@MainActivity, source)
-					val target =
-						File(if (isInternal) uniPackExt else uniPackInt, source.name)
-					CoroutineScope(Dispatchers.IO).launch {
-						withContext(Dispatchers.Main) {
-							item.moving = true
-							P_pack.data.moving.set(item.moving)
-						}
-						FileManager.moveDirectory(source, target)
-						withContext(Dispatchers.Main) {
-							item.moving = false
-							P_pack.data.moving.set(item.moving)
-							update()
-						}
-					}
-				}
-			}
 
 			override fun onYoutubeClick(v: View) {
 				Intent()
@@ -737,9 +714,7 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val size = FileManager.getFolderSize(uniPackExt) + FileManager.getFolderSize(
-					uniPackInt
-				)
+				val size = FileManager.getFolderSize(uniPackWorkspace)
 
 				withContext(Dispatchers.Main) {
 					P_total.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
@@ -754,8 +729,6 @@ class MainActivity : BaseActivity() {
 		item.flagColor = flagColor
 
 		P_pack.data.apply {
-
-			storage.set(!FileManager.isInternalFile(this@MainActivity, unipack.F_project))
 			title.set(unipack.title)
 			subtitle.set(unipack.producerName)
 			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
