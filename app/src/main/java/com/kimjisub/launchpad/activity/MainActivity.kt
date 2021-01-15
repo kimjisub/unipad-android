@@ -14,7 +14,6 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -134,7 +133,7 @@ class MainActivity : BaseActivity() {
 		firebaseManager.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long? = dataSnapshot.getValue(Long::class.java)
-				val prev = preference.prevStoreCount
+				val prev = p.prevStoreCount
 				runOnUiThread { blink(data != prev) }
 			}
 
@@ -226,14 +225,14 @@ class MainActivity : BaseActivity() {
 			start<MidiSelectActivity>()
 		}
 		FAB_loadUniPack.setOnClickListener {
-			FileExplorerDialog(this@MainActivity, preference.fileExplorerPath,
+			FileExplorerDialog(this@MainActivity, p.fileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
 						importUniPack(File(filePath))
 					}
 
 					override fun onPathChanged(folderPath: String) {
-						preference.fileExplorerPath = folderPath
+						p.fileExplorerPath = folderPath
 					}
 				})
 				.show()
@@ -313,10 +312,10 @@ class MainActivity : BaseActivity() {
 				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
 				I_list =
 					ArrayList(I_list.sortedWith(Comparator { a, b ->
-						sortMethods[preference.sortMethod].compare(
+						sortMethods[p.sortMethod].compare(
 							a,
 							b
-						) * if (preference.sortType) -1 else 1
+						) * if (p.sortType) -1 else 1
 					}))
 
 				for (item: UniPackItem in I_list) {
@@ -564,19 +563,19 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		P_total.data.sortMethod.set(preference.sortMethod)
-		P_total.data.sortType.set(preference.sortType)
+		P_total.data.sortMethod.set(p.sortMethod)
+		P_total.data.sortType.set(p.sortType)
 		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		P_total.data.version.set(BuildConfig.VERSION_NAME)
 		P_total.data.sort.addOnPropertyChanged {
 			val sort = it.get()!!
-			preference.sortMethod = sort / 2
-			preference.sortType = sort % 2 == 1
+			p.sortMethod = sort / 2
+			p.sortType = sort % 2 == 1
 			update()
 		}
 		P_total.data.selectedTheme.addOnPropertyChanged {
 			val selectedThemeIndex = it.get()!!
-			preference.selectedTheme = themeItemList!![selectedThemeIndex].package_name
+			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
 		}
 
 		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
@@ -707,7 +706,7 @@ class MainActivity : BaseActivity() {
 		P_total.data.themeList.set(themeNameList)
 
 		try {
-			val index = themeItemList!!.indexOfFirst { it.package_name == preference.selectedTheme }
+			val index = themeItemList!!.indexOfFirst { it.package_name == p.selectedTheme }
 			P_total.data.selectedTheme.set(index)
 		} catch (e: Exception) {
 			P_total.data.selectedTheme.set(0)

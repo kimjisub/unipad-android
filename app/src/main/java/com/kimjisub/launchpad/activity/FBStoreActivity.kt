@@ -130,7 +130,7 @@ class FBStoreActivity : BaseActivity() {
 		firebase_storeCount.setEventListener(object : ValueEventListener {
 			override fun onDataChange(dataSnapshot: DataSnapshot) {
 				val data: Long = dataSnapshot.getValue(Long::class.java)!!
-				preference.prevStoreCount = data
+				p.prevStoreCount = data
 			}
 
 			override fun onCancelled(databaseError: DatabaseError) {}

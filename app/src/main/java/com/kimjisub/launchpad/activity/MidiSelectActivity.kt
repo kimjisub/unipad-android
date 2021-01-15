@@ -132,7 +132,7 @@ class MidiSelectActivity : BaseActivity() {
 				TV_log.append(log + "\n")
 			}
 		}
-		MidiConnection.mode = preference.launchpadConnectMethod
+		MidiConnection.mode = p.launchpadConnectMethod
 		MidiConnection.initConnection(intent, service)
 
 
@@ -151,7 +151,7 @@ class MidiSelectActivity : BaseActivity() {
 			else
 				changeViewColor(LL_mode[i], color.background1, color.gray1)
 		}
-		preference.launchpadConnectMethod = mode
+		p.launchpadConnectMethod = mode
 	}
 
 	// Functions /////////////////////////////////////////////////////////////////////////////////////////

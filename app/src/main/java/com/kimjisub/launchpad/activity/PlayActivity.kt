@@ -225,7 +225,7 @@ class PlayActivity : BaseActivity() {
 
 
 	private fun initTheme() {
-		val packageName = preference.selectedTheme
+		val packageName = p.selectedTheme
 
 		theme = try {
 			ThemeResources(this@PlayActivity, packageName, true)
@@ -237,7 +237,7 @@ class PlayActivity : BaseActivity() {
 		} catch (e: Exception) {
 			e.printStackTrace()
 			toast("${getString(string.skinErr)}\n$packageName")
-			preference.selectedTheme = getPackageName()
+			p.selectedTheme = getPackageName()
 			ThemeResources(this@PlayActivity, true)
 		}
 
