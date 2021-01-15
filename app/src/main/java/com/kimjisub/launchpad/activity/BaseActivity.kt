@@ -5,6 +5,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
+import android.os.Environment
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -18,10 +19,10 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import splitties.activities.start
 import java.io.File
-import java.util.*
 
 open class BaseActivity : AppCompatActivity() {
 
@@ -89,15 +90,63 @@ open class BaseActivity : AppCompatActivity() {
 
 	val uniPackWorkspace: File
 		get() {
+			if (p.storageIndex == -1) {
+				val legacyWorkspace = File(Environment.getExternalStorageDirectory(), "Unipad")
+
+				//todo thread
+				FileManager.makeDirWhenNotExist(legacyWorkspace)
+				FileManager.makeNomedia(legacyWorkspace)
+				return legacyWorkspace
+			}
 			val filesDirs = ContextCompat.getExternalFilesDirs(applicationContext, "UniPack")
-			if (filesDirs.size <= preference.storageIndex)
-				preference.storageIndex = 0
+			if (filesDirs.size <= p.storageIndex)
+				p.storageIndex = 0
 
 			return ContextCompat.getExternalFilesDirs(
 				applicationContext,
 				"UniPack"
 			)[p.storageIndex]
 		}
+
+
+	data class UniPackWorkspace(
+		val name: String,
+		val file: File,
+		val index: Int
+	){
+		override fun toString(): String {
+			return "UniPackWorkspace(name='$name', file=$file, index=$index)"
+		}
+	}
+
+	fun getUniPackWorkspaces(): Array<UniPackWorkspace> {
+		val uniPackWorkspaces = ArrayList<UniPackWorkspace>()
+
+		uniPackWorkspaces.add(
+			UniPackWorkspace(
+				"Legacy",
+				File(Environment.getExternalStorageDirectory(), "Unipad"),
+				-1
+			)
+		)
+
+		val dirs = ContextCompat.getExternalFilesDirs(this, "UniPack")
+
+		dirs.forEachIndexed { index, file ->
+
+			val name = when {
+				file.absolutePath.contains("/storage/emulated/0") -> "내부 저장소" // todo string.xml
+				file.absolutePath.contains("/storage/0000-0000") -> "SD 카드"
+				else -> "SD 카드 $index"
+			}
+
+			uniPackWorkspaces.add(
+				UniPackWorkspace(name, file, index)
+			)
+		}
+
+		return uniPackWorkspaces.toTypedArray()
+	}
 
 	fun getUniPackDirList(): Array<File> {
 		return uniPackWorkspace.listFiles()!!
