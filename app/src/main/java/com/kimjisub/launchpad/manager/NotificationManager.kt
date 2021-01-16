@@ -23,7 +23,7 @@ object NotificationManager {
 
 			enumValues<Channel>().forEach {
 				val channel =
-					NotificationChannel(it.name, context.getString(it.titleId), IMPORTANCE_HIGH)
+					NotificationChannel(it.name, context.getString(it.titleId), IMPORTANCE_LOW)
 				channel.apply {
 					description = context.getString(it.titleId) + " disc"
 					group = it.group.name
