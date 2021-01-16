@@ -23,8 +23,8 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	var errorDetail: String? = null
 	var criticalError = false
 
-	var title: String? = null
-	var producerName: String? = null
+	var title: String = ""
+	var producerName: String = ""
 	var buttonX = 0
 	var buttonY = 0
 	var chain = 0
