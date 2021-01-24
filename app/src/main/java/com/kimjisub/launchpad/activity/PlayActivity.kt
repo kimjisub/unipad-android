@@ -514,7 +514,6 @@ class PlayActivity : BaseActivity() {
 				listener = object : LedRunner.Listener {
 
 					override fun onStart() {
-						// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
 					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
@@ -538,7 +537,6 @@ class PlayActivity : BaseActivity() {
 					}
 
 					override fun onEnd() {
-						// TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 					}
 
 				})
