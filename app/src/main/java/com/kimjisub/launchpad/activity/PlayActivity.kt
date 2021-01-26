@@ -60,7 +60,7 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
-	private lateinit var binding: ActivityPlayBinding
+	private lateinit var b: ActivityPlayBinding
 
 	private var unipack: UniPack? = null
 	private var unipackLoaded = false
@@ -164,7 +164,7 @@ class PlayActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		binding = DataBindingUtil.setContentView(this, layout.activity_play)
+		b = DataBindingUtil.setContentView(this, layout.activity_play)
 
 		initVar()
 
@@ -208,7 +208,7 @@ class PlayActivity : BaseActivity() {
 		log("[04] Start ledTask (isKeyLed = " + unipack!!.keyLedExist.toString() + ")")
 
 		initTheme()
-		binding.themeResources = theme
+		b.themeResources = theme
 
 		if (theme != null) {
 			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object :
@@ -228,7 +228,7 @@ class PlayActivity : BaseActivity() {
 		val packageName = p.selectedTheme
 
 		theme = try {
-			ThemeResources(this@PlayActivity, packageName, true)
+				ThemeResources(this@PlayActivity, packageName, true)
 		} catch (e: OutOfMemoryError) {
 			e.printStackTrace()
 			toast("${getString(string.skinMemoryErr)}\n$packageName")
@@ -238,7 +238,7 @@ class PlayActivity : BaseActivity() {
 			e.printStackTrace()
 			toast("${getString(string.skinErr)}\n$packageName")
 			p.selectedTheme = getPackageName()
-			ThemeResources(this@PlayActivity, true)
+			ThemeResources(this@PlayActivity)
 		}
 
 
