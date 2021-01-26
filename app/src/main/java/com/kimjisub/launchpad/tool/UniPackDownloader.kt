@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class UniPackInstaller(
+class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
@@ -208,6 +208,7 @@ class UniPackInstaller(
 	}
 
 	private fun onException(throwable: Throwable) {
+		throwable.printStackTrace()
 		notificationBuilder.apply {
 			setContentTitle(title)
 			setContentText(context.getString(R.string.downloadWaiting))
