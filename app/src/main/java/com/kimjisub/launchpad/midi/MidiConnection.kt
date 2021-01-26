@@ -86,7 +86,7 @@ object MidiConnection {
 							CoroutineScope(Dispatchers.IO).launch {
 								sendBuffer(cmd, sig, note, velocity)
 							}
-						} catch (ignore: Exception) {
+						} catch (e: Exception) {
 							//Log.midiDetail("MIDI send thread execute fail");
 						}
 
@@ -229,7 +229,7 @@ object MidiConnection {
 		try {
 			val buffer = byteArrayOf(cmd, sig, note, velocity)
 			usbDeviceConnection!!.bulkTransfer(usbEndpoint_out, buffer, buffer.size, 1000)
-		} catch (ignored: Exception) {
+		} catch (e: Exception) {
 		}
 
 	}

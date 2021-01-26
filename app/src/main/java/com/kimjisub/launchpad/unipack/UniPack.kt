@@ -14,7 +14,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -251,7 +250,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 								"on", "o" -> {
 									try {
 										_x = Integer.parseInt(split2[1]) - 1
-									} catch (ignore: NumberFormatException) {
+									} catch (e: NumberFormatException) {
 									}
 									_y = Integer.parseInt(split2[2]) - 1
 									if (split2.size == 4) _color =
@@ -274,7 +273,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 								"off", "f" -> {
 									try {
 										_x = Integer.parseInt(split2[1]) - 1
-									} catch (ignore: NumberFormatException) {
+									} catch (e: NumberFormatException) {
 									}
 									_y = Integer.parseInt(split2[2]) - 1
 								}
@@ -469,7 +468,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	fun Sound_get(c: Int, x: Int, y: Int): Sound? {
 		return try {
 			soundTable!![c][x][y]!![0]
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 			null
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_get ($c, $x, $y)")
@@ -481,7 +480,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		return try {
 			val sound = soundTable!![c][x][y]
 			soundTable!![c][x][y]!![num % sound!!.size]
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 			null
 		} catch (e: IndexOutOfBoundsException) {
 			err("Sound_get ($c, $x, $y)")
@@ -493,7 +492,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		try {
 			val item = soundTable!![c][x][y]!!.removeAt(0)
 			soundTable!![c][x][y]!!.add(item)
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_push ($c, $x, $y)")
 		}
@@ -510,7 +509,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 					if (e[0].num == num % e.size)
 						break
 				}
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("Sound_push ($c, $x, $y, $num)")
 		} catch (ee: ArithmeticException) {
@@ -522,7 +521,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	fun led_get(c: Int, x: Int, y: Int): LedAnimation? {
 		return try {
 			ledAnimationTable!![c][x][y]!![0]
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 			null
 		} catch (ee: IndexOutOfBoundsException) {
 			err("LED_get ($c, $x, $y)")
@@ -534,7 +533,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		try {
 			val item = ledAnimationTable!![c][x][y]!!.removeAt(0)
 			ledAnimationTable!![c][x][y]!!.add(item)
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 		} catch (e: IndexOutOfBoundsException) {
 			err("LED_push ($c, $x, $y)")
 		}
@@ -549,7 +548,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 					e.add(item)
 					if (e[0].num == num % e.size) break
 				}
-		} catch (ignored: NullPointerException) {
+		} catch (e: NullPointerException) {
 		} catch (ee: IndexOutOfBoundsException) {
 			err("LED_push ($c, $x, $y, $num)")
 		}

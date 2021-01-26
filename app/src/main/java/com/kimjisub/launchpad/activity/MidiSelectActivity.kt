@@ -10,7 +10,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.color
-import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
 import com.kimjisub.launchpad.adapter.MidiDeviceItem
 import com.kimjisub.launchpad.databinding.ActivityMidiSelectBinding

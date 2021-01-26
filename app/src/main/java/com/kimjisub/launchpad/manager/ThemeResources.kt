@@ -78,7 +78,7 @@ class ThemeResources(
 			phantom = getDrawable("phantom", drawable.phantom)
 			phantom_ = try {
 				getDrawable("phantom_")
-			} catch (ignore: Exception) {
+			} catch (e: Exception) {
 				null
 			}
 			xml_prev = getDrawable("xml_prev", drawable.xml_prev)

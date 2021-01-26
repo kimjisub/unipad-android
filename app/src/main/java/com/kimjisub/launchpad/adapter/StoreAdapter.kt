@@ -48,7 +48,7 @@ class StoreAdapter(
 		// 이전 데이터에 매핑된 뷰를 제거합니다.
 		try {
 			list[holder.realPosition].packView = null
-		} catch (ignored: Exception) {
+		} catch (e: Exception) {
 		}
 
 		// 새롭게 할당될 데이터에 뷰를 할당하고 홀더에도 해당 포지션을 등록합니다.

@@ -8,7 +8,7 @@
 
 		<Preference
 			android:key="storage_location"
-			android:title="@string/storage_location"/>
+			android:title="@string/storage_location" />
 
 	</PreferenceCategory>
 

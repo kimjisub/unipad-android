@@ -37,7 +37,8 @@ class UniPackImporter(
 			intent.action = Intent.ACTION_MAIN
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			val pIntent:PendingIntent = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+			val pIntent: PendingIntent =
+				PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 			setContentIntent(pIntent)
 		}
 		builder
