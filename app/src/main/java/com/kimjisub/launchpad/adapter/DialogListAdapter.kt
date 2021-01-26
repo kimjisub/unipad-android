@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.databinding.ItemSettingBinding
-import java.util.*
 
 data class DialogListItem(
 	val title: String,

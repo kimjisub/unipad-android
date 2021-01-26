@@ -228,7 +228,7 @@ class PlayActivity : BaseActivity() {
 		val packageName = p.selectedTheme
 
 		theme = try {
-				ThemeResources(this@PlayActivity, packageName, true)
+			ThemeResources(this@PlayActivity, packageName, true)
 		} catch (e: OutOfMemoryError) {
 			e.printStackTrace()
 			toast("${getString(string.skinMemoryErr)}\n$packageName")
@@ -245,7 +245,7 @@ class PlayActivity : BaseActivity() {
 		/*if (num >= 2) {//하다하다 안되면
 			try {
 				theme = ThemeResources(this@PlayActivity, true)
-			} catch (ignore: Exception) {
+			} catch (e: Exception) {
 			}
 			return true
 		}

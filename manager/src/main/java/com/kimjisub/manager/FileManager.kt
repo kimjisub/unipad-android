@@ -1,12 +1,7 @@
 package com.kimjisub.manager
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import android.media.MediaPlayer
-import android.os.Environment
-import android.preference.PreferenceManager
-import androidx.core.content.ContextCompat
 import java.io.*
 import java.util.*
 import java.util.zip.ZipEntry

@@ -113,7 +113,7 @@ open class BaseActivity : AppCompatActivity() {
 		val name: String,
 		val file: File,
 		val index: Int
-	){
+	) {
 		override fun toString(): String {
 			return "UniPackWorkspace(name='$name', file=$file, index=$index)"
 		}

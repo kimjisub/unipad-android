@@ -4,7 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
-import android.app.NotificationManager.*
+import android.app.NotificationManager.IMPORTANCE_LOW
 import android.content.Context
 import android.graphics.Color
 import android.os.Build.VERSION
