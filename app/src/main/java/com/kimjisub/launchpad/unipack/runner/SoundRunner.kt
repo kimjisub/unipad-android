@@ -17,8 +17,8 @@ class SoundRunner(
 	private val loadingListener: LoadingListener
 ) {
 
-	private lateinit var soundPool: SoundPool
-	private lateinit var stopID: Array<Array<Array<Int>>>
+	private var soundPool: SoundPool
+	private var stopID: Array<Array<Array<Int>>>
 
 	interface LoadingListener {
 		fun onStart(soundCount: Int)

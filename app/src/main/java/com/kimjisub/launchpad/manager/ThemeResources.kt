@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.manager
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
@@ -7,11 +8,13 @@ import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 
-class ThemeResources {
-	var packageName: String? = null
-	var customRes: Resources? = null
-	var defaultRes: Resources
+class ThemeResources(
+	context: Context,
+	private val packageName: String = BuildConfig.APPLICATION_ID,
+	fullLoad: Boolean = false
+) {
 	var resources: Resources
+	var defaultRes: Resources
 
 	var icon: Drawable
 	var name: String
@@ -41,140 +44,99 @@ class ThemeResources {
 	var option_window_btn_text: Int? = null
 	var isChainLed = true
 
-	constructor(context: Context, packageName: String, fullLoad: Boolean = false) {
-		this.packageName = packageName
-		customRes = context.packageManager.getResourcesForApplication(packageName)
+	init {
+
 		defaultRes = context.resources
-		resources = context.packageManager.getResourcesForApplication(packageName)
-		icon = getCustomDrawable("theme_ic", drawable.theme_ic)
+		resources = if (packageName == context.packageName)
+			context.resources
+		else
+			context.packageManager.getResourcesForApplication(packageName)
+
+
+		icon = getDrawable("theme_ic", drawable.theme_ic)!!
 		version = context.packageManager.getPackageInfo(packageName, 0).versionName
-		name = getCustomString("theme_name", string.theme_name)
-		description = getCustomString("theme_description", string.theme_description)
-		author = getCustomString("theme_author", string.theme_author)
-		if (!fullLoad) return
-
-		////////////////////////////////////////////////////////////////////////////////////////////////
-
-		// Drawable
-
-		playbg = getCustomDrawable("playbg", drawable.playbg)
-		custom_logo = try {
-			getCustomDrawable("custom_logo")
-		} catch (ignore: Exception) {
-			null
+		name = getString("theme_name", string.theme_name)!!
+		description = getString("theme_description", string.theme_description)!!
+		author = getString("theme_author", string.theme_author)!!
+		if (fullLoad) {
+			playbg = getDrawable("playbg", drawable.playbg)
+			custom_logo = try {
+				getDrawable("custom_logo")
+			} catch (e: Exception) {
+				null
+			}
+			btn = getDrawable("btn", drawable.btn)
+			btn_ = getDrawable("btn_", drawable.btn_)
+			try {
+				chainled = getDrawable("chainled")
+			} catch (e: Exception) {
+				isChainLed = false
+				chain = getDrawable("chain", drawable.chain)
+				chain_ = getDrawable("chain_", drawable.chain_)
+				chain__ = getDrawable("chain__", drawable.chain__)
+			}
+			phantom = getDrawable("phantom", drawable.phantom)
+			phantom_ = try {
+				getDrawable("phantom_")
+			} catch (ignore: Exception) {
+				null
+			}
+			xml_prev = getDrawable("xml_prev", drawable.xml_prev)
+			xml_play = getDrawable("xml_play", drawable.xml_play)
+			xml_pause = getDrawable("xml_pause", drawable.xml_pause)
+			xml_next = getDrawable("xml_next", drawable.xml_next)
+			checkbox = getColor("checkbox", color.checkbox)
+			trace_log = getColor("trace_log", color.trace_log)
+			option_window = getColor("option_window", color.option_window)
+			option_window_checkbox =
+				getColor("option_window_checkbox", color.option_window_checkbox)
+			option_window_btn = getColor("option_window_btn", color.option_window_btn)
+			option_window_btn_text =
+				getColor("option_window_btn_text", color.option_window_btn_text)
 		}
-		btn = getCustomDrawable("btn", drawable.btn)
-		btn_ = getCustomDrawable("btn_", drawable.btn_)
-		try {
-			chainled = getCustomDrawable("chainled")
-		} catch (e: Exception) {
-			isChainLed = false
-			chain = getCustomDrawable("chain")
-			chain_ = getCustomDrawable("chain_")
-			chain__ = getCustomDrawable("chain__")
-		}
-		phantom = getCustomDrawable("phantom")
-		try {
-			phantom_ = getCustomDrawable("phantom_")
-		} catch (ignore: Exception) {
-		}
-		xml_prev = getCustomDrawable("xml_prev", drawable.xml_prev)
-		xml_play = getCustomDrawable("xml_play", drawable.xml_play)
-		xml_pause = getCustomDrawable("xml_pause", drawable.xml_pause)
-		xml_next = getCustomDrawable("xml_next", drawable.xml_next)
-		checkbox = getCustomColor("checkbox", color.checkbox)
-		trace_log = getCustomColor("trace_log", color.trace_log)
-		option_window = getCustomColor("option_window", color.option_window)
-		option_window_checkbox =
-			getCustomColor("option_window_checkbox", color.option_window_checkbox)
-		option_window_btn = getCustomColor("option_window_btn", color.option_window_btn)
-		option_window_btn_text =
-			getCustomColor("option_window_btn_text", color.option_window_btn_text)
-	}
-
-	constructor(context: Context, fullLoad: Boolean) {
-		defaultRes = context.resources
-		resources = context.resources
-		icon = defaultRes.getDrawable(drawable.theme_ic)
-		version = BuildConfig.VERSION_NAME
-		name = defaultRes.getString(string.theme_name)
-		description = defaultRes.getString(string.theme_description)
-		author = defaultRes.getString(string.theme_author)
-		if (!fullLoad) return
-
-		////////////////////////////////////////////////////////////////////////////////////////////////
-
-		// Drawable
-
-		playbg = ResourcesCompat.getDrawable(defaultRes, drawable.playbg, null)
-		custom_logo = ResourcesCompat.getDrawable(defaultRes, drawable.custom_logo, null)
-		btn = ResourcesCompat.getDrawable(defaultRes, drawable.btn, null)
-		btn_ = ResourcesCompat.getDrawable(defaultRes, drawable.btn_, null)
-		chainled = ResourcesCompat.getDrawable(defaultRes, drawable.chainled, null)
-		phantom = ResourcesCompat.getDrawable(defaultRes, drawable.phantom, null)
-		phantom_ = ResourcesCompat.getDrawable(defaultRes, drawable.phantom_, null)
-		xml_prev = ResourcesCompat.getDrawable(defaultRes, drawable.xml_prev, null)
-		xml_play = ResourcesCompat.getDrawable(defaultRes, drawable.xml_play, null)
-		xml_pause = ResourcesCompat.getDrawable(defaultRes, drawable.xml_pause, null)
-		xml_next = ResourcesCompat.getDrawable(defaultRes, drawable.xml_next, null)
-		checkbox = ResourcesCompat.getColor(defaultRes, color.checkbox, null)
-		trace_log = ResourcesCompat.getColor(defaultRes, color.trace_log, null)
-		option_window = ResourcesCompat.getColor(defaultRes, color.option_window, null)
-		option_window_checkbox =
-			ResourcesCompat.getColor(defaultRes, color.option_window_checkbox, null)
-		option_window_btn = ResourcesCompat.getColor(defaultRes, color.option_window_btn, null)
-		option_window_btn_text =
-			ResourcesCompat.getColor(defaultRes, color.option_window_btn_text, null)
-	}
-
-	private fun init() {
-
 	}
 
 	@Throws(Exception::class)
-	private fun getCustomDrawable(customId: String): Drawable {
-		val resId = getResourceId("drawable", customId)
-		return customRes!!.getDrawable(resId)
+	private fun getResourceId(resources: Resources, type: String, customId: String): Int {
+		return resources.getIdentifier(customId, type, packageName)
 	}
 
-	@Throws(Exception::class)
-	private fun getCustomColor(customId: String): Int {
-		val resId = getResourceId("color", customId)
-		return customRes!!.getColor(resId)
-	}
-
-	@Throws(Exception::class)
-	private fun getCustomString(customId: String): String {
-		val resId = getResourceId("string", customId)
-		return customRes!!.getString(resId)
-	}
-
-	private fun getCustomDrawable(customId: String, defaultId: Int): Drawable {
+	@SuppressLint("UseCompatLoadingForDrawables")
+	fun getDrawable(resName: String, defaultId: Int? = null): Drawable? {
 		return try {
-			getCustomDrawable(customId)
+			val resId = getResourceId(resources, "drawable", resName)
+			ResourcesCompat.getDrawable(resources, resId, null)
 		} catch (e: Exception) {
-			defaultRes.getDrawable(defaultId)
+			if (defaultId != null)
+				ResourcesCompat.getDrawable(defaultRes, defaultId, null)
+			else
+				throw e
 		}
 	}
 
-	private fun getCustomColor(customId: String, defaultId: Int): Int {
+	@SuppressLint("UseCompatLoadingForDrawables")
+	fun getColor(resName: String, defaultId: Int? = 0): Int? {
 		return try {
-			getCustomColor(customId)
+			val resId = getResourceId(resources, "color", resName)
+			ResourcesCompat.getColor(resources, resId, null)
 		} catch (e: Exception) {
-			defaultRes.getColor(defaultId)
+			if (defaultId != null)
+				ResourcesCompat.getColor(defaultRes, defaultId, null)
+			else
+				throw e
 		}
 	}
 
-	private fun getCustomString(customId: String, defaultId: Int): String {
+	@SuppressLint("UseCompatLoadingForDrawables")
+	fun getString(resName: String, defaultId: Int?): String? {
 		return try {
-			getCustomString(customId)
+			val resId = getResourceId(resources, "string", resName)
+			resources.getString(resId)
 		} catch (e: Exception) {
-			defaultRes.getString(defaultId)
+			if (defaultId != null)
+				defaultRes.getString(defaultId)
+			else
+				throw e
 		}
-	}
-
-	@Throws(Exception::class)
-	private fun getResourceId(type: String, customId: String): Int {
-		return customRes!!.getIdentifier("$packageName:$type/$customId", null, null)
 	}
 }
