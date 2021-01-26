@@ -13,14 +13,17 @@ import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
 import com.kimjisub.launchpad.adapter.MidiDeviceItem
+import com.kimjisub.launchpad.databinding.ActivityMidiSelectBinding
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.manager.AutorunTimer
+import com.kimjisub.manager.Log
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 import kotlinx.android.synthetic.main.activity_midi_select.*
 
 
 class MidiSelectActivity : BaseActivity() {
+	private lateinit var b: ActivityMidiSelectBinding
 	private val midiDeviceList = lazy {
 		arrayListOf(
 			MidiDeviceItem(getDrawable(R.drawable.midi_lp_s), "Launchpad S", LaunchpadS::class),
@@ -91,8 +94,15 @@ class MidiSelectActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_midi_select)
+		b = ActivityMidiSelectBinding.inflate(layoutInflater)
+		setContentView(b.root)
 		autorunTimer.start()
+
+		b.root.setOnTouchListener { v, event ->
+			Log.test("onTouch")
+			userInteract()
+			true
+		}
 
 		val adapter = MidiDeviceAdapter(midiDeviceList.value)
 		picker.setSlideOnFling(true)

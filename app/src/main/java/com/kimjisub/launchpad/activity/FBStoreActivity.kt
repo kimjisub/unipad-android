@@ -19,10 +19,9 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
-import com.kimjisub.launchpad.network.Networks
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
-import com.kimjisub.launchpad.tool.UniPackInstaller
+import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -211,18 +210,13 @@ class FBStoreActivity : BaseActivity() {
 
 		item.downloading = true
 
-
-		// todo thread
-		Networks.sendGet("https://us-central1-unipad-e41ab.cloudfunctions.net/increaseDownloadCount/$code")
-
-
-		UniPackInstaller(
+		UniPackDownloader(
 			context = this,
 			title = item.storeVO.title!!,
-			url = item.storeVO.URL!!,
+			url = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy?code=$code",
 			workspace = uniPackWorkspace,
 			folderName = item.storeVO.code!!,
-			listener = object : UniPackInstaller.Listener {
+			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
 				}
 

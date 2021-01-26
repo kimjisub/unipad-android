@@ -4,7 +4,7 @@ import android.os.Bundle
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
-import com.kimjisub.launchpad.tool.UniPackInstaller
+import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
@@ -64,13 +64,13 @@ class ImportPackByUrlActivity : BaseActivity() {
 	}
 
 	fun startInstall(unishare: UnishareVO) {
-		UniPackInstaller(
+		UniPackDownloader(
 			context = this,
 			title = "${unishare.title} #${unishare._id}",
 			url = "https://api.unipad.io/unishare/${unishare._id}/download",
 			workspace = uniPackWorkspace,
 			folderName = "${unishare.title} #${unishare._id}",
-			listener = object : UniPackInstaller.Listener {
+			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
 					log("Install start")
 					TV_title.setText(string.downloadWaiting)
