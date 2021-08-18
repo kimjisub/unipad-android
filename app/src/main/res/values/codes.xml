@@ -2,13 +2,11 @@
 <resources>
 
 	<string name="admob_appid" translatable="false">ca-app-pub-1077445788578961~6318287933</string>
-	<!--
-		<string name="admob_main_panel" translatable="false">ca-app-pub-1077445788578961/1137091733</string>
-		<string name="admob_play_start" translatable="false">ca-app-pub-1077445788578961/8025949620</string>
-		<string name="admob_play_end" translatable="false">ca-app-pub-1077445788578961/6242001881</string>
-	-->
-	<string name="admob_main_panel" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+	<string name="admob_main_panel" translatable="false">ca-app-pub-1077445788578961/1137091733</string>
+	<string name="admob_play_start" translatable="false">ca-app-pub-1077445788578961/8025949620</string>
+	<string name="admob_play_end" translatable="false">ca-app-pub-1077445788578961/6242001881</string>
+	<!--<string name="admob_main_panel" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
 	<string name="admob_play_start" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
-	<string name="admob_play_end" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+	<string name="admob_play_end" translatable="false">ca-app-pub-3940256099942544/1033173712</string>-->
 
 </resources>
