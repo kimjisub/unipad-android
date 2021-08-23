@@ -39,7 +39,8 @@
 			android:name=".activity.SplashActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity">
+			tools:ignore="LockedOrientationActivity"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 
@@ -81,7 +82,8 @@
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
-			android:screenOrientation="sensorLandscape">
+			android:screenOrientation="sensorLandscape"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 			</intent-filter>
@@ -94,7 +96,8 @@
 			android:name=".activity.ImportPackByFileActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
-			android:theme="@style/PopupTheme">
+			android:theme="@style/PopupTheme"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 
@@ -114,7 +117,8 @@
 			android:name=".activity.ImportPackByUrlActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:launchMode="singleInstance"
-			android:theme="@style/PopupTheme">
+			android:theme="@style/PopupTheme"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.VIEW" />
 
@@ -127,7 +131,8 @@
 			</intent-filter>
 		</activity>
 
-		<service android:name=".service.MyFirebaseMessagingService">
+		<service android:name=".service.MyFirebaseMessagingService"
+			android:exported="true">
 			<intent-filter>
 				<action android:name="com.google.firebase.MESSAGING_EVENT" />
 			</intent-filter>

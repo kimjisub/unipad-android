@@ -44,3 +44,4 @@ captures/
 **/ndkHelperBin
 **/.cxx
 *.jks
+/app/release/app-release.aab
