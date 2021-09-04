@@ -5,7 +5,6 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
-import com.kimjisub.design.R.layout
 import com.kimjisub.design.databinding.ViewPadBinding
 
 class PadView
@@ -14,7 +13,8 @@ class PadView
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-	private val b: ViewPadBinding = ViewPadBinding.bind(this)
+	private val b: ViewPadBinding =
+		ViewPadBinding.inflate(LayoutInflater.from(context), this, true)
 
 	override fun setOnClickListener(listener: OnClickListener?) {
 		b.touchSpace.setOnClickListener(listener)

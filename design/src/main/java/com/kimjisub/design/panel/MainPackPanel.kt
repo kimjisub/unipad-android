@@ -2,6 +2,7 @@ package com.kimjisub.design.panel
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.databinding.ObservableField
@@ -15,7 +16,8 @@ class MainPackPanel
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-	private val b: PanelMainPackBinding = PanelMainPackBinding.bind(this)
+	private val b: PanelMainPackBinding =
+		PanelMainPackBinding.inflate(LayoutInflater.from(context), this, true)
 	val data = Data()
 
 	class Data {
