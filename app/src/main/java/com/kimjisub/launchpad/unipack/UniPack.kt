@@ -568,7 +568,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 		return context.resources.getString(string.title) + " : " + title + "\n" +
 				context.resources.getString(string.producerName) + " : " + producerName + "\n" +
 				context.resources.getString(string.padSize) + " : " + buttonX.toString() + " x " + buttonY.toString() + "\n" +
-				context.resources.getString(string.chainCount) + " : " + chain.toString() + "\n" +
+				context.resources.getString(string.numChain) + " : " + chain.toString() + "\n" +
 				context.resources.getString(string.fileSize) + " : " + byteToMB(
 			getFolderSize(
 				F_project

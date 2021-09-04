@@ -86,7 +86,7 @@
 	<string name="title">제목</string>
 	<string name="producerName">제작자</string>
 	<string name="padSize">패드 크기</string>
-	<string name="chainCount">체인 개수</string>
+	<string name="numChain">체인 개수</string>
 	<string name="fileSize">용량</string>
 
 	<!--UniPack Function-->

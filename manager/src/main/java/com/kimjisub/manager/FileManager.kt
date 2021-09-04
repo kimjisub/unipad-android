@@ -8,53 +8,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 object FileManager {
-	fun unZipFile(zipFileURL: String?, location: String) {
-		var location = location
-		val zipFile: InputStream = FileInputStream(zipFileURL)
-		var size: Int
-		val buffer = ByteArray(1024)
-		try {
-			if (!location.endsWith("/")) {
-				location += "/"
-			}
-			val f = File(location)
-			if (!f.isDirectory) f.mkdirs()
-			val zin = ZipInputStream(BufferedInputStream(zipFile, 1024))
-			try {
-				var ze: ZipEntry
-				while (zin.nextEntry.also { ze = it } != null) {
-					val path = location + ze.name
-					val unzipFile = File(path)
-					if (ze.isDirectory) {
-						if (!unzipFile.isDirectory) unzipFile.mkdirs()
-					} else {
-						val parentDir: File? = unzipFile.parentFile
-						if (null != parentDir) {
-							if (!parentDir.isDirectory) parentDir.mkdirs()
-						}
-						val out = FileOutputStream(unzipFile, false)
-						val fout = BufferedOutputStream(out, 1024)
-						try {
-							while (zin.read(buffer, 0, 1024).also { size = it } != -1) {
-								fout.write(buffer, 0, size)
-							}
-							zin.closeEntry()
-						} catch (e: Exception) {
-							e.printStackTrace()
-						}
-						fout.flush()
-						fout.close()
-					}
-				}
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-			zin.close()
-			removeDoubleFolder(location)
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-	}
 
 	fun removeDoubleFolder(path: String) {
 		try {
