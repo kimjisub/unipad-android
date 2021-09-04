@@ -18,7 +18,6 @@ import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.manager.AutorunTimer
 import com.kimjisub.manager.Log
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
-import kotlinx.android.synthetic.main.activity_midi_select.*
 
 
 class MidiSelectActivity : BaseActivity() {
@@ -61,8 +60,8 @@ class MidiSelectActivity : BaseActivity() {
 
 	private val LL_mode: Array<LinearLayout> by lazy {
 		arrayOf(
-			BTN_speedFirst,
-			BTN_avoidAfterimage
+			b.speedFirst,
+			b.avoidAfterimage
 		)
 	}
 
@@ -73,7 +72,7 @@ class MidiSelectActivity : BaseActivity() {
 	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
 		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
 			runOnUiThread {
-				timer.text = (leftTime / 1000 - 1).toString()
+				b.timer.text = (leftTime / 1000 - 1).toString()
 			}
 		}
 
@@ -85,7 +84,7 @@ class MidiSelectActivity : BaseActivity() {
 
 		override fun onCanceled() {
 			runOnUiThread {
-				timer.text = ""
+				b.timer.text = ""
 			}
 		}
 
@@ -104,14 +103,14 @@ class MidiSelectActivity : BaseActivity() {
 		}
 
 		val adapter = MidiDeviceAdapter(midiDeviceList.value)
-		picker.setSlideOnFling(true)
-		picker.adapter = adapter
-		picker.addOnItemChangedListener { _, adapterPosition ->
+		b.picker.setSlideOnFling(true)
+		b.picker.adapter = adapter
+		b.picker.addOnItemChangedListener { _, adapterPosition ->
 			val item = midiDeviceList.value[adapterPosition]
 			MidiConnection.driver = item.driver.java.newInstance() as DriverRef
 		}
-		picker.setItemTransitionTimeMillis(50)
-		picker.setItemTransformer(
+		b.picker.setItemTransitionTimeMillis(50)
+		b.picker.setItemTransformer(
 			ScaleTransformer.Builder()
 				.setMinScale(0.7f)
 				.build()
@@ -123,13 +122,13 @@ class MidiSelectActivity : BaseActivity() {
 
 		MidiConnection.listener = object : MidiConnection.Listener {
 			override fun onConnectedListener() {
-				RL_err.visibility = View.GONE
+				b.err.visibility = View.GONE
 			}
 
 			override fun onChangeDriver(driverRef: DriverRef) {
 				for ((i, item) in midiDeviceList.value.withIndex()) {
 					if (item.driver == driverRef::class)
-						picker.scrollToPosition(i)
+						b.picker.scrollToPosition(i)
 				}
 			}
 
@@ -138,7 +137,7 @@ class MidiSelectActivity : BaseActivity() {
 			}
 
 			override fun onUiLog(log: String) {
-				TV_log.append(log + "\n")
+				b.log.append(log + "\n")
 			}
 		}
 		MidiConnection.mode = p.launchpadConnectMethod

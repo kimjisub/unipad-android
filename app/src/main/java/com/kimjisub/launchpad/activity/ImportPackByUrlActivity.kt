@@ -4,11 +4,11 @@ import android.os.Bundle
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
+import com.kimjisub.launchpad.databinding.ActivityImportpackBinding
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
-import kotlinx.android.synthetic.main.activity_importpack.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -19,6 +19,8 @@ import retrofit2.Response
 import java.io.File
 
 class ImportPackByUrlActivity : BaseActivity() {
+	private lateinit var b: ActivityImportpackBinding
+
 	private val code: String? by lazy { intent?.data?.getQueryParameter("code") }
 
 	private var fileSize: Long = 0
@@ -27,13 +29,14 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_importpack)
+		b = ActivityImportpackBinding.inflate(layoutInflater)
+		setContentView(b.root)
 
 		log("code: $code")
 		identifyCode = "#$code"
 
-		TV_title.setText(string.wait_a_sec)
-		TV_message.text = identifyCode
+		b.title.setText(string.wait_a_sec)
+		b.message.text = identifyCode
 		service.getUnishare(code)!!.enqueue(object : Callback<UnishareVO?> {
 			override fun onResponse(call: Call<UnishareVO?>, response: Response<UnishareVO?>) {
 				if (response.isSuccessful) {
@@ -48,8 +51,8 @@ class ImportPackByUrlActivity : BaseActivity() {
 						404 -> {
 							log("404 Not Found")
 
-							TV_title.setText(string.unipackNotFound)
-							TV_message.text = identifyCode
+							b.title.setText(string.unipackNotFound)
+							b.message.text = identifyCode
 						}
 					}
 				}
@@ -57,8 +60,8 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 			override fun onFailure(call: Call<UnishareVO?>?, t: Throwable?) {
 				log("server error")
-				TV_title.setText(string.failed)
-				TV_message.text = "server error\n${t?.message}"
+				b.title.setText(string.failed)
+				b.message.text = "server error\n${t?.message}"
 			}
 		})
 	}
@@ -73,8 +76,8 @@ class ImportPackByUrlActivity : BaseActivity() {
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
 					log("Install start")
-					TV_title.setText(string.downloadWaiting)
-					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
+					b.title.setText(string.downloadWaiting)
+					b.message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
 
 				override fun onGetFileSize(
@@ -100,22 +103,22 @@ class ImportPackByUrlActivity : BaseActivity() {
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
-					TV_title.setText(string.downloading)
-					TV_message.text = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
+					b.title.setText(string.downloading)
+					b.message.text = "${percent}%\n${downloadedMB} / $fileSizeMB MB"
 				}
 
 				override fun onImportStart(zip: File) {
 					log("Import Start")
 
-					TV_title.setText(string.importing)
-					TV_message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
+					b.title.setText(string.importing)
+					b.message.text = "#${code}\n${unishare.title}\n${unishare.producer}"
 				}
 
 				override fun onInstallComplete(folder: File, unipack: UniPack) {
 					log("Install Success")
 
-					TV_title.setText(string.success)
-					TV_message.text = unipack.toString(this@ImportPackByUrlActivity)
+					b.title.setText(string.success)
+					b.message.text = unipack.toString(this@ImportPackByUrlActivity)
 
 					delayFinish()
 				}
@@ -124,15 +127,15 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("Exception: " + throwable.message)
 					throwable.printStackTrace()
 
-					TV_title.setText(string.exceptionOccurred)
-					TV_message.text = throwable.message
+					b.title.setText(string.exceptionOccurred)
+					b.message.text = throwable.message
 				}
 			}
 		)
 	}
 
 	private fun log(msg: String) {
-		TV_info.append(msg + "\n")
+		b.info.append(msg + "\n")
 		Log.download(msg)
 	}
 

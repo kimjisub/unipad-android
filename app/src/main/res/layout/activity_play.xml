@@ -10,13 +10,12 @@
 	</data>
 
 	<RelativeLayout
-		android:id="@+id/RL_root"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
 
 		<View
-			android:id="@+id/V_paddingScale"
+			android:id="@+id/paddingScale"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:layout_margin="8dp"

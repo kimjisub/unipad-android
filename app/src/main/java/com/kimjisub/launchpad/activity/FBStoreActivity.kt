@@ -13,7 +13,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.kimjisub.design.PackView
+import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.StoreAdapter
@@ -25,14 +25,13 @@ import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
-import com.kimjisub.manager.Log
-import kotlinx.android.synthetic.main.activity_store.*
 import splitties.toast.toast
 import java.io.File
 import java.util.*
 
 class FBStoreActivity : BaseActivity() {
 	private lateinit var b: ActivityStoreBinding
+
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
@@ -54,24 +53,24 @@ class FBStoreActivity : BaseActivity() {
 			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
 				override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 					super.onItemRangeInserted(positionStart, itemCount)
-					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+					b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 
 				override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 					super.onItemRangeRemoved(positionStart, itemCount)
-					LL_errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+					b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 			})
 			val divider =
 				DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
 			divider.setDrawable(resources.getDrawable(drawable.border_divider))
-			RV_recyclerView.addItemDecoration(divider)
-			RV_recyclerView.setHasFixedSize(false)
-			RV_recyclerView.layoutManager = LinearLayoutManager(this@FBStoreActivity)
+			b.recyclerView.addItemDecoration(divider)
+			b.recyclerView.setHasFixedSize(false)
+			b.recyclerView.layoutManager = LinearLayoutManager(this@FBStoreActivity)
 			//b.recyclerView.setItemAnimator(null);
 
 
-			RV_recyclerView.adapter = adapter
+			b.recyclerView.adapter = adapter
 		}
 	}
 
@@ -83,9 +82,9 @@ class FBStoreActivity : BaseActivity() {
 		setContentView(b.root)
 		initVar(true)
 
-		P_total.b.IVLogo.setImageResource(drawable.custom_logo)
-		P_total.b.TVVersion.text = BuildConfig.VERSION_NAME
-		P_total.b.TVStoreCount.text = list.size.toString()
+		b.totalPanel.b.logo.setImageResource(drawable.custom_logo)
+		b.totalPanel.b.version.text = BuildConfig.VERSION_NAME
+		b.totalPanel.b.storeCount.text = list.size.toString()
 		firebase_store.setEventListener(object : ChildEventListener {
 			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
 				try {
@@ -285,33 +284,33 @@ class FBStoreActivity : BaseActivity() {
 		)
 		animation.setAnimationListener(object : AnimationListener {
 			override fun onAnimationStart(animation: Animation?) {
-				P_pack.visibility = View.VISIBLE
-				P_pack.alpha = 1f
+				b.packPanel.visibility = View.VISIBLE
+				b.packPanel.alpha = 1f
 			}
 
 			override fun onAnimationEnd(animation: Animation?) {
-				P_pack.visibility = if (playIndex != -1) View.VISIBLE else View.INVISIBLE
-				P_pack.alpha = (if (playIndex != -1) 1.toFloat() else 0.toFloat())
+				b.packPanel.visibility = if (playIndex != -1) View.VISIBLE else View.INVISIBLE
+				b.packPanel.alpha = (if (playIndex != -1) 1.toFloat() else 0.toFloat())
 			}
 
 			override fun onAnimationRepeat(animation: Animation?) {}
 		})
 		if (playIndex == -1) updatePanelMain() else updatePanelPack(list[playIndex])
-		val visibility = P_pack.visibility
+		val visibility = b.packPanel.visibility
 		if (visibility == View.VISIBLE && playIndex == -1
 			|| visibility == View.INVISIBLE && playIndex != -1
-		) P_pack.startAnimation(animation)
+		) b.packPanel.startAnimation(animation)
 	}
 
 	internal fun updatePanelMain() {
-		P_total.b.TVDownloadedCount.text = downloadedCount.toString()
+		b.totalPanel.b.downloadedCount.text = downloadedCount.toString()
 	}
 
 	internal fun updatePanelPack(item: StoreItem?) {
 		val storeVO = item!!.storeVO
-		P_pack.updateTitle(storeVO.title!!)
-		P_pack.updateSubtitle(storeVO.producerName!!)
-		P_pack.updateDownloadCount(storeVO.downloadCount.toLong())
+		b.packPanel.updateTitle(storeVO.title!!)
+		b.packPanel.updateSubtitle(storeVO.producerName!!)
+		b.packPanel.updateDownloadCount(storeVO.downloadCount.toLong())
 	}
 
 	// ============================================================================================= Activity

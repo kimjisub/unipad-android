@@ -1,176 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
 
-	<androidx.constraintlayout.widget.ConstraintLayout
-		android:id="@+id/CL_root"
+	<LinearLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+		android:layout_height="match_parent"
+		android:orientation="horizontal"
+		android:weightSum="5">
 
-		<LinearLayout
-			android:layout_width="match_parent"
+		<RelativeLayout
+			android:layout_width="0dp"
 			android:layout_height="match_parent"
-			android:orientation="horizontal"
-			android:weightSum="5">
+			android:layout_marginStart="16dp"
+			android:layout_marginTop="16dp"
+			android:layout_marginBottom="16dp"
+			android:layout_weight="2">
 
-			<RelativeLayout
-				android:layout_width="0dp"
-				android:layout_height="match_parent"
-				android:layout_marginStart="16dp"
-				android:layout_marginTop="16dp"
-				android:layout_marginBottom="16dp"
-				android:layout_weight="2">
+			<com.kimjisub.design.panel.MainTotalPanel
+				android:id="@+id/totalPanel"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent">
 
-				<com.kimjisub.design.panel.MainTotalPanel
-					android:id="@+id/P_total"
+				<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+					android:id="@+id/adView"
 					android:layout_width="match_parent"
-					android:layout_height="match_parent">
+					android:layout_height="wrap_content"
+					ads:adSize="BANNER"
+					ads:adUnitId="@string/admob_main_panel"></com.google.android.gms.ads.AdView>
 
-					<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-						android:id="@+id/adView"
-						android:layout_width="match_parent"
-						android:layout_height="wrap_content"
-						ads:adSize="BANNER"
-						ads:adUnitId="@string/admob_main_panel"></com.google.android.gms.ads.AdView>
+			</com.kimjisub.design.panel.MainTotalPanel>
 
-				</com.kimjisub.design.panel.MainTotalPanel>
+			<com.kimjisub.design.panel.MainPackPanel
+				android:id="@+id/packPanel"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:alpha="0"
+				android:clickable="true"
+				android:focusable="true"
+				android:visibility="invisible" />
 
-				<com.kimjisub.design.panel.MainPackPanel
-					android:id="@+id/P_pack"
+		</RelativeLayout>
+
+		<RelativeLayout
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_weight="3">
+
+			<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+				android:id="@+id/swipeRefreshLayout"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent">
+
+				<androidx.recyclerview.widget.RecyclerView
+					android:id="@+id/recyclerView"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
-					android:alpha="0"
-					android:clickable="true"
-					android:focusable="true"
-					android:visibility="invisible" />
+					android:clipToPadding="false"
+					android:orientation="vertical"
+					android:paddingTop="16dp"
+					android:paddingBottom="6dp"
+					android:scrollbarThumbVertical="@color/gray2" />
 
-			</RelativeLayout>
+			</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-			<RelativeLayout
-				android:layout_width="0dp"
-				android:layout_height="match_parent"
-				android:layout_weight="3">
+			<LinearLayout
+				android:id="@+id/errItem"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_centerInParent="true"
+				android:gravity="center"
+				android:orientation="vertical">
 
-				<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-					android:id="@+id/SRL_swipeRefreshLayout"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent">
+				<ImageView
+					android:layout_width="100dp"
+					android:layout_height="100dp"
+					android:contentDescription="@string/unipackNotFound"
+					app:srcCompat="@drawable/ic_error_outline_24dp"
+					app:tint="@color/white" />
 
-					<androidx.recyclerview.widget.RecyclerView
-						android:id="@+id/RV_recyclerView"
-						android:layout_width="match_parent"
-						android:layout_height="match_parent"
-						android:clipToPadding="false"
-						android:orientation="vertical"
-						android:paddingTop="16dp"
-						android:paddingBottom="6dp"
-						android:scrollbarThumbVertical="@color/gray2" />
-
-				</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-				<LinearLayout
-					android:id="@+id/LL_errItem"
+				<TextView
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:layout_centerInParent="true"
-					android:gravity="center"
-					android:orientation="vertical">
+					android:layout_gravity="center_horizontal"
+					android:text="@string/unipackNotFound"
+					android:textColor="@color/white" />
 
-					<ImageView
-						android:layout_width="100dp"
-						android:layout_height="100dp"
-						android:contentDescription="@string/unipackNotFound"
-						app:srcCompat="@drawable/ic_error_outline_24dp"
-						app:tint="@color/white" />
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_gravity="center_horizontal"
+					android:text="@string/clickToAddUniPack"
+					android:textColor="@color/gray1" />
+			</LinearLayout>
+		</RelativeLayout>
+	</LinearLayout>
 
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center_horizontal"
-						android:text="@string/unipackNotFound"
-						android:textColor="@color/white" />
+	<com.github.clans.fab.FloatingActionMenu
+		android:id="@+id/floatingMenu"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentEnd="true"
+		android:layout_alignParentBottom="true"
+		android:layout_margin="10dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:menu_animationDelayPerItem="50"
+		app:menu_backgroundColor="@android:color/transparent"
+		app:menu_buttonSpacing="0dp"
+		app:menu_colorNormal="@color/red"
+		app:menu_colorPressed="@color/red"
+		app:menu_icon="@drawable/fab_add"
+		app:menu_labels_colorNormal="#333"
+		app:menu_labels_cornerRadius="3dp"
+		app:menu_labels_ellipsize="none"
+		app:menu_labels_hideAnimation="@anim/fab_slide_out_to_right"
+		app:menu_labels_margin="0dp"
+		app:menu_labels_maxLines="-1"
+		app:menu_labels_padding="8dp"
+		app:menu_labels_position="left"
+		app:menu_labels_showAnimation="@anim/fab_slide_in_from_right"
+		app:menu_labels_showShadow="true"
+		app:menu_labels_singleLine="false"
+		app:menu_labels_textColor="#f2f1f1"
+		app:menu_labels_textSize="10dp"
+		app:menu_openDirection="up">
 
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center_horizontal"
-						android:text="@string/clickToAddUniPack"
-						android:textColor="@color/gray1" />
-				</LinearLayout>
-			</RelativeLayout>
-		</LinearLayout>
-
-		<com.github.clans.fab.FloatingActionMenu
-			android:id="@+id/FAM_floatingMenu"
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/reconnectLaunchpad"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_alignParentEnd="true"
-			android:layout_alignParentBottom="true"
-			android:layout_margin="10dp"
-			app:layout_constraintBottom_toBottomOf="parent"
-			app:layout_constraintRight_toRightOf="parent"
-			app:menu_animationDelayPerItem="50"
-			app:menu_backgroundColor="@android:color/transparent"
-			app:menu_buttonSpacing="0dp"
-			app:menu_colorNormal="@color/red"
-			app:menu_colorPressed="@color/red"
-			app:menu_icon="@drawable/fab_add"
-			app:menu_labels_colorNormal="#333"
-			app:menu_labels_cornerRadius="3dp"
-			app:menu_labels_ellipsize="none"
-			app:menu_labels_hideAnimation="@anim/fab_slide_out_to_right"
-			app:menu_labels_margin="0dp"
-			app:menu_labels_maxLines="-1"
-			app:menu_labels_padding="8dp"
-			app:menu_labels_position="left"
-			app:menu_labels_showAnimation="@anim/fab_slide_in_from_right"
-			app:menu_labels_showShadow="true"
-			app:menu_labels_singleLine="false"
-			app:menu_labels_textColor="#f2f1f1"
-			app:menu_labels_textSize="10dp"
-			app:menu_openDirection="up">
+			android:src="@drawable/baseline_launchpad_24dp"
+			app:fab_colorNormal="@color/red"
+			app:fab_colorPressed="@color/red"
+			app:fab_label="@string/reconnect_launchpad"
+			app:fab_size="mini" />
 
-			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/FAB_reconnectLaunchpad"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:src="@drawable/baseline_launchpad_24dp"
-				app:fab_colorNormal="@color/red"
-				app:fab_colorPressed="@color/red"
-				app:fab_label="@string/reconnect_launchpad"
-				app:fab_size="mini" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/loadUniPack"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/baseline_folder_open_white_24"
+			app:fab_colorNormal="@color/red"
+			app:fab_colorPressed="@color/red"
+			app:fab_label="@string/import_unipack"
+			app:fab_size="mini" />
 
-			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/FAB_loadUniPack"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:src="@drawable/baseline_folder_open_white_24"
-				app:fab_colorNormal="@color/red"
-				app:fab_colorPressed="@color/red"
-				app:fab_label="@string/import_unipack"
-				app:fab_size="mini" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/store"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/baseline_shopping_basket_white_24"
+			app:fab_colorNormal="@color/red"
+			app:fab_colorPressed="@color/red"
+			app:fab_label="@string/store"
+			app:fab_size="mini" />
 
-			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/FAB_store"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:src="@drawable/baseline_shopping_basket_white_24"
-				app:fab_colorNormal="@color/red"
-				app:fab_colorPressed="@color/red"
-				app:fab_label="@string/store"
-				app:fab_size="mini" />
+		<com.github.clans.fab.FloatingActionButton
+			android:id="@+id/setting"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/baseline_settings_white_24"
+			app:fab_colorNormal="@color/red"
+			app:fab_colorPressed="@color/red"
+			app:fab_label="@string/setting"
+			app:fab_size="mini" />
 
-			<com.github.clans.fab.FloatingActionButton
-				android:id="@+id/FAB_setting"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:src="@drawable/baseline_settings_white_24"
-				app:fab_colorNormal="@color/red"
-				app:fab_colorPressed="@color/red"
-				app:fab_label="@string/setting"
-				app:fab_size="mini" />
+	</com.github.clans.fab.FloatingActionMenu>
 
-		</com.github.clans.fab.FloatingActionMenu>
-
-	</androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+</androidx.constraintlayout.widget.ConstraintLayout>

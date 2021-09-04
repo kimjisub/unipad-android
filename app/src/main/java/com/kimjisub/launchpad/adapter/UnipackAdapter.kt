@@ -9,8 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
-import com.kimjisub.design.PackView
-import com.kimjisub.design.PackView.OnEventListener
+import com.kimjisub.design.view.PackView
+import com.kimjisub.design.view.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.util.observeOnce

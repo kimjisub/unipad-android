@@ -24,17 +24,15 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
-import androidx.databinding.DataBindingUtil
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.InterstitialAd
-import com.kimjisub.design.Chain
-import com.kimjisub.design.Pad
 import com.kimjisub.design.manage.SyncCheckBox
 import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick
-import com.kimjisub.launchpad.R.layout
+import com.kimjisub.design.view.ChainView
+import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding
 import com.kimjisub.launchpad.manager.BillingManager
@@ -53,7 +51,6 @@ import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.manager.Log.log
-import kotlinx.android.synthetic.main.activity_play.*
 import splitties.activities.start
 import splitties.toast.toast
 import java.io.File
@@ -74,24 +71,24 @@ class PlayActivity : BaseActivity() {
 
 	private val CB1s: Array<CheckBox> by lazy {
 		arrayOf(
-			CB1_feedbackLight,
-			CB1_led,
-			CB1_autoPlay,
-			CB1_traceLog,
-			CB1_record
+			b.CB1FeedbackLight,
+			b.CB1Led,
+			b.CB1AutoPlay,
+			b.CB1TraceLog,
+			b.CB1Record
 		)
 	}
 	private val CB2s: Array<CheckBox> by lazy {
 		arrayOf(
-			CB2_feedbackLight,
-			CB2_led,
-			CB2_autoPlay,
-			CB2_traceLog,
-			CB2_record,
-			CB2_hideUI,
-			CB2_watermark,
-			CB2_proLightMode,
-			CB2_purchase
+			b.CB2FeedbackLight,
+			b.CB2Led,
+			b.CB2AutoPlay,
+			b.CB2TraceLog,
+			b.CB2Record,
+			b.CB2HideUI,
+			b.CB2Watermark,
+			b.CB2ProLightMode,
+			b.CB2Purchase
 		)
 	}
 	private val SCB_feedbackLight: SyncCheckBox = SyncCheckBox()
@@ -108,8 +105,8 @@ class PlayActivity : BaseActivity() {
 
 	// =============================================================================================
 
-	private var U_pads: Array<Array<Pad?>>? = null
-	private var U_circle: Array<Chain?>? = null
+	private var U_pads: Array<Array<PadView?>>? = null
+	private var U_circle: Array<ChainView?>? = null
 
 	// Runner, Manager /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -128,14 +125,14 @@ class PlayActivity : BaseActivity() {
 	private var bool_toggleOption_window = false
 
 	private fun initVar() {
-		SCB_feedbackLight.addCheckBox(CB1_feedbackLight, CB2_feedbackLight)
-		SCB_led.addCheckBox(CB1_led, CB2_led)
-		SCB_autoPlay.addCheckBox(CB1_autoPlay, CB2_autoPlay)
-		SCB_traceLog.addCheckBox(CB1_traceLog, CB2_traceLog)
-		SCB_record.addCheckBox(CB1_record, CB2_record)
-		SCB_hideUI.addCheckBox(CB2_hideUI)
-		SCB_watermark.addCheckBox(CB2_watermark)
-		SCB_proLightMode.addCheckBox(CB2_proLightMode)
+		SCB_feedbackLight.addCheckBox(b.CB1FeedbackLight, b.CB2FeedbackLight)
+		SCB_led.addCheckBox(b.CB1Led, b.CB2Led)
+		SCB_autoPlay.addCheckBox(b.CB1AutoPlay, b.CB2AutoPlay)
+		SCB_traceLog.addCheckBox(b.CB1TraceLog, b.CB2TraceLog)
+		SCB_record.addCheckBox(b.CB1Record, b.CB2Record)
+		SCB_hideUI.addCheckBox(b.CB2HideUI)
+		SCB_watermark.addCheckBox(b.CB2Watermark)
+		SCB_proLightMode.addCheckBox(b.CB2ProLightMode)
 
 		SCB_watermark.forceSetChecked(true)
 
@@ -146,7 +143,7 @@ class PlayActivity : BaseActivity() {
 			override fun onBillingInitialized() {
 				val proMode = bm.isPro
 
-				CB2_purchase.visibility = if (proMode) View.GONE else View.VISIBLE
+				b.CB2Purchase.visibility = if (proMode) View.GONE else View.VISIBLE
 				SCB_hideUI.isLocked = !proMode
 				SCB_watermark.isLocked = !proMode
 				SCB_proLightMode.isLocked = !proMode
@@ -164,7 +161,8 @@ class PlayActivity : BaseActivity() {
 	@SuppressLint("StaticFieldLeak")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		b = DataBindingUtil.setContentView(this, layout.activity_play)
+		b = ActivityPlayBinding.inflate(layoutInflater)
+		setContentView(b.root)
 
 		initVar()
 
@@ -202,7 +200,7 @@ class PlayActivity : BaseActivity() {
 
 	private fun start() {
 		chain.range = 0 until unipack!!.chain
-		U_pads = Array(unipack!!.buttonX) { Array<Pad?>(unipack!!.buttonY) { null } }
+		U_pads = Array(unipack!!.buttonX) { Array<PadView?>(unipack!!.buttonY) { null } }
 		U_circle = Array(32) { null }
 		channelManager = ChannelManager(unipack!!.buttonX, unipack!!.buttonY)
 		log("[04] Start ledTask (isKeyLed = " + unipack!!.keyLedExist.toString() + ")")
@@ -211,10 +209,10 @@ class PlayActivity : BaseActivity() {
 		b.themeResources = theme
 
 		if (theme != null) {
-			RL_root.viewTreeObserver.addOnGlobalLayoutListener(object :
+			b.root.viewTreeObserver.addOnGlobalLayoutListener(object :
 				ViewTreeObserver.OnGlobalLayoutListener {
 				override fun onGlobalLayout() {
-					RL_root.viewTreeObserver.removeOnGlobalLayoutListener(this)
+					b.root.viewTreeObserver.removeOnGlobalLayoutListener(this)
 					initLayout()
 					initRunner()
 					initSetting()
@@ -297,10 +295,10 @@ class PlayActivity : BaseActivity() {
 			val buttonSizeY: Int
 			val buttonSizeMin: Int
 
-			val screenWidth = RL_root.width
-			val screenHeight = RL_root.height
-			val paddingWidth = V_paddingScale.width
-			val paddingheight = V_paddingScale.height
+			val screenWidth = b.root.width
+			val screenHeight = b.root.height
+			val paddingWidth = b.paddingScale.width
+			val paddingheight = b.paddingScale.height
 
 			if (unipack!!.squareButton) {
 				val xSize = paddingWidth / unipack!!.buttonX
@@ -316,20 +314,20 @@ class PlayActivity : BaseActivity() {
 
 
 			// Setting
-			CB2_purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
+			b.CB2Purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
 				compoundButton!!.isChecked = false
 				start<SettingActivity>()
 			}
 			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
+				override fun onCheckedChange(bool: Boolean) {
 					padInit()
 					refreshWatermark()
 				}
 			}
 			SCB_led.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
+				override fun onCheckedChange(bool: Boolean) {
 					if (unipack!!.keyLedExist) {
-						if (b) {
+						if (bool) {
 							ledRunner?.launch()
 						} else {
 							ledRunner?.stop()
@@ -340,15 +338,15 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 			SCB_autoPlay.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
-					if (b) {
+				override fun onCheckedChange(bool: Boolean) {
+					if (bool) {
 						autoPlayRunner?.launch()
 					} else {
 						autoPlayRunner?.stop()
 						padInit()
 						ledInit()
 						autoPlay_removeGuide()
-						autoPlayControlView.visibility = View.GONE
+						b.autoPlayControlView.visibility = View.GONE
 					}
 					refreshWatermark()
 				}
@@ -361,7 +359,7 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 			SCB_record.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
+				override fun onCheckedChange(bool: Boolean) {
 					if (SCB_record.isChecked()) {
 						rec_prevEventMS = java.lang.System.currentTimeMillis()
 						rec_log = "c " + (chain.value + 1)
@@ -374,33 +372,33 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 			SCB_hideUI.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
-					option_view.visibility = if (b) View.GONE else View.VISIBLE
+				override fun onCheckedChange(bool: Boolean) {
+					b.optionView.visibility = if (bool) View.GONE else View.VISIBLE
 					refreshWatermark()
 				}
 			}
 			SCB_watermark.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
+				override fun onCheckedChange(bool: Boolean) {
 					refreshWatermark()
 				}
 			}
 			SCB_proLightMode.onCheckedChange = object : OnCheckedChange {
-				override fun onCheckedChange(b: Boolean) {
-					proLightMode(b)
+				override fun onCheckedChange(bool: Boolean) {
+					proLightMode(bool)
 					refreshWatermark()
 				}
 			}
-			prev.setOnClickListener { autoPlay_prev() }
-			play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
-			next.setOnClickListener { autoPlay_next() }
-			option_blur.setOnClickListener {
+			b.prev.setOnClickListener { autoPlay_prev() }
+			b.play.setOnClickListener { if (autoPlayRunner!!.playmode) autoPlay_stop() else autoPlay_play() }
+			b.next.setOnClickListener { autoPlay_next() }
+			b.optionBlur.setOnClickListener {
 				if (bool_toggleOption_window)
 					toggleOption_window(false)
 			}
-			quit.setOnClickListener { finish() }
-			pads.removeAllViews()
-			chainsRight.removeAllViews()
-			chainsLeft.removeAllViews()
+			b.quit.setOnClickListener { finish() }
+			b.pads.removeAllViews()
+			b.chainsRight.removeAllViews()
+			b.chainsLeft.removeAllViews()
 
 
 			// Setup Pads
@@ -412,7 +410,7 @@ class PlayActivity : BaseActivity() {
 					1F
 				)
 				for (y in 0 until unipack!!.buttonY) {
-					val view = Pad(this)
+					val view = PadView(this)
 					view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 					view.setBackgroundImageDrawable(theme!!.btn)
 					view.setTraceLogTextColor(theme!!.trace_log!!)
@@ -426,7 +424,7 @@ class PlayActivity : BaseActivity() {
 					U_pads!![x][y] = view
 					row.addView(view)
 				}
-				pads.addView(row)
+				b.pads.addView(row)
 			}
 			if (unipack!!.buttonX < 16 && unipack!!.buttonY < 16) {
 				for (i in 0 until unipack!!.buttonX)
@@ -448,7 +446,7 @@ class PlayActivity : BaseActivity() {
 			// Setup Chains
 			for (i in 0..31) {
 				val c = i - 8
-				val view = Chain(this)
+				val view = ChainView(this)
 				view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
 				if (theme!!.isChainLed) {
 					view.setBackgroundImageDrawable(theme!!.btn)
@@ -461,11 +459,11 @@ class PlayActivity : BaseActivity() {
 				U_circle!![i] = view
 				if (c in 0..7) {
 					U_circle!![i]!!.setOnClickListener { chain.value = c }
-					chainsRight.addView(U_circle!![i])
+					b.chainsRight.addView(U_circle!![i])
 				}
 				if (c in 16..23) {
 					U_circle!![i]!!.setOnClickListener { chain.value = c }
-					chainsLeft.addView(U_circle!![i], 0)
+					b.chainsLeft.addView(U_circle!![i], 0)
 				}
 			}
 
@@ -549,10 +547,10 @@ class PlayActivity : BaseActivity() {
 				listener = object : AutoPlayRunner.Listener {
 					override fun onStart() {
 						runOnUiThread {
-							if (unipack!!.squareButton) autoPlayControlView.visibility =
+							if (unipack!!.squareButton) b.autoPlayControlView.visibility =
 								View.VISIBLE
-							autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
-							autoPlayProgressBar.progress = 0
+							b.autoPlayProgressBar.max = unipack!!.autoPlayTable!!.elements.size
+							b.autoPlayProgressBar.progress = 0
 							autoPlay_play()
 						}
 					}
@@ -613,7 +611,7 @@ class PlayActivity : BaseActivity() {
 
 					override fun onProgressUpdate(progress: Int) {
 						runOnUiThread {
-							autoPlayProgressBar.progress = progress
+							b.autoPlayProgressBar.progress = progress
 						}
 					}
 
@@ -626,7 +624,7 @@ class PlayActivity : BaseActivity() {
 							} else {
 								SCB_feedbackLight.setChecked(true)
 							}
-							autoPlayControlView.visibility = View.GONE
+							b.autoPlayControlView.visibility = View.GONE
 						}
 					}
 				})
@@ -877,39 +875,39 @@ class PlayActivity : BaseActivity() {
 		if (bool) {
 			val a: Animation = object : Animation() {
 				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-					option_blur.alpha = interpolatedTime
-					option_window.alpha = interpolatedTime
+					b.optionBlur.alpha = interpolatedTime
+					b.optionWindow.alpha = interpolatedTime
 				}
 			}
 			a.duration = 200
 			a.setAnimationListener(object : AnimationListener {
 				override fun onAnimationStart(animation: Animation?) {
-					option_blur.visibility = View.VISIBLE
-					option_window.visibility = View.VISIBLE
+					b.optionBlur.visibility = View.VISIBLE
+					b.optionWindow.visibility = View.VISIBLE
 				}
 
 				override fun onAnimationEnd(animation: Animation?) {}
 				override fun onAnimationRepeat(animation: Animation?) {}
 			})
-			option_blur.startAnimation(a)
+			b.optionBlur.startAnimation(a)
 		} else {
 			val a: Animation = object : Animation() {
 				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-					option_blur.alpha = 1 - interpolatedTime
-					option_window.alpha = 1 - interpolatedTime
+					b.optionBlur.alpha = 1 - interpolatedTime
+					b.optionWindow.alpha = 1 - interpolatedTime
 				}
 			}
 			a.duration = 500
 			a.setAnimationListener(object : AnimationListener {
 				override fun onAnimationStart(animation: Animation?) {}
 				override fun onAnimationEnd(animation: Animation?) {
-					option_blur.visibility = View.INVISIBLE
-					option_window.visibility = View.INVISIBLE
+					b.optionBlur.visibility = View.INVISIBLE
+					b.optionWindow.visibility = View.INVISIBLE
 				}
 
 				override fun onAnimationRepeat(animation: Animation?) {}
 			})
-			option_blur.startAnimation(a)
+			b.optionBlur.startAnimation(a)
 		}
 	}
 
@@ -1095,7 +1093,7 @@ class PlayActivity : BaseActivity() {
 		padInit()
 		ledInit()
 		autoPlayRunner!!.playmode = true
-		play.background = theme!!.xml_pause
+		b.play.background = theme!!.xml_pause
 		if (unipack!!.keyLedExist) {
 			SCB_led.setChecked(true)
 			SCB_feedbackLight.setChecked(false)
@@ -1110,7 +1108,7 @@ class PlayActivity : BaseActivity() {
 		autoPlayRunner!!.playmode = false
 		padInit()
 		ledInit()
-		play.background = theme!!.xml_play
+		b.play.background = theme!!.xml_play
 		autoPlayRunner!!.achieve = -1
 		SCB_feedbackLight.setChecked(false)
 		SCB_led.setChecked(false)

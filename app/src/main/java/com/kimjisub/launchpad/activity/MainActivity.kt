@@ -31,10 +31,10 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.kimjisub.design.PackView
 import com.kimjisub.design.dialog.FileExplorerDialog
 import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.design.panel.MainPackPanel
+import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.ThemeItem
@@ -42,6 +42,7 @@ import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.databinding.ActivityMainBinding
 import com.kimjisub.launchpad.db.AppDataBase
 import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
@@ -62,7 +63,6 @@ import com.kimjisub.manager.Log
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import com.kimjisub.manager.extra.getVirtualIndexFormSorted
 import com.kimjisub.manager.splitties.browse
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -80,6 +80,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : BaseActivity() {
+	private lateinit var b: ActivityMainBinding
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private lateinit var bm: BillingManager
@@ -103,12 +104,12 @@ class MainActivity : BaseActivity() {
 		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
 			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 				super.onItemRangeInserted(positionStart, itemCount)
-				LL_errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
+				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 
 			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 				super.onItemRangeRemoved(positionStart, itemCount)
-				LL_errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
+				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 		})
 
@@ -122,10 +123,10 @@ class MainActivity : BaseActivity() {
 		animator.repeatMode = ValueAnimator.REVERSE
 		animator.addUpdateListener {
 			val color = it.animatedValue as Int
-			FAM_floatingMenu.menuButtonColorNormal = color
-			FAM_floatingMenu.menuButtonColorPressed = color
-			FAB_store.colorNormal = color
-			FAB_store.colorPressed = color
+			b.floatingMenu.menuButtonColorNormal = color
+			b.floatingMenu.menuButtonColorPressed = color
+			b.store.colorNormal = color
+			b.store.colorPressed = color
 		}
 		animator
 	}
@@ -169,12 +170,12 @@ class MainActivity : BaseActivity() {
 				if (f == 0 && upDown) {
 					if (havePrev()) {
 						togglePlay(lastPlayIndex - 1)
-						RV_recyclerView.smoothScrollToPosition(lastPlayIndex)
+						b.recyclerView.smoothScrollToPosition(lastPlayIndex)
 					} else showSelectLPUI()
 				} else if (f == 1 && upDown) {
 					if (haveNext()) {
 						togglePlay(lastPlayIndex + 1)
-						RV_recyclerView.smoothScrollToPosition(lastPlayIndex)
+						b.recyclerView.smoothScrollToPosition(lastPlayIndex)
 					} else showSelectLPUI()
 				} else if (f == 2 && upDown) {
 					if (haveNow()) unipackList[lastPlayIndex].playClick?.invoke()
@@ -193,14 +194,15 @@ class MainActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_main)
+		b = ActivityMainBinding.inflate(layoutInflater)
+		setContentView(b.root)
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		divider.setDrawable(resources.getDrawable(drawable.border_divider))
-		RV_recyclerView.addItemDecoration(divider)
-		RV_recyclerView.setHasFixedSize(false)
-		RV_recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
-		RV_recyclerView.adapter = adapter
+		b.recyclerView.addItemDecoration(divider)
+		b.recyclerView.setHasFixedSize(false)
+		b.recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+		b.recyclerView.adapter = adapter
 
 
 		initPanel()
@@ -212,21 +214,21 @@ class MainActivity : BaseActivity() {
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {
-				P_total.data.premium.set(bm.isPro)
+				b.totalPanel.data.premium.set(bm.isPro)
 				if (!bm.isPro) {
-					adView.loadAd(AdRequest.Builder().build())
+					b.adView.loadAd(AdRequest.Builder().build())
 					adsPlayStart.loadAd(AdRequest.Builder().build())
 				} else
-					adView.visibility = View.GONE
+					b.adView.visibility = View.GONE
 			}
 		})
 		bm.initialize()
 
-		SRL_swipeRefreshLayout.setOnRefreshListener { this.update() }
-		FAB_reconnectLaunchpad.setOnClickListener {
+		b.swipeRefreshLayout.setOnRefreshListener { this.update() }
+		b.reconnectLaunchpad.setOnClickListener {
 			start<MidiSelectActivity>()
 		}
-		FAB_loadUniPack.setOnClickListener {
+		b.loadUniPack.setOnClickListener {
 			FileExplorerDialog(this@MainActivity, p.fileExplorerPath,
 				object : OnEventListener {
 					override fun onFileSelected(filePath: String) {
@@ -239,15 +241,15 @@ class MainActivity : BaseActivity() {
 				})
 				.show()
 		}
-		FAB_store.setOnClickListener {
+		b.store.setOnClickListener {
 			val intent = Intent(applicationContext, FBStoreActivity::class.java)
 			startActivityForResult(intent, REQUEST_FB_STORE)
 		}
-		FAB_store.setOnLongClickListener { false }
-		FAB_setting.setOnClickListener { start<SettingActivity>() }
-		FAM_floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
+		b.store.setOnLongClickListener { false }
+		b.setting.setOnClickListener { start<SettingActivity>() }
+		b.floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
-			var runnable: Runnable = Runnable { FAM_floatingMenu.close(true) }
+			var runnable: Runnable = Runnable { b.floatingMenu.close(true) }
 
 			override fun onMenuToggle(opened: Boolean) {
 				if (opened) handler.postDelayed(runnable, 5000) else handler.removeCallbacks(
@@ -255,7 +257,7 @@ class MainActivity : BaseActivity() {
 				)
 			}
 		})
-		LL_errItem.setOnClickListener { start<FBStoreActivity>() }
+		b.errItem.setOnClickListener { start<FBStoreActivity>() }
 		checkThings()
 		update(false)
 
@@ -270,12 +272,12 @@ class MainActivity : BaseActivity() {
 	private fun update(animateNew: Boolean = true) {
 		lastPlayIndex = -1
 		if (listRefreshing) return
-		SRL_swipeRefreshLayout.isRefreshing = true
+		b.swipeRefreshLayout.isRefreshing = true
 		listRefreshing = true
 
 		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
-			Comparator { a, b -> -a.unipack.title!!.compareTo(b.unipack.title!!) },
-			Comparator { a, b -> -a.unipack.producerName!!.compareTo(b.unipack.producerName!!) },
+			Comparator { a, b -> -a.unipack.title.compareTo(b.unipack.title) },
+			Comparator { a, b -> -a.unipack.producerName.compareTo(b.unipack.producerName) },
 			Comparator { a, b ->
 				val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name)
 				val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)
@@ -365,7 +367,7 @@ class MainActivity : BaseActivity() {
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
-							P_total.data.unipackCount.set(unipackList.size.toString())
+							b.totalPanel.data.unipackCount.set(unipackList.size.toString())
 							break
 						}
 					}
@@ -385,8 +387,8 @@ class MainActivity : BaseActivity() {
 				if (changed)
 					adapter.notifyDataSetChanged()
 
-				if (I_added.size > 0) RV_recyclerView.smoothScrollToPosition(0)
-				SRL_swipeRefreshLayout.isRefreshing = false
+				if (I_added.size > 0) b.recyclerView.smoothScrollToPosition(0)
+				b.swipeRefreshLayout.isRefreshing = false
 				listRefreshing = false
 
 				updatePanel(true)
@@ -448,7 +450,7 @@ class MainActivity : BaseActivity() {
 	private fun importUniPack(unipackFile: File) {
 		lateinit var progressDialog: ProgressDialog
 
-		UniPackImporter(context = this, unipackFile = unipackFile, uniPackWorkspace, object:
+		UniPackImporter(context = this, unipackFile = unipackFile, uniPackWorkspace, object :
 			UniPackImporter.OnEventListener {
 			override fun onImportStart(zip: File) {
 				progressDialog = ProgressDialog(this@MainActivity)
@@ -466,14 +468,14 @@ class MainActivity : BaseActivity() {
 				when {
 					unipack.errorDetail == null -> {
 						alertDialog {
-							title =  getString(string.importComplete)
+							title = getString(string.importComplete)
 							message = unipack.toString(this@MainActivity)
 							okButton()
 						}.show()
 					}
 					else -> {
 						alertDialog {
-							title =  getString(string.warning)
+							title = getString(string.warning)
 							message = unipack.errorDetail!!
 							okButton()
 						}.show()
@@ -558,22 +560,22 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		P_total.data.sortMethod.set(p.sortMethod)
-		P_total.data.sortType.set(p.sortType)
-		P_total.data.logo.set(resources.getDrawable(drawable.custom_logo))
-		P_total.data.version.set(BuildConfig.VERSION_NAME)
-		P_total.data.sort.addOnPropertyChanged {
+		b.totalPanel.data.sortMethod.set(p.sortMethod)
+		b.totalPanel.data.sortType.set(p.sortType)
+		b.totalPanel.data.logo.set(resources.getDrawable(drawable.custom_logo))
+		b.totalPanel.data.version.set(BuildConfig.VERSION_NAME)
+		b.totalPanel.data.sort.addOnPropertyChanged {
 			val sort = it.get()!!
 			p.sortMethod = sort / 2
 			p.sortType = sort % 2 == 1
 			update()
 		}
-		P_total.data.selectedTheme.addOnPropertyChanged {
+		b.totalPanel.data.selectedTheme.addOnPropertyChanged {
 			val selectedThemeIndex = it.get()!!
 			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
 		}
 
-		P_pack.onEventListener = object : MainPackPanel.OnEventListener {
+		b.packPanel.onEventListener = object : MainPackPanel.OnEventListener {
 			override fun onBookmarkClick(v: View) {
 				val item = selected
 				if (item != null) {
@@ -663,22 +665,22 @@ class MainActivity : BaseActivity() {
 		)
 		animation.setAnimationListener(object : AnimationListener {
 			override fun onAnimationStart(animation: Animation?) {
-				P_pack.visibility = View.VISIBLE
-				P_pack.alpha = 1f
+				b.packPanel.visibility = View.VISIBLE
+				b.packPanel.alpha = 1f
 			}
 
 			override fun onAnimationEnd(animation: Animation?) {
-				P_pack.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
-				P_pack.alpha = if (selectedIndex != -1) 1.toFloat() else 0.toFloat()
+				b.packPanel.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
+				b.packPanel.alpha = if (selectedIndex != -1) 1.toFloat() else 0.toFloat()
 			}
 
 			override fun onAnimationRepeat(animation: Animation?) {}
 		})
 		if (selectedIndex == -1) updatePanelMain(hardWork) else updatePanelPack(unipackList[selectedIndex])
-		val visibility = P_pack.visibility
+		val visibility = b.packPanel.visibility
 		if (((visibility == View.VISIBLE && selectedIndex == -1)
 					|| (visibility == View.INVISIBLE && selectedIndex != -1))
-		) P_pack.startAnimation(animation)
+		) b.packPanel.startAnimation(animation)
 	}
 
 	var themeItemList: ArrayList<ThemeItem>? = null
@@ -692,26 +694,26 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("StaticFieldLeak")
 	private fun updatePanelMain(hardWork: Boolean) {
-		P_total.data.unipackCount.set(unipackList.size.toString())
+		b.totalPanel.data.unipackCount.set(unipackList.size.toString())
 		db.unipackOpenDAO()!!.count.observe(
 			this,
-			Observer { integer: Int? -> P_total.data.openCount.set(integer.toString()) })
+			Observer { integer: Int? -> b.totalPanel.data.openCount.set(integer.toString()) })
 		updateThemeList()
 
-		P_total.data.themeList.set(themeNameList)
+		b.totalPanel.data.themeList.set(themeNameList)
 
 		try {
 			val index = themeItemList!!.indexOfFirst { it.package_name == p.selectedTheme }
-			P_total.data.selectedTheme.set(index)
+			b.totalPanel.data.selectedTheme.set(index)
 		} catch (e: Exception) {
-			P_total.data.selectedTheme.set(0)
+			b.totalPanel.data.selectedTheme.set(0)
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
 				val size = FileManager.getFolderSize(uniPackWorkspace)
 
 				withContext(Dispatchers.Main) {
-					P_total.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
+					b.totalPanel.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
 				}
 			}
 	}
@@ -722,7 +724,7 @@ class MainActivity : BaseActivity() {
 		val flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
 		item.flagColor = flagColor
 
-		P_pack.data.apply {
+		b.packPanel.data.apply {
 			title.set(unipack.title)
 			subtitle.set(unipack.producerName)
 			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
@@ -781,7 +783,7 @@ class MainActivity : BaseActivity() {
 			val currVersionList: List<String> =
 				gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
-				CL_root.longSnack(
+				b.root.longSnack(
 					"${getString(string.newVersionFound)}"
 				) {
 					action(getString(string.update)) {

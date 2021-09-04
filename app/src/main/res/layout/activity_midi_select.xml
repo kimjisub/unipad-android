@@ -55,7 +55,7 @@
 			android:orientation="vertical">
 
 			<LinearLayout
-				android:id="@+id/BTN_speedFirst"
+				android:id="@+id/speedFirst"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center"
@@ -76,7 +76,7 @@
 			</LinearLayout>
 
 			<LinearLayout
-				android:id="@+id/BTN_avoidAfterimage"
+				android:id="@+id/avoidAfterimage"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:gravity="center"
@@ -99,7 +99,7 @@
 		</LinearLayout>
 
 		<RelativeLayout
-			android:id="@+id/RL_err"
+			android:id="@+id/err"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:background="@color/background1"
@@ -120,7 +120,7 @@
 
 
 		<TextView
-			android:id="@+id/TV_log"
+			android:id="@+id/log"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentStart="true"
