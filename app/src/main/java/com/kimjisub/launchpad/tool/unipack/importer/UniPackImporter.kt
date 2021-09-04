@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.tool
+package com.kimjisub.launchpad.tool.unipack.importer
 
 import android.app.PendingIntent
 import android.content.Context
@@ -16,14 +16,26 @@ import net.lingala.zip4j.progress.ProgressMonitor
 import java.io.File
 
 class UniPackImporter(
-	private var context: Context,
-	private var unipackFile: File,
+	context: Context,
 	workspace: File,
-	private var onEventListener: OnEventListener
 ) {
-	private val zipNameWithoutExt = unipackFile.name.split('.').first()
-	private val targetFolder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")
 
+	/*enum class Mode {
+		FROM_URL, FROM_FILE, FROM_UNISHARE
+	}
+
+	private lateinit var mode: Mode
+
+	// Download
+	private lateinit var downloadUrl: String
+
+
+
+
+	private val targetFolderName = unipackFile.name.split('.').first()
+	private val targetFolder: File = FileManager.makeNextPath(workspace, targetFolderName, "/")
+
+	// notification
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
@@ -43,7 +55,24 @@ class UniPackImporter(
 		builder
 	}
 
-	init {
+	fun fromUrl(urlString: String) {
+
+	}
+
+	fun fromFile(file: File){
+
+	}
+
+	fun fromUniShare(uniShare: String){
+
+	}
+
+	fun downloadFile(urlString: String) {
+		DownloadTask
+
+	}
+
+	fun startImport() {
 		CoroutineScope(Dispatchers.IO).launch {
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
@@ -85,7 +114,7 @@ class UniPackImporter(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onImportStart(unipackFile)
+		onImportEventListener?.onImportStart(unipackFile)
 	}
 
 	private fun onImportProgress(processMonitor: ProgressMonitor) {
@@ -94,7 +123,7 @@ class UniPackImporter(
 			setOngoing(false)
 		}
 
-		onEventListener?.onImportProgress(processMonitor)
+		onImportEventListener?.onImportProgress(processMonitor)
 	}
 
 	private fun onInstallComplete(folder: File, unipack: UniPack) {
@@ -106,7 +135,7 @@ class UniPackImporter(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onImportComplete(folder, unipack)
+		onImportEventListener?.onImportComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
@@ -118,10 +147,17 @@ class UniPackImporter(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onException(throwable)
+		onImportEventListener?.onException(throwable)
 	}
 
 	interface OnEventListener {
+		fun onStart()
+
+		fun onDownloadStart()
+
+		fun onDownloadFileSize()
+
+		fun onDownloadProgress()
 
 		fun onImportStart(zip: File)
 
@@ -137,4 +173,8 @@ class UniPackImporter(
 	companion object {
 		const val PROGRESS_INTERVAL = 10L
 	}
+
+	class FromUrl() : UniPackImporter(){
+
+	}*/
 }

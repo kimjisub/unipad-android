@@ -127,6 +127,9 @@ dependencies {
 	implementation 'cn.aigestudio.wheelpicker:WheelPicker:1.1.3'
 	implementation 'com.yarolegovich:discrete-scrollview:1.5.1'
 	implementation 'net.lingala.zip4j:zip4j:2.9.0'
+	implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+	implementation "com.liulishuo.okdownload:okhttp:1.0.3"
+
 
 	api project(':design')
 	api project(':manager')

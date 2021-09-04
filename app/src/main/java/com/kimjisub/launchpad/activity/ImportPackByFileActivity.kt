@@ -10,12 +10,12 @@ class ImportPackByFileActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 
 		Log.test("intent?.data?.path!!: " + intent?.data?.path!!)
-
-		UniPackImporter(
-			context = this,
-			File(intent?.data?.path!!),
-			uniPackWorkspace
-		)
+// Todo
+//		UniPackImporter(
+//			context = this,
+//			File(intent?.data?.path!!),
+//			uniPackWorkspace
+//		)
 		finish()
 	}
 }

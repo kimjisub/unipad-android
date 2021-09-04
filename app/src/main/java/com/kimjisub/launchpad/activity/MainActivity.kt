@@ -54,6 +54,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
+import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.FileManager.getInnerFileLastModified
@@ -66,6 +67,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.lingala.zip4j.progress.ProgressMonitor
 import splitties.activities.start
 import splitties.alertdialog.alertDialog
 import splitties.alertdialog.message
@@ -443,14 +445,12 @@ class MainActivity : BaseActivity() {
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun importUniPack(zip: File) {
-		CoroutineScope(Dispatchers.IO).launch {
+	private fun importUniPack(unipackFile: File) {
+		lateinit var progressDialog: ProgressDialog
 
-			lateinit var progressDialog: ProgressDialog
-			var msg1 = "(null)"
-			var msg2 = "(null)"
-
-			withContext(Dispatchers.Main) {
+		UniPackImporter(context = this, unipackFile = unipackFile, uniPackWorkspace, object:
+			UniPackImporter.OnEventListener {
+			override fun onImportStart(zip: File) {
 				progressDialog = ProgressDialog(this@MainActivity)
 				progressDialog.setTitle(getString(string.importing))
 				progressDialog.setMessage(getString(string.wait_a_sec))
@@ -458,43 +458,38 @@ class MainActivity : BaseActivity() {
 				progressDialog.show()
 			}
 
-			val name: String = zip.name
-			val name_ = name.substring(0, name.lastIndexOf("."))
-			val F_UniPack: File = FileManager.makeNextPath(uniPackWorkspace, name_, "/")
-			try {
-				FileManager.unZipFile(zip.path, F_UniPack.path)
-				val unipack = UniPack(F_UniPack, true)
-				when {
-					unipack.errorDetail == null -> {
-						msg1 = getString(string.importComplete)
-						msg2 = unipack.toString(this@MainActivity)
-					}
-					unipack.criticalError -> {
-						msg1 = getString(string.importFailed)
-						msg2 = unipack.errorDetail!!
-						FileManager.deleteDirectory(F_UniPack)
-					}
-					else -> {
-						msg1 = getString(string.warning)
-						msg2 = unipack.errorDetail!!
-					}
-				}
-			} catch (e: Exception) {
-				msg1 = getString(string.importFailed)
-				msg2 = e.toString()
-				FileManager.deleteDirectory(F_UniPack)
+			override fun onImportProgress(processMonitor: ProgressMonitor) {
+				progressDialog.progress = processMonitor.percentDone
 			}
 
-			withContext(Dispatchers.Main) {
-				update()
+			override fun onImportComplete(folder: File, unipack: UniPack) {
+				when {
+					unipack.errorDetail == null -> {
+						alertDialog {
+							title =  getString(string.importComplete)
+							message = unipack.toString(this@MainActivity)
+							okButton()
+						}.show()
+					}
+					else -> {
+						alertDialog {
+							title =  getString(string.warning)
+							message = unipack.errorDetail!!
+							okButton()
+						}.show()
+					}
+				}
+			}
+
+			override fun onException(throwable: Throwable) {
 				alertDialog {
-					title = msg1
-					message = msg2
+					title = getString(string.importFailed)
+					message = throwable.toString()
 					okButton()
 				}.show()
-				progressDialog.dismiss()
 			}
-		}
+
+		})
 	}
 
 	// ListManage /////////////////////////////////////////////////////////////////////////////////////////
