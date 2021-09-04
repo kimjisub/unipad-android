@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
-import androidx.databinding.DataBindingUtil
-import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelStoreTotalBinding
 
@@ -14,8 +12,9 @@ class StoreTotalPanel
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
-) : RelativeLayout(context, attrs, defStyleAttr){
-	val b: PanelStoreTotalBinding = PanelStoreTotalBinding.bind(this)
+) : RelativeLayout(context, attrs, defStyleAttr) {
+	val b: PanelStoreTotalBinding =
+		PanelStoreTotalBinding.inflate(LayoutInflater.from(context), this, true)
 
 	init {
 		attrs?.let {
