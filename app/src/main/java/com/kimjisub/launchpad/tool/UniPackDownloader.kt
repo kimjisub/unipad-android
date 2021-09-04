@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.FileOutputStream
 
@@ -27,7 +28,7 @@ class UniPackDownloader(
 	preKnownFileSize: Long = 0,
 	private var listener: Listener
 ) {
-	private val zip: File = FileManager.makeNextPath(workspace, folderName, ".zip")
+	private val unipackFile: File = FileManager.makeNextPath(workspace, folderName, ".zip")
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
 
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
@@ -78,7 +79,7 @@ class UniPackDownloader(
 				}
 
 				val inputStream = responseBody.byteStream()
-				val outputStream = FileOutputStream(zip)
+				val outputStream = FileOutputStream(unipackFile)
 				val buf = ByteArray(1024)
 				var downloadedSize = 0L
 				var n: Int
@@ -125,9 +126,11 @@ class UniPackDownloader(
 				inputStream.close()
 				outputStream.close()
 
-				withContext(Dispatchers.Main) { onImportStart(zip) }
+				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-				FileManager.unZipFile(zip.path, folder.path)
+				val zip = ZipFile(unipackFile)
+				zip.extractAll(folder.path)
+				FileManager.removeDoubleFolder(folder.path)
 				val unipack = UniPack(folder, true)
 				if (unipack.criticalError) {
 					Log.err(unipack.errorDetail!!)
@@ -142,7 +145,7 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onException(e) }
 				FileManager.deleteDirectory(folder)
 			}
-			FileManager.deleteDirectory(zip)
+			FileManager.deleteDirectory(unipackFile)
 		}
 	}
 
