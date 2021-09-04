@@ -9,7 +9,7 @@
 		android:gravity="center">
 
 		<ImageView
-			android:id="@+id/IV_bookmark_back"
+			android:id="@+id/bookmarkBack"
 			android:layout_width="30dp"
 			android:layout_height="27dp"
 			android:layout_marginStart="10dp"
@@ -30,7 +30,7 @@
 				android:layout_height="60dp">
 
 				<RelativeLayout
-					android:id="@+id/RL_flag"
+					android:id="@+id/flag"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:layout_alignParentStart="true"
@@ -38,7 +38,7 @@
 					android:background="@drawable/border_all_round" />
 
 				<ImageView
-					android:id="@+id/IV_playImg"
+					android:id="@+id/playImage"
 					android:layout_width="100dp"
 					android:layout_height="15dp"
 					android:layout_centerVertical="true"
@@ -47,7 +47,7 @@
 					app:srcCompat="@drawable/playbtn" />
 
 				<TextView
-					android:id="@+id/TV_playText"
+					android:id="@+id/playText"
 					android:layout_width="100dp"
 					android:layout_height="wrap_content"
 					android:layout_centerVertical="true"
@@ -56,7 +56,7 @@
 					android:textSize="10dp" />
 
 				<RelativeLayout
-					android:id="@+id/RL_playBtn"
+					android:id="@+id/playBtn"
 					android:layout_width="100dp"
 					android:layout_height="match_parent"
 					android:layout_alignParentStart="true"
@@ -73,12 +73,12 @@
 				android:orientation="horizontal">
 
 				<RelativeLayout
-					android:id="@+id/RL_flagSize"
+					android:id="@+id/flagSize"
 					android:layout_width="10dp"
 					android:layout_height="match_parent" />
 
 				<LinearLayout
-					android:id="@+id/LL_touchView"
+					android:id="@+id/touchSpace"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:clickable="true"
@@ -86,7 +86,7 @@
 					android:orientation="horizontal">
 
 					<LinearLayout
-						android:id="@+id/LL_leftView"
+						android:id="@+id/leftView"
 						android:layout_width="0dp"
 						android:layout_height="match_parent"
 						android:layout_weight="1"
@@ -101,7 +101,7 @@
 							android:orientation="vertical">
 
 							<TextView
-								android:id="@+id/TV_title"
+								android:id="@+id/title"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:ellipsize="end"
@@ -111,7 +111,7 @@
 								tools:text="Title" />
 
 							<TextView
-								android:id="@+id/TV_subtitle"
+								android:id="@+id/subtitle"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:layout_marginTop="3dp"
@@ -125,7 +125,7 @@
 					</LinearLayout>
 
 					<RelativeLayout
-						android:id="@+id/RL_rightView"
+						android:id="@+id/rightView"
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:background="@drawable/border_right_round"
@@ -139,7 +139,7 @@
 							android:paddingRight="15dp">
 
 							<TextView
-								android:id="@+id/TV_option1"
+								android:id="@+id/option1"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:layout_gravity="end"
@@ -150,7 +150,7 @@
 								android:textSize="10dp" />
 
 							<TextView
-								android:id="@+id/TV_option2"
+								android:id="@+id/option2"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:layout_gravity="end"
@@ -171,7 +171,7 @@
 		</RelativeLayout>
 
 		<ImageView
-			android:id="@+id/IV_bookmark_front"
+			android:id="@+id/bookmarkFront"
 			android:layout_width="30dp"
 			android:layout_height="27dp"
 			android:layout_marginStart="10dp"

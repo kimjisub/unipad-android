@@ -2,35 +2,20 @@ package com.kimjisub.design.panel
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
-import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelStorePackBinding
-import kotlinx.android.synthetic.main.panel_store_pack.view.*
 import java.text.DecimalFormat
 
 class StorePackPanel
-@JvmOverloads
-constructor(
+@JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-
-	/*@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	constructor(
-		context: Context,
-		attrs: AttributeSet?,
-		defStyleAttr: Int,
-		defStyleRes: Int)
-			: super(context, attrs, defStyleAttr, defStyleRes)*/
-
-	val b: PanelStorePackBinding =
-		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_store_pack, this, true)
+	val b: PanelStorePackBinding = PanelStorePackBinding.bind(this)
 	val data = Data()
 
 	class Data {
@@ -41,10 +26,6 @@ constructor(
 	}
 
 	init {
-		/*val v = LayoutInflater.from(context)
-			.inflate(layout.panel_store_pack, this, true)
-		b = PanelStorePackBinding.bind(v)*/
-
 		attrs?.let {
 			val typedArray =
 				context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
@@ -69,15 +50,15 @@ constructor(
 
 
 	fun setTitle(title: String) {
-		TV_title.text = title
+		b.title.text = title
 	}
 
 	fun setSubtitle(subtitle: String) {
-		TV_subtitle.text = subtitle
+		b.subtitle.text = subtitle
 	}
 
 	fun setDownloadCount(downloadCount: String) {
-		TV_downloadCount.text = downloadCount
+		b.downloadCount.text = downloadCount
 	}
 
 	fun setDownloadCount(downloadCount: Long) {
@@ -86,27 +67,27 @@ constructor(
 	}
 
 	fun updateTitle(title: String) {
-		if (TV_title.text != title) {
-			TV_title.alpha = 0f
+		if (b.title.text != title) {
+			b.title.alpha = 0f
 			setTitle(title)
-			TV_title.animate().alpha(1f).setDuration(500).start()
+			b.title.animate().alpha(1f).setDuration(500).start()
 		}
 	}
 
 	fun updateSubtitle(subtitle: String) {
-		if (TV_subtitle.text != subtitle) {
-			TV_subtitle.alpha = 0f
+		if (b.subtitle.text != subtitle) {
+			b.subtitle.alpha = 0f
 			setSubtitle(subtitle)
-			TV_subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+			b.subtitle.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
 		}
 	}
 
 	fun updateDownloadCount(downloadCount: Long) {
 		val downloadCountFormatted: String = numberFormatter.format(downloadCount)
-		if (TV_downloadCount.text != downloadCountFormatted) {
-			TV_downloadCount.alpha = 0f
+		if (b.downloadCount.text != downloadCountFormatted) {
+			b.downloadCount.alpha = 0f
 			setDownloadCount(downloadCountFormatted)
-			TV_downloadCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
+			b.downloadCount.animate().alphaBy(0f).alpha(1f).setDuration(500).start()
 		}
 	}
 

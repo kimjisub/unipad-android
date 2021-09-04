@@ -1,13 +1,11 @@
-package com.kimjisub.design
+package com.kimjisub.design.view
 
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -17,35 +15,22 @@ import android.view.animation.Transformation
 import android.widget.RelativeLayout
 import androidx.core.content.ContextCompat
 import com.kimjisub.design.R.*
+import com.kimjisub.design.databinding.ViewPackBinding
 import com.kimjisub.manager.UIManager
-import kotlinx.android.synthetic.main.view_pack.view.*
 
-class PackView : RelativeLayout {
+class PackView
+@JvmOverloads constructor(
+	context: Context,
+	attrs: AttributeSet? = null,
+	defStyleAttr: Int = 0
+) : RelativeLayout(context, attrs, defStyleAttr) {
+	private val b: ViewPackBinding = ViewPackBinding.bind(this)
 
-	@JvmOverloads
-	constructor(
-		context: Context,
-		attrs: AttributeSet? = null,
-		defStyleAttr: Int = 0
-	)
-			: super(context, attrs, defStyleAttr)
-
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	constructor(
-		context: Context,
-		attrs: AttributeSet?,
-		defStyleAttr: Int,
-		defStyleRes: Int
-	)
-			: super(context, attrs, defStyleAttr, defStyleRes)
 
 	init {
-		LayoutInflater.from(context)
-			.inflate(layout.view_pack, this, true)
-
 		// set listener
-		LL_touchView.setOnClickListener { onViewClick() }
-		LL_touchView.setOnLongClickListener {
+		b.touchSpace.setOnClickListener { onViewClick() }
+		b.touchSpace.setOnLongClickListener {
 			onViewLongClick()
 			true
 		}
@@ -126,39 +111,39 @@ class PackView : RelativeLayout {
 	}
 
 	var title: String
-		get() = TV_title.text.toString()
+		get() = b.title.text.toString()
 		set(value) {
-			TV_title.text = value
+			b.title.text = value
 		}
 
 	var subtitle: String
-		get() = TV_subtitle.text.toString()
+		get() = b.subtitle.text.toString()
 		set(value) {
-			TV_subtitle.text = value
+			b.subtitle.text = value
 		}
 
 	var option1Name: String
-		get() = TV_option1.text.toString()
+		get() = b.option1.text.toString()
 		set(value) {
-			TV_option1.text = value
+			b.option1.text = value
 		}
 
 	var option2Name: String
-		get() = TV_option1.text.toString()
+		get() = b.option2.text.toString()
 		set(value) {
-			TV_option2.text = value
+			b.option2.text = value
 		}
 
 	var option1: Boolean = false
 		set(value) {
 			field = value
-			TV_option1.setTextColor(if (field) green else pink)
+			b.option1.setTextColor(if (field) green else pink)
 		}
 
 	var option2: Boolean = false
 		set(value) {
 			field = value
-			TV_option2.setTextColor(if (field) green else pink)
+			b.option2.setTextColor(if (field) green else pink)
 		}
 
 	var toggleColor: Int = 0
@@ -178,17 +163,17 @@ class PackView : RelativeLayout {
 	var bookmark: Boolean = false
 		set(value) {
 			field = value
-			IV_bookmark_front.visibility = if (field) View.VISIBLE else View.INVISIBLE
-			IV_bookmark_back.visibility = if (field) View.VISIBLE else View.INVISIBLE
+			b.bookmarkFront.visibility = if (field) View.VISIBLE else View.INVISIBLE
+			b.bookmarkBack.visibility = if (field) View.VISIBLE else View.INVISIBLE
 		}
 
 
 	fun showPlayImage(bool: Boolean) {
-		IV_playImg!!.visibility = if (bool) View.VISIBLE else View.GONE
+		b.playImage.visibility = if (bool) View.VISIBLE else View.GONE
 	}
 
 	fun setPlayText(str: String?) {
-		TV_playText!!.text = str
+		b.playText.text = str
 	}
 
 
@@ -206,7 +191,7 @@ class PackView : RelativeLayout {
 			flagAnimator?.addUpdateListener { valueAnimator: ValueAnimator ->
 				flagColor = valueAnimator.animatedValue as Int
 				flagBackground.setColor(flagColor)
-				RL_flag!!.background = flagBackground
+				b.flag.background = flagBackground
 			}
 			flagAnimator?.start()
 		} else {
@@ -214,28 +199,28 @@ class PackView : RelativeLayout {
 				ContextCompat.getDrawable(context, drawable.border_all_round) as GradientDrawable
 			flagColor = colorNext
 			flagBackground.setColor(colorNext)
-			RL_flag!!.background = flagBackground
+			b.flag.background = flagBackground
 		}
 	}
 
 	private fun animateFlagSize(target: Int) {
 		if (animate) {
-			val start = RL_flagSize.layoutParams.width
+			val start = b.flagSize.layoutParams.width
 			val change = target - start
 
-			val params: ViewGroup.LayoutParams = RL_flagSize.layoutParams
+			val params: ViewGroup.LayoutParams = b.flagSize.layoutParams
 			toggleAnimator = object : Animation() {
 				override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
 					params.width = start + (change * interpolatedTime).toInt()
-					RL_flagSize.layoutParams = params
+					b.flagSize.layoutParams = params
 				}
 			}
 			toggleAnimator?.duration = 500
-			RL_flagSize.startAnimation(toggleAnimator)
+			b.flagSize.startAnimation(toggleAnimator)
 		} else {
-			val params: ViewGroup.LayoutParams = RL_flagSize.layoutParams
+			val params: ViewGroup.LayoutParams = b.flagSize.layoutParams
 			params.width = target
-			RL_flagSize.layoutParams = params
+			b.flagSize.layoutParams = params
 		}
 	}
 
@@ -253,13 +238,13 @@ class PackView : RelativeLayout {
 				animateFlagSize(PX_flag_enable)
 				animateFlagColor(toggleColor)
 
-				RL_playBtn!!.setOnClickListener { onPlayClick() }
+				b.playBtn.setOnClickListener { onPlayClick() }
 			} else {
 				animateFlagSize(PX_flag_default)
 				animateFlagColor(untoggleColor)
 
-				RL_playBtn!!.setOnClickListener(null)
-				RL_playBtn!!.isClickable = false
+				b.playBtn.setOnClickListener(null)
+				b.playBtn.isClickable = false
 			}
 			isToggled = bool
 		}

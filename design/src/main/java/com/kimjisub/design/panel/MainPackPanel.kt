@@ -2,35 +2,20 @@ package com.kimjisub.design.panel
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.RelativeLayout
-import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainPackBinding
-import kotlinx.android.synthetic.main.panel_main_pack.view.*
 import java.util.*
 
 class MainPackPanel
-@JvmOverloads
-constructor(
+@JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-
-	/*@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	constructor(
-		context: Context,
-		attrs: AttributeSet?,
-		defStyleAttr: Int,
-		defStyleRes: Int)
-			: super(context, attrs, defStyleAttr, defStyleRes)*/
-
-	private val b: PanelMainPackBinding =
-		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_pack, this, true)
+	private val b: PanelMainPackBinding = PanelMainPackBinding.bind(this)
 	val data = Data()
 
 	class Data {
@@ -51,38 +36,34 @@ constructor(
 	}
 
 	init {
-		/*LayoutInflater.from(context)
-			.inflate(layout.panel_store_pack, this, true)
-		b = PanelMainPackBinding.bind(this)*/
-
 		b.data = data
 
 		attrs?.let {
 			val typedArray =
 				context.obtainStyledAttributes(it, styleable.StorePackPanel, defStyleAttr, 0)
 
-			TV_title.isSelected = true
-			TV_subtitle.isSelected = true
-			TV_path.isSelected = true
-			IV_bookmark.setOnClickListener { v: View ->
+			b.title.isSelected = true
+			b.subtitle.isSelected = true
+			b.path.isSelected = true
+			b.bookmark.setOnClickListener { v: View ->
 				onEventListener?.onBookmarkClick(v)
 			}
-			IV_edit.setOnClickListener { v: View ->
+			b.btnEdit.setOnClickListener { v: View ->
 				onEventListener?.onEditClick(v)
 			}
-			IV_youtube.setOnClickListener { v: View ->
+			b.btnYoutube.setOnClickListener { v: View ->
 				onEventListener?.onYoutubeClick(v)
 			}
-			IV_website.setOnClickListener { v: View ->
+			b.btnWebsite.setOnClickListener { v: View ->
 				onEventListener?.onWebsiteClick(v)
 			}
-			IV_func.setOnClickListener { v: View ->
+			b.btnFunc.setOnClickListener { v: View ->
 				onEventListener?.onFuncClick(v)
 			}
-			IV_delete.setOnClickListener { v: View ->
+			b.btnDelete.setOnClickListener { v: View ->
 				onEventListener?.onDeleteClick(v)
 			}
-			TV_path.setOnClickListener { v: View ->
+			b.path.setOnClickListener { v: View ->
 				onEventListener?.onPathClick(v)
 			}
 

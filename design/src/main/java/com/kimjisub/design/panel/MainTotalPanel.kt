@@ -3,39 +3,24 @@ package com.kimjisub.design.panel
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.RelativeLayout
-import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
 import com.kimjisub.design.R
-import com.kimjisub.design.R.layout
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import com.polyak.iconswitch.IconSwitch
-import kotlinx.android.synthetic.main.panel_main_total.view.*
 
 class MainTotalPanel
-@JvmOverloads
-constructor(
+@JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : RelativeLayout(context, attrs, defStyleAttr) {
-
-	/*@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	constructor(
-		context: Context,
-		attrs: AttributeSet?,
-		defStyleAttr: Int,
-		defStyleRes: Int)
-			: super(context, attrs, defStyleAttr, defStyleRes)*/
-
-	private val b: PanelMainTotalBinding =
-		DataBindingUtil.inflate(LayoutInflater.from(context), layout.panel_main_total, this, true)
+	private val b: PanelMainTotalBinding = PanelMainTotalBinding.bind(this)
 	val data = Data()
 
 	class Data {
@@ -56,10 +41,6 @@ constructor(
 
 
 	init {
-		/*LayoutInflater.from(context)
-			.inflate(layout.panel_main_total, this, true)
-		b = PanelMainTotalBinding.bind(this)*/
-
 		b.data = data
 
 		attrs?.let {
@@ -71,7 +52,7 @@ constructor(
 			typedArray.recycle()
 		}
 
-		spinner_sort_method.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+		b.spinnerSortMethod.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 			override fun onItemSelected(p0: AdapterView<*>?, p1: View?, sortMethod: Int, p3: Long) {
 				setSort(sortMethod)
 			}
@@ -81,19 +62,19 @@ constructor(
 
 		}
 
-		sortTypeSwitch.setCheckedChangeListener { current ->
+		b.sortTypeSwitch.setCheckedChangeListener { current ->
 			setSort(
-				spinner_sort_method.selectedItemPosition,
+				b.spinnerSortMethod.selectedItemPosition,
 				current == IconSwitch.Checked.RIGHT
 			)
 		}
 
 		data.sortType.addOnPropertyChanged {
-			sortTypeSwitch.checked =
+			b.sortTypeSwitch.checked =
 				if (it.get() == true) IconSwitch.Checked.RIGHT else IconSwitch.Checked.LEFT
 		}
 
-		themeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+		b.themeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 			override fun onItemSelected(
 				parent: AdapterView<*>?,
 				view: View?,

@@ -24,7 +24,7 @@
 			android:orientation="horizontal">
 
 			<ImageView
-				android:id="@+id/IV_bookmark"
+				android:id="@+id/bookmark"
 				android:layout_width="@dimen/imgbtn"
 				android:layout_height="@dimen/imgbtn"
 				android:layout_marginStart="16dp"
@@ -48,7 +48,7 @@
 					android:layout_alignParentRight="true">
 
 					<ImageView
-						android:id="@+id/IV_edit"
+						android:id="@+id/btnEdit"
 						android:layout_width="@dimen/imgbtn"
 						android:layout_height="@dimen/imgbtn"
 						android:background="@drawable/border_icon"
@@ -57,7 +57,7 @@
 						app:srcCompat="@drawable/ic_edit_24dp" />
 
 					<ImageView
-						android:id="@+id/IV_func"
+						android:id="@+id/btnFunc"
 						android:layout_width="@dimen/imgbtn"
 						android:layout_height="@dimen/imgbtn"
 						android:background="@drawable/border_icon"
@@ -65,7 +65,7 @@
 						app:srcCompat="@drawable/ic_edit_24dp" />
 
 					<ImageView
-						android:id="@+id/IV_delete"
+						android:id="@+id/btnDelete"
 						android:layout_width="@dimen/imgbtn"
 						android:layout_height="@dimen/imgbtn"
 						android:background="@drawable/border_icon"
@@ -90,7 +90,7 @@
 				android:orientation="vertical">
 
 				<TextView
-					android:id="@+id/TV_title"
+					android:id="@+id/title"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					android:ellipsize="marquee"
@@ -107,7 +107,7 @@
 					android:orientation="horizontal">
 
 					<TextView
-						android:id="@+id/TV_subtitle"
+						android:id="@+id/subtitle"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
@@ -120,14 +120,14 @@
 						tools:text="Subtitle" />
 
 					<ImageView
-						android:id="@+id/IV_youtube"
+						android:id="@+id/btnYoutube"
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:background="@drawable/border_icon"
 						app:srcCompat="@drawable/ic_youtube_24dp" />
 
 					<ImageView
-						android:id="@+id/IV_website"
+						android:id="@+id/btnWebsite"
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:background="@drawable/border_icon"
@@ -291,7 +291,7 @@
 					android:layout_height="wrap_content">
 
 					<TextView
-						android:id="@+id/TV_path"
+						android:id="@+id/path"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"

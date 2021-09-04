@@ -5,12 +5,17 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
+import android.widget.RelativeLayout
 
 import android.widget.TableLayout
 import android.widget.TableRow
 
 
-class RadioButtonGroupTableLayout : TableLayout, View.OnClickListener {
+class RadioButtonGroupTableLayout
+@JvmOverloads constructor(
+	context: Context,
+	attrs: AttributeSet? = null
+) : TableLayout(context, attrs), View.OnClickListener {
 	companion object {
 		private const val TAG = "RadioButtonGroupTableLayout"
 	}
@@ -18,10 +23,6 @@ class RadioButtonGroupTableLayout : TableLayout, View.OnClickListener {
 	private var activeRadioButton: RadioButton? = null
 
 	var onCheckedChangeListener: ((radioButton: RadioButton) -> Unit)? = null
-
-	constructor(context: Context?) : super(context)
-
-	constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
 
 	override fun onClick(v: View) {
 		val rb = v as RadioButton

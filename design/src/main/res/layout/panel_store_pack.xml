@@ -29,7 +29,7 @@
 				android:paddingRight="8dp">
 
 				<ImageView
-					android:id="@+id/IV_star"
+					android:id="@+id/btnStar"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
 					android:background="@drawable/border_icon"
@@ -38,16 +38,16 @@
 					app:srcCompat="@drawable/ic_star_border_24dp" />
 
 				<ImageView
-					android:id="@+id/IV_bookmark"
+					android:id="@+id/btnBookmark"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
-					android:layout_toEndOf="@id/IV_star"
-					android:layout_toRightOf="@id/IV_star"
+					android:layout_toEndOf="@id/btnStar"
+					android:layout_toRightOf="@id/btnStar"
 					android:background="@drawable/border_icon"
 					android:padding="4dp" />
 
 				<ImageView
-					android:id="@+id/IV_edit"
+					android:id="@+id/btnEdit"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
 					android:layout_alignParentEnd="true"
@@ -74,7 +74,7 @@
 					android:orientation="vertical">
 
 					<TextView
-						android:id="@+id/TV_title"
+						android:id="@+id/title"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:ellipsize="marquee"
@@ -85,7 +85,7 @@
 						android:textSize="25dp" />
 
 					<TextView
-						android:id="@+id/TV_subtitle"
+						android:id="@+id/subtitle"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:ellipsize="marquee"
@@ -124,7 +124,7 @@
 							android:paddingLeft="32dp">
 
 							<TextView
-								android:id="@+id/TV_downloadCount"
+								android:id="@+id/downloadCount"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:text="@{data.downloadCount}" />
