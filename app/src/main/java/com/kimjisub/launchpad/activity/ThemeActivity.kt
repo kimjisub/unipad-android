@@ -4,21 +4,22 @@ import android.os.Bundle
 import com.azoft.carousellayoutmanager.CarouselLayoutManager
 import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener
 import com.azoft.carousellayoutmanager.CenterScrollListener
-import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.adapter.ThemeAdapter
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
+import com.kimjisub.launchpad.databinding.ActivityThemeBinding
 import com.kimjisub.manager.Log
 import com.kimjisub.manager.splitties.browse
-import kotlinx.android.synthetic.main.activity_theme.*
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
+	private lateinit var b: ActivityThemeBinding
 	val list: ArrayList<ThemeItem> by lazy { ThemeTool.getThemePackList(applicationContext) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_theme)
+		b = ActivityThemeBinding.inflate(layoutInflater)
+		setContentView(b.root)
 	}
 
 	override fun onResume() {
@@ -27,7 +28,7 @@ class ThemeActivity : BaseActivity() {
 			setPostLayoutListener(CarouselZoomPostLayoutListener())
 		}
 
-		RV_list.apply {
+		b.list.apply {
 			layoutManager = manager
 			adapter = ThemeAdapter(list)
 
@@ -37,7 +38,7 @@ class ThemeActivity : BaseActivity() {
 
 		manager.scrollToPosition(getSavedTheme())
 
-		TV_apply.setOnClickListener {
+		b.apply.setOnClickListener {
 			selectTheme(manager.centerItemPosition)
 			finish()
 		}

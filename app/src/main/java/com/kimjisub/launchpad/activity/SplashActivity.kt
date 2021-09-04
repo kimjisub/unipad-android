@@ -9,12 +9,14 @@ import com.anjlab.android.iab.v3.TransactionDetails
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.color
+import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.databinding.ActivitySplashBinding
 import com.kimjisub.launchpad.manager.BillingManager
-import kotlinx.android.synthetic.main.activity_splash.*
 import splitties.activities.start
 
 class SplashActivity : BaseActivity() {
+	private lateinit var b: ActivitySplashBinding
 	internal lateinit var bm: BillingManager
 
 	// Timer
@@ -29,10 +31,11 @@ class SplashActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_splash)
+		b = ActivitySplashBinding.inflate(layoutInflater)
+		setContentView(b.root)
 		startTime = System.currentTimeMillis()
 
-		TV_version.text = BuildConfig.VERSION_NAME
+		b.version.text = BuildConfig.VERSION_NAME
 
 		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
@@ -43,7 +46,7 @@ class SplashActivity : BaseActivity() {
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
 			override fun onBillingInitialized() {
 				if (bm.isPro)
-					TV_version.setTextColor(orange)
+					b.version.setTextColor(orange)
 			}
 		})
 		bm.initialize()

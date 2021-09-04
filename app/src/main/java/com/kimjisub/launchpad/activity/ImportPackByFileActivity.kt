@@ -1,9 +1,7 @@
 package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
-import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.manager.Log
-import java.io.File
 
 class ImportPackByFileActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
