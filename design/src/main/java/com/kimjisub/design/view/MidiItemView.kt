@@ -1,4 +1,4 @@
-package com.kimjisub.design
+package com.kimjisub.design.view
 
 import android.content.Context
 import android.util.AttributeSet
@@ -10,23 +10,12 @@ import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.ViewMidiItemBinding
 
 class MidiItemView
-@JvmOverloads
-constructor(
+@JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
-) : RelativeLayout(context, attrs, defStyleAttr) {
-
-	/*@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	constructor(
-		context: Context,
-		attrs: AttributeSet?,
-		defStyleAttr: Int,
-		defStyleRes: Int)
-			: super(context, attrs, defStyleAttr, defStyleRes)*/
-
-	private val b: ViewMidiItemBinding =
-		DataBindingUtil.inflate(LayoutInflater.from(context), layout.view_midi_item, this, true)
+) : RelativeLayout(context, attrs, defStyleAttr){
+	private val b: ViewMidiItemBinding = ViewMidiItemBinding.bind(this);
 
 	init {
 		attrs?.let {

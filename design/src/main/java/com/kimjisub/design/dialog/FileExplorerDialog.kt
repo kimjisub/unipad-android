@@ -7,11 +7,9 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
-import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog.Builder
-import com.kimjisub.design.R
 import com.kimjisub.design.R.string
-import com.kimjisub.design.databinding.FileExplorerBinding
+import com.kimjisub.design.databinding.LayoutFileExplorerBinding
 import java.io.File
 import java.util.*
 
@@ -21,8 +19,8 @@ class FileExplorerDialog(
 	private val onEventListener: OnEventListener
 ) {
 	private val dialog = Builder(context).create()
-	private var b = FileExplorerBinding.bind(
-		LayoutInflater.from(context).inflate(R.layout.file_explorer, null) as LinearLayout
+	private var fileExplorerLayout = LayoutFileExplorerBinding.inflate(
+		LayoutInflater.from(context)
 	)
 
 	private var mItem: MutableList<String> = ArrayList()
@@ -30,7 +28,7 @@ class FileExplorerDialog(
 
 
 	fun show() {
-		b.LVList.onItemClickListener =
+		fileExplorerLayout.list.onItemClickListener =
 			OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
 				val file = File(mPath[position])
 				if (file.isDirectory) {
@@ -46,13 +44,13 @@ class FileExplorerDialog(
 				}
 			}
 		moveDir(path)
-		dialog.setView(b.root)
+		dialog.setView(fileExplorerLayout.root)
 		dialog.show()
 	}
 
 	private fun moveDir(dirPath: String) {
 		onPathChanged(dirPath)
-		b.TVPath.text = dirPath
+		fileExplorerLayout.path.text = dirPath
 		mItem.clear()
 		mPath.clear()
 		val f = File(dirPath)
@@ -74,7 +72,7 @@ class FileExplorerDialog(
 			}
 		}
 		val fileList = ArrayAdapter(context, layout.simple_list_item_1, mItem)
-		b.LVList.adapter = fileList
+		fileExplorerLayout.list.adapter = fileList
 	}
 
 

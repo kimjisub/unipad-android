@@ -5,22 +5,22 @@
 		android:layout_height="match_parent">
 
 		<ImageView
-			android:id="@+id/IV_background"
+			android:id="@+id/background"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
 
 		<ImageView
-			android:id="@+id/IV_led"
+			android:id="@+id/led"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
 
 		<ImageView
-			android:id="@+id/IV_phantom"
+			android:id="@+id/phantom"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent" />
 
 		<View
-			android:id="@+id/V_touchView"
+			android:id="@+id/touchSpace"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:clickable="true"

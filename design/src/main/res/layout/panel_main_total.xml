@@ -166,7 +166,7 @@
 							android:paddingTop="8dp">
 
 							<TextView
-								android:id="@+id/TV_capacity"
+								android:id="@+id/capacity"
 								android:layout_width="wrap_content"
 								android:layout_height="wrap_content"
 								android:singleLine="true"
@@ -183,8 +183,8 @@
 								android:text="@string/mb"
 								android:textSize="@dimen/text_small"
 								android:textStyle="bold"
-								app:layout_constraintBaseline_toBaselineOf="@+id/TV_capacity"
-								app:layout_constraintLeft_toRightOf="@+id/TV_capacity" />
+								app:layout_constraintBaseline_toBaselineOf="@+id/capacity"
+								app:layout_constraintLeft_toRightOf="@+id/capacity" />
 
 						</androidx.constraintlayout.widget.ConstraintLayout>
 					</LinearLayout>

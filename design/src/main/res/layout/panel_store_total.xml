@@ -26,13 +26,13 @@
 					android:paddingTop="8dp">
 
 					<ImageView
-						android:id="@+id/IV_logo"
+						android:id="@+id/logo"
 						android:layout_width="130dp"
 						android:layout_height="50dp"
 						android:scaleType="centerInside" />
 
 					<TextView
-						android:id="@+id/TV_version"
+						android:id="@+id/version"
 						android:layout_width="130dp"
 						android:layout_height="50dp"
 						android:gravity="bottom|end"
@@ -79,13 +79,13 @@
 						android:paddingLeft="32dp">
 
 						<TextView
-							android:id="@+id/TV_storeCount"
+							android:id="@+id/storeCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:text="0" />
 
 						<TextView
-							android:id="@+id/TV_downloadedCount"
+							android:id="@+id/downloadedCount"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:text="0" />
