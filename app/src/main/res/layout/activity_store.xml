@@ -1,92 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
 
-	<androidx.constraintlayout.widget.ConstraintLayout
+	<LinearLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
+		android:layout_height="match_parent"
+		android:orientation="horizontal"
+		android:weightSum="5">
 
-		<LinearLayout
-			android:layout_width="match_parent"
+		<RelativeLayout
+			android:layout_width="0dp"
 			android:layout_height="match_parent"
-			android:orientation="horizontal"
-			android:weightSum="5">
+			android:layout_marginStart="16dp"
+			android:layout_marginTop="16dp"
+			android:layout_marginBottom="16dp"
+			android:layout_weight="2">
 
-			<RelativeLayout
-				android:layout_width="0dp"
+			<com.kimjisub.design.panel.StoreTotalPanel
+				android:id="@+id/totalPanel"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent" />
+
+			<com.kimjisub.design.panel.StorePackPanel
+				android:id="@+id/packPanel"
+				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:layout_marginStart="16dp"
-				android:layout_marginTop="16dp"
-				android:layout_marginBottom="16dp"
-				android:layout_weight="2">
+				android:alpha="0"
+				android:visibility="invisible" />
 
-				<com.kimjisub.design.panel.StoreTotalPanel
-					android:id="@+id/totalPanel"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent" />
+		</RelativeLayout>
 
-				<com.kimjisub.design.panel.StorePackPanel
-					android:id="@+id/packPanel"
+		<RelativeLayout
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_weight="3">
+
+			<androidx.core.widget.NestedScrollView
+				android:layout_width="match_parent"
+				android:layout_height="match_parent">
+
+				<androidx.recyclerview.widget.RecyclerView
+					android:id="@+id/recyclerView"
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
-					android:alpha="0"
-					android:visibility="invisible" />
+					android:clipToPadding="false"
+					android:orientation="vertical"
+					android:paddingTop="16dp"
+					android:paddingBottom="6dp"
+					android:scrollbarThumbVertical="@color/gray2" />
 
-			</RelativeLayout>
+			</androidx.core.widget.NestedScrollView>
 
-			<RelativeLayout
-				android:layout_width="0dp"
-				android:layout_height="match_parent"
-				android:layout_weight="3">
+			<LinearLayout
+				android:id="@+id/errItem"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_centerInParent="true"
+				android:gravity="center"
+				android:orientation="vertical">
 
-				<androidx.core.widget.NestedScrollView
-					android:layout_width="match_parent"
-					android:layout_height="match_parent">
+				<ImageView
+					android:layout_width="100dp"
+					android:layout_height="100dp"
+					app:srcCompat="@drawable/ic_error_outline_24dp"
+					app:tint="@color/white" />
 
-					<androidx.recyclerview.widget.RecyclerView
-						android:id="@+id/recyclerView"
-						android:layout_width="match_parent"
-						android:layout_height="match_parent"
-						android:clipToPadding="false"
-						android:orientation="vertical"
-						android:paddingTop="16dp"
-						android:paddingBottom="6dp"
-						android:scrollbarThumbVertical="@color/gray2" />
-
-				</androidx.core.widget.NestedScrollView>
-
-				<LinearLayout
-					android:id="@+id/errItem"
+				<TextView
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:layout_centerInParent="true"
-					android:gravity="center"
-					android:orientation="vertical">
+					android:layout_gravity="center_horizontal"
+					android:text="@string/errOccur"
+					android:textColor="@color/white" />
 
-					<ImageView
-						android:layout_width="100dp"
-						android:layout_height="100dp"
-						app:srcCompat="@drawable/ic_error_outline_24dp"
-						app:tint="@color/white" />
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_gravity="center_horizontal"
+					android:text="@string/UnableToAccessServer"
+					android:textColor="@color/gray1" />
+			</LinearLayout>
 
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center_horizontal"
-						android:text="@string/errOccur"
-						android:textColor="@color/white" />
+		</RelativeLayout>
 
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_gravity="center_horizontal"
-						android:text="@string/UnableToAccessServer"
-						android:textColor="@color/gray1" />
-				</LinearLayout>
+	</LinearLayout>
 
-			</RelativeLayout>
-
-		</LinearLayout>
-
-	</androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+</androidx.constraintlayout.widget.ConstraintLayout>

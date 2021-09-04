@@ -1,133 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
-	xmlns:tools="http://schemas.android.com/toolss">
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@color/background1"
+	android:orientation="vertical">
 
-	<RelativeLayout
+	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@color/background1"
+		android:layout_centerHorizontal="true"
+		android:layout_centerVertical="true"
+		android:orientation="vertical">
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginBottom="10dp"
+			android:gravity="center"
+			android:text="@string/launchpadConnecting"
+			android:textColor="@color/gray1"
+			android:textSize="30dp" />
+
+		<TextView
+			android:id="@+id/timer"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginBottom="10dp"
+			android:gravity="center"
+			android:textColor="@color/gray1"
+			android:textSize="30dp"
+			tools:text="5" />
+
+		<com.yarolegovich.discretescrollview.DiscreteScrollView
+			android:id="@+id/picker"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			app:dsv_orientation="horizontal" />
+
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentEnd="true"
+		android:layout_alignParentBottom="true"
+		android:layout_margin="10dp"
 		android:orientation="vertical">
 
 		<LinearLayout
+			android:id="@+id/speedFirst"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:layout_centerHorizontal="true"
-			android:layout_centerVertical="true"
-			android:orientation="vertical">
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:onClick="selectModeXml"
+			android:orientation="vertical"
+			android:tag="0">
 
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_gravity="center_horizontal"
-				android:layout_marginBottom="10dp"
 				android:gravity="center"
-				android:text="@string/launchpadConnecting"
+				android:padding="10dp"
+				android:text="@string/signal_SpeedFirst"
 				android:textColor="@color/gray1"
-				android:textSize="30dp" />
-
-			<TextView
-				android:id="@+id/timer"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_gravity="center_horizontal"
-				android:layout_marginBottom="10dp"
-				android:gravity="center"
-				android:textColor="@color/gray1"
-				android:textSize="30dp"
-				tools:text="5" />
-
-			<com.yarolegovich.discretescrollview.DiscreteScrollView
-				android:id="@+id/picker"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				app:dsv_orientation="horizontal" />
+				android:textSize="15dp" />
 
 
 		</LinearLayout>
 
 		<LinearLayout
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_alignParentEnd="true"
-			android:layout_alignParentBottom="true"
-			android:layout_margin="10dp"
-			android:orientation="vertical">
-
-			<LinearLayout
-				android:id="@+id/speedFirst"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center"
-				android:onClick="selectModeXml"
-				android:orientation="vertical"
-				android:tag="0">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:gravity="center"
-					android:padding="10dp"
-					android:text="@string/signal_SpeedFirst"
-					android:textColor="@color/gray1"
-					android:textSize="15dp" />
-
-
-			</LinearLayout>
-
-			<LinearLayout
-				android:id="@+id/avoidAfterimage"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center"
-				android:onClick="selectModeXml"
-				android:orientation="vertical"
-				android:tag="1">
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:gravity="center"
-					android:padding="10dp"
-					android:text="@string/signal_avoidAfterimage"
-					android:textColor="@color/gray1"
-					android:textSize="15dp" />
-
-
-			</LinearLayout>
-
-		</LinearLayout>
-
-		<RelativeLayout
-			android:id="@+id/err"
+			android:id="@+id/avoidAfterimage"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			android:background="@color/background1"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:onClick="selectModeXml"
 			android:orientation="vertical"
-			android:visibility="gone">
+			android:tag="1">
 
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_centerHorizontal="true"
-				android:layout_centerVertical="true"
-				android:layout_marginBottom="10dp"
 				android:gravity="center"
-				android:text="@string/midiDevicesNotDetected"
+				android:padding="10dp"
+				android:text="@string/signal_avoidAfterimage"
 				android:textColor="@color/gray1"
-				android:textSize="30dp" />
-		</RelativeLayout>
+				android:textSize="15dp" />
 
+
+		</LinearLayout>
+
+	</LinearLayout>
+
+	<RelativeLayout
+		android:id="@+id/err"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@color/background1"
+		android:orientation="vertical"
+		android:visibility="gone">
 
 		<TextView
-			android:id="@+id/log"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_alignParentStart="true"
-			android:layout_alignParentTop="true"
+			android:layout_centerHorizontal="true"
+			android:layout_centerVertical="true"
+			android:layout_marginBottom="10dp"
+			android:gravity="center"
+			android:text="@string/midiDevicesNotDetected"
 			android:textColor="@color/gray1"
-			android:textSize="10dp"
-			tools:text="Log\nLog" />
-
+			android:textSize="30dp" />
 	</RelativeLayout>
-</layout>
+
+
+	<TextView
+		android:id="@+id/log"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentStart="true"
+		android:layout_alignParentTop="true"
+		android:textColor="@color/gray1"
+		android:textSize="10dp"
+		tools:text="Log\nLog" />
+
+</RelativeLayout>
