@@ -86,7 +86,7 @@
 	<string name="title">Title</string>
 	<string name="producerName">Producer</string>
 	<string name="padSize">Pad Size</string>
-	<string name="chainCount">Chain Count</string>
+	<string name="numChain">Chains</string>
 	<string name="fileSize">File Size</string>
 
 	<!--UniPack Function-->

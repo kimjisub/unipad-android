@@ -19,6 +19,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
+import com.kimjisub.launchpad.databinding.ActivityStoreBinding
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UniPackDownloader
@@ -31,6 +32,7 @@ import java.io.File
 import java.util.*
 
 class FBStoreActivity : BaseActivity() {
+	private lateinit var b: ActivityStoreBinding
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
@@ -77,7 +79,8 @@ class FBStoreActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		setContentView(layout.activity_store)
+		b = ActivityStoreBinding.inflate(layoutInflater)
+		setContentView(b.root)
 		initVar(true)
 
 		P_total.b.IVLogo.setImageResource(drawable.custom_logo)
@@ -85,7 +88,6 @@ class FBStoreActivity : BaseActivity() {
 		P_total.b.TVStoreCount.text = list.size.toString()
 		firebase_store.setEventListener(object : ChildEventListener {
 			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-				Log.test("onChildAdded: $s")
 				try {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					var isDownloaded = false
@@ -101,11 +103,9 @@ class FBStoreActivity : BaseActivity() {
 				} catch (e: Exception) {
 					e.printStackTrace()
 				}
-				Log.test("onChildAdded: ")
 			}
 
 			override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
-				Log.test("onChildChanged: $s")
 				try {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					val item = getPackItemByCode(d.code!!)
@@ -278,7 +278,6 @@ class FBStoreActivity : BaseActivity() {
 
 
 	internal fun updatePanel() {
-		Log.test("panel")
 		val playIndex = selectedIndex
 		val animation: Animation = AnimationUtils.loadAnimation(
 			this@FBStoreActivity,
@@ -305,12 +304,10 @@ class FBStoreActivity : BaseActivity() {
 	}
 
 	internal fun updatePanelMain() {
-		Log.test("panel main")
 		P_total.b.TVDownloadedCount.text = downloadedCount.toString()
 	}
 
 	internal fun updatePanelPack(item: StoreItem?) {
-		Log.test("panel pack")
 		val storeVO = item!!.storeVO
 		P_pack.updateTitle(storeVO.title!!)
 		P_pack.updateSubtitle(storeVO.producerName!!)
