@@ -14,6 +14,7 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -198,7 +199,8 @@ class MainActivity : BaseActivity() {
 		setContentView(b.root)
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
-		divider.setDrawable(resources.getDrawable(drawable.border_divider))
+		val borderDivider = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
+		divider.setDrawable(borderDivider)
 		b.recyclerView.addItemDecoration(divider)
 		b.recyclerView.setHasFixedSize(false)
 		b.recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
@@ -523,7 +525,7 @@ class MainActivity : BaseActivity() {
 	}
 
 	fun pressPlay(item: UniPackItem) {
-		Thread(Runnable {
+		Thread({
 			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date()))
 		}).start()
 		start<PlayActivity> {
@@ -556,7 +558,7 @@ class MainActivity : BaseActivity() {
 			return ret
 		}
 
-	// Pannel /////////////////////////////////////////////////////////////////////////////////////////
+	// Panel /////////////////////////////////////////////////////////////////////////////////////////
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
@@ -697,7 +699,7 @@ class MainActivity : BaseActivity() {
 		b.totalPanel.data.unipackCount.set(unipackList.size.toString())
 		db.unipackOpenDAO()!!.count.observe(
 			this,
-			Observer { integer: Int? -> b.totalPanel.data.openCount.set(integer.toString()) })
+			{ integer: Int? -> b.totalPanel.data.openCount.set(integer.toString()) })
 		updateThemeList()
 
 		b.totalPanel.data.themeList.set(themeNameList)
