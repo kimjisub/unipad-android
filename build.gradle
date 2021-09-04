@@ -1,9 +1,9 @@
 buildscript {
-	ext.kotlin_version = '1.5.21'
+	ext.kotlin_version = '1.5.30'
 	ext.splitties_version = '3.0.0-beta01'
 	repositories {
 		google()
-		jcenter()
+		mavenCentral()
 	}
 	dependencies {
 		classpath 'com.android.tools.build:gradle:7.0.1'
@@ -17,7 +17,7 @@ buildscript {
 allprojects {
 	repositories {
 		google()
-		jcenter()
+		mavenCentral()
 	}
 }
 
