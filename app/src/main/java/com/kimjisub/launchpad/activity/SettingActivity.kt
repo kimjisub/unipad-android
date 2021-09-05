@@ -10,7 +10,7 @@ import androidx.core.net.toUri
 import androidx.preference.*
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
@@ -336,7 +336,7 @@ class SettingActivity : BaseActivity() {
 					try {
 						Functions.putClipboard(
 							requireContext(),
-							FirebaseInstanceId.getInstance().token!!
+							FirebaseMessaging.getInstance().token.toString()
 						)
 						context?.toast(R.string.copied)
 					} catch (e: Exception) {
@@ -350,7 +350,7 @@ class SettingActivity : BaseActivity() {
 			findPreference<Preference>("storage_location")?.summary =
 				settingActivity.uniPackWorkspace.absolutePath
 
-			findPreference<Preference>("FCMToken")?.summary = FirebaseInstanceId.getInstance().token
+			findPreference<Preference>("FCMToken")?.summary = FirebaseMessaging.getInstance().token.toString()
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력
 

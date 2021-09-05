@@ -10,10 +10,9 @@ import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.InterstitialAd
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.ads.*
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ColorManager
@@ -158,6 +157,12 @@ open class BaseActivity : AppCompatActivity() {
 
 	// Ads /////////////////////////////////////////////////////////////////////////////////////////
 
+	private fun adsCooltime(callback: () -> Unit) {
+		if (checkAdsCooltime()) {
+			updateAdsCooltime()
+			callback
+		}
+	}
 
 	private fun checkAdsCooltime(): Boolean {
 		val prevTime = p.prevAdsShowTime
@@ -170,36 +175,50 @@ open class BaseActivity : AppCompatActivity() {
 		p.prevAdsShowTime = currTime
 	}
 
-	fun showAdmob(interstitialAd: InterstitialAd) {
-		Log.admob("showAdmob " + getActivityName())
-		if (checkAdsCooltime()) {
-			updateAdsCooltime()
-			val isLoaded = interstitialAd.isLoaded
-			Log.admob("isLoaded: $isLoaded")
-			if (isLoaded) {
-				interstitialAd.show()
-				Log.admob("ad showed")
-			} else {
-				interstitialAd.adListener = object : AdListener() {
-					override fun onAdLoaded() {
-						interstitialAd.show()
-						Log.admob("ad late showed!")
-					}
-				}
+	fun loadAds(unitId: String, callback: ((interstitialAd: InterstitialAd?) -> Unit)) {
+		val adRequest = AdRequest.Builder().build()
+		InterstitialAd.load(this, unitId, adRequest, object : InterstitialAdLoadCallback() {
+			override fun onAdFailedToLoad(adError: LoadAdError) {
+				Log.admob(adError.message)
+				callback(null)
 			}
-		} else
-			Log.admob("skipped!")
+
+			override fun onAdLoaded(interstitialAd: InterstitialAd) {
+				Log.admob("Ad was loaded.")
+				callback(interstitialAd)
+			}
+		})
 	}
 
-	open fun initAdmob() {
+	fun showAds(interstitialAd: InterstitialAd?) {
+		Log.admob("showAdmob " + getActivityName())
+		if (interstitialAd != null)
+			adsCooltime {
+				interstitialAd.show(this@BaseActivity)
+			}
+	}
+
+	fun immediatelyAds(unitId: String){
+		loadAds(unitId){
+			showAds(it)
+		}
+	}
+
+	private var mInterstitialAd: InterstitialAd? = null
+	open fun initAdmob(unitId: String) {
 		Log.admob("initAdmob " + getActivityName())
+		var adRequest = AdRequest.Builder().build()
+		InterstitialAd.load(this, unitId, adRequest, object : InterstitialAdLoadCallback() {
+			override fun onAdFailedToLoad(adError: LoadAdError) {
+				Log.admob(adError.message)
+				mInterstitialAd = null
+			}
 
-		// todo remove
-		val testDeviceIds = listOf("A86032885B9C7CDBD0BB88119118E85D")
-		val configuration = RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build()
-		MobileAds.setRequestConfiguration(configuration)
-
-		MobileAds.initialize(this) {}
+			override fun onAdLoaded(interstitialAd: InterstitialAd) {
+				Log.admob("Ad was loaded.")
+				mInterstitialAd = interstitialAd
+			}
+		})
 	}
 
 	// ============================================================================================= Show Things, Get Resources
@@ -229,8 +248,6 @@ open class BaseActivity : AppCompatActivity() {
 		});*/
 
 		onStartActivity(this)
-
-		initAdmob()
 	}
 
 	public override fun onStart() {

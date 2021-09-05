@@ -22,9 +22,8 @@ import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
-import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -85,6 +84,8 @@ class MainActivity : BaseActivity() {
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	private lateinit var bm: BillingManager
+
+	private var adsPlayStart: InterstitialAd? = null
 
 	// List Management
 	private var unipackList: ArrayList<UniPackItem> = ArrayList()
@@ -219,7 +220,6 @@ class MainActivity : BaseActivity() {
 				b.totalPanel.data.premium.set(bm.isPro)
 				if (!bm.isPro) {
 					b.adView.loadAd(AdRequest.Builder().build())
-					adsPlayStart.loadAd(AdRequest.Builder().build())
 				} else
 					b.adView.visibility = View.GONE
 			}
@@ -265,6 +265,8 @@ class MainActivity : BaseActivity() {
 
 		updatePanel(true)
 	}
+
+
 
 	private fun checkThings() {
 		versionCheck()
@@ -525,14 +527,13 @@ class MainActivity : BaseActivity() {
 	}
 
 	fun pressPlay(item: UniPackItem) {
-		Thread({
+		Thread {
 			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date()))
-		}).start()
+		}.start()
 		start<PlayActivity> {
 			putExtra("path", item.unipack.F_project.path)
 		}
-		if (!bm.isPro)
-			showAdmob(adsPlayStart)
+			showAds(adsPlayStart)
 		removeController((midiController))
 	}
 
@@ -833,18 +834,6 @@ class MainActivity : BaseActivity() {
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////
 
-	lateinit var adsPlayStart: InterstitialAd
-	override fun initAdmob() {
-		super.initAdmob()
-		adsPlayStart = InterstitialAd(this)
-		adsPlayStart.adUnitId = getString(string.admob_play_start)
-		adsPlayStart.adListener = object : AdListener() {
-			override fun onAdClosed() {
-				adsPlayStart.loadAd(AdRequest.Builder().build())
-			}
-		}
-	}
-
 	override fun onBackPressed() {
 		if (selectedIndex != -1) togglePlay(null) else super.onBackPressed()
 	}
@@ -855,6 +844,11 @@ class MainActivity : BaseActivity() {
 		Handler().postDelayed({ update() }, 1000)
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
+
+		val playStartUnitId = resources.getString(string.admob_play_start)
+		loadAds(playStartUnitId){
+			adsPlayStart = it
+		}
 	}
 
 	override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
