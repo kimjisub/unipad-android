@@ -26,8 +26,6 @@ import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
 import com.anjlab.android.iab.v3.BillingProcessor
 import com.anjlab.android.iab.v3.TransactionDetails
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.InterstitialAd
 import com.kimjisub.design.manage.SyncCheckBox
 import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick
@@ -148,10 +146,6 @@ class PlayActivity : BaseActivity() {
 				SCB_watermark.isLocked = !proMode
 				SCB_proLightMode.isLocked = !proMode
 
-				if (!proMode) {
-					if (!adsPlayEnd.isLoaded)
-						adsPlayEnd.loadAd(AdRequest.Builder().build())
-				}
 			}
 		})
 		bm.initialize()
@@ -1248,12 +1242,6 @@ class PlayActivity : BaseActivity() {
 
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////
 
-	lateinit var adsPlayEnd: InterstitialAd
-	override fun initAdmob() {
-		super.initAdmob()
-		adsPlayEnd = InterstitialAd(this)
-		adsPlayEnd.adUnitId = getString(string.admob_play_end)
-	}
 
 	override fun onBackPressed() {
 		toggleOption_window()
@@ -1294,9 +1282,7 @@ class PlayActivity : BaseActivity() {
 		enable = false
 		removeController(midiController!!)
 		if (unipackLoaded) {
-			if (!bm.isPro) {
-				showAdmob(adsPlayEnd)
-			}
+			//showAds(adsPlayEnd)
 		}
 		bm.release()
 	}
