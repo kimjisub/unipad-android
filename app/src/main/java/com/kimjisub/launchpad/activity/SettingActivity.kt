@@ -336,7 +336,7 @@ class SettingActivity : BaseActivity() {
 					try {
 						Functions.putClipboard(
 							requireContext(),
-							FirebaseMessaging.getInstance().token.toString()
+							FirebaseMessaging.getInstance().token.result
 						)
 						context?.toast(R.string.copied)
 					} catch (e: Exception) {
@@ -350,7 +350,6 @@ class SettingActivity : BaseActivity() {
 			findPreference<Preference>("storage_location")?.summary =
 				settingActivity.uniPackWorkspace.absolutePath
 
-			findPreference<Preference>("FCMToken")?.summary = FirebaseMessaging.getInstance().token.toString()
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력
 
