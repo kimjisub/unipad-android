@@ -34,7 +34,7 @@ class AppOpenManager(
 		ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 	}
 
-	fun showAdIfAvailable() {
+	private fun showAdsIfAvailable() {
 		if (!isShowingAd && isAdAvailable()) {
 			val fullScreenContentCallback = object : FullScreenContentCallback() {
 				override fun onAdDismissedFullScreenContent() {
@@ -97,7 +97,7 @@ class AppOpenManager(
 
 	@OnLifecycleEvent(Lifecycle.Event.ON_START)
 	fun onStart() {
-		showAdIfAvailable()
+		showAdsIfAvailable()
 	}
 
 	// Activity
