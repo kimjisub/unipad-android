@@ -70,6 +70,8 @@ class SplashActivity : BaseActivity() {
 				permission.WRITE_EXTERNAL_STORAGE
 			)
 			.check()
+
+		logAdsId()
 	}
 
 	override fun onStop() {

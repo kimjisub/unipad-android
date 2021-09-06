@@ -533,7 +533,12 @@ class MainActivity : BaseActivity() {
 		start<PlayActivity> {
 			putExtra("path", item.unipack.F_project.path)
 		}
-			showAds(adsPlayStart)
+			showAds(adsPlayStart){
+				val playStartUnitId = resources.getString(string.admob_play_start)
+				loadAds(playStartUnitId){
+					adsPlayStart = it
+				}
+			}
 		removeController((midiController))
 	}
 
