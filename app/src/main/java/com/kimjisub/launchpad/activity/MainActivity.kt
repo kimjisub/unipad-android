@@ -48,7 +48,7 @@ import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
-import com.kimjisub.launchpad.manager.BillingManager
+import com.kimjisub.launchpad.manager.DeprecatedBillingManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -83,7 +83,7 @@ class MainActivity : BaseActivity() {
 	private lateinit var b: ActivityMainBinding
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
-	private lateinit var bm: BillingManager
+	private lateinit var bm: DeprecatedBillingManager
 
 	private var adsPlayStart: InterstitialAd? = null
 
@@ -209,7 +209,7 @@ class MainActivity : BaseActivity() {
 
 
 		initPanel()
-		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
+		bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 				//updateBilling()
 			}

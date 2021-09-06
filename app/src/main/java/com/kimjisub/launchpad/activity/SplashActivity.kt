@@ -12,12 +12,12 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding
-import com.kimjisub.launchpad.manager.BillingManager
+import com.kimjisub.launchpad.manager.DeprecatedBillingManager
 import splitties.activities.start
 
 class SplashActivity : BaseActivity() {
 	private lateinit var b: ActivitySplashBinding
-	internal lateinit var bm: BillingManager
+	internal lateinit var bm: DeprecatedBillingManager
 
 	// Timer
 	var startTime: Long? = null
@@ -37,7 +37,7 @@ class SplashActivity : BaseActivity() {
 
 		b.version.text = BuildConfig.VERSION_NAME
 
-		bm = BillingManager(this, object : BillingProcessor.IBillingHandler {
+		bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 				//updateBilling()
 			}

@@ -15,7 +15,7 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.databinding.ActivitySettingBinding
-import com.kimjisub.launchpad.manager.BillingManager
+import com.kimjisub.launchpad.manager.DeprecatedBillingManager
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -42,14 +42,14 @@ class SettingActivity : BaseActivity() {
 	class SettingsFragment : PreferenceFragmentCompat() {
 		private lateinit var settingActivity: SettingActivity
 		private lateinit var p: PreferenceManager
-		private lateinit var bm: BillingManager
+		private lateinit var bm: DeprecatedBillingManager
 
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
 			settingActivity = activity as SettingActivity
 			p = settingActivity.p
-			bm = BillingManager(requireActivity(), object : BillingProcessor.IBillingHandler {
+			bm = DeprecatedBillingManager(requireActivity(), object : BillingProcessor.IBillingHandler {
 				override fun onProductPurchased(productId: String, details: TransactionDetails?) {
 					updateBilling()
 				}

@@ -5,7 +5,7 @@ import com.anjlab.android.iab.v3.BillingProcessor
 import com.kimjisub.launchpad.manager.Constant.BILLING
 
 
-class BillingManager(internal var activity: Activity, handler: IBillingHandler) : BillingProcessor(
+class DeprecatedBillingManager(internal var activity: Activity, handler: IBillingHandler) : BillingProcessor(
 	activity,
 	BILLING.DEVELOPERPAYLOAD,
 	handler
