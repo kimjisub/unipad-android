@@ -33,7 +33,6 @@ import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding
-import com.kimjisub.launchpad.manager.DeprecatedBillingManager
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.Functions.putClipboard
@@ -99,7 +98,7 @@ class PlayActivity : BaseActivity() {
 	private val SCB_proLightMode: SyncCheckBox = SyncCheckBox()
 
 
-	private lateinit var bm: DeprecatedBillingManager
+	//private lateinit var bm: DeprecatedBillingManager
 
 	// =============================================================================================
 
@@ -134,7 +133,7 @@ class PlayActivity : BaseActivity() {
 
 		SCB_watermark.forceSetChecked(true)
 
-		bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
+		/*bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
 			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
 			override fun onPurchaseHistoryRestored() {}
 			override fun onBillingError(errorCode: Int, error: Throwable?) {}
@@ -148,7 +147,7 @@ class PlayActivity : BaseActivity() {
 
 			}
 		})
-		bm.initialize()
+		bm.initialize()*/
 
 	}
 
@@ -1284,6 +1283,6 @@ class PlayActivity : BaseActivity() {
 		if (unipackLoaded) {
 			//showAds(adsPlayEnd)
 		}
-		bm.release()
+		//bm.release()
 	}
 }

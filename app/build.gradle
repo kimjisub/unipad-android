@@ -23,7 +23,8 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 
 			minifyEnabled true
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			proguardFile getDefaultProguardFile('proguard-android.txt')
+			proguardFile 'proguard-rules.pro'
 			proguardFile 'proguard-billing.pro'
 			proguardFile 'proguard-common.pro'
 			proguardFile 'proguard-firebase.pro'
@@ -61,7 +62,7 @@ dependencies {
 	implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
 	implementation 'androidx.core:core-ktx:1.6.0'
 	implementation 'androidx.preference:preference-ktx:1.1.1'
-	implementation 'androidx.work:work-runtime:2.5.0'
+	implementation 'androidx.work:work-runtime:2.6.0'
 
 	implementation 'com.google.guava:guava:30.1-jre'
 
@@ -110,7 +111,8 @@ dependencies {
 	implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
 
 	// Billing
-	implementation "com.android.billingclient:billing-ktx:4.0.0"
+	//noinspection GradleDependency
+	implementation "com.android.billingclient:billing-ktx:3.0.0"
 
 
 	// etc
