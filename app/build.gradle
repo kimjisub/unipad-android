@@ -1,9 +1,9 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'com.google.firebase.crashlytics'
-apply plugin: 'com.google.gms.google-services'
 
 android {
 	compileSdkVersion 31
@@ -11,8 +11,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 31
-		versionCode 89
-		versionName "4.0.0b8"
+		versionCode 90
+		versionName "4.0.0.b9"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
