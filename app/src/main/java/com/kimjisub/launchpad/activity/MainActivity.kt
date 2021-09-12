@@ -19,10 +19,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
-import com.anjlab.android.iab.v3.BillingProcessor
-import com.anjlab.android.iab.v3.TransactionDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
-import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -264,7 +261,6 @@ class MainActivity : BaseActivity() {
 
 		updatePanel(true)
 	}
-
 
 
 	private fun checkThings() {
@@ -532,12 +528,12 @@ class MainActivity : BaseActivity() {
 		start<PlayActivity> {
 			putExtra("path", item.unipack.F_project.path)
 		}
-			showAds(adsPlayStart){
-				val playStartUnitId = resources.getString(string.admob_play_start)
-				loadAds(playStartUnitId){
-					adsPlayStart = it
-				}
+		showAds(adsPlayStart) {
+			val playStartUnitId = resources.getString(string.admob_play_start)
+			loadAds(playStartUnitId) {
+				adsPlayStart = it
 			}
+		}
 		removeController((midiController))
 	}
 
@@ -850,7 +846,7 @@ class MainActivity : BaseActivity() {
 		fbStoreCount.attachEventListener(true)
 
 		val playStartUnitId = resources.getString(string.admob_play_start)
-		loadAds(playStartUnitId){
+		loadAds(playStartUnitId) {
 			adsPlayStart = it
 		}
 	}

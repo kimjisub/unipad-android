@@ -39,7 +39,7 @@ class BillingModule(
 		.build()
 
 	init {
-		billingClient.startConnection(object: BillingClientStateListener {
+		billingClient.startConnection(object : BillingClientStateListener {
 			override fun onBillingSetupFinished(billingResult: BillingResult) {
 				if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 					// 여기서부터 billingClient 활성화 됨
@@ -121,6 +121,9 @@ class BillingModule(
 		// 이후 부터는 purchasesUpdatedListener를 거치게 됩니다.
 	}
 
+	fun restorePurchase(){
+		billingClient
+	}
 
 
 	/**

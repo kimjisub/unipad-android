@@ -33,7 +33,7 @@ android {
 		}
 		debug {
 			manifestPlaceholders = [appName: "@string/app_name_test"]
-			applicationIdSuffix ".dev"
+			// applicationIdSuffix ".dev"
 
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
