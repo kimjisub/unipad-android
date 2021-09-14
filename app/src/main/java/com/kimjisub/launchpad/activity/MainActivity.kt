@@ -16,9 +16,12 @@ import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.SkuDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
@@ -45,6 +48,8 @@ import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
+import com.kimjisub.launchpad.manager.billing.BillingModule
+import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -75,8 +80,15 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), BillingModule.Callback {
 	private lateinit var b: ActivityMainBinding
+	private lateinit var bm: BillingModule
+
+	private var isPro = false
+		set(value) {
+			field = value
+			b.totalPanel.data.premium.set(field)
+		}
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
 	//private lateinit var bm: DeprecatedBillingManager
@@ -195,6 +207,8 @@ class MainActivity : BaseActivity() {
 		b = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
+		bm = BillingModule(this, lifecycleScope, this)
+
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		val borderDivider = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
 		divider.setDrawable(borderDivider)
@@ -260,6 +274,15 @@ class MainActivity : BaseActivity() {
 		update(false)
 
 		updatePanel(true)
+	}
+
+	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
+		if (skuDetails.type == BillingClient.SkuType.SUBS)
+			when (skuDetails.sku) {
+				Sku.PRO -> {
+					isPro = purchased
+				}
+			}
 	}
 
 

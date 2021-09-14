@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
 import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.SkuDetails
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
@@ -21,6 +20,7 @@ import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.splitties.browse
 import splitties.activities.start
 import splitties.toast.toast
@@ -43,29 +43,17 @@ class SettingActivity : BaseActivity() {
 		}
 	}
 
-
-	class SettingsFragment : PreferenceFragmentCompat() {
+	class SettingsFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 		private lateinit var settingActivity: SettingActivity
 		private lateinit var p: PreferenceManager
 		private lateinit var bm: BillingModule
-		//private lateinit var bm: DeprecatedBillingManager
 
-		private var mSkuDetails = listOf<SkuDetails>()
-			set(value) {
-				field = value
-				//setSkuDetailsView()
-			}
+		private var mSubsSkuDetails = listOf<SkuDetails>()
 
 		private var isPro = false
 			set(value) {
 				field = value
 				proPreference.isChecked = value
-			}
-
-		private var currentSubscription: Purchase? = null
-			set(value) {
-				field = value
-				// updateSubscriptionState()
 			}
 
 		// Preferences
@@ -80,88 +68,19 @@ class SettingActivity : BaseActivity() {
 		private lateinit var copyrightPreference: Preference
 
 
+		// PreferenceFragmentCycle
+
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
 			settingActivity = activity as SettingActivity
 			p = settingActivity.p
-			initBilling()
-			/*bm = DeprecatedBillingManager(
-				requireActivity(),
-				object : BillingProcessor.IBillingHandler {
-					override fun onProductPurchased(
-						productId: String,
-						details: TransactionDetails?
-					) {
-						updateBilling()
-					}
 
-					override fun onPurchaseHistoryRestored() {}
-					override fun onBillingError(errorCode: Int, error: Throwable?) {}
-					override fun onBillingInitialized() {
-						updateBilling()
-					}
-				})
-			bm.initialize()*/
+			Log.billing("1 onCreatePreferences")
+
+			bm = BillingModule(requireActivity(), lifecycleScope, this)
 
 			initPreference()
 			addPreferenceListener()
-		}
-
-		private fun initPreference() {
-			selectThemePreference = findPreference("selectTheme")!!
-			storageLocationPreference = findPreference("storageLocation")!!
-			proPreference = findPreference("pro")!!
-			restoreBillingPreference = findPreference("restoreBilling")!!
-			communityPreference = findPreference("community")!!
-			openSourceLicensePreference = findPreference("openSourceLicense")!!
-			fcmTokenPreference = findPreference("fcmToken")!!
-			languagePreference = findPreference("language")!!
-			copyrightPreference = findPreference("copyright")!!
-		}
-
-		private fun initBilling() {
-			bm = BillingModule(requireActivity(), lifecycleScope, object : BillingModule.Callback {
-				override fun onBillingModulesIsReady() {
-					bm.querySkuDetail(BillingClient.SkuType.SUBS, Sku.PRO) { skuDetails ->
-						mSkuDetails = skuDetails
-					}
-
-					bm.checkSubscribed {
-						currentSubscription = it
-					}
-				}
-
-				override fun onSuccess(purchase: Purchase) {
-					when (purchase.sku) {
-						Sku.PRO -> {
-							isPro = true
-						}
-						/*Sku.BUY_1000 -> {
-							// 크리스탈 1000개를 충전합니다.
-							val currentCrystal = storage.getInt(PREF_KEY_CRYSTAL)
-							storage.put(PREF_KEY_CRYSTAL, currentCrystal + 1000)
-							updateCrystalView()
-						}*/
-					}
-				}
-
-				override fun onFailure(errorCode: Int) {
-					when (errorCode) {
-						BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-							toast("이미 구입한 상품입니다.")
-						}
-						BillingClient.BillingResponseCode.USER_CANCELED -> {
-							toast("구매를 취소하셨습니다.")
-						}
-						BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
-							toast("Google Billing 서비스를 사용할 수 없습니다.")
-						}
-						else -> {
-							toast("error: $errorCode")
-						}
-					}
-				}
-			})
 		}
 
 		override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
@@ -174,13 +93,67 @@ class SettingActivity : BaseActivity() {
 		}
 
 		override fun onResume() {
-			setPreferenceValues()
 			super.onResume()
+			setPreferenceValues()
 		}
 
 		override fun onDestroy() {
 			super.onDestroy()
-			// bm.release()
+			bm.release()
+		}
+
+		// Billing Cycle
+
+		override fun onBillingSubsQuerySkuDetailResult(subsSkuDetails: List<SkuDetails>) {
+			Log.billing("onSubsQuerySkuDetailResult")
+			mSubsSkuDetails = subsSkuDetails
+			for (skuDetails in subsSkuDetails)
+				Log.billing(skuDetails.sku)
+		}
+
+		override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
+			Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
+
+			if (skuDetails.type == BillingClient.SkuType.SUBS)
+				when (skuDetails.sku) {
+					Sku.PRO -> {
+						isPro = purchased
+					}
+				}
+		}
+
+		override fun onBillingFailure(errorCode: Int) {
+			when (errorCode) {
+				BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+					toast("이미 구입한 상품입니다.")
+				}
+				BillingClient.BillingResponseCode.USER_CANCELED -> {
+					toast("구매를 취소하셨습니다.")
+				}
+				BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
+					toast("Google Billing 서비스를 사용할 수 없습니다.")
+				}
+				BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
+					toast("Google Billing Developer Error")
+				}
+				else -> {
+					toast("error: $errorCode")
+				}
+			}
+		}
+
+		//
+
+		private fun initPreference() {
+			selectThemePreference = findPreference("selectTheme")!!
+			storageLocationPreference = findPreference("storageLocation")!!
+			proPreference = findPreference("pro")!!
+			restoreBillingPreference = findPreference("restoreBilling")!!
+			communityPreference = findPreference("community")!!
+			openSourceLicensePreference = findPreference("openSourceLicense")!!
+			fcmTokenPreference = findPreference("fcmToken")!!
+			languagePreference = findPreference("language")!!
+			copyrightPreference = findPreference("copyright")!!
 		}
 
 		private fun addPreferenceListener() {
@@ -313,8 +286,9 @@ class SettingActivity : BaseActivity() {
 			proPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener { preference: Preference ->
 					(preference as CheckBoxPreference).isChecked = isPro
-					mSkuDetails.find { it.sku == Sku.PRO }?.let { skuDetail ->
-						bm.purchase(skuDetail)
+
+					bm.findSkuDetails(Sku.PRO)?.let {
+						bm.purchase(it)
 					} ?: also {
 						toast("상품을 찾을 수 없습니다.")
 					}
@@ -322,7 +296,7 @@ class SettingActivity : BaseActivity() {
 				}
 			restoreBillingPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					// bm.loadOwnedPurchasesFromGoogle()
+					bm.restorePurchase()
 					false
 				}
 			openSourceLicensePreference.onPreferenceClickListener =
