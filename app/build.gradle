@@ -23,8 +23,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 31
-		versionCode 90
-		versionName "4.0.0.b9"
+		versionCode 91
+		versionName "4.0.0.b10"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
@@ -73,10 +73,10 @@ dependencies {
 	implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1"
 
 	implementation 'androidx.appcompat:appcompat:1.3.1'
-	implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
+	implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
 	implementation 'androidx.core:core-ktx:1.6.0'
 	implementation 'androidx.preference:preference-ktx:1.1.1'
-	implementation 'androidx.work:work-runtime:2.6.0'
+	implementation 'androidx.work:work-runtime:2.7.0'
 
 	implementation 'com.google.guava:guava:30.1-jre'
 
@@ -99,12 +99,12 @@ dependencies {
 
 	// Firebase
 	implementation platform('com.google.firebase:firebase-bom:25.12.0')
-	implementation 'com.google.firebase:firebase-core:19.0.1'
-	implementation 'com.google.firebase:firebase-firestore:23.0.3'
-	implementation 'com.google.firebase:firebase-database:20.0.1'
+	implementation 'com.google.firebase:firebase-core:19.0.2'
+	implementation 'com.google.firebase:firebase-firestore:23.0.4'
+	implementation 'com.google.firebase:firebase-database:20.0.2'
 	implementation 'com.google.firebase:firebase-messaging:22.0.0'
-	implementation 'com.google.firebase:firebase-ads:20.3.0'
-	implementation 'com.google.firebase:firebase-perf:20.0.2'
+	implementation 'com.google.firebase:firebase-ads:20.4.0'
+	implementation 'com.google.firebase:firebase-perf:20.0.3'
 	implementation 'com.google.firebase:firebase-config:21.0.1'
 	implementation 'com.google.firebase:firebase-crashlytics-ktx'
 	implementation 'com.google.firebase:firebase-analytics-ktx'
@@ -116,7 +116,7 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.9.0'
 
 	// Admob
-	implementation 'com.google.android.gms:play-services-ads:20.3.0'
+	implementation 'com.google.android.gms:play-services-ads:20.4.0'
 	implementation 'com.google.android.gms:play-services-identity:17.0.1'
 	implementation 'androidx.ads:ads-identifier:1.0.0-alpha04'
 	implementation 'com.google.android.gms:play-services-gcm:17.0.0'
