@@ -9,6 +9,7 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -32,6 +33,8 @@ import java.util.*
 class FBStoreActivity : BaseActivity() {
 	private lateinit var b: ActivityStoreBinding
 
+	private var adsStoreDownload: InterstitialAd? = null
+
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
@@ -47,7 +50,18 @@ class FBStoreActivity : BaseActivity() {
 
 				override fun onViewLongClick(item: StoreItem, v: PackView) {}
 				override fun onPlayClick(item: StoreItem, v: PackView) {
-					if (!item.downloaded && !item.downloading) startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+					if (!item.downloaded && !item.downloading) {
+						showAds(adsStoreDownload){
+							val playStartUnitId = resources.getString(string.admob_play_start)
+							// remove adscooltime
+							loadAds(playStartUnitId){
+								adsStoreDownload = it
+
+
+								startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+							}
+						}
+					}
 				}
 			})
 			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
@@ -331,6 +345,11 @@ class FBStoreActivity : BaseActivity() {
 		updatePanel()
 		firebase_store.attachEventListener(true)
 		firebase_storeCount.attachEventListener(true)
+
+		val playStartUnitId = resources.getString(string.admob_store_download)
+		loadAds(playStartUnitId){
+			adsStoreDownload = it
+		}
 	}
 
 	override fun onPause() {
