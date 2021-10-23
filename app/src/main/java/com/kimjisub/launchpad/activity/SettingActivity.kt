@@ -75,9 +75,8 @@ class SettingActivity : BaseActivity() {
 			settingActivity = activity as SettingActivity
 			p = settingActivity.p
 
-			Log.billing("1 onCreatePreferences")
-
 			bm = BillingModule(requireActivity(), lifecycleScope, this)
+			bm.load()
 
 			initPreference()
 			addPreferenceListener()

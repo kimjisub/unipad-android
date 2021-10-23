@@ -44,7 +44,7 @@ class BillingModule(
 		.enablePendingPurchases()
 		.build()
 
-	init {
+	fun load() {
 		billingClient.startConnection(object : BillingClientStateListener {
 			override fun onBillingSetupFinished(billingResult: BillingResult) {
 				if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {

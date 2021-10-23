@@ -16,12 +16,9 @@ import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.SkuDetails
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
@@ -49,7 +46,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.billing.BillingModule
-import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -80,9 +76,8 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainActivity : BaseActivity(), BillingModule.Callback {
+class MainActivity : BaseActivity() {
 	private lateinit var b: ActivityMainBinding
-	private lateinit var bm: BillingModule
 
 	private var isPro = false
 		set(value) {
@@ -91,7 +86,6 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 		}
 
 	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
-	//private lateinit var bm: DeprecatedBillingManager
 
 	private var adsPlayStart: InterstitialAd? = null
 
@@ -207,7 +201,7 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 		b = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
-		bm = BillingModule(this, lifecycleScope, this)
+		bm.load()
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		val borderDivider = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
@@ -219,22 +213,6 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 
 
 		initPanel()
-		/*bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {
-				//updateBilling()
-			}
-
-			override fun onPurchaseHistoryRestored() {}
-			override fun onBillingError(errorCode: Int, error: Throwable?) {}
-			override fun onBillingInitialized() {
-				b.totalPanel.data.premium.set(bm.isPro)
-				if (!bm.isPro) {
-					b.adView.loadAd(AdRequest.Builder().build())
-				} else
-					b.adView.visibility = View.GONE
-			}
-		})
-		bm.initialize()*/
 
 		b.swipeRefreshLayout.setOnRefreshListener { this.update() }
 		b.reconnectLaunchpad.setOnClickListener {
@@ -276,13 +254,8 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 		updatePanel(true)
 	}
 
-	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
-		if (skuDetails.type == BillingClient.SkuType.SUBS)
-			when (skuDetails.sku) {
-				Sku.PRO -> {
-					isPro = purchased
-				}
-			}
+	override fun onProStatusUpdated(isPro: Boolean) {
+		this.isPro = isPro
 	}
 
 
@@ -551,9 +524,9 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 		start<PlayActivity> {
 			putExtra("path", item.unipack.F_project.path)
 		}
-		showAds(adsPlayStart) {
+		ads.showAdsWithCooltime(adsPlayStart) {
 			val playStartUnitId = resources.getString(string.admob_play_start)
-			loadAds(playStartUnitId) {
+			ads.loadAds(playStartUnitId) {
 				adsPlayStart = it
 			}
 		}
@@ -869,7 +842,7 @@ class MainActivity : BaseActivity(), BillingModule.Callback {
 		fbStoreCount.attachEventListener(true)
 
 		val playStartUnitId = resources.getString(string.admob_play_start)
-		loadAds(playStartUnitId) {
+		ads.loadAds(playStartUnitId) {
 			adsPlayStart = it
 		}
 	}
