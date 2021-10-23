@@ -1,9 +1,9 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'com.google.firebase.crashlytics'
-apply plugin: 'com.google.gms.google-services'
 
 android {
 	compileSdkVersion 31
@@ -11,8 +11,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 31
-		versionCode 89
-		versionName "4.0.0b8"
+		versionCode 90
+		versionName "4.0.0.b9"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
@@ -23,7 +23,8 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 
 			minifyEnabled true
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			proguardFile getDefaultProguardFile('proguard-android.txt')
+			proguardFile 'proguard-rules.pro'
 			proguardFile 'proguard-billing.pro'
 			proguardFile 'proguard-common.pro'
 			proguardFile 'proguard-firebase.pro'
@@ -32,7 +33,7 @@ android {
 		}
 		debug {
 			manifestPlaceholders = [appName: "@string/app_name_test"]
-			applicationIdSuffix ".dev"
+			// applicationIdSuffix ".dev"
 
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -61,7 +62,7 @@ dependencies {
 	implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
 	implementation 'androidx.core:core-ktx:1.6.0'
 	implementation 'androidx.preference:preference-ktx:1.1.1'
-	implementation 'androidx.work:work-runtime:2.5.0'
+	implementation 'androidx.work:work-runtime:2.6.0'
 
 	implementation 'com.google.guava:guava:30.1-jre'
 
@@ -108,6 +109,10 @@ dependencies {
 	implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
 	implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
 	implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
+
+	// Billing
+	//noinspection GradleDependency
+	implementation "com.android.billingclient:billing-ktx:3.0.0"
 
 
 	// etc

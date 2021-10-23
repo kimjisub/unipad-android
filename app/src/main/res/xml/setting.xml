@@ -3,20 +3,16 @@
 
 	<PreferenceCategory android:title="@string/setting">
 		<Preference
-			android:key="select_theme"
+			android:key="selectTheme"
 			android:title="@string/select_theme" />
 
 		<Preference
-			android:key="storage_location"
+			android:key="storageLocation"
 			android:title="@string/storage_location" />
 
 	</PreferenceCategory>
 
 	<PreferenceCategory android:title="@string/payment">
-		<Preference
-			android:key="donation"
-			android:summary="@string/donation_"
-			android:title="@string/donation" />
 		<CheckBoxPreference
 			android:key="pro"
 			android:summary="@string/plan_pro_"
@@ -32,10 +28,10 @@
 			android:key="community"
 			android:title="@string/community" />
 		<Preference
-			android:key="OpenSourceLicense"
+			android:key="openSourceLicense"
 			android:title="@string/openSourceLicense" />
 		<Preference
-			android:key="FCMToken"
+			android:key="fcmToken"
 			android:title="@string/FCMToken" />
 		<Preference
 			android:key="language"

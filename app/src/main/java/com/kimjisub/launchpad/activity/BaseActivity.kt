@@ -163,7 +163,7 @@ open class BaseActivity : AppCompatActivity() {
 		if (checkAdsCooltime()) {
 			updateAdsCooltime()
 			callback
-		}else
+		} else
 			Log.admob("ads skip: cooltime")
 	}
 
@@ -193,7 +193,7 @@ open class BaseActivity : AppCompatActivity() {
 		})
 	}
 
-	fun showAds(interstitialAd: InterstitialAd?, callback: (()->Unit)? = null) {
+	fun showAds(interstitialAd: InterstitialAd?, callback: (() -> Unit)? = null) {
 		Log.admob("Ads show: ${getActivityName()}")
 		if (interstitialAd != null) {
 			adsCooltime {
@@ -217,21 +217,21 @@ open class BaseActivity : AppCompatActivity() {
 				interstitialAd.show(this@BaseActivity)
 				callback?.invoke()
 			}
-		}else
+		} else
 			Log.admob("Ads not loaded")
 	}
 
-	fun immediatelyAds(unitId: String){
-		loadAds(unitId){
+	fun immediatelyAds(unitId: String) {
+		loadAds(unitId) {
 			showAds(it)
 		}
 	}
 
-	fun logAdsId(){
-		if(isAdvertisingIdProviderAvailable(this)) {
+	fun logAdsId() {
+		if (isAdvertisingIdProviderAvailable(this)) {
 			val adsId = AdvertisingIdClient.getAdvertisingIdInfo(this).id
 			Log.admob("AdvertisingId: $adsId")
-		}else{
+		} else {
 			Log.admob("AdvertisingId: not available")
 		}
 	}
