@@ -2,7 +2,13 @@ package com.kimjisub.launchpad.manager
 
 object Constant {
 	const val AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15
-	const val ADSCOOLTIME = 60000
+
+
+	object ADS{
+		const val COOLTIME = 60000
+		const val DOWNLOAD_COUPON_TYPE = "download-coupon"
+		const val PLAY_COUPON_TYPE = "play-coupon"
+	}
 
 	object BILLING {
 		const val DEVELOPERPAYLOAD =

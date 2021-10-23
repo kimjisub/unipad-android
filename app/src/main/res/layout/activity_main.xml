@@ -23,12 +23,13 @@
 				android:layout_width="match_parent"
 				android:layout_height="match_parent">
 
-				<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+				<com.google.android.gms.ads.AdView
+					xmlns:ads="http://schemas.android.com/apk/res-auto"
 					android:id="@+id/adView"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					ads:adSize="BANNER"
-					ads:adUnitId="@string/admob_main_panel"></com.google.android.gms.ads.AdView>
+					ads:adUnitId="@string/admob_main_panel"/>
 
 			</com.kimjisub.design.panel.MainTotalPanel>
 

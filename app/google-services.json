@@ -23,14 +23,6 @@
           }
         },
         {
-          "client_id": "215327865638-sfpieea44mj248t7h9mu0r9n6isur9i6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kimjisub.launchpad",
-            "certificate_hash": "e83967a72b25eb4b9901927662de7a506d027d45"
-          }
-        },
-        {
           "client_id": "215327865638-uc719nold1me1c6e3c4da8o4hovru209.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -48,10 +40,10 @@
               "client_type": 3
             },
             {
-              "client_id": "215327865638-lqucfeths116le48eq8jgte90tmk06k4.apps.googleusercontent.com",
+              "client_id": "215327865638-kphcs692ar0uvm5e99g56psjej3tbioj.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.kimjisub.unipad"
+                "bundle_id": "asd"
               }
             }
           ]
@@ -93,10 +85,10 @@
               "client_type": 3
             },
             {
-              "client_id": "215327865638-lqucfeths116le48eq8jgte90tmk06k4.apps.googleusercontent.com",
+              "client_id": "215327865638-kphcs692ar0uvm5e99g56psjej3tbioj.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.kimjisub.unipad"
+                "bundle_id": "asd"
               }
             }
           ]

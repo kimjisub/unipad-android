@@ -60,6 +60,15 @@ class PlayActivity : BaseActivity() {
 	private var enable = true
 	private var chain: ChainObserver = ChainObserver()
 
+	private var isPro = false
+		set(value) {
+			field = value
+			b.CB2Purchase.visibility = if (field) View.GONE else View.VISIBLE
+			SCB_hideUI.isLocked = !field
+			SCB_watermark.isLocked = !field
+			SCB_proLightMode.isLocked = !field
+		}
+
 	// UI /////////////////////////////////////////////////////////////////////////////////////////
 
 	private var theme: ThemeResources? = null
@@ -154,6 +163,7 @@ class PlayActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 		b = ActivityPlayBinding.inflate(layoutInflater)
 		setContentView(b.root)
+		bm.load()
 
 		initVar()
 
@@ -187,6 +197,10 @@ class PlayActivity : BaseActivity() {
 			}
 			finish()
 		}
+	}
+
+	override fun onProStatusUpdated(isPro: Boolean) {
+		this.isPro = isPro
 	}
 
 	private fun start() {
@@ -1281,6 +1295,6 @@ class PlayActivity : BaseActivity() {
 		if (unipackLoaded) {
 			//showAds(adsPlayEnd)
 		}
-		//bm.release()
+		bm.release()
 	}
 }
