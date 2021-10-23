@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import java.io.*
 import java.util.*
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 
 object FileManager {
 
@@ -46,8 +44,8 @@ object FileManager {
 		Arrays.sort(
 			files,
 			Comparator { object1: Any, object2: Any ->
-				(object1 as File).name.toLowerCase(Locale.getDefault())
-					.compareTo((object2 as File).name.toLowerCase(Locale.getDefault()))
+				(object1 as File).name.lowercase(Locale.getDefault())
+					.compareTo((object2 as File).name.lowercase(Locale.getDefault()))
 			} as Comparator<Any>
 		)
 		return files
