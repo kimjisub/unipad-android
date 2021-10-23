@@ -117,4 +117,28 @@ class PreferenceManager(
 				putBoolean(sortTypeTag, value)
 			}
 		}
+
+	private val downloadCouponCountTag = "DownloadCouponCount"
+	var downloadCouponCount: Int
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getInt(downloadCouponCountTag, 0)
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putInt(downloadCouponCountTag, value)
+			}
+		}
+
+	private val playCouponCountTag = "PlayCouponCount"
+	var playCouponCount: Int
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getInt(playCouponCountTag, 0)
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putInt(playCouponCountTag, value)
+			}
+		}
 }

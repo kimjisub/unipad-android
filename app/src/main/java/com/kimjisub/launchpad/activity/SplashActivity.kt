@@ -19,9 +19,8 @@ import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.manager.Log
 import splitties.activities.start
 
-class SplashActivity : BaseActivity(), BillingModule.Callback {
+class SplashActivity : BaseActivity() {
 	private lateinit var b: ActivitySplashBinding
-	private lateinit var bm: BillingModule
 
 	private var isPro = false
 		set(value) {
@@ -46,7 +45,7 @@ class SplashActivity : BaseActivity(), BillingModule.Callback {
 		b = ActivitySplashBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
-		bm = BillingModule(this, lifecycleScope, this)
+		bm.load()
 
 
 		b.version.text = BuildConfig.VERSION_NAME
@@ -68,18 +67,10 @@ class SplashActivity : BaseActivity(), BillingModule.Callback {
 				permission.WRITE_EXTERNAL_STORAGE
 			)
 			.check()
-
-		logAdsId()
 	}
 
-	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
-		Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
-		if (skuDetails.type == BillingClient.SkuType.SUBS)
-			when (skuDetails.sku) {
-				Sku.PRO -> {
-					isPro = purchased
-				}
-			}
+	override fun onProStatusUpdated(isPro: Boolean) {
+		this.isPro = isPro
 	}
 
 	override fun onStop() {

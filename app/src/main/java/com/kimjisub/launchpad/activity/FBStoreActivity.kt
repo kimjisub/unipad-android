@@ -9,7 +9,7 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
-import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -30,10 +30,11 @@ import splitties.toast.toast
 import java.io.File
 import java.util.*
 
+
 class FBStoreActivity : BaseActivity() {
 	private lateinit var b: ActivityStoreBinding
-
-	private var adsStoreDownload: InterstitialAd? = null
+	private var mRewardedAd: RewardedAd? = null
+	private var isPro = false
 
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
@@ -51,13 +52,14 @@ class FBStoreActivity : BaseActivity() {
 				override fun onViewLongClick(item: StoreItem, v: PackView) {}
 				override fun onPlayClick(item: StoreItem, v: PackView) {
 					if (!item.downloaded && !item.downloading) {
-						showAds(adsStoreDownload){
-							val playStartUnitId = resources.getString(string.admob_play_start)
-							// remove adscooltime
-							loadAds(playStartUnitId){
-								adsStoreDownload = it
+						if (p.downloadCouponCount > 0 || isPro) {
+							if(!isPro)
+								p.downloadCouponCount--
 
-
+							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+						} else {
+							showRewardedAd{
+								p.downloadCouponCount--
 								startDownload(getPackItemByCode(item.storeVO.code!!)!!)
 							}
 						}
@@ -88,11 +90,32 @@ class FBStoreActivity : BaseActivity() {
 		}
 	}
 
+
+	private fun initRewardedAd() {
+		val storeDownloadCouponUnitId = resources.getString(string.admob_download_coupon)
+		ads.loadRewardedAd(storeDownloadCouponUnitId) {
+			mRewardedAd = it
+		}
+	}
+
+	fun showRewardedAd(callback: (() -> Unit)? = null) {
+		if (mRewardedAd != null) {
+			ads.showRewardedAd(mRewardedAd!!) { _, _ ->
+				initRewardedAd()
+				callback?.invoke()
+			}
+
+		} else {
+			// TODO ad not ready
+		}
+	}
+
 	// =============================================================================================
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		b = ActivityStoreBinding.inflate(layoutInflater)
+		bm.load()
 		setContentView(b.root)
 		initVar(true)
 
@@ -147,6 +170,14 @@ class FBStoreActivity : BaseActivity() {
 
 			override fun onCancelled(databaseError: DatabaseError) {}
 		})
+
+
+		firebase_store.attachEventListener(true)
+		firebase_storeCount.attachEventListener(true)
+	}
+
+	override fun onProStatusUpdated(isPro: Boolean) {
+		this.isPro = isPro
 	}
 
 	// ============================================================================================= List Manage
@@ -338,23 +369,18 @@ class FBStoreActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		initVar(false)
-		list.clear()
-		adapter!!.notifyDataSetChanged()
-		togglePlay(null)
-		updatePanel()
-		firebase_store.attachEventListener(true)
-		firebase_storeCount.attachEventListener(true)
+		//initVar(false)
+		//list.clear()
+		//adapter!!.notifyDataSetChanged()
+		//togglePlay(null)
+		//updatePanel()
 
-		val playStartUnitId = resources.getString(string.admob_store_download)
-		loadAds(playStartUnitId){
-			adsStoreDownload = it
-		}
+		initRewardedAd()
 	}
 
 	override fun onPause() {
 		super.onPause()
-		firebase_store.attachEventListener(false)
-		firebase_storeCount.attachEventListener(false)
+		//firebase_store.attachEventListener(false)
+		//firebase_storeCount.attachEventListener(false)
 	}
 }

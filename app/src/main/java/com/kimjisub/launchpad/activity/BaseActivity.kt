@@ -7,25 +7,25 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Environment
 import android.os.Process
-import androidx.ads.identifier.AdvertisingIdClient.isAdvertisingIdProviderAvailable
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.gms.ads.*
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import androidx.lifecycle.lifecycleScope
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.SkuDetails
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
-import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.manager.billing.BillingModule
+import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import splitties.activities.start
 import java.io.File
 
-open class BaseActivity : AppCompatActivity() {
+open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 
 	companion object {
 		var activityList = ArrayList<BaseActivity>()
@@ -85,7 +85,23 @@ open class BaseActivity : AppCompatActivity() {
 		}
 	}
 
-	lateinit var p: PreferenceManager
+	val p by lazy { PreferenceManager(applicationContext) }
+	val ads by lazy { AdmobManager(this) }
+	val bm by lazy { BillingModule(this, lifecycleScope, this) }
+
+	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
+		Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
+		if (skuDetails.type == BillingClient.SkuType.SUBS)
+			when (skuDetails.sku) {
+				Sku.PRO -> {
+					onProStatusUpdated(purchased)
+				}
+			}
+	}
+
+	open fun onProStatusUpdated(isPro: Boolean){
+
+	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -157,87 +173,6 @@ open class BaseActivity : AppCompatActivity() {
 		return this.localClassName.split('.').last()
 	}
 
-	// Ads /////////////////////////////////////////////////////////////////////////////////////////
-
-	private fun adsCooltime(callback: () -> Unit) {
-		if (checkAdsCooltime()) {
-			updateAdsCooltime()
-      
-			callback()
-      
-		} else
-			Log.admob("ads skip: cooltime")
-	}
-
-	private fun checkAdsCooltime(): Boolean {
-		val prevTime = p.prevAdsShowTime
-		val currTime = System.currentTimeMillis()
-		return currTime < prevTime || currTime - prevTime >= Constant.ADSCOOLTIME
-	}
-
-	private fun updateAdsCooltime() {
-		val currTime = System.currentTimeMillis()
-		p.prevAdsShowTime = currTime
-	}
-
-	fun loadAds(unitId: String, callback: ((interstitialAd: InterstitialAd?) -> Unit)) {
-		val adRequest = AdRequest.Builder().build()
-		InterstitialAd.load(this, unitId, adRequest, object : InterstitialAdLoadCallback() {
-			override fun onAdFailedToLoad(adError: LoadAdError) {
-				Log.admob("Ads load fail: ${adError.message}")
-				callback(null)
-			}
-
-			override fun onAdLoaded(interstitialAd: InterstitialAd) {
-				Log.admob("Ads loaded.")
-				callback(interstitialAd)
-			}
-		})
-	}
-
-	fun showAds(interstitialAd: InterstitialAd?, callback: (() -> Unit)? = null) {
-		Log.admob("Ads show: ${getActivityName()}")
-		if (interstitialAd != null) {
-			adsCooltime {
-				Log.admob("Ads showed")
-				interstitialAd.fullScreenContentCallback = object : FullScreenContentCallback() {
-					override fun onAdShowedFullScreenContent() {
-						super.onAdShowedFullScreenContent()
-						Log.admob("onAdShowedFullScreenContent")
-					}
-
-					override fun onAdDismissedFullScreenContent() {
-						super.onAdDismissedFullScreenContent()
-						Log.admob("onAdDismissedFullScreenContent")
-					}
-
-					override fun onAdFailedToShowFullScreenContent(p0: AdError) {
-						super.onAdFailedToShowFullScreenContent(p0)
-						Log.admob("onAdFailedToShowFullScreenContent: ${p0.message}")
-					}
-				}
-				interstitialAd.show(this@BaseActivity)
-				// callback?.invoke()
-			}
-		} else
-			Log.admob("Ads not loaded")
-	}
-
-	fun immediatelyAds(unitId: String) {
-		loadAds(unitId) {
-			showAds(it)
-		}
-	}
-
-	fun logAdsId() {
-		if (isAdvertisingIdProviderAvailable(this)) {
-			val adsId = AdvertisingIdClient.getAdvertisingIdInfo(this).id
-			Log.admob("AdvertisingId: $adsId")
-		} else {
-			Log.admob("AdvertisingId: not available")
-		}
-	}
-
 	// ============================================================================================= Show Things, Get Resources
 
 
@@ -255,7 +190,6 @@ open class BaseActivity : AppCompatActivity() {
 	public override fun onCreate(savedInstanceState: Bundle?) {
 		Log.activity("onCreate " + getActivityName())
 		super.onCreate(savedInstanceState)
-		p = PreferenceManager(applicationContext)
 
 		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
