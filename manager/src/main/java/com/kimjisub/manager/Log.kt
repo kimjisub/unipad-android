@@ -18,6 +18,7 @@ object Log {
 	fun midiDetail(msg: String) = printLog("com.kimjisub._mididetail", msg)
 	fun driver(msg: String) = printLog("com.kimjisub._driver", msg)
 	fun driverCycle(msg: String) = printLog("com.kimjisub._cycle", msg)
+	fun billing(msg: String) = printLog("com.kimjisub._billing", msg)
 	fun err(msg: String) = printLog("com.kimjisub._err", msg)
 
 	private fun printLog(tag: String, msg: String?) {

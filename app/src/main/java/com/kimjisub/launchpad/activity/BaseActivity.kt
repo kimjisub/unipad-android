@@ -162,7 +162,9 @@ open class BaseActivity : AppCompatActivity() {
 	private fun adsCooltime(callback: () -> Unit) {
 		if (checkAdsCooltime()) {
 			updateAdsCooltime()
+      
 			callback()
+      
 		} else
 			Log.admob("ads skip: cooltime")
 	}
