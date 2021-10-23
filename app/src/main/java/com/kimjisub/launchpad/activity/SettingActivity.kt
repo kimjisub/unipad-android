@@ -7,18 +7,20 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
-import com.anjlab.android.iab.v3.BillingProcessor
-import com.anjlab.android.iab.v3.TransactionDetails
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.SkuDetails
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.databinding.ActivitySettingBinding
-import com.kimjisub.launchpad.manager.BillingManager
-import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.manager.billing.BillingModule
+import com.kimjisub.launchpad.manager.billing.Sku
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.splitties.browse
 import splitties.activities.start
 import splitties.toast.toast
@@ -26,10 +28,12 @@ import java.util.*
 
 class SettingActivity : BaseActivity() {
 	private lateinit var b: ActivitySettingBinding
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		b = ActivitySettingBinding.inflate(layoutInflater)
 		setContentView(b.root)
+
 
 		if (savedInstanceState == null) {
 			supportFragmentManager
@@ -39,29 +43,43 @@ class SettingActivity : BaseActivity() {
 		}
 	}
 
-	class SettingsFragment : PreferenceFragmentCompat() {
+	class SettingsFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 		private lateinit var settingActivity: SettingActivity
 		private lateinit var p: PreferenceManager
-		private lateinit var bm: BillingManager
+		private lateinit var bm: BillingModule
 
+		private var mSubsSkuDetails = listOf<SkuDetails>()
+
+		private var isPro = false
+			set(value) {
+				field = value
+				proPreference.isChecked = value
+			}
+
+		// Preferences
+		private lateinit var selectThemePreference: Preference
+		private lateinit var storageLocationPreference: Preference
+		private lateinit var proPreference: CheckBoxPreference
+		private lateinit var restoreBillingPreference: Preference
+		private lateinit var communityPreference: Preference
+		private lateinit var openSourceLicensePreference: Preference
+		private lateinit var fcmTokenPreference: Preference
+		private lateinit var languagePreference: Preference
+		private lateinit var copyrightPreference: Preference
+
+
+		// PreferenceFragmentCycle
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
 			settingActivity = activity as SettingActivity
 			p = settingActivity.p
-			bm = BillingManager(requireActivity(), object : BillingProcessor.IBillingHandler {
-				override fun onProductPurchased(productId: String, details: TransactionDetails?) {
-					updateBilling()
-				}
 
-				override fun onPurchaseHistoryRestored() {}
-				override fun onBillingError(errorCode: Int, error: Throwable?) {}
-				override fun onBillingInitialized() {
-					updateBilling()
-				}
-			})
-			bm.initialize()
+			Log.billing("1 onCreatePreferences")
 
+			bm = BillingModule(requireActivity(), lifecycleScope, this)
+
+			initPreference()
 			addPreferenceListener()
 		}
 
@@ -75,8 +93,8 @@ class SettingActivity : BaseActivity() {
 		}
 
 		override fun onResume() {
-			setPreferenceValues()
 			super.onResume()
+			setPreferenceValues()
 		}
 
 		override fun onDestroy() {
@@ -84,15 +102,69 @@ class SettingActivity : BaseActivity() {
 			bm.release()
 		}
 
+		// Billing Cycle
+
+		override fun onBillingSubsQuerySkuDetailResult(subsSkuDetails: List<SkuDetails>) {
+			Log.billing("onSubsQuerySkuDetailResult")
+			mSubsSkuDetails = subsSkuDetails
+			for (skuDetails in subsSkuDetails)
+				Log.billing(skuDetails.sku)
+		}
+
+		override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
+			Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
+
+			if (skuDetails.type == BillingClient.SkuType.SUBS)
+				when (skuDetails.sku) {
+					Sku.PRO -> {
+						isPro = purchased
+					}
+				}
+		}
+
+		override fun onBillingFailure(errorCode: Int) {
+			when (errorCode) {
+				BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+					toast("이미 구입한 상품입니다.")
+				}
+				BillingClient.BillingResponseCode.USER_CANCELED -> {
+					toast("구매를 취소하셨습니다.")
+				}
+				BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
+					toast("Google Billing 서비스를 사용할 수 없습니다.")
+				}
+				BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
+					toast("Google Billing Developer Error")
+				}
+				else -> {
+					toast("error: $errorCode")
+				}
+			}
+		}
+
+		//
+
+		private fun initPreference() {
+			selectThemePreference = findPreference("selectTheme")!!
+			storageLocationPreference = findPreference("storageLocation")!!
+			proPreference = findPreference("pro")!!
+			restoreBillingPreference = findPreference("restoreBilling")!!
+			communityPreference = findPreference("community")!!
+			openSourceLicensePreference = findPreference("openSourceLicense")!!
+			fcmTokenPreference = findPreference("fcmToken")!!
+			languagePreference = findPreference("language")!!
+			copyrightPreference = findPreference("copyright")!!
+		}
+
 		private fun addPreferenceListener() {
-			findPreference<Preference>("select_theme")?.onPreferenceClickListener =
+			selectThemePreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					requireContext().start<ThemeActivity>()
 					false
 				}
 
 
-			findPreference<Preference>("storage_location")?.onPreferenceClickListener =
+			storageLocationPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					val list = settingActivity.getUniPackWorkspaces()
 					val listView = ListView(context)
@@ -104,7 +176,7 @@ class SettingActivity : BaseActivity() {
 					listView.onItemClickListener =
 						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
 							p.storageIndex = list[position].index
-							findPreference<Preference>("storage_location")?.summary =
+							storageLocationPreference.summary =
 								settingActivity.uniPackWorkspace.absolutePath
 							// todo 다이얼로그 닫히게
 							// todo 유니팩 복사 진행
@@ -116,7 +188,7 @@ class SettingActivity : BaseActivity() {
 					false
 				}
 
-			findPreference<Preference>("storage_location")?.onPreferenceChangeListener =
+			storageLocationPreference.onPreferenceChangeListener =
 				Preference.OnPreferenceChangeListener { _, newValue ->
 					false
 				}
@@ -126,7 +198,7 @@ class SettingActivity : BaseActivity() {
 			//
 			//				false
 			//			}
-			findPreference<Preference>("community")?.onPreferenceClickListener =
+			communityPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					class Item(
 						val title: String,
@@ -211,60 +283,23 @@ class SettingActivity : BaseActivity() {
 					builder.show()
 					false
 				}
-			findPreference<Preference>("donation")?.onPreferenceClickListener =
-				Preference.OnPreferenceClickListener { preference: Preference? ->
-					class Item(
-						val title: String,
-						val subtitle: String,
-						val purchaseId: String
-					) {
-						constructor(
-							title: Int,
-							purchaseId: String
-						) : this(getString(title), purchaseId, purchaseId)
-
-						constructor(
-							title: String,
-							purchaseId: String
-						) : this(title, purchaseId, purchaseId)
-
-						fun toListItem() = DialogListItem(title, subtitle)
-					}
-
-					val list = arrayOf(
-						Item("Donate $1", Constant.BILLING.DONATE_1),
-						Item("Donate $5", Constant.BILLING.DONATE_5),
-						Item("Donate $10", Constant.BILLING.DONATE_10),
-						Item("Donate $50", Constant.BILLING.DONATE_50)
-					)
-					val listView = ListView(context)
-					val data = ArrayList<DialogListItem>()
-					for (i in list.indices) data.add(list[i].toListItem())
-					listView.adapter = DialogListAdapter(data.toTypedArray())
-					listView.onItemClickListener =
-						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-							bm.purchase(
-								list[position].purchaseId
-							)
-						}
-					val builder = AlertDialog.Builder(context)
-					builder.setTitle(getString(R.string.donation))
-					builder.setView(listView)
-					builder.show()
-					false
-				}
-			findPreference<Preference>("pro")?.onPreferenceClickListener =
+			proPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener { preference: Preference ->
-					(preference as CheckBoxPreference).isChecked = bm.isPro
-					bm.subscribePro()
+					(preference as CheckBoxPreference).isChecked = isPro
+
+					bm.findSkuDetails(Sku.PRO)?.let {
+						bm.purchase(it)
+					} ?: also {
+						toast("상품을 찾을 수 없습니다.")
+					}
 					false
 				}
-			findPreference<Preference>("restoreBilling")?.onPreferenceClickListener =
+			restoreBillingPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					bm.loadOwnedPurchasesFromGoogle()
+					bm.restorePurchase()
 					false
 				}
-			findPreference<Preference>("OpenSourceLicense")?.onPreferenceClickListener =
+			openSourceLicensePreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					class Item(
 						val title: String,
@@ -331,7 +366,7 @@ class SettingActivity : BaseActivity() {
 					builder.show()
 					false
 				}
-			findPreference<Preference>("FCMToken")?.onPreferenceClickListener =
+			fcmTokenPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener { preference: Preference? ->
 					try {
 						Functions.putClipboard(
@@ -346,8 +381,8 @@ class SettingActivity : BaseActivity() {
 		}
 
 		private fun setPreferenceValues() {
-			findPreference<Preference>("select_theme")?.summary = p.selectedTheme
-			findPreference<Preference>("storage_location")?.summary =
+			selectThemePreference.summary = p.selectedTheme
+			storageLocationPreference.summary =
 				settingActivity.uniPackWorkspace.absolutePath
 
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
@@ -357,11 +392,11 @@ class SettingActivity : BaseActivity() {
 
 			val language: String = systemLocale.language // 언어 코드 출력 ex) ko
 
-			findPreference<Preference>("language")?.title =
+			languagePreference.title =
 				getString(R.string.language) + " (" + getString(R.string.languageCode) + ")"
-			findPreference<Preference>("language")?.summary =
+			languagePreference.summary =
 				"$displayCountry ($country) - $language"
-			findPreference<Preference>("copyright")?.summary =
+			copyrightPreference.summary =
 				String.format(getString(R.string.translatedBy), getString(R.string.translator))
 		}
 
@@ -374,10 +409,6 @@ class SettingActivity : BaseActivity() {
 			}
 		}
 
-		internal fun updateBilling() {
-			(findPreference<Preference>("pro") as CheckBoxPreference).isChecked =
-				bm.isPro
-		}
 
 		companion object {
 			fun newInstance(rootKey: String = "root") =
@@ -386,4 +417,6 @@ class SettingActivity : BaseActivity() {
 				}
 		}
 	}
+
 }
+
