@@ -45,3 +45,4 @@ captures/
 **/.cxx
 *.jks
 /app/release/app-release.aab
+keystore.properties
