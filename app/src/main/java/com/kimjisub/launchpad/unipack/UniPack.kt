@@ -1,24 +1,24 @@
 package com.kimjisub.launchpad.unipack
 
 import android.content.Context
+import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.manager.FileManager.byteToMB
-import com.kimjisub.manager.FileManager.getFolderSize
-import com.kimjisub.manager.FileManager.sortByName
+import com.kimjisub.launchpad.manager.FileManager.byteToMB
 import com.kimjisub.manager.Log.err
 import java.io.BufferedReader
 import java.io.File
-import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class UniPack(val F_project: File, val loadDetail: Boolean) {
+class UniPack(val context: Context, val F_project: DocumentFile, val loadDetail: Boolean) {
+	val resolver = context.contentResolver
+
 	var errorDetail: String? = null
 	var criticalError = false
 
@@ -37,11 +37,11 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 	var ledAnimationTable: Array<Array<Array<ArrayList<LedAnimation>?>>>? = null
 	var autoPlayTable: AutoPlay? = null
 
-	var F_info: File? = null
-	var F_sounds: File? = null
-	var F_keySound: File? = null
-	var F_keyLed: File? = null
-	var F_autoPlay: File? = null
+	var F_info: DocumentFile? = null
+	var F_sounds: DocumentFile? = null
+	var F_keySound: DocumentFile? = null
+	var F_keyLed: DocumentFile? = null
+	var F_autoPlay: DocumentFile? = null
 
 	val infoExist
 		get() = F_info != null
@@ -70,7 +70,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 
 	private fun checkFile() {
 		for (item in F_project.listFiles()) {
-			when (item.name.toLowerCase(Locale.getDefault())) {
+			when (item.name?.lowercase()) {
 				"info" -> F_info = if (item.isFile) item else null
 				"sounds" -> F_sounds = if (item.isDirectory) item else null
 				"keysound" -> F_keySound = if (item.isFile) item else null
@@ -89,7 +89,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 
 	private fun info() {
 		if (F_info != null) {
-			val reader = BufferedReader(InputStreamReader(FileInputStream(F_info)))
+			val reader = BufferedReader(InputStreamReader(resolver.openInputStream(F_info!!.uri)))
 			while (true) {
 				val s = reader.readLine() ?: break
 				if (s.isEmpty()) continue
@@ -131,7 +131,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				}
 			}
 			soundCount = 0
-			val reader = BufferedReader(InputStreamReader(FileInputStream(F_keySound)))
+			val reader = BufferedReader(InputStreamReader(resolver.openInputStream(F_keySound!!.uri)))
 			while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
@@ -167,7 +167,8 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 					"keySound : [$s] y is incorrect"
 				) else {
 					try {
-						val soundFile = File(F_sounds!!.absolutePath + "/" + soundURL)
+
+						val soundFile = File(F_sounds!!.uri.path + "/" + soundURL)
 						val sound = Sound(soundFile, loop, wormhole)
 						if (!sound.file.isFile) {
 							addErr("keySound : [$s] sound was not found")
@@ -197,10 +198,10 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				}
 			}
 			ledTableCount = 0
-			val fileList = sortByName(F_keyLed!!.listFiles())
+			val fileList = F_keyLed!!.listFiles().sortedBy { it.name?.lowercase() } // todo 작동확인
 			for (file in fileList) {
 				if (file.isFile) {
-					val fileName: String = file.name
+					val fileName: String = file.name!!
 					val split1 = fileName.split(" ").toTypedArray()
 					var c: Int
 					var x: Int
@@ -233,7 +234,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 						continue
 					}
 					val ledList = ArrayList<LedAnimation.LedEvent>()
-					val reader = BufferedReader(InputStreamReader(FileInputStream(file)))
+					val reader = BufferedReader(InputStreamReader(resolver.openInputStream(file!!.uri)))
 					loop@ while (true) {
 						val s = reader.readLine() ?: break
 						val split2 = s.split(" ").toTypedArray()
@@ -324,7 +325,7 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 			autoPlayTable = AutoPlay(ArrayList())
 			val map = Array(buttonX) { IntArray(buttonY) }
 			var currChain = 0
-			val reader = BufferedReader(InputStreamReader(FileInputStream(F_autoPlay)))
+			val reader = BufferedReader(InputStreamReader(resolver.openInputStream(F_autoPlay!!.uri)))
 			loop@ while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
@@ -574,5 +575,16 @@ class UniPack(val F_project: File, val loadDetail: Boolean) {
 				F_project
 			)
 		) + " MB"
+	}
+
+	fun getFolderSize(file: DocumentFile): Long {
+		var totalMemory: Long = 0
+		if (file.isFile) {
+			return file.length()
+		} else if (file.isDirectory) {
+			val childFileList: Array<out DocumentFile> = file.listFiles() ?: return 0
+			for (childFile in childFileList) totalMemory += getFolderSize(childFile)
+			return totalMemory
+		} else return 0
 	}
 }

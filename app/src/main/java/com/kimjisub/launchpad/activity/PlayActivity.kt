@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.design.manage.SyncCheckBox
 import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick
@@ -45,6 +46,7 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import com.kimjisub.manager.Log
 import com.kimjisub.manager.Log.log
 import splitties.activities.start
 import splitties.toast.toast
@@ -169,8 +171,9 @@ class PlayActivity : BaseActivity() {
 
 		val path: String? = intent.getStringExtra("path")
 
+
 		try {
-			unipack = UniPack(File(path), true)
+			unipack = UniPack(baseContext , DocumentFile.fromTreeUri(baseContext, Uri.parse(path))!!, true)
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
 					.setTitle(

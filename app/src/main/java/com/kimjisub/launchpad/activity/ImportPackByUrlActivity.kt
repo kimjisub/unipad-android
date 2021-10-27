@@ -8,7 +8,7 @@ import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.FileManager
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

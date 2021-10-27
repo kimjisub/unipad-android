@@ -4,11 +4,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.FileManager
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.manager.Log
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
@@ -60,7 +62,7 @@ class UniPackImporter(
 				}
 
 
-				val unipack = UniPack(targetFolder, true)
+				val unipack = UniPack(context, DocumentFile.fromTreeUri(context, targetFolder.toUri())!!, true)
 				if (unipack.criticalError) {
 					Log.err(unipack.errorDetail!!)
 					FileManager.deleteDirectory(unipack.F_project)

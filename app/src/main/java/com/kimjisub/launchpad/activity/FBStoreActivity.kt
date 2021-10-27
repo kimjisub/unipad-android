@@ -27,7 +27,7 @@ import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.FileManager
+import com.kimjisub.launchpad.manager.FileManager
 import splitties.toast.toast
 import java.io.File
 import java.util.*

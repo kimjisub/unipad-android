@@ -5,7 +5,7 @@ import android.media.MediaPlayer
 import com.kimjisub.launchpad.manager.Constant
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.manager.FileManager
+import com.kimjisub.launchpad.manager.FileManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,7 +103,9 @@ class UniPackAutoMapper(
 					}
 				}
 				try {
+					/* todo 수정
 					val filePre = File(unipack.F_project, "autoPlay")
+
 					@SuppressLint("SimpleDateFormat") val fileNow = File(
 						unipack.F_project,
 						"autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date(System.currentTimeMillis()))
@@ -112,7 +114,7 @@ class UniPackAutoMapper(
 					val writer =
 						BufferedWriter(OutputStreamWriter(FileOutputStream(unipack.F_autoPlay)))
 					writer.write(stringBuilder.toString())
-					writer.close()
+					writer.close()*/
 				} catch (e: FileNotFoundException) {
 					e.printStackTrace()
 				} catch (ee: IOException) {
