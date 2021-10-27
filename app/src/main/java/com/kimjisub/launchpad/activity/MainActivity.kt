@@ -60,7 +60,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.Log
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import com.kimjisub.manager.extra.getVirtualIndexFormSorted
-import com.kimjisub.manager.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.browse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
