@@ -6,7 +6,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
 
-class UniPackWorkspaceManager(val activity: BaseActivity) {
+class WorkspaceManager(val activity: BaseActivity) {
 	val context: Context = activity.baseContext
 	val p by lazy { PreferenceManager(context) }
 
