@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.midi.driver
 
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 
 class LaunchpadMK3 : DriverRef() {
 	companion object {

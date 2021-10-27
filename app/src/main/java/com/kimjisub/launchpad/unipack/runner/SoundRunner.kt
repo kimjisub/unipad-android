@@ -5,7 +5,7 @@ import android.media.SoundPool
 import android.os.Handler
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

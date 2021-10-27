@@ -19,7 +19,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.UniPackWorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import splitties.activities.start
 
 open class BaseActivity : AppCompatActivity(), BillingModule.Callback {

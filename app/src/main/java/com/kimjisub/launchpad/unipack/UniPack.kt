@@ -8,7 +8,7 @@ import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.manager.FileManager.byteToMB
-import com.kimjisub.manager.Log.err
+import com.kimjisub.launchpad.tool.Log.err
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader

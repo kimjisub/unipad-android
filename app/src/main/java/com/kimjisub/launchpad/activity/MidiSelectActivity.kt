@@ -15,8 +15,8 @@ import com.kimjisub.launchpad.adapter.MidiDeviceItem
 import com.kimjisub.launchpad.databinding.ActivityMidiSelectBinding
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
-import com.kimjisub.manager.AutorunTimer
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.AutorunTimer
+import com.kimjisub.launchpad.tool.Log
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 
 

@@ -10,7 +10,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.kimjisub.launchpad.activity.BaseActivity
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 
 class AdmobManager(val activity: BaseActivity) {
 	val p: PreferenceManager = activity.p

@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.service
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 

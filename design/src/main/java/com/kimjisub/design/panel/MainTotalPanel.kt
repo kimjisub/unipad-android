@@ -12,7 +12,7 @@ import androidx.databinding.ObservableField
 import com.kimjisub.design.R
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
-import com.kimjisub.launchpad.tool.extra.addOnPropertyChanged
+import com.kimjisub.design.extra.addOnPropertyChanged
 import com.polyak.iconswitch.IconSwitch
 
 class MainTotalPanel

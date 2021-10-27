@@ -16,7 +16,7 @@ import android.widget.RelativeLayout
 import androidx.core.content.ContextCompat
 import com.kimjisub.design.R.*
 import com.kimjisub.design.databinding.ViewPackBinding
-import com.kimjisub.manager.UIManager
+import com.kimjisub.design.manage.UIManager.dpToPx
 
 class PackView
 @JvmOverloads constructor(
@@ -43,8 +43,8 @@ class PackView
 
 
 	private var flagColor: Int = 0
-	private val PX_flag_default = UIManager.dpToPx(context, 10f)
-	private val PX_flag_enable = UIManager.dpToPx(context, 100f)
+	private val PX_flag_default = dpToPx(context, 10f)
+	private val PX_flag_enable = dpToPx(context, 100f)
 
 	private var isToggled = false
 

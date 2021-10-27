@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.api.unipad
 
 import com.kimjisub.launchpad.api.BaseApiService
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
