@@ -85,7 +85,7 @@ class SettingActivity : BaseActivity() {
 									Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 							// Check for the freshest data.
 							contentResolver.takePersistableUriPermission(uri, takeFlags)
-							for(persistedUriPermission in contentResolver.persistedUriPermissions){
+							for (persistedUriPermission in contentResolver.persistedUriPermissions) {
 								Log.test(persistedUriPermission.uri.path + " " + persistedUriPermission.persistedTime)
 							}
 
@@ -109,7 +109,6 @@ class SettingActivity : BaseActivity() {
 			initPreference()
 			addPreferenceListener()
 		}
-
 
 
 		override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
@@ -220,28 +219,28 @@ class SettingActivity : BaseActivity() {
 					false
 				}
 
-			storageLocationTestPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+			storageLocationTestPreference.onPreferenceClickListener =
+				Preference.OnPreferenceClickListener {
 
 
+					// Choose a directory using the system's file picker.
+					val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+						// Provide read access to files and sub-directories in the user-selected
+						// directory.
+						flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-				// Choose a directory using the system's file picker.
-				val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-					// Provide read access to files and sub-directories in the user-selected
-					// directory.
-					flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-
-					// Optionally, specify a URI for the directory that should be opened in
-					// the system file picker when it loads.
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-						// putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+						// Optionally, specify a URI for the directory that should be opened in
+						// the system file picker when it loads.
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+							// putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+						}
+						putExtra("android.content.extra.SHOW_ADVANCED", true)
 					}
-					putExtra("android.content.extra.SHOW_ADVANCED", true)
+
+					folderResultLauncher.launch(intent)
+
+					false
 				}
-
-				folderResultLauncher.launch(intent)
-
-				false
-			}
 
 			communityPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {

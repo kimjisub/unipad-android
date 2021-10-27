@@ -3,12 +3,12 @@ package com.kimjisub.launchpad.unipack
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.manager.FileManager.byteToMB
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
+import com.kimjisub.launchpad.tool.Log.err
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.launchpad.manager.FileManager.byteToMB
-import com.kimjisub.launchpad.tool.Log.err
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -131,7 +131,8 @@ class UniPack(val context: Context, val F_project: DocumentFile, val loadDetail:
 				}
 			}
 			soundCount = 0
-			val reader = BufferedReader(InputStreamReader(resolver.openInputStream(F_keySound!!.uri)))
+			val reader =
+				BufferedReader(InputStreamReader(resolver.openInputStream(F_keySound!!.uri)))
 			while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
@@ -234,7 +235,8 @@ class UniPack(val context: Context, val F_project: DocumentFile, val loadDetail:
 						continue
 					}
 					val ledList = ArrayList<LedAnimation.LedEvent>()
-					val reader = BufferedReader(InputStreamReader(resolver.openInputStream(file!!.uri)))
+					val reader =
+						BufferedReader(InputStreamReader(resolver.openInputStream(file!!.uri)))
 					loop@ while (true) {
 						val s = reader.readLine() ?: break
 						val split2 = s.split(" ").toTypedArray()
@@ -325,7 +327,8 @@ class UniPack(val context: Context, val F_project: DocumentFile, val loadDetail:
 			autoPlayTable = AutoPlay(ArrayList())
 			val map = Array(buttonX) { IntArray(buttonY) }
 			var currChain = 0
-			val reader = BufferedReader(InputStreamReader(resolver.openInputStream(F_autoPlay!!.uri)))
+			val reader =
+				BufferedReader(InputStreamReader(resolver.openInputStream(F_autoPlay!!.uri)))
 			loop@ while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()

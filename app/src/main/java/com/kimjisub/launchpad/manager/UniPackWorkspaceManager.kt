@@ -25,11 +25,11 @@ class UniPackWorkspaceManager(val activity: BaseActivity) {
 			return workspaces[0].uri
 		}
 
-	fun setMainWorkspace(uri: Uri){
+	fun setMainWorkspace(uri: Uri) {
 		val index = workspaces.indexOfFirst {
 			it.uri == uri
 		}
-		if(index != -1)
+		if (index != -1)
 			p.mainStorage = workspaces[index].uri.path!!
 		else
 			p.mainStorage = workspaces[0].uri.path!!

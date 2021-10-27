@@ -98,7 +98,7 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 			}
 	}
 
-	open fun onProStatusUpdated(isPro: Boolean){
+	open fun onProStatusUpdated(isPro: Boolean) {
 
 	}
 

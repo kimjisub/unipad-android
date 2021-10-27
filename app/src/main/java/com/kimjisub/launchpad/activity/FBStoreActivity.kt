@@ -23,11 +23,11 @@ import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.launchpad.manager.FileManager
 import splitties.toast.toast
 import java.io.File
 import java.util.*
@@ -55,12 +55,12 @@ class FBStoreActivity : BaseActivity() {
 				override fun onPlayClick(item: StoreItem, v: PackView) {
 					if (!item.downloaded && !item.downloading) {
 						if (p.downloadCouponCount > 0 || isPro) {
-							if(!isPro)
+							if (!isPro)
 								p.downloadCouponCount--
 
 							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
 						} else {
-							showRewardedAd{
+							showRewardedAd {
 								p.downloadCouponCount--
 								startDownload(getPackItemByCode(item.storeVO.code!!)!!)
 							}
@@ -248,7 +248,8 @@ class FBStoreActivity : BaseActivity() {
 		val (code, title, producerName, isAutoPlay, isLED, downloadCount, URL) = item.storeVO
 
 		val packView = item.packView!!
-		val F_UniPackZip: File = FileManager.makeNextPath(workspace.mainWorkspace.toFile(), code!!, ".zip")
+		val F_UniPackZip: File =
+			FileManager.makeNextPath(workspace.mainWorkspace.toFile(), code!!, ".zip")
 		val F_UniPack = File(workspace.mainWorkspace.toFile(), code)
 		packView.toggleColor = colors.gray1
 		packView.untoggleColor = colors.gray1
