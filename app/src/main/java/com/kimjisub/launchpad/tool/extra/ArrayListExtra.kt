@@ -1,4 +1,4 @@
-package com.kimjisub.manager.extra
+package com.kimjisub.launchpad.tool.extra
 
 import androidx.databinding.Observable
 import java.util.*
