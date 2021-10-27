@@ -47,7 +47,8 @@ import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
-import com.kimjisub.launchpad.manager.billing.BillingModule
+import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -56,8 +57,6 @@ import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.FileManager
-import com.kimjisub.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.manager.Log
 import com.kimjisub.manager.extra.addOnPropertyChanged
 import com.kimjisub.manager.extra.getVirtualIndexFormSorted
@@ -302,14 +301,14 @@ class MainActivity : BaseActivity() {
 
 			try {
 
-				 for (file: DocumentFile in workspace.getUnipacks()) {
+				for (file: DocumentFile in workspace.getUnipacks()) {
 					if (!file.isDirectory) continue
-					 /* todo 활성화
-					val unipack = UniPack(file, false)
-					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
+
+					val unipack = UniPack(baseContext, file, false)
+					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name!!)
 
 					val packItem = UniPackItem(unipack, unipackENT, animateNew)
-					I_list.add(packItem)*/
+					I_list.add(packItem)
 				}
 
 				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
@@ -324,7 +323,7 @@ class MainActivity : BaseActivity() {
 				for (item: UniPackItem in I_list) {
 					var index = -1
 					for ((i, item2: UniPackItem) in I_removed.withIndex()) {
-						if ((item2.unipack.F_project.path == item.unipack.F_project.path)) {
+						if ((item2.unipack.F_project.uri == item.unipack.F_project.uri)) {
 							index = i
 							break
 						}
@@ -361,7 +360,7 @@ class MainActivity : BaseActivity() {
 				}
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
-						if ((item.unipack.F_project.path == removed.unipack.F_project.path)) {
+						if ((item.unipack.F_project.uri == removed.unipack.F_project.uri)) {
 							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
@@ -376,7 +375,7 @@ class MainActivity : BaseActivity() {
 				for ((to, target: UniPackItem) in I_list.withIndex()) {
 					var from = -1
 					for ((i, item) in adapter.list.withIndex())
-						if (target.unipack.F_project.path == item.unipack.F_project.path)
+						if (target.unipack.F_project.uri == item.unipack.F_project.uri)
 							from = i
 					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
@@ -449,48 +448,52 @@ class MainActivity : BaseActivity() {
 	private fun importUniPack(unipackFile: File) {
 		lateinit var progressDialog: ProgressDialog
 
-		UniPackImporter(context = this, unipackFile = unipackFile, workspace.mainWorkspace.toFile(), object :
-			UniPackImporter.OnEventListener {
-			override fun onImportStart(zip: File) {
-				progressDialog = ProgressDialog(this@MainActivity)
-				progressDialog.setTitle(getString(string.importing))
-				progressDialog.setMessage(getString(string.wait_a_sec))
-				progressDialog.setCancelable(false)
-				progressDialog.show()
-			}
+		UniPackImporter(
+			context = this,
+			unipackFile = unipackFile,
+			workspace.mainWorkspace.toFile(),
+			object :
+				UniPackImporter.OnEventListener {
+				override fun onImportStart(zip: File) {
+					progressDialog = ProgressDialog(this@MainActivity)
+					progressDialog.setTitle(getString(string.importing))
+					progressDialog.setMessage(getString(string.wait_a_sec))
+					progressDialog.setCancelable(false)
+					progressDialog.show()
+				}
 
-			override fun onImportProgress(processMonitor: ProgressMonitor) {
-				progressDialog.progress = processMonitor.percentDone
-			}
+				override fun onImportProgress(processMonitor: ProgressMonitor) {
+					progressDialog.progress = processMonitor.percentDone
+				}
 
-			override fun onImportComplete(folder: File, unipack: UniPack) {
-				when {
-					unipack.errorDetail == null -> {
-						alertDialog {
-							title = getString(string.importComplete)
-							message = unipack.toString(this@MainActivity)
-							okButton()
-						}.show()
-					}
-					else -> {
-						alertDialog {
-							title = getString(string.warning)
-							message = unipack.errorDetail!!
-							okButton()
-						}.show()
+				override fun onImportComplete(folder: File, unipack: UniPack) {
+					when {
+						unipack.errorDetail == null -> {
+							alertDialog {
+								title = getString(string.importComplete)
+								message = unipack.toString(this@MainActivity)
+								okButton()
+							}.show()
+						}
+						else -> {
+							alertDialog {
+								title = getString(string.warning)
+								message = unipack.errorDetail!!
+								okButton()
+							}.show()
+						}
 					}
 				}
-			}
 
-			override fun onException(throwable: Throwable) {
-				alertDialog {
-					title = getString(string.importFailed)
-					message = throwable.toString()
-					okButton()
-				}.show()
-			}
+				override fun onException(throwable: Throwable) {
+					alertDialog {
+						title = getString(string.importFailed)
+						message = throwable.toString()
+						okButton()
+					}.show()
+				}
 
-		})
+			})
 	}
 
 	// ListManage /////////////////////////////////////////////////////////////////////////////////////////
@@ -504,7 +507,7 @@ class MainActivity : BaseActivity() {
 		try {
 			for ((i, item: UniPackItem) in unipackList.withIndex()) {
 				//val packView = item.packView
-				if (target != null && (item.unipack.F_project.path == target.unipack.F_project.path)) {
+				if (target != null && (item.unipack.F_project.uri == target.unipack.F_project.uri)) {
 
 					item.toggle = !item.toggle
 					lastPlayIndex = i
@@ -523,10 +526,12 @@ class MainActivity : BaseActivity() {
 
 	fun pressPlay(item: UniPackItem) {
 		Thread {
-			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name, Date()))
+			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name!!, Date()))
 		}.start()
 		start<PlayActivity> {
-			putExtra("path", item.unipack.F_project.path)
+
+			Log.test("path: " + item.unipack.F_project.uri.path)
+			putExtra("path", item.unipack.F_project.uri.path)
 		}
 		ads.showAdsWithCooltime(adsPlayStart) {
 			val playStartUnitId = resources.getString(string.admob_play_start)
@@ -713,7 +718,12 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val size = FileManager.getFolderSize(workspace.mainWorkspace.toFile())
+				val size = FileManager.getFolderSize(
+					DocumentFile.fromTreeUri(
+						baseContext,
+						workspace.mainWorkspace
+					)!!
+				)
 
 				withContext(Dispatchers.Main) {
 					b.totalPanel.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
@@ -733,7 +743,7 @@ class MainActivity : BaseActivity() {
 			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
 			chainCount.set(unipack.chain.toString())
 			websiteExist.set(unipack.website != null)
-			path.set(item.unipack.F_project.path)
+			path.set(item.unipack.F_project.uri.path)
 			downloadedDate.set(Date(getInnerFileLastModified(item.unipack.F_project)))
 
 
@@ -757,15 +767,15 @@ class MainActivity : BaseActivity() {
 				val fileSizeString =
 					FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
 				withContext(Dispatchers.Main) {
-					if ((path.get() == item.unipack.F_project.path))
+					if ((path.get() == item.unipack.F_project.uri.path))
 						fileSize.set(fileSizeString)
 				}
 			}
 
 			CoroutineScope(Dispatchers.IO).launch {
-				item.unipack = UniPack(item.unipack.F_project, true)
+				item.unipack = UniPack(baseContext, item.unipack.F_project, true)
 				withContext(Dispatchers.Main) {
-					if ((path.get() == item.unipack.F_project.path)) {
+					if ((path.get() == item.unipack.F_project.uri.path)) {
 						soundCount.set(item.unipack.soundCount.toString())
 						ledCount.set(item.unipack.ledTableCount.toString())
 					}

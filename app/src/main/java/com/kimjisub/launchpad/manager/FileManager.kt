@@ -1,7 +1,8 @@
-package com.kimjisub.manager
+package com.kimjisub.launchpad.manager
 
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
+import androidx.documentfile.provider.DocumentFile
 import java.io.*
 import java.util.*
 
@@ -27,7 +28,7 @@ object FileManager {
 	// ============================================================================================= Tools
 
 
-	fun sortByTime(files: Array<File>): Array<File> {
+	fun sortByTime(files: Array<DocumentFile>): Array<DocumentFile> {
 		for (i in 0 until files.size - 1) {
 			for (j in 0 until files.size - (i + 1)) {
 				if (getInnerFileLastModified(files[j]) < getInnerFileLastModified(files[j + 1])) {
@@ -51,7 +52,7 @@ object FileManager {
 		return files
 	}
 
-	fun getInnerFileLastModified(target: File): Long {
+	fun getInnerFileLastModified(target: DocumentFile): Long {
 		var time: Long = 0
 		if (target.isDirectory) for (file in target.listFiles()) {
 			if (file.isFile) {
@@ -126,6 +127,17 @@ object FileManager {
 		}
 	}
 
+	fun deleteDirectory(file: DocumentFile) {
+		try {
+			if (file.isDirectory) {
+				val childFileList: Array<DocumentFile> = file.listFiles()
+				for (childFile in childFileList) deleteDirectory(childFile)
+				file.delete()
+			} else file.delete()
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+	}
 	fun deleteDirectory(file: File) {
 		try {
 			if (file.isDirectory) {
@@ -139,12 +151,12 @@ object FileManager {
 	}
 
 	fun makeDirWhenNotExist(dir: File) {
-		try{
+		try {
 			if (!dir.isDirectory) {
 				if (dir.isFile) dir.delete()
 				dir.mkdir()
 			}
-		}catch (e: Exception){
+		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 
@@ -169,12 +181,12 @@ object FileManager {
 		return String.format(format, b.toFloat() / 1024 / 1024)
 	}
 
-	fun getFolderSize(file: File): Long {
+	fun getFolderSize(file: DocumentFile): Long {
 		var totalMemory: Long = 0
 		if (file.isFile) {
 			return file.length()
 		} else if (file.isDirectory) {
-			val childFileList: Array<out File> = file.listFiles() ?: return 0
+			val childFileList: Array<out DocumentFile> = file.listFiles() ?: return 0
 			for (childFile in childFileList) totalMemory += getFolderSize(childFile)
 			return totalMemory
 		} else return 0

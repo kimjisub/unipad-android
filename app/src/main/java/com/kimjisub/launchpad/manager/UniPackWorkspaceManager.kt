@@ -104,16 +104,10 @@ class UniPackWorkspaceManager(val activity: BaseActivity) {
 
 			Log.test("workspace: " + workspace.uri.path)
 			val folder = DocumentFile.fromTreeUri(context, workspace.uri)!!
-			Log.test("workspace to file: " + folder.listFiles())
-			try {
-				val files = folder.listFiles()
-				files.forEach {
-					unipacks.add(it)
-				}
-				unipacks.addAll(files)
-				Log.test("files: " + files.size)
-			} catch (e: Exception) {
-				e.printStackTrace()
+			val files = folder.listFiles()
+			files.forEach {
+				unipacks.add(it)
+				Log.test("file: " + it.uri)
 			}
 		}
 

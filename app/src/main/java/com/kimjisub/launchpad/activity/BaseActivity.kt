@@ -5,11 +5,9 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
-import android.os.Environment
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.SkuDetails
@@ -21,10 +19,8 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.UniPackWorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
-import com.kimjisub.manager.FileManager
 import com.kimjisub.manager.Log
 import splitties.activities.start
-import java.io.File
 
 open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 
