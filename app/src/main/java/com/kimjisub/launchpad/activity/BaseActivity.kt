@@ -16,7 +16,7 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.launchpad.manager.UniPackWorkspaceManager
+import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.tool.Log
@@ -85,7 +85,7 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 	val p by lazy { PreferenceManager(applicationContext) }
 	val ads by lazy { AdmobManager(this) }
 	val bm by lazy { BillingModule(this, lifecycleScope, this) }
-	val workspace by lazy { UniPackWorkspaceManager(this) }
+	val workspace by lazy { WorkspaceManager(this) }
 
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
