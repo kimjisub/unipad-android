@@ -139,10 +139,15 @@ object FileManager {
 	}
 
 	fun makeDirWhenNotExist(dir: File) {
-		if (!dir.isDirectory) {
-			if (dir.isFile) dir.delete()
-			dir.mkdir()
+		try{
+			if (!dir.isDirectory) {
+				if (dir.isFile) dir.delete()
+				dir.mkdir()
+			}
+		}catch (e: Exception){
+			e.printStackTrace()
 		}
+
 	}
 
 	// ============================================================================================= Get Info

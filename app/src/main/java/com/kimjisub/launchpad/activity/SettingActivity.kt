@@ -1,11 +1,14 @@
 package com.kimjisub.launchpad.activity
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ListView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
@@ -59,6 +62,7 @@ class SettingActivity : BaseActivity() {
 		// Preferences
 		private lateinit var selectThemePreference: Preference
 		private lateinit var storageLocationPreference: Preference
+		private lateinit var storageLocationTestPreference: Preference
 		private lateinit var proPreference: CheckBoxPreference
 		private lateinit var restoreBillingPreference: Preference
 		private lateinit var communityPreference: Preference
@@ -67,6 +71,30 @@ class SettingActivity : BaseActivity() {
 		private lateinit var languagePreference: Preference
 		private lateinit var copyrightPreference: Preference
 
+		// https://developer.android.com/training/data-storage/shared/documents-files#perform-operations
+		private val folderResultLauncher =
+			registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+				if (result.resultCode == Activity.RESULT_OK) {
+					// There are no request codes
+					val data: Intent? = result.data
+					data?.data.also { uri ->
+						if (uri != null) {
+							val contentResolver = requireContext().contentResolver
+
+							val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+									Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+							// Check for the freshest data.
+							contentResolver.takePersistableUriPermission(uri, takeFlags)
+							for(persistedUriPermission in contentResolver.persistedUriPermissions){
+								Log.test(persistedUriPermission.uri.path + " " + persistedUriPermission.persistedTime)
+							}
+
+
+						}
+					}
+
+				}
+			}
 
 		// PreferenceFragmentCycle
 
@@ -81,6 +109,8 @@ class SettingActivity : BaseActivity() {
 			initPreference()
 			addPreferenceListener()
 		}
+
+
 
 		override fun setPreferenceScreen(preferenceScreen: PreferenceScreen?) {
 			super.setPreferenceScreen(preferenceScreen)
@@ -146,6 +176,7 @@ class SettingActivity : BaseActivity() {
 		private fun initPreference() {
 			selectThemePreference = findPreference("selectTheme")!!
 			storageLocationPreference = findPreference("storageLocation")!!
+			storageLocationTestPreference = findPreference("storageLocationTest")!!
 			proPreference = findPreference("pro")!!
 			restoreBillingPreference = findPreference("restoreBilling")!!
 			communityPreference = findPreference("community")!!
@@ -165,38 +196,53 @@ class SettingActivity : BaseActivity() {
 
 			storageLocationPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					val list = settingActivity.getUniPackWorkspaces()
+					val list = settingActivity.workspace.workspaces
 					val listView = ListView(context)
 					val data = list
-						.map { DialogListItem(it.name, it.file.absolutePath) }
+						.map { DialogListItem(it.name, it.uri.path!!) }
 						.toTypedArray()
 
 					listView.adapter = DialogListAdapter(data)
 					listView.onItemClickListener =
 						AdapterView.OnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-							p.storageIndex = list[position].index
+							/*p.storageIndex = list[position].index // todo 다른 방식으로 저장하기
 							storageLocationPreference.summary =
-								settingActivity.uniPackWorkspace.absolutePath
+								settingActivity.workspace.uniPackWorkspace.absolutePath
 							// todo 다이얼로그 닫히게
-							// todo 유니팩 복사 진행
+							// todo 유니팩 복사 진행*/
 						}
 					val builder = AlertDialog.Builder(context)
 					builder.setTitle(getString(R.string.storage_location))
 					builder.setView(listView)
 					builder.show()
+
+
 					false
 				}
 
-			storageLocationPreference.onPreferenceChangeListener =
-				Preference.OnPreferenceChangeListener { _, newValue ->
-					false
+			storageLocationTestPreference.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+
+
+
+				// Choose a directory using the system's file picker.
+				val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+					// Provide read access to files and sub-directories in the user-selected
+					// directory.
+					flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+					// Optionally, specify a URI for the directory that should be opened in
+					// the system file picker when it loads.
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+						// putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+					}
+					putExtra("android.content.extra.SHOW_ADVANCED", true)
 				}
 
-			//		.onPreferenceClickListener =
-			//			Preference.OnPreferenceClickListener {
-			//
-			//				false
-			//			}
+				folderResultLauncher.launch(intent)
+
+				false
+			}
+
 			communityPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
 					class Item(
@@ -382,7 +428,7 @@ class SettingActivity : BaseActivity() {
 		private fun setPreferenceValues() {
 			selectThemePreference.summary = p.selectedTheme
 			storageLocationPreference.summary =
-				settingActivity.uniPackWorkspace.absolutePath
+				settingActivity.workspace.mainWorkspace.path
 
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력
