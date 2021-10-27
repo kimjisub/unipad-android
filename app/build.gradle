@@ -145,6 +145,5 @@ dependencies {
 
 
 	api project(':design')
-	api project(':manager')
 }
 

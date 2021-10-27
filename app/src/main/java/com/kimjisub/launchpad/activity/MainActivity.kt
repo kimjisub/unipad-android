@@ -57,9 +57,9 @@ import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.manager.Log
-import com.kimjisub.launchpad.tool.extra.addOnPropertyChanged
-import com.kimjisub.launchpad.tool.extra.getVirtualIndexFormSorted
+import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.design.extra.addOnPropertyChanged
+import com.kimjisub.design.extra.getVirtualIndexFormSorted
 import com.kimjisub.launchpad.tool.splitties.browse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

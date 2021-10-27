@@ -1,4 +1,4 @@
-package com.kimjisub.manager
+package com.kimjisub.design.manage
 
 import android.content.Context
 import android.util.DisplayMetrics

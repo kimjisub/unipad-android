@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.api.file
 
 import com.kimjisub.launchpad.api.BaseApiService
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor

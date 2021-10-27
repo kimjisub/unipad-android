@@ -43,6 +43,4 @@ dependencies {
 	kapt 'com.android.databinding:compiler:3.5.0'
 
 	implementation 'com.polyak:icon-switch:1.0.0'
-
-	api project(':manager')
 }

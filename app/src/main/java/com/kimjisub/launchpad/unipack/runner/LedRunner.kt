@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.unipack.runner
 
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import kotlin.system.measureTimeMillis
 
 class LedRunner(

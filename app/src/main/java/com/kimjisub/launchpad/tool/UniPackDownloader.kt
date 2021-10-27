@@ -12,7 +12,6 @@ import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.manager.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -9,7 +9,7 @@ import com.kimjisub.launchpad.databinding.ActivityImportpackBinding
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

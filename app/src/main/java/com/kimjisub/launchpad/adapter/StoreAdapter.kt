@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.network.fb.StoreVO
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import java.util.*
 
 // todo fix async system

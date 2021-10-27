@@ -8,7 +8,7 @@ import com.kimjisub.launchpad.adapter.ThemeAdapter
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.databinding.ActivityThemeBinding
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
 import java.util.*
 

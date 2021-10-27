@@ -11,7 +11,6 @@ import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.manager.Log
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.progress.ProgressMonitor

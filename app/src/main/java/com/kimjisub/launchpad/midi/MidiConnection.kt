@@ -6,7 +6,7 @@ import android.hardware.usb.*
 import android.os.AsyncTask
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.*
-import com.kimjisub.manager.Log
+import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
