@@ -58,8 +58,8 @@ import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.manager.Log
-import com.kimjisub.manager.extra.addOnPropertyChanged
-import com.kimjisub.manager.extra.getVirtualIndexFormSorted
+import com.kimjisub.launchpad.tool.extra.addOnPropertyChanged
+import com.kimjisub.launchpad.tool.extra.getVirtualIndexFormSorted
 import com.kimjisub.launchpad.tool.splitties.browse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
