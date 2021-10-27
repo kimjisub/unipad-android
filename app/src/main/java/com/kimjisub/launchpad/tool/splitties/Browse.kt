@@ -1,4 +1,4 @@
-package com.kimjisub.manager.splitties
+package com.kimjisub.launchpad.tool.splitties
 
 import android.content.Intent
 import android.net.Uri

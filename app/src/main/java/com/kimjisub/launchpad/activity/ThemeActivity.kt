@@ -9,7 +9,7 @@ import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.databinding.ActivityThemeBinding
 import com.kimjisub.manager.Log
-import com.kimjisub.manager.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.browse
 import java.util.*
 
 class ThemeActivity : BaseActivity() {
