@@ -18,6 +18,7 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.manager.UniPackWorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.manager.FileManager
@@ -88,6 +89,8 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 	val p by lazy { PreferenceManager(applicationContext) }
 	val ads by lazy { AdmobManager(this) }
 	val bm by lazy { BillingModule(this, lifecycleScope, this) }
+	val workspace by lazy { UniPackWorkspaceManager(this) }
+
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
 		Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
@@ -104,70 +107,6 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
-
-	val uniPackWorkspace: File
-		get() {
-			if (p.storageIndex == -1) {
-				val legacyWorkspace = File(Environment.getExternalStorageDirectory(), "Unipad")
-
-				//todo thread
-				FileManager.makeDirWhenNotExist(legacyWorkspace)
-				FileManager.makeNomedia(legacyWorkspace)
-				return legacyWorkspace
-			}
-			val filesDirs = ContextCompat.getExternalFilesDirs(applicationContext, "UniPack")
-			if (filesDirs.size <= p.storageIndex)
-				p.storageIndex = 0
-
-			return ContextCompat.getExternalFilesDirs(
-				applicationContext,
-				"UniPack"
-			)[p.storageIndex]
-		}
-
-
-	data class UniPackWorkspace(
-		val name: String,
-		val file: File,
-		val index: Int
-	) {
-		override fun toString(): String {
-			return "UniPackWorkspace(name='$name', file=$file, index=$index)"
-		}
-	}
-
-	fun getUniPackWorkspaces(): Array<UniPackWorkspace> {
-		val uniPackWorkspaces = ArrayList<UniPackWorkspace>()
-
-		uniPackWorkspaces.add(
-			UniPackWorkspace(
-				"Legacy",
-				File(Environment.getExternalStorageDirectory(), "Unipad"),
-				-1
-			)
-		)
-
-		val dirs = ContextCompat.getExternalFilesDirs(this, "UniPack")
-
-		dirs.forEachIndexed { index, file ->
-
-			val name = when {
-				file.absolutePath.contains("/storage/emulated/0") -> "내부 저장소" // todo string.xml
-				file.absolutePath.contains("/storage/0000-0000") -> "SD 카드"
-				else -> "SD 카드 $index"
-			}
-
-			uniPackWorkspaces.add(
-				UniPackWorkspace(name, file, index)
-			)
-		}
-
-		return uniPackWorkspaces.toTypedArray()
-	}
-
-	fun getUniPackDirList(): Array<File> {
-		return uniPackWorkspace.listFiles()!!
-	}
 
 	fun getActivityName(): String {
 		return this.localClassName.split('.').last()

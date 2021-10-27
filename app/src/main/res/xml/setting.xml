@@ -9,6 +9,9 @@
 		<Preference
 			android:key="storageLocation"
 			android:title="@string/storage_location" />
+		<Preference
+			android:key="storageLocationTest"
+			android:title="@string/storage_location" />
 
 	</PreferenceCategory>
 

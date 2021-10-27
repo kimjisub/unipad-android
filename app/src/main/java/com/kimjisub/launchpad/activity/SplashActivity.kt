@@ -5,18 +5,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.SkuDetails
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding
-import com.kimjisub.launchpad.manager.billing.BillingModule
-import com.kimjisub.launchpad.manager.billing.Sku
-import com.kimjisub.manager.Log
 import splitties.activities.start
 
 class SplashActivity : BaseActivity() {
@@ -50,7 +44,9 @@ class SplashActivity : BaseActivity() {
 
 		b.version.text = BuildConfig.VERSION_NAME
 
-		TedPermission.with(this)
+		handler.postDelayed(runnable, 2000)
+
+		/*TedPermission.with(this)
 			.setPermissionListener(object : PermissionListener {
 				override fun onPermissionGranted() {
 					handler.postDelayed(runnable, 2000)
@@ -66,7 +62,7 @@ class SplashActivity : BaseActivity() {
 				permission.READ_EXTERNAL_STORAGE,
 				permission.WRITE_EXTERNAL_STORAGE
 			)
-			.check()
+			.check()*/
 	}
 
 	override fun onProStatusUpdated(isPro: Boolean) {

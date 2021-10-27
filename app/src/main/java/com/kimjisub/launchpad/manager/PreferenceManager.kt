@@ -42,18 +42,26 @@ class PreferenceManager(
 			}
 		}
 
-	private val storageIndexTag = "StorageIndex"
-	var storageIndex: Int
+	private val activeStorageTag = "ActiveStorage"
+	var activeStorage: String
 		get() {
 			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getInt(
-				storageIndexTag,
-				-1
-			)
+			return pref.getString(activeStorageTag, "") ?: ""
 		}
 		set(value) {
 			context.getSharedPreferences(name, MODE_PRIVATE).edit {
-				putInt(storageIndexTag, value)
+				putString(activeStorageTag, value)
+			}
+		}
+	private val mainStorageTag = "MainStorage"
+	var mainStorage: String
+		get() {
+			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+			return pref.getString(mainStorageTag, "") ?: ""
+		}
+		set(value) {
+			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+				putString(mainStorageTag, value)
 			}
 		}
 

@@ -6,6 +6,8 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
+import androidx.core.net.toFile
+import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
@@ -40,7 +42,7 @@ class FBStoreActivity : BaseActivity() {
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
-	private val downloadList: Array<File> by lazy { getUniPackDirList() }
+	private val downloadList: Array<DocumentFile> by lazy { workspace.getUnipacks() }
 
 	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
@@ -246,8 +248,8 @@ class FBStoreActivity : BaseActivity() {
 		val (code, title, producerName, isAutoPlay, isLED, downloadCount, URL) = item.storeVO
 
 		val packView = item.packView!!
-		val F_UniPackZip: File = FileManager.makeNextPath(uniPackWorkspace, code!!, ".zip")
-		val F_UniPack = File(uniPackWorkspace, code)
+		val F_UniPackZip: File = FileManager.makeNextPath(workspace.mainWorkspace.toFile(), code!!, ".zip")
+		val F_UniPack = File(workspace.mainWorkspace.toFile(), code)
 		packView.toggleColor = colors.gray1
 		packView.untoggleColor = colors.gray1
 		packView.setPlayText("0%")
@@ -258,7 +260,7 @@ class FBStoreActivity : BaseActivity() {
 			context = this,
 			title = item.storeVO.title!!,
 			url = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy?code=$code",
-			workspace = uniPackWorkspace,
+			workspace = workspace.mainWorkspace.toFile(),
 			folderName = item.storeVO.code!!,
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {

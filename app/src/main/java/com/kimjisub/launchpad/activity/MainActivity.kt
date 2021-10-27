@@ -15,6 +15,8 @@ import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.net.toFile
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -299,13 +301,15 @@ class MainActivity : BaseActivity() {
 
 
 			try {
-				for (file: File in getUniPackDirList()) {
+
+				 for (file: DocumentFile in workspace.getUnipacks()) {
 					if (!file.isDirectory) continue
+					 /* todo 활성화
 					val unipack = UniPack(file, false)
 					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name)
 
 					val packItem = UniPackItem(unipack, unipackENT, animateNew)
-					I_list.add(packItem)
+					I_list.add(packItem)*/
 				}
 
 				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
@@ -445,7 +449,7 @@ class MainActivity : BaseActivity() {
 	private fun importUniPack(unipackFile: File) {
 		lateinit var progressDialog: ProgressDialog
 
-		UniPackImporter(context = this, unipackFile = unipackFile, uniPackWorkspace, object :
+		UniPackImporter(context = this, unipackFile = unipackFile, workspace.mainWorkspace.toFile(), object :
 			UniPackImporter.OnEventListener {
 			override fun onImportStart(zip: File) {
 				progressDialog = ProgressDialog(this@MainActivity)
@@ -709,7 +713,7 @@ class MainActivity : BaseActivity() {
 		}
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
-				val size = FileManager.getFolderSize(uniPackWorkspace)
+				val size = FileManager.getFolderSize(workspace.mainWorkspace.toFile())
 
 				withContext(Dispatchers.Main) {
 					b.totalPanel.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))

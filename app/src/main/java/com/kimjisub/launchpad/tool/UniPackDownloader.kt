@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
@@ -50,6 +51,8 @@ class UniPackDownloader(
 		builder
 	}
 
+	val contentResolver = context.contentResolver
+
 	interface Listener {
 		fun onInstallStart()
 		fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
@@ -78,67 +81,74 @@ class UniPackDownloader(
 					)
 				}
 
-				val inputStream = responseBody.byteStream()
-				val outputStream = FileOutputStream(unipackFile)
-				val buf = ByteArray(1024)
-				var downloadedSize = 0L
-				var n: Int
-				var prevPercent: Int = -1
-				var prevMillis = System.currentTimeMillis()
-				while (true) {
-					n = inputStream.read(buf)
-					if (n == -1)
-						break
+				contentResolver.openFileDescriptor(unipackFile.toUri(), "w")?.use {
+					FileOutputStream(it.fileDescriptor).use { outputStream ->
+						val inputStream = responseBody.byteStream()
 
-					outputStream.write(buf, 0, n)
-					downloadedSize += n.toLong()
-					val millis = System.currentTimeMillis()
-					if (millis - prevMillis > 20) {
-						val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-						Log.test(
-							"${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${
-								FileManager.byteToMB(
-									fileSize
-								)
-							} MB"
-						)
-						withContext(Dispatchers.Main) {
-							onDownloadProgress(
-								percent,
-								downloadedSize,
-								fileSize
-							)
-						}
-						prevMillis = millis
+						//val outputStream = contentResolver.openOutputStream(unipackFile.toUri())!!
+						val buf = ByteArray(1024)
+						var downloadedSize = 0L
+						var n: Int
+						var prevPercent: Int = -1
+						var prevMillis = System.currentTimeMillis()
+						while (true) {
+							n = inputStream.read(buf)
+							if (n == -1)
+								break
 
-						if (prevPercent != percent) {
-							withContext(Dispatchers.Main) {
-								onDownloadProgressPercent(
-									percent,
-									downloadedSize,
-									fileSize
+							outputStream.write(buf, 0, n)
+							downloadedSize += n.toLong()
+							val millis = System.currentTimeMillis()
+							if (millis - prevMillis > 20) {
+								val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
+								Log.test(
+									"${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${
+										FileManager.byteToMB(
+											fileSize
+										)
+									} MB"
 								)
+								withContext(Dispatchers.Main) {
+									onDownloadProgress(
+										percent,
+										downloadedSize,
+										fileSize
+									)
+								}
+								prevMillis = millis
+
+								if (prevPercent != percent) {
+									withContext(Dispatchers.Main) {
+										onDownloadProgressPercent(
+											percent,
+											downloadedSize,
+											fileSize
+										)
+									}
+									prevPercent = percent
+								}
 							}
-							prevPercent = percent
 						}
+						inputStream.close()
+						outputStream.close()
+
+						withContext(Dispatchers.Main) { onImportStart(unipackFile) }
+
+						val zip = ZipFile(unipackFile)
+						zip.extractAll(folder.path)
+						FileManager.removeDoubleFolder(folder.path)
+						val unipack = UniPack(folder, true)
+						if (unipack.criticalError) {
+							Log.err(unipack.errorDetail!!)
+							FileManager.deleteDirectory(folder)
+							throw UniPackCriticalErrorException(unipack.errorDetail!!)
+						}
+
+						withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+
 					}
 				}
-				inputStream.close()
-				outputStream.close()
 
-				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
-
-				val zip = ZipFile(unipackFile)
-				zip.extractAll(folder.path)
-				FileManager.removeDoubleFolder(folder.path)
-				val unipack = UniPack(folder, true)
-				if (unipack.criticalError) {
-					Log.err(unipack.errorDetail!!)
-					FileManager.deleteDirectory(folder)
-					throw UniPackCriticalErrorException(unipack.errorDetail!!)
-				}
-
-				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
 
 			} catch (e: Exception) {
 				e.printStackTrace()
