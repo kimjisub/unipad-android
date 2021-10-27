@@ -4,7 +4,7 @@ object Constant {
 	const val AUTOPLAY_AUTOMAPPING_DELAY_PRESET = -15
 
 
-	object ADS{
+	object ADS {
 		const val COOLTIME = 60000
 		const val DOWNLOAD_COUPON_TYPE = "download-coupon"
 		const val PLAY_COUPON_TYPE = "play-coupon"

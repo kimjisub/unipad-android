@@ -1,17 +1,16 @@
 package com.kimjisub.launchpad.tool
 
-import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import com.kimjisub.launchpad.manager.Constant
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.launchpad.manager.FileManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.*
-import java.text.SimpleDateFormat
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.util.*
 
 class UniPackAutoMapper(

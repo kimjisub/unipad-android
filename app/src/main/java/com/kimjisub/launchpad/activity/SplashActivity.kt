@@ -1,15 +1,11 @@
 package com.kimjisub.launchpad.activity
 
-import android.Manifest.permission
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import com.gun0912.tedpermission.PermissionListener
-import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
-import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding
 import splitties.activities.start
 

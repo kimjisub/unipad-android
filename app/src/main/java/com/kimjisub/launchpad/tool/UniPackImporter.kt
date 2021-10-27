@@ -8,9 +8,9 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.launchpad.manager.FileManager
 import kotlinx.coroutines.*
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.progress.ProgressMonitor
@@ -61,7 +61,11 @@ class UniPackImporter(
 				}
 
 
-				val unipack = UniPack(context, DocumentFile.fromTreeUri(context, targetFolder.toUri())!!, true)
+				val unipack = UniPack(
+					context,
+					DocumentFile.fromTreeUri(context, targetFolder.toUri())!!,
+					true
+				)
 				if (unipack.criticalError) {
 					Log.err(unipack.errorDetail!!)
 					FileManager.deleteDirectory(unipack.F_project)

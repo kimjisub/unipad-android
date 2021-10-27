@@ -83,17 +83,20 @@ class AdmobManager(val activity: BaseActivity) {
 		interstitialAd.show(activity)
 	}
 
-	fun showRewardedAd(rewardedAd: RewardedAd, rewardedCallback: ((type: String, amount:Int) -> Unit)? = null) {
+	fun showRewardedAd(
+		rewardedAd: RewardedAd,
+		rewardedCallback: ((type: String, amount: Int) -> Unit)? = null
+	) {
 		rewardedAd.show(activity) { rewardItem ->
 			val rewardType = rewardItem.type
 			val rewardAmount = rewardItem.amount
 			Log.admob("Reward: $rewardType $rewardAmount")
 
-			when (rewardType){
-				Constant.ADS.DOWNLOAD_COUPON_TYPE->{
+			when (rewardType) {
+				Constant.ADS.DOWNLOAD_COUPON_TYPE -> {
 					p.downloadCouponCount += rewardAmount
 				}
-				Constant.ADS.PLAY_COUPON_TYPE->{
+				Constant.ADS.PLAY_COUPON_TYPE -> {
 					p.playCouponCount += rewardAmount
 				}
 			}

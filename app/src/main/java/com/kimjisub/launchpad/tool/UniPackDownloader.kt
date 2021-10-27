@@ -9,9 +9,9 @@ import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
+import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.launchpad.manager.FileManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -137,7 +137,11 @@ class UniPackDownloader(
 						val zip = ZipFile(unipackFile)
 						zip.extractAll(folder.path)
 						FileManager.removeDoubleFolder(folder.path)
-						val unipack = UniPack(context, DocumentFile.fromTreeUri(context, folder.toUri())!!, true)
+						val unipack = UniPack(
+							context,
+							DocumentFile.fromTreeUri(context, folder.toUri())!!,
+							true
+						)
 						if (unipack.criticalError) {
 							Log.err(unipack.errorDetail!!)
 							FileManager.deleteDirectory(folder)

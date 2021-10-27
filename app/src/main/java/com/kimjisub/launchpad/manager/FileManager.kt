@@ -138,6 +138,7 @@ object FileManager {
 			e.printStackTrace()
 		}
 	}
+
 	fun deleteDirectory(file: File) {
 		try {
 			if (file.isDirectory) {

@@ -1,8 +1,8 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import com.kimjisub.launchpad.tool.Log
 import java.util.*
 
 class AutoPlayRunner(
