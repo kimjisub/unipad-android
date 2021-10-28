@@ -18,7 +18,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
-import com.kimjisub.launchpad.databinding.ActivitySettingBinding
+import com.kimjisub.launchpad.databinding.ActivitySettingLegacyBinding
 import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
@@ -29,12 +29,12 @@ import splitties.activities.start
 import splitties.toast.toast
 import java.util.*
 
-class LegacySettingActivity : BaseActivity() {
-	private lateinit var b: ActivitySettingBinding
+class SettingLegacyActivity : BaseActivity() {
+	private lateinit var b: ActivitySettingLegacyBinding
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		b = ActivitySettingBinding.inflate(layoutInflater)
+		b = ActivitySettingLegacyBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
 
@@ -47,7 +47,7 @@ class LegacySettingActivity : BaseActivity() {
 	}
 
 	class SettingsFragment : PreferenceFragmentCompat(), BillingModule.Callback {
-		private lateinit var legacySettingActivity: LegacySettingActivity
+		private lateinit var settingLegacyActivity: SettingLegacyActivity
 		private lateinit var p: PreferenceManager
 		private lateinit var bm: BillingModule
 
@@ -100,8 +100,8 @@ class LegacySettingActivity : BaseActivity() {
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
-			legacySettingActivity = activity as LegacySettingActivity
-			p = legacySettingActivity.p
+			settingLegacyActivity = activity as SettingLegacyActivity
+			p = settingLegacyActivity.p
 
 			bm = BillingModule(requireActivity(), lifecycleScope, this)
 			bm.load()
@@ -195,7 +195,7 @@ class LegacySettingActivity : BaseActivity() {
 
 			storageLocationPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					val list = legacySettingActivity.ws.availableWorkspaces
+					val list = settingLegacyActivity.ws.availableWorkspaces
 					val listView = ListView(context)
 					val data = list
 						.map { DialogListItem(it.name, it.file.path) }
@@ -427,7 +427,7 @@ class LegacySettingActivity : BaseActivity() {
 		private fun setPreferenceValues() {
 			selectThemePreference.summary = p.selectedTheme
 			storageLocationPreference.summary =
-				legacySettingActivity.ws.mainWorkspace.file.path
+				settingLegacyActivity.ws.mainWorkspace.file.path
 
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력
