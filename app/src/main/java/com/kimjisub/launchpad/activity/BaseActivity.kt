@@ -85,7 +85,7 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 	val p by lazy { PreferenceManager(applicationContext) }
 	val ads by lazy { AdmobManager(this) }
 	val bm by lazy { BillingModule(this, lifecycleScope, this) }
-	val workspace by lazy { WorkspaceManager(this) }
+	val ws by lazy { WorkspaceManager(this) }
 
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {

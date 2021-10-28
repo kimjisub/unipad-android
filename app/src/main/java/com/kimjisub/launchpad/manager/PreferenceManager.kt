@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Environment
 import androidx.core.content.edit
 import java.io.File
@@ -42,17 +43,18 @@ class PreferenceManager(
 			}
 		}
 
-	private val activeStorageTag = "ActiveStorage"
-	var activeStorage: String
-		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-			return pref.getString(activeStorageTag, "") ?: ""
-		}
-		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
-				putString(activeStorageTag, value)
-			}
-		}
+//	private val workspaceTag = "Workspace"
+//	var workspace: Array<WorkspaceManager.Workspace>
+//		get() {
+//			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+//			val joinedString = pref.getString(workspaceTag, "") ?: ""
+//			return
+//		}
+//		set(value) {
+//			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+//				putString(workspaceTag, value.joinToString { "${it.path}" })
+//			}
+//		}
 	private val mainStorageTag = "MainStorage"
 	var mainStorage: String
 		get() {

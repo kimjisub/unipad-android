@@ -2,9 +2,9 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
+import java.io.File
 
 class WorkspaceManager(val activity: BaseActivity) {
 	val context: Context = activity.baseContext
@@ -13,47 +13,36 @@ class WorkspaceManager(val activity: BaseActivity) {
 
 	data class Workspace(
 		val name: String,
-		val uri: Uri
+		val file: File
 	) {
+
 		override fun toString(): String {
-			return "UniPackWorkspace(name='$name', uri=$uri)"
+			return "UniPackWorkspace(name='$name', file=${file.path})"
 		}
 	}
 
-	val mainWorkspace: Uri
-		get() {
-			return workspaces[0].uri
-		}
-
-	fun setMainWorkspace(uri: Uri) {
-		val index = workspaces.indexOfFirst {
-			it.uri == uri
-		}
-		if (index != -1)
-			p.mainStorage = workspaces[index].uri.path!!
-		else
-			p.mainStorage = workspaces[0].uri.path!!
-	}
-
-	val workspaces: Array<Workspace>
+	// 사용 가능한 모든 Workspaces
+	val availableWorkspaces: Array<Workspace>
 		get() {
 			val uniPackWorkspaces = ArrayList<Workspace>()
+			/*val persistedUriPermissions = context.contentResolver.persistedUriPermissions
 
-			for (persistedUriPermission in context.contentResolver.persistedUriPermissions) {
+
+			persistedUriPermissions.forEachIndexed { index, uriPermission ->
 				uniPackWorkspaces.add(
-					Workspace(
-						"Folder",
-						persistedUriPermission.uri,
+					WorkspaceUri(
+						"Folder #$index",
+						uriPermission.uri,
 					)
 				)
-			}
+			}*/
 
 			/*uniPackWorkspaces.add(
-				UniPackWorkspace(
+				Workspace(
 					"앱 내부 저장소",
 					File(context.filesDir, "UniPack")
 				)
-			)
+			)*/
 
 			val dirs = context.getExternalFilesDirs("UniPack")
 
@@ -65,12 +54,39 @@ class WorkspaceManager(val activity: BaseActivity) {
 				}
 
 				uniPackWorkspaces.add(
-					UniPackWorkspace(name, file)
+					Workspace(name, file)
 				)
-			}*/
+			}
 
 			return uniPackWorkspaces.toTypedArray()
 		}
+
+
+	// 다운로드 시 저장되는 Workspace
+	val mainWorkspace: Workspace
+		get() {
+			return availableWorkspaces[0]
+		}
+
+	fun setMainWorkspace(uri: Uri) {
+		/*val index = availableWorkspaces.indexOfFirst {
+			it.uri == uri
+		}
+		if (index != -1)
+			p.mainStorage = availableWorkspaces[index].uri.path!!
+		else
+			p.mainStorage = availableWorkspaces[0].uri.path!!*/
+	}
+
+	// 유니팩 로딩에 사용될 Workspaces
+
+	/*val workspaces: Array<Workspace>
+		get() {
+			availableWorkspaces.filter {
+				return p.activeStorage.contains(it.uri)
+			}
+
+		}*/
 
 	fun setActiveWorkspace() {
 
@@ -95,17 +111,18 @@ class WorkspaceManager(val activity: BaseActivity) {
 			return unipacks.toArray() as Array<File>
 		}*/
 
-	fun getUnipacks(): Array<DocumentFile> {
-		val unipacks = mutableListOf<DocumentFile>()
+	fun getUnipacks(): Array<File> {
+		val unipacks = mutableListOf<File>()
 
-		for (workspace in workspaces) {
+		for (workspace in availableWorkspaces) {
 
-			Log.test("workspace: " + workspace.uri.path)
-			val folder = DocumentFile.fromTreeUri(context, workspace.uri)!!
+
+			Log.test("workspace (file): " + workspace.file.path)
+			val folder = workspace.file
 			val files = folder.listFiles()
 			files.forEach {
 				unipacks.add(it)
-				Log.test("file: " + it.uri)
+				Log.test("file: " + it.path)
 			}
 		}
 

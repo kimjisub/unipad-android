@@ -26,6 +26,7 @@ import com.kimjisub.launchpad.databinding.ActivityStoreBinding
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
+import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
 import splitties.toast.toast
@@ -42,7 +43,7 @@ class FBStoreActivity : BaseActivity() {
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
-	private val downloadList: Array<DocumentFile> by lazy { workspace.getUnipacks() }
+	private val downloadList: Array<File> by lazy { ws.getUnipacks() }
 
 	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
@@ -249,8 +250,8 @@ class FBStoreActivity : BaseActivity() {
 
 		val packView = item.packView!!
 		val F_UniPackZip: File =
-			FileManager.makeNextPath(workspace.mainWorkspace.toFile(), code!!, ".zip")
-		val F_UniPack = File(workspace.mainWorkspace.toFile(), code)
+			FileManager.makeNextPath(ws.mainWorkspace.file, code!!, ".zip")
+		val F_UniPack = File(ws.mainWorkspace.file, code)
 		packView.toggleColor = colors.gray1
 		packView.untoggleColor = colors.gray1
 		packView.setPlayText("0%")
@@ -261,10 +262,11 @@ class FBStoreActivity : BaseActivity() {
 			context = this,
 			title = item.storeVO.title!!,
 			url = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy?code=$code",
-			workspace = workspace.mainWorkspace.toFile(),
+			workspace = ws.mainWorkspace.file,
 			folderName = item.storeVO.code!!,
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
+					Log.test("onInstallStart")
 				}
 
 				override fun onGetFileSize(
@@ -272,6 +274,7 @@ class FBStoreActivity : BaseActivity() {
 					contentLength: Long,
 					preKnownFileSize: Long
 				) {
+					Log.test("onGetFileSize(fileSize=$fileSize, contentLength=$contentLength, preKnownFileSize=$preKnownFileSize)")
 					val percent = 0
 					val downloadedMB: String = FileManager.byteToMB(0)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
@@ -284,6 +287,8 @@ class FBStoreActivity : BaseActivity() {
 					downloadedSize: Long,
 					fileSize: Long
 				) {
+					Log.test("onDownloadProgress(percent=$percent, downloadSize=$downloadedSize, fileSize=$fileSize)")
+
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
@@ -298,12 +303,15 @@ class FBStoreActivity : BaseActivity() {
 				}
 
 				override fun onImportStart(zip: File) {
+					Log.test("onImportStart(zip=${zip.path})")
+
 					packView.setPlayText(getString(string.importing))
 					packView.toggleColor = colors.orange
 					packView.untoggleColor = colors.orange
 				}
 
 				override fun onInstallComplete(folder: File, unipack: UniPack) {
+					Log.test("onInstallComplete(folder=${folder.path})")
 					packView.setPlayText(getString(string.downloaded))
 					packView.toggleColor = colors.green
 					packView.untoggleColor = colors.green
@@ -313,6 +321,8 @@ class FBStoreActivity : BaseActivity() {
 				}
 
 				override fun onException(throwable: Throwable) {
+					Log.test("onException")
+					throwable.printStackTrace()
 					packView.setPlayText(getString(string.failed))
 					packView.toggleColor = colors.red
 					packView.untoggleColor = colors.red

@@ -15,8 +15,6 @@ import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.net.toFile
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -61,6 +59,7 @@ import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -275,20 +274,20 @@ class MainActivity : BaseActivity() {
 			Comparator { a, b -> -a.unipack.title.compareTo(b.unipack.title) },
 			Comparator { a, b -> -a.unipack.producerName.compareTo(b.unipack.producerName) },
 			Comparator { a, b ->
-				val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.F_project.name)
-				val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.F_project.name)
+				val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.id)
+				val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.id)
 				-aCount.compareTo(bCount)
 			},
 			Comparator { a, b ->
 				val aDate = db.unipackOpenDAO()!!
-					.getLastOpenedDateSync(a.unipack.F_project.name)?.created_at ?: Date(0)
+					.getLastOpenedDateSync(a.unipack.id)?.created_at ?: Date(0)
 				val bDate = db.unipackOpenDAO()!!
-					.getLastOpenedDateSync(b.unipack.F_project.name)?.created_at ?: Date(0)
+					.getLastOpenedDateSync(b.unipack.id)?.created_at ?: Date(0)
 				-aDate.compareTo(bDate)
 			},
 			Comparator { a, b ->
-				val aDate = getInnerFileLastModified(a.unipack.F_project)
-				val bDate = getInnerFileLastModified(b.unipack.F_project)
+				val aDate = a.unipack.lastModified()
+				val bDate = b.unipack.lastModified()
 				-aDate.compareTo(bDate)
 			}
 		)
@@ -301,11 +300,11 @@ class MainActivity : BaseActivity() {
 
 			try {
 
-				for (file: DocumentFile in workspace.getUnipacks()) {
-					if (!file.isDirectory) continue
+				ws.getUnipacks().forEach {
+					if (!it.isDirectory) return@forEach
 
-					val unipack = UniPack(baseContext, file, false)
-					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.F_project.name!!)
+					val unipack = UniPackFolder(it).load()
+					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.id)
 
 					val packItem = UniPackItem(unipack, unipackENT, animateNew)
 					I_list.add(packItem)
@@ -323,7 +322,7 @@ class MainActivity : BaseActivity() {
 				for (item: UniPackItem in I_list) {
 					var index = -1
 					for ((i, item2: UniPackItem) in I_removed.withIndex()) {
-						if ((item2.unipack.F_project.uri == item.unipack.F_project.uri)) {
+						if ((item2.unipack == item.unipack)) {
 							index = i
 							break
 						}
@@ -341,8 +340,8 @@ class MainActivity : BaseActivity() {
 			withContext(Dispatchers.Main) {
 				for (added: UniPackItem in I_added) {
 					val i = unipackList.getVirtualIndexFormSorted(Comparator { a, b ->
-						getInnerFileLastModified(a.unipack.F_project).compareTo(
-							getInnerFileLastModified(b.unipack.F_project)
+						a.unipack.lastModified().compareTo(
+							b.unipack.lastModified()
 						)
 					}, added)
 
@@ -360,7 +359,7 @@ class MainActivity : BaseActivity() {
 				}
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
-						if ((item.unipack.F_project.uri == removed.unipack.F_project.uri)) {
+						if ((item.unipack == removed.unipack)) {
 							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
@@ -375,7 +374,7 @@ class MainActivity : BaseActivity() {
 				for ((to, target: UniPackItem) in I_list.withIndex()) {
 					var from = -1
 					for ((i, item) in adapter.list.withIndex())
-						if (target.unipack.F_project.uri == item.unipack.F_project.uri)
+						if (target.unipack == item.unipack)
 							from = i
 					if (from != -1 && from != to) {
 						Collections.swap(adapter.list, from, to)
@@ -397,8 +396,7 @@ class MainActivity : BaseActivity() {
 	// UniPack /////////////////////////////////////////////////////////////////////////////////////////
 
 	private fun deleteUniPack(unipack: UniPack) {
-		FileManager.deleteDirectory(unipack.F_project)
-		update()
+
 	}
 
 	@SuppressLint("StaticFieldLeak")
@@ -451,7 +449,7 @@ class MainActivity : BaseActivity() {
 		UniPackImporter(
 			context = this,
 			unipackFile = unipackFile,
-			workspace.mainWorkspace.toFile(),
+			ws.mainWorkspace.file,
 			object :
 				UniPackImporter.OnEventListener {
 				override fun onImportStart(zip: File) {
@@ -471,7 +469,7 @@ class MainActivity : BaseActivity() {
 						unipack.errorDetail == null -> {
 							alertDialog {
 								title = getString(string.importComplete)
-								message = unipack.toString(this@MainActivity)
+								message = unipack.infoToString(this@MainActivity)
 								okButton()
 							}.show()
 						}
@@ -507,7 +505,7 @@ class MainActivity : BaseActivity() {
 		try {
 			for ((i, item: UniPackItem) in unipackList.withIndex()) {
 				//val packView = item.packView
-				if (target != null && (item.unipack.F_project.uri == target.unipack.F_project.uri)) {
+				if (target != null && (item.unipack == target.unipack)) {
 
 					item.toggle = !item.toggle
 					lastPlayIndex = i
@@ -526,12 +524,10 @@ class MainActivity : BaseActivity() {
 
 	fun pressPlay(item: UniPackItem) {
 		Thread {
-			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.F_project.name!!, Date()))
+			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.id, Date()))
 		}.start()
 		start<PlayActivity> {
-
-			Log.test("path: " + item.unipack.F_project.uri.path)
-			putExtra("path", item.unipack.F_project.uri.path)
+			putExtra("path", item.unipack.getPathString())
 		}
 		ads.showAdsWithCooltime(adsPlayStart) {
 			val playStartUnitId = resources.getString(string.admob_play_start)
@@ -642,9 +638,8 @@ class MainActivity : BaseActivity() {
 					.setTitle(getString(string.warning))
 					.setMessage(getString(string.doYouWantToDeleteUniPack))
 					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
-						deleteUniPack(
-							item.unipack
-						)
+						item.unipack.delete()
+						update()
 					}.setNegativeButton(
 						getString(string.cancel),
 						null
@@ -719,10 +714,7 @@ class MainActivity : BaseActivity() {
 		if (hardWork)
 			CoroutineScope(Dispatchers.IO).launch {
 				val size = FileManager.getFolderSize(
-					DocumentFile.fromTreeUri(
-						baseContext,
-						workspace.mainWorkspace
-					)!!
+					ws.mainWorkspace.file// todo 여러 workspace의 용량 계산, WorkspaceManager로 이동하기
 				)
 
 				withContext(Dispatchers.Main) {
@@ -743,8 +735,8 @@ class MainActivity : BaseActivity() {
 			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
 			chainCount.set(unipack.chain.toString())
 			websiteExist.set(unipack.website != null)
-			path.set(item.unipack.F_project.uri.path)
-			downloadedDate.set(Date(getInnerFileLastModified(item.unipack.F_project)))
+			path.set(item.unipack.getPathString())
+			downloadedDate.set(Date(item.unipack.lastModified()))
 
 
 			soundCount.set(getString(string.measuring))
@@ -754,31 +746,31 @@ class MainActivity : BaseActivity() {
 			item.unipackENT.observeOnce(Observer {
 				bookmark.set(it.bookmark)
 			})
-			db.unipackOpenDAO()!!.getCount(item.unipack.F_project.name)
+			db.unipackOpenDAO()!!.getCount(item.unipack.id)
 				.observe(this@MainActivity, Observer {
 					playCount.set(it.toString())
 				})
-			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.F_project.name)
+			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.id)
 				.observe(this@MainActivity, Observer {
 					lastPlayed.set(it?.created_at)
 				})
 
 			CoroutineScope(Dispatchers.IO).launch {
 				val fileSizeString =
-					FileManager.byteToMB(FileManager.getFolderSize(unipack.F_project)) + " MB"
+					FileManager.byteToMB(unipack.getByteSize()) + " MB"
 				withContext(Dispatchers.Main) {
-					if ((path.get() == item.unipack.F_project.uri.path))
+					//if ((path.get() == item.unipack)) // todo 다른 방식으로 활성 판넬 인식
 						fileSize.set(fileSizeString)
 				}
 			}
 
 			CoroutineScope(Dispatchers.IO).launch {
-				item.unipack = UniPack(baseContext, item.unipack.F_project, true)
+				item.unipack.loadDetail()
 				withContext(Dispatchers.Main) {
-					if ((path.get() == item.unipack.F_project.uri.path)) {
+					//if ((path.get() == item.unipack.F_project.path)) {// todo 다른 방식으로 활성 판넬 인식
 						soundCount.set(item.unipack.soundCount.toString())
 						ledCount.set(item.unipack.ledTableCount.toString())
-					}
+					//}
 				}
 			}
 		}

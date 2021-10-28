@@ -12,6 +12,7 @@ import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,8 +29,19 @@ class UniPackDownloader(
 	folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener
-) {
+) {interface Listener {
+	fun onInstallStart()
+	fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
+	fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
+	fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
+	fun onImportStart(zip: File)
+	fun onInstallComplete(folder: File, unipack: UniPack)
+
+	fun onException(throwable: Throwable)
+}
+
 	private val unipackFile: File = FileManager.makeNextPath(workspace, folderName, ".zip")
+
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
 
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
@@ -53,16 +65,7 @@ class UniPackDownloader(
 
 	val contentResolver = context.contentResolver
 
-	interface Listener {
-		fun onInstallStart()
-		fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
-		fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
-		fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
-		fun onImportStart(zip: File)
-		fun onInstallComplete(folder: File, unipack: UniPack)
 
-		fun onException(throwable: Throwable)
-	}
 
 	init {
 		CoroutineScope(Dispatchers.IO).launch {
@@ -101,13 +104,6 @@ class UniPackDownloader(
 							val millis = System.currentTimeMillis()
 							if (millis - prevMillis > 20) {
 								val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-								Log.test(
-									"${percent}%    ${FileManager.byteToMB(downloadedSize)} / ${
-										FileManager.byteToMB(
-											fileSize
-										)
-									} MB"
-								)
 								withContext(Dispatchers.Main) {
 									onDownloadProgress(
 										percent,
@@ -137,11 +133,7 @@ class UniPackDownloader(
 						val zip = ZipFile(unipackFile)
 						zip.extractAll(folder.path)
 						FileManager.removeDoubleFolder(folder.path)
-						val unipack = UniPack(
-							context,
-							DocumentFile.fromTreeUri(context, folder.toUri())!!,
-							true
-						)
+						val unipack = UniPackFolder(folder).loadDetail()
 						if (unipack.criticalError) {
 							Log.err(unipack.errorDetail!!)
 							FileManager.deleteDirectory(folder)

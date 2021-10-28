@@ -58,7 +58,7 @@ class SplashActivity : BaseActivity() {
 				permission.READ_EXTERNAL_STORAGE,
 				permission.WRITE_EXTERNAL_STORAGE
 			)
-			.check()*/
+			.check()*\
 	}
 
 	override fun onProStatusUpdated(isPro: Boolean) {

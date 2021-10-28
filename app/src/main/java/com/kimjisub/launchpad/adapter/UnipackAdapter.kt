@@ -67,7 +67,7 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 		if (item.unipack.criticalError) {
 			item.flagColor = ContextCompat.getColor(context, color.red)
 			viewingTitle = context.getString(string.errOccur)
-			viewingSubtitle = item.unipack.F_project.uri.path!!
+			viewingSubtitle = item.unipack.getPathString()
 		} else
 			item.flagColor = ContextCompat.getColor(context, color.skyblue)
 
