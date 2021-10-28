@@ -43,9 +43,7 @@ class SplashActivity : BaseActivity() {
 
 
 		b.version.text = BuildConfig.VERSION_NAME
-
-		handler.postDelayed(runnable, 2000)
-
+		
 		TedPermission.with(this)
 			.setPermissionListener(object : PermissionListener {
 				override fun onPermissionGranted() {
