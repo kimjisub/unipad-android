@@ -48,7 +48,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.FileManager.getInnerFileLastModified
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -760,7 +759,7 @@ class MainActivity : BaseActivity() {
 					FileManager.byteToMB(unipack.getByteSize()) + " MB"
 				withContext(Dispatchers.Main) {
 					//if ((path.get() == item.unipack)) // todo 다른 방식으로 활성 판넬 인식
-						fileSize.set(fileSizeString)
+					fileSize.set(fileSizeString)
 				}
 			}
 
@@ -768,8 +767,8 @@ class MainActivity : BaseActivity() {
 				item.unipack.loadDetail()
 				withContext(Dispatchers.Main) {
 					//if ((path.get() == item.unipack.F_project.path)) {// todo 다른 방식으로 활성 판넬 인식
-						soundCount.set(item.unipack.soundCount.toString())
-						ledCount.set(item.unipack.ledTableCount.toString())
+					soundCount.set(item.unipack.soundCount.toString())
+					ledCount.set(item.unipack.ledTableCount.toString())
 					//}
 				}
 			}

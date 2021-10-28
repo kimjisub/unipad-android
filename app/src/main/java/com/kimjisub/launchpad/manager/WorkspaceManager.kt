@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
 import java.io.File
@@ -25,9 +26,18 @@ class WorkspaceManager(val activity: BaseActivity) {
 	val availableWorkspaces: Array<Workspace>
 		get() {
 			val uniPackWorkspaces = ArrayList<Workspace>()
+
+			val legacyWorkspace = File(Environment.getExternalStorageDirectory(), "Unipad")
+			FileManager.makeDirWhenNotExist(legacyWorkspace)
+			FileManager.makeNomedia(legacyWorkspace)
+			uniPackWorkspaces.add(
+				Workspace(
+					"Legacy",
+					legacyWorkspace
+				)
+			)
+
 			/*val persistedUriPermissions = context.contentResolver.persistedUriPermissions
-
-
 			persistedUriPermissions.forEachIndexed { index, uriPermission ->
 				uniPackWorkspaces.add(
 					WorkspaceUri(
@@ -117,12 +127,12 @@ class WorkspaceManager(val activity: BaseActivity) {
 		for (workspace in availableWorkspaces) {
 
 
-			Log.test("workspace (file): " + workspace.file.path)
+			Log.test("workspace: " + workspace.file.path)
 			val folder = workspace.file
 			val files = folder.listFiles()
 			files.forEach {
 				unipacks.add(it)
-				Log.test("file: " + it.path)
+				Log.test("    file: " + it.path)
 			}
 		}
 

@@ -24,7 +24,6 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AlertDialog.Builder
-import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.design.manage.SyncCheckBox
 import com.kimjisub.design.manage.SyncCheckBox.OnCheckedChange
 import com.kimjisub.design.manage.SyncCheckBox.OnLongClick

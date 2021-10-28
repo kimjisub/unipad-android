@@ -1,16 +1,11 @@
 package com.kimjisub.launchpad.unipack
 
-import android.content.Context
-import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.FileManager.byteToMB
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.tool.Log
-import com.kimjisub.launchpad.tool.Log.err
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
-import net.lingala.zip4j.ZipFile
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -26,6 +21,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 	var F_keySound: File? = null
 	var F_keyLed: File? = null
 	var F_autoPlay: File? = null
+	override val id: String
+		get() = rootFolder.path
 
 	override val infoExist
 		get() = F_info != null
@@ -52,7 +49,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 
 	override fun loadDetail(): UniPack {
 		if (!criticalError) {
-			if(!detailLoaded) {
+			if (!detailLoaded) {
 				keySound()
 				keyLed()
 				autoPlay()
@@ -92,7 +89,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		FileManager.deleteDirectory(rootFolder)
 	}
 
-	override fun getPathString() : String {
+	override fun getPathString(): String {
 		return rootFolder.path
 	}
 
@@ -476,9 +473,10 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		}
 	}
 
-	override fun getByteSize() :Long{
+	override fun getByteSize(): Long {
 		return getFolderSize(rootFolder)
 	}
+
 	fun getFolderSize(file: File): Long {
 		var totalMemory: Long = 0
 		if (file.isFile) {

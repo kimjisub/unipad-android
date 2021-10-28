@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Environment
 import androidx.core.content.edit
 import java.io.File
@@ -43,7 +42,7 @@ class PreferenceManager(
 			}
 		}
 
-//	private val workspaceTag = "Workspace"
+	//	private val workspaceTag = "Workspace"
 //	var workspace: Array<WorkspaceManager.Workspace>
 //		get() {
 //			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)

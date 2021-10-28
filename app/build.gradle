@@ -147,7 +147,6 @@ dependencies {
 	implementation "com.liulishuo.okdownload:okhttp:1.0.3"
 
 
-
 	api project(':design')
 }
 
