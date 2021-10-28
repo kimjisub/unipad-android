@@ -195,10 +195,10 @@ class SettingActivity : BaseActivity() {
 
 			storageLocationPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					val list = settingActivity.workspace.workspaces
+					val list = settingActivity.ws.availableWorkspaces
 					val listView = ListView(context)
 					val data = list
-						.map { DialogListItem(it.name, it.uri.path!!) }
+						.map { DialogListItem(it.name, it.file.path) }
 						.toTypedArray()
 
 					listView.adapter = DialogListAdapter(data)
@@ -427,7 +427,7 @@ class SettingActivity : BaseActivity() {
 		private fun setPreferenceValues() {
 			selectThemePreference.summary = p.selectedTheme
 			storageLocationPreference.summary =
-				settingActivity.workspace.mainWorkspace.path
+				settingActivity.ws.mainWorkspace.file.path
 
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력

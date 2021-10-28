@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
-import androidx.core.net.toFile
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
@@ -72,7 +71,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 			context = this,
 			title = "${unishare.title} #${unishare._id}",
 			url = "https://api.unipad.io/unishare/${unishare._id}/download",
-			workspace = workspace.mainWorkspace.toFile(),
+			workspace = ws.mainWorkspace.file,
 			folderName = "${unishare.title} #${unishare._id}",
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
@@ -119,7 +118,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("Install Success")
 
 					b.title.setText(string.success)
-					b.message.text = unipack.toString(this@ImportPackByUrlActivity)
+					b.message.text = unipack.infoToString(this@ImportPackByUrlActivity)
 
 					delayFinish()
 				}

@@ -28,7 +28,7 @@ object FileManager {
 	// ============================================================================================= Tools
 
 
-	fun sortByTime(files: Array<DocumentFile>): Array<DocumentFile> {
+	fun sortByTime(files: Array<File>): Array<File> {
 		for (i in 0 until files.size - 1) {
 			for (j in 0 until files.size - (i + 1)) {
 				if (getInnerFileLastModified(files[j]) < getInnerFileLastModified(files[j + 1])) {
@@ -52,7 +52,7 @@ object FileManager {
 		return files
 	}
 
-	fun getInnerFileLastModified(target: DocumentFile): Long {
+	fun getInnerFileLastModified(target: File): Long {
 		var time: Long = 0
 		if (target.isDirectory) for (file in target.listFiles()) {
 			if (file.isFile) {
@@ -182,12 +182,12 @@ object FileManager {
 		return String.format(format, b.toFloat() / 1024 / 1024)
 	}
 
-	fun getFolderSize(file: DocumentFile): Long {
+	fun getFolderSize(file: File): Long {
 		var totalMemory: Long = 0
 		if (file.isFile) {
 			return file.length()
 		} else if (file.isDirectory) {
-			val childFileList: Array<out DocumentFile> = file.listFiles() ?: return 0
+			val childFileList: Array<out File> = file.listFiles() ?: return 0
 			for (childFile in childFileList) totalMemory += getFolderSize(childFile)
 			return totalMemory
 		} else return 0

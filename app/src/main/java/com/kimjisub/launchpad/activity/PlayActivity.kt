@@ -42,6 +42,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
@@ -49,6 +50,7 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import splitties.activities.start
 import splitties.toast.toast
+import java.io.File
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
@@ -172,7 +174,7 @@ class PlayActivity : BaseActivity() {
 
 		try {
 			unipack =
-				UniPack(baseContext, DocumentFile.fromTreeUri(baseContext, Uri.parse(path))!!, true)
+				UniPackFolder(File(path)).load().loadDetail()
 			if (unipack!!.errorDetail != null) {
 				Builder(this@PlayActivity)
 					.setTitle(
