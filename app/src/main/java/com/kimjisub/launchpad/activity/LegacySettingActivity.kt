@@ -29,7 +29,7 @@ import splitties.activities.start
 import splitties.toast.toast
 import java.util.*
 
-class SettingActivity : BaseActivity() {
+class LegacySettingActivity : BaseActivity() {
 	private lateinit var b: ActivitySettingBinding
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +47,7 @@ class SettingActivity : BaseActivity() {
 	}
 
 	class SettingsFragment : PreferenceFragmentCompat(), BillingModule.Callback {
-		private lateinit var settingActivity: SettingActivity
+		private lateinit var legacySettingActivity: LegacySettingActivity
 		private lateinit var p: PreferenceManager
 		private lateinit var bm: BillingModule
 
@@ -100,8 +100,8 @@ class SettingActivity : BaseActivity() {
 
 		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 			addPreferencesFromResource(R.xml.setting)
-			settingActivity = activity as SettingActivity
-			p = settingActivity.p
+			legacySettingActivity = activity as LegacySettingActivity
+			p = legacySettingActivity.p
 
 			bm = BillingModule(requireActivity(), lifecycleScope, this)
 			bm.load()
@@ -195,7 +195,7 @@ class SettingActivity : BaseActivity() {
 
 			storageLocationPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener {
-					val list = settingActivity.ws.availableWorkspaces
+					val list = legacySettingActivity.ws.availableWorkspaces
 					val listView = ListView(context)
 					val data = list
 						.map { DialogListItem(it.name, it.file.path) }
@@ -427,7 +427,7 @@ class SettingActivity : BaseActivity() {
 		private fun setPreferenceValues() {
 			selectThemePreference.summary = p.selectedTheme
 			storageLocationPreference.summary =
-				settingActivity.ws.mainWorkspace.file.path
+				legacySettingActivity.ws.mainWorkspace.file.path
 
 			val systemLocale: Locale = activity?.application?.resources?.configuration?.locale!!
 			val displayCountry: String = systemLocale.displayCountry //국가출력

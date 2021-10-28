@@ -324,7 +324,7 @@ class PlayActivity : BaseActivity() {
 			// Setting
 			b.CB2Purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
 				compoundButton!!.isChecked = false
-				start<SettingActivity>()
+				start<LegacySettingActivity>()
 			}
 			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(bool: Boolean) {
