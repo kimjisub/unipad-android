@@ -13,7 +13,7 @@ abstract class UniPack {
 	var errorDetail: String? = null
 	var criticalError = false
 
-	var id: String = ""
+	abstract val id: String
 
 
 	var title: String = ""
@@ -55,10 +55,10 @@ abstract class UniPack {
 	init {
 	}
 
-	var loaded : Boolean = false
+	var loaded: Boolean = false
 	fun load(): UniPack {
-		if(!loaded)
-		checkFile()
+		if (!loaded)
+			checkFile()
 		loadInfo()
 		loaded = true
 
@@ -180,11 +180,11 @@ abstract class UniPack {
 		if (other !is UniPack)
 			return false
 		val otherUniPack = other as UniPack
-		return toString() == otherUniPack.toString()
+		return id == otherUniPack.id
 	}
 
 	override fun toString(): String {
-		return "UniPack()"
+		return "UniPack(id=$id)"
 	}
 
 

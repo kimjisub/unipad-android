@@ -1,11 +1,15 @@
 package com.kimjisub.launchpad.activity
 
+import android.Manifest.permission
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.TedPermission
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivitySplashBinding
 import splitties.activities.start
 
@@ -42,7 +46,7 @@ class SplashActivity : BaseActivity() {
 
 		handler.postDelayed(runnable, 2000)
 
-		/*TedPermission.with(this)
+		TedPermission.with(this)
 			.setPermissionListener(object : PermissionListener {
 				override fun onPermissionGranted() {
 					handler.postDelayed(runnable, 2000)
@@ -58,7 +62,7 @@ class SplashActivity : BaseActivity() {
 				permission.READ_EXTERNAL_STORAGE,
 				permission.WRITE_EXTERNAL_STORAGE
 			)
-			.check()*\
+			.check()
 	}
 
 	override fun onProStatusUpdated(isPro: Boolean) {

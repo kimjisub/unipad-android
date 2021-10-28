@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
@@ -29,16 +28,17 @@ class UniPackDownloader(
 	folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener
-) {interface Listener {
-	fun onInstallStart()
-	fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
-	fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
-	fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
-	fun onImportStart(zip: File)
-	fun onInstallComplete(folder: File, unipack: UniPack)
+) {
+	interface Listener {
+		fun onInstallStart()
+		fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
+		fun onDownloadProgress(percent: Int, downloadedSize: Long, fileSize: Long)
+		fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long)
+		fun onImportStart(zip: File)
+		fun onInstallComplete(folder: File, unipack: UniPack)
 
-	fun onException(throwable: Throwable)
-}
+		fun onException(throwable: Throwable)
+	}
 
 	private val unipackFile: File = FileManager.makeNextPath(workspace, folderName, ".zip")
 
@@ -64,7 +64,6 @@ class UniPackDownloader(
 	}
 
 	val contentResolver = context.contentResolver
-
 
 
 	init {
