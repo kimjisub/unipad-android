@@ -179,13 +179,10 @@ abstract class UniPack {
 	override fun equals(other: Any?): Boolean {
 		if (other !is UniPack)
 			return false
-		val otherUniPack = other as UniPack
-		return id == otherUniPack.id
+		return id == other.id
 	}
 
 	override fun toString(): String {
 		return "UniPack(id=$id)"
 	}
-
-
 }
