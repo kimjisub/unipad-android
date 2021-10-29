@@ -11,11 +11,8 @@
 		<item name="android:windowBackground">@color/background1</item>
 	</style>
 
-	<style name="SettingTheme" parent="Theme.AppCompat.NoActionBar">
-		<item name="android:windowBackground">@color/background1</item>
-		<item name="android:textColor">@color/white</item>
-		<!--<item name="android:textColorPrimary">@color/white</item>
-		<item name="android:textColorSecondary">@color/white</item>-->
+	<style name="SettingTheme" parent="AppTheme">
+		<item name="android:windowBackground">@color/white</item>
 	</style>
 
 	<style name="PopupTheme" parent="AppTheme">
