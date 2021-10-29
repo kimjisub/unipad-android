@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="horizontal">
+
+	<!--<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_weight="2">
+
+		<ListView
+			android:layout_width="match_parent"
+			android:layout_height="match_parent" >
+
+
+		</ListView>
+
+	</ScrollView>-->
+
+	<FrameLayout
+		android:id="@+id/category"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_weight="2" />
+
+	<FrameLayout
+		android:id="@+id/settings"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_weight="1" />
+</LinearLayout>
