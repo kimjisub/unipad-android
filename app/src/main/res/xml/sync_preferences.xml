@@ -1,0 +1,13 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<SwitchPreferenceCompat
+		app:key="sync"
+		app:title="@string/storage_location" />
+
+	<SwitchPreferenceCompat
+		app:dependency="sync"
+		app:key="attachment"
+		app:summary="@string/storage_location"
+		app:title="@string/storage_location" />
+
+</PreferenceScreen>

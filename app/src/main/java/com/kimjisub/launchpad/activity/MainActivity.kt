@@ -36,6 +36,7 @@ import com.kimjisub.design.panel.MainPackPanel
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.activity.settings.SettingsActivity
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.UniPackAdapter
@@ -235,7 +236,11 @@ class MainActivity : BaseActivity() {
 			startActivityForResult(intent, REQUEST_FB_STORE)
 		}
 		b.store.setOnLongClickListener { false }
-		b.setting.setOnClickListener { start<SettingLegacyActivity>() }
+		b.setting.setOnClickListener { start<SettingsActivity>() }
+		b.setting.setOnLongClickListener {
+			start<SettingLegacyActivity>()
+			false
+		}
 		b.floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
 			var runnable: Runnable = Runnable { b.floatingMenu.close(true) }
