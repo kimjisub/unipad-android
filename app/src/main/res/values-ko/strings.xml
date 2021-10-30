@@ -150,8 +150,10 @@
 	<string name="settings_theme">테마</string>
 	<string name="settings_ads_payment">광고 및 결제</string>
 	<string name="unipad">UniPad</string>
-	<string name="settings_app_info">앱 정보</string>
 	<string name="settings_storage_active">사용하는 저장소</string>
 	<string name="settings_storage_download">다운로드 저장소</string>
+	<string name="settings_developer">개발자</string>
+	<string name="settings_app">애플리케이션</string>
+	<string name="settings_user">사용자</string>
 
 </resources>
