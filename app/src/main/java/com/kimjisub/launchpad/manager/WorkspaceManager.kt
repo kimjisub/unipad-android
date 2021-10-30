@@ -111,41 +111,14 @@ class WorkspaceManager(val context: Context) {
 
 		}*/
 
-	fun setActiveWorkspace() {
-
-	}
-
-	/*val unipacks: Array<File>
-		get() {
-			val unipacks = ArrayList<File>()
-
-			for (workspace in workspaces) {
-
-				Log.test("workspace: " + workspace.file.path)
-				try {
-					unipacks.addAll(workspace.file.listFiles()!!)
-					Log.test("files: " + workspace.file.path)
-				} catch (e: Exception) {
-					e.printStackTrace()
-				}
-			}
-
-
-			return unipacks.toArray() as Array<File>
-		}*/
-
 	fun getUnipacks(): Array<File> {
 		val unipacks = mutableListOf<File>()
 
 		for (workspace in activeWorkspaces) {
-
-
-			Log.test("workspace: " + workspace.file.path)
 			val folder = workspace.file
 			val files = folder.listFiles()
 			files?.forEach {
 				unipacks.add(it)
-				Log.test("    file: " + it.path)
 			}
 		}
 

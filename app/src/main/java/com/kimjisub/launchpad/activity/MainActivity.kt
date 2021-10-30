@@ -363,7 +363,6 @@ class MainActivity : BaseActivity() {
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack == removed.unipack)) {
-							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)

@@ -31,7 +31,6 @@ class StoreAdapter(
 ) : Adapter<StoreHolder>() {
 	private var viewHolderCount = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoreHolder {
-		Log.test("onCreateViewHolder: " + viewHolderCount++)
 		val packView = PackView(parent.context)
 		val lp =
 			LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -40,7 +39,6 @@ class StoreAdapter(
 	}
 
 	override fun onBindViewHolder(holder: StoreHolder, position: Int) {
-		Log.test("onBindViewHolder: $position")
 		val item = list[holder.adapterPosition]
 		val packView = holder.packView
 
@@ -94,14 +92,12 @@ class StoreAdapter(
 			super.onBindViewHolder(holder, position, payloads)
 			return
 		}
-		Log.test("onBindViewHolder payloads: $position")
 		val item = list[holder.adapterPosition]
 		val packView = holder.packView
 		for (payload in payloads) {
 			if (payload is String) {
 				when (payload) {
 					"update" -> {
-						Log.test("update")
 						packView.apply {
 							toggleColor = ContextCompat.getColor(
 								context,

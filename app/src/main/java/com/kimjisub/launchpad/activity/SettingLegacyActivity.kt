@@ -86,7 +86,7 @@ class SettingLegacyActivity : BaseActivity() {
 							// Check for the freshest data.
 							contentResolver.takePersistableUriPermission(uri, takeFlags)
 							for (persistedUriPermission in contentResolver.persistedUriPermissions) {
-								Log.test(persistedUriPermission.uri.path + " " + persistedUriPermission.persistedTime)
+								// Log.test(persistedUriPermission.uri.path + " " + persistedUriPermission.persistedTime)
 							}
 
 

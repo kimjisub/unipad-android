@@ -49,7 +49,6 @@ class StorageFragment : PreferenceFragmentCompat() {
 	}
 
 	private fun updateStorage() {
-		Log.test("storageActive: ${p.storageActive}")
 		storageListPreferenceCategory.children.forEach {
 			(it as CheckBoxPreference).apply {
 				isChecked = p.storageActive.contains(it.summary)
