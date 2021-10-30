@@ -33,8 +33,8 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.databinding.ActivityPlayBinding
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
-import com.kimjisub.launchpad.manager.Functions.putClipboard
 import com.kimjisub.launchpad.manager.ThemeResources
+import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -372,7 +372,7 @@ class PlayActivity : BaseActivity() {
 						rec_prevEventMS = java.lang.System.currentTimeMillis()
 						rec_log = "c " + (chain.value + 1)
 					} else {
-						putClipboard(this@PlayActivity, rec_log!!)
+						putClipboard(rec_log!!)
 						toast(string.copied)
 						rec_log = ""
 					}

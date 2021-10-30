@@ -6,19 +6,14 @@
 
 		<Preference
 			app:iconSpaceReserved="false"
-			app:key="copyright"
+			app:key="app"
 			app:summary="@string/copyright"
 			app:title="@string/unipad" />
 
 		<Preference
 			app:iconSpaceReserved="false"
-			app:key="oss_licence"
-			app:title="@string/openSourceLicense" />
-
-		<Preference
-			app:iconSpaceReserved="false"
 			app:key="language"
-			app:summary="@string/languageCode"
+			app:summary="@string/translated_by"
 			app:title="@string/language" />
 	</PreferenceCategory>
 	<PreferenceCategory
@@ -34,10 +29,14 @@
 	<PreferenceCategory
 		app:iconSpaceReserved="false"
 		app:title="@string/settings_developer">
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="oss_licence"
+			app:title="@string/openSourceLicense" />
 
 		<Preference
 			app:iconSpaceReserved="false"
-			app:key="fcmToken"
+			app:key="fcm_token"
 			app:title="@string/FCMToken" />
 	</PreferenceCategory>
 
