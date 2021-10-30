@@ -2,14 +2,10 @@ package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.CheckBoxPreference
-import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.kimjisub.launchpad.R.xml
-import com.kimjisub.launchpad.activity.settings.HeaderFragment
+import com.kimjisub.launchpad.fragment.HeaderFragment
 import com.kimjisub.launchpad.databinding.ActivitySettingsBinding
-import com.kimjisub.launchpad.manager.WorkspaceManager
 
 class SettingsActivity : AppCompatActivity(),
 	PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
