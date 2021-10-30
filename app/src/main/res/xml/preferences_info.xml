@@ -1,0 +1,33 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<PreferenceCategory
+		app:iconSpaceReserved="false"
+		app:title="@string/settings_app_info">
+
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="copyright"
+			app:summary="@string/copyright"
+			app:title="@string/unipad" />
+
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="openSourceLicense"
+			app:title="@string/openSourceLicense" />
+
+	</PreferenceCategory>
+	<Preference
+		app:iconSpaceReserved="false"
+		app:key="community"
+		app:title="@string/community" />
+	<Preference
+		app:iconSpaceReserved="false"
+		app:key="fcmToken"
+		app:title="@string/FCMToken" />
+	<Preference
+		app:iconSpaceReserved="false"
+		app:key="language"
+		app:summary="@string/languageCode"
+		app:title="@string/language" />
+
+</PreferenceScreen>
