@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.activity.settings
+package com.kimjisub.launchpad.fragment
 
 import android.os.Bundle
 import androidx.preference.CheckBoxPreference
@@ -8,7 +8,6 @@ import androidx.preference.children
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
-import com.kimjisub.launchpad.tool.Log
 
 class StorageFragment : PreferenceFragmentCompat() {
 	private val p by lazy { PreferenceManager(requireContext()) }

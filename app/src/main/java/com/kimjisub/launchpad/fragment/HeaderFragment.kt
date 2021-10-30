@@ -1,11 +1,11 @@
-package com.kimjisub.launchpad.activity.settings
+package com.kimjisub.launchpad.fragment
 
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import com.kimjisub.launchpad.R
 
-class ThemeFragment : PreferenceFragmentCompat() {
+class HeaderFragment : PreferenceFragmentCompat() {
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-		setPreferencesFromResource(R.xml.preferences_theme, rootKey)
+		setPreferencesFromResource(R.xml.preferences_header, rootKey)
 	}
 }
