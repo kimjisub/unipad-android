@@ -65,9 +65,6 @@ class MainPackPanel
 			b.btnDelete.setOnClickListener { v: View ->
 				onEventListener?.onDeleteClick(v)
 			}
-			b.path.setOnClickListener { v: View ->
-				onEventListener?.onPathClick(v)
-			}
 
 			typedArray.recycle()
 		}
@@ -85,7 +82,6 @@ class MainPackPanel
 		fun onWebsiteClick(v: View)
 		fun onFuncClick(v: View)
 		fun onDeleteClick(v: View)
-		fun onPathClick(v: View)
 	}
 }
 
