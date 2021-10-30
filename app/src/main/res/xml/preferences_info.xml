@@ -2,7 +2,7 @@
 
 	<PreferenceCategory
 		app:iconSpaceReserved="false"
-		app:title="@string/settings_app_info">
+		app:title="@string/settings_app">
 
 		<Preference
 			app:iconSpaceReserved="false"
@@ -15,19 +15,30 @@
 			app:key="openSourceLicense"
 			app:title="@string/openSourceLicense" />
 
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="language"
+			app:summary="@string/languageCode"
+			app:title="@string/language" />
 	</PreferenceCategory>
-	<Preference
+	<PreferenceCategory
 		app:iconSpaceReserved="false"
-		app:key="community"
-		app:title="@string/community" />
-	<Preference
+		app:title="@string/settings_user">
+
+
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="community"
+			app:title="@string/community" />
+	</PreferenceCategory>
+	<PreferenceCategory
 		app:iconSpaceReserved="false"
-		app:key="fcmToken"
-		app:title="@string/FCMToken" />
-	<Preference
-		app:iconSpaceReserved="false"
-		app:key="language"
-		app:summary="@string/languageCode"
-		app:title="@string/language" />
+		app:title="@string/settings_developer">
+
+		<Preference
+			app:iconSpaceReserved="false"
+			app:key="fcmToken"
+			app:title="@string/FCMToken" />
+	</PreferenceCategory>
 
 </PreferenceScreen>
