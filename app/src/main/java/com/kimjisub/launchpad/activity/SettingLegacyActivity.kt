@@ -19,10 +19,10 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.databinding.ActivitySettingLegacyBinding
-import com.kimjisub.launchpad.manager.Functions
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
+import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
 import splitties.activities.start
@@ -249,14 +249,14 @@ class SettingLegacyActivity : BaseActivity() {
 						val subtitle: String,
 						val iconResId: Int,
 						val url: String,
-						val action: String
+						val action: String,
 					) {
 						constructor(
 							title: Int,
 							subtitle: Int,
 							iconResId: Int,
 							url: String,
-							action: String
+							action: String,
 						) : this(getString(title), getString(subtitle), iconResId, url, action)
 
 						fun toListItem() = DialogListItem(title, subtitle, iconResId)
@@ -348,17 +348,17 @@ class SettingLegacyActivity : BaseActivity() {
 					class Item(
 						val title: String,
 						val subtitle: String,
-						val url: String
+						val url: String,
 					) {
 						constructor(
 							title: Int,
-							purchaseId: String
+							purchaseId: String,
 						) : this(getString(title), purchaseId, purchaseId)
 
 						constructor(
 							title: Int,
 							subtitle: Int,
-							url: String
+							url: String,
 						) : this(getString(title), getString(subtitle), url)
 
 						fun toListItem() = DialogListItem(title, subtitle)
@@ -413,8 +413,7 @@ class SettingLegacyActivity : BaseActivity() {
 			fcmTokenPreference.onPreferenceClickListener =
 				Preference.OnPreferenceClickListener { preference: Preference? ->
 					try {
-						Functions.putClipboard(
-							requireContext(),
+						putClipboard(
 							FirebaseMessaging.getInstance().token.result
 						)
 						context?.toast(R.string.copied)
@@ -441,7 +440,7 @@ class SettingLegacyActivity : BaseActivity() {
 			languagePreference.summary =
 				"$displayCountry ($country) - $language"
 			copyrightPreference.summary =
-				String.format(getString(R.string.translatedBy), getString(R.string.translator))
+				getString(R.string.translated_by)
 		}
 
 		private fun removeIconSpace(preference: Preference?) {
