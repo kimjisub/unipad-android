@@ -1,0 +1,27 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<Preference
+		app:fragment="com.kimjisub.launchpad.activity.SettingsActivity$InfoFragment"
+		app:icon="@drawable/ic_chain_24dp"
+		app:key="messages_header"
+		app:title="@string/settings_info" />
+
+	<Preference
+		app:fragment="com.kimjisub.launchpad.activity.SettingsActivity$AdsPaymentFragment"
+		app:icon="@drawable/ic_chain_24dp"
+		app:key="sync_header"
+		app:title="@string/settings_ads_payment" />
+
+	<Preference
+		app:fragment="com.kimjisub.launchpad.activity.SettingsActivity$StorageFragment"
+		app:icon="@drawable/ic_chain_24dp"
+		app:key="sync_header"
+		app:title="@string/settings_storage" />
+
+	<Preference
+		app:fragment="com.kimjisub.launchpad.activity.SettingsActivity$ThemeFragment"
+		app:icon="@drawable/ic_chain_24dp"
+		app:key="sync_header"
+		app:title="@string/settings_theme" />
+
+</PreferenceScreen>

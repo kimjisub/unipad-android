@@ -10,19 +10,19 @@
 		android:glEsVersion="0x00020000"
 		android:required="true" />
 
-
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<!--<uses-permission android:name="android.permission.STORAGE" />
+	<!--
+<uses-permission android:name="android.permission.STORAGE" />
 	<uses-permission android:name="android.permission.PERMISSIONS_STORAGE" />
-	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE" />-->
+	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE" />
+    -->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="com.android.vending.BILLING" />
 
 	<application
-
 		android:name=".BaseApplication"
 		android:allowBackup="true"
 		android:fullBackupContent="true"
@@ -36,8 +36,6 @@
 		android:usesCleartextTraffic="true"
 		tools:replace="android:label">
 		<!-- Todo network cleartext traffic -->
-
-
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_icon"
 			android:resource="@mipmap/ic_launcher" />
@@ -84,6 +82,12 @@
 			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
+			tools:ignore="LockedOrientationActivity" />
+		<activity
+			android:name=".activity.SettingsActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:screenOrientation="sensorLandscape"
+			android:theme="@style/SettingTheme"
 			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.SettingLegacyActivity"

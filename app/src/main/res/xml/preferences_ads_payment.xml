@@ -1,0 +1,14 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<CheckBoxPreference
+		app:iconSpaceReserved="false"
+		app:key="pro"
+		app:summary="@string/plan_pro_"
+		app:title="@string/plan_pro" />
+	<Preference
+		app:iconSpaceReserved="false"
+		app:key="restoreBilling"
+		app:summary="@string/plan_restorePurchases_"
+		app:title="@string/plan_restorePurchases" />
+
+</PreferenceScreen>
