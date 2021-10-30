@@ -151,5 +151,7 @@
 	<string name="settings_ads_payment">광고 및 결제</string>
 	<string name="unipad">UniPad</string>
 	<string name="settings_app_info">앱 정보</string>
+	<string name="settings_storage_active">사용하는 저장소</string>
+	<string name="settings_storage_download">다운로드 저장소</string>
 
 </resources>

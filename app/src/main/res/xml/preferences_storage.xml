@@ -1,12 +1,10 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<Preference
+	<PreferenceCategory
 		app:iconSpaceReserved="false"
-		app:key="storageLocation"
-		app:title="@string/storage_location" />
-	<Preference
-		app:iconSpaceReserved="false"
-		app:key="storageLocationTest"
-		app:title="@string/storage_location" />
+		app:key="storage_list"
+		app:title="@string/settings_storage">
+
+	</PreferenceCategory>
 
 </PreferenceScreen>
