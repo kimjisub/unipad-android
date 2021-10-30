@@ -3,12 +3,10 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
 import java.io.File
 
-class WorkspaceManager(val activity: BaseActivity) {
-	val context: Context = activity.baseContext
+class WorkspaceManager(val context: Context) {
 	val p by lazy { PreferenceManager(context) }
 
 
@@ -28,14 +26,16 @@ class WorkspaceManager(val activity: BaseActivity) {
 			val uniPackWorkspaces = ArrayList<Workspace>()
 
 			val legacyWorkspace = File(Environment.getExternalStorageDirectory(), "Unipad")
-			FileManager.makeDirWhenNotExist(legacyWorkspace)
-			FileManager.makeNomedia(legacyWorkspace)
-			uniPackWorkspaces.add(
-				Workspace(
-					"Legacy",
-					legacyWorkspace
+			if(legacyWorkspace.canWrite()) {
+				FileManager.makeDirWhenNotExist(legacyWorkspace)
+				FileManager.makeNomedia(legacyWorkspace)
+				uniPackWorkspaces.add(
+					Workspace(
+						"Legacy",
+						legacyWorkspace
+					)
 				)
-			)
+			}
 
 			/*val persistedUriPermissions = context.contentResolver.persistedUriPermissions
 			persistedUriPermissions.forEachIndexed { index, uriPermission ->
@@ -71,11 +71,24 @@ class WorkspaceManager(val activity: BaseActivity) {
 			return uniPackWorkspaces.toTypedArray()
 		}
 
+	val activeWorkspaces: Array<Workspace>
+		get() {
+			validateWorkspace()
+
+			return availableWorkspaces.filter { p.storageActive.contains(it.file.path) }.toTypedArray()
+		}
+
+	fun validateWorkspace(){
+		// 활성화된 작업공간이 없다면 사용가능한 작업공간 중 첫번째 활성화
+		if(p.storageActive.isEmpty())
+			p.storageActive = setOf(availableWorkspaces[0].file.path)
+	}
+
 
 	// 다운로드 시 저장되는 Workspace
 	val mainWorkspace: Workspace
 		get() {
-			return availableWorkspaces[0]
+			return activeWorkspaces[0]
 		}
 
 	fun setMainWorkspace(uri: Uri) {
@@ -124,13 +137,13 @@ class WorkspaceManager(val activity: BaseActivity) {
 	fun getUnipacks(): Array<File> {
 		val unipacks = mutableListOf<File>()
 
-		for (workspace in availableWorkspaces) {
+		for (workspace in activeWorkspaces) {
 
 
 			Log.test("workspace: " + workspace.file.path)
 			val folder = workspace.file
 			val files = folder.listFiles()
-			files.forEach {
+			files?.forEach {
 				unipacks.add(it)
 				Log.test("    file: " + it.path)
 			}

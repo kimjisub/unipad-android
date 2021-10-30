@@ -2,10 +2,14 @@ package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.CheckBoxPreference
+import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.kimjisub.launchpad.R.xml
+import com.kimjisub.launchpad.activity.settings.HeaderFragment
 import com.kimjisub.launchpad.databinding.ActivitySettingsBinding
+import com.kimjisub.launchpad.manager.WorkspaceManager
 
 class SettingsActivity : AppCompatActivity(),
 	PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -52,33 +56,11 @@ class SettingsActivity : AppCompatActivity(),
 		return true
 	}
 
-	class HeaderFragment : PreferenceFragmentCompat() {
-		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-			setPreferencesFromResource(xml.preferences_header, rootKey)
-		}
-	}
 
-	class InfoFragment : PreferenceFragmentCompat() {
-		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-			setPreferencesFromResource(xml.preferences_info, rootKey)
-		}
-	}
 
-	class AdsPaymentFragment : PreferenceFragmentCompat() {
-		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-			setPreferencesFromResource(xml.preferences_ads_payment, rootKey)
-		}
-	}
 
-	class StorageFragment : PreferenceFragmentCompat() {
-		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-			setPreferencesFromResource(xml.preferences_storage, rootKey)
-		}
-	}
 
-	class ThemeFragment : PreferenceFragmentCompat() {
-		override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-			setPreferencesFromResource(xml.preferences_theme, rootKey)
-		}
-	}
+
+
+
 }

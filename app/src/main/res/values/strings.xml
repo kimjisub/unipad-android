@@ -151,5 +151,7 @@
 	<string name="settings_ads_payment">Ads and Payment</string>
 	<string name="unipad">UniPad</string>
 	<string name="settings_app_info">Application Information</string>
+	<string name="settings_storage_active">Active Storage</string>
+	<string name="settings_storage_download">Download Storage</string>
 
 </resources>
