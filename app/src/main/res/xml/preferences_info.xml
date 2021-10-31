@@ -20,11 +20,11 @@
 		app:iconSpaceReserved="false"
 		app:title="@string/settings_user">
 
-
 		<Preference
 			app:iconSpaceReserved="false"
 			app:key="community"
 			app:title="@string/community" />
+
 	</PreferenceCategory>
 	<PreferenceCategory
 		app:iconSpaceReserved="false"

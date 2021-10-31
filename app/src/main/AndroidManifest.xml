@@ -83,12 +83,7 @@
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="LockedOrientationActivity" />
-		<activity
-			android:name=".activity.SettingsActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"
-			android:theme="@style/SettingTheme"
-			tools:ignore="LockedOrientationActivity" />
+
 		<activity
 			android:name=".activity.SettingLegacyActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
@@ -147,12 +142,19 @@
 					android:scheme="unipad" />
 			</intent-filter>
 		</activity>
+
+		<activity
+			android:name=".activity.SettingsActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:screenOrientation="sensorLandscape"
+			android:theme="@style/SettingTheme"
+			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-			android:theme="@style/AppTheme" />
+			android:theme="@style/SettingTheme" />
 		<activity
 			android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-			android:theme="@style/AppTheme" />
+			android:theme="@style/SettingTheme" />
 
 		<service
 			android:name=".service.MyFirebaseMessagingService"
