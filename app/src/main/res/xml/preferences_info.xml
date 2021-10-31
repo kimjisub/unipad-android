@@ -8,7 +8,7 @@
 			app:iconSpaceReserved="false"
 			app:key="app"
 			app:summary="@string/copyright"
-			app:title="@string/unipad" />
+			app:title="@string/app_name" />
 
 		<Preference
 			app:iconSpaceReserved="false"
