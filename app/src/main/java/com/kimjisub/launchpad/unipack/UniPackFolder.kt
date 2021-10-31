@@ -53,6 +53,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 				keySound()
 				keyLed()
 				autoPlay()
+				detailLoaded = true
 			}
 		}
 
