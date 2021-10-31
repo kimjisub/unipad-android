@@ -8,18 +8,18 @@ import androidx.core.content.edit
 import java.io.File
 
 class PreferenceManager(
-	val context: Context
+	val context: Context,
 ) {
 	private val name = "data"
+	private val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 
 	private val launchpadConnectMethodTag = "LaunchpadConnectMethod"
 	var launchpadConnectMethod: Int
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getInt(launchpadConnectMethodTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putInt(launchpadConnectMethodTag, value)
 			}
 		}
@@ -27,7 +27,6 @@ class PreferenceManager(
 	private val fileExplorerPathTag = "FileExplorerPath"
 	var fileExplorerPath: String
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			var url: String = pref.getString(
 				fileExplorerPathTag,
 				"${System.getenv("SECONDARY_STORAGE")}/Download"
@@ -37,31 +36,29 @@ class PreferenceManager(
 			return url
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putString(fileExplorerPathTag, value)
 			}
 		}
 
-	//	private val workspaceTag = "Workspace"
-//	var workspace: Array<WorkspaceManager.Workspace>
-//		get() {
-//			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
-//			val joinedString = pref.getString(workspaceTag, "") ?: ""
-//			return
-//		}
-//		set(value) {
-//			context.getSharedPreferences(name, MODE_PRIVATE).edit {
-//				putString(workspaceTag, value.joinToString { "${it.path}" })
-//			}
-//		}
+	private val storageActiveTag = "storage_active"
+	var storageActive: Set<String>
+		get() {
+			return pref.getStringSet(storageActiveTag, setOf()) ?: setOf()
+		}
+		set(value) {
+			pref.edit {
+				putStringSet(storageActiveTag, value)
+			}
+		}
+
 	private val mainStorageTag = "MainStorage"
 	var mainStorage: String
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getString(mainStorageTag, "") ?: ""
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putString(mainStorageTag, value)
 			}
 		}
@@ -69,11 +66,10 @@ class PreferenceManager(
 	private val prevAdsShowTimeTag = "PrevAdsShowTime"
 	var prevAdsShowTime: Long
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getLong(prevAdsShowTimeTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putLong(prevAdsShowTimeTag, value)
 			}
 		}
@@ -81,12 +77,11 @@ class PreferenceManager(
 	private val selectedThemeTag = "SelectedTheme"
 	var selectedTheme: String
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getString(selectedThemeTag, "com.kimjisub.launchpad")
 				?: "com.kimjisub.launchpad"
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putString(selectedThemeTag, value)
 			}
 		}
@@ -94,11 +89,10 @@ class PreferenceManager(
 	private val prevStoreCountTag = "PrevStoreCount"
 	var prevStoreCount: Long
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getLong(prevStoreCountTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putLong(prevStoreCountTag, value)
 			}
 		}
@@ -106,11 +100,10 @@ class PreferenceManager(
 	private val sortMethodTag = "SortMethod"
 	var sortMethod: Int
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getInt(sortMethodTag, 4)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putInt(sortMethodTag, value)
 			}
 		}
@@ -118,11 +111,10 @@ class PreferenceManager(
 	private val sortTypeTag = "SortType"
 	var sortType: Boolean
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getBoolean(sortTypeTag, true)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putBoolean(sortTypeTag, value)
 			}
 		}
@@ -130,11 +122,10 @@ class PreferenceManager(
 	private val downloadCouponCountTag = "DownloadCouponCount"
 	var downloadCouponCount: Int
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getInt(downloadCouponCountTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putInt(downloadCouponCountTag, value)
 			}
 		}
@@ -142,11 +133,10 @@ class PreferenceManager(
 	private val playCouponCountTag = "PlayCouponCount"
 	var playCouponCount: Int
 		get() {
-			val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
 			return pref.getInt(playCouponCountTag, 0)
 		}
 		set(value) {
-			context.getSharedPreferences(name, MODE_PRIVATE).edit {
+			pref.edit {
 				putInt(playCouponCountTag, value)
 			}
 		}

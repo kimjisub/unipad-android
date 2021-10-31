@@ -53,6 +53,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 				keySound()
 				keyLed()
 				autoPlay()
+				detailLoaded = true
 			}
 		}
 
@@ -66,7 +67,6 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 
 
 	override fun checkFile() {
-		Log.test(rootFolder.path)
 		rootFolder.listFiles().forEach {
 			when (it.name.lowercase()) {
 				"info" -> F_info = if (it.isFile) it else null

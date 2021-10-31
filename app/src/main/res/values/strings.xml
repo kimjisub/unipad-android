@@ -1,8 +1,7 @@
 <resources>
 	<string name="languageCode">en</string>
 	<string name="language">English</string>
-	<string name="translator">Kimjisub</string>
-	<string name="translatedBy">Translated by %1$s</string>
+	<string name="translated_by">Translated by Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
 	<string name="app_name_test">UniPad Test</string>
@@ -63,7 +62,7 @@
 	<string name="purchaseComplete">Purchase Complete</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2021. (UniPad) All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Community</string>
@@ -145,5 +144,15 @@
 	<string name="theme_name">Default Theme</string>
 	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Informations</string>
+	<string name="settings_storage">Storage</string>
+	<string name="settings_theme">Theme</string>
+	<string name="settings_ads_payment">Ads and Payment</string>
+	<string name="settings_storage_active">Active Storage</string>
+	<string name="settings_storage_download">Download Storage</string>
+	<string name="settings_developer">Developer</string>
+	<string name="settings_app">Application</string>
+	<string name="settings_user">User</string>
+	<string name="settings_payment">Payment</string>
 
 </resources>

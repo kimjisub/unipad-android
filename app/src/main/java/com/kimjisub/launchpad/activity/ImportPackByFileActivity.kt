@@ -6,8 +6,6 @@ import com.kimjisub.launchpad.tool.Log
 class ImportPackByFileActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-
-		Log.test("intent?.data?.path!!: " + intent?.data?.path!!)
 // Todo
 //		UniPackImporter(
 //			context = this,
