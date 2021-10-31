@@ -37,6 +37,8 @@ android {
 	buildTypes {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
+			signingConfig signingConfigs.release
+			debuggable true // todo make false
 
 			minifyEnabled true
 			proguardFile getDefaultProguardFile('proguard-android.txt')
@@ -46,15 +48,15 @@ android {
 			proguardFile 'proguard-firebase.pro'
 			proguardFile 'proguard-okhttp3.pro'
 			proguardFile 'proguard-retrofit2.pro'
-			signingConfig signingConfigs.release
 		}
 		debug {
 			manifestPlaceholders = [appName: "@string/app_name_test"]
 			applicationIdSuffix ".dev"
+			signingConfig signingConfigs.debug
+			debuggable true
 
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-			signingConfig signingConfigs.debug
 		}
 	}
 	buildFeatures {

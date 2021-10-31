@@ -4,11 +4,12 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.kimjisub.launchpad.fragment.HeaderFragment
 import com.kimjisub.launchpad.databinding.ActivitySettingsBinding
+import com.kimjisub.launchpad.fragment.*
+import com.kimjisub.launchpad.fragment.HeaderFragment.Companion.Category
+import com.kimjisub.launchpad.tool.Log
 
-class SettingsActivity : AppCompatActivity(),
-	PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+class SettingsActivity : AppCompatActivity() {
 
 	lateinit var b: ActivitySettingsBinding
 
@@ -19,7 +20,21 @@ class SettingsActivity : AppCompatActivity(),
 
 		supportFragmentManager
 			.beginTransaction()
-			.replace(b.category.id, HeaderFragment())
+			.replace(b.category.id, HeaderFragment{
+				val fragment = when(it){
+					Category.INFO-> InfoFragment()
+					Category.ADS_PAYMENT-> AdsPaymentFragment()
+					Category.STORAGE-> StorageFragment()
+					Category.THEME-> ThemeFragment()
+					else-> null
+				}
+
+				if (fragment != null) {
+					supportFragmentManager.beginTransaction()
+						.replace(b.settings.id, fragment)
+						.commit()
+				}
+			})
 			.commit()
 	}
 
@@ -29,34 +44,4 @@ class SettingsActivity : AppCompatActivity(),
 		}
 		return super.onSupportNavigateUp()
 	}
-
-	override fun onPreferenceStartFragment(
-		caller: PreferenceFragmentCompat,
-		pref: Preference
-	): Boolean {
-		// Instantiate the new Fragment
-		val args = pref.extras
-		val fragment = supportFragmentManager.fragmentFactory.instantiate(
-			classLoader,
-			pref.fragment
-		).apply {
-			arguments = args
-			setTargetFragment(caller, 0)
-		}
-		// Replace the existing Fragment with the new Fragment
-		supportFragmentManager.beginTransaction()
-			.replace(b.settings.id, fragment)
-			//.addToBackStack(null)
-			.commit()
-		title = pref.title
-		return true
-	}
-
-
-
-
-
-
-
-
 }

@@ -154,5 +154,6 @@
 	<string name="settings_developer">Developer</string>
 	<string name="settings_app">Application</string>
 	<string name="settings_user">User</string>
+	<string name="settings_payment">Payment</string>
 
 </resources>
