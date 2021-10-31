@@ -154,5 +154,6 @@
 	<string name="settings_developer">개발자</string>
 	<string name="settings_app">애플리케이션</string>
 	<string name="settings_user">사용자</string>
+	<string name="settings_payment">결제</string>
 
 </resources>
