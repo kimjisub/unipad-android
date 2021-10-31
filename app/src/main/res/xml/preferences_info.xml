@@ -20,10 +20,6 @@
 		app:iconSpaceReserved="false"
 		app:title="@string/settings_user">
 
-		<com.kimjisub.launchpad.view.preference.IconsPreference
-			app:iconSpaceReserved="false"
-			app:key="community"/>
-
 
 		<Preference
 			app:iconSpaceReserved="false"
