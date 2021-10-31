@@ -97,7 +97,6 @@ class MidiSelectActivity : BaseActivity() {
 		autorunTimer.start()
 
 		b.root.setOnTouchListener { v, event ->
-			Log.test("onTouch")
 			userInteract()
 			true
 		}

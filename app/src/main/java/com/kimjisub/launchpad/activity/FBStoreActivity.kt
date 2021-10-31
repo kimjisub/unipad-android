@@ -264,7 +264,6 @@ class FBStoreActivity : BaseActivity() {
 			folderName = item.storeVO.code!!,
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {
-					Log.test("onInstallStart")
 				}
 
 				override fun onGetFileSize(
@@ -272,7 +271,6 @@ class FBStoreActivity : BaseActivity() {
 					contentLength: Long,
 					preKnownFileSize: Long
 				) {
-					Log.test("onGetFileSize(fileSize=$fileSize, contentLength=$contentLength, preKnownFileSize=$preKnownFileSize)")
 					val percent = 0
 					val downloadedMB: String = FileManager.byteToMB(0)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
@@ -285,8 +283,6 @@ class FBStoreActivity : BaseActivity() {
 					downloadedSize: Long,
 					fileSize: Long
 				) {
-					Log.test("onDownloadProgress(percent=$percent, downloadSize=$downloadedSize, fileSize=$fileSize)")
-
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
 
@@ -301,15 +297,12 @@ class FBStoreActivity : BaseActivity() {
 				}
 
 				override fun onImportStart(zip: File) {
-					Log.test("onImportStart(zip=${zip.path})")
-
 					packView.setPlayText(getString(string.importing))
 					packView.toggleColor = colors.orange
 					packView.untoggleColor = colors.orange
 				}
 
 				override fun onInstallComplete(folder: File, unipack: UniPack) {
-					Log.test("onInstallComplete(folder=${folder.path})")
 					packView.setPlayText(getString(string.downloaded))
 					packView.toggleColor = colors.green
 					packView.untoggleColor = colors.green
@@ -319,7 +312,6 @@ class FBStoreActivity : BaseActivity() {
 				}
 
 				override fun onException(throwable: Throwable) {
-					Log.test("onException")
 					throwable.printStackTrace()
 					packView.setPlayText(getString(string.failed))
 					packView.toggleColor = colors.red

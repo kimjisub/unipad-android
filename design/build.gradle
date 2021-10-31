@@ -3,19 +3,23 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-	compileSdkVersion 31
+	compileSdkVersion 29
 	defaultConfig {
 		minSdkVersion 21
-		targetSdkVersion 31
+		targetSdkVersion 29
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 	}
 	buildTypes {
 		release {
+			debuggable false
+
 			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 		debug {
+			debuggable true
+
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
 		}

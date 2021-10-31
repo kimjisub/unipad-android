@@ -1,0 +1,23 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<Preference
+		app:key="info"
+		app:icon="@drawable/ic_info"
+		app:title="@string/settings_info" />
+
+	<Preference
+		app:key="ads_payment"
+		app:icon="@drawable/ic_payment"
+		app:title="@string/settings_ads_payment" />
+
+	<Preference
+		app:key="storage"
+		app:icon="@drawable/ic_storage"
+		app:title="@string/settings_storage" />
+
+	<Preference
+		app:key="theme"
+		app:icon="@drawable/ic_palette"
+		app:title="@string/settings_theme" />
+
+</PreferenceScreen>

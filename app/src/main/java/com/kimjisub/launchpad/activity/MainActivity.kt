@@ -235,7 +235,11 @@ class MainActivity : BaseActivity() {
 			startActivityForResult(intent, REQUEST_FB_STORE)
 		}
 		b.store.setOnLongClickListener { false }
-		b.setting.setOnClickListener { start<SettingLegacyActivity>() }
+		b.setting.setOnClickListener { start<SettingsActivity>() }
+		b.setting.setOnLongClickListener {
+			start<SettingLegacyActivity>()
+			false
+		}
 		b.floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
 			var runnable: Runnable = Runnable { b.floatingMenu.close(true) }
@@ -359,7 +363,6 @@ class MainActivity : BaseActivity() {
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack == removed.unipack)) {
-							Log.test("remove: #$i ")
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
@@ -644,17 +647,6 @@ class MainActivity : BaseActivity() {
 						null
 					)
 					.show()
-			}
-
-			override fun onPathClick(v: View) {
-				val item = selected
-				if (item != null) {
-//					todo
-//					val intent = Intent(Intent.ACTION_GET_CONTENT)
-//					val uri: Uri = Uri.parse(item.unipack.F_project.path)
-//					intent.setDataAndType(uri, "file/*") //specify your type
-//					startActivity(Intent.createChooser(intent, getString(string.openDirectory)))
-				}
 			}
 		}
 	}
