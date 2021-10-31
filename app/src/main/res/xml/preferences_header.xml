@@ -1,22 +1,22 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
 	<Preference
-		app:fragment="com.kimjisub.launchpad.activity.settings.InfoFragment"
+		app:fragment="com.kimjisub.launchpad.fragment.InfoFragment"
 		app:icon="@drawable/ic_info"
 		app:title="@string/settings_info" />
 
 	<Preference
-		app:fragment="com.kimjisub.launchpad.activity.settings.AdsPaymentFragment"
+		app:fragment="com.kimjisub.launchpad.fragment.AdsPaymentFragment"
 		app:icon="@drawable/ic_payment"
 		app:title="@string/settings_ads_payment" />
 
 	<Preference
-		app:fragment="com.kimjisub.launchpad.activity.settings.StorageFragment"
+		app:fragment="com.kimjisub.launchpad.fragment.StorageFragment"
 		app:icon="@drawable/ic_storage"
 		app:title="@string/settings_storage" />
 
 	<Preference
-		app:fragment="com.kimjisub.launchpad.activity.settings.ThemeFragment"
+		app:fragment="com.kimjisub.launchpad.fragment.ThemeFragment"
 		app:icon="@drawable/ic_palette"
 		app:title="@string/settings_theme" />
 
