@@ -40,6 +40,8 @@ class AdsPaymentFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 				}
 			}
 
+		restoreBillingPreference.setOnPreferenceClickListener {
+			bm.restorePurchase()
 			false
 		}
 	}
