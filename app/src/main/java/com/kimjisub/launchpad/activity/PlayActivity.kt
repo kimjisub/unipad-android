@@ -1263,6 +1263,7 @@ class PlayActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
+		bm.restorePurchase()
 		//initVar();
 
 		contentResolver.registerContentObserver(

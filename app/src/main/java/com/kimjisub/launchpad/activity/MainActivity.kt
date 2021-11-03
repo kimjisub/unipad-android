@@ -837,6 +837,7 @@ class MainActivity : BaseActivity() {
 		Handler().postDelayed({ update() }, 1000)
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
+		bm.restorePurchase()
 
 		val playStartUnitId = resources.getString(string.admob_play_start)
 		ads.loadAds(playStartUnitId) {
