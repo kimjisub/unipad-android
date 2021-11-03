@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.fragment
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.CheckBoxPreference
@@ -38,7 +40,15 @@ class AdsPaymentFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 				} ?: also {
 					toast("상품을 찾을 수 없습니다.")
 				}
+			}else{
+				val context = requireContext()
+				val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0);
+				val packageName = packageInfo.packageName
+				val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Sku.PRO}&package=${packageName}"));
+				startActivity(browserIntent);
 			}
+			false
+		}
 
 		restoreBillingPreference.setOnPreferenceClickListener {
 			bm.restorePurchase()
