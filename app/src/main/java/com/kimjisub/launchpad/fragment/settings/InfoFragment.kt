@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.fragment
+package com.kimjisub.launchpad.fragment.settings
 
 import android.os.Bundle
 import androidx.core.content.pm.PackageInfoCompat

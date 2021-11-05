@@ -2,12 +2,12 @@ package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
 import com.kimjisub.launchpad.databinding.ActivitySettingsBinding
-import com.kimjisub.launchpad.fragment.*
-import com.kimjisub.launchpad.fragment.HeaderFragment.Companion.Category
-import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.fragment.settings.AdsPaymentFragment
+import com.kimjisub.launchpad.fragment.settings.HeaderFragment
+import com.kimjisub.launchpad.fragment.settings.HeaderFragment.Companion.Category
+import com.kimjisub.launchpad.fragment.settings.InfoFragment
+import com.kimjisub.launchpad.fragment.settings.StorageFragment
 import splitties.activities.start
 
 class SettingsActivity : AppCompatActivity() {
