@@ -35,12 +35,23 @@ class MainTotalPanel
 		val openCount: ObservableField<String> = ObservableField()
 		val themeList: ObservableField<ArrayList<String>> = ObservableField()
 		val selectedTheme: ObservableField<Int> = ObservableField()
-
-		val sortMethod: ObservableField<Int> = ObservableField(0) // 0~5
-		val sortType: ObservableField<Boolean> = ObservableField(false)
-		val sort: ObservableField<Int> = ObservableField(0)
 	}
 
+	var sortMethod: Int = 0
+		set(value) {
+			field = value
+			b.spinnerSortMethod.setSelection(field)
+			onSortChangeListener?.onSortMethodChange(field)
+		}
+
+	var sortOrder: Boolean = false
+		set(value) {
+			field = value
+			b.sortOrder.checked = if (field) IconSwitch.Checked.RIGHT else IconSwitch.Checked.LEFT
+			onSortChangeListener?.onSortOrderChange(field)
+		}
+
+	var onSortChangeListener:OnSortChangeListener? = null
 
 	init {
 		b.data = data
@@ -55,8 +66,8 @@ class MainTotalPanel
 		}
 
 		b.spinnerSortMethod.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-			override fun onItemSelected(p0: AdapterView<*>?, p1: View?, sortMethod: Int, p3: Long) {
-				setSort(sortMethod)
+			override fun onItemSelected(p0: AdapterView<*>?, p1: View?, index: Int, p3: Long) {
+				sortMethod = index
 			}
 
 			override fun onNothingSelected(p0: AdapterView<*>?) {
@@ -64,16 +75,8 @@ class MainTotalPanel
 
 		}
 
-		b.sortTypeSwitch.setCheckedChangeListener { current ->
-			setSort(
-				b.spinnerSortMethod.selectedItemPosition,
-				current == IconSwitch.Checked.RIGHT
-			)
-		}
-
-		data.sortType.addOnPropertyChanged {
-			b.sortTypeSwitch.checked =
-				if (it.get() == true) IconSwitch.Checked.RIGHT else IconSwitch.Checked.LEFT
+		b.sortOrder.setCheckedChangeListener { current ->
+			sortOrder = current == IconSwitch.Checked.RIGHT
 		}
 
 		b.themeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -101,25 +104,17 @@ class MainTotalPanel
 				b.contentRoot.addView(child, index, params)
 			}
 		}
-		//super.addView(child, index, params)
-		//		try{
-//
-//			b.rootView.addView(child, index, params)
-//		}catch (e:Exception){
-//			super.addView(child, index, params)
-//		}
+		/*super.addView(child, index, params)
+				try{
+
+			b.rootView.addView(child, index, params)
+		}catch (e:Exception){
+			super.addView(child, index, params)
+		}*/
 	}
 
-	private fun setSort(sortMethod: Int) {
-		val defaultSortTypes = arrayOf(false, false, true, true, true)
-		val sortType = defaultSortTypes[sortMethod]
-		setSort(sortMethod, sortType)
+	interface OnSortChangeListener {
+		fun onSortMethodChange(sortMethod: Int)
+		fun onSortOrderChange(sortOrder: Boolean)
 	}
-
-	private fun setSort(sortMethod: Int, sortType: Boolean) {
-		data.sortMethod.set(sortMethod)
-		data.sortType.set(sortType)
-		data.sort.set(sortMethod * 2 + if (sortType) 0 else 1)
-	}
-
 }

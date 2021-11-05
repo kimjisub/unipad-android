@@ -33,6 +33,7 @@ import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.design.extra.addOnPropertyChanged
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
 import com.kimjisub.design.panel.MainPackPanel
+import com.kimjisub.design.panel.MainTotalPanel.OnSortChangeListener
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
@@ -319,7 +320,7 @@ class MainActivity : BaseActivity() {
 						sortMethods[p.sortMethod].compare(
 							a,
 							b
-						) * if (p.sortType) -1 else 1
+						) * if (p.sortOrder) -1 else 1
 					}))
 
 				for (item: UniPackItem in I_list) {
@@ -566,16 +567,23 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		b.totalPanel.data.sortMethod.set(p.sortMethod)
-		b.totalPanel.data.sortType.set(p.sortType)
+		b.totalPanel.onSortChangeListener = object:OnSortChangeListener{
+			override fun onSortMethodChange(sortMethod: Int) {
+				p.sortMethod = sortMethod
+				val defaultSortTypes = arrayOf(false, false, true, true, true)
+				b.totalPanel.sortOrder = defaultSortTypes[sortMethod]
+			}
+
+			override fun onSortOrderChange(sortOrder: Boolean) {
+				p.sortOrder = sortOrder
+
+				update()
+			}
+		}
+		b.totalPanel.sortMethod = p.sortMethod
+		b.totalPanel.sortOrder = p.sortOrder
 		b.totalPanel.data.logo.set(resources.getDrawable(drawable.custom_logo))
 		b.totalPanel.data.version.set(BuildConfig.VERSION_NAME)
-		b.totalPanel.data.sort.addOnPropertyChanged {
-			val sort = it.get()!!
-			p.sortMethod = sort / 2
-			p.sortType = sort % 2 == 1
-			update()
-		}
 		b.totalPanel.data.selectedTheme.addOnPropertyChanged {
 			val selectedThemeIndex = it.get()!!
 			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
