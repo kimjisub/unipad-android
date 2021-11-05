@@ -1,10 +1,9 @@
-package com.kimjisub.launchpad.fragment
+package com.kimjisub.launchpad.fragment.settings
 
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.kimjisub.launchpad.R
-import com.kimjisub.launchpad.tool.Log
 
 class HeaderFragment(val callback: (Category) -> Unit) : PreferenceFragmentCompat() {
 	private val infoPreference: Preference by lazy { findPreference("info")!! }

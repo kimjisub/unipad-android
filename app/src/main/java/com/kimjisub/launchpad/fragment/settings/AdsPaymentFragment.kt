@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.fragment
+package com.kimjisub.launchpad.fragment.settings
 
 import android.content.Intent
 import android.net.Uri
