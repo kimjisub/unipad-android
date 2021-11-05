@@ -108,14 +108,14 @@ class PreferenceManager(
 			}
 		}
 
-	private val sortTypeTag = "SortType"
-	var sortType: Boolean
+	private val sortOrderTag = "SortOrder"
+	var sortOrder: Boolean
 		get() {
-			return pref.getBoolean(sortTypeTag, true)
+			return pref.getBoolean(sortOrderTag, true)
 		}
 		set(value) {
 			pref.edit {
-				putBoolean(sortTypeTag, value)
+				putBoolean(sortOrderTag, value)
 			}
 		}
 

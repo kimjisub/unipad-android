@@ -198,7 +198,7 @@
 					android:orientation="horizontal">
 
 					<com.polyak.iconswitch.IconSwitch
-						android:id="@+id/sortTypeSwitch"
+						android:id="@+id/sort_order"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						app:isw_icon_left="@drawable/ic_sort_asc"
@@ -209,7 +209,6 @@
 						android:layout_width="wrap_content"
 						android:layout_height="match_parent"
 						android:entries="@array/packSortMethod"
-						android:selectedItemPosition="@{data.sortMethod}"
 						android:theme="@style/UniPadSpinner" />
 
 				</LinearLayout>
