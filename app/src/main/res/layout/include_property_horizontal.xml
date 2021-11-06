@@ -8,11 +8,11 @@
 
 		<variable
 			name="title"
-			type="java.lang.String" />
+			type="String" />
 
 		<variable
 			name="value"
-			type="java.lang.String" />
+			type="String" />
 	</data>
 
 	<LinearLayout

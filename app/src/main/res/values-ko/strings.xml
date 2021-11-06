@@ -155,4 +155,43 @@
 	<string name="settings_user">사용자</string>
 	<string name="settings_payment">결제</string>
 
+	<!--String Format-->
+	<string name="date_format">%1$tY-%1$tm-%1$td</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">유니팩 개수</string>
+	<string name="MTP_size">유니팩 용량</string>
+	<string name="MPT_playCount">플레이 횟수</string>
+	<string name="MPT_theme">테마</string>
+	<array name="packSortMethod">
+		<item>제목</item>
+		<item>제작자</item>
+		<item>플레이 횟수</item>
+		<item>최근 연 날짜</item>
+		<item>다운로드 날짜</item>
+	</array>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">패드 크기</string>
+	<string name="MPP_chain">체인</string>
+	<string name="MPP_soundFiles">사운드 파일</string>
+	<string name="MPP_ledEvents">Led 이벤트</string>
+	<string name="MPP_fileSize">용량</string>
+	<string name="MPP_playCount">플레이 횟수</string>
+	<string name="MPP_downloadedDate">다운로드한 날짜</string>
+	<string name="MPP_lastPlayed">최근 플레이</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">유니팩 개수</string>
+	<string name="STP_downloadedCount">다운로드 </string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">다운로드 수</string>
+
+	<!--File Explorer-->
+	<string name="FE_accept">확인</string>
+	<string name="FE_folderErr">폴더를 읽을 수 없습니다.</string>
+	<string name="FE_fileErr">파일을 읽을 수 없습니다.</string>
+	<string name="mb">MB</string>
 </resources>
