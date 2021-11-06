@@ -155,4 +155,43 @@
 	<string name="settings_user">User</string>
 	<string name="settings_payment">Payment</string>
 
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPacks Count</string>
+	<string name="MTP_size">UniPacks Size</string>
+	<string name="MPT_playCount">Play Count</string>
+	<string name="MPT_theme">Theme</string>
+	<array name="packSortMethod">
+		<item>Title</item>
+		<item>Producer</item>
+		<item>Play Count</item>
+		<item>Last Opened Date</item>
+		<item>Download Date</item>
+	</array>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Pad Size</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">Sound files</string>
+	<string name="MPP_ledEvents">Led Events</string>
+	<string name="MPP_fileSize">File Size</string>
+	<string name="MPP_playCount">Play Count</string>
+	<string name="MPP_downloadedDate">Downloaded Date</string>
+	<string name="MPP_lastPlayed">Last Played</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">Store UniPacks</string>
+	<string name="STP_downloadedCount">Downloaded UniPacks</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Download count</string>
+
+	<!--File Explorer-->
+	<string name="FE_accept">Accept</string>
+	<string name="FE_folderErr">Couldn\'t read the folder.</string>
+	<string name="FE_fileErr">Couldn\'t read the file.</string>
+	<string name="mb">MB</string>
 </resources>

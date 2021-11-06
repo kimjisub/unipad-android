@@ -5,16 +5,14 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.view.animation.Animation
-import android.view.animation.Animation.AnimationListener
-import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,7 +30,6 @@ import com.kimjisub.design.dialog.FileExplorerDialog
 import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.design.extra.addOnPropertyChanged
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
-import com.kimjisub.design.panel.MainPackPanel
 import com.kimjisub.design.panel.MainTotalPanel.OnSortChangeListener
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
@@ -44,10 +41,10 @@ import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.ActivityMainBinding
 import com.kimjisub.launchpad.db.AppDataBase
-import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
-import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.db.util.observeRealChange
+import com.kimjisub.launchpad.fragment.MainPackPanelFragment
+import com.kimjisub.launchpad.fragment.MainTotalPanelFragment
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -196,6 +193,7 @@ class MainActivity : BaseActivity() {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		b = ActivityMainBinding.inflate(layoutInflater)
@@ -256,6 +254,13 @@ class MainActivity : BaseActivity() {
 		update(false)
 
 		updatePanel(true)
+
+		val mainTotalPanelFragment = MainTotalPanelFragment()
+
+		supportFragmentManager
+			.beginTransaction()
+			.replace(b.panelFragment.id, mainTotalPanelFragment)
+			.commit()
 	}
 
 	override fun onProStatusUpdated(isPro: Boolean) {
@@ -567,7 +572,7 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		b.totalPanel.onSortChangeListener = object:OnSortChangeListener{
+		b.totalPanel.onSortChangeListener = object : OnSortChangeListener {
 			override fun onSortMethodChange(sortMethod: Int) {
 				p.sortMethod = sortMethod
 				val defaultSortTypes = arrayOf(false, false, true, true, true)
@@ -588,101 +593,28 @@ class MainActivity : BaseActivity() {
 			val selectedThemeIndex = it.get()!!
 			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
 		}
-
-		b.packPanel.onEventListener = object : MainPackPanel.OnEventListener {
-			override fun onBookmarkClick(v: View) {
-				val item = selected
-				if (item != null) {
-					val unipackENT = item.unipackENT
-					unipackENT.observe(this@MainActivity, object : Observer<UniPackENT> {
-						override fun onChanged(it: UniPackENT?) {
-							unipackENT.removeObserver(this)
-							CoroutineScope(Dispatchers.IO).launch {
-								it!!.bookmark = !it.bookmark
-								db.unipackDAO()!!.update(it)
-							}
-						}
-					})
-				}
-			}
-
-			override fun onEditClick(v: View) {}
-
-			override fun onYoutubeClick(v: View) {
-				Intent()
-				Intent(Intent.ACTION_VIEW)
-
-				val item = selected
-				if (item != null)
-					browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title + "+" + item.unipack.producerName)
-			}
-
-			override fun onWebsiteClick(v: View) {
-				val item = selected
-				if (item != null) {
-					val website: String? = item.unipack.website
-					if (website != null)
-						browse(website)
-				}
-			}
-
-			override fun onFuncClick(v: View) {
-				val item = selected
-				if (item != null) Builder(this@MainActivity)
-					.setTitle(getString(string.warning))
-					.setMessage(getString(string.doYouWantToRemapUniPack))
-					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
-						autoMapping(
-							item.unipack
-						)
-					}.setNegativeButton(
-						getString(string.cancel),
-						null
-					)
-					.show()
-			}
-
-			override fun onDeleteClick(v: View) {
-				val item = selected
-				if (item != null) Builder(this@MainActivity)
-					.setTitle(getString(string.warning))
-					.setMessage(getString(string.doYouWantToDeleteUniPack))
-					.setPositiveButton(getString(string.accept)) { _: DialogInterface?, _: Int ->
-						item.unipack.delete()
-						update()
-					}.setNegativeButton(
-						getString(string.cancel),
-						null
-					)
-					.show()
-			}
-		}
 	}
 
 	private fun updatePanel(hardWork: Boolean) {
-		val selectedIndex = selectedIndex
-		val animation: Animation = AnimationUtils.loadAnimation(
-			this@MainActivity,
-			if (selectedIndex != -1) anim.panel_in else anim.panel_out
-		)
-		animation.setAnimationListener(object : AnimationListener {
-			override fun onAnimationStart(animation: Animation?) {
-				b.packPanel.visibility = View.VISIBLE
-				b.packPanel.alpha = 1f
-			}
+		Log.test("backStackEntryCount: ${supportFragmentManager.backStackEntryCount}")
 
-			override fun onAnimationEnd(animation: Animation?) {
-				b.packPanel.visibility = if (selectedIndex != -1) View.VISIBLE else View.INVISIBLE
-				b.packPanel.alpha = if (selectedIndex != -1) 1.toFloat() else 0.toFloat()
-			}
+		if (selectedIndex == -1) { // Total
+			// Pack 이 켜져있으면 닫기
+			if (supportFragmentManager.backStackEntryCount >= 1)
+				supportFragmentManager.popBackStack()
+		} else { // Pack
+			if (supportFragmentManager.backStackEntryCount >= 1)
+				supportFragmentManager.popBackStack()
 
-			override fun onAnimationRepeat(animation: Animation?) {}
-		})
-		if (selectedIndex == -1) updatePanelMain(hardWork) else updatePanelPack(unipackList[selectedIndex])
-		val visibility = b.packPanel.visibility
-		if (((visibility == View.VISIBLE && selectedIndex == -1)
-					|| (visibility == View.INVISIBLE && selectedIndex != -1))
-		) b.packPanel.startAnimation(animation)
+			supportFragmentManager.beginTransaction().apply {
+				if (supportFragmentManager.backStackEntryCount == 0)
+					setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+
+				replace(b.panelFragment.id, MainPackPanelFragment(unipackList[selectedIndex]))
+				addToBackStack("pack")
+				commit()
+			}
+		}
 	}
 
 	var themeItemList: ArrayList<ThemeItem>? = null
@@ -720,59 +652,6 @@ class MainActivity : BaseActivity() {
 					b.totalPanel.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
 				}
 			}
-	}
-
-	@SuppressLint("StaticFieldLeak", "SetTextI18n")
-	private fun updatePanelPack(item: UniPackItem) {
-		val unipack = item.unipack
-		val flagColor: Int = if (unipack.criticalError) colors.red else colors.skyblue
-		item.flagColor = flagColor
-
-		b.packPanel.data.apply {
-			title.set(unipack.title)
-			subtitle.set(unipack.producerName)
-			padSize.set("${unipack.buttonX} × ${unipack.buttonY}")
-			chainCount.set(unipack.chain.toString())
-			websiteExist.set(unipack.website != null)
-			path.set(item.unipack.getPathString())
-			downloadedDate.set(Date(item.unipack.lastModified()))
-
-
-			soundCount.set(getString(string.measuring))
-			ledCount.set(getString(string.measuring))
-			fileSize.set(getString(string.measuring))
-
-			item.unipackENT.observeOnce(Observer {
-				bookmark.set(it.bookmark)
-			})
-			db.unipackOpenDAO()!!.getCount(item.unipack.id)
-				.observe(this@MainActivity, Observer {
-					playCount.set(it.toString())
-				})
-			db.unipackOpenDAO()!!.getLastOpenedDate(item.unipack.id)
-				.observe(this@MainActivity, Observer {
-					lastPlayed.set(it?.created_at)
-				})
-
-			CoroutineScope(Dispatchers.IO).launch {
-				val fileSizeString =
-					FileManager.byteToMB(unipack.getByteSize()) + " MB"
-				withContext(Dispatchers.Main) {
-					//if ((path.get() == item.unipack)) // todo 다른 방식으로 활성 판넬 인식
-					fileSize.set(fileSizeString)
-				}
-			}
-
-			CoroutineScope(Dispatchers.IO).launch {
-				item.unipack.loadDetail()
-				withContext(Dispatchers.Main) {
-					//if ((path.get() == item.unipack.F_project.path)) {// todo 다른 방식으로 활성 판넬 인식
-					soundCount.set(item.unipack.soundCount.toString())
-					ledCount.set(item.unipack.ledTableCount.toString())
-					//}
-				}
-			}
-		}
 	}
 
 	// Check /////////////////////////////////////////////////////////////////////////////////////////

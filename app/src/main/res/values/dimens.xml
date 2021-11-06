@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-	<dimen name="text">14sp</dimen>
-	<dimen name="text_big">20sp</dimen>
+	<dimen name="text_big">16sp</dimen>
+	<dimen name="text">12sp</dimen>
 	<dimen name="text_small">10sp</dimen>
 
 	<dimen name="imgbtn">40dp</dimen>

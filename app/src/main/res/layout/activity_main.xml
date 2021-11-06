@@ -20,26 +20,17 @@
 
 			<com.kimjisub.design.panel.MainTotalPanel
 				android:id="@+id/totalPanel"
+				android:visibility="gone"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent">
 
-				<com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-					android:id="@+id/adView"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					ads:adSize="BANNER"
-					ads:adUnitId="@string/admob_main_panel" />
-
 			</com.kimjisub.design.panel.MainTotalPanel>
 
-			<com.kimjisub.design.panel.MainPackPanel
-				android:id="@+id/packPanel"
+
+			<FrameLayout
+				android:id="@+id/panel_fragment"
 				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:alpha="0"
-				android:clickable="true"
-				android:focusable="true"
-				android:visibility="invisible" />
+				android:layout_height="match_parent" />
 
 		</RelativeLayout>
 
