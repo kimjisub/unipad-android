@@ -9,10 +9,13 @@ import com.kimjisub.launchpad.databinding.FragmentMainTotalPanelBinding
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.observeEvent
 
-class MainTotalPanelFragment : BaseFragment() {
+class MainTotalPanelFragment(val sortChangeListener: (Pair<MainTotalPanelViewModel.SortMethod, Boolean>) -> Unit) :
+	BaseFragment() {
 	private var _b: FragmentMainTotalPanelBinding? = null
 	private val b get() = _b!!
 	private val vm: MainTotalPanelViewModel by viewModels()
+
+	var sort : Pair<MainTotalPanelViewModel.SortMethod, Boolean>? = null
 
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?,
@@ -24,12 +27,9 @@ class MainTotalPanelFragment : BaseFragment() {
 			vm = this@MainTotalPanelFragment.vm
 		}
 
-		vm.eventSort.observeEvent(viewLifecycleOwner){
-			// todo MainActivity에 정렬 요청
-			val comparator = it.first.comparator
-			val sortOrder = it.second
-
-			Log.test("DO SORT: ${it.first.name}, $sortOrder")
+		vm.eventSort.observeEvent(viewLifecycleOwner) {
+			sort = it
+			sortChangeListener(it)
 		}
 
 
@@ -39,10 +39,6 @@ class MainTotalPanelFragment : BaseFragment() {
 
 		return b.root
 	}
-
-
-
-
 
 
 	override fun onDestroyView() {
