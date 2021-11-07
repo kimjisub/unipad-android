@@ -28,14 +28,10 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.kimjisub.design.dialog.FileExplorerDialog
 import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
-import com.kimjisub.design.extra.addOnPropertyChanged
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
-import com.kimjisub.design.panel.MainTotalPanel.OnSortChangeListener
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.adapter.ThemeItem
-import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -45,7 +41,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.fragment.MainPackPanelFragment
 import com.kimjisub.launchpad.fragment.MainTotalPanelFragment
-import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -572,32 +567,10 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("SetTextI18n")
 	private fun initPanel() {
-		b.totalPanel.onSortChangeListener = object : OnSortChangeListener {
-			override fun onSortMethodChange(sortMethod: Int) {
-				p.sortMethod = sortMethod
-				val defaultSortTypes = arrayOf(false, false, true, true, true)
-				b.totalPanel.sortOrder = defaultSortTypes[sortMethod]
-			}
 
-			override fun onSortOrderChange(sortOrder: Boolean) {
-				p.sortOrder = sortOrder
-
-				update()
-			}
-		}
-		b.totalPanel.sortMethod = p.sortMethod
-		b.totalPanel.sortOrder = p.sortOrder
-		b.totalPanel.data.logo.set(resources.getDrawable(drawable.custom_logo))
-		b.totalPanel.data.version.set(BuildConfig.VERSION_NAME)
-		b.totalPanel.data.selectedTheme.addOnPropertyChanged {
-			val selectedThemeIndex = it.get()!!
-			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
-		}
 	}
 
 	private fun updatePanel(hardWork: Boolean) {
-		Log.test("backStackEntryCount: ${supportFragmentManager.backStackEntryCount}")
-
 		if (selectedIndex == -1) { // Total
 			// Pack 이 켜져있으면 닫기
 			if (supportFragmentManager.backStackEntryCount >= 1)
@@ -615,43 +588,6 @@ class MainActivity : BaseActivity() {
 				commit()
 			}
 		}
-	}
-
-	var themeItemList: ArrayList<ThemeItem>? = null
-	var themeNameList: ArrayList<String>? = null
-	private fun updateThemeList() {
-		themeItemList = ThemeTool.getThemePackList(applicationContext)
-		themeNameList = ArrayList()
-		for (item: ThemeItem in themeItemList!!)
-			themeNameList!!.add(item.name)
-	}
-
-	@SuppressLint("StaticFieldLeak")
-	private fun updatePanelMain(hardWork: Boolean) {
-		b.totalPanel.data.unipackCount.set(unipackList.size.toString())
-		db.unipackOpenDAO()!!.count.observe(
-			this,
-			{ integer: Int? -> b.totalPanel.data.openCount.set(integer.toString()) })
-		updateThemeList()
-
-		b.totalPanel.data.themeList.set(themeNameList)
-
-		try {
-			val index = themeItemList!!.indexOfFirst { it.package_name == p.selectedTheme }
-			b.totalPanel.data.selectedTheme.set(index)
-		} catch (e: Exception) {
-			b.totalPanel.data.selectedTheme.set(0)
-		}
-		if (hardWork)
-			CoroutineScope(Dispatchers.IO).launch {
-				val size = FileManager.getFolderSize(
-					ws.mainWorkspace.file// todo 여러 workspace의 용량 계산, WorkspaceManager로 이동하기
-				)
-
-				withContext(Dispatchers.Main) {
-					b.totalPanel.data.unipackCapacity.set(FileManager.byteToMB(size, "%.0f"))
-				}
-			}
 	}
 
 	// Check /////////////////////////////////////////////////////////////////////////////////////////
