@@ -65,10 +65,7 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	val sortOrder = MutableLiveData<Boolean>()
 	val eventSort = MutableLiveData<Event<Pair<SortMethod, Boolean>>>()
 
-	var sortLoaded = false
-
 	init {
-		Log.test("vm init")
 		version.value = BuildConfig.VERSION_NAME
 		unipackCount.value = ws.getUnipacks().size
 		db.unipackOpenDAO()!!.count.observeForever {
@@ -84,8 +81,6 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 			}
 		}
 
-		// sort
-
 		sortMethod.value = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
 		sortOrder.value = p.sortOrder
 
@@ -98,9 +93,6 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 			p.sortOrder = it
 			sortChange()
 		}
-
-
-		// theme
 	}
 
 	// sort
@@ -109,41 +101,15 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	var prevSortOrder: Boolean? = null
 
 	private fun sortChange() {
-		if (sortMethod.value!! != prevSortMethod || sortOrder.value!! != prevSortOrder) {
-			Log.test("${p.sortMethod}, ${p.sortOrder}")
+		if (sortMethod.value!! != prevSortMethod || sortOrder.value!! != prevSortOrder)
 			eventSort.emit(Pair(sortMethodList[sortMethod.value!!], sortOrder.value!!))
-		}
+
 		prevSortMethod = sortMethod.value
 		prevSortOrder = sortOrder.value
 
 	}
 
-	// theme
-
-	/*var themeItemList: ArrayList<ThemeItem>? = null
-	var themeNameList: ArrayList<String>? = null
-	private fun updateThemeList() {
-		themeItemList = ThemeTool.getThemePackList(requireContext())
-		themeNameList = ArrayList()
-		for (item: ThemeItem in themeItemList!!)
-			themeNameList!!.add(item.name)
-	}*/
-
-	fun update() {
-		// updateThemeList()
-
-		/*try {
-			val index = themeItemList!!.indexOfFirst { it.package_name == p.selectedTheme }
-			b.totalPanel.data.selectedTheme.set(index)
-		} catch (e: Exception) {
-			b.totalPanel.data.selectedTheme.set(0)
-		}*/
-
-	}
-
-
 	fun string(id: Int): String = app.getString(id)
-
 
 	data class SortMethod(
 		val name: String,

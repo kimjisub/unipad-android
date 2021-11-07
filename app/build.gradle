@@ -38,7 +38,7 @@ android {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
-			debuggable false
+			debuggable true
 
 			minifyEnabled true
 			proguardFile getDefaultProguardFile('proguard-android.txt')
@@ -88,6 +88,7 @@ dependencies {
 	implementation 'com.google.guava:guava:30.1-jre'
 	implementation 'androidx.preference:preference-ktx:1.1.1'
 	implementation 'com.google.android.material:material:1.4.0'
+	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
 	// Test
 	testImplementation 'junit:junit:4.13.2'
@@ -152,6 +153,7 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 	implementation "com.liulishuo.okdownload:okhttp:1.0.3"
 	implementation "com.google.android.gms:play-services-oss-licenses:17.0.0"
+	implementation 'com.polyak:icon-switch:1.0.0'
 
 	api project(':design')
 }
