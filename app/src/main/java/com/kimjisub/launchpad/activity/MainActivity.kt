@@ -188,6 +188,11 @@ class MainActivity : BaseActivity() {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
+	private val mainTotalPanelFragment by lazy {
+		MainTotalPanelFragment {
+			update()
+		}
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -250,7 +255,6 @@ class MainActivity : BaseActivity() {
 
 		updatePanel(true)
 
-		val mainTotalPanelFragment = MainTotalPanelFragment()
 
 		supportFragmentManager
 			.beginTransaction()
@@ -274,28 +278,6 @@ class MainActivity : BaseActivity() {
 		b.swipeRefreshLayout.isRefreshing = true
 		listRefreshing = true
 
-		val sortMethods: Array<Comparator<UniPackItem>> = arrayOf(
-			Comparator { a, b -> -a.unipack.title.compareTo(b.unipack.title) },
-			Comparator { a, b -> -a.unipack.producerName.compareTo(b.unipack.producerName) },
-			Comparator { a, b ->
-				val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.id)
-				val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.id)
-				-aCount.compareTo(bCount)
-			},
-			Comparator { a, b ->
-				val aDate = db.unipackOpenDAO()!!
-					.getLastOpenedDateSync(a.unipack.id)?.created_at ?: Date(0)
-				val bDate = db.unipackOpenDAO()!!
-					.getLastOpenedDateSync(b.unipack.id)?.created_at ?: Date(0)
-				-aDate.compareTo(bDate)
-			},
-			Comparator { a, b ->
-				val aDate = a.unipack.lastModified()
-				val bDate = b.unipack.lastModified()
-				-aDate.compareTo(bDate)
-			}
-		)
-
 		CoroutineScope(Dispatchers.IO).launch {
 			var I_list = ArrayList<UniPackItem>()
 			val I_added = ArrayList<UniPackItem>()
@@ -314,14 +296,15 @@ class MainActivity : BaseActivity() {
 					I_list.add(packItem)
 				}
 
-				I_list = ArrayList(I_list.sortedWith(sortMethods[3]))
-				I_list =
-					ArrayList(I_list.sortedWith(Comparator { a, b ->
-						sortMethods[p.sortMethod].compare(
-							a,
-							b
-						) * if (p.sortOrder) -1 else 1
-					}))
+				val sort = mainTotalPanelFragment.sort
+
+				if(sort != null){
+					val comparator = Comparator<UniPackItem> { a, b ->
+						sort.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
+					}
+
+					I_list = ArrayList(I_list.sortedWith(comparator))
+				}
 
 				for (item: UniPackItem in I_list) {
 					var index = -1

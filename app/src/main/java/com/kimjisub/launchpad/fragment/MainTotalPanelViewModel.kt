@@ -51,6 +51,7 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 			-aDate.compareTo(bDate)
 		}
 	)
+	val sortMethodTitleList = sortMethodList.map { return@map it.name }
 
 	val version = MutableLiveData<String>()
 	val premium = MutableLiveData<Boolean>()
@@ -88,21 +89,14 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 		sortMethod.value = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
 		sortOrder.value = p.sortOrder
 
-		var prevSortMethod: Int? = null
-		var prevSortOrder: Boolean? = null
 		sortMethod.observeForever {
-			if (it != prevSortMethod) {
-				p.sortMethod = it
-				sortOrder.value = sortMethodList[sortMethod.value!!].defaultOrder
-			}
-			prevSortMethod = it
+			p.sortMethod = it
+			sortOrder.value = sortMethodList[sortMethod.value!!].defaultOrder
+
 		}
 		sortOrder.observeForever {
-			if (it != prevSortOrder) {
-				p.sortOrder = it
-				sortChange()
-			}
-			prevSortOrder = it
+			p.sortOrder = it
+			sortChange()
 		}
 
 
@@ -111,13 +105,16 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 
 	// sort
 
-
-	val sortMethodTitleList = sortMethodList.map { return@map it.name }
+	var prevSortMethod: Int? = null
+	var prevSortOrder: Boolean? = null
 
 	private fun sortChange() {
-		Log.test("${p.sortMethod}, ${p.sortOrder}")
-
-		eventSort.emit(Pair(sortMethodList[sortMethod.value!!], sortOrder.value!!))
+		if (sortMethod.value!! != prevSortMethod || sortOrder.value!! != prevSortOrder) {
+			Log.test("${p.sortMethod}, ${p.sortOrder}")
+			eventSort.emit(Pair(sortMethodList[sortMethod.value!!], sortOrder.value!!))
+		}
+		prevSortMethod = sortMethod.value
+		prevSortOrder = sortOrder.value
 
 	}
 
