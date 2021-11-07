@@ -32,11 +32,6 @@ class MainTotalPanelFragment(val sortChangeListener: (Pair<MainTotalPanelViewMod
 			sortChangeListener(it)
 		}
 
-
-		/*vm.selectedTheme.observe(viewLifecycleOwner) { selectedThemeIndex->
-			p.selectedTheme = themeItemList!![selectedThemeIndex].package_name
-		}*/
-
 		return b.root
 	}
 
