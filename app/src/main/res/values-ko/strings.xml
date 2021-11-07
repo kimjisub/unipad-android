@@ -163,13 +163,11 @@
 	<string name="MTP_size">유니팩 용량</string>
 	<string name="MPT_playCount">플레이 횟수</string>
 	<string name="MPT_theme">테마</string>
-	<array name="packSortMethod">
-		<item>제목</item>
-		<item>제작자</item>
-		<item>플레이 횟수</item>
-		<item>최근 연 날짜</item>
-		<item>다운로드 날짜</item>
-	</array>
+	<string name="sort_title">제목</string>
+	<string name="sort_producer">제작자</string>
+	<string name="sort_play_count">플레이 횟수</string>
+	<string name="sort_last_opened_date">최근 연 날짜</string>
+	<string name="sort_download_date">다운로드 날짜</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>

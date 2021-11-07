@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:bind="http://schemas.android.com/tools">
 
 	<data>
 
-		<variable
-			name="viewModel"
-			type="com.kimjisub.launchpad.fragment.MainTotalPanelViewModel" />
+		<import type="com.polyak.iconswitch.IconSwitch.Checked" />
 
+		<variable
+			name="vm"
+			type="com.kimjisub.launchpad.fragment.MainTotalPanelViewModel" />
 	</data>
 
-	<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		xmlns:app="http://schemas.android.com/apk/res-auto"
-		xmlns:tools="http://schemas.android.com/tools"
+	<FrameLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		tools:context=".fragment.MainTotalPanelFragment">
+		android:layout_height="match_parent">
 
 		<LinearLayout
 			android:id="@+id/rootView"
@@ -45,9 +45,8 @@
 						<ImageView
 							android:layout_width="130dp"
 							android:layout_height="50dp"
-							android:src="@drawable/custom_logo"
-							android:scaleType="centerInside" />
-<!--						android:src="@{data.logo}"-->
+							android:scaleType="centerInside"
+							android:src="@drawable/custom_logo" />
 
 						<TextView
 							android:layout_width="130dp"
@@ -55,9 +54,9 @@
 							android:gravity="bottom|end"
 							android:paddingStart="8dp"
 							android:paddingLeft="8dp"
-							android:text="@{viewModel.version}"
+							android:text="@{vm.version, default=`0.0.0`}"
+							android:textColor="@{vm.premium ? @color/orange : @color/text}"
 							android:textSize="10dp" />
-<!--						android:textColor="@{data.premium ? @color/orange : @color/text}"-->
 
 					</RelativeLayout>
 
@@ -65,9 +64,9 @@
 						android:id="@+id/themeSpinner"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
+						android:entries="@{vm.themeList}"
+						android:selectedItemPosition="@{vm.selectedTheme}"
 						android:theme="@style/UniPadSpinner" />
-<!--					android:entries="@{data.themeList}"-->
-<!--					android:selectedItemPosition="@{data.selectedTheme}"-->
 
 					<LinearLayout
 						android:layout_width="match_parent"
@@ -96,9 +95,9 @@
 								android:layout_gravity="center"
 								android:paddingTop="8dp"
 								android:singleLine="true"
+								android:text="@{vm.openCount.toString(), default=`123`}"
 								android:textSize="@dimen/text_17"
 								android:textStyle="bold" />
-<!--							android:text="@{data.openCount}"-->
 						</LinearLayout>
 
 						<View
@@ -129,10 +128,9 @@
 								android:layout_gravity="center"
 								android:paddingTop="8dp"
 								android:singleLine="true"
+								android:text="@{vm.unipackCount.toString(), default=`123`}"
 								android:textSize="@dimen/text_17"
-								android:textStyle="bold"
-								tools:text="123" />
-<!--							android:text="@{data.unipackCount}"-->
+								android:textStyle="bold" />
 						</LinearLayout>
 
 						<View
@@ -169,11 +167,11 @@
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
 									android:singleLine="true"
+									android:text="@{vm.unipackCapacity, default=`12.34`}"
 									android:textSize="@dimen/text_17"
 									android:textStyle="bold"
 									app:layout_constraintLeft_toLeftOf="parent"
 									app:layout_constraintTop_toTopOf="parent" />
-<!--								android:text="@{data.unipackCapacity}"-->
 
 								<TextView
 									android:layout_width="wrap_content"
@@ -201,14 +199,16 @@
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							app:isw_icon_left="@drawable/ic_sort_asc"
-							app:isw_icon_right="@drawable/ic_sort_desc" />
+							app:isw_icon_right="@drawable/ic_sort_desc"
+							bind:checked="@={vm.sortOrder}" />
 
 						<androidx.appcompat.widget.AppCompatSpinner
 							android:id="@+id/spinner_sort_method"
 							android:layout_width="wrap_content"
 							android:layout_height="match_parent"
-							android:entries="@array/packSortMethod"
-							android:theme="@style/UniPadSpinner" />
+							android:entries="@{vm.sortMethodTitleList}"
+							android:theme="@style/UniPadSpinner"
+							bind:selectedItemPosition="@={vm.sortMethod}" />
 
 					</LinearLayout>
 
