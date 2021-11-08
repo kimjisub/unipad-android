@@ -7,85 +7,24 @@
 	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:orientation="horizontal"
-		android:weightSum="5">
+		android:orientation="horizontal">
 
-		<RelativeLayout
+
+		<FrameLayout
+			android:id="@+id/fragment_panel"
 			android:layout_width="0dp"
 			android:layout_height="match_parent"
 			android:layout_marginStart="16dp"
 			android:layout_marginTop="16dp"
 			android:layout_marginBottom="16dp"
-			android:layout_weight="2">
+			android:layout_weight="2" />
 
-			<com.kimjisub.design.panel.MainTotalPanel
-				android:id="@+id/totalPanel"
-				android:visibility="gone"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent">
-
-			</com.kimjisub.design.panel.MainTotalPanel>
-
-
-			<FrameLayout
-				android:id="@+id/panel_fragment"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent" />
-
-		</RelativeLayout>
-
-		<RelativeLayout
+		<FrameLayout
+			android:id="@+id/fragment_list"
 			android:layout_width="0dp"
 			android:layout_height="match_parent"
-			android:layout_weight="3">
+			android:layout_weight="3" />
 
-			<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-				android:id="@+id/swipeRefreshLayout"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent">
-
-				<androidx.recyclerview.widget.RecyclerView
-					android:id="@+id/recyclerView"
-					android:layout_width="match_parent"
-					android:layout_height="match_parent"
-					android:clipToPadding="false"
-					android:orientation="vertical"
-					android:paddingTop="16dp"
-					android:paddingBottom="6dp"
-					android:scrollbarThumbVertical="@color/gray2" />
-
-			</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-			<LinearLayout
-				android:id="@+id/errItem"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_centerInParent="true"
-				android:gravity="center"
-				android:orientation="vertical">
-
-				<ImageView
-					android:layout_width="100dp"
-					android:layout_height="100dp"
-					android:contentDescription="@string/unipackNotFound"
-					app:srcCompat="@drawable/ic_error"
-					app:tint="@color/white" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_gravity="center_horizontal"
-					android:text="@string/unipackNotFound"
-					android:textColor="@color/white" />
-
-				<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:layout_gravity="center_horizontal"
-					android:text="@string/clickToAddUniPack"
-					android:textColor="@color/gray1" />
-			</LinearLayout>
-		</RelativeLayout>
 	</LinearLayout>
 
 	<com.github.clans.fab.FloatingActionMenu

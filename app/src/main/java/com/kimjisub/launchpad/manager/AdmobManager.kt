@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.manager
 
+import android.app.Activity
 import android.content.Context
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
@@ -12,9 +13,9 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
 
-class AdmobManager(val activity: BaseActivity) {
-	val p: PreferenceManager = activity.p
+class AdmobManager(val activity: Activity) {
 	val context: Context = activity.baseContext
+	val p by lazy { PreferenceManager(context) }
 
 
 	private fun adsCooltime(callback: () -> Unit) {
@@ -106,7 +107,7 @@ class AdmobManager(val activity: BaseActivity) {
 	}
 
 	fun showAdsWithCooltime(interstitialAd: InterstitialAd?, callback: (() -> Unit)? = null) {
-		Log.admob("Ads show: ${activity.getActivityName()}")
+		Log.admob("Ads show")
 		if (interstitialAd != null) {
 			adsCooltime {
 				showAds(interstitialAd, callback)
