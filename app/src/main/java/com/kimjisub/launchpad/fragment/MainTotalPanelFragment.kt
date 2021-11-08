@@ -29,21 +29,20 @@ class MainTotalPanelFragment : BaseFragment() {
 
 		vm.eventSort.observeEvent(viewLifecycleOwner) {
 			sort = it
-			callbacks?.sortChangeListener(it)
+			callbacks?.onSortChangeListener(it)
 		}
-
 
 		return b.root
 	}
 
-	fun update(){
+	fun update() {
 		vm.update()
 	}
 
 	private var callbacks: Callbacks? = null
 
 	interface Callbacks {
-		fun sortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>)
+		fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>)
 	}
 
 	override fun onAttach(context: Context) {

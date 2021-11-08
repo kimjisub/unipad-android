@@ -8,16 +8,10 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
-import android.view.View
 import android.view.animation.Animation
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog.Builder
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentTransaction
-import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
@@ -29,17 +23,11 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.kimjisub.design.dialog.FileExplorerDialog
 import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
-import com.kimjisub.design.extra.getVirtualIndexFormSorted
-import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.BuildConfig
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.adapter.UniPackAdapter
-import com.kimjisub.launchpad.adapter.UniPackAdapter.EventListener
-import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.ActivityMainBinding
-import com.kimjisub.launchpad.db.AppDataBase
-import com.kimjisub.launchpad.db.ent.UniPackOpenENT
-import com.kimjisub.launchpad.db.util.observeRealChange
+import com.kimjisub.launchpad.fragment.MainListFragment
 import com.kimjisub.launchpad.fragment.MainPackPanelFragment
 import com.kimjisub.launchpad.fragment.MainTotalPanelFragment
 import com.kimjisub.launchpad.midi.MidiConnection.controller
@@ -52,12 +40,7 @@ import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
-import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.lingala.zip4j.progress.ProgressMonitor
 import splitties.activities.start
 import splitties.alertdialog.alertDialog
@@ -68,51 +51,12 @@ import splitties.snackbar.action
 import splitties.snackbar.longSnack
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
 
-class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
+class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListFragment.Callbacks {
 	private lateinit var b: ActivityMainBinding
 
 	private var isPro = false
-		set(value) {
-			field = value
-			b.totalPanel.data.premium.set(field)
-		}
 
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(this)!! }
-
-	private var adsPlayStart: InterstitialAd? = null
-
-	// List Management
-	private var unipackList: ArrayList<UniPackItem> = ArrayList()
-	private var lastPlayIndex = -1
-	private var listRefreshing = false
-	private val adapter: UniPackAdapter by lazy {
-		val adapter = UniPackAdapter(unipackList, object : EventListener {
-			override fun onViewClick(item: UniPackItem, v: PackView) {
-				togglePlay(item)
-			}
-
-			override fun onViewLongClick(item: UniPackItem, v: PackView) {}
-
-			override fun onPlayClick(item: UniPackItem, v: PackView) {
-				pressPlay(item)
-			}
-		})
-		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
-			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-				super.onItemRangeInserted(positionStart, itemCount)
-				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
-			}
-
-			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-				super.onItemRangeRemoved(positionStart, itemCount)
-				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
-			}
-		})
-
-		adapter
-	}
 
 	private val storeAnimator: ValueAnimator by lazy {
 		val animator = ObjectAnimator.ofObject(ArgbEvaluator(), colors.orange, colors.red)
@@ -165,19 +109,13 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 			}
 
 			override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
-				if (f == 0 && upDown) {
-					if (havePrev()) {
-						togglePlay(lastPlayIndex - 1)
-						b.recyclerView.smoothScrollToPosition(lastPlayIndex)
-					} else showSelectLPUI()
-				} else if (f == 1 && upDown) {
-					if (haveNext()) {
-						togglePlay(lastPlayIndex + 1)
-						b.recyclerView.smoothScrollToPosition(lastPlayIndex)
-					} else showSelectLPUI()
-				} else if (f == 2 && upDown) {
-					if (haveNow()) unipackList[lastPlayIndex].playClick?.invoke()
-				}
+				if (f == 0 && upDown)
+					listFragment.prev()
+				else if (f == 1 && upDown)
+					listFragment.next()
+				else if (f == 2 && upDown)
+					listFragment.currentClick()
+
 			}
 
 			override fun onChainTouch(c: Int, upDown: Boolean) {}
@@ -190,21 +128,18 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 
 	private val settingsActivityResultLauncher =
 		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-			update()
+			listFragment.update()
 		}
 	private val storeActivityResultLauncher =
 		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-			update()
+			listFragment.update()
 		}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private val mainTotalPanelFragment by lazy { MainTotalPanelFragment() }
+	private val listFragment by lazy { MainListFragment() }
 
-
-	override fun sortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
-		update()
-	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -215,21 +150,16 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 
 		supportFragmentManager
 			.beginTransaction()
-			.replace(b.panelFragment.id, mainTotalPanelFragment)
+			.replace(b.fragmentPanel.id, mainTotalPanelFragment)
 			.commit()
 
-		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
-		val borderDivider = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
-		divider.setDrawable(borderDivider)
-		b.recyclerView.addItemDecoration(divider)
-		b.recyclerView.setHasFixedSize(false)
-		b.recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
-		b.recyclerView.adapter = adapter
+		supportFragmentManager
+			.beginTransaction()
+			.replace(b.fragmentList.id, listFragment)
+			.commit()
 
 
-		initPanel()
 
-		b.swipeRefreshLayout.setOnRefreshListener { this.update() }
 		b.reconnectLaunchpad.setOnClickListener {
 			start<MidiSelectActivity>()
 		}
@@ -270,7 +200,6 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 				)
 			}
 		})
-		b.errItem.setOnClickListener { start<FBStoreActivity>() }
 		checkThings()
 	}
 
@@ -283,122 +212,8 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		versionCheck()
 	}
 
-	@SuppressLint("StaticFieldLeak")
-	private fun update(animateNew: Boolean = true) {
-		Log.test("update")
-
-		lastPlayIndex = -1
-		if (listRefreshing) return
-		b.swipeRefreshLayout.isRefreshing = true
-		listRefreshing = true
-
-		mainTotalPanelFragment.update()
-
-		CoroutineScope(Dispatchers.IO).launch {
-			var I_list = ArrayList<UniPackItem>()
-			val I_added = ArrayList<UniPackItem>()
-			val I_removed = ArrayList(unipackList)
-
-
-			try {
-
-				ws.getUnipacks().forEach {
-					if (!it.isDirectory) return@forEach
-
-					val unipack = UniPackFolder(it).load()
-					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.id)
-
-					val packItem = UniPackItem(unipack, unipackENT, animateNew)
-					I_list.add(packItem)
-				}
-
-				val sort = mainTotalPanelFragment.sort
-
-				if (sort != null) {
-					val comparator = Comparator<UniPackItem> { a, b ->
-						sort.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
-					}
-
-					I_list = ArrayList(I_list.sortedWith(comparator))
-				}
-
-				for (item: UniPackItem in I_list) {
-					var index = -1
-					for ((i, item2: UniPackItem) in I_removed.withIndex()) {
-						if ((item2.unipack == item.unipack)) {
-							index = i
-							break
-						}
-					}
-					if (index != -1)
-						I_removed.removeAt(index)
-					else
-						I_added.add(0, item)
-				}
-
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-
-			withContext(Dispatchers.Main) {
-				for (added: UniPackItem in I_added) {
-					val i = unipackList.getVirtualIndexFormSorted(Comparator { a, b ->
-						a.unipack.lastModified().compareTo(
-							b.unipack.lastModified()
-						)
-					}, added)
-
-					unipackList.add(i, added)
-					adapter.notifyItemInserted(i)
-
-					added.unipackENTObserver =
-						added.unipackENT.observeRealChange(this@MainActivity, Observer {
-							val index = unipackList.indexOf(added)
-							adapter.notifyItemChanged(index)
-
-							/* todo unipackEnt가 변경되었을 때 Fragment 내부에서 알아서 감지하는지
-							if (selectedIndex == index)
-								updatePanel(false)*/
-						}) { it.clone() }
-				}
-				for (removed: UniPackItem in I_removed) {
-					for ((i, item: UniPackItem) in unipackList.withIndex()) {
-						if ((item.unipack == removed.unipack)) {
-							unipackList.removeAt(i)
-							adapter.notifyItemRemoved(i)
-							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
-							b.totalPanel.data.unipackCount.set(unipackList.size.toString())
-							break
-						}
-					}
-				}
-
-				var changed = false
-				for ((to, target: UniPackItem) in I_list.withIndex()) {
-					var from = -1
-					for ((i, item) in adapter.list.withIndex())
-						if (target.unipack == item.unipack)
-							from = i
-					if (from != -1 && from != to) {
-						Collections.swap(adapter.list, from, to)
-						changed = true
-					}
-				}
-				if (changed)
-					adapter.notifyDataSetChanged()
-
-				if (I_added.size > 0) b.recyclerView.smoothScrollToPosition(0)
-				b.swipeRefreshLayout.isRefreshing = false
-				listRefreshing = false
-			}
-		}
-	}
 
 	// UniPack /////////////////////////////////////////////////////////////////////////////////////////
-
-	private fun deleteUniPack(unipack: UniPack) {
-
-	}
 
 	@SuppressLint("StaticFieldLeak")
 	private fun autoMapping(unipack: UniPack) {
@@ -497,79 +312,12 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 
 	// ListManage /////////////////////////////////////////////////////////////////////////////////////////
 
-	private fun togglePlay(i: Int) {
-		togglePlay(unipackList[i])
-	}
-
-	@SuppressLint("SetTextI18n")
-	fun togglePlay(target: UniPackItem?) {
-		try {
-			for ((i, item: UniPackItem) in unipackList.withIndex()) {
-				//val packView = item.packView
-				if (target != null && (item.unipack == target.unipack)) {
-
-					item.toggle = !item.toggle
-					lastPlayIndex = i
-					item.togglea?.invoke(item.toggle)
-				} else if (item.toggle) {
-					item.toggle = false
-					item.togglea?.invoke(item.toggle)
-				}
-			}
-			showSelectLPUI()
-			updatePanel()
-		} catch (e: ConcurrentModificationException) {
-			e.printStackTrace()
-		}
-	}
-
-	fun pressPlay(item: UniPackItem) {
-		Thread {
-			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.id, Date()))
-		}.start()
-		start<PlayActivity> {
-			putExtra("path", item.unipack.getPathString())
-		}
-		ads.showAdsWithCooltime(adsPlayStart) {
-			val playStartUnitId = resources.getString(string.admob_play_start)
-			ads.loadAds(playStartUnitId) {
-				adsPlayStart = it
-			}
-		}
-		removeController((midiController))
-	}
-
-	private val selectedIndex: Int
-		get() {
-			var index = -1
-			var i = 0
-			for (item: UniPackItem in unipackList) {
-				if (item.toggle) {
-					index = i
-					break
-				}
-				i++
-			}
-			return index
-		}
-
-	private val selected: UniPackItem?
-		get() {
-			var ret: UniPackItem? = null
-			val playIndex = selectedIndex
-			if (playIndex != -1) ret = unipackList[playIndex]
-			return ret
-		}
 
 	// Panel /////////////////////////////////////////////////////////////////////////////////////////
 
-	@SuppressLint("SetTextI18n")
-	private fun initPanel() {
-
-	}
-
 	private fun updatePanel() {
-		if (selectedIndex == -1) { // Total
+		val selectedUniPackItem = listFragment.selectedUniPackItem()
+		if (selectedUniPackItem == null) { // Total
 			// Pack 이 켜져있으면 닫기
 			if (supportFragmentManager.backStackEntryCount >= 1)
 				supportFragmentManager.popBackStack()
@@ -581,7 +329,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 				if (supportFragmentManager.backStackEntryCount == 0)
 					setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
 
-				replace(b.panelFragment.id, MainPackPanelFragment(unipackList[selectedIndex]))
+				replace(b.fragmentPanel.id, MainPackPanelFragment(selectedUniPackItem))
 				addToBackStack("pack")
 				commit()
 			}
@@ -621,22 +369,15 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		showSelectLPUI()
 	}
 
-	private fun haveNow(): Boolean {
-		return 0 <= lastPlayIndex && lastPlayIndex <= unipackList.size - 1
-	}
-
-	private fun haveNext(): Boolean {
-		return lastPlayIndex < unipackList.size - 1
-	}
-
-	private fun havePrev(): Boolean {
-		return 0 < lastPlayIndex
-	}
 
 	private fun showSelectLPUI() {
-		if (havePrev()) driver.sendFunctionkeyLed(0, 63) else driver.sendFunctionkeyLed(0, 5)
-		if (haveNow()) driver.sendFunctionkeyLed(2, 61) else driver.sendFunctionkeyLed(2, 0)
-		if (haveNext()) driver.sendFunctionkeyLed(1, 63) else driver.sendFunctionkeyLed(1, 5)
+		if (listFragment.havePrev()) driver.sendFunctionkeyLed(0,
+			63) else driver.sendFunctionkeyLed(0, 5)
+		if (listFragment.haveNow()) driver.sendFunctionkeyLed(2, 61) else driver.sendFunctionkeyLed(
+			2,
+			0)
+		if (listFragment.haveNext()) driver.sendFunctionkeyLed(1,
+			63) else driver.sendFunctionkeyLed(1, 5)
 	}
 
 	private fun showWatermark() {
@@ -649,7 +390,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 	// Activity /////////////////////////////////////////////////////////////////////////////////////////
 
 	override fun onBackPressed() {
-		if (selectedIndex != -1) togglePlay(null) else super.onBackPressed()
+		if (!listFragment.deselect()) super.onBackPressed()
 	}
 
 	override fun onResume() {
@@ -659,7 +400,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		fbStoreCount.attachEventListener(true)
 		bm.restorePurchase()
 
-		val playStartUnitId = resources.getString(string.admob_play_start)
+		val playStartUnitId = resources.getString(R.string.admob_play_start)
 		ads.loadAds(playStartUnitId) {
 			adsPlayStart = it
 		}
@@ -674,5 +415,35 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 	override fun onDestroy() {
 		super.onDestroy()
 		removeController(midiController)
+	}
+
+	// ListFragment Callbacks
+
+	override fun onListSelectedChange(
+		index: Int,
+	) {
+		showSelectLPUI()
+		updatePanel()
+	}
+
+	override fun onListUpdated() {
+		mainTotalPanelFragment.update()
+	}
+
+	private var adsPlayStart: InterstitialAd? = null
+	override fun onRequestAds() {
+		ads.showAdsWithCooltime(adsPlayStart) {
+			val playStartUnitId = resources.getString(R.string.admob_play_start)
+			ads.loadAds(playStartUnitId) {
+				adsPlayStart = it
+			}
+		}
+	}
+
+	// TotalPanelFragment Callbacks
+
+	override fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
+		listFragment.sort = sort
+		listFragment.update()
 	}
 }
