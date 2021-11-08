@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.view.animation.Animation
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.FragmentTransaction
@@ -41,6 +42,7 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.fragment.MainPackPanelFragment
 import com.kimjisub.launchpad.fragment.MainTotalPanelFragment
+import com.kimjisub.launchpad.fragment.MainTotalPanelViewModel
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -68,7 +70,7 @@ import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 	private lateinit var b: ActivityMainBinding
 
 	private var isPro = false
@@ -186,12 +188,22 @@ class MainActivity : BaseActivity() {
 		}
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
-	private val mainTotalPanelFragment by lazy {
-		MainTotalPanelFragment {
+	private val settingsActivityResultLauncher =
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 			update()
 		}
+	private val storeActivityResultLauncher =
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+			update()
+		}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	private val mainTotalPanelFragment by lazy { MainTotalPanelFragment() }
+
+
+	override fun sortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
+		update()
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -200,6 +212,11 @@ class MainActivity : BaseActivity() {
 		setContentView(b.root)
 
 		bm.load()
+
+		supportFragmentManager
+			.beginTransaction()
+			.replace(b.panelFragment.id, mainTotalPanelFragment)
+			.commit()
 
 		val divider = DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL)
 		val borderDivider = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
@@ -231,12 +248,16 @@ class MainActivity : BaseActivity() {
 		}
 		b.store.setOnClickListener {
 			val intent = Intent(applicationContext, FBStoreActivity::class.java)
-			startActivityForResult(intent, REQUEST_FB_STORE)
+			storeActivityResultLauncher.launch(intent)
 		}
 		b.store.setOnLongClickListener { false }
-		b.setting.setOnClickListener { start<SettingsActivity>() }
+		b.setting.setOnClickListener {
+			val intent = Intent(applicationContext, SettingsActivity::class.java)
+			settingsActivityResultLauncher.launch(intent)
+		}
 		b.setting.setOnLongClickListener {
-			start<SettingLegacyActivity>()
+			val intent = Intent(applicationContext, SettingLegacyActivity::class.java)
+			settingsActivityResultLauncher.launch(intent)
 			false
 		}
 		b.floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
@@ -251,15 +272,6 @@ class MainActivity : BaseActivity() {
 		})
 		b.errItem.setOnClickListener { start<FBStoreActivity>() }
 		checkThings()
-		update(false)
-
-		updatePanel(true)
-
-
-		supportFragmentManager
-			.beginTransaction()
-			.replace(b.panelFragment.id, mainTotalPanelFragment)
-			.commit()
 	}
 
 	override fun onProStatusUpdated(isPro: Boolean) {
@@ -273,10 +285,14 @@ class MainActivity : BaseActivity() {
 
 	@SuppressLint("StaticFieldLeak")
 	private fun update(animateNew: Boolean = true) {
+		Log.test("update")
+
 		lastPlayIndex = -1
 		if (listRefreshing) return
 		b.swipeRefreshLayout.isRefreshing = true
 		listRefreshing = true
+
+		mainTotalPanelFragment.update()
 
 		CoroutineScope(Dispatchers.IO).launch {
 			var I_list = ArrayList<UniPackItem>()
@@ -298,7 +314,7 @@ class MainActivity : BaseActivity() {
 
 				val sort = mainTotalPanelFragment.sort
 
-				if(sort != null){
+				if (sort != null) {
 					val comparator = Comparator<UniPackItem> { a, b ->
 						sort.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
 					}
@@ -340,8 +356,9 @@ class MainActivity : BaseActivity() {
 							val index = unipackList.indexOf(added)
 							adapter.notifyItemChanged(index)
 
+							/* todo unipackEnt가 변경되었을 때 Fragment 내부에서 알아서 감지하는지
 							if (selectedIndex == index)
-								updatePanel(false)
+								updatePanel(false)*/
 						}) { it.clone() }
 				}
 				for (removed: UniPackItem in I_removed) {
@@ -373,8 +390,6 @@ class MainActivity : BaseActivity() {
 				if (I_added.size > 0) b.recyclerView.smoothScrollToPosition(0)
 				b.swipeRefreshLayout.isRefreshing = false
 				listRefreshing = false
-
-				updatePanel(true)
 			}
 		}
 	}
@@ -502,7 +517,7 @@ class MainActivity : BaseActivity() {
 				}
 			}
 			showSelectLPUI()
-			updatePanel(false)
+			updatePanel()
 		} catch (e: ConcurrentModificationException) {
 			e.printStackTrace()
 		}
@@ -553,7 +568,7 @@ class MainActivity : BaseActivity() {
 
 	}
 
-	private fun updatePanel(hardWork: Boolean) {
+	private fun updatePanel() {
 		if (selectedIndex == -1) { // Total
 			// Pack 이 켜져있으면 닫기
 			if (supportFragmentManager.backStackEntryCount >= 1)
@@ -640,7 +655,6 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		checkThings()
-		Handler().postDelayed({ update() }, 1000)
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		bm.restorePurchase()

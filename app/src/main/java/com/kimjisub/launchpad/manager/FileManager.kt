@@ -3,6 +3,9 @@ package com.kimjisub.launchpad.manager
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import java.io.*
 import java.util.*
 
@@ -182,15 +185,22 @@ object FileManager {
 		return String.format(format, b.toFloat() / 1024 / 1024)
 	}
 
-	fun getFolderSize(file: File): Long {
-		var totalMemory: Long = 0
-		if (file.isFile) {
-			return file.length()
-		} else if (file.isDirectory) {
-			val childFileList: Array<out File> = file.listFiles() ?: return 0
-			for (childFile in childFileList) totalMemory += getFolderSize(childFile)
-			return totalMemory
-		} else return 0
+	suspend fun getFolderSize(file: File): Long {
+		val job = CoroutineScope(Dispatchers.IO).async {
+			var totalMemory: Long = 0
+			when {
+				file.isFile -> {
+					return@async file.length()
+				}
+				file.isDirectory -> {
+					val childFileList: Array<out File> = file.listFiles() ?: return@async 0
+					for (childFile in childFileList) totalMemory += getFolderSize(childFile)
+					return@async totalMemory
+				}
+				else -> return@async 0
+			}
+		}
+		return job.await()
 	}
 
 	// ============================================================================================= Etc

@@ -11,12 +11,10 @@ import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Event
-import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.emit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 
@@ -59,26 +57,14 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	val unipackCount = MutableLiveData<Int>()
 	val unipackCapacity = MutableLiveData<String>()
 	val openCount = MutableLiveData<Int>()
-	val themeList = MutableLiveData<ArrayList<String>>()
-	val selectedTheme = MutableLiveData<Int>()
 	val sortMethod = MutableLiveData<Int>()
 	val sortOrder = MutableLiveData<Boolean>()
 	val eventSort = MutableLiveData<Event<Pair<SortMethod, Boolean>>>()
 
 	init {
 		version.value = BuildConfig.VERSION_NAME
-		unipackCount.value = ws.getUnipacks().size
 		db.unipackOpenDAO()!!.count.observeForever {
 			openCount.value = it ?: 0
-		}
-		CoroutineScope(Dispatchers.IO).launch {
-			val size = FileManager.getFolderSize(
-				ws.mainWorkspace.file // todo 여러 workspace의 용량 계산, WorkspaceManager로 이동하기
-			)
-
-			withContext(Dispatchers.Main) {
-				unipackCapacity.value = FileManager.byteToMB(size, "%.0f")
-			}
 		}
 
 		sortMethod.value = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
@@ -92,6 +78,17 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 		sortOrder.observeForever {
 			p.sortOrder = it
 			sortChange()
+		}
+	}
+
+	fun update(){
+		CoroutineScope(Dispatchers.Main).launch {
+			val size = ws.getActiveWorkspacesSize()
+			unipackCapacity.value = FileManager.byteToMB(size, "%.0f")
+		}
+
+		CoroutineScope(Dispatchers.Main).launch {
+			unipackCount.value = ws.getUnipacks().size
 		}
 	}
 
