@@ -30,13 +30,13 @@ open class BaseApiService {
 					object : X509TrustManager {
 						override fun checkClientTrusted(
 							chain: Array<out X509Certificate>?,
-							authType: String?
+							authType: String?,
 						) {
 						}
 
 						override fun checkServerTrusted(
 							chain: Array<out X509Certificate>?,
-							authType: String?
+							authType: String?,
 						) {
 						}
 
@@ -63,7 +63,7 @@ open class BaseApiService {
 						override fun deserialize(
 							json: JsonElement,
 							typeOfT: Type?,
-							context: JsonDeserializationContext?
+							context: JsonDeserializationContext?,
 						): Date? {
 							return try {
 								df.parse(json.asString)

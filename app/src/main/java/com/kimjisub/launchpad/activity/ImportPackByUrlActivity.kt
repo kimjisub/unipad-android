@@ -83,7 +83,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 				override fun onGetFileSize(
 					fileSize: Long,
 					contentLength: Long,
-					preKnownFileSize: Long
+					preKnownFileSize: Long,
 				) {
 					log("fileSize: $contentLength → $fileSize")
 				}
@@ -91,14 +91,14 @@ class ImportPackByUrlActivity : BaseActivity() {
 				override fun onDownloadProgress(
 					percent: Int,
 					downloadedSize: Long,
-					fileSize: Long
+					fileSize: Long,
 				) {
 				}
 
 				override fun onDownloadProgressPercent(
 					percent: Int,
 					downloadedSize: Long,
-					fileSize: Long
+					fileSize: Long,
 				) {
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)

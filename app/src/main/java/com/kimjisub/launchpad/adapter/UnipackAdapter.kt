@@ -33,7 +33,7 @@ data class UniPackItem(
 }
 
 class UniPackHolder(
-	var packView: PackView
+	var packView: PackView,
 ) : RecyclerView.ViewHolder(packView)
 
 class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener: EventListener) :

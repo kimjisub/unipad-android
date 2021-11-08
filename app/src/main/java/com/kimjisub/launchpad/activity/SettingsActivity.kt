@@ -21,19 +21,19 @@ class SettingsActivity : AppCompatActivity() {
 
 		supportFragmentManager
 			.beginTransaction()
-			.replace(b.category.id, HeaderFragment{
-				val fragment = when(it){
-					Category.INFO-> InfoFragment()
-					Category.ADS_PAYMENT-> AdsPaymentFragment()
-					Category.STORAGE-> StorageFragment()
-					Category.THEME-> {
+			.replace(b.category.id, HeaderFragment {
+				val fragment = when (it) {
+					Category.INFO -> InfoFragment()
+					Category.ADS_PAYMENT -> AdsPaymentFragment()
+					Category.STORAGE -> StorageFragment()
+					Category.THEME -> {
 						start<ThemeActivity>()
 						// todo 이런식으로 fragment 띄우지 않는 경우에는
 						//  HeaderFragment 내부에서 select 값 바꾸지 않도록
 						// ThemeFragment()
 						null
 					}
-					else-> null
+					else -> null
 				}
 
 				if (fragment != null) {

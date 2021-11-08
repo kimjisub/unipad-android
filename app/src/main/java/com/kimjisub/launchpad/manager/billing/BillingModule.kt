@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 class BillingModule(
 	private val activity: Activity,
 	private val lifeCycleScope: LifecycleCoroutineScope,
-	private val callback: Callback
+	private val callback: Callback,
 ) {
 	// sku 들을 적어줍니다.
 	private val inAppSkus = listOf<String>()
@@ -91,7 +91,7 @@ class BillingModule(
 	fun querySkuDetail(
 		type: String = BillingClient.SkuType.INAPP,
 		skus: List<String>,
-		resultBlock: (List<SkuDetails>) -> Unit = {}
+		resultBlock: (List<SkuDetails>) -> Unit = {},
 	) {
 		SkuDetailsParams.newBuilder().apply {
 			// 인앱, 정기결제 유형중에서 고름. (SkuType.INAPP, SkuType.SUBS)
@@ -117,7 +117,7 @@ class BillingModule(
 	 */
 	fun purchase(
 		skuDetails: SkuDetails,
-		oldPurchase: Purchase? = null
+		oldPurchase: Purchase? = null,
 	) {
 		val flowParams = BillingFlowParams.newBuilder().apply {
 			setSkuDetails(skuDetails)
@@ -168,7 +168,7 @@ class BillingModule(
 	 */
 	fun checkPurchased(
 		sku: String,
-		resultBlock: (purchased: Boolean) -> Unit
+		resultBlock: (purchased: Boolean) -> Unit,
 	) {
 		billingClient.queryPurchases(BillingClient.SkuType.INAPP).purchasesList?.let { purchaseList ->
 			for (purchase in purchaseList) {

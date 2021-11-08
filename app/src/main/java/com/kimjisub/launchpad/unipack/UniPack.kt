@@ -65,7 +65,7 @@ abstract class UniPack {
 		return this
 	}
 
-	// Circular Queue /////////////////////////////////////////////////////////////////////////////////////////
+	// Circular Queue
 
 	fun Sound_get(c: Int, x: Int, y: Int): Sound? {
 		return try {
@@ -156,7 +156,7 @@ abstract class UniPack {
 		}
 	}
 
-	// etc /////////////////////////////////////////////////////////////////////////////////////////
+	// etc
 
 
 	fun addErr(content: String) {

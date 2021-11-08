@@ -35,7 +35,7 @@ class MidiDeviceAdapter(private val data: List<MidiDeviceItem>) :
 
 	override fun onCreateViewHolder(
 		parent: ViewGroup,
-		viewType: Int
+		viewType: Int,
 	): MidiDeviceViewHolder {
 		val inflater = LayoutInflater.from(parent.context)
 		val v: View = inflater.inflate(R.layout.item_midi_device, parent, false)

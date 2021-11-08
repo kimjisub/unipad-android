@@ -10,7 +10,6 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import com.kimjisub.launchpad.activity.BaseActivity
 import com.kimjisub.launchpad.tool.Log
 
 class AdmobManager(val activity: Activity) {
@@ -86,7 +85,7 @@ class AdmobManager(val activity: Activity) {
 
 	fun showRewardedAd(
 		rewardedAd: RewardedAd,
-		rewardedCallback: ((type: String, amount: Int) -> Unit)? = null
+		rewardedCallback: ((type: String, amount: Int) -> Unit)? = null,
 	) {
 		rewardedAd.show(activity) { rewardItem ->
 			val rewardType = rewardItem.type

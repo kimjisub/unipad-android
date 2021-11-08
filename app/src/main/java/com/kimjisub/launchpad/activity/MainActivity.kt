@@ -213,7 +213,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 	}
 
 
-	// UniPack /////////////////////////////////////////////////////////////////////////////////////////
+	// UniPack
 
 	@SuppressLint("StaticFieldLeak")
 	private fun autoMapping(unipack: UniPack) {
@@ -310,10 +310,10 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 			})
 	}
 
-	// ListManage /////////////////////////////////////////////////////////////////////////////////////////
+	// ListManage
 
 
-	// Panel /////////////////////////////////////////////////////////////////////////////////////////
+	// Panel
 
 	private fun updatePanel() {
 		val selectedUniPackItem = listFragment.selectedUniPackItem()
@@ -336,7 +336,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 		}
 	}
 
-	// Check /////////////////////////////////////////////////////////////////////////////////////////
+	// Check
 
 	private fun versionCheck() {
 		val thisVersion = BuildConfig.VERSION_NAME
@@ -362,7 +362,7 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 		if (bool) storeAnimator.start() else storeAnimator.end()
 	}
 
-	// Controller /////////////////////////////////////////////////////////////////////////////////////////
+	// Controller
 
 	private fun updateLP() {
 		showWatermark()
@@ -385,36 +385,6 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 		driver.sendPadLed(3, 4, 40)
 		driver.sendPadLed(4, 3, 40)
 		driver.sendPadLed(4, 4, 61)
-	}
-
-	// Activity /////////////////////////////////////////////////////////////////////////////////////////
-
-	override fun onBackPressed() {
-		if (!listFragment.deselect()) super.onBackPressed()
-	}
-
-	override fun onResume() {
-		super.onResume()
-		checkThings()
-		controller = midiController
-		fbStoreCount.attachEventListener(true)
-		bm.restorePurchase()
-
-		val playStartUnitId = resources.getString(R.string.admob_play_start)
-		ads.loadAds(playStartUnitId) {
-			adsPlayStart = it
-		}
-	}
-
-	override fun onPause() {
-		super.onPause()
-		controller = midiController
-		fbStoreCount.attachEventListener(false)
-	}
-
-	override fun onDestroy() {
-		super.onDestroy()
-		removeController(midiController)
 	}
 
 	// ListFragment Callbacks
@@ -445,5 +415,35 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 	override fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
 		listFragment.sort = sort
 		listFragment.update()
+	}
+
+	// Activity
+
+	override fun onBackPressed() {
+		if (!listFragment.deselect()) super.onBackPressed()
+	}
+
+	override fun onResume() {
+		super.onResume()
+		checkThings()
+		controller = midiController
+		fbStoreCount.attachEventListener(true)
+		bm.restorePurchase()
+
+		val playStartUnitId = resources.getString(R.string.admob_play_start)
+		ads.loadAds(playStartUnitId) {
+			adsPlayStart = it
+		}
+	}
+
+	override fun onPause() {
+		super.onPause()
+		controller = midiController
+		fbStoreCount.attachEventListener(false)
+	}
+
+	override fun onDestroy() {
+		super.onDestroy()
+		removeController(midiController)
 	}
 }

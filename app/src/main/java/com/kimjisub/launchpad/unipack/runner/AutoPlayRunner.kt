@@ -9,7 +9,7 @@ class AutoPlayRunner(
 	private val unipack: UniPack,
 	private val listener: Listener,
 	private val chain: ChainObserver,
-	private val loopDelay: Long = 1L
+	private val loopDelay: Long = 1L,
 ) {
 	var playmode = true
 	var beforeStartPlaying = true
@@ -43,7 +43,7 @@ class AutoPlayRunner(
 		fun onEnd()
 	}
 
-	// Thread /////////////////////////////////////////////////////////////////////////////////////////
+	// Thread
 
 	private val runnable = java.lang.Runnable {
 		Log.thread("[AutoPlay] 2. Start Thread")
@@ -119,7 +119,7 @@ class AutoPlayRunner(
 		thread?.interrupt()
 	}
 
-	// Functions /////////////////////////////////////////////////////////////////////////////////////////
+	// Functions
 
 	private fun beforeStartPlaying() {
 		if (beforeStartPlaying) {

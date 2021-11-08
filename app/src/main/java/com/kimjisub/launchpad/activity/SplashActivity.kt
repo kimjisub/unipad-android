@@ -43,7 +43,7 @@ class SplashActivity : BaseActivity() {
 
 
 		b.version.text = BuildConfig.VERSION_NAME
-		
+
 		TedPermission.with(this)
 			.setPermissionListener(object : PermissionListener {
 				override fun onPermissionGranted() {

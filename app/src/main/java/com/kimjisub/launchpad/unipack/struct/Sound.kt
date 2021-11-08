@@ -7,5 +7,5 @@ data class Sound(
 	val loop: Int,
 	val wormhole: Int = -1,
 	var num: Int = 0,
-	var id: Int = -1
+	var id: Int = -1,
 )

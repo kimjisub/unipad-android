@@ -10,12 +10,12 @@ import com.kimjisub.launchpad.databinding.ItemSettingBinding
 data class DialogListItem(
 	val title: String,
 	val subtitle: String,
-	val iconResId: Int? = null
+	val iconResId: Int? = null,
 )
 
 
 class DialogListAdapter(
-	private val list: Array<DialogListItem>
+	private val list: Array<DialogListItem>,
 ) : BaseAdapter() {
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

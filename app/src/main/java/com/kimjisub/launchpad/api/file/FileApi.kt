@@ -40,7 +40,7 @@ class FileApi : BaseApiService() {
 
 		interface FileService {
 
-			// unishare /////////////////////////////////////////////////////////////////////////////////////////
+			// unishare
 
 			@GET
 			@Streaming

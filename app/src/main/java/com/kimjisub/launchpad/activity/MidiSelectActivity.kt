@@ -16,7 +16,6 @@ import com.kimjisub.launchpad.databinding.ActivityMidiSelectBinding
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.launchpad.tool.AutorunTimer
-import com.kimjisub.launchpad.tool.Log
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 
 
@@ -145,7 +144,7 @@ class MidiSelectActivity : BaseActivity() {
 
 	}
 
-	// Select Mode /////////////////////////////////////////////////////////////////////////////////////////
+	// Select Mode
 
 	fun selectModeXml(v: View) {
 		MidiConnection.mode = Integer.parseInt(v.tag as String)
@@ -161,7 +160,7 @@ class MidiSelectActivity : BaseActivity() {
 		p.launchpadConnectMethod = mode
 	}
 
-	// Functions /////////////////////////////////////////////////////////////////////////////////////////
+	// Functions
 
 	private fun changeViewColor(layout: ViewGroup, backgroundColorRes: Int, textColorRes: Int) {
 		layout.setBackgroundColor(colors.get(backgroundColorRes))
@@ -172,7 +171,7 @@ class MidiSelectActivity : BaseActivity() {
 		}
 	}
 
-	// ActivityCycle /////////////////////////////////////////////////////////////////////////////////////////
+	// ActivityCycle
 
 	@SuppressLint("StaticFieldLeak")
 	override fun onDestroy() {

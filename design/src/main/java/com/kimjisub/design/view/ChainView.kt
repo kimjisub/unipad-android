@@ -11,7 +11,7 @@ class ChainView
 @JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
-	defStyleAttr: Int = 0
+	defStyleAttr: Int = 0,
 ) : RelativeLayout(context, attrs, defStyleAttr) {
 	private val b: ViewChainBinding =
 		ViewChainBinding.inflate(LayoutInflater.from(context), this, true)

@@ -10,7 +10,7 @@ import java.util.*
 @TypeConverters(DateConverter::class)
 class UniPackOpenENT(
 	var path: String,
-	var created_at: Date
+	var created_at: Date,
 ) {
 	@PrimaryKey(autoGenerate = true)
 	var id: Long = 0

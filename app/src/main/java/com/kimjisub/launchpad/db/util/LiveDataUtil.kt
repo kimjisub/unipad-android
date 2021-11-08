@@ -16,7 +16,7 @@ fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 fun <T> LiveData<T>.observeRealChange(
 	owner: LifecycleOwner,
 	realChangeObserver: Observer<T>,
-	clone: (T) -> T
+	clone: (T) -> T,
 ): Observer<T> {
 	val observer = object : Observer<T> {
 		var prev: T? = null

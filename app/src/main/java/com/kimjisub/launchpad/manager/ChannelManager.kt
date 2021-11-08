@@ -19,7 +19,7 @@ class ChannelManager(x: Int, y: Int) {
 	data class Item(
 		var channel: Channel,
 		var color: Int,
-		var code: Int
+		var code: Int,
 	) {
 		override fun toString(): String {
 			return "Item(channel=$channel, color=$color, code=$code)"

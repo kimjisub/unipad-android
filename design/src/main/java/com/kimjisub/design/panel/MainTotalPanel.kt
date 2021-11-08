@@ -12,14 +12,13 @@ import androidx.databinding.ObservableField
 import com.kimjisub.design.R
 import com.kimjisub.design.R.styleable
 import com.kimjisub.design.databinding.PanelMainTotalBinding
-import com.kimjisub.design.extra.addOnPropertyChanged
 import com.polyak.iconswitch.IconSwitch
 
 class MainTotalPanel
 @JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
-	defStyleAttr: Int = 0
+	defStyleAttr: Int = 0,
 ) : RelativeLayout(context, attrs, defStyleAttr) {
 	private val b: PanelMainTotalBinding =
 		PanelMainTotalBinding.inflate(LayoutInflater.from(context), this, true)
@@ -51,7 +50,7 @@ class MainTotalPanel
 			onSortChangeListener?.onSortOrderChange(field)
 		}
 
-	var onSortChangeListener:OnSortChangeListener? = null
+	var onSortChangeListener: OnSortChangeListener? = null
 
 	init {
 		b.data = data
@@ -84,7 +83,7 @@ class MainTotalPanel
 				parent: AdapterView<*>?,
 				view: View?,
 				position: Int,
-				id: Long
+				id: Long,
 			) {
 				data.selectedTheme.set(position)
 			}

@@ -10,7 +10,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.R
@@ -23,7 +22,6 @@ import com.kimjisub.launchpad.db.AppDataBase
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.tool.Log
-import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -27,7 +27,7 @@ class UniPackDownloader(
 	workspace: File,
 	folderName: String,
 	preKnownFileSize: Long = 0,
-	private var listener: Listener
+	private var listener: Listener,
 ) {
 	interface Listener {
 		fun onInstallStart()

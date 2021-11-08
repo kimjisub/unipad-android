@@ -4,7 +4,7 @@ import com.kimjisub.launchpad.tool.Log
 
 abstract class DriverRef {
 
-	// OnCycleListener /////////////////////////////////////////////////////////////////////////////////////////
+	// OnCycleListener
 
 	private var onCycleListener: OnCycleListener? = null
 	fun setOnCycleListener(listener: OnCycleListener?): DriverRef {
@@ -23,7 +23,7 @@ abstract class DriverRef {
 
 	fun onDisconnected() = onCycleListener?.onDisconnected()
 
-	// OnReceiveSignalListener /////////////////////////////////////////////////////////////////////////////////////////
+	// OnReceiveSignalListener
 
 	private var onReceiveSignalListener: OnReceiveSignalListener? = null
 	fun setOnGetSignalListener(listener: OnReceiveSignalListener?): DriverRef {
@@ -68,7 +68,7 @@ abstract class DriverRef {
 		onReceiveSignalListener?.onUnknownReceived(cmd, sig, note, velocity)
 	}
 
-	// OnSendSignalListener /////////////////////////////////////////////////////////////////////////////////////////
+	// OnSendSignalListener
 
 	private var onSendSignalListener: OnSendSignalListener? = null
 	fun setOnSendSignalListener(listener: OnSendSignalListener?): DriverRef {

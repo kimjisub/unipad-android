@@ -12,7 +12,7 @@ import android.widget.TableRow
 class RadioButtonGroupTableLayout
 @JvmOverloads constructor(
 	context: Context,
-	attrs: AttributeSet? = null
+	attrs: AttributeSet? = null,
 ) : TableLayout(context, attrs), View.OnClickListener {
 	companion object {
 		private const val TAG = "RadioButtonGroupTableLayout"
