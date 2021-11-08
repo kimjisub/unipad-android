@@ -9,7 +9,7 @@
 
 		<variable
 			name="vm"
-			type="com.kimjisub.launchpad.fragment.MainTotalPanelViewModel" />
+			type="com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel" />
 	</data>
 
 	<FrameLayout

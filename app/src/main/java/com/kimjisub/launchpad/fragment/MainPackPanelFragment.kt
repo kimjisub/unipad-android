@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainPackPanelBinding
+import com.kimjisub.launchpad.viewmodel.MainPackPanelViewModel
 
 class MainPackPanelFragment(val unipackItem: UniPackItem) : Fragment() {
 	private var _b: FragmentMainPackPanelBinding? = null

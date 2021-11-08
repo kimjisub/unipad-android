@@ -1,4 +1,4 @@
-package com.kimjisub.launchpad.fragment
+package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
