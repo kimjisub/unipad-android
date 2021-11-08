@@ -189,11 +189,11 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 	}
 
 	private val settingsActivityResultLauncher =
-		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
 			update()
 		}
 	private val storeActivityResultLauncher =
-		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
 			update()
 		}
 
@@ -665,15 +665,6 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		}
 	}
 
-	override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-		super.onActivityResult(requestCode, resultCode, intent)
-		when (requestCode) {
-			REQUEST_FB_STORE -> checkThings()
-			else -> {
-			}
-		}
-	}
-
 	override fun onPause() {
 		super.onPause()
 		controller = midiController
@@ -685,8 +676,4 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		removeController(midiController)
 	}
 
-
-	companion object {
-		private const val REQUEST_FB_STORE = 100
-	}
 }
