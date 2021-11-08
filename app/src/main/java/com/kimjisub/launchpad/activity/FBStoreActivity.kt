@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.StoreAdapter
 import com.kimjisub.launchpad.adapter.StoreAdapter.EventListener
 import com.kimjisub.launchpad.adapter.StoreItem
+import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.ActivityStoreBinding
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
@@ -29,6 +30,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.internal.notifyAll
 import splitties.toast.toast
 import java.io.File
 import java.util.*
@@ -43,7 +45,7 @@ class FBStoreActivity : BaseActivity() {
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
-	private lateinit var downloadList: Array<File>
+	private lateinit var downloadList: List<UniPackItem>
 
 	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
@@ -135,7 +137,7 @@ class FBStoreActivity : BaseActivity() {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java)!!
 					var isDownloaded = false
 					for (dir in downloadList) {
-						if (d.code == dir.name) {
+						if (d.code == dir.unipack.id) {
 							isDownloaded = true
 							break
 						}

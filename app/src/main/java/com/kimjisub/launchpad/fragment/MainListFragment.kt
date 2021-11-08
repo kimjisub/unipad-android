@@ -115,22 +115,12 @@ class MainListFragment : BaseFragment() {
 
 
 		CoroutineScope(Dispatchers.IO).launch {
-			var I_list = ArrayList<UniPackItem>()
+			var I_list = ws.getUnipacks()
 			val I_added = ArrayList<UniPackItem>()
 			val I_removed = ArrayList(unipackList)
 
 
 			try {
-
-				ws.getUnipacks().forEach {
-					if (!it.isDirectory) return@forEach
-
-					val unipack = UniPackFolder(it).load()
-					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.id)
-
-					val packItem = UniPackItem(unipack, unipackENT, animateNew)
-					I_list.add(packItem)
-				}
 
 
 				if (sort != null) {
@@ -138,7 +128,7 @@ class MainListFragment : BaseFragment() {
 						sort!!.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
 					}
 
-					I_list = ArrayList(I_list.sortedWith(comparator))
+					I_list = I_list.sortedWith(comparator)
 				}
 
 				for (item: UniPackItem in I_list) {

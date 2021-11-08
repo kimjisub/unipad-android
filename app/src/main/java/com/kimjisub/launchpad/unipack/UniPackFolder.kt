@@ -22,7 +22,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 	var F_keyLed: File? = null
 	var F_autoPlay: File? = null
 	override val id: String
-		get() = rootFolder.path
+		get() = rootFolder.name
 
 	override val infoExist
 		get() = F_info != null

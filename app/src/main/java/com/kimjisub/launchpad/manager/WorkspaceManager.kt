@@ -3,14 +3,15 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.unipack.UniPackFolder
+import kotlinx.coroutines.*
 import java.io.File
 
 class WorkspaceManager(val context: Context) {
 	val p by lazy { PreferenceManager(context) }
-
+	private val db: AppDataBase by lazy { AppDataBase.getInstance(context)!! }
 
 	data class Workspace(
 		val name: String,
@@ -125,16 +126,23 @@ class WorkspaceManager(val context: Context) {
 		}*/
 
 	suspend fun getUnipacks() =
-		coroutineScope {
-			val unipacks = mutableListOf<File>()
+		withContext(Dispatchers.IO) {
+			val unipacks = mutableListOf<UniPackItem>()
 
 			for (workspace in activeWorkspaces) {
 				val folder = workspace.file
 				val files = folder.listFiles()
 				files?.forEach {
-					unipacks.add(it)
+					if (!it.isDirectory) return@forEach
+
+					val unipack = UniPackFolder(it).load()
+					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.id)
+
+					val packItem = UniPackItem(unipack, unipackENT)
+					unipacks.add(packItem)
 				}
 			}
-			unipacks.toTypedArray()
+
+			unipacks.toList()
 		}
 }
