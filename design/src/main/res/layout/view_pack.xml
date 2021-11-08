@@ -107,7 +107,7 @@
 								android:ellipsize="end"
 								android:maxLines="1"
 								android:textColor="@color/title"
-								android:textSize="15dp"
+								android:textSize="14sp"
 								tools:text="Title" />
 
 							<TextView
@@ -118,7 +118,7 @@
 								android:ellipsize="end"
 								android:maxLines="1"
 								android:textColor="@color/subtitle"
-								android:textSize="10dp"
+								android:textSize="10sp"
 								tools:text="Producer" />
 
 						</LinearLayout>
