@@ -8,14 +8,8 @@ import java.util.*
 @Dao
 abstract class UniPackDAO {
 
-	/*@Query("SELECT * FROM UniPackENT")
-	public abstract List<UniPackENT> getAll();*/
-
 	@Query("SELECT * FROM UniPackENT WHERE path=:path LIMIT 1")
 	abstract fun find(path: String): LiveData<UniPackENT>
-
-	/*fun findasdf(id: String):
-			LiveData<UniPackENT?> = find_(id).getDistinct()*/
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	abstract fun insert(item: UniPackENT)

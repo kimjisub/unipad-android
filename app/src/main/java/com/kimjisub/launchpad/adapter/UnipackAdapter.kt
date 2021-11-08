@@ -20,7 +20,7 @@ import java.util.*
 data class UniPackItem(
 	var unipack: UniPack,
 	val unipackENT: LiveData<UniPackENT>,
-	var isNew: Boolean
+	/*var isNew: Boolean,*/
 ) {
 	var unipackENTObserver: Observer<UniPackENT>? = null
 
@@ -83,9 +83,9 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 			option2 = item.unipack.autoPlayExist
 			bookmark = false
 
-			item.unipackENT.observeOnce(Observer {
+			item.unipackENT.observeOnce {
 				bookmark = it.bookmark
-			})
+			}
 
 			setOnEventListener(object : OnEventListener {
 				override fun onViewClick(v: PackView) {
@@ -103,8 +103,8 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 			toggle(item.toggle)
 			animate = true
 			var a: Animation? = AnimationUtils.loadAnimation(context, anim.pack_in)
-			if (item.isNew) a = AnimationUtils.loadAnimation(context, anim.pack_new_in)
-			item.isNew = false
+			// if (item.isNew) a = AnimationUtils.loadAnimation(context, anim.pack_new_in)
+			// item.isNew = false
 			animation = a
 		}
 

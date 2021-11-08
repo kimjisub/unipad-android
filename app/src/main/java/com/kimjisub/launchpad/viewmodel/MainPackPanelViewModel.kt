@@ -44,20 +44,24 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 		downloadedDate.value = Date(unipack.lastModified())
 
 
-		val unipackOpenDao = db.unipackOpenDAO()!!
-		val unipackDao = db.unipackDAO()!!
-		val unipackEnt = unipackDao.find(unipack.getPathString())
+		CoroutineScope(Dispatchers.IO).launch {
+			val unipackOpenDao = db.unipackOpenDAO()!!
+			val unipackDao = db.unipackDAO()!!
+			val unipackEnt = unipackDao.getOrCreate(unipack.id)
 
-		unipackEnt.observeForever {
-			bookmark.value = it.bookmark
+			withContext(Dispatchers.Main) {
+				unipackEnt.observeForever {
+					bookmark.value = it.bookmark
+				}
+				unipackOpenDao.getCount(unipack.id).observeForever {
+					playCount.value = it
+				}
+				unipackOpenDao.getLastOpenedDate(unipack.id).observeForever {
+					lastPlayed.value = it?.created_at
+				}
+			}
 		}
 
-		unipackOpenDao.getCount(unipack.id).observeForever {
-			playCount.value = it
-		}
-		unipackOpenDao.getLastOpenedDate(unipack.id).observeForever {
-			lastPlayed.value = it?.created_at
-		}
 
 		fileSize.value = null
 		CoroutineScope(Dispatchers.IO).launch {
