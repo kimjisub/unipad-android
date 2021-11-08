@@ -3,7 +3,9 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import com.kimjisub.launchpad.tool.Log
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import java.io.File
 
 class WorkspaceManager(val context: Context) {
@@ -12,7 +14,7 @@ class WorkspaceManager(val context: Context) {
 
 	data class Workspace(
 		val name: String,
-		val file: File
+		val file: File,
 	) {
 
 		override fun toString(): String {
@@ -26,7 +28,7 @@ class WorkspaceManager(val context: Context) {
 			val uniPackWorkspaces = ArrayList<Workspace>()
 
 			val legacyWorkspace = File(Environment.getExternalStorageDirectory(), "Unipad")
-			if(legacyWorkspace.canWrite()) {
+			if (legacyWorkspace.canWrite()) {
 				FileManager.makeDirWhenNotExist(legacyWorkspace)
 				FileManager.makeNomedia(legacyWorkspace)
 				uniPackWorkspaces.add(
@@ -75,12 +77,23 @@ class WorkspaceManager(val context: Context) {
 		get() {
 			validateWorkspace()
 
-			return availableWorkspaces.filter { p.storageActive.contains(it.file.path) }.toTypedArray()
+			return availableWorkspaces.filter { p.storageActive.contains(it.file.path) }
+				.toTypedArray()
 		}
 
-	fun validateWorkspace(){
+	suspend fun getActiveWorkspacesSize() =
+		coroutineScope {
+			var size = 0L
+			val works = activeWorkspaces.map {
+				async { FileManager.getFolderSize(activeWorkspaces[0].file) }
+			}
+
+			works.awaitAll().sum()
+		}
+
+	fun validateWorkspace() {
 		// 활성화된 작업공간이 없다면 사용가능한 작업공간 중 첫번째 활성화
-		if(p.storageActive.isEmpty())
+		if (p.storageActive.isEmpty())
 			p.storageActive = setOf(availableWorkspaces[0].file.path)
 	}
 
@@ -111,23 +124,17 @@ class WorkspaceManager(val context: Context) {
 
 		}*/
 
-	fun getUnipacks(): Array<File> {
-		val unipacks = mutableListOf<File>()
+	suspend fun getUnipacks() =
+		coroutineScope {
+			val unipacks = mutableListOf<File>()
 
-		for (workspace in activeWorkspaces) {
-			val folder = workspace.file
-			val files = folder.listFiles()
-			files?.forEach {
-				unipacks.add(it)
+			for (workspace in activeWorkspaces) {
+				val folder = workspace.file
+				val files = folder.listFiles()
+				files?.forEach {
+					unipacks.add(it)
+				}
 			}
+			unipacks.toTypedArray()
 		}
-
-
-		return unipacks.toTypedArray()
-	}
-
-
-	companion object {
-		const val REQUEST_CODE = 0x0100
-	}
 }

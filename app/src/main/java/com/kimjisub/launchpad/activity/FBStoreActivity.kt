@@ -24,9 +24,11 @@ import com.kimjisub.launchpad.databinding.ActivityStoreBinding
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
-import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.UniPackDownloader
 import com.kimjisub.launchpad.unipack.UniPack
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import splitties.toast.toast
 import java.io.File
 import java.util.*
@@ -41,10 +43,14 @@ class FBStoreActivity : BaseActivity() {
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
 	private var adapter: StoreAdapter? = null
-	private val downloadList: Array<File> by lazy { ws.getUnipacks() }
+	private lateinit var downloadList: Array<File>
 
 	private fun initVar(onFirst: Boolean) {
 		if (onFirst) {
+			CoroutineScope(Dispatchers.IO).launch {
+				downloadList = ws.getUnipacks()
+			}
+
 			adapter = StoreAdapter(list, object : EventListener {
 				override fun onViewClick(item: StoreItem, v: PackView) {
 					togglePlay(item)
@@ -269,7 +275,7 @@ class FBStoreActivity : BaseActivity() {
 				override fun onGetFileSize(
 					fileSize: Long,
 					contentLength: Long,
-					preKnownFileSize: Long
+					preKnownFileSize: Long,
 				) {
 					val percent = 0
 					val downloadedMB: String = FileManager.byteToMB(0)
@@ -281,7 +287,7 @@ class FBStoreActivity : BaseActivity() {
 				override fun onDownloadProgress(
 					percent: Int,
 					downloadedSize: Long,
-					fileSize: Long
+					fileSize: Long,
 				) {
 					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
 					val fileSizeMB: String = FileManager.byteToMB(fileSize)
@@ -292,7 +298,7 @@ class FBStoreActivity : BaseActivity() {
 				override fun onDownloadProgressPercent(
 					percent: Int,
 					downloadedSize: Long,
-					fileSize: Long
+					fileSize: Long,
 				) {
 				}
 

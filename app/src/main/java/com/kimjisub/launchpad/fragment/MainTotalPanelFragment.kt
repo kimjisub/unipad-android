@@ -1,21 +1,20 @@
 package com.kimjisub.launchpad.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.kimjisub.launchpad.databinding.FragmentMainTotalPanelBinding
-import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.observeEvent
 
-class MainTotalPanelFragment(val sortChangeListener: (Pair<MainTotalPanelViewModel.SortMethod, Boolean>) -> Unit) :
-	BaseFragment() {
+class MainTotalPanelFragment : BaseFragment() {
 	private var _b: FragmentMainTotalPanelBinding? = null
 	private val b get() = _b!!
 	private val vm: MainTotalPanelViewModel by viewModels()
 
-	var sort : Pair<MainTotalPanelViewModel.SortMethod, Boolean>? = null
+	var sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>? = null
 
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?,
@@ -29,10 +28,31 @@ class MainTotalPanelFragment(val sortChangeListener: (Pair<MainTotalPanelViewMod
 
 		vm.eventSort.observeEvent(viewLifecycleOwner) {
 			sort = it
-			sortChangeListener(it)
+			callbacks?.sortChangeListener(it)
 		}
 
+
 		return b.root
+	}
+
+	fun update(){
+		vm.update()
+	}
+
+	private var callbacks: Callbacks? = null
+
+	interface Callbacks {
+		fun sortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>)
+	}
+
+	override fun onAttach(context: Context) {
+		super.onAttach(context)
+		callbacks = context as Callbacks?
+	}
+
+	override fun onDetach() {
+		super.onDetach()
+		callbacks = null
 	}
 
 
