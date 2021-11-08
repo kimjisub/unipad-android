@@ -18,7 +18,7 @@ import java.util.*
 // https://developers.google.com/admob/android/app-open-ads
 
 class AppOpenManager(
-	val application: BaseApplication
+	val application: BaseApplication,
 ) : LifecycleObserver, Application.ActivityLifecycleCallbacks {
 	private val AD_UNIT_ID = "ca-app-pub-1077445788578961/9421803373"
 	private var appOpenAd: AppOpenAd? = null

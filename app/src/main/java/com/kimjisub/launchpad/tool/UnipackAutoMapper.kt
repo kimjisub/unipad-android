@@ -15,7 +15,7 @@ import java.util.*
 
 class UniPackAutoMapper(
 	private val unipack: UniPack,
-	private var listener: Listener
+	private var listener: Listener,
 ) {
 	private var autoplay1: ArrayList<AutoPlay.Element> = ArrayList()
 	private var autoplay2: ArrayList<AutoPlay.Element> = ArrayList()

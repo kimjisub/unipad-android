@@ -16,7 +16,7 @@ import java.util.*
 class FileExplorerDialog(
 	internal var context: Context,
 	internal var path: String,
-	private val onEventListener: OnEventListener
+	private val onEventListener: OnEventListener,
 ) {
 	private val dialog = Builder(context).create()
 	private var fileExplorerLayout = LayoutFileExplorerBinding.inflate(
@@ -76,7 +76,7 @@ class FileExplorerDialog(
 	}
 
 
-	// Listener /////////////////////////////////////////////////////////////////////////////////////////
+	// Listener
 
 
 	interface OnEventListener {
@@ -92,7 +92,7 @@ class FileExplorerDialog(
 		onEventListener.onPathChanged(folderPath)
 	}
 
-	// view /////////////////////////////////////////////////////////////////////////////////////////
+	// view
 
 	private fun getString(id: Int): String {
 		return context.getString(id)

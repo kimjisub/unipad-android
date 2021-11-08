@@ -81,7 +81,7 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 		}
 	}
 
-	fun update(){
+	fun update() {
 		CoroutineScope(Dispatchers.Main).launch {
 			val size = ws.getActiveWorkspacesSize()
 			unipackCapacity.value = FileManager.byteToMB(size, "%.0f")

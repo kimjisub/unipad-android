@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.unipack
 
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
-import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound

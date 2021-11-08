@@ -20,11 +20,12 @@ open class Event<T>(value: T) {
 	}
 }
 
-fun <T> LiveData<Event<T>>.observeEvent(owner: LifecycleOwner, observer: Observer<T>) = observe(owner) {
-	if (it.isActive()) {
-		observer.onChanged(it.value)
+fun <T> LiveData<Event<T>>.observeEvent(owner: LifecycleOwner, observer: Observer<T>) =
+	observe(owner) {
+		if (it.isActive()) {
+			observer.onChanged(it.value)
+		}
 	}
-}
 
 fun MutableLiveData<Event<Unit>>.emit() = postValue(Event(Unit))
 

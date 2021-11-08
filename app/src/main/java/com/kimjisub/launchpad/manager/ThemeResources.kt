@@ -11,7 +11,7 @@ import com.kimjisub.launchpad.R.*
 class ThemeResources(
 	context: Context,
 	private val packageName: String = BuildConfig.APPLICATION_ID,
-	fullLoad: Boolean = false
+	fullLoad: Boolean = false,
 ) {
 	var resources: Resources
 	var defaultRes: Resources

@@ -14,7 +14,7 @@ import java.util.*
 class SoundRunner(
 	private val unipack: UniPack,
 	private val chain: ChainObserver,
-	private val loadingListener: LoadingListener
+	private val loadingListener: LoadingListener,
 ) {
 
 	private var soundPool: SoundPool

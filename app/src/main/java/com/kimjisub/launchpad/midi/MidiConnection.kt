@@ -53,7 +53,7 @@ object MidiConnection {
 			listener?.onChangeMode(field)
 		}
 
-	// Listener /////////////////////////////////////////////////////////////////////////////////////////
+	// Listener
 
 
 	fun initConnection(intent: Intent, usbManager: UsbManager) {
@@ -311,7 +311,7 @@ object MidiConnection {
 		}
 	}
 
-	// Driver /////////////////////////////////////////////////////////////////////////////////////////
+	// Driver
 
 	fun setDriverListener() {
 		driver.setOnCycleListener(onCycleListener)
@@ -319,7 +319,7 @@ object MidiConnection {
 		driver.setOnSendSignalListener(onSendSignalListener)
 	}
 
-	// Controller /////////////////////////////////////////////////////////////////////////////////////////
+	// Controller
 
 	fun removeController(controller_: MidiController) {
 		if (controller != null && controller === controller_)

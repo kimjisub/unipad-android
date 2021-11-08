@@ -19,7 +19,7 @@ class UniPackImporter(
 	private var context: Context,
 	private var unipackFile: File,
 	workspace: File,
-	private var onEventListener: OnEventListener
+	private var onEventListener: OnEventListener,
 ) {
 	private val zipNameWithoutExt = unipackFile.name.split('.').first()
 	private val targetFolder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")

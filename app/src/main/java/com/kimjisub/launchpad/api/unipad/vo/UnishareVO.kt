@@ -10,5 +10,5 @@ data class UnishareVO(
 	var fileSize: Long = 0,
 	var isPublic: Boolean = false,//todo remove is
 	var password: String? = null,
-	var downloadCount: Int = 0
+	var downloadCount: Int = 0,
 )

@@ -13,7 +13,7 @@ class UniPackENT(
 	var path: String,
 	var padTouch: Int,
 	var bookmark: Boolean,
-	var created_at: Date
+	var created_at: Date,
 ) {
 
 	override fun toString(): String =

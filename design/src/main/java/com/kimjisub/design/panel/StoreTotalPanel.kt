@@ -11,7 +11,7 @@ class StoreTotalPanel
 @JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
-	defStyleAttr: Int = 0
+	defStyleAttr: Int = 0,
 ) : RelativeLayout(context, attrs, defStyleAttr) {
 	val b: PanelStoreTotalBinding =
 		PanelStoreTotalBinding.inflate(LayoutInflater.from(context), this, true)

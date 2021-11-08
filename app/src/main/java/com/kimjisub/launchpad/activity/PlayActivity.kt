@@ -70,7 +70,7 @@ class PlayActivity : BaseActivity() {
 			SCB_proLightMode.isLocked = !field
 		}
 
-	// UI /////////////////////////////////////////////////////////////////////////////////////////
+	// UI
 
 	private var theme: ThemeResources? = null
 
@@ -113,7 +113,7 @@ class PlayActivity : BaseActivity() {
 	private var U_pads: Array<Array<PadView?>>? = null
 	private var U_circle: Array<ChainView?>? = null
 
-	// Runner, Manager /////////////////////////////////////////////////////////////////////////////////////////
+	// Runner, Manager
 
 	private var ledRunner: LedRunner? = null
 	private var autoPlayRunner: AutoPlayRunner? = null
@@ -719,7 +719,7 @@ class PlayActivity : BaseActivity() {
 			SCB_feedbackLight.setChecked(true)
 	}
 
-	// pad, chain /////////////////////////////////////////////////////////////////////////////////////////
+	// pad, chain
 
 	private fun padTouch(x: Int, y: Int, upDown: Boolean) {
 		//Log.log("padTouch (" + buttonX + ", " + buttonY + ", " + upDown + ")");
@@ -783,7 +783,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	//  /////////////////////////////////////////////////////////////////////////////////////////
+	//
 
 	private fun refreshWatermark() {
 		log("refreshWatermark")
@@ -919,7 +919,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	// volume /////////////////////////////////////////////////////////////////////////////////////////
+	// volume
 
 	private fun setVolume(level: Int, maxLevel: Int) {
 		val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
@@ -945,7 +945,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	// Led /////////////////////////////////////////////////////////////////////////////////////////
+	// Led
 
 	private fun setLed(x: Int, y: Int) {
 		if (enable) {
@@ -1036,7 +1036,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	// midiController /////////////////////////////////////////////////////////////////////////////////////////
+	// midiController
 
 	private var midiController: MidiController? =
 		object : MidiController() {
@@ -1094,7 +1094,7 @@ class PlayActivity : BaseActivity() {
 		refreshWatermark()
 	}
 
-	// autoPlay /////////////////////////////////////////////////////////////////////////////////////////
+	// autoPlay
 
 	private fun autoPlay_play() {
 		log("autoPlay_play")
@@ -1201,7 +1201,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	// TraceLog /////////////////////////////////////////////////////////////////////////////////////////
+	// TraceLog
 
 	private fun traceLog_show() {
 		//Log.log("traceLog_show");
@@ -1254,7 +1254,7 @@ class PlayActivity : BaseActivity() {
 		rec_log += "\n" + msg
 	}
 
-	// Activity /////////////////////////////////////////////////////////////////////////////////////////
+	// Activity
 
 
 	override fun onBackPressed() {

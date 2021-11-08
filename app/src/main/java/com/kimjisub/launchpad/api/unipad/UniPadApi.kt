@@ -41,7 +41,7 @@ class UniPadApi : BaseApiService() {
 
 		interface UniPadApiService {
 
-			// unishare /////////////////////////////////////////////////////////////////////////////////////////
+			// unishare
 
 			@GET("/unishare")
 			fun getUnishares(): Call<List<UnishareVO?>?>?

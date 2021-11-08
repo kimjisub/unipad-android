@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.network.fb.StoreVO
-import com.kimjisub.launchpad.tool.Log
 import java.util.*
 
 // todo fix async system
@@ -27,7 +26,7 @@ class StoreHolder(val packView: PackView) : RecyclerView.ViewHolder(packView) {
 
 class StoreAdapter(
 	private val list: ArrayList<StoreItem>,
-	private val eventListener: EventListener
+	private val eventListener: EventListener,
 ) : Adapter<StoreHolder>() {
 	private var viewHolderCount = 0
 	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoreHolder {

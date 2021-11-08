@@ -9,7 +9,7 @@ class LedRunner(
 	private val unipack: UniPack,
 	private val listener: Listener,
 	private val chain: ChainObserver,
-	private val loopDelay: Long = 4L
+	private val loopDelay: Long = 4L,
 ) {
 	private var btnLed: Array<Array<Led?>?>?
 	private var cirLed: Array<Led?>?
@@ -34,7 +34,7 @@ class LedRunner(
 		cirLed = arrayOfNulls<Led?>(36)
 	}
 
-	// Thread /////////////////////////////////////////////////////////////////////////////////////////
+	// Thread
 
 	private val runnable = java.lang.Runnable {
 		Log.thread("[Led] 2. Start Thread")
@@ -166,7 +166,7 @@ class LedRunner(
 		thread?.interrupt()
 	}
 
-	// Functions /////////////////////////////////////////////////////////////////////////////////////////
+	// Functions
 
 	private fun searchEvent(x: Int, y: Int): LedAnimationState? {
 		var res: LedAnimationState? = null
@@ -208,7 +208,7 @@ class LedRunner(
 	inner class Led(
 		var buttonX: Int,
 		var buttonY: Int,
-		var ledEvent: LedAnimation.LedEvent
+		var ledEvent: LedAnimation.LedEvent,
 	) {
 		fun equal(buttonX: Int, buttonY: Int): Boolean {
 			return this.buttonX == buttonX && this.buttonY == buttonY

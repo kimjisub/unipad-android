@@ -34,17 +34,18 @@ class AdsPaymentFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 		bm.load()
 
 		unipadProPreference.setOnPreferenceChangeListener { preference, _ ->
-			if(!isPro){
+			if (!isPro) {
 				bm.findSkuDetails(Sku.PRO)?.let {
 					bm.purchase(it)
 				} ?: also {
 					toast("상품을 찾을 수 없습니다.")
 				}
-			}else{
+			} else {
 				val context = requireContext()
 				val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0);
 				val packageName = packageInfo.packageName
-				val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Sku.PRO}&package=${packageName}"));
+				val browserIntent = Intent(Intent.ACTION_VIEW,
+					Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Sku.PRO}&package=${packageName}"));
 				startActivity(browserIntent);
 			}
 			false

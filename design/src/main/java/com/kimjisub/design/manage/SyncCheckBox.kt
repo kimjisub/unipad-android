@@ -23,7 +23,7 @@ class SyncCheckBox(vararg cbs: CheckBox) {
 		}
 	}
 
-	// Checked Manage /////////////////////////////////////////////////////////////////////////////////////////
+	// Checked Manage
 
 	private var isChecked = false
 	var isLocked: Boolean = false
@@ -70,7 +70,7 @@ class SyncCheckBox(vararg cbs: CheckBox) {
 	}
 
 
-	// view /////////////////////////////////////////////////////////////////////////////////////////
+	// view
 
 
 	fun setVisibility(visibility: Int) {
@@ -78,7 +78,7 @@ class SyncCheckBox(vararg cbs: CheckBox) {
 	}
 
 
-	// listener /////////////////////////////////////////////////////////////////////////////////////////
+	// listener
 
 	var onCheckedChange: OnCheckedChange? = null
 
