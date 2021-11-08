@@ -42,7 +42,6 @@ import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.fragment.MainPackPanelFragment
 import com.kimjisub.launchpad.fragment.MainTotalPanelFragment
-import com.kimjisub.launchpad.fragment.MainTotalPanelViewModel
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -54,6 +53,7 @@ import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -675,5 +675,4 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks {
 		super.onDestroy()
 		removeController(midiController)
 	}
-
 }

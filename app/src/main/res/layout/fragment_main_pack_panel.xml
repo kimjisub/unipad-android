@@ -11,7 +11,7 @@
 
 		<variable
 			name="vm"
-			type="com.kimjisub.launchpad.fragment.MainPackPanelViewModel" />
+			type="com.kimjisub.launchpad.viewmodel.MainPackPanelViewModel" />
 
 	</data>
 

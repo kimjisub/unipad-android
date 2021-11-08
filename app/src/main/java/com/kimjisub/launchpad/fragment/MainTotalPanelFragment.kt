@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.kimjisub.launchpad.databinding.FragmentMainTotalPanelBinding
 import com.kimjisub.launchpad.tool.observeEvent
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 
 class MainTotalPanelFragment : BaseFragment() {
 	private var _b: FragmentMainTotalPanelBinding? = null
