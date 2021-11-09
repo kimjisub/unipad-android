@@ -3,6 +3,8 @@ package com.kimjisub.launchpad.fragment
 import androidx.fragment.app.Fragment
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.SkuDetails
+import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.db.repository.UniPackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
@@ -15,6 +17,10 @@ open class BaseFragment : Fragment(), BillingModule.Callback {
 
 	//val ads by lazy { AdmobManager(this) }
 	//val bm by lazy { BillingModule(this, lifecycleScope, this) }
+	val unipackRepo: UniPackRepository by lazy {
+		val db = AppDataBase.getInstance(requireContext())!!
+		UniPackRepository(db.unipackDAO()!!, db.unipackOpenDAO()!!)
+	}
 	val ws by lazy { WorkspaceManager(requireContext()) }
 
 

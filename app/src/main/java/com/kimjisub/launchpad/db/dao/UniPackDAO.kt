@@ -8,8 +8,8 @@ import java.util.*
 @Dao
 abstract class UniPackDAO {
 
-	@Query("SELECT * FROM UniPackENT WHERE path=:path LIMIT 1")
-	abstract fun find(path: String): LiveData<UniPackENT>
+	@Query("SELECT * FROM UniPackENT WHERE path=:id LIMIT 1")
+	abstract fun find(id: String): LiveData<UniPackENT>
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	abstract fun insert(item: UniPackENT)
@@ -17,8 +17,8 @@ abstract class UniPackDAO {
 	@Update
 	abstract fun update(item: UniPackENT?)
 
-	fun getOrCreate(path: String): LiveData<UniPackENT> {
-		insert(UniPackENT(path, 0, false, Date()))
-		return find(path)
+	fun getOrCreate(id: String): LiveData<UniPackENT> {
+		insert(UniPackENT(id, 0, false, Date()))
+		return find(id)
 	}
 }

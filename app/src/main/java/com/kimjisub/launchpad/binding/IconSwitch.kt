@@ -5,12 +5,12 @@ import androidx.databinding.InverseBindingAdapter
 import androidx.databinding.InverseBindingListener
 import com.polyak.iconswitch.IconSwitch
 
-@BindingAdapter("checked")
+@BindingAdapter("checkedBoolean")
 fun setChecked(view: IconSwitch, checked: Boolean) {
 	view.checked = if (checked) IconSwitch.Checked.RIGHT else IconSwitch.Checked.LEFT
 }
 
-@BindingAdapter("checkedAttrChanged")
+@BindingAdapter("checkedBooleanAttrChanged")
 fun setCheckedListeners(
 	view: IconSwitch,
 	attrChange: InverseBindingListener,
@@ -20,7 +20,7 @@ fun setCheckedListeners(
 	}
 }
 
-@InverseBindingAdapter(attribute = "checked", event = "checkedAttrChanged")
+@InverseBindingAdapter(attribute = "checkedBoolean", event = "checkedBooleanAttrChanged")
 fun getChecked(view: IconSwitch): Boolean {
 	return view.checked == IconSwitch.Checked.RIGHT
 }

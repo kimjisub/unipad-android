@@ -192,7 +192,7 @@
 							android:layout_height="wrap_content"
 							app:isw_icon_left="@drawable/ic_sort_asc"
 							app:isw_icon_right="@drawable/ic_sort_desc"
-							bind:checked="@={vm.sortOrder}" />
+							bind:checkedBoolean="@={vm.sortOrder}" />
 
 						<androidx.appcompat.widget.AppCompatSpinner
 							android:id="@+id/spinner_sort_method"
