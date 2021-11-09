@@ -4,14 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.kimjisub.launchpad.adapter.UniPackItem
-import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.*
 import java.io.File
 
 class WorkspaceManager(val context: Context) {
 	val p by lazy { PreferenceManager(context) }
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(context)!! }
+	private val db: AppDatabase by lazy { AppDatabase.getInstance(context)!! }
 
 	data class Workspace(
 		val name: String,

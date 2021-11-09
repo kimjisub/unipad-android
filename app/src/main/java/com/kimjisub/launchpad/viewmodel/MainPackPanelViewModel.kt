@@ -3,7 +3,9 @@ package com.kimjisub.launchpad.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import com.kimjisub.launchpad.db.AppDataBase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.kimjisub.launchpad.db.repository.UniPackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
@@ -11,60 +13,25 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.reflect.InvocationTargetException
 import java.util.*
 
 
-class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(app.baseContext)!! }
-	val unipackOpenDao = db.unipackOpenDAO()!!
-	val unipackDao = db.unipackDAO()!!
-
-	val title = MutableLiveData<String>()
-	val producerName = MutableLiveData<String>()
-	val padSize = MutableLiveData<String>()
-	val chainCount = MutableLiveData<Int>()
-	val website = MutableLiveData<String?>()
-	val path = MutableLiveData<String>()
-	val downloadedDate = MutableLiveData<Date>()
+class MainPackPanelViewModel(
+	private val app: Application,
+	repo: UniPackRepository,
+	val unipack: UniPack,
+) : AndroidViewModel(app) {
+	val downloadedDate = Date(unipack.lastModified())
 	val soundCount = MutableLiveData<Int?>()
 	val ledCount = MutableLiveData<Int?>()
 	val fileSize = MutableLiveData<String?>()
 	val bookmark = MutableLiveData<Boolean>()
-	val playCount = MutableLiveData<Int>()
-	val lastPlayed = MutableLiveData<Date?>()
-
+	val playCount by lazy { repo.openCount(unipack.id) }
+	val lastPlayed by lazy { repo.getLastOpenedDate(unipack.id) }
+	val unipackEnt by lazy { repo.getOrCreate(unipack.id) }
 
 	init {
-	}
-
-	fun setUniPack(unipack: UniPack) {
-		title.value = unipack.title
-		producerName.value = unipack.producerName
-		padSize.value = "${unipack.buttonX} × ${unipack.buttonY}"
-		chainCount.value = unipack.chain
-		website.value = unipack.website
-		path.value = unipack.getPathString()
-		downloadedDate.value = Date(unipack.lastModified())
-
-
-		CoroutineScope(Dispatchers.IO).launch {
-			val unipackEnt = unipackDao.getOrCreate(unipack.id)
-
-			withContext(Dispatchers.Main) {
-				unipackEnt.observeForever {
-					bookmark.value = it.bookmark
-				}
-				unipackOpenDao.getCount(unipack.id).observeForever {
-					playCount.value = it
-				}
-				unipackOpenDao.getLastOpenedDate(unipack.id).observeForever {
-					lastPlayed.value = it?.created_at
-				}
-			}
-		}
-
-
-		fileSize.value = null
 		CoroutineScope(Dispatchers.IO).launch {
 			val fileSizeString =
 				FileManager.byteToMB(unipack.getByteSize()) + " MB"
@@ -94,11 +61,11 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	}
 
 	fun websiteClick() {
-		website.value?.let { app.browse(it) }
+		unipack.website?.let { app.browse(it) }
 	}
 
 	fun youtubeClick() {
-		app.browse("https://www.youtube.com/results?search_query=UniPad+${title.value}+${producerName.value}")
+		app.browse("https://www.youtube.com/results?search_query=UniPad+${unipack.title}+${unipack.producerName}")
 	}
 
 	/*b.packPanel.onEventListener = object : MainPackPanel.OnEventListener {
@@ -171,4 +138,32 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 				.show()
 		}
 	}*/
+
+	class Factory(
+		private val app: Application,
+		private val repo: UniPackRepository,
+		private val unipack: UniPack,
+	) : ViewModelProvider.NewInstanceFactory() {
+
+		override fun <T : ViewModel> create(modelClass: Class<T>): T {
+			if (ViewModel::class.java.isAssignableFrom(modelClass)) {
+				try {
+					return modelClass.getConstructor(
+						Application::class.java,
+						UniPackRepository::class.java,
+						UniPack::class.java)
+						.newInstance(app, repo, unipack)
+				} catch (e: NoSuchMethodException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: IllegalAccessException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: InstantiationException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: InvocationTargetException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				}
+			}
+			return super.create(modelClass)
+		}
+	}
 }

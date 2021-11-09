@@ -18,7 +18,7 @@ import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainListBinding
-import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.tool.Log
@@ -36,7 +36,7 @@ class MainListFragment : BaseFragment() {
 	private var _b: FragmentMainListBinding? = null
 	private val b get() = _b!!
 
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(requireContext())!! }
+	private val db: AppDatabase by lazy { AppDatabase.getInstance(requireContext())!! }
 
 
 	// List Management
@@ -233,7 +233,7 @@ class MainListFragment : BaseFragment() {
 	fun pressPlay(item: UniPackItem) {
 
 		CoroutineScope(Dispatchers.IO).launch {
-			db.unipackOpenDAO()!!.insert(UniPackOpenENT(item.unipack.id, Date()))
+			db.unipackOpenDAO().insert(UniPackOpenENT(item.unipack.id))
 		}
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())
