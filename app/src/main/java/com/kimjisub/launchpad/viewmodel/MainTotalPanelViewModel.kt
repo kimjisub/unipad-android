@@ -22,7 +22,7 @@ import java.util.*
 
 
 class MainTotalPanelViewModel(
-	private val app: Application,
+	app: Application,
 	private val repo: UniPackRepository,
 	private val p: PreferenceManager,
 	private val ws: WorkspaceManager,
@@ -91,8 +91,8 @@ class MainTotalPanelViewModel(
 	}
 
 	// sort
-	var prevSortMethod: Int? = null
-	var prevSortOrder: Boolean? = null
+	private var prevSortMethod: Int? = null
+	private var prevSortOrder: Boolean? = null
 
 	private fun sortChange() {
 		if (sortMethod.value!! != prevSortMethod || sortOrder.value!! != prevSortOrder)
@@ -108,34 +108,38 @@ class MainTotalPanelViewModel(
 		val defaultOrder: Boolean,
 		val comparator: Comparator<UniPackItem>,
 	)
-}
 
-class MainTotalPanelViewModelFactory(
-	private val app: Application,
-	private val repo: UniPackRepository,
-	private val p: PreferenceManager,
-	private val ws: WorkspaceManager,
-) : ViewModelProvider.NewInstanceFactory() {
+	class Factory(
+		private val app: Application,
+		private val repo: UniPackRepository,
+		private val p: PreferenceManager,
+		private val ws: WorkspaceManager,
+	) : ViewModelProvider.NewInstanceFactory() {
 
-	override fun <T : ViewModel> create(modelClass: Class<T>): T {
-		if (ViewModel::class.java.isAssignableFrom(modelClass)) {
-			try {
-				return modelClass.getConstructor(
-					Application::class.java,
-					UniPackRepository::class.java,
-					PreferenceManager::class.java,
-					WorkspaceManager::class.java)
-					.newInstance(app, repo, p, ws)
-			} catch (e: NoSuchMethodException) {
-				throw RuntimeException("Cannot create an instance of $modelClass", e)
-			} catch (e: IllegalAccessException) {
-				throw RuntimeException("Cannot create an instance of $modelClass", e)
-			} catch (e: InstantiationException) {
-				throw RuntimeException("Cannot create an instance of $modelClass", e)
-			} catch (e: InvocationTargetException) {
-				throw RuntimeException("Cannot create an instance of $modelClass", e)
+		override fun <T : ViewModel> create(modelClass: Class<T>): T {
+			if (ViewModel::class.java.isAssignableFrom(modelClass)) {
+				try {
+					return modelClass.getConstructor(
+						Application::class.java,
+						UniPackRepository::class.java,
+						PreferenceManager::class.java,
+						WorkspaceManager::class.java)
+						.newInstance(app, repo, p, ws)
+				} catch (e: NoSuchMethodException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: IllegalAccessException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: InstantiationException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				} catch (e: InvocationTargetException) {
+					throw RuntimeException("Cannot create an instance of $modelClass", e)
+				}
 			}
+			return super.create(modelClass)
 		}
-		return super.create(modelClass)
 	}
+
+
 }
+
+
