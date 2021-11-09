@@ -233,7 +233,7 @@ class MainListFragment : BaseFragment() {
 	fun pressPlay(item: UniPackItem) {
 
 		CoroutineScope(Dispatchers.IO).launch {
-			db.unipackOpenDAO().insert(UniPackOpenENT(item.unipack.id))
+			db.unipackOpenDAO().insert(UniPackOpenENT(item.unipack.id, Date()))
 		}
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())

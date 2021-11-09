@@ -12,17 +12,17 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.view.PackView
 import com.kimjisub.design.view.PackView.OnEventListener
 import com.kimjisub.launchpad.R.*
-import com.kimjisub.launchpad.db.ent.UniPackENT
+import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.unipack.UniPack
 import java.util.*
 
 data class UniPackItem(
 	var unipack: UniPack,
-	val unipackENT: LiveData<UniPackENT>,
+	val unipackENT: LiveData<Unipack>,
 	/*var isNew: Boolean,*/
 ) {
-	var unipackENTObserver: Observer<UniPackENT>? = null
+	var unipackENTObserver: Observer<Unipack>? = null
 
 	//var packView: PackView? = null
 	var flagColor: Int = 0

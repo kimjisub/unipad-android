@@ -4,8 +4,9 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.kimjisub.launchpad.db.dao.UniPackDao
 import com.kimjisub.launchpad.db.dao.UniPackOpenDao
-import com.kimjisub.launchpad.db.ent.UniPackENT
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
+import com.kimjisub.launchpad.db.ent.Unipack
+import java.util.*
 
 class UniPackRepository(
 	private val uniPackDAO: UniPackDao,
@@ -13,32 +14,32 @@ class UniPackRepository(
 ) {
 	@Suppress("RedundantSuspendModifier")
 	@WorkerThread
-	fun find(id: String): LiveData<UniPackENT> {
+	fun find(id: String): LiveData<Unipack> {
 		return uniPackDAO.find(id)
 	}
 
 	@Suppress("RedundantSuspendModifier")
 	@WorkerThread
-	fun insert(unipack: UniPackENT) {
+	fun insert(unipack: Unipack) {
 		uniPackDAO.insert(unipack)
 	}
 
 	@Suppress("RedundantSuspendModifier")
 	@WorkerThread
-	fun update(unipack: UniPackENT) {
+	fun update(unipack: Unipack) {
 		return uniPackDAO.update(unipack)
 	}
 
 	@Suppress("RedundantSuspendModifier")
 	@WorkerThread
-	fun getOrCreate(id: String): LiveData<UniPackENT> {
+	fun getOrCreate(id: String): LiveData<Unipack> {
 		return uniPackDAO.getOrCreate(id)
 	}
 
 	@Suppress("RedundantSuspendModifier")
 	@WorkerThread
 	fun recordOpen(id: String) {
-		uniPackOpenDAO.insert(UniPackOpenENT(id))
+		uniPackOpenDAO.insert(UniPackOpenENT(id, Date()))
 	}
 
 	@Suppress("RedundantSuspendModifier")

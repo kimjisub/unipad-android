@@ -40,8 +40,8 @@ class MainTotalPanelViewModel(
 			-aCount.compareTo(bCount)
 		},
 		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = repo.getLastOpenedDateSync(a.unipack.id)?.created_at ?: Date(0)
-			val bDate = repo.getLastOpenedDateSync(b.unipack.id)?.created_at ?: Date(0)
+			val aDate = repo.getLastOpenedDateSync(a.unipack.id)?.createdAt ?: Date(0)
+			val bDate = repo.getLastOpenedDateSync(b.unipack.id)?.createdAt ?: Date(0)
 			-aDate.compareTo(bDate)
 		},
 		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->
