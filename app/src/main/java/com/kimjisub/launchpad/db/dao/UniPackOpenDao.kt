@@ -20,9 +20,9 @@ interface UniPackOpenDao {
 	@Query("SELECT COUNT(*) FROM UniPackOpenENT WHERE path=:path")
 	fun getCountSync(path: String?): Int
 
-	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
+	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY createdAt DESC LIMIT 1")
 	fun getLastOpenedDate(path: String?): LiveData<UniPackOpenENT>
 
-	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
+	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY createdAt DESC LIMIT 1")
 	fun getLastOpenedDateSync(path: String?): UniPackOpenENT?
 }
