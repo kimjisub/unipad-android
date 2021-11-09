@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.kimjisub.launchpad.databinding.FragmentMainTotalPanelBinding
 import com.kimjisub.launchpad.tool.observeEvent
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
-import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModelFactory
 
 class MainTotalPanelFragment : BaseFragment() {
 	private var _b: FragmentMainTotalPanelBinding? = null
@@ -29,7 +28,7 @@ class MainTotalPanelFragment : BaseFragment() {
 		savedInstanceState: Bundle?,
 	): View {
 		vm = ViewModelProvider(this,
-			MainTotalPanelViewModelFactory(requireActivity().application,
+			MainTotalPanelViewModel.Factory(requireActivity().application,
 				unipackRepo,
 				p,
 				ws))[MainTotalPanelViewModel::class.java]
