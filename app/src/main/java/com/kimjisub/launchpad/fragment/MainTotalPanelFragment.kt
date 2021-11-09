@@ -5,22 +5,34 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import com.kimjisub.launchpad.databinding.FragmentMainTotalPanelBinding
 import com.kimjisub.launchpad.tool.observeEvent
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModelFactory
 
 class MainTotalPanelFragment : BaseFragment() {
 	private var _b: FragmentMainTotalPanelBinding? = null
 	private val b get() = _b!!
-	private val vm: MainTotalPanelViewModel by viewModels()
+	private lateinit var vm: MainTotalPanelViewModel
 
 	var sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>? = null
+
+	private var callbacks: Callbacks? = null
+
+	interface Callbacks {
+		fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>)
+	}
 
 	override fun onCreateView(
 		inflater: LayoutInflater, container: ViewGroup?,
 		savedInstanceState: Bundle?,
 	): View {
+		vm = ViewModelProvider(this,
+			MainTotalPanelViewModelFactory(requireActivity().application,
+				unipackRepo,
+				p,
+				ws))[MainTotalPanelViewModel::class.java]
 		_b = FragmentMainTotalPanelBinding.inflate(inflater, container, false)
 		b.apply {
 			lifecycleOwner = this@MainTotalPanelFragment
@@ -39,11 +51,7 @@ class MainTotalPanelFragment : BaseFragment() {
 		vm.update()
 	}
 
-	private var callbacks: Callbacks? = null
-
-	interface Callbacks {
-		fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>)
-	}
+	// Lifecycle
 
 	override fun onAttach(context: Context) {
 		super.onAttach(context)

@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.db.ent
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
@@ -10,14 +11,15 @@ import java.util.*
 @TypeConverters(DateConverter::class)
 class UniPackENT(
 	@PrimaryKey
-	var path: String,
+	@ColumnInfo(name = "path")
+	var id: String,
 	var padTouch: Int,
 	var bookmark: Boolean,
 	var created_at: Date,
 ) {
 
 	override fun toString(): String =
-		"UniPackENT(path='$path', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
+		"UniPackENT(id='$id', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
 
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true
@@ -25,7 +27,7 @@ class UniPackENT(
 
 		other as UniPackENT
 
-		if (path != other.path) return false
+		if (id != other.id) return false
 		if (padTouch != other.padTouch) return false
 		if (bookmark != other.bookmark) return false
 		if (created_at != other.created_at) return false
@@ -34,7 +36,7 @@ class UniPackENT(
 	}
 
 	fun clone(): UniPackENT {
-		return UniPackENT(path, padTouch, bookmark, created_at)
+		return UniPackENT(id, padTouch, bookmark, created_at)
 	}
 
 }

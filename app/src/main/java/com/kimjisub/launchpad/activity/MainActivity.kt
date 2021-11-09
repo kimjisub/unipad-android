@@ -26,6 +26,7 @@ import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.ActivityMainBinding
 import com.kimjisub.launchpad.fragment.MainListFragment
 import com.kimjisub.launchpad.fragment.MainPackPanelFragment
@@ -52,7 +53,10 @@ import splitties.snackbar.longSnack
 import java.io.File
 import java.util.*
 
-class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListFragment.Callbacks {
+class MainActivity : BaseActivity(),
+	MainListFragment.Callbacks,
+	MainTotalPanelFragment.Callbacks,
+	MainPackPanelFragment.Callbacks {
 	private lateinit var b: ActivityMainBinding
 
 	private var isPro = false
@@ -415,6 +419,16 @@ class MainActivity : BaseActivity(), MainTotalPanelFragment.Callbacks, MainListF
 	override fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
 		listFragment.sort = sort
 		listFragment.update()
+	}
+
+	// PackPanelFragment Callbacks
+
+	override fun onDeleteClick(unipackItem: UniPackItem) {
+		unipackItem.unipackENT
+	}
+
+	override fun onBookmarkChange(unipackItem: UniPackItem, bookmark: Boolean) {
+		TODO("Not yet implemented")
 	}
 
 	// Activity

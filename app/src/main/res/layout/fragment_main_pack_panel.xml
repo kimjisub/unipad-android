@@ -36,6 +36,7 @@
 					android:layout_height="@dimen/imgbtn"
 					android:layout_marginStart="16dp"
 					android:layout_marginLeft="16dp"
+					android:onClick="@{()->vm.bookmarkToggle()}"
 					android:background="@drawable/border_icon"
 					app:imgRes="@{vm.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
 

@@ -15,6 +15,10 @@ import java.util.*
 
 
 class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
+	private val db: AppDataBase by lazy { AppDataBase.getInstance(app.baseContext)!! }
+	val unipackOpenDao = db.unipackOpenDAO()!!
+	val unipackDao = db.unipackDAO()!!
+
 	val title = MutableLiveData<String>()
 	val producerName = MutableLiveData<String>()
 	val padSize = MutableLiveData<String>()
@@ -29,7 +33,6 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	val playCount = MutableLiveData<Int>()
 	val lastPlayed = MutableLiveData<Date?>()
 
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(app.baseContext)!! }
 
 	init {
 	}
@@ -45,8 +48,6 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 
 
 		CoroutineScope(Dispatchers.IO).launch {
-			val unipackOpenDao = db.unipackOpenDAO()!!
-			val unipackDao = db.unipackDAO()!!
 			val unipackEnt = unipackDao.getOrCreate(unipack.id)
 
 			withContext(Dispatchers.Main) {
@@ -88,12 +89,15 @@ class MainPackPanelViewModel(val app: Application) : AndroidViewModel(app) {
 		}
 	}
 
+	fun bookmarkToggle() {
+		bookmark.value = !bookmark.value!!
+	}
+
 	fun websiteClick() {
 		website.value?.let { app.browse(it) }
 	}
 
 	fun youtubeClick() {
-		// todo fix
 		app.browse("https://www.youtube.com/results?search_query=UniPad+${title.value}+${producerName.value}")
 	}
 

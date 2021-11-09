@@ -3,10 +3,12 @@ package com.kimjisub.launchpad.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
-import com.kimjisub.launchpad.db.AppDataBase
+import com.kimjisub.launchpad.db.repository.UniPackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -15,35 +17,34 @@ import com.kimjisub.launchpad.tool.emit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.lang.reflect.InvocationTargetException
 import java.util.*
 
 
-class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
-	private val db: AppDataBase by lazy { AppDataBase.getInstance(app.baseContext)!! }
-	private val p by lazy { PreferenceManager(app.baseContext) }
-	private val ws by lazy { WorkspaceManager(app.baseContext) }
-
-
+class MainTotalPanelViewModel(
+	private val app: Application,
+	private val repo: UniPackRepository,
+	private val p: PreferenceManager,
+	private val ws: WorkspaceManager,
+) : AndroidViewModel(app) {
 	private val sortMethodList = arrayOf(
-		SortMethod(string(R.string.sort_title), false) { a, b ->
+		SortMethod(app.getString(R.string.sort_title), false) { a, b ->
 			-a.unipack.title.compareTo(b.unipack.title)
 		},
-		SortMethod(string(R.string.sort_producer), false) { a, b ->
+		SortMethod(app.getString(R.string.sort_producer), false) { a, b ->
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
-		SortMethod(string(R.string.sort_play_count), true) { a, b ->
-			val aCount = db.unipackOpenDAO()!!.getCountSync(a.unipack.id)
-			val bCount = db.unipackOpenDAO()!!.getCountSync(b.unipack.id)
+		SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
+			val aCount = repo.openCountSync(a.unipack.id)
+			val bCount = repo.openCountSync(b.unipack.id)
 			-aCount.compareTo(bCount)
 		},
-		SortMethod(string(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = db.unipackOpenDAO()!!
-				.getLastOpenedDateSync(a.unipack.id)?.created_at ?: Date(0)
-			val bDate = db.unipackOpenDAO()!!
-				.getLastOpenedDateSync(b.unipack.id)?.created_at ?: Date(0)
+		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
+			val aDate = repo.getLastOpenedDateSync(a.unipack.id)?.created_at ?: Date(0)
+			val bDate = repo.getLastOpenedDateSync(b.unipack.id)?.created_at ?: Date(0)
 			-aDate.compareTo(bDate)
 		},
-		SortMethod(string(R.string.sort_download_date), true) { a, b ->
+		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->
 			val aDate = a.unipack.lastModified()
 			val bDate = b.unipack.lastModified()
 			-aDate.compareTo(bDate)
@@ -56,16 +57,13 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 
 	val unipackCount = MutableLiveData<Int>()
 	val unipackCapacity = MutableLiveData<String>()
-	val openCount = MutableLiveData<Int>()
+	val openCount = repo.openCount()
 	val sortMethod = MutableLiveData<Int>()
 	val sortOrder = MutableLiveData<Boolean>()
 	val eventSort = MutableLiveData<Event<Pair<SortMethod, Boolean>>>()
 
 	init {
 		version.value = BuildConfig.VERSION_NAME
-		db.unipackOpenDAO()!!.count.observeForever {
-			openCount.value = it ?: 0
-		}
 
 		sortMethod.value = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
 		sortOrder.value = p.sortOrder
@@ -93,7 +91,6 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 	}
 
 	// sort
-
 	var prevSortMethod: Int? = null
 	var prevSortOrder: Boolean? = null
 
@@ -106,11 +103,39 @@ class MainTotalPanelViewModel(val app: Application) : AndroidViewModel(app) {
 
 	}
 
-	fun string(id: Int): String = app.getString(id)
-
 	data class SortMethod(
 		val name: String,
 		val defaultOrder: Boolean,
 		val comparator: Comparator<UniPackItem>,
 	)
+}
+
+class MainTotalPanelViewModelFactory(
+	private val app: Application,
+	private val repo: UniPackRepository,
+	private val p: PreferenceManager,
+	private val ws: WorkspaceManager,
+) : ViewModelProvider.NewInstanceFactory() {
+
+	override fun <T : ViewModel> create(modelClass: Class<T>): T {
+		if (ViewModel::class.java.isAssignableFrom(modelClass)) {
+			try {
+				return modelClass.getConstructor(
+					Application::class.java,
+					UniPackRepository::class.java,
+					PreferenceManager::class.java,
+					WorkspaceManager::class.java)
+					.newInstance(app, repo, p, ws)
+			} catch (e: NoSuchMethodException) {
+				throw RuntimeException("Cannot create an instance of $modelClass", e)
+			} catch (e: IllegalAccessException) {
+				throw RuntimeException("Cannot create an instance of $modelClass", e)
+			} catch (e: InstantiationException) {
+				throw RuntimeException("Cannot create an instance of $modelClass", e)
+			} catch (e: InvocationTargetException) {
+				throw RuntimeException("Cannot create an instance of $modelClass", e)
+			}
+		}
+		return super.create(modelClass)
+	}
 }

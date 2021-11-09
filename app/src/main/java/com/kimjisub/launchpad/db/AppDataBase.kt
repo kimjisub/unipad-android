@@ -23,8 +23,7 @@ abstract class AppDataBase : RoomDatabase() {
 					INSTANCE = Room.databaseBuilder(
 						context.applicationContext,
 						AppDataBase::class.java, "UniPad.db"
-					)
-						.build()
+					).build()
 				}
 			}
 			return INSTANCE
