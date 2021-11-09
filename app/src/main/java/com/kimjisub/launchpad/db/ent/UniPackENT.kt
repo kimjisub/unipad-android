@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.kimjisub.launchpad.db.util.DateConverter
-import java.util.*
 
 @Entity
 @TypeConverters(DateConverter::class)
@@ -15,8 +14,7 @@ class UniPackENT(
 	var id: String,
 	var padTouch: Int,
 	var bookmark: Boolean,
-	var created_at: Date,
-) {
+) : BaseEntity() {
 
 	override fun toString(): String =
 		"UniPackENT(id='$id', padTouch=$padTouch, bookmark=$bookmark, created_at=$created_at)"
@@ -28,15 +26,12 @@ class UniPackENT(
 		other as UniPackENT
 
 		if (id != other.id) return false
-		if (padTouch != other.padTouch) return false
-		if (bookmark != other.bookmark) return false
-		if (created_at != other.created_at) return false
 
 		return true
 	}
 
 	fun clone(): UniPackENT {
-		return UniPackENT(id, padTouch, bookmark, created_at)
+		return UniPackENT(id, padTouch, bookmark)
 	}
 
 }

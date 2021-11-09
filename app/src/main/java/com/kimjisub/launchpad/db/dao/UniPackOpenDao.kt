@@ -7,22 +7,22 @@ import androidx.room.Query
 import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 
 @Dao
-abstract class UniPackOpenDAO {
+interface UniPackOpenDao {
 	@Insert
-	abstract fun insert(item: UniPackOpenENT?)
+	fun insert(item: UniPackOpenENT?)
 
 	@get:Query("SELECT COUNT(*) FROM UniPackOpenENT")
-	abstract val count: LiveData<Int>
+	val count: LiveData<Int>
 
 	@Query("SELECT COUNT(*) FROM UniPackOpenENT WHERE path=:path")
-	abstract fun getCount(path: String?): LiveData<Int>
+	fun getCount(path: String?): LiveData<Int>
 
 	@Query("SELECT COUNT(*) FROM UniPackOpenENT WHERE path=:path")
-	abstract fun getCountSync(path: String?): Int
+	fun getCountSync(path: String?): Int
 
 	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
-	abstract fun getLastOpenedDate(path: String?): LiveData<UniPackOpenENT>
+	fun getLastOpenedDate(path: String?): LiveData<UniPackOpenENT>
 
 	@Query("SELECT * FROM UniPackOpenENT WHERE path=:path ORDER BY created_at DESC LIMIT 1")
-	abstract fun getLastOpenedDateSync(path: String?): UniPackOpenENT?
+	fun getLastOpenedDateSync(path: String?): UniPackOpenENT?
 }

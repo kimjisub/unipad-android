@@ -36,8 +36,8 @@
 					android:layout_height="@dimen/imgbtn"
 					android:layout_marginStart="16dp"
 					android:layout_marginLeft="16dp"
-					android:onClick="@{()->vm.bookmarkToggle()}"
 					android:background="@drawable/border_icon"
+					android:onClick="@{()->vm.bookmarkToggle()}"
 					app:imgRes="@{vm.bookmark ? @drawable/ic_bookmark_on : @drawable/ic_bookmark_off}" />
 
 
@@ -105,7 +105,7 @@
 						android:focusable="true"
 						android:marqueeRepeatLimit="marquee_forever"
 						android:singleLine="true"
-						android:text="@{vm.title}"
+						android:text="@{vm.unipack.title}"
 						android:textSize="@dimen/text_big"
 						tools:text="Title" />
 
@@ -123,7 +123,7 @@
 							android:focusable="true"
 							android:marqueeRepeatLimit="marquee_forever"
 							android:singleLine="true"
-							android:text="@{vm.producerName}"
+							android:text="@{vm.unipack.producerName}"
 							android:textSize="@dimen/text"
 							tools:text="Subtitle" />
 
@@ -141,7 +141,7 @@
 							android:layout_height="match_parent"
 							android:background="@drawable/border_icon"
 							android:onClick="@{()->vm.websiteClick()}"
-							android:visibility="@{vm.website != null ? View.VISIBLE : View.GONE}"
+							android:visibility="@{vm.unipack.website != null ? View.VISIBLE : View.GONE}"
 							app:srcCompat="@drawable/ic_web_24dp" />
 
 					</LinearLayout>
@@ -210,7 +210,7 @@
 								<TextView
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
-									android:text="@{vm.lastPlayed != null ? @string/date_format(vm.lastPlayed) : `-`}"
+									android:text="@{vm.lastPlayed != null ? @string/date_format(vm.lastPlayed.created_at) : `-`}"
 									android:textColor="@color/wb5"
 									android:textSize="@dimen/text_small"
 									tools:text="Value" />
@@ -240,7 +240,7 @@
 								android:layout_weight="1"
 								app:icon="@{@drawable/ic_pad_24dp}"
 								app:title="@{@string/MPP_padSize}"
-								app:value="@{vm.padSize.toString()}" />
+								app:value="@{vm.unipack.buttonX+` × `+vm.unipack.buttonY}" />
 
 							<include
 								layout="@layout/include_property_block"
@@ -249,7 +249,7 @@
 								android:layout_weight="1"
 								app:icon="@{@drawable/ic_chain_24dp}"
 								app:title="@{@string/MPP_chain}"
-								app:value="@{vm.chainCount.toString()}" />
+								app:value="@{vm.unipack.chain + ``}" />
 
 						</LinearLayout>
 
@@ -296,7 +296,7 @@
 							android:focusable="true"
 							android:marqueeRepeatLimit="marquee_forever"
 							android:singleLine="true"
-							android:text="@{vm.path}"
+							android:text="@{vm.unipack.pathString}"
 							android:textSize="@dimen/text_small"
 							tools:text="/path/to/unipack" />
 
