@@ -47,6 +47,9 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import splitties.activities.start
 import splitties.toast.toast
 import java.io.File
@@ -207,6 +210,11 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun start() {
+		CoroutineScope(Dispatchers.IO).launch {
+			unipackRepo.recordOpen(unipack!!.id)
+		}
+
+
 		chain.range = 0 until unipack!!.chain
 		U_pads = Array(unipack!!.buttonX) { Array<PadView?>(unipack!!.buttonY) { null } }
 		U_circle = Array(32) { null }
