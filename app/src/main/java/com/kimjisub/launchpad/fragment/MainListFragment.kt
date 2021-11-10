@@ -18,7 +18,6 @@ import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainListBinding
-import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -96,7 +95,7 @@ class MainListFragment : BaseFragment() {
 	var sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>? = null
 
 	@SuppressLint("StaticFieldLeak")
-	fun update(animateNew: Boolean = true) {
+	fun update() {
 		Log.test("update")
 
 		lastPlayIndex = -1
@@ -159,6 +158,10 @@ class MainListFragment : BaseFragment() {
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack == removed.unipack)) {
+
+							if(i == selectedIndex)
+								togglePlay(null)
+
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
 							// todo 삭제됐을 때 observing 어떻게될까?
@@ -213,7 +216,7 @@ class MainListFragment : BaseFragment() {
 					item.togglea?.invoke(item.toggle)
 				}
 			}
-			callbacks?.onListSelectedChange(index)
+			selectedIndex = index
 
 		} catch (e: ConcurrentModificationException) {
 			e.printStackTrace()
@@ -229,27 +232,22 @@ class MainListFragment : BaseFragment() {
 
 	}
 
-	private val selectedIndex: Int
-		get() {
-			var index = -1
-			var i = 0
-			for (item: UniPackItem in unipackList) {
-				if (item.toggle) {
-					index = i
-					break
-				}
-				i++
+	private var selectedIndex: Int = -1
+		set(value) {
+			if(value != field) {
+				field = value
+				callbacks?.onListSelectedChange(field)
 			}
-			return index
 		}
 
-	private val selected: UniPackItem?
+
+	val selected: UniPackItem?
 		get() {
-			var ret: UniPackItem? = null
-			val playIndex = selectedIndex
-			if (playIndex != -1) ret = unipackList[playIndex]
-			return ret
+			if (selectedIndex == -1)
+				return null
+			return unipackList[selectedIndex]
 		}
+
 
 	fun haveNow(): Boolean {
 		return 0 <= lastPlayIndex && lastPlayIndex <= unipackList.size - 1
@@ -290,12 +288,6 @@ class MainListFragment : BaseFragment() {
 			togglePlay(null)
 			true
 		} else false
-	}
-
-	fun selectedUniPackItem(): UniPackItem? {
-		if (selectedIndex == -1)
-			return null
-		return unipackList[selectedIndex]
 	}
 
 

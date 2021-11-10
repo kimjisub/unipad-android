@@ -319,7 +319,7 @@ class MainActivity : BaseActivity(),
 	// Panel
 
 	private fun updatePanel() {
-		val selectedUniPackItem = listFragment.selectedUniPackItem()
+		val selectedUniPackItem = listFragment.selected
 		if (selectedUniPackItem == null) { // Total
 			// Pack 이 켜져있으면 닫기
 			if (supportFragmentManager.backStackEntryCount >= 1)
@@ -422,12 +422,8 @@ class MainActivity : BaseActivity(),
 
 	// PackPanelFragment Callbacks
 
-	override fun onDeleteClick(unipackItem: UniPackItem) {
-		unipackItem.unipackENT
-	}
-
-	override fun onBookmarkChange(unipackItem: UniPackItem, bookmark: Boolean) {
-		TODO("Not yet implemented")
+	override fun onDelete() {
+		listFragment.update()
 	}
 
 	// Activity
