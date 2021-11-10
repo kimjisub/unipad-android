@@ -13,15 +13,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.android.ext.android.inject
 import java.lang.reflect.InvocationTargetException
-import java.util.*
 
 
 class MainPackPanelViewModel(
 	private val app: Application,
-	private val repo: UniPackRepository,
 	val unipack: UniPack,
 ) : AndroidViewModel(app) {
+	val repo: UniPackRepository by app.inject()
+
 	//val downloadedDate = Date(unipack.lastModified())
 	val soundCount = MutableLiveData<Int?>()
 	val ledCount = MutableLiveData<Int?>()
@@ -148,7 +149,6 @@ class MainPackPanelViewModel(
 
 	class Factory(
 		private val app: Application,
-		private val repo: UniPackRepository,
 		private val unipack: UniPack,
 	) : ViewModelProvider.NewInstanceFactory() {
 
@@ -157,9 +157,8 @@ class MainPackPanelViewModel(
 				try {
 					return modelClass.getConstructor(
 						Application::class.java,
-						UniPackRepository::class.java,
 						UniPack::class.java)
-						.newInstance(app, repo, unipack)
+						.newInstance(app, unipack)
 				} catch (e: NoSuchMethodException) {
 					throw RuntimeException("Cannot create an instance of $modelClass", e)
 				} catch (e: IllegalAccessException) {

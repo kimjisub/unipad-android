@@ -8,10 +8,12 @@ import androidx.preference.children
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import org.koin.android.ext.android.inject
 
 class StorageFragment : PreferenceFragmentCompat() {
-	private val p by lazy { PreferenceManager(requireContext()) }
-	private val ws by lazy { WorkspaceManager(requireContext()) }
+
+	val p: PreferenceManager by inject()
+	val ws: WorkspaceManager by inject()
 
 	private val storageListPreferenceCategory: PreferenceCategory by lazy { findPreference("storage_list")!! }
 

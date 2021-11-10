@@ -11,10 +11,12 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.kimjisub.launchpad.tool.Log
+import org.koin.android.ext.android.inject
 
 class AdmobManager(val activity: Activity) {
 	val context: Context = activity.baseContext
-	val p by lazy { PreferenceManager(context) }
+
+	val p: PreferenceManager by activity.inject()
 
 
 	private fun adsCooltime(callback: () -> Unit) {

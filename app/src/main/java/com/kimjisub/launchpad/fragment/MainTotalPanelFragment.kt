@@ -29,7 +29,6 @@ class MainTotalPanelFragment : BaseFragment() {
 	): View {
 		vm = ViewModelProvider(this,
 			MainTotalPanelViewModel.Factory(requireActivity().application,
-				unipackRepo,
 				p,
 				ws))[MainTotalPanelViewModel::class.java]
 		_b = FragmentMainTotalPanelBinding.inflate(inflater, container, false)

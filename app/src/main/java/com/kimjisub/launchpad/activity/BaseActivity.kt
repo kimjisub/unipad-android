@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.tool.Log
+import org.koin.android.ext.android.inject
 import splitties.activities.start
 
 open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
@@ -82,10 +83,10 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 		}
 	}
 
-	val p by lazy { PreferenceManager(applicationContext) }
+	val p: PreferenceManager by inject()
+	val ws: WorkspaceManager by inject()
 	val ads by lazy { AdmobManager(this) }
 	val bm by lazy { BillingModule(this, lifecycleScope, this) }
-	val ws by lazy { WorkspaceManager(this) }
 
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {

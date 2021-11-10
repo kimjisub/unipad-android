@@ -17,16 +17,18 @@ import com.kimjisub.launchpad.tool.emit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import java.lang.reflect.InvocationTargetException
 import java.util.*
 
 
 class MainTotalPanelViewModel(
 	app: Application,
-	private val repo: UniPackRepository,
 	private val p: PreferenceManager,
 	private val ws: WorkspaceManager,
 ) : AndroidViewModel(app) {
+	val repo: UniPackRepository by app.inject()
+
 	private val sortMethodList = arrayOf(
 		SortMethod(app.getString(R.string.sort_title), false) { a, b ->
 			-a.unipack.title.compareTo(b.unipack.title)
@@ -113,7 +115,6 @@ class MainTotalPanelViewModel(
 
 	class Factory(
 		private val app: Application,
-		private val repo: UniPackRepository,
 		private val p: PreferenceManager,
 		private val ws: WorkspaceManager,
 	) : ViewModelProvider.NewInstanceFactory() {
@@ -123,10 +124,9 @@ class MainTotalPanelViewModel(
 				try {
 					return modelClass.getConstructor(
 						Application::class.java,
-						UniPackRepository::class.java,
 						PreferenceManager::class.java,
 						WorkspaceManager::class.java)
-						.newInstance(app, repo, p, ws)
+						.newInstance(app, p, ws)
 				} catch (e: NoSuchMethodException) {
 					throw RuntimeException("Cannot create an instance of $modelClass", e)
 				} catch (e: IllegalAccessException) {

@@ -5,10 +5,17 @@ import android.os.Build
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.kimjisub.launchpad.db.AppDatabase
+import com.kimjisub.launchpad.db.repository.UniPackRepository
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.dsl.module
 
 class BaseApplication : Application() {
 	override fun onCreate() {
@@ -20,6 +27,26 @@ class BaseApplication : Application() {
 
 		MobileAds.initialize(this) { }
 		appOpenManager = AppOpenManager(this)
+
+		startKoin {
+			androidContext(applicationContext)
+			modules(
+				module {
+					single {
+						val db = AppDatabase.getInstance(applicationContext)!!
+						UniPackRepository(db.unipackDAO())
+					}
+
+					single {
+						PreferenceManager(applicationContext)
+					}
+
+					single {
+						WorkspaceManager(applicationContext)
+					}
+				}
+			)
+		}
 	}
 
 	private fun setupNotification() {
