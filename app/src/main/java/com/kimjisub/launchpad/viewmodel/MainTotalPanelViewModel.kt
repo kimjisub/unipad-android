@@ -27,7 +27,7 @@ class MainTotalPanelViewModel(
 	private val p: PreferenceManager,
 	private val ws: WorkspaceManager,
 ) : AndroidViewModel(app) {
-	val repo: UniPackRepository by app.inject()
+	private val repo: UniPackRepository by app.inject()
 
 	private val sortMethodList = arrayOf(
 		SortMethod(app.getString(R.string.sort_title), false) { a, b ->

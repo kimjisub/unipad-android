@@ -80,10 +80,8 @@ class MainListFragment : BaseFragment() {
 		}
 
 		val divider = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
-		val borderDivider =
-			ResourcesCompat.getDrawable(resources, R.drawable.border_divider, null)!!
-		divider.setDrawable(borderDivider)
-
+		val drawable = ResourcesCompat.getDrawable(resources, R.drawable.border_divider, null)!!
+		divider.setDrawable(drawable)
 
 		b.recyclerView.addItemDecoration(divider)
 		b.recyclerView.setHasFixedSize(false)
