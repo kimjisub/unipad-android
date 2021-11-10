@@ -1,75 +1,42 @@
 package com.kimjisub.launchpad.db.repository
 
-import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
-import com.kimjisub.launchpad.db.dao.UniPackDao
-import com.kimjisub.launchpad.db.dao.UniPackOpenDao
-import com.kimjisub.launchpad.db.ent.UniPackOpenENT
+import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.ent.Unipack
 import java.util.*
 
 class UniPackRepository(
-	private val uniPackDAO: UniPackDao,
-	private val uniPackOpenDAO: UniPackOpenDao,
+	private val unipackDao: UnipackDao,
 ) {
 	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
 	fun find(id: String): LiveData<Unipack> {
-		return uniPackDAO.find(id)
+		return unipackDao.find(id)
+	}
+
+
+	@Suppress("RedundantSuspendModifier")
+	suspend fun getOrCreate(id: String): LiveData<Unipack> {
+		return unipackDao.getOrCreate(id)
 	}
 
 	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun insert(unipack: Unipack) {
-		uniPackDAO.insert(unipack)
+	suspend fun recordOpen(id: String) {
+		unipackDao.addOpenCount(id)
 	}
 
 	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun update(unipack: Unipack) {
-		return uniPackDAO.update(unipack)
+	fun openCount(): LiveData<Long> {
+		return unipackDao.openCount()
 	}
 
 	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun getOrCreate(id: String): LiveData<Unipack> {
-		return uniPackDAO.getOrCreate(id)
+	fun openCount(id: String): LiveData<Long> {
+		return unipackDao.openCount(id)
 	}
+
 
 	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun recordOpen(id: String) {
-		uniPackOpenDAO.insert(UniPackOpenENT(id, Date()))
+	fun getLastOpenedDate(id: String): LiveData<Date> {
+		return unipackDao.lastOpenedAt(id)
 	}
-
-	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun openCount(): LiveData<Int> {
-		return uniPackOpenDAO.count
-	}
-
-	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun openCount(id: String): LiveData<Int> {
-		return uniPackOpenDAO.getCount(id)
-	}
-
-	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun openCountSync(id: String): Int {
-		return uniPackOpenDAO.getCountSync(id)
-	}
-
-	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun getLastOpenedDate(id: String): LiveData<UniPackOpenENT> {
-		return uniPackOpenDAO.getLastOpenedDate(id)
-	}
-
-	@Suppress("RedundantSuspendModifier")
-	@WorkerThread
-	fun getLastOpenedDateSync(id: String): UniPackOpenENT? {
-		return uniPackOpenDAO.getLastOpenedDateSync(id)
-	}
-
 }

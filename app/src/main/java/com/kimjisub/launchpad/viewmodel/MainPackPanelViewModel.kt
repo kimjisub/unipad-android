@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.db.repository.UniPackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -29,9 +30,13 @@ class MainPackPanelViewModel(
 	val bookmark = MutableLiveData<Boolean>()
 	val playCount by lazy { repo.openCount(unipack.id) }
 	val lastPlayed by lazy { repo.getLastOpenedDate(unipack.id) }
-	val unipackEnt by lazy { repo.getOrCreate(unipack.id) }
+	lateinit var unipackEnt: Unipack
 
 	init {
+		CoroutineScope(Dispatchers.IO).launch {
+			repo.getOrCreate(unipack.id)
+		}
+
 		CoroutineScope(Dispatchers.IO).launch {
 			val fileSizeString =
 				FileManager.byteToMB(unipack.getByteSize()) + " MB"

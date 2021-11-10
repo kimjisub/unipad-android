@@ -19,7 +19,6 @@ import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainListBinding
 import com.kimjisub.launchpad.db.AppDatabase
-import com.kimjisub.launchpad.db.ent.UniPackOpenENT
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
@@ -233,7 +232,7 @@ class MainListFragment : BaseFragment() {
 	fun pressPlay(item: UniPackItem) {
 
 		CoroutineScope(Dispatchers.IO).launch {
-			db.unipackOpenDAO().insert(UniPackOpenENT(item.unipack.id, Date()))
+			db.unipackDAO().addOpenCount(item.unipack.id)
 		}
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())

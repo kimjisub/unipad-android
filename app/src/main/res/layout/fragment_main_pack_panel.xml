@@ -210,7 +210,7 @@
 								<TextView
 									android:layout_width="wrap_content"
 									android:layout_height="wrap_content"
-									android:text="@{vm.lastPlayed != null ? @string/date_format(vm.lastPlayed.createdAt) : `-`}"
+									android:text="@{vm.lastPlayed != null ? @string/date_format(vm.lastPlayed) : `-`}"
 									android:textColor="@color/wb5"
 									android:textSize="@dimen/text_small"
 									tools:text="Value" />

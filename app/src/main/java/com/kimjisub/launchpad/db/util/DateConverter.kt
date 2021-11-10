@@ -3,14 +3,16 @@ package com.kimjisub.launchpad.db.util
 import androidx.room.TypeConverter
 import java.util.*
 
+// https://developer.android.com/training/data-storage/room/referencing-data?hl=ko
+
 class DateConverter {
 	@TypeConverter
-	fun toDate(dateLong: Long?): Date? {
-		return if (dateLong == null) null else Date(dateLong)
+	fun fromTimestamp(value: Long?): Date? {
+		return value?.let { Date(it) }
 	}
 
 	@TypeConverter
-	fun fromDate(date: Date?): Long? {
-		return date?.time
+	fun dateToTimestamp(date: Date?): Long? {
+		return date?.time?.toLong()
 	}
 }

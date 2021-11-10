@@ -19,7 +19,7 @@ open class BaseFragment : Fragment(), BillingModule.Callback {
 	//val bm by lazy { BillingModule(this, lifecycleScope, this) }
 	val unipackRepo: UniPackRepository by lazy {
 		val db = AppDatabase.getInstance(requireContext())!!
-		UniPackRepository(db.unipackDAO(), db.unipackOpenDAO())
+		UniPackRepository(db.unipackDAO())
 	}
 	val ws by lazy { WorkspaceManager(requireContext()) }
 
