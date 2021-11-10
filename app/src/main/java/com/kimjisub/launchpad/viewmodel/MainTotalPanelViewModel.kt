@@ -35,13 +35,15 @@ class MainTotalPanelViewModel(
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
 		SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
-			val aCount = repo.openCountSync(a.unipack.id)
-			val bCount = repo.openCountSync(b.unipack.id)
+			val aCount = a.unipackENT.value?.openCount!!//repo.openCountSync(a.unipack.id)
+			val bCount = b.unipackENT.value?.openCount!!//repo.openCountSync(b.unipack.id)
 			-aCount.compareTo(bCount)
 		},
 		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = repo.getLastOpenedDateSync(a.unipack.id)?.createdAt ?: Date(0)
-			val bDate = repo.getLastOpenedDateSync(b.unipack.id)?.createdAt ?: Date(0)
+			val aDate = a.unipackENT.value?.lastOpenedAt
+				?: Date(0) // repo.getLastOpenedDateSync(a.unipack.id)?.createdAt ?: Date(0)
+			val bDate = b.unipackENT.value?.lastOpenedAt
+				?: Date(0)// repo.getLastOpenedDateSync(b.unipack.id)?.createdAt ?: Date(0)
 			-aDate.compareTo(bDate)
 		},
 		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->

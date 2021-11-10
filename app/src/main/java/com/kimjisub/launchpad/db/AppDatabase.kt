@@ -4,18 +4,27 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.kimjisub.launchpad.db.dao.UniPackDao
-import com.kimjisub.launchpad.db.dao.UniPackOpenDao
+import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.ent.Unipack
-import com.kimjisub.launchpad.db.ent.UniPackOpenENT
+import com.kimjisub.launchpad.db.util.DateConverter
 
-@Database(entities = [Unipack::class, UniPackOpenENT::class], version = 1)
+@TypeConverters(DateConverter::class)
+@Database(entities = [Unipack::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
-	abstract fun unipackDAO(): UniPackDao
-	abstract fun unipackOpenDAO(): UniPackOpenDao
+	abstract fun unipackDAO(): UnipackDao
 
 	companion object {
 		private var INSTANCE: AppDatabase? = null
+
+		private val MIGRATION_1_2 = object : Migration(1, 2) {
+			override fun migrate(database: SupportSQLiteDatabase) {
+				database.execSQL("DROP TABLE UniPackENT")
+				database.execSQL("DROP TABLE UniPackOpenENT")
+			}
+		}
 
 		fun getInstance(context: Context): AppDatabase? {
 			if (INSTANCE == null) {
@@ -23,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
 					INSTANCE = Room.databaseBuilder(
 						context.applicationContext,
 						AppDatabase::class.java, "UniPad.db"
-					).build()
+					).addMigrations(MIGRATION_1_2).build()
 				}
 			}
 			return INSTANCE
