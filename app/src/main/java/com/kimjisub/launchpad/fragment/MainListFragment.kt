@@ -18,7 +18,6 @@ import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.adapter.UniPackAdapter
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainListBinding
-import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.util.observeRealChange
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
@@ -34,9 +33,6 @@ import kotlin.collections.ArrayList
 class MainListFragment : BaseFragment() {
 	private var _b: FragmentMainListBinding? = null
 	private val b get() = _b!!
-
-	private val db: AppDatabase by lazy { AppDatabase.getInstance(requireContext())!! }
-
 
 	// List Management
 	private var unipackList: ArrayList<UniPackItem> = ArrayList()
@@ -159,10 +155,6 @@ class MainListFragment : BaseFragment() {
 						added.unipackENT.observeRealChange(viewLifecycleOwner, {
 							val index = unipackList.indexOf(added)
 							adapter.notifyItemChanged(index)
-
-							/* todo unipackEnt가 변경되었을 때 Fragment 내부에서 알아서 감지하는지
-							if (selectedIndex == index)
-								updatePanel(false)*/
 						}) { it.clone() }
 				}
 				for (removed: UniPackItem in I_removed) {
@@ -228,11 +220,6 @@ class MainListFragment : BaseFragment() {
 	}
 
 	fun pressPlay(item: UniPackItem) {
-
-		CoroutineScope(Dispatchers.IO).launch {
-			// todo PlayActivity 로 이동
-			unipackRepo.recordOpen(item.unipack.id)
-		}
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())
 		}
