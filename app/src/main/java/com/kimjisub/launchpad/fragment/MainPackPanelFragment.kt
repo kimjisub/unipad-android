@@ -1,13 +1,17 @@
 package com.kimjisub.launchpad.fragment
 
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.FragmentMainPackPanelBinding
+import com.kimjisub.launchpad.tool.observeEvent
 import com.kimjisub.launchpad.viewmodel.MainPackPanelViewModel
 
 class MainPackPanelFragment(private val unipackItem: UniPackItem) : BaseFragment() {
@@ -18,8 +22,7 @@ class MainPackPanelFragment(private val unipackItem: UniPackItem) : BaseFragment
 	private var callbacks: Callbacks? = null
 
 	interface Callbacks {
-		fun onDeleteClick(unipackItem: UniPackItem)
-		fun onBookmarkChange(unipackItem: UniPackItem, bookmark: Boolean)
+		fun onDelete()
 	}
 
 	override fun onCreateView(
@@ -35,6 +38,18 @@ class MainPackPanelFragment(private val unipackItem: UniPackItem) : BaseFragment
 		b.apply {
 			lifecycleOwner = this@MainPackPanelFragment
 			vm = this@MainPackPanelFragment.vm
+		}
+
+		vm.eventDelete.observeEvent(viewLifecycleOwner) {
+
+			AlertDialog.Builder(requireContext())
+				.setTitle(R.string.warning)
+				.setMessage(R.string.doYouWantToDeleteUniPack)
+				.setPositiveButton(R.string.accept) { _: DialogInterface?, _: Int ->
+					unipackItem.unipack.delete()
+					callbacks?.onDelete()
+				}.setNegativeButton(R.string.cancel, null)
+				.show()
 		}
 
 		// 텍스트가 흘러갈 수 있도록 선택

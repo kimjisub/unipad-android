@@ -1,12 +1,17 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
+import android.content.DialogInterface
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.tool.Event
+import com.kimjisub.launchpad.tool.emit
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
 import kotlinx.coroutines.CoroutineScope
@@ -29,9 +34,11 @@ class MainPackPanelViewModel(
 	val fileSize = MutableLiveData<String?>()
 
 	//val bookmark = MutableLiveData<Boolean>()
-	val playCount by lazy { repo.openCount(unipack.id) }
-	val lastPlayed by lazy { repo.getLastOpenedDate(unipack.id) }
-	val unipackEnt by lazy { repo.find(unipack.id) }
+	val playCount = repo.openCount(unipack.id)
+	val lastPlayed = repo.getLastOpenedDate(unipack.id)
+	val unipackEnt = repo.find(unipack.id)
+
+	val eventDelete = MutableLiveData<Event<Unit>>()
 
 	init {
 		CoroutineScope(Dispatchers.IO).launch {
@@ -76,44 +83,11 @@ class MainPackPanelViewModel(
 		app.browse("https://www.youtube.com/results?search_query=UniPad+${unipack.title}+${unipack.producerName}")
 	}
 
+	fun delete() {
+		eventDelete.emit()
+	}
+
 	/*b.packPanel.onEventListener = object : MainPackPanel.OnEventListener {
-		override fun onBookmarkClick(v: View) {
-			val item = selected
-			if (item != null) {
-				val unipackENT = item.unipackENT
-				unipackENT.observe(this@MainActivity, object : Observer<UniPackENT> {
-					override fun onChanged(it: UniPackENT?) {
-						unipackENT.removeObserver(this)
-						CoroutineScope(Dispatchers.IO).launch {
-							it!!.bookmark = !it.bookmark
-							db.unipackDAO()!!.update(it)
-						}
-					}
-				})
-			}
-		}
-
-		override fun onEditClick(v: View) {}
-
-		// done
-		override fun onYoutubeClick(v: View) {
-			Intent()
-			Intent(Intent.ACTION_VIEW)
-
-			val item = selected
-			if (item != null)
-				browse("https://www.youtube.com/results?search_query=UniPad+" + item.unipack.title + "+" + item.unipack.producerName)
-		}
-
-		// done
-		override fun onWebsiteClick(v: View) {
-			val item = selected
-			if (item != null) {
-				val website: String? = item.unipack.website
-				if (website != null)
-					browse(website)
-			}
-		}
 
 		override fun onFuncClick(v: View) {
 			val item = selected
@@ -132,18 +106,7 @@ class MainPackPanelViewModel(
 		}
 
 		override fun onDeleteClick(v: View) {
-			val item = selected
-			if (item != null) AlertDialog.Builder(this@MainActivity)
-				.setTitle(getString(R.string.warning))
-				.setMessage(getString(R.string.doYouWantToDeleteUniPack))
-				.setPositiveButton(getString(R.string.accept)) { _: DialogInterface?, _: Int ->
-					item.unipack.delete()
-					update()
-				}.setNegativeButton(
-					getString(R.string.cancel),
-					null
-				)
-				.show()
+
 		}
 	}*/
 
