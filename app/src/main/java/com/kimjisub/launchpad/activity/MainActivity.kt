@@ -24,7 +24,6 @@ import com.google.gson.reflect.TypeToken
 import com.kimjisub.design.dialog.FileExplorerDialog
 import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.launchpad.BuildConfig
-import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.databinding.ActivityMainBinding

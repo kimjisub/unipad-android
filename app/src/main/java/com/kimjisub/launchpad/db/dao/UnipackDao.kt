@@ -1,7 +1,10 @@
 package com.kimjisub.launchpad.db.dao
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.kimjisub.launchpad.db.ent.Unipack
 import java.util.*
 
@@ -27,10 +30,10 @@ interface UnipackDao {
 	suspend fun addOpenCount(id: String)
 
 	@Query("UPDATE Unipack SET lastOpenedAt=:lastOpenedAt WHERE id=:id")
-	suspend fun setLastOpenedAt(id:String, lastOpenedAt:Date)
+	suspend fun setLastOpenedAt(id: String, lastOpenedAt: Date)
 
 	@Query("UPDATE Unipack SET bookmark=NOT(bookmark) WHERE id=:id")
-	suspend fun toggleBookmark(id:String)
+	suspend fun toggleBookmark(id: String)
 
 	suspend fun getOrCreate(id: String): LiveData<Unipack> {
 		insert(Unipack.create(id))
