@@ -13,7 +13,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.SkuDetails
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
-import com.kimjisub.launchpad.db.repository.UniPackRepository
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -86,9 +86,10 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
+	val unipackRepo: UnipackRepository by inject()
 	val ads by lazy { AdmobManager(this) }
 	val bm by lazy { BillingModule(this, lifecycleScope, this) }
-	val unipackRepo: UniPackRepository by inject()
+
 
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {

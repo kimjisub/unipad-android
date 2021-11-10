@@ -151,18 +151,19 @@ class MainListFragment : BaseFragment() {
 					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
-					added.unipackENTObserver =
-						added.unipackENT.observeRealChange(viewLifecycleOwner, {
-							val index = unipackList.indexOf(added)
-							adapter.notifyItemChanged(index)
-						}) { it.clone() }
+					added.unipackENT.observe(viewLifecycleOwner){
+						val index = unipackList.indexOf(added)
+						adapter.notifyItemChanged(index)
+					}
 				}
 				for (removed: UniPackItem in I_removed) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack == removed.unipack)) {
 							unipackList.removeAt(i)
 							adapter.notifyItemRemoved(i)
-							removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
+							// todo 삭제됐을 때 observing 어떻게될까?
+							// removed.unipackENT.removeObservers(viewLifecycleOwner)
+							// removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
 							break
 						}
 					}

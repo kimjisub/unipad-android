@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
-import com.kimjisub.launchpad.db.repository.UniPackRepository
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -27,7 +27,7 @@ class MainTotalPanelViewModel(
 	private val p: PreferenceManager,
 	private val ws: WorkspaceManager,
 ) : AndroidViewModel(app) {
-	private val repo: UniPackRepository by app.inject()
+	private val repo: UnipackRepository by app.inject()
 
 	private val sortMethodList = arrayOf(
 		SortMethod(app.getString(R.string.sort_title), false) { a, b ->

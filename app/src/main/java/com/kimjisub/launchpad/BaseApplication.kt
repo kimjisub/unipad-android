@@ -6,7 +6,7 @@ import com.google.android.gms.ads.MobileAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.db.AppDatabase
-import com.kimjisub.launchpad.db.repository.UniPackRepository
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -34,7 +34,7 @@ class BaseApplication : Application() {
 				module {
 					single {
 						val db = AppDatabase.getInstance(applicationContext)!!
-						UniPackRepository(db.unipackDAO())
+						UnipackRepository(db.unipackDAO())
 					}
 
 					single {

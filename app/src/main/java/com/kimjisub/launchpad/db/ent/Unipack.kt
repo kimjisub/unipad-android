@@ -11,18 +11,11 @@ class Unipack(
 	var bookmark: Boolean,
 	var openCount: Long,
 	var lastOpenedAt: Date?,
+	// var deleted: Boolean,
+	// var downloadedAt: Date,
+	// var downloadFrom: String,
 	var createdAt: Date,
 ) {
-	fun clone(): Unipack {
-		return Unipack(
-			id,
-			bookmark,
-			openCount,
-			lastOpenedAt,
-			createdAt,
-		)
-	}
-
 	override fun toString(): String {
 		return "Unipack(id='$id', bookmark=$bookmark, openCount=$openCount, lastOpenedAt=$lastOpenedAt, createdAt=$createdAt)"
 	}
