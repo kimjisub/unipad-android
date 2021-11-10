@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import java.io.File
 
 class WorkspaceManager(val context: Context) {
+	// todo koin
 	val p by lazy { PreferenceManager(context) }
 	private val db: AppDatabase by lazy { AppDatabase.getInstance(context)!! }
 

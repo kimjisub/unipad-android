@@ -29,7 +29,6 @@ class MainPackPanelFragment(private val unipackItem: UniPackItem) : BaseFragment
 		vm = ViewModelProvider(this,
 			MainPackPanelViewModel.Factory(
 				requireActivity().application,
-				unipackRepo,
 				unipackItem.unipack
 			))[MainPackPanelViewModel::class.java]
 		_b = FragmentMainPackPanelBinding.inflate(inflater, container, false)
