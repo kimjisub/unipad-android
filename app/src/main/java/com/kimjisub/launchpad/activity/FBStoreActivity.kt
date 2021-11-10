@@ -6,6 +6,7 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
@@ -46,33 +47,32 @@ class FBStoreActivity : BaseActivity() {
 	private var adapter: StoreAdapter? = null
 	private lateinit var downloadList: List<UniPackItem>
 
-	private fun initVar(onFirst: Boolean) {
-		if (onFirst) {
-			CoroutineScope(Dispatchers.IO).launch {
-				downloadList = ws.getUnipacks()
+	private fun initVar() {
+		CoroutineScope(Dispatchers.IO).launch {
+			downloadList = ws.getUnipacks()
+		}
+
+		adapter = StoreAdapter(list, object : EventListener {
+			override fun onViewClick(item: StoreItem, v: PackView) {
+				togglePlay(item)
 			}
 
-			adapter = StoreAdapter(list, object : EventListener {
-				override fun onViewClick(item: StoreItem, v: PackView) {
-					togglePlay(item)
-				}
+			override fun onViewLongClick(item: StoreItem, v: PackView) {}
+			override fun onPlayClick(item: StoreItem, v: PackView) {
+				if (!item.downloaded && !item.downloading) {
+					if (p.downloadCouponCount > 0 || isPro) {
+						if (!isPro)
+							p.downloadCouponCount--
 
-				override fun onViewLongClick(item: StoreItem, v: PackView) {}
-				override fun onPlayClick(item: StoreItem, v: PackView) {
-					if (!item.downloaded && !item.downloading) {
-						if (p.downloadCouponCount > 0 || isPro) {
-							if (!isPro)
-								p.downloadCouponCount--
-
+						startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+					} else {
+						showRewardedAd {
+							p.downloadCouponCount--
 							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-						} else {
-							showRewardedAd {
-								p.downloadCouponCount--
-								startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-							}
 						}
 					}
 				}
+			}
 			})
 			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
 				override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
@@ -85,17 +85,16 @@ class FBStoreActivity : BaseActivity() {
 					b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
 				}
 			})
-			val divider =
-				DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
-			divider.setDrawable(resources.getDrawable(drawable.border_divider))
-			b.recyclerView.addItemDecoration(divider)
-			b.recyclerView.setHasFixedSize(false)
-			b.recyclerView.layoutManager = LinearLayoutManager(this@FBStoreActivity)
-			//b.recyclerView.setItemAnimator(null);
+		val divider = DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
+		val drawable = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
+		divider.setDrawable(drawable)
+		b.recyclerView.addItemDecoration(divider)
+		b.recyclerView.setHasFixedSize(false)
+		b.recyclerView.layoutManager = LinearLayoutManager(this@FBStoreActivity)
+		//b.recyclerView.setItemAnimator(null);
 
 
-			b.recyclerView.adapter = adapter
-		}
+		b.recyclerView.adapter = adapter
 	}
 
 
@@ -125,7 +124,7 @@ class FBStoreActivity : BaseActivity() {
 		b = ActivityStoreBinding.inflate(layoutInflater)
 		bm.load()
 		setContentView(b.root)
-		initVar(true)
+		initVar()
 
 		b.totalPanel.b.logo.setImageResource(drawable.custom_logo)
 		b.totalPanel.b.version.text = BuildConfig.VERSION_NAME
@@ -208,7 +207,7 @@ class FBStoreActivity : BaseActivity() {
 	}
 
 	internal val selectedIndex: Int
-		internal get() {
+		get() {
 			var index = -1
 			var i = 0
 			for (item in list) {
@@ -231,8 +230,8 @@ class FBStoreActivity : BaseActivity() {
 		return ret
 	}
 
-	internal val downloadingCount: Int
-		internal get() {
+	private val downloadingCount: Int
+		get() {
 			var count = 0
 			for (item in list) {
 				if (item.downloading) count++
@@ -240,8 +239,8 @@ class FBStoreActivity : BaseActivity() {
 			return count
 		}
 
-	internal val downloadedCount: Int
-		internal get() {
+	private val downloadedCount: Int
+		get() {
 			var count = 0
 			for (item in list) {
 				if (item.downloaded) count++

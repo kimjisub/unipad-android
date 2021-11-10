@@ -126,7 +126,7 @@ class PlayActivity : BaseActivity() {
 	private var traceLog_table: Array<Array<Array<ArrayList<Int>>>>? = null
 	private var traceLog_nextNum: IntArray? = null
 	private var rec_prevEventMS: Long = 0
-	private var rec_log: String? = ""
+	private var log: String? = ""
 	private var bool_toggleOption_window = false
 
 	private fun initVar() {
@@ -306,11 +306,11 @@ class PlayActivity : BaseActivity() {
 			val screenWidth = b.root.width
 			val screenHeight = b.root.height
 			val paddingWidth = b.paddingScale.width
-			val paddingheight = b.paddingScale.height
+			val paddingHeight = b.paddingScale.height
 
 			if (unipack!!.squareButton) {
 				val xSize = paddingWidth / unipack!!.buttonX
-				val ySize = paddingheight / unipack!!.buttonY
+				val ySize = paddingHeight / unipack!!.buttonY
 
 				buttonSizeY = xSize.coerceAtMost(ySize)
 				buttonSizeX = buttonSizeY
@@ -370,11 +370,11 @@ class PlayActivity : BaseActivity() {
 				override fun onCheckedChange(bool: Boolean) {
 					if (SCB_record.isChecked()) {
 						rec_prevEventMS = java.lang.System.currentTimeMillis()
-						rec_log = "c " + (chain.value + 1)
+						log = "c " + (chain.value + 1)
 					} else {
-						putClipboard(rec_log!!)
+						putClipboard(log!!)
 						toast(string.copied)
-						rec_log = ""
+						log = ""
 					}
 					refreshWatermark()
 				}
@@ -697,8 +697,8 @@ class PlayActivity : BaseActivity() {
 				// 녹음 chain 추가
 				if (SCB_record.isChecked()) {
 					val currTime = java.lang.System.currentTimeMillis()
-					rec_addLog("d " + (currTime - rec_prevEventMS))
-					rec_addLog("chain " + (curr + 1))
+					addLog("d " + (currTime - rec_prevEventMS))
+					addLog("chain " + (curr + 1))
 					rec_prevEventMS = currTime
 				}
 
@@ -729,8 +729,8 @@ class PlayActivity : BaseActivity() {
 				soundRunner?.soundOn(x, y)
 				if (SCB_record.isChecked()) {
 					val currTime = java.lang.System.currentTimeMillis()
-					rec_addLog("d " + (currTime - rec_prevEventMS))
-					rec_addLog("t " + (x + 1).toString() + " " + (y + 1))
+					addLog("d " + (currTime - rec_prevEventMS))
+					addLog("t " + (x + 1).toString() + " " + (y + 1))
 					rec_prevEventMS = currTime
 				}
 				if (SCB_traceLog.isChecked())
@@ -1250,8 +1250,8 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun rec_addLog(msg: String?) {
-		rec_log += "\n" + msg
+	private fun addLog(msg: String?) {
+		log += "\n" + msg
 	}
 
 	// Activity

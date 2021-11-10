@@ -285,8 +285,8 @@ class MainActivity : BaseActivity(),
 				}
 
 				override fun onImportComplete(folder: File, unipack: UniPack) {
-					when {
-						unipack.errorDetail == null -> {
+					when (unipack.errorDetail) {
+						null -> {
 							alertDialog {
 								title = getString(string.importComplete)
 								message = unipack.infoToString(this@MainActivity)
@@ -353,7 +353,7 @@ class MainActivity : BaseActivity(),
 				gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
 			if (!currVersionList.contains(thisVersion))
 				b.root.longSnack(
-					"${getString(string.newVersionFound)}"
+					getString(string.newVersionFound)
 				) {
 					action(getString(string.update)) {
 						browse("https://play.google.com/store/apps/details?id=$packageName")
@@ -407,7 +407,7 @@ class MainActivity : BaseActivity(),
 	private var adsPlayStart: InterstitialAd? = null
 	override fun onRequestAds() {
 		ads.showAdsWithCooltime(adsPlayStart) {
-			val playStartUnitId = resources.getString(R.string.admob_play_start)
+			val playStartUnitId = resources.getString(string.admob_play_start)
 			ads.loadAds(playStartUnitId) {
 				adsPlayStart = it
 			}
@@ -444,7 +444,7 @@ class MainActivity : BaseActivity(),
 		fbStoreCount.attachEventListener(true)
 		bm.restorePurchase()
 
-		val playStartUnitId = resources.getString(R.string.admob_play_start)
+		val playStartUnitId = resources.getString(string.admob_play_start)
 		ads.loadAds(playStartUnitId) {
 			adsPlayStart = it
 		}

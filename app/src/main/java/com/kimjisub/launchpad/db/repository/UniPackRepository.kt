@@ -19,11 +19,6 @@ class UniPackRepository(
 		return unipackDao.getOrCreate(id)
 	}
 
-
-	suspend fun setBookmark(id: String, bookmark: Boolean) {
-		unipackDao.setBookmark(id, bookmark)
-	}
-
 	suspend fun toggleBookmark(id: String) {
 		unipackDao.toggleBookmark(id)
 	}

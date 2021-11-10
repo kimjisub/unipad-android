@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
@@ -23,41 +24,45 @@ class MidiSelectActivity : BaseActivity() {
 	private lateinit var b: ActivityMidiSelectBinding
 	private val midiDeviceList = lazy {
 		arrayListOf(
-			MidiDeviceItem(getDrawable(R.drawable.midi_lp_s), "Launchpad S", LaunchpadS::class),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_lp_mk2),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_s, null)!!,
+				"Launchpad S",
+				LaunchpadS::class
+			),
+			MidiDeviceItem(
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk2, null)!!,
 				"Launchpad MK2",
 				LaunchpadMK2::class
 			),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_lp_pro),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_pro, null)!!,
 				"Launchpad PRO",
 				LaunchpadPRO::class
 			),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_lp_x),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_x, null)!!,
 				"Launchpad X",
 				LaunchpadX::class
 			),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_lp_mk3),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk3, null)!!,
 				"Launchpad MK3",
 				LaunchpadMK3::class
 			),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_midifighter),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_midifighter, null)!!,
 				"Midi Fighter",
 				MidiFighter::class
 			),
 			MidiDeviceItem(
-				getDrawable(R.drawable.midi_master_keyboard),
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_master_keyboard, null)!!,
 				"Master Keyboard",
 				MasterKeyboard::class
 			)
 		)
 	}
 
-	private val LL_mode: Array<LinearLayout> by lazy {
+	private val modeViewList: Array<LinearLayout> by lazy {
 		arrayOf(
 			b.speedFirst,
 			b.avoidAfterimage
@@ -89,13 +94,14 @@ class MidiSelectActivity : BaseActivity() {
 
 	}, 60000)
 
+	@SuppressLint("ClickableViewAccessibility")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		b = ActivityMidiSelectBinding.inflate(layoutInflater)
 		setContentView(b.root)
 		autorunTimer.start()
 
-		b.root.setOnTouchListener { v, event ->
+		b.root.setOnTouchListener { _, _ ->
 			userInteract()
 			true
 		}
@@ -151,11 +157,11 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	fun showMode(mode: Int) {
-		for (i in LL_mode.indices) {
+		for (i in modeViewList.indices) {
 			if (mode == i)
-				changeViewColor(LL_mode[i], color.gray1, color.background1)
+				changeViewColor(modeViewList[i], color.gray1, color.background1)
 			else
-				changeViewColor(LL_mode[i], color.background1, color.gray1)
+				changeViewColor(modeViewList[i], color.background1, color.gray1)
 		}
 		p.launchpadConnectMethod = mode
 	}

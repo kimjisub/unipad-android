@@ -26,9 +26,6 @@ interface UnipackDao {
 	@Query("UPDATE Unipack SET openCount = openCount + 1 WHERE id=:id")
 	suspend fun addOpenCount(id: String)
 
-	@Query("UPDATE Unipack SET bookmark=:bookmark WHERE id=:id")
-	suspend fun setBookmark(id:String, bookmark:Boolean)
-
 	@Query("UPDATE Unipack SET lastOpenedAt=:lastOpenedAt WHERE id=:id")
 	suspend fun setLastOpenedAt(id:String, lastOpenedAt:Date)
 

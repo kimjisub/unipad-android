@@ -26,7 +26,7 @@ import splitties.activities.start
 open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 
 	companion object {
-		var activityList = ArrayList<BaseActivity>()
+		private var activityList = ArrayList<BaseActivity>()
 		internal fun onStartActivity(activity: BaseActivity) {
 			activityList.add(activity)
 			printActivityLog(activity.getActivityName() + " start")
@@ -46,7 +46,7 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 			printActivityLog(activity.getActivityName() + " finish" + if (exist) "" else " error")
 		}
 
-		internal fun restartApp(activity: BaseActivity) {
+		private fun restartApp(activity: BaseActivity) {
 			val size = activityList.size
 			for (i in size - 1 downTo 0) {
 				activityList[i].finish()
@@ -57,7 +57,7 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 			Process.killProcess(Process.myPid())
 		}
 
-		internal fun printActivityLog(log: String) {
+		private fun printActivityLog(log: String) {
 			val str = StringBuilder("ACTIVITY STACK - $log[")
 			val size = activityList.size
 			for (i in 0 until size) {

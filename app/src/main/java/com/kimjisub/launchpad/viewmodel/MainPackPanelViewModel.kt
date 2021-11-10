@@ -21,7 +21,7 @@ class MainPackPanelViewModel(
 	private val app: Application,
 	val unipack: UniPack,
 ) : AndroidViewModel(app) {
-	val repo: UniPackRepository by app.inject()
+	private val repo: UniPackRepository by app.inject()
 
 	//val downloadedDate = Date(unipack.lastModified())
 	val soundCount = MutableLiveData<Int?>()
