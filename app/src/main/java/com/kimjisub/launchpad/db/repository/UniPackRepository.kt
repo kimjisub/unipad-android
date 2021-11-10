@@ -19,9 +19,13 @@ class UniPackRepository(
 		return unipackDao.getOrCreate(id)
 	}
 
-	@Suppress("RedundantSuspendModifier")
-	suspend fun recordOpen(id: String) {
-		unipackDao.addOpenCount(id)
+
+	suspend fun setBookmark(id: String, bookmark: Boolean) {
+		unipackDao.setBookmark(id, bookmark)
+	}
+
+	suspend fun toggleBookmark(id: String) {
+		unipackDao.toggleBookmark(id)
 	}
 
 	@Suppress("RedundantSuspendModifier")
@@ -38,5 +42,11 @@ class UniPackRepository(
 	@Suppress("RedundantSuspendModifier")
 	fun getLastOpenedDate(id: String): LiveData<Date> {
 		return unipackDao.lastOpenedAt(id)
+	}
+
+	@Suppress("RedundantSuspendModifier")
+	suspend fun recordOpen(id: String) {
+		unipackDao.addOpenCount(id)
+		unipackDao.setLastOpenedAt(id, Date())
 	}
 }

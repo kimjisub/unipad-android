@@ -232,7 +232,8 @@ class MainListFragment : BaseFragment() {
 	fun pressPlay(item: UniPackItem) {
 
 		CoroutineScope(Dispatchers.IO).launch {
-			db.unipackDAO().addOpenCount(item.unipack.id)
+			// todo PlayActivity 로 이동
+			unipackRepo.recordOpen(item.unipack.id)
 		}
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())
