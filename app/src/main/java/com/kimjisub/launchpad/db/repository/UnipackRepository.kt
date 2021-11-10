@@ -5,7 +5,7 @@ import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.ent.Unipack
 import java.util.*
 
-class UniPackRepository(
+class UnipackRepository(
 	private val unipackDao: UnipackDao,
 ) {
 	@Suppress("RedundantSuspendModifier")

@@ -4,15 +4,17 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import com.kimjisub.launchpad.adapter.UniPackItem
-import com.kimjisub.launchpad.db.AppDatabase
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 
-class WorkspaceManager(val context: Context) {
+class WorkspaceManager(val context: Context) : KoinComponent {
 	// todo koin
+	val repo: UnipackRepository by inject()
 	val p by lazy { PreferenceManager(context) }
-	private val db: AppDatabase by lazy { AppDatabase.getInstance(context)!! }
 
 	data class Workspace(
 		val name: String,
@@ -137,7 +139,7 @@ class WorkspaceManager(val context: Context) {
 					if (!it.isDirectory) return@forEach
 
 					val unipack = UniPackFolder(it).load()
-					val unipackENT = db.unipackDAO()!!.getOrCreate(unipack.id)
+					val unipackENT = repo.getOrCreate(unipack.id)
 
 					val packItem = UniPackItem(unipack, unipackENT)
 					unipacks.add(packItem)

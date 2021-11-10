@@ -22,8 +22,6 @@ data class UniPackItem(
 	val unipackENT: LiveData<Unipack>,
 	/*var isNew: Boolean,*/
 ) {
-	var unipackENTObserver: Observer<Unipack>? = null
-
 	//var packView: PackView? = null
 	var flagColor: Int = 0
 	var toggle: Boolean = false

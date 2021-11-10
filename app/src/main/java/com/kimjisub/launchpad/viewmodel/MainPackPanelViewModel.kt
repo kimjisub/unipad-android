@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.kimjisub.launchpad.db.repository.UniPackRepository
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
@@ -21,7 +21,7 @@ class MainPackPanelViewModel(
 	private val app: Application,
 	val unipack: UniPack,
 ) : AndroidViewModel(app) {
-	private val repo: UniPackRepository by app.inject()
+	private val repo: UnipackRepository by app.inject()
 
 	//val downloadedDate = Date(unipack.lastModified())
 	val soundCount = MutableLiveData<Int?>()

@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.fragment
 import androidx.fragment.app.Fragment
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.SkuDetails
+import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.billing.BillingModule
@@ -13,9 +14,10 @@ import org.koin.android.ext.android.inject
 open class BaseFragment : Fragment(), BillingModule.Callback {
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
+	// val unipackRepo: UnipackRepository by inject()
 
-	//val ads by lazy { AdmobManager(this) }
-	//val bm by lazy { BillingModule(this, lifecycleScope, this) }
+	// val ads by lazy { AdmobManager(this) }
+	// val bm by lazy { BillingModule(this, lifecycleScope, this) }
 
 
 	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
