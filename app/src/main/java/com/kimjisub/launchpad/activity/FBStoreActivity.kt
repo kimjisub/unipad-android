@@ -73,18 +73,18 @@ class FBStoreActivity : BaseActivity() {
 					}
 				}
 			}
-			})
-			adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
-				override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-					super.onItemRangeInserted(positionStart, itemCount)
-					b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
-				}
+		})
+		adapter!!.registerAdapterDataObserver(object : AdapterDataObserver() {
+			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+				super.onItemRangeInserted(positionStart, itemCount)
+				b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+			}
 
-				override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-					super.onItemRangeRemoved(positionStart, itemCount)
-					b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
-				}
-			})
+			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+				super.onItemRangeRemoved(positionStart, itemCount)
+				b.errItem.visibility = if (list.size == 0) View.VISIBLE else View.GONE
+			}
+		})
 		val divider = DividerItemDecoration(this@FBStoreActivity, DividerItemDecoration.VERTICAL)
 		val drawable = ResourcesCompat.getDrawable(resources, drawable.border_divider, null)!!
 		divider.setDrawable(drawable)
