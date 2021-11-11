@@ -105,34 +105,33 @@ class MainListFragment : BaseFragment() {
 
 
 		CoroutineScope(Dispatchers.IO).launch {
-			var I_list = ws.getUnipacks()
-			val I_added = ArrayList<UniPackItem>()
-			val I_removed = ArrayList(unipackList)
+			var newList = ws.getUnipacks()
+			val newAdded = ArrayList<UniPackItem>()
+			val newRemoved = ArrayList(unipackList)
+
+
+			val comparator: Comparator<UniPackItem> = if (sort != null)
+				Comparator { a, b ->
+					sort!!.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
+				} else
+				Comparator { _, _ -> 0 }
 
 
 			try {
+				newList = newList.sortedWith(comparator)
 
-
-				if (sort != null) {
-					val comparator = Comparator<UniPackItem> { a, b ->
-						sort!!.first.comparator.compare(a, b) * if (p.sortOrder) 1 else -1
-					}
-
-					I_list = I_list.sortedWith(comparator)
-				}
-
-				for (item: UniPackItem in I_list) {
+				for (item: UniPackItem in newList) {
 					var index = -1
-					for ((i, item2: UniPackItem) in I_removed.withIndex()) {
+					for ((i, item2: UniPackItem) in newRemoved.withIndex()) {
 						if ((item2.unipack == item.unipack)) {
 							index = i
 							break
 						}
 					}
 					if (index != -1)
-						I_removed.removeAt(index)
+						newRemoved.removeAt(index)
 					else
-						I_added.add(0, item)
+						newAdded.add(0, item)
 				}
 
 			} catch (e: Exception) {
@@ -140,26 +139,23 @@ class MainListFragment : BaseFragment() {
 			}
 
 			withContext(Dispatchers.Main) {
-				for (added: UniPackItem in I_added) {
-					val i = unipackList.getVirtualIndexFormSorted(Comparator { a, b ->
-						a.unipack.lastModified().compareTo(
-							b.unipack.lastModified()
-						)
-					}, added)
+				for (added: UniPackItem in newAdded) {
+					// 새로 추가됐을 때 정렬 기준에 맞게 끼워넣기
+					val i = unipackList.getVirtualIndexFormSorted(comparator, added)
 
 					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
-					added.unipackENT.observe(viewLifecycleOwner){
+					added.unipackENT.observe(viewLifecycleOwner) {
 						val index = unipackList.indexOf(added)
 						adapter.notifyItemChanged(index)
 					}
 				}
-				for (removed: UniPackItem in I_removed) {
+				for (removed: UniPackItem in newRemoved) {
 					for ((i, item: UniPackItem) in unipackList.withIndex()) {
 						if ((item.unipack == removed.unipack)) {
 
-							if(i == selectedIndex)
+							if (item == selected)
 								togglePlay(null)
 
 							unipackList.removeAt(i)
@@ -173,7 +169,7 @@ class MainListFragment : BaseFragment() {
 				}
 
 				var changed = false
-				for ((to, target: UniPackItem) in I_list.withIndex()) {
+				for ((to, target: UniPackItem) in newList.withIndex()) {
 					var from = -1
 					for ((i, item) in adapter.list.withIndex())
 						if (target.unipack == item.unipack)
@@ -186,7 +182,7 @@ class MainListFragment : BaseFragment() {
 				if (changed)
 					adapter.notifyDataSetChanged()
 
-				if (I_added.size > 0) b.recyclerView.smoothScrollToPosition(0)
+				if (newAdded.size > 0) b.recyclerView.smoothScrollToPosition(0)
 				b.swipeRefreshLayout.isRefreshing = false
 				listRefreshing = false
 			}
@@ -202,13 +198,11 @@ class MainListFragment : BaseFragment() {
 
 	fun togglePlay(target: UniPackItem?) {
 		try {
-			var index = -1
 			for ((i, item: UniPackItem) in unipackList.withIndex()) {
 				//val packView = item.packView
 				if (target != null && (item.unipack == target.unipack)) {
 
 					lastPlayIndex = i
-					index = i
 					item.toggle = !item.toggle
 					item.togglea?.invoke(item.toggle)
 				} else if (item.toggle) {
@@ -216,7 +210,7 @@ class MainListFragment : BaseFragment() {
 					item.togglea?.invoke(item.toggle)
 				}
 			}
-			selectedIndex = index
+			selected = if (target == null) null else if (target.toggle) target else null
 
 		} catch (e: ConcurrentModificationException) {
 			e.printStackTrace()
@@ -232,20 +226,32 @@ class MainListFragment : BaseFragment() {
 
 	}
 
-	private var selectedIndex: Int = -1
+	/*private var selectedIndex: Int = -1
 		set(value) {
 			if(value != field) {
 				field = value
 				callbacks?.onListSelectedChange(field)
 			}
 		}
-
-
 	val selected: UniPackItem?
 		get() {
 			if (selectedIndex == -1)
 				return null
 			return unipackList[selectedIndex]
+		}*/
+
+	private val selectedIndex: Int?
+		get() {
+			if (selected == null)
+				return null
+			return unipackList.indexOf(selected)
+		}
+	var selected: UniPackItem? = null
+		set(value) {
+			if (value != field) {
+				field = value
+				callbacks?.onListSelectedChange(field)
+			}
 		}
 
 
@@ -294,7 +300,7 @@ class MainListFragment : BaseFragment() {
 	private var callbacks: Callbacks? = null
 
 	interface Callbacks {
-		fun onListSelectedChange(index: Int)
+		fun onListSelectedChange(item: UniPackItem?)
 		fun onListUpdated()
 		fun onRequestAds()
 	}
