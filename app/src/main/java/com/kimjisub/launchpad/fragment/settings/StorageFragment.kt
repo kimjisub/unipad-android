@@ -33,9 +33,10 @@ class StorageFragment : PreferenceFragmentCompat() {
 				isIconSpaceReserved = false
 				setOnPreferenceChangeListener { _, newValue ->
 					val list = p.storageActive.toMutableSet()
-					if (newValue == true)
+					if (newValue == true) {
+						list.clear()
 						list.add(it.file.path)
-					else if (list.size > 1)
+					} else if (list.size > 1)
 						list.remove(it.file.path)
 					p.storageActive = list
 					ws.validateWorkspace()
