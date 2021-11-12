@@ -36,9 +36,10 @@ class MainTotalPanelViewModel(
 		SortMethod(app.getString(R.string.sort_producer), false) { a, b ->
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
+		// todo 이거 정렬 안됨
 		SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
-			val aCount = a.unipackENT.value?.openCount!!//repo.openCountSync(a.unipack.id)
-			val bCount = b.unipackENT.value?.openCount!!//repo.openCountSync(b.unipack.id)
+			val aCount = repo.openCountSync(a.unipack.id)//a.unipackENT.value?.openCount!!
+			val bCount = repo.openCountSync(b.unipack.id)//b.unipackENT.value?.openCount!!
 			-aCount.compareTo(bCount)
 		},
 		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
@@ -59,8 +60,8 @@ class MainTotalPanelViewModel(
 	val version = MutableLiveData<String>()
 	val premium = MutableLiveData<Boolean>()
 
-	val unipackCount = MutableLiveData<Int>()
-	val unipackCapacity = MutableLiveData<String>()
+	val unipackCount = MutableLiveData<Int?>()
+	val unipackCapacity = MutableLiveData<String?>()
 	val openCount = repo.openCount()
 	val sortMethod = MutableLiveData<Int>()
 	val sortOrder = MutableLiveData<Boolean>()
@@ -85,11 +86,13 @@ class MainTotalPanelViewModel(
 
 	fun update() {
 		CoroutineScope(Dispatchers.Main).launch {
+			unipackCapacity.value = null
 			val size = ws.getActiveWorkspacesSize()
 			unipackCapacity.value = FileManager.byteToMB(size, "%.0f")
 		}
 
 		CoroutineScope(Dispatchers.Main).launch {
+			unipackCount.value = null
 			unipackCount.value = ws.getUnipacks().size
 		}
 	}

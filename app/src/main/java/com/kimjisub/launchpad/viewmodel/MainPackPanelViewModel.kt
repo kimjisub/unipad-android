@@ -34,8 +34,6 @@ class MainPackPanelViewModel(
 	val fileSize = MutableLiveData<String?>()
 
 	//val bookmark = MutableLiveData<Boolean>()
-	val playCount = repo.openCount(unipack.id)
-	val lastPlayed = repo.getLastOpenedDate(unipack.id)
 	val unipackEnt = repo.find(unipack.id)
 
 	val eventDelete = MutableLiveData<Event<Unit>>()

@@ -29,15 +29,18 @@ class UnipackRepository(
 	}
 
 	@Suppress("RedundantSuspendModifier")
-	fun openCount(id: String): LiveData<Long> {
+	fun openCountSync(id: String): Long {
 		return unipackDao.openCount(id)
 	}
 
 
 	@Suppress("RedundantSuspendModifier")
-	fun getLastOpenedDate(id: String): LiveData<Date> {
+	fun getLastOpenedDateSync(id: String): Date? {
 		return unipackDao.lastOpenedAt(id)
 	}
+
+
+
 
 	@Suppress("RedundantSuspendModifier")
 	suspend fun recordOpen(id: String) {

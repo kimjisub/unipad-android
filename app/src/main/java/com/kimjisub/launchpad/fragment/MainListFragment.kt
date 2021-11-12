@@ -118,7 +118,9 @@ class MainListFragment : BaseFragment() {
 
 
 			try {
+				Log.test("1")
 				newList = newList.sortedWith(comparator)
+				Log.test("2")
 
 				for (item: UniPackItem in newList) {
 					var index = -1
@@ -134,15 +136,29 @@ class MainListFragment : BaseFragment() {
 						newAdded.add(0, item)
 				}
 
+				Log.test("3")
+
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 
-			withContext(Dispatchers.Main) {
-				for (added: UniPackItem in newAdded) {
-					// 새로 추가됐을 때 정렬 기준에 맞게 끼워넣기
+			Log.test("4")
+			for (added: UniPackItem in newAdded) {
+				Log.test("added: ${added.unipack.title}")
+				// 새로 추가됐을 때 정렬 기준에 맞게 끼워넣기
+				try {
 					val i = unipackList.getVirtualIndexFormSorted(comparator, added)
 
+				} catch (e: Exception) {
+					e.printStackTrace()
+				}
+				val i = unipackList.getVirtualIndexFormSorted(comparator, added)
+
+
+				Log.test("virtualIndex: $i")
+
+
+				withContext(Dispatchers.Main) {
 					unipackList.add(i, added)
 					adapter.notifyItemInserted(i)
 
@@ -151,10 +167,15 @@ class MainListFragment : BaseFragment() {
 						adapter.notifyItemChanged(index)
 					}
 				}
-				for (removed: UniPackItem in newRemoved) {
-					for ((i, item: UniPackItem) in unipackList.withIndex()) {
-						if ((item.unipack == removed.unipack)) {
+			}
 
+			Log.test("5")
+			for (removed: UniPackItem in newRemoved) {
+				for ((i, item: UniPackItem) in unipackList.withIndex()) {
+					if ((item.unipack == removed.unipack)) {
+
+
+						withContext(Dispatchers.Main) {
 							if (item == selected)
 								togglePlay(null)
 
@@ -163,25 +184,31 @@ class MainListFragment : BaseFragment() {
 							// todo 삭제됐을 때 observing 어떻게될까?
 							// removed.unipackENT.removeObservers(viewLifecycleOwner)
 							// removed.unipackENT.removeObserver(removed.unipackENTObserver!!)
-							break
 						}
+						break
 					}
 				}
+			}
+			Log.test("6")
 
-				var changed = false
-				for ((to, target: UniPackItem) in newList.withIndex()) {
-					var from = -1
-					for ((i, item) in adapter.list.withIndex())
-						if (target.unipack == item.unipack)
-							from = i
-					if (from != -1 && from != to) {
-						Collections.swap(adapter.list, from, to)
-						changed = true
-					}
+			var changed = false
+			for ((to, target: UniPackItem) in newList.withIndex()) {
+				var from = -1
+				for ((i, item) in adapter.list.withIndex())
+					if (target.unipack == item.unipack)
+						from = i
+				if (from != -1 && from != to) {
+					Collections.swap(adapter.list, from, to)
+					changed = true
 				}
+			}
+			Log.test("7")
+
+			withContext(Dispatchers.Main) {
 				if (changed)
 					adapter.notifyDataSetChanged()
 
+				Log.test("8")
 				if (newAdded.size > 0) b.recyclerView.smoothScrollToPosition(0)
 				b.swipeRefreshLayout.isRefreshing = false
 				listRefreshing = false
@@ -240,12 +267,6 @@ class MainListFragment : BaseFragment() {
 			return unipackList[selectedIndex]
 		}*/
 
-	private val selectedIndex: Int?
-		get() {
-			if (selected == null)
-				return null
-			return unipackList.indexOf(selected)
-		}
 	var selected: UniPackItem? = null
 		set(value) {
 			if (value != field) {
@@ -290,7 +311,7 @@ class MainListFragment : BaseFragment() {
 	}
 
 	fun deselect(): Boolean {
-		return if (selectedIndex != -1) {
+		return if (selected != null) {
 			togglePlay(null)
 			true
 		} else false

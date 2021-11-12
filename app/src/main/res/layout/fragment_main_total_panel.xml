@@ -120,7 +120,7 @@
 								android:layout_gravity="center"
 								android:paddingTop="8dp"
 								android:singleLine="true"
-								android:text="@{vm.unipackCount.toString(), default=`123`}"
+								android:text="@{vm.unipackCount.toString() ?? `-`, default=`123`}"
 								android:textSize="@dimen/text_17"
 								android:textStyle="bold" />
 						</LinearLayout>
