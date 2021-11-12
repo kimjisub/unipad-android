@@ -44,8 +44,8 @@ interface UnipackDao {
 	// todo find 로 대체
 
 	@Query("SELECT openCount FROM Unipack WHERE id=:id")
-	fun openCount(id: String): LiveData<Long>
+	fun openCount(id: String): Long
 
 	@Query("SELECT lastOpenedAt FROM Unipack WHERE id=:id")
-	fun lastOpenedAt(id: String): LiveData<Date>
+	fun lastOpenedAt(id: String): Date?
 }
