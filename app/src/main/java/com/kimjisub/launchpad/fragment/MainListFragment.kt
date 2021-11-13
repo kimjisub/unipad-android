@@ -10,6 +10,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
 import com.kimjisub.design.view.PackView
 import com.kimjisub.launchpad.R
@@ -50,14 +51,18 @@ class MainListFragment : BaseFragment() {
 				pressPlay(item)
 			}
 		})
-		adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
-			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
+			/*override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 				super.onItemRangeInserted(positionStart, itemCount)
 				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 
 			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 				super.onItemRangeRemoved(positionStart, itemCount)
+			}*/
+
+			override fun onChanged() {
+				super.onChanged()
 				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
 			}
 		})
@@ -97,6 +102,8 @@ class MainListFragment : BaseFragment() {
 	@SuppressLint("StaticFieldLeak")
 	fun update() {
 		Log.test("update")
+
+		val firstUpdate = unipackList.size == 0
 
 		lastPlayIndex = -1
 		if (listRefreshing) return
@@ -145,13 +152,6 @@ class MainListFragment : BaseFragment() {
 			Log.test("4")
 			for (added: UniPackItem in newAdded) {
 				Log.test("added: ${added.unipack.title}")
-				// 새로 추가됐을 때 정렬 기준에 맞게 끼워넣기
-				try {
-					val i = unipackList.getVirtualIndexFormSorted(comparator, added)
-
-				} catch (e: Exception) {
-					e.printStackTrace()
-				}
 				val i = unipackList.getVirtualIndexFormSorted(comparator, added)
 
 
@@ -160,12 +160,14 @@ class MainListFragment : BaseFragment() {
 
 				withContext(Dispatchers.Main) {
 					unipackList.add(i, added)
-					adapter.notifyItemInserted(i)
+					if (!firstUpdate)
+						adapter.notifyItemInserted(i)
 
-					added.unipackENT.observe(viewLifecycleOwner) {
+
+					/*added.unipackENT.observe(viewLifecycleOwner) {
 						val index = unipackList.indexOf(added)
 						adapter.notifyItemChanged(index)
-					}
+					}*/
 				}
 			}
 
