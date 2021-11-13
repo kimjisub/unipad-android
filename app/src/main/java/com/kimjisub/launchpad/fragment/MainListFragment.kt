@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.kimjisub.design.extra.getVirtualIndexFormSorted
 import com.kimjisub.design.view.PackView
@@ -52,18 +51,24 @@ class MainListFragment : BaseFragment() {
 			}
 		})
 		adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
-			/*override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+			override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 				super.onItemRangeInserted(positionStart, itemCount)
-				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
+				showErrItem(adapter.itemCount == 0)
 			}
 
 			override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 				super.onItemRangeRemoved(positionStart, itemCount)
-			}*/
+				showErrItem(adapter.itemCount == 0)
+			}
 
 			override fun onChanged() {
 				super.onChanged()
-				b.errItem.visibility = if (unipackList.size == 0) View.VISIBLE else View.GONE
+				showErrItem(adapter.itemCount == 0)
+			}
+
+			fun showErrItem(visibility: Boolean) {
+				b.errItem.visibility = if (visibility) View.VISIBLE else View.GONE
+
 			}
 		})
 
@@ -125,9 +130,7 @@ class MainListFragment : BaseFragment() {
 
 
 			try {
-				Log.test("1")
 				newList = newList.sortedWith(comparator)
-				Log.test("2")
 
 				for (item: UniPackItem in newList) {
 					var index = -1
@@ -143,13 +146,10 @@ class MainListFragment : BaseFragment() {
 						newAdded.add(0, item)
 				}
 
-				Log.test("3")
-
 			} catch (e: Exception) {
 				e.printStackTrace()
 			}
 
-			Log.test("4")
 			for (added: UniPackItem in newAdded) {
 				Log.test("added: ${added.unipack.title}")
 				val i = unipackList.getVirtualIndexFormSorted(comparator, added)
@@ -171,7 +171,6 @@ class MainListFragment : BaseFragment() {
 				}
 			}
 
-			Log.test("5")
 			for (removed: UniPackItem in newRemoved) {
 				for ((i, item: UniPackItem) in unipackList.withIndex()) {
 					if ((item.unipack == removed.unipack)) {
@@ -191,26 +190,23 @@ class MainListFragment : BaseFragment() {
 					}
 				}
 			}
-			Log.test("6")
 
 			var changed = false
 			for ((to, target: UniPackItem) in newList.withIndex()) {
-				var from = -1
-				for ((i, item) in adapter.list.withIndex())
-					if (target.unipack == item.unipack)
-						from = i
+				val from = adapter.list.indexOfFirst { it.unipack == target.unipack }
+
 				if (from != -1 && from != to) {
 					Collections.swap(adapter.list, from, to)
 					changed = true
 				}
 			}
-			Log.test("7")
+			Log.test("changed: $changed")
 
 			withContext(Dispatchers.Main) {
-				if (changed)
+				if (changed || adapter.list.size == newAdded.size)
 					adapter.notifyDataSetChanged()
 
-				Log.test("8")
+				// todo 만약 added가 1이라면 그 팩으로 스크롤하기
 				if (newAdded.size > 0) b.recyclerView.smoothScrollToPosition(0)
 				b.swipeRefreshLayout.isRefreshing = false
 				listRefreshing = false

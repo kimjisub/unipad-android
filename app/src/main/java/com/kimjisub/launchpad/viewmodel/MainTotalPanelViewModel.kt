@@ -38,15 +38,13 @@ class MainTotalPanelViewModel(
 		},
 		// todo 이거 정렬 안됨
 		SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
-			val aCount = repo.openCountSync(a.unipack.id)//a.unipackENT.value?.openCount!!
-			val bCount = repo.openCountSync(b.unipack.id)//b.unipackENT.value?.openCount!!
+			val aCount = repo.openCountSync(a.unipack.id)
+			val bCount = repo.openCountSync(b.unipack.id)
 			-aCount.compareTo(bCount)
 		},
 		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = a.unipackENT.value?.lastOpenedAt
-				?: Date(0) // repo.getLastOpenedDateSync(a.unipack.id)?.createdAt ?: Date(0)
-			val bDate = b.unipackENT.value?.lastOpenedAt
-				?: Date(0)// repo.getLastOpenedDateSync(b.unipack.id)?.createdAt ?: Date(0)
+			val aDate = repo.getLastOpenedDateSync(a.unipack.id) ?: Date(0)
+			val bDate = repo.getLastOpenedDateSync(b.unipack.id) ?: Date(0)
 			-aDate.compareTo(bDate)
 		},
 		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->

@@ -17,14 +17,9 @@ fun <T : Observable> T.addOnPropertyChanged(callback: (T) -> Unit) =
  * */
 fun <T> ArrayList<T>.getVirtualIndexFormSorted(comparator: Comparator<T>, target: T): Int {
 	var index = 0
-	Log.test("getVirtualIndexFormSorted")
 	for ((i, item: T) in this.withIndex()) {
-
-		Log.test("    $i, $item")
 		if (comparator.compare(target, item) < 0) {
 			index = i
-
-			Log.test("    index = $i")
 			break
 		}
 	}
