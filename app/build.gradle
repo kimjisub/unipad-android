@@ -27,8 +27,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 31
-		versionCode 92
-		versionName "4.0.0.b11"
+		versionCode 93
+		versionName "4.0.0.b12"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
@@ -38,7 +38,7 @@ android {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
-			debuggable false
+			debuggable true
 
 			minifyEnabled true
 			proguardFile getDefaultProguardFile('proguard-android.txt')
