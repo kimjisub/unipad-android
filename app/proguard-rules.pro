@@ -34,3 +34,7 @@
 -keepclassmembernames class kotlinx.* {
     volatile <fields>;
 }
+
+
+# todo fix this
+-keep class com.kimjisub.launchpad.viewmodel.**{ *; }
