@@ -64,6 +64,12 @@
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>
 
+	<string name="adsPayment_noSku">SKU not found.</string>
+	<string name="adsPayment_alreadyOwned">You\'ve already purchased this item.</string>
+	<string name="adsPayment_userCanceled">You canceled your purchase.</string>
+	<string name="adsPayment_unavailable">Google Billing service is unavailable.</string>
+	<string name="adsPayment_devError">Google Billing Developer Error</string>
+
 	<!--Community-->
 	<string name="community">Community</string>
 	<string name="officialHomepage">Official Website</string>
@@ -129,6 +135,13 @@
 	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
+	<string name="midi_lp_s" translatable="false">Launchpad S</string>
+	<string name="midi_lp_mk2" translatable="false">Launchpad MK2</string>
+	<string name="midi_lp_pro" translatable="false">Launchpad PRO</string>
+	<string name="midi_lp_x" translatable="false">Launchpad X</string>
+	<string name="midi_lp_mk3" translatable="false">Launchpad MK3</string>
+	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
+	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Can\'t quit while downloading the pack</string>
