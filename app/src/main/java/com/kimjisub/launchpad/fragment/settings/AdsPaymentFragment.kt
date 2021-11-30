@@ -10,6 +10,7 @@ import androidx.preference.PreferenceFragmentCompat
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.SkuDetails
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.manager.billing.BillingModule
 import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.tool.Log
@@ -38,7 +39,7 @@ class AdsPaymentFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 				bm.findSkuDetails(Sku.PRO)?.let {
 					bm.purchase(it)
 				} ?: also {
-					toast("상품을 찾을 수 없습니다.")
+					toast(string.adsPayment_noSku)
 				}
 			} else {
 				val context = requireContext()
@@ -72,19 +73,17 @@ class AdsPaymentFragment : PreferenceFragmentCompat(), BillingModule.Callback {
 
 	override fun onBillingFailure(errorCode: Int) {
 		when (errorCode) {
-
-			// todo string.xml
 			BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-				toast("이미 구입한 상품입니다.")
+				toast(string.adsPayment_alreadyOwned)
 			}
 			BillingClient.BillingResponseCode.USER_CANCELED -> {
-				toast("구매를 취소하셨습니다.")
+				toast(string.adsPayment_userCanceled)
 			}
 			BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
-				toast("Google Billing 서비스를 사용할 수 없습니다.")
+				toast(string.adsPayment_unavailable)
 			}
 			BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
-				toast("Google Billing Developer Error")
+				toast(string.adsPayment_devError)
 			}
 			else -> {
 				toast("error: $errorCode")
