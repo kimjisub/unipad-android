@@ -19,44 +19,43 @@ import com.kimjisub.launchpad.midi.driver.*
 import com.kimjisub.launchpad.tool.AutorunTimer
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer
 
-
 class MidiSelectActivity : BaseActivity() {
 	private lateinit var b: ActivityMidiSelectBinding
 	private val midiDeviceList = lazy {
 		arrayListOf(
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_s, null)!!,
-				"Launchpad S",
+				getString(R.string.midi_lp_s),
 				LaunchpadS::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk2, null)!!,
-				"Launchpad MK2",
+				getString(R.string.midi_lp_mk2),
 				LaunchpadMK2::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_pro, null)!!,
-				"Launchpad PRO",
+				getString(R.string.midi_lp_pro),
 				LaunchpadPRO::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_x, null)!!,
-				"Launchpad X",
+				getString(R.string.midi_lp_x),
 				LaunchpadX::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk3, null)!!,
-				"Launchpad MK3",
+				getString(R.string.midi_lp_mk3),
 				LaunchpadMK3::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_midifighter, null)!!,
-				"Midi Fighter",
+				getString(R.string.midi_midi_fighter),
 				MidiFighter::class
 			),
 			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_master_keyboard, null)!!,
-				"Master Keyboard",
+				getString(R.string.midi_master_keyboard),
 				MasterKeyboard::class
 			)
 		)
