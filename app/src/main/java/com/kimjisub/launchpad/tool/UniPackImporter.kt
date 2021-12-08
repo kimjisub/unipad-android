@@ -8,12 +8,15 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
-import com.kimjisub.launchpad.activity.SplashActivity
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.lingala.zip4j.progress.ProgressMonitor
 import java.io.File
 import java.util.zip.ZipInputStream
@@ -36,7 +39,7 @@ class UniPackImporter(
 			setAutoCancel(true)
 			setSmallIcon(R.mipmap.ic_launcher)
 
-			val intent = Intent(context, SplashActivity::class.java)
+			val intent = Intent(context, MainActivity::class.java)
 			intent.action = Intent.ACTION_MAIN
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

@@ -12,6 +12,7 @@ import android.os.Handler
 import android.view.animation.Animation
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog.Builder
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentTransaction
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
@@ -145,6 +146,9 @@ class MainActivity : BaseActivity(),
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+
+		installSplashScreen()
+
 		b = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
