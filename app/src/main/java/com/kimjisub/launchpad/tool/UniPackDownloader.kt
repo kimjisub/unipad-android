@@ -6,7 +6,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
-import com.kimjisub.launchpad.activity.SplashActivity
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
@@ -52,7 +52,7 @@ class UniPackDownloader(
 			setAutoCancel(true)
 			setSmallIcon(R.mipmap.ic_launcher)
 
-			val intent = Intent(context, SplashActivity::class.java)
+			val intent = Intent(context, MainActivity::class.java)
 			intent.action = Intent.ACTION_MAIN
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
