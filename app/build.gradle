@@ -151,7 +151,6 @@ dependencies {
 	// kapt 'com.github.bumptech.glide:compiler:4.11.0'
 	implementation 'com.azoft.carousellayoutmanager:carousel:1.2.1'
 	implementation 'com.github.clans:fab:1.6.4'
-	implementation 'gun0912.ted:tedpermission:2.2.3'
 	implementation 'com.anjlab.android.iab.v3:library:1.1.0'
 	implementation 'com.orhanobut:logger:2.2.0'
 	implementation 'cn.aigestudio.wheelpicker:WheelPicker:1.1.3'
