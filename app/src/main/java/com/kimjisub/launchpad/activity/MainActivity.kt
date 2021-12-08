@@ -6,6 +6,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.view.animation.Animation
@@ -21,8 +22,6 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.kimjisub.design.dialog.FileExplorerDialog
-import com.kimjisub.design.dialog.FileExplorerDialog.OnEventListener
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -166,18 +165,11 @@ class MainActivity : BaseActivity(),
 		b.reconnectLaunchpad.setOnClickListener {
 			start<MidiSelectActivity>()
 		}
+		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+			importUniPack(uri)
+		}
 		b.loadUniPack.setOnClickListener {
-			FileExplorerDialog(this@MainActivity, p.fileExplorerPath,
-				object : OnEventListener {
-					override fun onFileSelected(filePath: String) {
-						importUniPack(File(filePath))
-					}
-
-					override fun onPathChanged(folderPath: String) {
-						p.fileExplorerPath = folderPath
-					}
-				})
-				.show()
+			filePick.launch(arrayOf("*/*"))
 		}
 		b.store.setOnClickListener {
 			val intent = Intent(applicationContext, FBStoreActivity::class.java)
@@ -262,16 +254,16 @@ class MainActivity : BaseActivity(),
 	}
 
 	@SuppressLint("StaticFieldLeak")
-	private fun importUniPack(unipackFile: File) {
+	private fun importUniPack(unipackUri: Uri) {
 		lateinit var progressDialog: ProgressDialog
 
 		UniPackImporter(
-			context = this,
-			unipackFile = unipackFile,
+			context = applicationContext,
+			uri = unipackUri,
 			ws.mainWorkspace.file,
 			object :
 				UniPackImporter.OnEventListener {
-				override fun onImportStart(zip: File) {
+				override fun onImportStart() {
 					progressDialog = ProgressDialog(this@MainActivity)
 					progressDialog.setTitle(getString(string.importing))
 					progressDialog.setMessage(getString(string.wait_a_sec))
@@ -284,6 +276,7 @@ class MainActivity : BaseActivity(),
 				}
 
 				override fun onImportComplete(folder: File, unipack: UniPack) {
+					progressDialog.cancel()
 					when (unipack.errorDetail) {
 						null -> {
 							alertDialog {
@@ -291,6 +284,7 @@ class MainActivity : BaseActivity(),
 								message = unipack.infoToString(this@MainActivity)
 								okButton()
 							}.show()
+							listFragment.update()
 						}
 						else -> {
 							alertDialog {
@@ -303,6 +297,7 @@ class MainActivity : BaseActivity(),
 				}
 
 				override fun onException(throwable: Throwable) {
+					progressDialog.cancel()
 					alertDialog {
 						title = getString(string.importFailed)
 						message = throwable.toString()
