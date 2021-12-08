@@ -3,7 +3,10 @@ package com.kimjisub.launchpad.tool
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.FileManager
@@ -11,17 +14,18 @@ import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.*
-import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.progress.ProgressMonitor
 import java.io.File
+import java.util.zip.ZipInputStream
 
 class UniPackImporter(
 	private var context: Context,
-	private var unipackFile: File,
+	private var uri: Uri,
 	workspace: File,
 	private var onEventListener: OnEventListener,
 ) {
-	private val zipNameWithoutExt = unipackFile.name.split('.').first()
+	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
+	private val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
 	private val targetFolder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")
 
 	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
@@ -37,7 +41,16 @@ class UniPackImporter(
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 			val pIntent: PendingIntent =
-				PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+				PendingIntent.getActivity(
+					context,
+					1,
+					intent,
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+						PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+					} else {
+						PendingIntent.FLAG_UPDATE_CURRENT
+					}
+				)
 			setContentIntent(pIntent)
 		}
 		builder
@@ -48,26 +61,34 @@ class UniPackImporter(
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
 
-				val zip = ZipFile(unipackFile)
-				zip.isRunInThread = true
-				zip.extractAll(targetFolder.path)
+				targetFolder.mkdir()
 
-				while (zip.progressMonitor.state != ProgressMonitor.State.READY) {
-					withContext(Dispatchers.Main) {
-						onImportProgress(zip.progressMonitor)
+				context.contentResolver.openInputStream(uri)?.use { inputStream ->
+					ZipInputStream(inputStream).use { input ->
+						var entry = input.nextEntry
+						while (entry != null) {
+							File(targetFolder.path, entry.name).apply {
+								if (entry.isDirectory) {
+									mkdirs()
+								} else {
+									outputStream().use { output ->
+										input.copyTo(output)
+									}
+								}
+							}
+							entry = input.nextEntry
+						}
 					}
-					delay(PROGRESS_INTERVAL)
 				}
 
-
-				val unipack = UniPackFolder(targetFolder).loadDetail()
+				val unipack = UniPackFolder(targetFolder).load()
 				if (unipack.criticalError) {
 					Log.err(unipack.errorDetail!!)
 					FileManager.deleteDirectory(targetFolder)
 					throw UniPackCriticalErrorException(unipack.errorDetail!!)
 				}
 
-				withContext(Dispatchers.Main) { onInstallComplete(targetFolder, unipack) }
+				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack) }
 			} catch (e: Exception) {
 				e.printStackTrace()
 				withContext(Dispatchers.Main) { onException(e) }
@@ -78,14 +99,14 @@ class UniPackImporter(
 
 	private fun onImportStart() {
 		notificationBuilder.apply {
-			setContentTitle(unipackFile.name)
+			setContentTitle(fileName)
 			setContentText(context.getString(R.string.importing))
 			setProgress(100, 0, false)
 			setOngoing(true)
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onImportStart(unipackFile)
+		onEventListener.onImportStart()
 	}
 
 	private fun onImportProgress(processMonitor: ProgressMonitor) {
@@ -94,36 +115,35 @@ class UniPackImporter(
 			setOngoing(false)
 		}
 
-		onEventListener?.onImportProgress(processMonitor)
+		onEventListener.onImportProgress(processMonitor)
 	}
 
-	private fun onInstallComplete(folder: File, unipack: UniPack) {
+	private fun onImportComplete(folder: File, unipack: UniPack) {
 		notificationBuilder.apply {
-			setContentTitle(this@UniPackImporter.unipackFile.name)
+			setContentTitle(fileName)
 			setContentText(context.getString(R.string.success))
 			setProgress(0, 0, false)
 			setOngoing(false)
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onImportComplete(folder, unipack)
+		onEventListener.onImportComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
 		notificationBuilder.apply {
-			setContentTitle(unipackFile.name)
+			setContentTitle(fileName)
 			setContentText(context.getString(R.string.downloadWaiting))
 			setProgress(0, 0, false)
 			setOngoing(false)
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener?.onException(throwable)
+		onEventListener.onException(throwable)
 	}
 
 	interface OnEventListener {
-
-		fun onImportStart(zip: File)
+		fun onImportStart()
 
 		fun onImportProgress(processMonitor: ProgressMonitor)
 
