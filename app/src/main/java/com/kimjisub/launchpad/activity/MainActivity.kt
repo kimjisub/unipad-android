@@ -166,7 +166,9 @@ class MainActivity : BaseActivity(),
 			start<MidiSelectActivity>()
 		}
 		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-			importUniPack(uri)
+			uri?.let {
+				importUniPack(uri)
+			}
 		}
 		b.loadUniPack.setOnClickListener {
 			filePick.launch(arrayOf("*/*"))
