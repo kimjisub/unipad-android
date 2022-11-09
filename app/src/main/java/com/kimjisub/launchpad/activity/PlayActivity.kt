@@ -969,6 +969,7 @@ class PlayActivity : BaseActivity() {
 				Channel.GUIDE -> U_pads!![x][y]!!.setLedBackgroundColor(item.color)
 				Channel.PRESSED -> U_pads!![x][y]!!.setLedBackground(theme!!.btn_)
 				Channel.LED -> U_pads!![x][y]!!.setLedBackgroundColor(item.color)
+				else -> {}
 			}
 		} else U_pads!![x][y]!!.setLedBackgroundColor(0)
 	}
@@ -999,6 +1000,7 @@ class PlayActivity : BaseActivity() {
 						Channel.GUIDE -> U_circle!![y]!!.setLedBackgroundColor(item.color)
 						Channel.CHAIN -> U_circle!![y]!!.setLedBackgroundColor(item.color)
 						Channel.LED -> U_circle!![y]!!.setLedBackgroundColor(item.color)
+						else -> {}
 					}
 				} else U_circle!![y]!!.setLedBackgroundColor(0)
 			} else {
@@ -1007,6 +1009,7 @@ class PlayActivity : BaseActivity() {
 						Channel.GUIDE -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain__)
 						Channel.CHAIN -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain_)
 						Channel.LED -> U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain)
+						else -> {}
 					}
 				} else U_circle!![y]!!.setBackgroundImageDrawable(theme!!.chain)
 			}

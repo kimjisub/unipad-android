@@ -60,17 +60,18 @@ class FBStoreActivity : BaseActivity() {
 			override fun onViewLongClick(item: StoreItem, v: PackView) {}
 			override fun onPlayClick(item: StoreItem, v: PackView) {
 				if (!item.downloaded && !item.downloading) {
-					if (p.downloadCouponCount > 0 || isPro) {
-						if (!isPro)
-							p.downloadCouponCount--
-
-						startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-					} else {
-						showRewardedAd {
-							p.downloadCouponCount--
-							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-						}
-					}
+					startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+//					if (p.downloadCouponCount > 0 || isPro) {
+//						if (!isPro)
+//							p.downloadCouponCount--
+//
+//						startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+//					} else {
+//						showRewardedAd {
+//							p.downloadCouponCount--
+//							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
+//						}
+//					}
 				}
 			}
 		})

@@ -142,7 +142,7 @@ dependencies {
 
 	// Billing
 	//noinspection GradleDependency
-	implementation 'com.android.billingclient:billing-ktx:5.0.0'
+	implementation "com.android.billingclient:billing-ktx:$billing_version"
 
 
 	// etc

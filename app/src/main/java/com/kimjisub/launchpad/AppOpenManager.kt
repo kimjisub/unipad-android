@@ -52,7 +52,7 @@ class AppOpenManager(
 			}
 
 			appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
-			appOpenAd?.show(currentActivity)
+			currentActivity?.let { appOpenAd?.show(it) }
 		}
 	}
 
@@ -74,7 +74,7 @@ class AppOpenManager(
 		val request = getAdRequest()
 		AppOpenAd.load(
 			application, AD_UNIT_ID, request,
-			AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, loadCallback
+			AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, loadCallback!!
 		)
 	}
 

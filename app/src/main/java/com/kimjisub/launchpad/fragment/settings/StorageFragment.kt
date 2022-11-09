@@ -27,7 +27,7 @@ class StorageFragment : PreferenceFragmentCompat() {
 	private fun initStorage() {
 		storageListPreferenceCategory.removeAll()
 		ws.availableWorkspaces.forEach {
-			val preference = CheckBoxPreference(context).apply {
+			val preference = CheckBoxPreference(context!!).apply {
 				title = it.name
 				summary = it.file.path
 				isIconSpaceReserved = false
