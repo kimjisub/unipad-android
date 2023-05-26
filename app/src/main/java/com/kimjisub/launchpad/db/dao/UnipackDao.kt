@@ -16,7 +16,7 @@ interface UnipackDao {
 	fun find(id: String): LiveData<Unipack>
 
 	@Query("SELECT SUM(openCount) FROM Unipack")
-	fun openCount(): LiveData<Long>
+	fun totalOpenCount(): LiveData<Long>
 
 	@Query("SELECT MAX(lastOpenedAt) FROM Unipack")
 	fun lastOpenedAt(): LiveData<Date>
@@ -24,28 +24,23 @@ interface UnipackDao {
 	// Update
 
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
-	suspend fun insert(item: Unipack)
+	fun insert(item: Unipack): Long
 
 	@Query("UPDATE Unipack SET openCount = openCount + 1 WHERE id=:id")
-	suspend fun addOpenCount(id: String)
+	fun addOpenCount(id: String): Int
 
 	@Query("UPDATE Unipack SET lastOpenedAt=:lastOpenedAt WHERE id=:id")
-	suspend fun setLastOpenedAt(id: String, lastOpenedAt: Date)
+	fun setLastOpenedAt(id: String, lastOpenedAt: Date): Int
 
 	@Query("UPDATE Unipack SET bookmark=NOT(bookmark) WHERE id=:id")
-	suspend fun toggleBookmark(id: String)
-
-	suspend fun getOrCreate(id: String): LiveData<Unipack> {
-		insert(Unipack.create(id))
-		return find(id)
-	}
-
-
-	// todo find 로 대체
+	fun toggleBookmark(id: String): Int
 
 	@Query("SELECT openCount FROM Unipack WHERE id=:id")
-	fun openCount(id: String): Long
+	fun openCount(id: String): LiveData<Long>
+
+	@Query("SELECT openCount FROM Unipack WHERE id=:id")
+	fun openCountSync(id: String): Long
 
 	@Query("SELECT lastOpenedAt FROM Unipack WHERE id=:id")
-	fun lastOpenedAt(id: String): Date?
+	fun lastOpenedAt(id: String): LiveData<Date>
 }

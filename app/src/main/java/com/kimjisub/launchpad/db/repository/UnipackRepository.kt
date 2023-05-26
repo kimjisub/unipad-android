@@ -3,46 +3,41 @@ package com.kimjisub.launchpad.db.repository
 import androidx.lifecycle.LiveData
 import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.ent.Unipack
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class UnipackRepository(
 	private val unipackDao: UnipackDao,
 ) {
-	@Suppress("RedundantSuspendModifier")
 	fun find(id: String): LiveData<Unipack> {
 		return unipackDao.find(id)
 	}
 
-
-	@Suppress("RedundantSuspendModifier")
 	suspend fun getOrCreate(id: String): LiveData<Unipack> {
-		return unipackDao.getOrCreate(id)
+		val unipack = unipackDao.find(id).value
+		if (unipack == null) {
+			unipackDao.insert(Unipack.create(id))
+		}
+		return unipackDao.find(id)
 	}
 
 	suspend fun toggleBookmark(id: String) {
 		unipackDao.toggleBookmark(id)
 	}
 
-	@Suppress("RedundantSuspendModifier")
-	fun openCount(): LiveData<Long> {
-		return unipackDao.openCount()
+	fun totalOpenCount(): LiveData<Long> {
+		return unipackDao.totalOpenCount()
 	}
 
-	@Suppress("RedundantSuspendModifier")
-	fun openCountSync(id: String): Long {
+	fun openCount(id: String): LiveData<Long> {
 		return unipackDao.openCount(id)
 	}
 
-
-	@Suppress("RedundantSuspendModifier")
-	fun getLastOpenedDateSync(id: String): Date? {
+	fun lastOpenedAt(id: String): LiveData<Date> {
 		return unipackDao.lastOpenedAt(id)
 	}
 
-
-
-
-	@Suppress("RedundantSuspendModifier")
 	suspend fun recordOpen(id: String) {
 		unipackDao.addOpenCount(id)
 		unipackDao.setLastOpenedAt(id, Date())
