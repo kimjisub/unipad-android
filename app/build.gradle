@@ -27,8 +27,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 33
-		versionCode 94
-		versionName "4.0.0.b13"
+		versionCode 95
+		versionName "4.0.0.b14"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
@@ -64,8 +64,8 @@ android {
 		dataBinding true
 	}
 	compileOptions {
-		sourceCompatibility = '1.8'
-		targetCompatibility = '1.8'
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
 	}
 	kotlinOptions {
 		jvmTarget = '1.8'
@@ -75,7 +75,7 @@ android {
 
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0-Beta"
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20"
 	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
 	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.0-Beta"

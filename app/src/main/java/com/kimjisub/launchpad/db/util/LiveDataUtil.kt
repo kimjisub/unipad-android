@@ -4,9 +4,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 
-fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
+fun <T> LiveData<T>.observeOnce(observer: Observer<in T>) {
 	observeForever(object : Observer<T> {
-		override fun onChanged(t: T?) {
+		override fun onChanged(t: T) {
 			observer.onChanged(t)
 			removeObserver(this)
 		}
@@ -15,7 +15,7 @@ fun <T> LiveData<T>.observeOnce(observer: Observer<T>) {
 
 fun <T> LiveData<T>.observeRealChange(
 	owner: LifecycleOwner,
-	realChangeObserver: Observer<T>,
+	realChangeObserver: Observer<in T>,
 	clone: (T) -> T,
 ): Observer<T> {
 	val observer = object : Observer<T> {

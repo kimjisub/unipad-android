@@ -37,16 +37,16 @@ class MainTotalPanelViewModel(
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
 		// todo 이거 정렬 안됨
-		SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
+		/*SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
 			val aCount = repo.openCountSync(a.unipack.id)
 			val bCount = repo.openCountSync(b.unipack.id)
 			-aCount.compareTo(bCount)
 		},
 		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = repo.getLastOpenedDateSync(a.unipack.id) ?: Date(0)
-			val bDate = repo.getLastOpenedDateSync(b.unipack.id) ?: Date(0)
+			val aDate = repo.lastOpenedAt(a.unipack.id) ?: Date(0)
+			val bDate = repo.lastOpenedAt(b.unipack.id) ?: Date(0)
 			-aDate.compareTo(bDate)
-		},
+		},*/
 		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->
 			val aDate = a.unipack.lastModified()
 			val bDate = b.unipack.lastModified()
@@ -60,7 +60,7 @@ class MainTotalPanelViewModel(
 
 	val unipackCount = MutableLiveData<Int?>()
 	val unipackCapacity = MutableLiveData<String?>()
-	val openCount = repo.openCount()
+	val openCount = repo.totalOpenCount()
 	val sortMethod = MutableLiveData<Int>()
 	val sortOrder = MutableLiveData<Boolean>()
 	val eventSort = MutableLiveData<Event<Pair<SortMethod, Boolean>>>()

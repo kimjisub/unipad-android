@@ -73,13 +73,13 @@ class BillingModule(
 	 */
 	fun onResume(type: String) {
 		if (billingClient.isReady) {
-			billingClient.queryPurchases(type).purchasesList?.let { purchaseList ->
+			/*billingClient.queryPurchases(type).purchasesList?.let { purchaseList ->
 				for (purchase in purchaseList) {
 					if (!purchase.isAcknowledged && purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
 						confirmPurchase(purchase)
 					}
 				}
-			}
+			}*/
 		}
 	}
 
@@ -123,8 +123,8 @@ class BillingModule(
 			setSkuDetails(skuDetails)
 			if (oldPurchase != null) {
 				// # 구독을 위한 ProrationMode 문서: https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode
-				setReplaceSkusProrationMode(IMMEDIATE_WITH_TIME_PRORATION)
-				setOldSku(oldPurchase.sku, oldPurchase.purchaseToken)
+				/*setReplaceSkusProrationMode(IMMEDIATE_WITH_TIME_PRORATION)
+				setOldSku(oldPurchase.sku, oldPurchase.purchaseToken)*/
 			}
 		}.build()
 
@@ -170,14 +170,14 @@ class BillingModule(
 		sku: String,
 		resultBlock: (purchased: Boolean) -> Unit,
 	) {
-		billingClient.queryPurchases(BillingClient.SkuType.INAPP).purchasesList?.let { purchaseList ->
+		/*billingClient.queryPurchases(BillingClient.SkuType.INAPP).purchasesList?.let { purchaseList ->
 			for (purchase in purchaseList) {
 				if (purchase.sku == sku && purchase.isPurchaseConfirmed()) {
 					return resultBlock(true)
 				}
 			}
 			return resultBlock(false)
-		}
+		}*/
 	}
 
 	/**
@@ -187,26 +187,26 @@ class BillingModule(
 	 */
 
 	private fun checkSubscribed(sku: String, resultBlock: (Boolean) -> Unit) {
-		billingClient.queryPurchases(BillingClient.SkuType.SUBS).purchasesList?.let { purchaseList ->
+		/*billingClient.queryPurchases(BillingClient.SkuType.SUBS).purchasesList?.let { purchaseList ->
 			for (purchase in purchaseList) {
 				if (purchase.sku == sku && purchase.isPurchaseConfirmed()) {
 					return resultBlock(true)
 				}
 			}
 			return resultBlock(false)
-		}
+		}*/
 	}
 
 
 	fun checkPlan(resultBlock: (Purchase?) -> Unit) {
-		billingClient.queryPurchases(BillingClient.SkuType.SUBS).purchasesList?.let { purchaseList ->
+		/*billingClient.queryPurchases(BillingClient.SkuType.SUBS).purchasesList?.let { purchaseList ->
 			for (purchase in purchaseList) {
 				if (purchase.isPurchaseConfirmed()) {
 					return resultBlock(purchase)
 				}
 			}
 			return resultBlock(null)
-		}
+		}*/
 	}
 
 	/**
@@ -214,7 +214,7 @@ class BillingModule(
 	 * @param purchase 확인처리할 아이템의 구매정보
 	 */
 	private fun confirmPurchase(purchase: Purchase) {
-		when {
+		/*when {
 			// 소비성 구매는 consume 을 해주어야합니다.
 			inAppSkus.contains(purchase.sku) -> {
 				consumePurchase(purchase)
@@ -239,11 +239,11 @@ class BillingModule(
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	private fun consumePurchase(purchase: Purchase) {
-		val consumeParams = ConsumeParams.newBuilder()
+		/*val consumeParams = ConsumeParams.newBuilder()
 			.setPurchaseToken(purchase.purchaseToken)
 			.build()
 
@@ -257,7 +257,7 @@ class BillingModule(
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	// 구매 확인 검사 Extension
