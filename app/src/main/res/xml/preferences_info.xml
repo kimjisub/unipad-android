@@ -31,6 +31,11 @@
 		app:title="@string/settings_developer">
 		<Preference
 			app:iconSpaceReserved="false"
+			app:key="github"
+			app:title="@string/github" />
+
+		<Preference
+			app:iconSpaceReserved="false"
 			app:key="oss_licence"
 			app:title="@string/openSourceLicense" />
 
