@@ -60,6 +60,7 @@
 	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">Purchase</string>
 	<string name="purchaseComplete">Purchase Complete</string>
+	<string name="github">Github</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
 	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>

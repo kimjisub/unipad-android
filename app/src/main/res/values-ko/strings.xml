@@ -60,6 +60,7 @@
 	<string name="donation_">Donate for the better UniPad.</string>
 	<string name="purchase">구매하기</string>
 	<string name="purchaseComplete">결제가 완료되었습니다.</string>
+	<string name="github">Github</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
 	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>

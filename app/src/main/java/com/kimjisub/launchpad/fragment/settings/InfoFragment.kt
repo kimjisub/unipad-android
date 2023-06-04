@@ -22,6 +22,7 @@ import splitties.toast.toast
 class InfoFragment : PreferenceFragmentCompat() {
 	private val appPreference: Preference by lazy { findPreference("app")!! }
 	private val fcmTokenPreference: Preference by lazy { findPreference("fcm_token")!! }
+	private val githubPreference: Preference by lazy { findPreference("github")!! }
 	private val ossLicencePreference: Preference by lazy { findPreference("oss_licence")!! }
 	private val communityPreference: Preference by lazy { findPreference("community")!! }
 
@@ -46,6 +47,12 @@ class InfoFragment : PreferenceFragmentCompat() {
 				e.printStackTrace()
 				toast(e.toString())
 			}
+			false
+		}
+
+		githubPreference.setOnPreferenceClickListener {
+			startActivity(Intent(Intent.ACTION_VIEW, "http://github.com/kimjisub/unipad-android".toUri()))
+
 			false
 		}
 
