@@ -141,6 +141,7 @@
 	<string name="midi_lp_pro" translatable="false">Launchpad PRO</string>
 	<string name="midi_lp_x" translatable="false">Launchpad X</string>
 	<string name="midi_lp_mk3" translatable="false">Launchpad MK3</string>
+	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
 	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>
 

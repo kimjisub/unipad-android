@@ -181,8 +181,16 @@ object MidiConnection {
 					LaunchpadPRO()
 				}
 				else -> {
-					listener?.onUiLog("prediction : unknown")
-					MasterKeyboard()
+					if(device.productId and  0xFFC0 == 0x1040)
+					{
+						listener?.onUiLog("prediction : 203 Matrix")
+						Matrix()
+					}
+					else
+					{
+						listener?.onUiLog("prediction : unknown")
+						MasterKeyboard()
+					}
 				}
 			}
 		} catch (e: Exception) {

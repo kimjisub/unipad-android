@@ -54,6 +54,11 @@ class MidiSelectActivity : BaseActivity() {
 				MidiFighter::class
 			),
 			MidiDeviceItem(
+				ResourcesCompat.getDrawable(resources, R.drawable.midi_matrix, null)!!,
+				getString(R.string.midi_matrix),
+				Matrix::class
+			),
+			MidiDeviceItem(
 				ResourcesCompat.getDrawable(resources, R.drawable.midi_master_keyboard, null)!!,
 				getString(R.string.midi_master_keyboard),
 				MasterKeyboard::class
