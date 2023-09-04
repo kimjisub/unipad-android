@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="languageCode">zh-cn</string>
+	<string name="language">Chinese (Simplified)</string>
+	<string name="translated_by">Translated by 203Null</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">接受</string>
+	<string name="cancel">取消</string>
+	<string name="warning">警告</string>
+	<string name="error">错误</string>
+	<string name="errOccur">发生错误。</string>
+	<string name="wait_a_sec">请稍等…</string>
+	<string name="importing">导入中</string>
+	<string name="loading">加载中</string>
+	<string name="download">下载</string>
+	<string name="downloadWaiting">等待下载</string>
+	<string name="downloading">下载中</string>
+	<string name="downloaded">已下载</string>
+	<string name="success">成功</string>
+	<string name="failed">失败</string>
+	<string name="delete">删除</string>
+	<string name="edit">编辑</string>
+	<string name="update">更新</string>
+	<string name="ignore">忽略</string>
+	<string name="apply">应用</string>
+	<string name="restart">重新启动</string>
+	<string name="using">使用中</string>
+	<string name="path">路径</string>
+	<string name="quit">退出</string>
+	<string name="website">网站</string>
+	<string name="measuring">测量中…</string>
+	<string name="general">常规</string>
+	<string name="notice">通知</string>
+	<string name="newUniPack">新 UniPack</string>
+	<string name="notFound">未找到</string>
+	<string name="exceptionOccurred">发生异常</string>
+	<string name="openDirectory">打开目录</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">重新连接 Launchpad</string>
+	<string name="list_refresh">刷新列表</string>
+	<string name="import_unipack">导入 UniPack</string>
+	<string name="store">商店</string>
+
+	<!--Setting-->
+	<string name="setting">设置</string>
+	<string name="information">信息</string>
+	<string name="payment">支付</string>
+	<string name="select_theme">选择主题</string>
+	<string name="storage_location">存储位置</string>
+	<string name="use_sd_card">使用SD卡</string>
+	<string name="plan_restorePurchases">恢复购买</string>
+	<string name="plan_restorePurchases_">购买后，请重新启动应用。</string>
+	<string name="plan_pro">UniPad Pro</string>
+	<string name="plan_pro_">解锁专业功能</string>
+	<string name="donation">捐款</string>
+	<string name="donation_">为UniPad的开发捐款。</string>
+	<string name="purchase">购买</string>
+	<string name="purchaseComplete">购买完成</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">开源许可</string>
+	<string name="FCMToken">FCM 令牌</string>
+	<string name="copyright">ⓒ 2016-2021. UniPad. 版权所有。</string>
+
+	<string name="adsPayment_noSku">找不到 SKU。</string>
+	<string name="adsPayment_alreadyOwned">您已购买了此物品。</string>
+	<string name="adsPayment_userCanceled">您已取消购买。</string>
+	<string name="adsPayment_unavailable">Google 账单服务不可用。</string>
+	<string name="adsPayment_devError">Google 账单开发者错误</string>
+
+	<!--Community-->
+	<string name="community">社区</string>
+	<string name="officialHomepage">官方网站</string>
+	<string name="officialHomepage_">UniPad 官方网站</string>
+	<string name="officialFacebook">官方 Facebook</string>
+	<string name="officialFacebook_">技术支持</string>
+	<string name="facebookCommunity">Facebook 社区</string>
+	<string name="facebookCommunity_">英文</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">韩文</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">与开发者 kimjisub 的 KakaoTalk</string>
+	<string name="kakaotalk_">非技术支持</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">非技术支持</string>
+
+	<!--UniPack Info-->
+	<string name="title">标题</string>
+	<string name="producerName">作者</string>
+	<string name="padSize">按键矩阵尺寸</string>
+	<string name="numChain">页数</string>
+	<string name="fileSize">文件大小</string>
+
+	<!--UniPack Function-->
+	<string name="led">灯光</string>
+	<string name="autoPlay">自动播放</string>
+	<string name="feedbackLight">反馈灯光</string>
+	<string name="traceLog">记录按键</string>
+	<string name="traceLogClear">按键记录已重置。</string>
+	<string name="record">录制</string>
+	<string name="hideUI">隐藏UI</string>
+	<string name="watermark">UI灯光</string>
+	<string name="proLightMode">Pro灯光模式</string>
+
+	<!--Version-->
+	<string name="newVersionFound">检测到新版本。</string>
+	<string name="currentVersion">当前版本</string>
+	<string name="newVersion">最新版本</string>
+
+	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
+	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>
+	<string name="unipackNotFound">找不到 UniPack。</string>
+	<string name="clickToAddUniPack">点击以添加 UniPacks。</string>
+	<string name="doYouWantToDeleteUniPack">您想删除此项目吗？</string>
+	<string name="doYouWantToRemapUniPack">您想重新映射此项目的自动播放吗？</string>
+	<string name="remapDone">自动播放重映射成功完成。</string>
+	<string name="remapFail">没有自动播放</string>
+	<string name="importComplete">分析完成！</string>
+	<string name="importFailed">分析失败…</string>
+	<string name="isNotAnUniPack">不是 UniPack</string>
+	<string name="pressAgainToGoBack">再按一次\n以退出。</string>
+	<string name="copied">已复制到剪贴板。</string>
+	<string name="skinMemoryErr">皮肤应用失败。\n重新启动应用程序。</string>
+	<string name="skinErr">皮肤应用失败。\n重置皮肤。</string>
+
+	<string name="outOfMemory">内存不足..\n释放一些内存并重试。</string>
+	<string name="outOfCPU">由于手机规格无法启动包...\n请重试。</string>
+	<string name="doNotSee">不再查看</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">正在连接 launchpad…</string>
+	<string name="midiDevicesNotDetected">未检测到 MIDI 设备</string>
+	<string name="signal_SpeedFirst">优先速度</string>
+	<string name="signal_avoidAfterimage">避免残影</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">下载包时不能退出</string>
+	<string name="UnableToAccessServer">无法访问服务器。</string>
+
+	<!--Theme-->
+	<string name="theme">主题</string>
+	<string name="themeDownload">下载主题</string>
+	<string name="requireRestart">需要重启应用。</string>
+	<string name="doYouWantToRestartApp">您想重新启动应用吗？</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">默认主题</string>
+	<string name="theme_description">这是 UniPad 的默认主题</string>
+	<string name="theme_author">UniPad 开发者</string>
+	<string name="settings_info">信息</string>
+	<string name="settings_storage">存储</string>
+	<string name="settings_theme">主题</string>
+	<string name="settings_ads_payment">广告和付款</string>
+	<string name="settings_storage_active">活跃存储</string>
+	<string name="settings_storage_download">下载存储</string>
+	<string name="settings_developer">开发者</string>
+	<string name="settings_app">应用</string>
+	<string name="settings_user">用户</string>
+	<string name="settings_payment">支付</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPacks 数量</string>
+	<string name="MTP_size">UniPacks 大小</string>
+	<string name="MPT_playCount">演奏次数</string>
+	<string name="MPT_theme">主题</string>
+	<string name="sort_title">标题</string>
+	<string name="sort_producer">作者</string>
+	<string name="sort_play_count">演奏次数</string>
+	<string name="sort_last_opened_date">上次打开日期</string>
+	<string name="sort_download_date">下载日期</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">按键矩阵大小</string>
+	<string name="MPP_chain">页数</string>
+	<string name="MPP_soundFiles">采样数量</string>
+	<string name="MPP_ledEvents">灯光数量</string>
+	<string name="MPP_fileSize">文件大小</string>
+	<string name="MPP_playCount">演奏次数</string>
+	<string name="MPP_downloadedDate">下载日期</string>
+	<string name="MPP_lastPlayed">最后播放</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">商店 UniPacks</string>
+	<string name="STP_downloadedCount">已下载的 UniPacks</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">下载量</string>
+
+	<!--File Explorer-->
+	<string name="FE_accept">接受</string>
+	<string name="FE_folderErr">无法读取文件夹。</string>
+	<string name="FE_fileErr">无法读取文件。</string>
+	<string name="mb">MB</string>
+</resources>
