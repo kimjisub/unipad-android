@@ -27,8 +27,8 @@ android {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
 		targetSdkVersion 33
-		versionCode 96
-		versionName "4.0.0.b15"
+		versionCode 97
+		versionName "4.0.0"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
 		// renderscriptTargetApi 19
