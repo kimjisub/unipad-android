@@ -7,4 +7,11 @@
 # Add when compile with JDK 1.7
 -keepattributes EnclosingMethod
 
+# GSON
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+
+-keep class com.kimjisub.launchpad.activity.MainActivity { *; }
+
+
 # End: Common Proguard rules

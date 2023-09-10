@@ -342,19 +342,27 @@ class MainActivity : BaseActivity(),
 		val thisVersion = BuildConfig.VERSION_NAME
 		if (thisVersion.contains('b'))
 			return
-		val currVersionJson = FirebaseRemoteConfig.getInstance().getString("android_version")
-		if (currVersionJson.isNotEmpty()) {
-			val gson: Gson = GsonBuilder().create()
-			val currVersionList: List<String> =
-				gson.fromJson(currVersionJson, object : TypeToken<List<String?>?>() {}.type)
-			if (!currVersionList.contains(thisVersion))
-				b.root.longSnack(
-					getString(string.newVersionFound)
-				) {
-					action(getString(string.update)) {
-						browse("https://play.google.com/store/apps/details?id=$packageName")
-					}
+
+		// Fetch version list from FirebaseRemoteConfig
+		val remoteConfig = FirebaseRemoteConfig.getInstance()
+		val versionListString = remoteConfig.getString("android_version")
+		val versionList = Gson().fromJson(versionListString, Array<String>::class.java).toList()
+
+		Log.test("versionList $versionList")
+
+		val latestVersion = versionList.contains(thisVersion)
+
+		Log.test("thisVersion $thisVersion")
+		Log.test("latestVersion $latestVersion")
+
+		if (!latestVersion) {
+			b.root.longSnack(
+				getString(string.newVersionFound)
+			) {
+				action(getString(string.update)) {
+					browse("https://play.google.com/store/apps/details?id=$packageName")
 				}
+			}
 		}
 	}
 

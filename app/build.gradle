@@ -22,12 +22,12 @@ android {
 			keyPassword keystoreProperties['keyPassword']
 		}
 	}
-	compileSdkVersion 33
+	compileSdk 34
 	defaultConfig {
 		applicationId "com.kimjisub.launchpad"
 		minSdkVersion 21
-		targetSdkVersion 33
-		versionCode 97
+		targetSdkVersion 34
+		versionCode 98
 		versionName "4.0.0"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary true
@@ -38,7 +38,7 @@ android {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
-			debuggable false
+			debuggable true
 
 			minifyEnabled true
 			proguardFile getDefaultProguardFile('proguard-android.txt')
@@ -76,24 +76,24 @@ android {
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20"
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
-	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.0-Beta"
-	implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+	implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.20-Beta'
+	implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
 
 	implementation 'androidx.appcompat:appcompat:1.6.1'
 	implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-	implementation 'androidx.core:core-ktx:1.10.1'
-	implementation 'androidx.preference:preference-ktx:1.2.0'
-	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
-	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+	implementation 'androidx.core:core-ktx:1.12.0'
+	implementation 'androidx.preference:preference-ktx:1.2.1'
+	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
+	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
 	implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-	implementation 'androidx.lifecycle:lifecycle-common-java8:2.6.1'
+	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+	implementation 'androidx.lifecycle:lifecycle-common-java8:2.6.2'
 
 
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'androidx.preference:preference-ktx:1.2.0'
+	implementation 'com.google.guava:guava:32.1.2-jre'
+	implementation 'androidx.preference:preference-ktx:1.2.1'
 	implementation 'com.google.android.material:material:1.9.0'
 	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
@@ -118,15 +118,15 @@ dependencies {
 
 
 	// Firebase
-	implementation platform('com.google.firebase:firebase-bom:32.0.0')
+	implementation platform('com.google.firebase:firebase-bom:32.2.3')
 	implementation 'com.google.firebase:firebase-core:21.1.1'
-	implementation 'com.google.firebase:firebase-firestore:24.6.1'
+	implementation 'com.google.firebase:firebase-firestore:24.7.1'
 	implementation 'com.google.firebase:firebase-database:20.2.2'
-	implementation 'com.google.firebase:firebase-messaging:23.1.2'
-	implementation 'com.google.firebase:firebase-ads:22.1.0'
-	implementation 'com.google.firebase:firebase-perf:20.3.2'
-	implementation 'com.google.firebase:firebase-config:21.4.0'
-	implementation 'com.google.firebase:firebase-crashlytics-ktx:18.3.7'
+	implementation 'com.google.firebase:firebase-messaging:23.2.1'
+	implementation 'com.google.firebase:firebase-ads:22.3.0'
+	implementation 'com.google.firebase:firebase-perf:20.4.1'
+	implementation 'com.google.firebase:firebase-config:21.4.1'
+	implementation 'com.google.firebase:firebase-crashlytics-ktx:18.4.1'
 	implementation 'com.google.firebase:firebase-analytics-ktx:21.3.0'
 
 	// Retrofit 2
@@ -136,7 +136,7 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.0.0-alpha.10'
 
 	// Admob
-	implementation 'com.google.android.gms:play-services-ads:22.1.0'
+	implementation 'com.google.android.gms:play-services-ads:22.3.0'
 	implementation 'com.google.android.gms:play-services-identity:18.0.1'
 	implementation 'androidx.ads:ads-identifier:1.0.0-alpha05'
 	implementation 'com.google.android.gms:play-services-gcm:17.0.0'
