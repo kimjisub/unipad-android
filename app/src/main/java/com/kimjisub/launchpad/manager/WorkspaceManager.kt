@@ -43,6 +43,23 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 				)
 			}
 
+			val externalStoragePublicPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+			val externalStoragePublic = File(externalStoragePublicPath, "Unipad")
+			if (!externalStoragePublic.exists()) {
+				externalStoragePublic.mkdirs()
+			}
+			if (externalStoragePublic.canWrite()) {
+				FileManager.makeDirWhenNotExist(externalStoragePublic)
+				FileManager.makeNomedia(externalStoragePublic)
+				uniPackWorkspaces.add(
+					Workspace(
+						"External Storage Public",
+						externalStoragePublic
+					)
+				)
+			}
+
+
 			/*val persistedUriPermissions = context.contentResolver.persistedUriPermissions
 			persistedUriPermissions.forEachIndexed { index, uriPermission ->
 				uniPackWorkspaces.add(
@@ -65,8 +82,8 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			dirs.forEachIndexed { index, file ->
 
 				val name = when {
-					file.absolutePath.contains("/storage/emulated/0") -> "내장 SD" // todo string.xml
-					else -> "SD 카드 $index"
+					file.absolutePath.contains("/storage/emulated/0") -> "Internal SD Card" // todo string.xml
+					else -> "External SD Card $index"
 				}
 
 				uniPackWorkspaces.add(
