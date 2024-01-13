@@ -7,12 +7,11 @@ import com.kimjisub.launchpad.R
 
 class HeaderFragment(val callback: (Category) -> Unit) : PreferenceFragmentCompat() {
 	private val infoPreference: Preference by lazy { findPreference("info")!! }
-	private val adsPaymentPreference: Preference by lazy { findPreference("ads_payment")!! }
 	private val storagePreference: Preference by lazy { findPreference("storage")!! }
 	private val themePreference: Preference by lazy { findPreference("theme")!! }
 
 	private val preferences by lazy {
-		arrayOf(infoPreference, adsPaymentPreference, storagePreference, themePreference)
+		arrayOf(infoPreference, storagePreference, themePreference)
 	}
 
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

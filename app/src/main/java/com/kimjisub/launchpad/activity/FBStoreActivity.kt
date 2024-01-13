@@ -86,26 +86,6 @@ class FBStoreActivity : BaseActivity() {
 		b.recyclerView.adapter = adapter
 	}
 
-
-	private fun initRewardedAd() {
-		val storeDownloadCouponUnitId = resources.getString(string.admob_download_coupon)
-		ads.loadRewardedAd(storeDownloadCouponUnitId) {
-			mRewardedAd = it
-		}
-	}
-
-	fun showRewardedAd(callback: (() -> Unit)? = null) {
-		if (mRewardedAd != null) {
-			ads.showRewardedAd(mRewardedAd!!) { _, _ ->
-				initRewardedAd()
-				callback?.invoke()
-			}
-
-		} else {
-			// TODO ad not ready
-		}
-	}
-
 	// =============================================================================================
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -367,8 +347,6 @@ class FBStoreActivity : BaseActivity() {
 		//adapter!!.notifyDataSetChanged()
 		//togglePlay(null)
 		//updatePanel()
-
-		initRewardedAd()
 	}
 
 	override fun onPause() {

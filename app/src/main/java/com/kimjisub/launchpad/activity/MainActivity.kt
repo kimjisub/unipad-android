@@ -405,16 +405,6 @@ class MainActivity : BaseActivity(),
 		mainTotalPanelFragment.update()
 	}
 
-	private var adsPlayStart: InterstitialAd? = null
-	override fun onRequestAds() {
-		ads.showAdsWithCooltime(adsPlayStart) {
-			val playStartUnitId = resources.getString(string.admob_play_start)
-			ads.loadAds(playStartUnitId) {
-				adsPlayStart = it
-			}
-		}
-	}
-
 	// TotalPanelFragment Callbacks
 
 	override fun onSortChangeListener(sort: Pair<MainTotalPanelViewModel.SortMethod, Boolean>) {
@@ -439,11 +429,6 @@ class MainActivity : BaseActivity(),
 		checkThings()
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
-
-		val playStartUnitId = resources.getString(string.admob_play_start)
-		ads.loadAds(playStartUnitId) {
-			adsPlayStart = it
-		}
 	}
 
 	override fun onPause() {

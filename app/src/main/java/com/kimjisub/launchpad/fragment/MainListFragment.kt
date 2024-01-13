@@ -246,9 +246,6 @@ class MainListFragment : BaseFragment() {
 		requireContext().start<PlayActivity> {
 			putExtra("path", item.unipack.getPathString())
 		}
-
-		callbacks?.onRequestAds()
-
 	}
 
 	/*private var selectedIndex: Int = -1
@@ -321,7 +318,6 @@ class MainListFragment : BaseFragment() {
 	interface Callbacks {
 		fun onListSelectedChange(item: UniPackItem?)
 		fun onListUpdated()
-		fun onRequestAds()
 	}
 
 	override fun onAttach(context: Context) {

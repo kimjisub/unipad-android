@@ -11,7 +11,6 @@ import android.widget.ListView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
 import androidx.preference.*
-import com.android.billingclient.api.SkuDetails
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
@@ -45,14 +44,11 @@ class SettingLegacyActivity : BaseActivity() {
 		private lateinit var settingLegacyActivity: SettingLegacyActivity
 		private lateinit var p: PreferenceManager
 
-		private var mSubsSkuDetails = listOf<SkuDetails>()
-
-
 		// Preferences
 		private lateinit var selectThemePreference: Preference
 		private lateinit var storageLocationPreference: Preference
 		private lateinit var storageLocationTestPreference: Preference
-		private lateinit var restoreBillingPreference: Preference
+		private lateinit var githubPreference: Preference
 		private lateinit var communityPreference: Preference
 		private lateinit var openSourceLicensePreference: Preference
 		private lateinit var fcmTokenPreference: Preference
@@ -120,7 +116,7 @@ class SettingLegacyActivity : BaseActivity() {
 			selectThemePreference = findPreference("selectTheme")!!
 			storageLocationPreference = findPreference("storageLocation")!!
 			storageLocationTestPreference = findPreference("storageLocationTest")!!
-			restoreBillingPreference = findPreference("restoreBilling")!!
+			githubPreference = findPreference("github")!!
 			communityPreference = findPreference("community")!!
 			openSourceLicensePreference = findPreference("openSourceLicense")!!
 			fcmTokenPreference = findPreference("fcmToken")!!
@@ -182,6 +178,12 @@ class SettingLegacyActivity : BaseActivity() {
 
 					folderResultLauncher.launch(intent)
 
+					false
+				}
+
+			githubPreference.onPreferenceClickListener =
+				Preference.OnPreferenceClickListener {
+					requireContext().browse("https://github.com/kimjisub/unipad-android")
 					false
 				}
 

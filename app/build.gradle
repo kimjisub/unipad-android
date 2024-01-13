@@ -103,7 +103,6 @@ dependencies {
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 	debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
 
-
 	// splitties
 	implementation("com.louiscad.splitties:splitties-activities:$splitties_version")
 	implementation("com.louiscad.splitties:splitties-toast:$splitties_version")
@@ -134,17 +133,6 @@ dependencies {
 	implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 	implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
 	implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.0.0-alpha.10'
-
-	// Admob
-	implementation 'com.google.android.gms:play-services-ads:22.3.0'
-	implementation 'com.google.android.gms:play-services-identity:18.0.1'
-	implementation 'androidx.ads:ads-identifier:1.0.0-alpha05'
-	implementation 'com.google.android.gms:play-services-gcm:17.0.0'
-
-	// Billing
-	//noinspection GradleDependency
-	implementation "com.android.billingclient:billing-ktx:$billing_version"
-
 
 	// etc
 	// implementation 'com.github.bumptech.glide:glide:4.11.0'

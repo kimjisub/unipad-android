@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
-import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -82,7 +81,6 @@ open class BaseActivity : AppCompatActivity() {
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
 	val unipackRepo: UnipackRepository by inject()
-	val ads by lazy { AdmobManager(this) }
 
 
 
