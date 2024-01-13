@@ -27,7 +27,7 @@ class Matrix : DriverRef() {
 			intArrayOf(9, -111, 118),
 			intArrayOf(9, -111, 117),
 			intArrayOf(9, -111, 116),
-			intArrayOf(9, -111, 115), 
+			intArrayOf(9, -111, 115),
 			intArrayOf(9, -111, 114),
 			intArrayOf(9, -111, 113),
 			intArrayOf(9, -111, 112),
@@ -50,12 +50,12 @@ class Matrix : DriverRef() {
 				x = (99 - note) / 4 + 1
 				y = 8 - (99 - note) % 4
 				onPadTouch(x - 1, y - 1, true, velocity)
-			} else if(note in 100..107) {
+			} else if (note in 100..107) {
 				val c = note - 100
 				onChainTouch(c, velocity != 0)
 				onFunctionKeyTouch(c + 8, velocity != 0)
-			} else if(note in 108..115) {
-				val c = 8 - (note - 108) + 8;
+			} else if (note in 108..115) {
+				val c = 8 - (note - 108) + 8
 				onFunctionKeyTouch(c + 8, velocity != 0)
 			}
 		} else if (cmd == 8) {
@@ -89,8 +89,9 @@ class Matrix : DriverRef() {
 		if (c in 0..7)
 			sendFunctionkeyLed(c + 8, velocity)
 	}
+
 	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
-			if (f in 0..31)
+		if (f in 0..31)
 			sendSignal(
 				circleCode[f][0].toByte(),
 				circleCode[f][1].toByte(),
@@ -98,6 +99,7 @@ class Matrix : DriverRef() {
 				velocity.toByte()
 			)
 	}
+
 	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)

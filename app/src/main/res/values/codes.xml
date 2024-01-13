@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-	<string name="admob_appid" translatable="false">ca-app-pub-1077445788578961~6318287933</string>
-	<string name="admob_main_panel" translatable="false">ca-app-pub-1077445788578961/1137091733</string>
-	<string name="admob_play_start" translatable="false">ca-app-pub-1077445788578961/8025949620</string>
-	<string name="admob_play_end" translatable="false">ca-app-pub-1077445788578961/6242001881</string>
-	<string name="admob_app_start" translatable="false">ca-app-pub-1077445788578961/9421803373</string>
-	<string name="admob_download_coupon" translatable="false">ca-app-pub-1077445788578961/6679967221</string>
-	<string name="admob_play_coupon" translatable="false">ca-app-pub-1077445788578961/4506882412</string>
 
 </resources>

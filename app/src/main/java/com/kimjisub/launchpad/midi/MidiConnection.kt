@@ -151,43 +151,48 @@ object MidiConnection {
 					listener?.onUiLog("prediction : MidiFighter")
 					MidiFighter()
 				}
+
 				105 -> {
 					listener?.onUiLog("prediction : Launchpad MK2")
 					LaunchpadMK2()
 				}
+
 				81 -> {
 					listener?.onUiLog("prediction : Launchpad Pro")
 					LaunchpadPRO()
 				}
+
 				54 -> {
 					listener?.onUiLog("prediction : Launchpad mk2 mini")
 					LaunchpadS()
 				}
+
 				259 -> {
 					listener?.onUiLog("prediction : Launchpad X")
 					LaunchpadX()
 				}
+
 				291 -> {
 					listener?.onUiLog("prediction : Launchpad MK3")
 					LaunchpadMK3()
 				}
+
 				8211 -> {
 					listener?.onUiLog("prediction : LX 61 piano")
 					MasterKeyboard()
 				}
+
 				32822 -> {
 					listener?.onUiLog("prediction : Arduino Leonardo midi")
 					interfaceNum = 3
 					LaunchpadPRO()
 				}
+
 				else -> {
-					if(device.productId and  0xFFC0 == 0x1040)
-					{
+					if (device.productId and 0xFFC0 == 0x1040) {
 						listener?.onUiLog("prediction : 203 Matrix")
 						Matrix()
-					}
-					else
-					{
+					} else {
 						listener?.onUiLog("prediction : unknown")
 						MasterKeyboard()
 					}

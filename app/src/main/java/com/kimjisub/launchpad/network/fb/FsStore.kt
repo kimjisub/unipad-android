@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.network.fb
 
 import com.google.firebase.database.IgnoreExtraProperties
-import java.util.*
+import java.util.Date
 
 @IgnoreExtraProperties
 class FsStore {

@@ -83,8 +83,6 @@ open class BaseActivity : AppCompatActivity() {
 	val unipackRepo: UnipackRepository by inject()
 
 
-
-
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 	fun getActivityName(): String {

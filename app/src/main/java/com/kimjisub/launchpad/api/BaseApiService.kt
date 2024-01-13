@@ -40,7 +40,7 @@ open class BaseApiService {
 						) {
 						}
 
-						override fun getAcceptedIssuers(): Array<out X509Certificate>? {
+						override fun getAcceptedIssuers(): Array<out X509Certificate> {
 							return arrayOf()
 						}
 					}

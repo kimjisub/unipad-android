@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.lang.reflect.InvocationTargetException
-import java.util.*
 
 
 class MainTotalPanelViewModel(
@@ -126,7 +125,8 @@ class MainTotalPanelViewModel(
 					return modelClass.getConstructor(
 						Application::class.java,
 						PreferenceManager::class.java,
-						WorkspaceManager::class.java)
+						WorkspaceManager::class.java
+					)
 						.newInstance(app, p, ws)
 				} catch (e: NoSuchMethodException) {
 					throw RuntimeException("Cannot create an instance of $modelClass", e)

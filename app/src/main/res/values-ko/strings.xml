@@ -63,13 +63,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
-	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>
-
-	<string name="adsPayment_noSku">상품을 찾을 수 없습니다.</string>
-	<string name="adsPayment_alreadyOwned">이미 구입한 상품입니다.</string>
-	<string name="adsPayment_userCanceled">구매를 취소하셨습니다.</string>
-	<string name="adsPayment_unavailable">Google Billing 서비스를 사용할 수 없습니다.</string>
-	<string name="adsPayment_devError">Google Billing Developer Error</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">커뮤니티</string>

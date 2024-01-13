@@ -63,13 +63,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Open Source License</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2021. UniPad. All rights reserved.</string>
-
-	<string name="adsPayment_noSku">SKU not found.</string>
-	<string name="adsPayment_alreadyOwned">You\'ve already purchased this item.</string>
-	<string name="adsPayment_userCanceled">You canceled your purchase.</string>
-	<string name="adsPayment_unavailable">Google Billing service is unavailable.</string>
-	<string name="adsPayment_devError">Google Billing Developer Error</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Community</string>

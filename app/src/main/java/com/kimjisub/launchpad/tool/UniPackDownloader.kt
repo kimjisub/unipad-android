@@ -57,10 +57,12 @@ class UniPackDownloader(
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 			val pIntent: PendingIntent =
-				PendingIntent.getActivity(context,
+				PendingIntent.getActivity(
+					context,
 					1,
 					intent,
-					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+				)
 			setContentIntent(pIntent)
 		}
 		builder

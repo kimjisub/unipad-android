@@ -2,7 +2,7 @@ package com.kimjisub.launchpad.db.ent
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.*
+import java.util.Date
 
 @Entity
 class Unipack(

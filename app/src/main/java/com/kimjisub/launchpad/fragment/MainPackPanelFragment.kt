@@ -29,11 +29,13 @@ class MainPackPanelFragment(private val unipackItem: UniPackItem) : BaseFragment
 		inflater: LayoutInflater, container: ViewGroup?,
 		savedInstanceState: Bundle?,
 	): View {
-		vm = ViewModelProvider(this,
+		vm = ViewModelProvider(
+			this,
 			MainPackPanelViewModel.Factory(
 				requireActivity().application,
 				unipackItem.unipack
-			))[MainPackPanelViewModel::class.java]
+			)
+		)[MainPackPanelViewModel::class.java]
 		_b = FragmentMainPackPanelBinding.inflate(inflater, container, false)
 		b.apply {
 			lifecycleOwner = this@MainPackPanelFragment

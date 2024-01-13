@@ -1,7 +1,8 @@
 package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.anim
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.api.unipad.UniPadApi.Companion.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.databinding.ActivityImportpackBinding

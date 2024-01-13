@@ -14,14 +14,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog.Builder
 import androidx.fragment.app.FragmentTransaction
 import com.github.clans.fab.FloatingActionMenu.OnMenuToggleListener
-import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.*
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -177,11 +174,6 @@ class MainActivity : BaseActivity(),
 			val intent = Intent(applicationContext, SettingsActivity::class.java)
 			settingsActivityResultLauncher.launch(intent)
 		}
-		b.setting.setOnLongClickListener {
-			val intent = Intent(applicationContext, SettingLegacyActivity::class.java)
-			settingsActivityResultLauncher.launch(intent)
-			false
-		}
 		b.floatingMenu.setOnMenuToggleListener(object : OnMenuToggleListener {
 			var handler = Handler()
 			var runnable: Runnable = Runnable { b.floatingMenu.close(true) }
@@ -331,31 +323,36 @@ class MainActivity : BaseActivity(),
 	// Check
 
 	private fun versionCheck() {
-		val thisVersion = BuildConfig.VERSION_NAME
-		if (thisVersion.contains('b'))
-			return
+		try {
+			val thisVersion = BuildConfig.VERSION_NAME
+			if (thisVersion.contains('b'))
+				return
 
-		// Fetch version list from FirebaseRemoteConfig
-		val remoteConfig = FirebaseRemoteConfig.getInstance()
-		val versionListString = remoteConfig.getString("android_version")
-		val versionList = Gson().fromJson(versionListString, Array<String>::class.java).toList()
+			// Fetch version list from FirebaseRemoteConfig
+			val remoteConfig = FirebaseRemoteConfig.getInstance()
+			val versionListString = remoteConfig.getString("android_version")
+			val versionList = Gson().fromJson(versionListString, Array<String>::class.java).toList()
 
-		Log.test("versionList $versionList")
+			Log.test("versionList $versionList")
 
-		val latestVersion = versionList.contains(thisVersion)
+			val latestVersion = versionList.contains(thisVersion)
 
-		Log.test("thisVersion $thisVersion")
-		Log.test("latestVersion $latestVersion")
+			Log.test("thisVersion $thisVersion")
+			Log.test("latestVersion $latestVersion")
 
-		if (!latestVersion) {
-			b.root.longSnack(
-				getString(string.newVersionFound)
-			) {
-				action(getString(string.update)) {
-					browse("https://play.google.com/store/apps/details?id=$packageName")
+			if (!latestVersion) {
+				b.root.longSnack(
+					getString(string.newVersionFound)
+				) {
+					action(getString(string.update)) {
+						browse("https://play.google.com/store/apps/details?id=$packageName")
+					}
 				}
 			}
+		} catch (e: Exception) {
+			Log.test("versionCheck error $e")
 		}
+
 	}
 
 	private fun blink(bool: Boolean) {

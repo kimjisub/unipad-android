@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.databinding.ItemThemeBinding
 import com.kimjisub.launchpad.manager.ThemeResources
-import java.util.*
 
 class ThemeItem(context: Context, val package_name: String) {
 	val res: Resources = context.packageManager.getResourcesForApplication(package_name)

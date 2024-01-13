@@ -21,11 +21,7 @@ class FileApi : BaseApiService() {
 		private const val URL = "https://api.unipad.io"
 
 		val service: FileService by lazy {
-			val httpLoggingInterceptor = HttpLoggingInterceptor(object : Logger {
-				override fun log(message: String) {
-					Log.network(message)
-				}
-			})
+			val httpLoggingInterceptor = HttpLoggingInterceptor { message -> Log.network(message) }
 			httpLoggingInterceptor.level = Level.BODY
 			val client: OkHttpClient = unsafeOkHttpClient
 				.addInterceptor(httpLoggingInterceptor)

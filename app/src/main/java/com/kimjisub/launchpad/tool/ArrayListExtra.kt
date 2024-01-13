@@ -1,8 +1,6 @@
 package com.kimjisub.design.extra
 
 import androidx.databinding.Observable
-import com.kimjisub.launchpad.tool.Log
-import java.util.*
 
 
 fun <T : Observable> T.addOnPropertyChanged(callback: (T) -> Unit) =

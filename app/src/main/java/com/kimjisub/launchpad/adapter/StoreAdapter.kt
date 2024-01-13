@@ -8,7 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.view.PackView
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.anim
+import com.kimjisub.launchpad.R.color
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.network.fb.StoreVO
 import java.util.*
 
@@ -61,9 +63,9 @@ class StoreAdapter(
 				ContextCompat.getColor(context, if (item.downloaded) color.green else color.red)
 			title = item.storeVO.title!!
 			subtitle = item.storeVO.producerName!!
-			option1Name = context.getString(string.led).toUpperCase(Locale.getDefault()) + " ●"
+			option1Name = context.getString(string.led).uppercase(Locale.getDefault()) + " ●"
 			option1 = item.storeVO.isLED
-			option2Name = context.getString(string.autoPlay).toUpperCase(Locale.getDefault()) + " ●"
+			option2Name = context.getString(string.autoPlay).uppercase(Locale.getDefault()) + " ●"
 			option2 = item.storeVO.isAutoPlay
 			showPlayImage(false)
 			setPlayText(context.getString(if (item.downloaded) string.downloaded else string.download))

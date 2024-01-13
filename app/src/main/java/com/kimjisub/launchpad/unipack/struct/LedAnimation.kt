@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad.unipack.struct
 
-import java.util.*
-
 class LedAnimation(
 	val ledEvents: ArrayList<LedEvent>,
 	val loop: Int,

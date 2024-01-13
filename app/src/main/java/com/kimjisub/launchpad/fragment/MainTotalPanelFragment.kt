@@ -27,10 +27,14 @@ class MainTotalPanelFragment : BaseFragment() {
 		inflater: LayoutInflater, container: ViewGroup?,
 		savedInstanceState: Bundle?,
 	): View {
-		vm = ViewModelProvider(this,
-			MainTotalPanelViewModel.Factory(requireActivity().application,
+		vm = ViewModelProvider(
+			this,
+			MainTotalPanelViewModel.Factory(
+				requireActivity().application,
 				p,
-				ws))[MainTotalPanelViewModel::class.java]
+				ws
+			)
+		)[MainTotalPanelViewModel::class.java]
 		_b = FragmentMainTotalPanelBinding.inflate(inflater, container, false)
 		b.apply {
 			lifecycleOwner = this@MainTotalPanelFragment

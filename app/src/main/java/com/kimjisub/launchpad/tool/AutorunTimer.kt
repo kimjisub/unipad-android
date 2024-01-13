@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.tool
 
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 
 class AutorunTimer(val listener: OnListener, val timeout: Long) {
 	private val everySecTimer = Timer()

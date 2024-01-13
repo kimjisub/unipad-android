@@ -12,13 +12,11 @@ object Log {
 	fun network(msg: String) = printLog("com.kimjisub._network", msg)
 	fun activity(msg: String) = printLog("com.kimjisub._activity", msg)
 	fun firebase(msg: String) = printLog("com.kimjisub._firebase", msg)
-	fun admob(msg: String) = printLog("com.kimjisub._admob", msg)
 	fun midi(msg: String) = printLog("com.kimjisub._midi", msg)
 	fun thread(msg: String) = printLog("com.kimjisub._thread", msg)
 	fun midiDetail(msg: String) = printLog("com.kimjisub._mididetail", msg)
 	fun driver(msg: String) = printLog("com.kimjisub._driver", msg)
 	fun driverCycle(msg: String) = printLog("com.kimjisub._cycle", msg)
-	fun billing(msg: String) = printLog("com.kimjisub._billing", msg)
 	fun err(msg: String) = printLog("com.kimjisub._err", msg)
 
 	private fun printLog(tag: String, msg: String?) {

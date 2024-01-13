@@ -27,8 +27,10 @@ fun selectedItemPositionListeners(
 	}
 }
 
-@InverseBindingAdapter(attribute = "selectedItemPosition",
-	event = "selectedItemPositionAttrChanged")
+@InverseBindingAdapter(
+	attribute = "selectedItemPosition",
+	event = "selectedItemPositionAttrChanged"
+)
 fun getSelectedItemPosition(spinner: AppCompatSpinner): Int {
 	return spinner.selectedItemPosition
 }

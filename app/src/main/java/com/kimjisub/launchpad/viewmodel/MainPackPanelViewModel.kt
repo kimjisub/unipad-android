@@ -1,13 +1,10 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
-import android.content.DialogInterface
-import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.Event
@@ -118,7 +115,8 @@ class MainPackPanelViewModel(
 				try {
 					return modelClass.getConstructor(
 						Application::class.java,
-						UniPack::class.java)
+						UniPack::class.java
+					)
 						.newInstance(app, unipack)
 				} catch (e: NoSuchMethodException) {
 					throw RuntimeException("Cannot create an instance of $modelClass", e)

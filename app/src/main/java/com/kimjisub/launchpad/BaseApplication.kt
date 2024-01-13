@@ -2,7 +2,6 @@ package com.kimjisub.launchpad
 
 import android.app.Application
 import android.os.Build
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.db.AppDatabase
@@ -25,7 +24,6 @@ class BaseApplication : Application() {
 		setupLogger()
 		setupRemoteConfig()
 
-		MobileAds.initialize(this) { }
 		appOpenManager = AppOpenManager(this)
 
 		startKoin {

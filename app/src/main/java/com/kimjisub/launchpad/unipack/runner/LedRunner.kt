@@ -86,6 +86,7 @@ class LedRunner(
 											cirLed!![y] = Led(e.buttonX, e.buttonY, event)
 										}
 									}
+
 									is LedAnimation.LedEvent.Off -> {
 										val x = event.x
 										val y = event.y
@@ -110,6 +111,7 @@ class LedRunner(
 											}
 										}
 									}
+
 									is LedAnimation.LedEvent.Delay -> {
 										e.delay += event.delay.toLong()
 									}

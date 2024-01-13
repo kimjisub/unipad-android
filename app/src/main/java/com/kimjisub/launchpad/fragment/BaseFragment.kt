@@ -10,8 +10,4 @@ open class BaseFragment : Fragment() {
 	val ws: WorkspaceManager by inject()
 	// val unipackRepo: UnipackRepository by inject()
 
-	// val ads by lazy { AdmobManager(this) }
-	// val bm by lazy { BillingModule(this, lifecycleScope, this) }
-
-
 }

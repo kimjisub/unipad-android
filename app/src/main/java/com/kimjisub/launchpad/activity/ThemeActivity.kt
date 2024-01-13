@@ -10,7 +10,6 @@ import com.kimjisub.launchpad.adapter.ThemeTool
 import com.kimjisub.launchpad.databinding.ActivityThemeBinding
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
-import java.util.*
 
 class ThemeActivity : BaseActivity() {
 	private lateinit var b: ActivityThemeBinding

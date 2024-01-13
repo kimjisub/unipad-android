@@ -31,6 +31,7 @@ class SettingsActivity : AppCompatActivity() {
 						// ThemeFragment()
 						null
 					}
+
 					else -> null
 				}
 

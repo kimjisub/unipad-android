@@ -31,7 +31,7 @@ class InfoFragment : PreferenceFragmentCompat() {
 
 		val context = requireContext()
 
-		val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0);
+		val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
 		val appName = getString(R.string.app_name)
 		val versionName = packageInfo.versionName
 		val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
@@ -51,7 +51,12 @@ class InfoFragment : PreferenceFragmentCompat() {
 		}
 
 		githubPreference.setOnPreferenceClickListener {
-			startActivity(Intent(Intent.ACTION_VIEW, "http://github.com/kimjisub/unipad-android".toUri()))
+			startActivity(
+				Intent(
+					Intent.ACTION_VIEW,
+					"http://github.com/kimjisub/unipad-android".toUri()
+				)
+			)
 
 			false
 		}

@@ -9,8 +9,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 class UniPackFolder(private val rootFolder: File) : UniPack() {
@@ -204,10 +202,10 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 				}
 			}
 			ledTableCount = 0
-			val fileList = F_keyLed!!.listFiles().sortedBy { it.name?.lowercase() } // todo 작동확인
+			val fileList = F_keyLed!!.listFiles().sortedBy { it.name.lowercase() } // todo 작동확인
 			for (file in fileList) {
 				if (file.isFile) {
-					val fileName: String = file.name!!
+					val fileName: String = file.name
 					val split1 = fileName.split(" ").toTypedArray()
 					var c: Int
 					var x: Int
@@ -278,6 +276,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 										continue@loop
 									}
 								}
+
 								"off", "f" -> {
 									try {
 										_x = Integer.parseInt(split2[1]) - 1
@@ -285,6 +284,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 									}
 									_y = Integer.parseInt(split2[2]) - 1
 								}
+
 								"delay", "d" -> _delay = Integer.parseInt(split2[1])
 								else -> {
 									addErr("keyLed : [$fileName].[$s] format is incorrect")
@@ -307,6 +307,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 									_velo
 								)
 							)
+
 							"off", "f" -> ledList.add(LedAnimation.LedEvent.Off(_x, _y))
 							"delay", "d" -> ledList.add(LedAnimation.LedEvent.Delay(_delay))
 						}
@@ -358,6 +359,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								continue@loop
 							}
 						}
+
 						"off", "f" -> {
 							x = Integer.parseInt(split[1]) - 1
 							y = Integer.parseInt(split[2]) - 1
@@ -369,6 +371,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								continue@loop
 							}
 						}
+
 						"touch", "t" -> {
 							x = Integer.parseInt(split[1]) - 1
 							y = Integer.parseInt(split[2]) - 1
@@ -380,6 +383,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								continue@loop
 							}
 						}
+
 						"chain", "c" -> {
 							chain = Integer.parseInt(split[1]) - 1
 							if (chain < 0 || chain >= this.chain) {
@@ -387,6 +391,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								continue@loop
 							}
 						}
+
 						"delay", "d" -> delay = Integer.parseInt(split[1])
 						else -> {
 							addErr("autoPlay : [$s] format is incorrect")
@@ -427,6 +432,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 							}
 						}
 					}
+
 					"off", "f" -> autoPlayTable!!.elements.add(
 						AutoPlay.Element.Off(
 							x,
@@ -434,6 +440,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 							currChain
 						)
 					)
+
 					"touch", "t" -> {
 						autoPlayTable!!.elements.add(
 							AutoPlay.Element.On(
@@ -446,6 +453,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 						autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
 						map[x][y]++
 					}
+
 					"chain", "c" -> {
 						autoPlayTable!!.elements.add(AutoPlay.Element.Chain(chain.also {
 							currChain = it
@@ -460,6 +468,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 							i++
 						}
 					}
+
 					"delay", "d" -> autoPlayTable!!.elements.add(
 						AutoPlay.Element.Delay(
 							delay,

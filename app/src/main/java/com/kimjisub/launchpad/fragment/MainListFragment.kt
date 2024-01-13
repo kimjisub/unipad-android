@@ -26,8 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import splitties.activities.start
 import java.util.*
-import kotlin.Comparator
-import kotlin.collections.ArrayList
 
 class MainListFragment : BaseFragment() {
 	private var _b: FragmentMainListBinding? = null

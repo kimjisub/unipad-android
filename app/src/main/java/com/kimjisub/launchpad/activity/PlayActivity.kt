@@ -19,7 +19,6 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.Transformation
 import android.widget.CheckBox
-import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
@@ -50,7 +49,6 @@ import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import splitties.activities.start
 import splitties.toast.toast
 import java.io.File
 import kotlin.math.roundToInt
@@ -99,8 +97,6 @@ class PlayActivity : BaseActivity() {
 	private val SCB_watermark: SyncCheckBox = SyncCheckBox()
 	private val SCB_proLightMode: SyncCheckBox = SyncCheckBox()
 
-
-	//private lateinit var bm: DeprecatedBillingManager
 
 	// =============================================================================================
 

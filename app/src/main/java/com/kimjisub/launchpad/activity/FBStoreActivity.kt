@@ -10,7 +10,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
-import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -38,8 +37,6 @@ import java.util.*
 
 class FBStoreActivity : BaseActivity() {
 	private lateinit var b: ActivityStoreBinding
-	private var mRewardedAd: RewardedAd? = null
-
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val list: ArrayList<StoreItem> = ArrayList()
@@ -340,18 +337,4 @@ class FBStoreActivity : BaseActivity() {
 		}
 	}
 
-	override fun onResume() {
-		super.onResume()
-		//initVar(false)
-		//list.clear()
-		//adapter!!.notifyDataSetChanged()
-		//togglePlay(null)
-		//updatePanel()
-	}
-
-	override fun onPause() {
-		super.onPause()
-		//firebase_store.attachEventListener(false)
-		//firebase_storeCount.attachEventListener(false)
-	}
 }

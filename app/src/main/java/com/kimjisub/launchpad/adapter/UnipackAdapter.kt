@@ -6,12 +6,13 @@ import android.view.animation.AnimationUtils
 import android.widget.LinearLayout.LayoutParams
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.kimjisub.design.view.PackView
 import com.kimjisub.design.view.PackView.OnEventListener
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.anim
+import com.kimjisub.launchpad.R.color
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.db.util.observeOnce
 import com.kimjisub.launchpad.unipack.UniPack
@@ -75,9 +76,9 @@ class UniPackAdapter(var list: ArrayList<UniPackItem>, private val eventListener
 			untoggleColor = item.flagColor
 			title = viewingTitle
 			subtitle = viewingSubtitle
-			option1Name = context.getString(string.led).toUpperCase(Locale.getDefault()) + " ●"
+			option1Name = context.getString(string.led).uppercase(Locale.getDefault()) + " ●"
 			option1 = item.unipack.keyLedExist
-			option2Name = context.getString(string.autoPlay).toUpperCase(Locale.getDefault()) + " ●"
+			option2Name = context.getString(string.autoPlay).uppercase(Locale.getDefault()) + " ●"
 			option2 = item.unipack.autoPlayExist
 			bookmark = false
 

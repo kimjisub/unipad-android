@@ -64,13 +64,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">开源许可</string>
 	<string name="FCMToken">FCM 令牌</string>
-	<string name="copyright">ⓒ 2016-2021. UniPad. 版权所有。</string>
-
-	<string name="adsPayment_noSku">找不到 SKU。</string>
-	<string name="adsPayment_alreadyOwned">您已购买了此物品。</string>
-	<string name="adsPayment_userCanceled">您已取消购买。</string>
-	<string name="adsPayment_unavailable">Google 账单服务不可用。</string>
-	<string name="adsPayment_devError">Google 账单开发者错误</string>
+	<string name="copyright">ⓒ 2016-2024. UniPad. 版权所有。</string>
 
 	<!--Community-->
 	<string name="community">社区</string>

@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.util.*
 
 class UniPackAutoMapper(
 	private val unipack: UniPack,
@@ -40,6 +39,7 @@ class UniPackAutoMapper(
 						is AutoPlay.Element.On -> autoplay1.add(e)
 						is AutoPlay.Element.Off -> {
 						}
+
 						is AutoPlay.Element.Chain -> autoplay1.add(e)
 						is AutoPlay.Element.Delay -> autoplay1.add(e)
 					}
@@ -55,6 +55,7 @@ class UniPackAutoMapper(
 							}
 							autoplay2.add(e)
 						}
+
 						is AutoPlay.Element.Chain -> autoplay2.add(e)
 						is AutoPlay.Element.Delay -> if (prevDelay != null) prevDelay.delay += e.delay else prevDelay =
 							e
@@ -77,6 +78,7 @@ class UniPackAutoMapper(
 								)
 								autoplay3.add(e)
 							}
+
 							is AutoPlay.Element.Chain -> autoplay3.add(e)
 							is AutoPlay.Element.Delay -> {
 								e.delay = nextDuration + Constant.AUTOPLAY_AUTOMAPPING_DELAY_PRESET
@@ -95,8 +97,10 @@ class UniPackAutoMapper(
 						is AutoPlay.Element.On -> //int num = e.num % unipack.soundTable[e.currChain][e.x][e.y].size();
 							stringBuilder.append("t ").append(e.x + 1).append(" ").append(e.y + 1)
 								.append("\n")
+
 						is AutoPlay.Element.Chain -> stringBuilder.append("c ").append(e.c + 1)
 							.append("\n")
+
 						is AutoPlay.Element.Delay -> stringBuilder.append("d ").append(e.delay)
 							.append("\n")
 					}

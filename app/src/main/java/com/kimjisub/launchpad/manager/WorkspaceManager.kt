@@ -6,7 +6,11 @@ import android.os.Environment
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -43,7 +47,8 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 				)
 			}
 
-			val externalStoragePublicPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+			val externalStoragePublicPath =
+				Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
 			val externalStoragePublic = File(externalStoragePublicPath, "Unipad")
 			if (!externalStoragePublic.exists()) {
 				externalStoragePublic.mkdirs()

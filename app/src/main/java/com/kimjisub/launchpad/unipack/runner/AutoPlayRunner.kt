@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.unipack.runner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import java.util.*
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -68,6 +67,7 @@ class AutoPlayRunner(
 								unipack.led_push(e.currChain, e.x, e.y, e.num)
 								listener.onPadTouchOn(e.x, e.y)
 							}
+
 							is AutoPlay.Element.Off -> {
 								Log.play("[AutoPlay] off ${e.x} ${e.y}")
 								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
@@ -136,7 +136,7 @@ class AutoPlayRunner(
 			for (i in 0 until unipack.chain) listener.onGuideChainOff(i)
 			beforeChain = -1
 			for (i in guideItems!!.indices) {
-				val e: AutoPlay.Element? = guideItems!![i]
+				val e: AutoPlay.Element = guideItems!![i]
 				when (e) {
 					is AutoPlay.Element.On -> listener.onGuidePadOn(e.x, e.y)
 				}
@@ -161,7 +161,7 @@ class AutoPlayRunner(
 		if (achieve >= guideItems!!.size || achieve == -1) {
 			achieve = 0
 			for (i in guideItems!!.indices) {
-				val e: AutoPlay.Element? = guideItems!![i]
+				val e: AutoPlay.Element = guideItems!![i]
 				when (e) {
 					is AutoPlay.Element.On -> listener.onGuidePadOff(e.x, e.y)
 				}
@@ -180,6 +180,7 @@ class AutoPlayRunner(
 						guideItems!!.add(e)
 						Log.log(e.currChain.toString() + " " + e.x.toString() + " " + e.y)
 					}
+
 					is AutoPlay.Element.Delay -> if (complete) addedDelay += e.delay
 				}
 				progress++

@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.db.util
 
 import androidx.room.TypeConverter
-import java.util.*
+import java.util.Date
 
 // https://developer.android.com/training/data-storage/room/referencing-data?hl=ko
 
