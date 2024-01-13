@@ -326,14 +326,6 @@
 							android:text="@string/proLightMode"
 							android:textColor="@color/option_window_checkbox" />
 
-						<CheckBox
-							android:id="@+id/CB2_purchase"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:buttonTint="@color/option_window_checkbox"
-							android:text="@string/purchase"
-							android:textColor="@color/option_window_checkbox" />
-
 					</LinearLayout>
 
 				</LinearLayout>

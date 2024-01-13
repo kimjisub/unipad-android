@@ -39,7 +39,6 @@ import java.util.*
 class FBStoreActivity : BaseActivity() {
 	private lateinit var b: ActivityStoreBinding
 	private var mRewardedAd: RewardedAd? = null
-	private var isPro = false
 
 	private val firebase_store: FirebaseManager by lazy { FirebaseManager("store") }
 	private val firebase_storeCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
@@ -61,17 +60,6 @@ class FBStoreActivity : BaseActivity() {
 			override fun onPlayClick(item: StoreItem, v: PackView) {
 				if (!item.downloaded && !item.downloading) {
 					startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-//					if (p.downloadCouponCount > 0 || isPro) {
-//						if (!isPro)
-//							p.downloadCouponCount--
-//
-//						startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-//					} else {
-//						showRewardedAd {
-//							p.downloadCouponCount--
-//							startDownload(getPackItemByCode(item.storeVO.code!!)!!)
-//						}
-//					}
 				}
 			}
 		})
@@ -123,7 +111,6 @@ class FBStoreActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		b = ActivityStoreBinding.inflate(layoutInflater)
-		bm.load()
 		setContentView(b.root)
 		initVar()
 
@@ -182,10 +169,6 @@ class FBStoreActivity : BaseActivity() {
 
 		firebase_store.attachEventListener(true)
 		firebase_storeCount.attachEventListener(true)
-	}
-
-	override fun onProStatusUpdated(isPro: Boolean) {
-		this.isPro = isPro
 	}
 
 	// ============================================================================================= List Manage

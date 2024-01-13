@@ -64,14 +64,6 @@ class PlayActivity : BaseActivity() {
 	private var enable = true
 	private var chain: ChainObserver = ChainObserver()
 
-	private var isPro = false
-		set(value) {
-			field = value
-			b.CB2Purchase.visibility = if (field) View.GONE else View.VISIBLE
-			SCB_hideUI.isLocked = !field
-			SCB_watermark.isLocked = !field
-			SCB_proLightMode.isLocked = !field
-		}
 
 	// UI
 
@@ -96,7 +88,6 @@ class PlayActivity : BaseActivity() {
 			b.CB2HideUI,
 			b.CB2Watermark,
 			b.CB2ProLightMode,
-			b.CB2Purchase
 		)
 	}
 	private val SCB_feedbackLight: SyncCheckBox = SyncCheckBox()
@@ -144,21 +135,6 @@ class PlayActivity : BaseActivity() {
 
 		SCB_watermark.forceSetChecked(true)
 
-		/*bm = DeprecatedBillingManager(this, object : BillingProcessor.IBillingHandler {
-			override fun onProductPurchased(productId: String, details: TransactionDetails?) {}
-			override fun onPurchaseHistoryRestored() {}
-			override fun onBillingError(errorCode: Int, error: Throwable?) {}
-			override fun onBillingInitialized() {
-				val proMode = bm.isPro
-
-				b.CB2Purchase.visibility = if (proMode) View.GONE else View.VISIBLE
-				SCB_hideUI.isLocked = !proMode
-				SCB_watermark.isLocked = !proMode
-				SCB_proLightMode.isLocked = !proMode
-
-			}
-		})
-		bm.initialize()*/
 
 	}
 
@@ -167,7 +143,6 @@ class PlayActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 		b = ActivityPlayBinding.inflate(layoutInflater)
 		setContentView(b.root)
-		bm.load()
 
 		initVar()
 
@@ -205,9 +180,6 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	override fun onProStatusUpdated(isPro: Boolean) {
-		this.isPro = isPro
-	}
 
 	private fun start() {
 		CoroutineScope(Dispatchers.IO).launch {
@@ -330,10 +302,6 @@ class PlayActivity : BaseActivity() {
 
 
 			// Setting
-			b.CB2Purchase.setOnCheckedChangeListener { compoundButton: CompoundButton?, _: Boolean ->
-				compoundButton!!.isChecked = false
-				start<SettingLegacyActivity>()
-			}
 			SCB_feedbackLight.onCheckedChange = object : OnCheckedChange {
 				override fun onCheckedChange(bool: Boolean) {
 					padInit()
@@ -1274,7 +1242,6 @@ class PlayActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		bm.restorePurchase()
 		//initVar();
 
 		contentResolver.registerContentObserver(
@@ -1310,6 +1277,5 @@ class PlayActivity : BaseActivity() {
 		if (unipackLoaded) {
 			//showAds(adsPlayEnd)
 		}
-		bm.release()
 	}
 }

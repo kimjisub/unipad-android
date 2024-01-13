@@ -38,7 +38,7 @@ android {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig signingConfigs.release
-			debuggable true
+			debuggable false
 
 			minifyEnabled true
 			proguardFile getDefaultProguardFile('proguard-android.txt')

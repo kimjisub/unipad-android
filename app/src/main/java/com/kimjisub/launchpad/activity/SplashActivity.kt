@@ -16,16 +16,6 @@ import splitties.activities.start
 class SplashActivity : BaseActivity() {
 	private lateinit var b: ActivitySplashBinding
 
-	private var isPro = false
-		set(value) {
-			field = value
-			b.version.setTextColor(
-				ContextCompat.getColor(
-					this,
-					if (field) color.orange else color.white
-				)
-			)
-		}
 
 	// Timer
 	internal var handler = Handler(Looper.getMainLooper())
@@ -38,9 +28,6 @@ class SplashActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 		b = ActivitySplashBinding.inflate(layoutInflater)
 		setContentView(b.root)
-
-		bm.load()
-
 
 		b.version.text = BuildConfig.VERSION_NAME
 
@@ -63,10 +50,6 @@ class SplashActivity : BaseActivity() {
 			.check()
 	}
 
-	override fun onProStatusUpdated(isPro: Boolean) {
-		this.isPro = isPro
-	}
-
 	override fun onStop() {
 		super.onStop()
 		handler.removeCallbacks(runnable)
@@ -75,6 +58,5 @@ class SplashActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
-		bm.release()
 	}
 }

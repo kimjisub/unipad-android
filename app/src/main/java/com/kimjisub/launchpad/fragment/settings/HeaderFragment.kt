@@ -39,7 +39,7 @@ class HeaderFragment(val callback: (Category) -> Unit) : PreferenceFragmentCompa
 
 	companion object {
 		enum class Category(val key: String) {
-			INFO("info"), ADS_PAYMENT("ads_payment"), STORAGE("storage"), THEME("theme")
+			INFO("info"), STORAGE("storage"), THEME("theme")
 		}
 	}
 }
