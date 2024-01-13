@@ -10,20 +10,14 @@ import android.widget.AdapterView
 import android.widget.ListView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.SkuDetails
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.databinding.ActivitySettingLegacyBinding
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.launchpad.manager.billing.BillingModule
-import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.manager.putClipboard
-import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
 import splitties.activities.start
 import splitties.toast.toast
@@ -46,25 +40,15 @@ class SettingLegacyActivity : BaseActivity() {
 		}
 	}
 
-	class SettingsFragment : PreferenceFragmentCompat(), BillingModule.Callback {
+	class SettingsFragment : PreferenceFragmentCompat() {
 		private lateinit var settingLegacyActivity: SettingLegacyActivity
 		private lateinit var p: PreferenceManager
-		private lateinit var bm: BillingModule
-
-		private var mSubsSkuDetails = listOf<SkuDetails>()
-
-		private var isPro = false
-			set(value) {
-				field = value
-				proPreference.isChecked = value
-			}
 
 		// Preferences
 		private lateinit var selectThemePreference: Preference
 		private lateinit var storageLocationPreference: Preference
 		private lateinit var storageLocationTestPreference: Preference
-		private lateinit var proPreference: CheckBoxPreference
-		private lateinit var restoreBillingPreference: Preference
+		private lateinit var githubPreference: Preference
 		private lateinit var communityPreference: Preference
 		private lateinit var openSourceLicensePreference: Preference
 		private lateinit var fcmTokenPreference: Preference
@@ -103,9 +87,6 @@ class SettingLegacyActivity : BaseActivity() {
 			settingLegacyActivity = activity as SettingLegacyActivity
 			p = settingLegacyActivity.p
 
-			bm = BillingModule(requireActivity(), lifecycleScope, this)
-			bm.load()
-
 			initPreference()
 			addPreferenceListener()
 		}
@@ -127,47 +108,6 @@ class SettingLegacyActivity : BaseActivity() {
 
 		override fun onDestroy() {
 			super.onDestroy()
-			bm.release()
-		}
-
-		// Billing Cycle
-
-		override fun onBillingSubsQuerySkuDetailResult(subsSkuDetails: List<SkuDetails>) {
-			Log.billing("onSubsQuerySkuDetailResult")
-			mSubsSkuDetails = subsSkuDetails
-			for (skuDetails in subsSkuDetails)
-				Log.billing(skuDetails.sku)
-		}
-
-		override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
-			Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
-
-			if (skuDetails.type == BillingClient.SkuType.SUBS)
-				when (skuDetails.sku) {
-					Sku.PRO -> {
-						isPro = purchased
-					}
-				}
-		}
-
-		override fun onBillingFailure(errorCode: Int) {
-			when (errorCode) {
-				BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-					toast("이미 구입한 상품입니다.")
-				}
-				BillingClient.BillingResponseCode.USER_CANCELED -> {
-					toast("구매를 취소하셨습니다.")
-				}
-				BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
-					toast("Google Billing 서비스를 사용할 수 없습니다.")
-				}
-				BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
-					toast("Google Billing Developer Error")
-				}
-				else -> {
-					toast("error: $errorCode")
-				}
-			}
 		}
 
 		//
@@ -176,8 +116,7 @@ class SettingLegacyActivity : BaseActivity() {
 			selectThemePreference = findPreference("selectTheme")!!
 			storageLocationPreference = findPreference("storageLocation")!!
 			storageLocationTestPreference = findPreference("storageLocationTest")!!
-			proPreference = findPreference("pro")!!
-			restoreBillingPreference = findPreference("restoreBilling")!!
+			githubPreference = findPreference("github")!!
 			communityPreference = findPreference("community")!!
 			openSourceLicensePreference = findPreference("openSourceLicense")!!
 			fcmTokenPreference = findPreference("fcmToken")!!
@@ -239,6 +178,12 @@ class SettingLegacyActivity : BaseActivity() {
 
 					folderResultLauncher.launch(intent)
 
+					false
+				}
+
+			githubPreference.onPreferenceClickListener =
+				Preference.OnPreferenceClickListener {
+					requireContext().browse("https://github.com/kimjisub/unipad-android")
 					false
 				}
 
@@ -325,22 +270,6 @@ class SettingLegacyActivity : BaseActivity() {
 					builder.setTitle(getString(R.string.community))
 					builder.setView(listView)
 					builder.show()
-					false
-				}
-			proPreference.onPreferenceClickListener =
-				Preference.OnPreferenceClickListener { preference: Preference ->
-					(preference as CheckBoxPreference).isChecked = isPro
-
-					bm.findSkuDetails(Sku.PRO)?.let {
-						bm.purchase(it)
-					} ?: also {
-						toast("상품을 찾을 수 없습니다.")
-					}
-					false
-				}
-			restoreBillingPreference.onPreferenceClickListener =
-				Preference.OnPreferenceClickListener {
-					bm.restorePurchase()
 					false
 				}
 			openSourceLicensePreference.onPreferenceClickListener =

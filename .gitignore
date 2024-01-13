@@ -46,3 +46,5 @@ captures/
 *.jks
 /app/release/app-release.aab
 keystore.properties
+
+app/release

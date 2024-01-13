@@ -6,11 +6,6 @@
 		app:title="@string/settings_info" />
 
 	<Preference
-		app:icon="@drawable/ic_payment"
-		app:key="ads_payment"
-		app:title="@string/settings_ads_payment" />
-
-	<Preference
 		app:icon="@drawable/ic_storage"
 		app:key="storage"
 		app:title="@string/settings_storage" />

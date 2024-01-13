@@ -8,23 +8,17 @@ import android.os.Bundle
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.SkuDetails
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
-import com.kimjisub.launchpad.manager.AdmobManager
 import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
-import com.kimjisub.launchpad.manager.billing.BillingModule
-import com.kimjisub.launchpad.manager.billing.Sku
 import com.kimjisub.launchpad.tool.Log
 import org.koin.android.ext.android.inject
 import splitties.activities.start
 
-open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
+open class BaseActivity : AppCompatActivity() {
 
 	companion object {
 		private var activityList = ArrayList<BaseActivity>()
@@ -87,24 +81,9 @@ open class BaseActivity : AppCompatActivity(), BillingModule.Callback {
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
 	val unipackRepo: UnipackRepository by inject()
-	val ads by lazy { AdmobManager(this) }
-	val bm by lazy { BillingModule(this, lifecycleScope, this) }
 
 
 
-	override fun onBillingPurchaseUpdate(skuDetails: SkuDetails, purchased: Boolean) {
-		Log.billing("onPurchaseUpdate: ${skuDetails.sku} - $purchased")
-		if (skuDetails.type == BillingClient.SkuType.SUBS)
-			when (skuDetails.sku) {
-				Sku.PRO -> {
-					onProStatusUpdated(purchased)
-				}
-			}
-	}
-
-	open fun onProStatusUpdated(isPro: Boolean) {
-
-	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -2,7 +2,7 @@
 
 	<PreferenceCategory
 		app:iconSpaceReserved="false"
-		app:title="@string/settings_app">
+		app:title="@string/settings_info">
 
 		<Preference
 			app:iconSpaceReserved="false"
@@ -15,16 +15,10 @@
 			app:key="language"
 			app:summary="@string/translated_by"
 			app:title="@string/language" />
-	</PreferenceCategory>
-	<PreferenceCategory
-		app:iconSpaceReserved="false"
-		app:title="@string/settings_user">
-
 		<Preference
 			app:iconSpaceReserved="false"
 			app:key="community"
 			app:title="@string/community" />
-
 	</PreferenceCategory>
 	<PreferenceCategory
 		app:iconSpaceReserved="false"

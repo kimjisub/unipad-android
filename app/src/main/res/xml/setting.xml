@@ -15,18 +15,10 @@
 
 	</PreferenceCategory>
 
-	<PreferenceCategory android:title="@string/payment">
-		<CheckBoxPreference
-			android:key="pro"
-			android:summary="@string/plan_pro_"
-			android:title="@string/plan_pro" />
-		<Preference
-			android:key="restoreBilling"
-			android:summary="@string/plan_restorePurchases_"
-			android:title="@string/plan_restorePurchases" />
-	</PreferenceCategory>
-
 	<PreferenceCategory android:title="@string/information">
+		<Preference
+			android:key="github"
+			android:title="@string/github" />
 		<Preference
 			android:key="community"
 			android:title="@string/community" />

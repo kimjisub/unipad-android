@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.databinding.ActivitySettingsBinding
-import com.kimjisub.launchpad.fragment.settings.AdsPaymentFragment
 import com.kimjisub.launchpad.fragment.settings.HeaderFragment
 import com.kimjisub.launchpad.fragment.settings.HeaderFragment.Companion.Category
 import com.kimjisub.launchpad.fragment.settings.InfoFragment
@@ -24,7 +23,6 @@ class SettingsActivity : AppCompatActivity() {
 			.replace(b.category.id, HeaderFragment {
 				val fragment = when (it) {
 					Category.INFO -> InfoFragment()
-					Category.ADS_PAYMENT -> AdsPaymentFragment()
 					Category.STORAGE -> StorageFragment()
 					Category.THEME -> {
 						start<ThemeActivity>()

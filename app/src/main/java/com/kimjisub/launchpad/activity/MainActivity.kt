@@ -57,9 +57,6 @@ class MainActivity : BaseActivity(),
 	MainPackPanelFragment.Callbacks {
 	private lateinit var b: ActivityMainBinding
 
-	private var isPro = false
-
-
 	private val storeAnimator: ValueAnimator by lazy {
 		val animator = ObjectAnimator.ofObject(ArgbEvaluator(), colors.orange, colors.red)
 		animator.duration = 300
@@ -148,8 +145,6 @@ class MainActivity : BaseActivity(),
 		b = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(b.root)
 
-		bm.load()
-
 		supportFragmentManager
 			.beginTransaction()
 			.replace(b.fragmentPanel.id, mainTotalPanelFragment)
@@ -198,10 +193,6 @@ class MainActivity : BaseActivity(),
 			}
 		})
 		checkThings()
-	}
-
-	override fun onProStatusUpdated(isPro: Boolean) {
-		this.isPro = isPro
 	}
 
 
@@ -288,6 +279,7 @@ class MainActivity : BaseActivity(),
 							}.show()
 							listFragment.update()
 						}
+
 						else -> {
 							alertDialog {
 								title = getString(string.warning)
@@ -379,13 +371,18 @@ class MainActivity : BaseActivity(),
 
 
 	private fun showSelectLPUI() {
-		if (listFragment.havePrev()) driver.sendFunctionkeyLed(0,
-			63) else driver.sendFunctionkeyLed(0, 5)
+		if (listFragment.havePrev()) driver.sendFunctionkeyLed(
+			0,
+			63
+		) else driver.sendFunctionkeyLed(0, 5)
 		if (listFragment.haveNow()) driver.sendFunctionkeyLed(2, 61) else driver.sendFunctionkeyLed(
 			2,
-			0)
-		if (listFragment.haveNext()) driver.sendFunctionkeyLed(1,
-			63) else driver.sendFunctionkeyLed(1, 5)
+			0
+		)
+		if (listFragment.haveNext()) driver.sendFunctionkeyLed(
+			1,
+			63
+		) else driver.sendFunctionkeyLed(1, 5)
 	}
 
 	private fun showWatermark() {
@@ -406,16 +403,6 @@ class MainActivity : BaseActivity(),
 
 	override fun onListUpdated() {
 		mainTotalPanelFragment.update()
-	}
-
-	private var adsPlayStart: InterstitialAd? = null
-	override fun onRequestAds() {
-		ads.showAdsWithCooltime(adsPlayStart) {
-			val playStartUnitId = resources.getString(string.admob_play_start)
-			ads.loadAds(playStartUnitId) {
-				adsPlayStart = it
-			}
-		}
 	}
 
 	// TotalPanelFragment Callbacks
@@ -442,12 +429,6 @@ class MainActivity : BaseActivity(),
 		checkThings()
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
-		bm.restorePurchase()
-
-		val playStartUnitId = resources.getString(string.admob_play_start)
-		ads.loadAds(playStartUnitId) {
-			adsPlayStart = it
-		}
 	}
 
 	override fun onPause() {
