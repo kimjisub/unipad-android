@@ -15,12 +15,10 @@ object FileManager {
 		try {
 			val rootFolder = File(path)
 			if (rootFolder.isDirectory) {
-				val childFileList: Array<File> = rootFolder.listFiles()
-				if (childFileList.size == 1) {
-					val innerFolder = childFileList[0]
-					if (innerFolder.isDirectory) {
-						moveDirectory(innerFolder, rootFolder)
-					}
+				val doubleFolder = File(rootFolder, rootFolder.name)
+
+				if (doubleFolder.isDirectory) {
+						moveDirectory(doubleFolder, rootFolder)
 				}
 			}
 		} catch (e: Exception) {
@@ -170,13 +168,17 @@ object FileManager {
 
 
 	fun makeNomedia(parent: File?) {
-		val nomedia = File(parent, ".nomedia")
-		if (!nomedia.isFile) {
-			try {
-				FileWriter(nomedia).close()
-			} catch (e: IOException) {
-				e.printStackTrace()
+		try {
+			val nomedia = File(parent, ".nomedia")
+			if (!nomedia.isFile) {
+				try {
+					FileWriter(nomedia).close()
+				} catch (e: IOException) {
+					e.printStackTrace()
+				}
 			}
+		} catch (e: Exception) {
+			e.printStackTrace()
 		}
 	}
 
@@ -192,11 +194,13 @@ object FileManager {
 				file.isFile -> {
 					return@async file.length()
 				}
+
 				file.isDirectory -> {
 					val childFileList: Array<out File> = file.listFiles() ?: return@async 0
 					for (childFile in childFileList) totalMemory += getFolderSize(childFile)
 					return@async totalMemory
 				}
+
 				else -> return@async 0
 			}
 		}

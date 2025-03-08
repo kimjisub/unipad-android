@@ -19,7 +19,6 @@
 	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE" />
     -->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
-	<uses-permission android:name="com.android.vending.BILLING" />
 
 	<application
 		android:name=".BaseApplication"
@@ -40,9 +39,6 @@
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_color"
 			android:resource="@color/app_orange" />
-		<meta-data
-			android:name="com.google.android.gms.ads.APPLICATION_ID"
-			android:value="@string/admob_appid" />
 
 		<activity
 			android:name=".activity.SplashActivity"
@@ -82,12 +78,6 @@
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="LockedOrientationActivity" />
 
-		<activity
-			android:name=".activity.SettingLegacyActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="portrait"
-			android:theme="@style/SettingTheme"
-			tools:ignore="LockedOrientationActivity" />
 		<activity
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
