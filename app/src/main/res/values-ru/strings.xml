@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Удалить тему</string>
 	<string name="theme_delete_confirm">Удалить \"%s\"?</string>
 	<string name="theme_add_title">Добавить тему</string>
-	<string name="theme_add_store">Искать в Play Store</string>
-	<string name="theme_add_store_desc">Искать приложения тем в Google Play Store.</string>
 	<string name="theme_add_zip">Импортировать ZIP-файл</string>
 	<string name="theme_add_zip_desc">Импортировать .zip файл темы с вашего устройства.</string>
 	<string name="theme_add_create">Создать свою тему</string>
 	<string name="theme_add_create_desc">Узнайте, как создать пользовательскую тему.</string>
+	<string name="theme_apk_deprecated">Темы на основе APK больше не поддерживаются. Пожалуйста, используйте ZIP-темы.</string>
 	<string name="theme_type_builtin">Встроенная</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

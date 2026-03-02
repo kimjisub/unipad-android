@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Tanggalin ang Tema</string>
 	<string name="theme_delete_confirm">Tanggalin ang \"%s\"?</string>
 	<string name="theme_add_title">Magdagdag ng Tema</string>
-	<string name="theme_add_store">Hanapin sa Play Store</string>
-	<string name="theme_add_store_desc">Maghanap ng tema apps sa Google Play Store.</string>
 	<string name="theme_add_zip">I-import ang ZIP file</string>
 	<string name="theme_add_zip_desc">Mag-import ng .zip tema file mula sa iyong device.</string>
 	<string name="theme_add_create">Gumawa ng sariling tema</string>
 	<string name="theme_add_create_desc">Alamin kung paano gumawa ng custom na tema.</string>
+	<string name="theme_apk_deprecated">Ang mga temang nakabatay sa APK ay hindi na sinusuportahan. Mangyaring gumamit ng ZIP na tema sa halip.</string>
 	<string name="theme_type_builtin">Built-in</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

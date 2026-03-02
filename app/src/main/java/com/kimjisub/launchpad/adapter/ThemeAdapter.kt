@@ -1,14 +1,9 @@
 package com.kimjisub.launchpad.adapter
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
@@ -20,7 +15,6 @@ import java.io.File
 enum class ThemeType {
 	BUILTIN,
 	ZIP,
-	APK,
 }
 
 class ThemeItem private constructor(
@@ -42,23 +36,6 @@ class ThemeItem private constructor(
 			val name = context.getString(R.string.theme_name)
 			val author = context.getString(R.string.theme_author)
 			return ThemeItem(context.packageName, icon, name, author, BuildConfig.VERSION_NAME, ThemeType.BUILTIN)
-		}
-
-		@SuppressLint("DiscouragedApi")
-		fun fromPackage(context: Context, packageName: String): ThemeItem {
-			val res = context.packageManager.getResourcesForApplication(packageName)
-			val icon = requireNotNull(
-				ResourcesCompat.getDrawable(res, res.getIdentifier("$packageName:drawable/theme_ic", null, null), null)
-			)
-			val name = res.getString(res.getIdentifier("$packageName:string/theme_name", null, null))
-			val author = res.getString(res.getIdentifier("$packageName:string/theme_author", null, null))
-			val version = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-				context.packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).versionName
-			} else {
-				@Suppress("DEPRECATION")
-				context.packageManager.getPackageInfo(packageName, 0).versionName
-			}
-			return ThemeItem(packageName, icon, name, author, version, ThemeType.APK)
 		}
 
 		fun fromAssetDir(context: Context, assetPath: String, dirName: String): ThemeItem {
@@ -113,26 +90,6 @@ object ThemeTool {
 				}
 			}
 		} catch (_: Exception) {}
-
-		// External APK themes
-		val packages: List<ApplicationInfo> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			context.packageManager.getInstalledApplications(
-				PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong())
-			)
-		} else {
-			@Suppress("DEPRECATION")
-			context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-		}
-		for (applicationInfo in packages) {
-			val packageName: String = applicationInfo.packageName
-			if (packageName.startsWith("com.kimjisub.launchpad.theme.")) {
-				try {
-					ret.add(ThemeItem.fromPackage(context, packageName))
-				} catch (e: Exception) {
-					Log.err("Theme pack load failed: $packageName", e)
-				}
-			}
-		}
 
 		// User-imported ZIP themes from external storage
 		val themesDir = context.getExternalFilesDir(null)?.let { File(it, "themes") }

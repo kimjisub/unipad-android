@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">删除主题</string>
 	<string name="theme_delete_confirm">删除 \"%s\"？</string>
 	<string name="theme_add_title">添加主题</string>
-	<string name="theme_add_store">在 Play 商店搜索</string>
-	<string name="theme_add_store_desc">在 Google Play 商店搜索主题应用。</string>
 	<string name="theme_add_zip">导入 ZIP 文件</string>
 	<string name="theme_add_zip_desc">从设备导入 .zip 主题文件。</string>
 	<string name="theme_add_create">创建自己的主题</string>
 	<string name="theme_add_create_desc">了解如何创建自定义主题。</string>
+	<string name="theme_apk_deprecated">APK主题已停止支持，请改用ZIP主题。</string>
 	<string name="theme_type_builtin">内置</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">默认主题</string>

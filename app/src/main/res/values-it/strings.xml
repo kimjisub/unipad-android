@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Elimina Tema</string>
 	<string name="theme_delete_confirm">Eliminare \"%s\"?</string>
 	<string name="theme_add_title">Aggiungi Tema</string>
-	<string name="theme_add_store">Cerca su Play Store</string>
-	<string name="theme_add_store_desc">Cerca app di temi su Google Play Store.</string>
 	<string name="theme_add_zip">Importa file ZIP</string>
 	<string name="theme_add_zip_desc">Importa un file tema .zip dal tuo dispositivo.</string>
 	<string name="theme_add_create">Crea il tuo tema</string>
 	<string name="theme_add_create_desc">Scopri come creare un tema personalizzato.</string>
+	<string name="theme_apk_deprecated">I temi APK non sono più supportati. Utilizza i temi ZIP al loro posto.</string>
 	<string name="theme_type_builtin">Integrato</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

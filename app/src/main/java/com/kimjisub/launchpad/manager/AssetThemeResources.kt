@@ -34,10 +34,6 @@ class AssetThemeResources(
 	override var chainGuide: Drawable? = null
 	override var phantom: Drawable? = null
 	override var phantomVariant: Drawable? = null
-	override var xmlPrev: Drawable? = null
-	override var xmlPlay: Drawable? = null
-	override var xmlPause: Drawable? = null
-	override var xmlNext: Drawable? = null
 	override var checkbox: Int? = null
 	override var traceLog: Int? = null
 	override var optionWindow: Int? = null
@@ -78,11 +74,6 @@ class AssetThemeResources(
 
 			phantom = loadPng("phantom") ?: defaultDrawable(R.drawable.phantom)
 			phantomVariant = loadPng("phantom_")
-
-			xmlPrev = loadPng("xml_prev") ?: defaultDrawable(R.drawable.xml_prev)
-			xmlPlay = loadPng("xml_play") ?: defaultDrawable(R.drawable.xml_play)
-			xmlPause = loadPng("xml_pause") ?: defaultDrawable(R.drawable.xml_pause)
-			xmlNext = loadPng("xml_next") ?: defaultDrawable(R.drawable.xml_next)
 
 			checkbox = parseColor(colors?.checkbox) ?: defaultColor(R.color.checkbox)
 			traceLog = parseColor(colors?.traceLog) ?: defaultColor(R.color.trace_log)

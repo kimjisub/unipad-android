@@ -38,9 +38,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -104,9 +104,6 @@ class ThemeActivity : BaseActivity() {
 						appliedIndex = index
 					}
 				},
-				onBrowseStore = {
-					browse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")
-				},
 				onCreateGuide = {
 					browse("https://github.com/kimjisub/unipad-android/blob/main/docs/THEME_CREATION_GUIDE.md")
 				},
@@ -157,7 +154,6 @@ private fun ThemeScreen(
 	appliedIndex: Int,
 	onBackClick: () -> Unit,
 	onApply: (Int) -> Unit,
-	onBrowseStore: () -> Unit,
 	onCreateGuide: () -> Unit,
 	onImport: (Uri) -> Unit,
 	onDelete: (ThemeItem) -> Unit,
@@ -312,7 +308,6 @@ private fun ThemeScreen(
 			) {
 				if (selectedIndex == themes.size) {
 					AddThemePanel(
-						onBrowseStore = onBrowseStore,
 						onCreateGuide = onCreateGuide,
 						onImportZip = { filePickerLauncher.launch("application/zip") },
 					)
@@ -425,7 +420,6 @@ private fun ThemeTypeBadge(type: ThemeType) {
 	val (label, color) = when (type) {
 		ThemeType.BUILTIN -> stringResource(R.string.theme_type_builtin) to Color(0xFF4CAF50)
 		ThemeType.ZIP -> stringResource(R.string.theme_type_zip) to Color(0xFF42A5F5)
-		ThemeType.APK -> stringResource(R.string.theme_type_apk) to Color(0xFFAB47BC)
 	}
 	Text(
 		text = label,
@@ -474,7 +468,6 @@ private fun AddThemeGuideItem(
 
 @Composable
 private fun AddThemePanel(
-	onBrowseStore: () -> Unit,
 	onCreateGuide: () -> Unit,
 	onImportZip: () -> Unit,
 ) {
@@ -495,40 +488,6 @@ private fun AddThemePanel(
 				fontSize = 20.sp,
 			)
 			Spacer(modifier = Modifier.height(20.dp))
-
-			// Play Store option
-			Row(
-				verticalAlignment = Alignment.CenterVertically,
-				modifier = Modifier
-					.fillMaxWidth()
-					.clip(RoundedCornerShape(12.dp))
-					.background(Color.White.copy(alpha = 0.08f))
-					.clickable(onClick = onBrowseStore)
-					.padding(16.dp),
-			) {
-				Icon(
-					imageVector = Icons.Default.Search,
-					contentDescription = null,
-					tint = Orange,
-					modifier = Modifier.size(28.dp),
-				)
-				Spacer(modifier = Modifier.width(14.dp))
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = stringResource(R.string.theme_add_store),
-						color = Color.White,
-						fontSize = 15.sp,
-					)
-					Spacer(modifier = Modifier.height(2.dp))
-					Text(
-						text = stringResource(R.string.theme_add_store_desc),
-						color = Color.White.copy(alpha = 0.5f),
-						fontSize = 12.sp,
-					)
-				}
-			}
-
-			Spacer(modifier = Modifier.height(12.dp))
 
 			// ZIP import option
 			Row(
@@ -594,6 +553,32 @@ private fun AddThemePanel(
 						fontSize = 12.sp,
 					)
 				}
+			}
+
+			Spacer(modifier = Modifier.height(20.dp))
+
+			// APK theme deprecation notice
+			Row(
+				verticalAlignment = Alignment.Top,
+				modifier = Modifier
+					.fillMaxWidth()
+					.clip(RoundedCornerShape(12.dp))
+					.background(Color.White.copy(alpha = 0.04f))
+					.padding(14.dp),
+			) {
+				Icon(
+					imageVector = Icons.Outlined.Info,
+					contentDescription = null,
+					tint = Color.White.copy(alpha = 0.4f),
+					modifier = Modifier.size(18.dp),
+				)
+				Spacer(modifier = Modifier.width(10.dp))
+				Text(
+					text = stringResource(R.string.theme_apk_deprecated),
+					color = Color.White.copy(alpha = 0.4f),
+					fontSize = 11.sp,
+					lineHeight = 16.sp,
+				)
 			}
 		}
 	}

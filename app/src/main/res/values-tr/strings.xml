@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Temayı Sil</string>
 	<string name="theme_delete_confirm">\"%s\" silinsin mi?</string>
 	<string name="theme_add_title">Tema Ekle</string>
-	<string name="theme_add_store">Play Store\'da Ara</string>
-	<string name="theme_add_store_desc">Google Play Store\'da tema uygulamalarını arayın.</string>
 	<string name="theme_add_zip">ZIP dosyası içe aktar</string>
 	<string name="theme_add_zip_desc">Cihazınızdan bir .zip tema dosyası içe aktarın.</string>
 	<string name="theme_add_create">Kendi temanızı oluşturun</string>
 	<string name="theme_add_create_desc">Özel tema oluşturmayı öğrenin.</string>
+	<string name="theme_apk_deprecated">APK tabanlı temalar artık desteklenmemektedir. Lütfen bunun yerine ZIP temaları kullanın.</string>
 	<string name="theme_type_builtin">Yerleşik</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

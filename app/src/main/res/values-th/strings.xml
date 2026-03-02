@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">ลบธีม</string>
 	<string name="theme_delete_confirm">ลบ \"%s\" หรือไม่?</string>
 	<string name="theme_add_title">เพิ่มธีม</string>
-	<string name="theme_add_store">ค้นหาใน Play Store</string>
-	<string name="theme_add_store_desc">ค้นหาแอปธีมใน Google Play Store</string>
 	<string name="theme_add_zip">นำเข้าไฟล์ ZIP</string>
 	<string name="theme_add_zip_desc">นำเข้าไฟล์ธีม .zip จากอุปกรณ์ของคุณ</string>
 	<string name="theme_add_create">สร้างธีมของคุณเอง</string>
 	<string name="theme_add_create_desc">เรียนรู้วิธีสร้างธีมที่กำหนดเอง</string>
+	<string name="theme_apk_deprecated">ธีมแบบ APK ไม่รองรับอีกต่อไป กรุณาใช้ธีม ZIP แทน</string>
 	<string name="theme_type_builtin">ในตัว</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">テーマを削除</string>
 	<string name="theme_delete_confirm">\"%s\" を削除しますか？</string>
 	<string name="theme_add_title">テーマを追加</string>
-	<string name="theme_add_store">Play ストアで検索</string>
-	<string name="theme_add_store_desc">Google Play ストアでテーマアプリを検索します。</string>
 	<string name="theme_add_zip">ZIPファイルをインポート</string>
 	<string name="theme_add_zip_desc">デバイスから.zipテーマファイルをインポートします。</string>
 	<string name="theme_add_create">自分のテーマを作成</string>
 	<string name="theme_add_create_desc">カスタムテーマの作り方を学びましょう。</string>
+	<string name="theme_apk_deprecated">APK形式のテーマはサポートを終了しました。ZIPテーマをご利用ください。</string>
 	<string name="theme_type_builtin">内蔵</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

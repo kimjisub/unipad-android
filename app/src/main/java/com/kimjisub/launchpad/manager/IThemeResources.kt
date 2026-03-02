@@ -18,10 +18,6 @@ interface IThemeResources {
 	val chainGuide: Drawable?
 	val phantom: Drawable?
 	val phantomVariant: Drawable?
-	val xmlPrev: Drawable?
-	val xmlPlay: Drawable?
-	val xmlPause: Drawable?
-	val xmlNext: Drawable?
 	val checkbox: Int?
 	val traceLog: Int?
 	val optionWindow: Int?

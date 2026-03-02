@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">အပြင်အဆင် ဖျက်မည်</string>
 	<string name="theme_delete_confirm">\"%s\" ဖျက်မည်လား?</string>
 	<string name="theme_add_title">အပြင်အဆင် ထည့်ရန်</string>
-	<string name="theme_add_store">Play Store တွင် ရှာရန်</string>
-	<string name="theme_add_store_desc">Google Play Store တွင် အပြင်အဆင် အက်ပ်များ ရှာဖွေပါ။</string>
 	<string name="theme_add_zip">ZIP ဖိုင် တင်သွင်းရန်</string>
 	<string name="theme_add_zip_desc">သင့်စက်မှ .zip အပြင်အဆင် ဖိုင်ကို တင်သွင်းပါ။</string>
 	<string name="theme_add_create">ကိုယ်ပိုင် အပြင်အဆင် ဖန်တီးရန်</string>
 	<string name="theme_add_create_desc">စိတ်ကြိုက် အပြင်အဆင် ဖန်တီးနည်းကို လေ့လာပါ။</string>
+	<string name="theme_apk_deprecated">APK အခြေပြု အပြင်အဆင်များကို ထပ်မံပံ့ပိုးမည်မဟုတ်ပါ။ ကျေးဇူးပြု၍ ZIP အပြင်အဆင်ကို အသုံးပြုပါ။</string>
 	<string name="theme_type_builtin">တပ်ဆင်ပြီး</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Padam Tema</string>
 	<string name="theme_delete_confirm">Padam \"%s\"?</string>
 	<string name="theme_add_title">Tambah Tema</string>
-	<string name="theme_add_store">Cari di Play Store</string>
-	<string name="theme_add_store_desc">Cari aplikasi tema di Google Play Store.</string>
 	<string name="theme_add_zip">Import fail ZIP</string>
 	<string name="theme_add_zip_desc">Import fail tema .zip dari peranti anda.</string>
 	<string name="theme_add_create">Cipta tema sendiri</string>
 	<string name="theme_add_create_desc">Ketahui cara mencipta tema tersuai.</string>
+	<string name="theme_apk_deprecated">Tema berasaskan APK tidak lagi disokong. Sila gunakan tema ZIP sebagai ganti.</string>
 	<string name="theme_type_builtin">Terbina dalam</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

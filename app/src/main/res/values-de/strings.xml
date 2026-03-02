@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Design löschen</string>
 	<string name="theme_delete_confirm">\"%s\" löschen?</string>
 	<string name="theme_add_title">Design hinzufügen</string>
-	<string name="theme_add_store">Im Play Store suchen</string>
-	<string name="theme_add_store_desc">Nach Design-Apps im Google Play Store suchen.</string>
 	<string name="theme_add_zip">ZIP-Datei importieren</string>
 	<string name="theme_add_zip_desc">Eine .zip-Designdatei von Ihrem Gerät importieren.</string>
 	<string name="theme_add_create">Eigenes Design erstellen</string>
 	<string name="theme_add_create_desc">Erfahren Sie, wie Sie ein eigenes Design erstellen.</string>
+	<string name="theme_apk_deprecated">APK-basierte Designs werden nicht mehr unterstützt. Bitte verwenden Sie stattdessen ZIP-Designs.</string>
 	<string name="theme_type_builtin">Integriert</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

@@ -21,8 +21,6 @@
 		tools:ignore="ScopedStorage" />
 
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
-	<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-		tools:ignore="QueryAllPackagesPermission" />
 
 	<application
 		android:name=".BaseApplication"

@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Hapus Tema</string>
 	<string name="theme_delete_confirm">Hapus \"%s\"?</string>
 	<string name="theme_add_title">Tambah Tema</string>
-	<string name="theme_add_store">Cari di Play Store</string>
-	<string name="theme_add_store_desc">Cari aplikasi tema di Google Play Store.</string>
 	<string name="theme_add_zip">Impor file ZIP</string>
 	<string name="theme_add_zip_desc">Impor file tema .zip dari perangkat Anda.</string>
 	<string name="theme_add_create">Buat tema sendiri</string>
 	<string name="theme_add_create_desc">Pelajari cara membuat tema kustom.</string>
+	<string name="theme_apk_deprecated">Tema berbasis APK tidak lagi didukung. Silakan gunakan tema ZIP sebagai gantinya.</string>
 	<string name="theme_type_builtin">Bawaan</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

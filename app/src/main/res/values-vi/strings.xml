@@ -135,15 +135,13 @@
 	<string name="theme_delete_title">Xóa Giao diện</string>
 	<string name="theme_delete_confirm">Xóa \"%s\"?</string>
 	<string name="theme_add_title">Thêm Giao Diện</string>
-	<string name="theme_add_store">Tìm trên Play Store</string>
-	<string name="theme_add_store_desc">Tìm ứng dụng giao diện trên Google Play Store.</string>
 	<string name="theme_add_zip">Nhập file ZIP</string>
 	<string name="theme_add_zip_desc">Nhập file giao diện .zip từ thiết bị của bạn.</string>
 	<string name="theme_add_create">Tạo giao diện riêng</string>
 	<string name="theme_add_create_desc">Tìm hiểu cách tạo giao diện tùy chỉnh.</string>
+	<string name="theme_apk_deprecated">Giao diện dạng APK không còn được hỗ trợ. Vui lòng sử dụng giao diện ZIP thay thế.</string>
 	<string name="theme_type_builtin">Tích hợp</string>
 	<string name="theme_type_zip">ZIP</string>
-	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

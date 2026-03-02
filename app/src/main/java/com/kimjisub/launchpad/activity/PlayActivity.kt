@@ -5,6 +5,7 @@ import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import android.media.AudioManager
 import android.net.Uri
@@ -27,6 +28,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +41,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,11 +51,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -312,7 +318,7 @@ class PlayActivity : BaseActivity() {
 			)
 			Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
 				if (vm.optionViewVisible) {
-					OptionPanel(modifier = Modifier.align(Alignment.CenterStart))
+					SideCheckPanel(modifier = Modifier.align(Alignment.CenterStart))
 				}
 				// Custom layout that centers pads independently and positions chains relative to pads
 				// Replicates the old RelativeLayout behavior where pads were layout_centerHorizontal/Vertical
@@ -358,11 +364,16 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 			}
-			AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(500))) {
-				Box(modifier = Modifier.fillMaxSize().background(colorResource(R.color.overlay_play_dim)).clickable { vm.toggleOptionWindow(false) })
+			AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+				Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable { vm.toggleOptionWindow(false) })
 			}
-			AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(500)), modifier = Modifier.align(Alignment.Center)) {
-				OptionWindow()
+			AnimatedVisibility(
+				visible = vm.isOptionWindowVisible,
+				enter = slideInHorizontally(tween(300)) { it },
+				exit = slideOutHorizontally(tween(250)) { it },
+				modifier = Modifier.align(Alignment.CenterEnd),
+			) {
+				OptionPanel()
 			}
 
 			// Sound loading overlay
@@ -420,7 +431,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun OptionPanel(modifier: Modifier = Modifier) {
+	private fun SideCheckPanel(modifier: Modifier = Modifier) {
 		val cbColor = theme?.checkbox?.let { Color(it) } ?: colorResource(R.color.checkbox)
 		Column(modifier = modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
 			Column {
@@ -445,118 +456,136 @@ class PlayActivity : BaseActivity() {
 				drawStopIndicator = {},
 			)
 			Row {
-				DrawableButton(theme?.xmlPrev, stringResource(string.cd_autoplay_prev)) { vm.autoPlayPrev() }
+				DrawableButton(ResourcesCompat.getDrawable(resources, R.drawable.xml_prev, null), stringResource(string.cd_autoplay_prev)) { vm.autoPlayPrev() }
 				DrawableButton(
-					if (vm.isAutoPlayPlaying) theme?.xmlPause else theme?.xmlPlay,
+					ResourcesCompat.getDrawable(resources, if (vm.isAutoPlayPlaying) R.drawable.xml_pause else R.drawable.xml_play, null),
 					stringResource(if (vm.isAutoPlayPlaying) string.cd_autoplay_pause else string.cd_autoplay_play)
 				) { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayStop() else vm.autoPlayPlay() }
-				DrawableButton(theme?.xmlNext, stringResource(string.cd_autoplay_next)) { vm.autoPlayNext() }
+				DrawableButton(ResourcesCompat.getDrawable(resources, R.drawable.xml_next, null), stringResource(string.cd_autoplay_next)) { vm.autoPlayNext() }
 			}
 		}
 	}
 
 	@Composable
-	private fun OptionWindow() {
-		val owBg = theme?.optionWindow?.let { Color(it) } ?: colorResource(R.color.option_window)
-		val owCbColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: colorResource(R.color.option_window_checkbox)
-		val sectionTitleColor = owCbColor.copy(alpha = 0.5f)
+	private fun OptionPanel() {
+		val panelBg = Color(0xF0161E2B)
+		val accentColor = Color(0xFFE8A44A)
+		val textColor = Color.White
+		val sectionColor = textColor.copy(alpha = 0.4f)
 
 		Column(
 			modifier = Modifier
-				.width(360.dp)
-				.background(owBg, RoundedCornerShape(12.dp))
-				.padding(top = 20.dp, bottom = 12.dp, start = 4.dp, end = 4.dp),
+				.fillMaxHeight()
+				.width(280.dp)
+				.background(panelBg)
+				.verticalScroll(rememberScrollState())
+				.padding(vertical = 24.dp),
 		) {
 			// Title
 			Text(
-				text = stringResource(string.setting),
-				color = owCbColor,
-				fontSize = 18.sp,
-				modifier = Modifier.padding(start = 16.dp, bottom = 12.dp),
+				text = stringResource(string.menu),
+				color = textColor,
+				fontSize = 22.sp,
+				modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
 			)
 
-			// Two-column options
-			Row(modifier = Modifier.padding(horizontal = 4.dp)) {
-				// Left: Performance
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = "Performance",
-						color = sectionTitleColor,
-						fontSize = 11.sp,
-						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
-					)
-					PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, owCbColor)
-					PlayCheckBox(vm.scbLed, string.led, owCbColor)
-					PlayCheckBox(vm.scbAutoPlay, string.autoPlay, owCbColor)
-				}
-				// Right: Display
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = "Display",
-						color = sectionTitleColor,
-						fontSize = 11.sp,
-						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
-					)
-					PlayCheckBox(vm.scbHideUI, string.hideUI, owCbColor)
-					PlayCheckBox(vm.scbWatermark, string.watermark, owCbColor)
-					PlayCheckBox(vm.scbProLightMode, string.proLightMode, owCbColor)
-				}
-			}
+			Spacer(modifier = Modifier.height(16.dp))
 
-			// Divider
-			Box(
-				modifier = Modifier
-					.padding(horizontal = 16.dp, vertical = 8.dp)
-					.fillMaxWidth()
-					.height(1.dp)
-					.background(owCbColor.copy(alpha = 0.15f)),
-			)
+			// Performance section
+			SectionTitle("Performance", sectionColor)
+			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, accentColor)
+			OptionSwitch(vm.scbLed, string.led, textColor, accentColor)
+			OptionSwitch(vm.scbAutoPlay, string.autoPlay, textColor, accentColor)
 
-			// Tools
-			Row(modifier = Modifier.padding(horizontal = 4.dp)) {
-				Column(modifier = Modifier.weight(1f)) {
-					Text(
-						text = "Tools",
-						color = sectionTitleColor,
-						fontSize = 11.sp,
-						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
-					)
-					PlayCheckBox(vm.scbTraceLog, string.traceLog, owCbColor, hasLongClick = true)
-					PlayCheckBox(vm.scbRecord, string.record, owCbColor)
-				}
-				androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
-			}
+			Spacer(modifier = Modifier.height(16.dp))
 
-			// Divider
-			Box(
-				modifier = Modifier
-					.padding(horizontal = 16.dp, vertical = 8.dp)
-					.fillMaxWidth()
-					.height(1.dp)
-					.background(owCbColor.copy(alpha = 0.15f)),
-			)
+			// Display section
+			SectionTitle("Display", sectionColor)
+			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, accentColor)
+			OptionSwitch(vm.scbWatermark, string.watermark, textColor, accentColor)
+			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, accentColor)
+
+			Spacer(modifier = Modifier.height(16.dp))
+
+			// Tools section
+			SectionTitle("Tools", sectionColor)
+			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, accentColor, hasLongClick = true)
+			OptionSwitch(vm.scbRecord, string.record, textColor, accentColor)
+
+			Spacer(modifier = Modifier.weight(1f))
 
 			// Quit button
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
 					.clickable { finish() }
-					.padding(horizontal = 16.dp, vertical = 8.dp),
+					.padding(horizontal = 24.dp, vertical = 16.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
 				Icon(
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
-					tint = owCbColor,
+					tint = Color(0xFFFF6B6B),
 					modifier = Modifier.size(20.dp),
 				)
+				Spacer(modifier = Modifier.width(12.dp))
 				Text(
 					text = stringResource(string.quit),
-					color = owCbColor,
-					fontSize = 14.sp,
-					modifier = Modifier.padding(start = 8.dp),
+					color = Color(0xFFFF6B6B),
+					fontSize = 15.sp,
 				)
 			}
+		}
+	}
+
+	@Composable
+	private fun SectionTitle(title: String, color: Color) {
+		Text(
+			text = title.uppercase(),
+			color = color,
+			fontSize = 11.sp,
+			letterSpacing = 1.sp,
+			modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+		)
+	}
+
+	@OptIn(ExperimentalFoundationApi::class)
+	@Composable
+	private fun OptionSwitch(state: CheckBoxState, textResId: Int, textColor: Color, accentColor: Color, hasLongClick: Boolean = false) {
+		if (!state.visible) return
+		val alpha = if (state.locked) LOCKED_ALPHA else 1f
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.alpha(alpha)
+				.then(
+					if (!state.locked) {
+						if (hasLongClick && state.onLongClick != null)
+							Modifier.combinedClickable(onClick = { state.toggleChecked() }, onLongClick = state.onLongClick)
+						else
+							Modifier.clickable { state.toggleChecked() }
+					} else Modifier
+				)
+				.padding(horizontal = 24.dp, vertical = 10.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Text(
+				text = stringResource(textResId),
+				color = textColor,
+				fontSize = 14.sp,
+				modifier = Modifier.weight(1f),
+			)
+			Switch(
+				checked = state.checked,
+				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
+				colors = SwitchDefaults.colors(
+					checkedThumbColor = Color.White,
+					checkedTrackColor = accentColor,
+					uncheckedThumbColor = Color.White.copy(alpha = 0.7f),
+					uncheckedTrackColor = Color.White.copy(alpha = 0.1f),
+					uncheckedBorderColor = Color.White.copy(alpha = 0.2f),
+				),
+			)
 		}
 	}
 
@@ -575,15 +604,23 @@ class PlayActivity : BaseActivity() {
 						else
 							Modifier.clickable { state.toggleChecked() }
 					} else Modifier
-				),
-			verticalAlignment = Alignment.CenterVertically
+				)
+				.padding(horizontal = 4.dp, vertical = 2.dp),
+			verticalAlignment = Alignment.CenterVertically,
 		) {
-			Checkbox(
+			Switch(
 				checked = state.checked,
 				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
-				colors = CheckboxDefaults.colors(checkedColor = color, uncheckedColor = color.copy(alpha = 0.7f), checkmarkColor = Color.Black)
+				colors = SwitchDefaults.colors(
+					checkedThumbColor = Color.White,
+					checkedTrackColor = color,
+					uncheckedThumbColor = color.copy(alpha = 0.5f),
+					uncheckedTrackColor = Color.Transparent,
+					uncheckedBorderColor = color.copy(alpha = 0.3f),
+				),
+				modifier = Modifier.size(width = 40.dp, height = 24.dp).padding(end = 6.dp),
 			)
-			Text(text = stringResource(textResId), color = color)
+			Text(text = stringResource(textResId), color = color, fontSize = 13.sp)
 		}
 	}
 
