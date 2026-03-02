@@ -30,6 +30,7 @@ proguard/
 # .idea/
 .idea/*.*
 .idea/caches/
+.idea/dictionaries/
 .idea/libraries/
 .idea/modules/
 *.iml
@@ -48,3 +49,13 @@ captures/
 keystore.properties
 
 app/release
+.claude/
+test_results/
+test_results_*.txt
+
+.specify/
+tasks/
+ralph.bat
+
+inspection-results/
+.mcp.json

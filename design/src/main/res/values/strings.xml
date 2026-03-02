@@ -7,13 +7,6 @@
 	<string name="MTP_size">UniPacks Size</string>
 	<string name="MPT_playCount">Play Count</string>
 	<string name="MPT_theme">Theme</string>
-	<array name="packSortMethod">
-		<item>Title</item>
-		<item>Producer</item>
-		<item>Play Count</item>
-		<item>Last Opened Date</item>
-		<item>Download Date</item>
-	</array>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Size</string>
@@ -33,9 +26,5 @@
 	<!--Store Pack Panel-->
 	<string name="SPP_downloadCount">Download count</string>
 
-	<!--File Explorer-->
-	<string name="FE_accept">Accept</string>
-	<string name="FE_folderErr">Couldn\'t read the folder.</string>
-	<string name="FE_fileErr">Couldn\'t read the file.</string>
 	<string name="mb">MB</string>
 </resources>

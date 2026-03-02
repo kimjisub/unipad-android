@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">pt-BR</string>
+	<string name="language">Portuguese (Brasil)</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Aceitar</string>
+	<string name="cancel">Cancelar</string>
+	<string name="warning">Aviso</string>
+	<string name="error">ERRO</string>
+	<string name="errOccur">Ocorreu um erro.</string>
+	<string name="wait_a_sec">Aguarde um momento…</string>
+	<string name="importing">Importando</string>
+	<string name="loading">Carregando</string>
+	<string name="download">Baixar</string>
+	<string name="downloadWaiting">Aguardando Download</string>
+	<string name="downloading">Baixando</string>
+	<string name="downloaded">Baixado</string>
+	<string name="success">Sucesso</string>
+	<string name="failed">Falhou</string>
+	<string name="delete">Excluir</string>
+	<string name="edit">Editar</string>
+	<string name="update">Atualizar</string>
+	<string name="ignore">Ignorar</string>
+	<string name="apply">Aplicar</string>
+	<string name="restart">Reiniciar</string>
+	<string name="using">Em uso</string>
+	<string name="path">Caminho</string>
+	<string name="quit">Sair</string>
+	<string name="menu">Menu</string>
+	<string name="website">Site</string>
+	<string name="measuring">Medindo…</string>
+	<string name="general">Geral</string>
+	<string name="notice">Aviso</string>
+	<string name="newUniPack">Novo UniPack</string>
+	<string name="exceptionOccurred">Ocorreu uma Exceção</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Reconectar Launchpad</string>
+	<string name="import_unipack">Importar UniPack</string>
+	<string name="store">Loja</string>
+
+	<!--Setting-->
+	<string name="setting">Configurações</string>
+	<string name="information">Informações</string>
+	<string name="select_theme">Selecionar Tema</string>
+	<string name="storage_location">Local de Armazenamento</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Licença de Código Aberto</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Comunidade</string>
+	<string name="officialHomepage">Site Oficial</string>
+	<string name="officialHomepage_">Site Oficial do UniPad</string>
+	<string name="officialFacebook">Facebook Oficial</string>
+	<string name="officialFacebook_">Suporte Técnico</string>
+	<string name="facebookCommunity">Comunidade do Facebook</string>
+	<string name="facebookCommunity_">Inglês</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Coreano</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk para Dev. kimjisub</string>
+	<string name="kakaotalk_">Exceto Suporte Técnico</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Exceto Suporte Técnico</string>
+
+	<!--UniPack Info-->
+	<string name="title">Título</string>
+	<string name="producerName">Produtor</string>
+	<string name="padSize">Tamanho do Pad</string>
+	<string name="numChain">Cadeias</string>
+	<string name="fileSize">Tamanho do Arquivo</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Reprodução Automática</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Luz de feedback</string>
+	<string name="traceLog">Registro de Sequência</string>
+	<string name="traceLogClear">O registro de sequência foi redefinido.</string>
+	<string name="record">Gravar</string>
+	<string name="hideUI">Ocultar UI</string>
+	<string name="watermark">Marca d\'água</string>
+	<string name="proLightMode">Modo Pro Light</string>
+
+	<!--Version-->
+	<string name="newVersionFound">Nova versão detectada.</string>
+
+	<string name="permissionRequire">É necessário acesso ao armazenamento externo para salvar arquivos do projeto.\nObtenha permissão para este privilégio.</string>
+	<string name="permissionDenied">O app requer acesso ao armazenamento externo.\nPor favor ative as permissões em [Configurações] > [Permissões]</string>
+	<string name="unipackNotFound">UniPack não encontrado.</string>
+	<string name="clickToAddUniPack">Clique para adicionar UniPacks.</string>
+	<string name="doYouWantToDeleteUniPack">Deseja excluir este projeto?</string>
+	<string name="remapDone">O remapeamento do AutoPlay foi concluído com sucesso.</string>
+	<string name="remapFail">AutoPlay não existe</string>
+	<string name="importComplete">Análise concluída!</string>
+	<string name="importFailed">Falha ao analisar…</string>
+	<string name="copied">Copiado para a área de transferência.</string>
+	<string name="skinMemoryErr">Falha ao aplicar o skin.\nReiniciar app.</string>
+	<string name="skinErr">Falha ao aplicar o skin.\nRedefinir skin.</string>
+
+	<string name="outOfMemory">Sem memória..\nLibere memória e tente novamente.</string>
+	<string name="outOfCPU">Não foi possível iniciar o pack\npor causa das especificações do telefone…\nTente novamente.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Conectando launchpad…</string>
+	<string name="midiDevicesNotDetected">Dispositivos MIDI Não Detectados</string>
+	<string name="signal_SpeedFirst">Velocidade primeiro</string>
+	<string name="signal_avoidAfterimage">Evitar imagem residual</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Não é possível sair durante o download do pack</string>
+	<string name="UnableToAccessServer">Não foi possível acessar o servidor.</string>
+
+	<!--Theme-->
+	<string name="theme">Tema</string>
+	<string name="themeDownload">Baixar Temas</string>
+	<string name="requireRestart">Requer reiniciar o app.</string>
+	<string name="doYouWantToRestartApp">Deseja reiniciar o app?</string>
+
+	<string name="theme_import">Importar Tema</string>
+	<string name="theme_import_success">Tema importado com sucesso.</string>
+	<string name="theme_import_failed">Falha ao importar tema.</string>
+	<string name="theme_import_invalid">Arquivo de tema inválido.</string>
+	<string name="theme_delete_title">Excluir Tema</string>
+	<string name="theme_delete_confirm">Excluir \"%s\"?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Informações</string>
+	<string name="settings_storage">Armazenamento</string>
+	<string name="settings_theme">Tema</string>
+	<string name="settings_storage_download">Armazenamento de Downloads</string>
+	<string name="settings_developer">Desenvolvedor</string>
+	<string name="settings_app">Aplicativo</string>
+	<string name="settings_user">Usuário</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">Quantidade de UniPacks</string>
+	<string name="MTP_size">Tamanho dos UniPacks</string>
+	<string name="MPT_playCount">Vezes Tocado</string>
+	<string name="MPT_theme">Tema</string>
+	<string name="sort_title">Título</string>
+	<string name="sort_producer">Produtor</string>
+	<string name="sort_play_count">Vezes Tocado</string>
+	<string name="sort_last_opened_date">Última Abertura</string>
+	<string name="sort_download_date">Data do Download</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Tamanho do Pad</string>
+	<string name="MPP_chain">Cadeia</string>
+	<string name="MPP_soundFiles">Arquivos de Som</string>
+	<string name="MPP_ledEvents">Eventos Led</string>
+	<string name="MPP_fileSize">Tamanho do Arquivo</string>
+	<string name="MPP_playCount">Vezes Tocado</string>
+	<string name="MPP_downloadedDate">Data do Download</string>
+	<string name="MPP_lastPlayed">Último Tocado</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPacks na Loja</string>
+	<string name="STP_downloadedCount">UniPacks Baixados</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Quantidade de downloads</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Site</string>
+	<string name="cd_bookmark">Favorito</string>
+	<string name="cd_delete">Excluir</string>
+	<string name="cd_logo">Logo do UniPad</string>
+	<string name="cd_autoplay_prev">Anterior</string>
+	<string name="cd_autoplay_play">Reproduzir</string>
+	<string name="cd_autoplay_pause">Pausar</string>
+	<string name="cd_autoplay_next">Próximo</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Documentos (Android 10)</string>
+	<string name="workspace_app_storage">Armazenamento do App (Recomendado)</string>
+	<string name="workspace_internal_storage">Armazenamento Interno</string>
+	<string name="workspace_internal_sd_card">Cartão SD Interno</string>
+	<string name="workspace_external_sd_card_format">Cartão SD Externo %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">Armazenamento específico do app. Sem permissão necessária. Excluído ao desinstalar o app.</string>
+	<string name="workspace_desc_documents_android10">Pasta compartilhada de Documentos. Disponível apenas no Android 10.</string>
+	<string name="workspace_desc_external_sd">Armazenamento em cartão SD externo. Portável entre dispositivos.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">Acesso necessário para verificar o conteúdo</string>
+	<string name="migration_grant_access">Conceder Acesso</string>
+	<string name="migration_same_as_source">Igual à origem</string>
+	<string name="migration_result">Resultado</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">erro do servidor\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

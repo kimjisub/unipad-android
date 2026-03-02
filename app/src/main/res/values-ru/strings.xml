@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">ru</string>
+	<string name="language">Russian</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Принять</string>
+	<string name="cancel">Отмена</string>
+	<string name="warning">Предупреждение</string>
+	<string name="error">ОШИБКА</string>
+	<string name="errOccur">Произошла ошибка.</string>
+	<string name="wait_a_sec">Подождите немного…</string>
+	<string name="importing">Импорт</string>
+	<string name="loading">Загрузка</string>
+	<string name="download">Скачать</string>
+	<string name="downloadWaiting">Ожидание загрузки</string>
+	<string name="downloading">Скачивание</string>
+	<string name="downloaded">Загружено</string>
+	<string name="success">Успешно</string>
+	<string name="failed">Ошибка</string>
+	<string name="delete">Удалить</string>
+	<string name="edit">Редактировать</string>
+	<string name="update">Обновить</string>
+	<string name="ignore">Игнорировать</string>
+	<string name="apply">Применить</string>
+	<string name="restart">Перезапустить</string>
+	<string name="using">Используется</string>
+	<string name="path">Путь</string>
+	<string name="quit">Выйти</string>
+	<string name="menu">Меню</string>
+	<string name="website">Веб-сайт</string>
+	<string name="measuring">Измерение…</string>
+	<string name="general">Общие</string>
+	<string name="notice">Уведомление</string>
+	<string name="newUniPack">Новый UniPack</string>
+	<string name="exceptionOccurred">Произошло исключение</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Переподключить Launchpad</string>
+	<string name="import_unipack">Импорт UniPack</string>
+	<string name="store">Магазин</string>
+
+	<!--Setting-->
+	<string name="setting">Настройки</string>
+	<string name="information">Информация</string>
+	<string name="select_theme">Выбрать тему</string>
+	<string name="storage_location">Расположение хранилища</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Лицензия открытого кода</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Сообщество</string>
+	<string name="officialHomepage">Официальный сайт</string>
+	<string name="officialHomepage_">Официальный сайт UniPad</string>
+	<string name="officialFacebook">Официальный Facebook</string>
+	<string name="officialFacebook_">Техническая поддержка</string>
+	<string name="facebookCommunity">Сообщество Facebook</string>
+	<string name="facebookCommunity_">Английский</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Корейский</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk разработчику kimjisub</string>
+	<string name="kakaotalk_">Кроме технической поддержки</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Кроме технической поддержки</string>
+
+	<!--UniPack Info-->
+	<string name="title">Название</string>
+	<string name="producerName">Создатель</string>
+	<string name="padSize">Размер пэда</string>
+	<string name="numChain">Цепочки</string>
+	<string name="fileSize">Размер файла</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Автовоспроизведение</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Подсветка отклика</string>
+	<string name="traceLog">Журнал действий</string>
+	<string name="traceLogClear">Журнал действий сброшен.</string>
+	<string name="record">Запись</string>
+	<string name="hideUI">Скрыть UI</string>
+	<string name="watermark">Водяной знак</string>
+	<string name="proLightMode">Режим Pro Light</string>
+
+	<!--Version-->
+	<string name="newVersionFound">Обнаружена новая версия.</string>
+
+	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
+	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>
+	<string name="unipackNotFound">UniPack не найден.</string>
+	<string name="clickToAddUniPack">Нажмите, чтобы добавить UniPack.</string>
+	<string name="doYouWantToDeleteUniPack">Вы хотите удалить этот проект?</string>
+	<string name="remapDone">Переназначение AutoPlay успешно завершено.</string>
+	<string name="remapFail">AutoPlay отсутствует</string>
+	<string name="importComplete">Анализ завершён!</string>
+	<string name="importFailed">Ошибка анализа…</string>
+	<string name="copied">Скопировано в буфер обмена.</string>
+	<string name="skinMemoryErr">Не удалось применить скин.\nПерезапустите приложение.</string>
+	<string name="skinErr">Не удалось применить скин.\nСбросить скин.</string>
+
+	<string name="outOfMemory">Недостаточно памяти..\nОсвободите память и повторите.</string>
+	<string name="outOfCPU">Не удалось запустить пак\nиз-за характеристик телефона…\nПопробуйте снова.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Подключение launchpad…</string>
+	<string name="midiDevicesNotDetected">MIDI устройства не обнаружены</string>
+	<string name="signal_SpeedFirst">Приоритет скорости</string>
+	<string name="signal_avoidAfterimage">Избежать послесвечения</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Нельзя выйти во время загрузки пака</string>
+	<string name="UnableToAccessServer">Не удаётся подключиться к серверу.</string>
+
+	<!--Theme-->
+	<string name="theme">Тема</string>
+	<string name="themeDownload">Скачать темы</string>
+	<string name="requireRestart">Требуется перезапуск приложения.</string>
+	<string name="doYouWantToRestartApp">Хотите перезапустить приложение?</string>
+
+	<string name="theme_import">Импорт темы</string>
+	<string name="theme_import_success">Тема успешно импортирована.</string>
+	<string name="theme_import_failed">Не удалось импортировать тему.</string>
+	<string name="theme_import_invalid">Недопустимый файл темы.</string>
+	<string name="theme_delete_title">Удалить тему</string>
+	<string name="theme_delete_confirm">Удалить \"%s\"?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Информация</string>
+	<string name="settings_storage">Хранилище</string>
+	<string name="settings_theme">Тема</string>
+	<string name="settings_storage_download">Хранилище загрузок</string>
+	<string name="settings_developer">Разработчик</string>
+	<string name="settings_app">Приложение</string>
+	<string name="settings_user">Пользователь</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td.%1$tm.%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">Количество UniPack</string>
+	<string name="MTP_size">Размер UniPack</string>
+	<string name="MPT_playCount">Количество игр</string>
+	<string name="MPT_theme">Тема</string>
+	<string name="sort_title">Название</string>
+	<string name="sort_producer">Создатель</string>
+	<string name="sort_play_count">Количество игр</string>
+	<string name="sort_last_opened_date">Последнее открытие</string>
+	<string name="sort_download_date">Дата загрузки</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Размер пэда</string>
+	<string name="MPP_chain">Цепочка</string>
+	<string name="MPP_soundFiles">Звуковые файлы</string>
+	<string name="MPP_ledEvents">События Led</string>
+	<string name="MPP_fileSize">Размер файла</string>
+	<string name="MPP_playCount">Количество игр</string>
+	<string name="MPP_downloadedDate">Дата загрузки</string>
+	<string name="MPP_lastPlayed">Последняя игра</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPack в магазине</string>
+	<string name="STP_downloadedCount">Загруженные UniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Количество загрузок</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Веб-сайт</string>
+	<string name="cd_bookmark">Закладка</string>
+	<string name="cd_delete">Удалить</string>
+	<string name="cd_logo">Логотип UniPad</string>
+	<string name="cd_autoplay_prev">Предыдущий</string>
+	<string name="cd_autoplay_play">Воспроизвести</string>
+	<string name="cd_autoplay_pause">Пауза</string>
+	<string name="cd_autoplay_next">Следующий</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Документы (Android 10)</string>
+	<string name="workspace_app_storage">Хранилище приложения (Рекомендуется)</string>
+	<string name="workspace_internal_storage">Внутреннее хранилище</string>
+	<string name="workspace_internal_sd_card">Внутренняя SD-карта</string>
+	<string name="workspace_external_sd_card_format">Внешняя SD-карта %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">Хранилище приложения. Разрешение не требуется. Удаляется при удалении приложения.</string>
+	<string name="workspace_desc_documents_android10">Общая папка Документы. Доступна только на Android 10.</string>
+	<string name="workspace_desc_external_sd">Хранилище внешней SD-карты. Переносимое между устройствами.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">Требуется доступ для проверки содержимого</string>
+	<string name="migration_grant_access">Предоставить доступ</string>
+	<string name="migration_same_as_source">Совпадает с источником</string>
+	<string name="migration_result">Результат</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">ошибка сервера\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

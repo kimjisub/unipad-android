@@ -1,0 +1,30 @@
+<resources>
+	<!--String Format-->
+	<string name="date_format">%1$tY-%1$tm-%1$td</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPacks 数量</string>
+	<string name="MTP_size">UniPacks 大小</string>
+	<string name="MPT_playCount">演奏次数</string>
+	<string name="MPT_theme">主题</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">按键矩阵大小</string>
+	<string name="MPP_chain">页数</string>
+	<string name="MPP_soundFiles">采样数量</string>
+	<string name="MPP_ledEvents">灯光数量</string>
+	<string name="MPP_fileSize">文件大小</string>
+	<string name="MPP_playCount">演奏次数</string>
+	<string name="MPP_downloadedDate">下载日期</string>
+	<string name="MPP_lastPlayed">最后播放</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">商店 UniPacks</string>
+	<string name="STP_downloadedCount">已下载的 UniPacks</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">下载量</string>
+
+	<string name="mb">MB</string>
+</resources>

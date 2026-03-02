@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">th</string>
+	<string name="language">Thai</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">ยอมรับ</string>
+	<string name="cancel">ยกเลิก</string>
+	<string name="warning">คำเตือน</string>
+	<string name="error">ข้อผิดพลาด</string>
+	<string name="errOccur">เกิดข้อผิดพลาด</string>
+	<string name="wait_a_sec">กรุณารอสักครู่…</string>
+	<string name="importing">กำลังนำเข้า</string>
+	<string name="loading">กำลังโหลด</string>
+	<string name="download">ดาวน์โหลด</string>
+	<string name="downloadWaiting">รอดาวน์โหลด</string>
+	<string name="downloading">กำลังดาวน์โหลด</string>
+	<string name="downloaded">ดาวน์โหลดแล้ว</string>
+	<string name="success">สำเร็จ</string>
+	<string name="failed">ล้มเหลว</string>
+	<string name="delete">ลบ</string>
+	<string name="edit">แก้ไข</string>
+	<string name="update">อัปเดต</string>
+	<string name="ignore">ข้าม</string>
+	<string name="apply">ใช้งาน</string>
+	<string name="restart">เริ่มใหม่</string>
+	<string name="using">ใช้งานอยู่</string>
+	<string name="path">เส้นทาง</string>
+	<string name="quit">ออก</string>
+	<string name="menu">เมนู</string>
+	<string name="website">เว็บไซต์</string>
+	<string name="measuring">กำลังวัด…</string>
+	<string name="general">ทั่วไป</string>
+	<string name="notice">ประกาศ</string>
+	<string name="newUniPack">UniPack ใหม่</string>
+	<string name="exceptionOccurred">เกิดข้อยกเว้น</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">เชื่อมต่อ Launchpad ใหม่</string>
+	<string name="import_unipack">นำเข้า UniPack</string>
+	<string name="store">ร้านค้า</string>
+
+	<!--Setting-->
+	<string name="setting">ตั้งค่า</string>
+	<string name="information">ข้อมูล</string>
+	<string name="select_theme">เลือกธีม</string>
+	<string name="storage_location">ตำแหน่งจัดเก็บ</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">สัญญาอนุญาตโอเพนซอร์ส</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">ชุมชน</string>
+	<string name="officialHomepage">เว็บไซต์ทางการ</string>
+	<string name="officialHomepage_">เว็บไซต์ทางการ UniPad</string>
+	<string name="officialFacebook">Facebook ทางการ</string>
+	<string name="officialFacebook_">สนับสนุนด้านเทคนิค</string>
+	<string name="facebookCommunity">ชุมชน Facebook</string>
+	<string name="facebookCommunity_">อังกฤษ</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">เกาหลี</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk ถึง Dev. kimjisub</string>
+	<string name="kakaotalk_">นอกเหนือจากการสนับสนุนด้านเทคนิค</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">นอกเหนือจากการสนับสนุนด้านเทคนิค</string>
+
+	<!--UniPack Info-->
+	<string name="title">ชื่อ</string>
+	<string name="producerName">ผู้ผลิต</string>
+	<string name="padSize">ขนาด Pad</string>
+	<string name="numChain">Chain</string>
+	<string name="fileSize">ขนาดไฟล์</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">เล่นอัตโนมัติ</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">ไฟตอบสนอง</string>
+	<string name="traceLog">บันทึกการติดตาม</string>
+	<string name="traceLogClear">บันทึกการติดตามถูกรีเซ็ตแล้ว</string>
+	<string name="record">บันทึก</string>
+	<string name="hideUI">ซ่อน UI</string>
+	<string name="watermark">ลายน้ำ</string>
+	<string name="proLightMode">โหมด Pro Light</string>
+
+	<!--Version-->
+	<string name="newVersionFound">พบเวอร์ชันใหม่</string>
+
+	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
+	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>
+	<string name="unipackNotFound">ไม่พบ UniPack</string>
+	<string name="clickToAddUniPack">คลิกเพื่อเพิ่ม UniPack</string>
+	<string name="doYouWantToDeleteUniPack">คุณต้องการลบโปรเจกต์นี้หรือไม่?</string>
+	<string name="remapDone">การแมปใหม่ AutoPlay เสร็จสมบูรณ์</string>
+	<string name="remapFail">ไม่มี AutoPlay</string>
+	<string name="importComplete">วิเคราะห์เสร็จสิ้น!</string>
+	<string name="importFailed">วิเคราะห์ล้มเหลว…</string>
+	<string name="copied">คัดลอกไปยังคลิปบอร์ดแล้ว</string>
+	<string name="skinMemoryErr">ไม่สามารถใช้สกินได้\nเริ่มแอปใหม่</string>
+	<string name="skinErr">ไม่สามารถใช้สกินได้\nรีเซ็ตสกิน</string>
+
+	<string name="outOfMemory">หน่วยความจำไม่เพียงพอ..\nกรุณาเคลียร์หน่วยความจำแล้วลองใหม่</string>
+	<string name="outOfCPU">ไม่สามารถเริ่ม pack ได้\nเนื่องจากสเปคโทรศัพท์…\nลองใหม่อีกครั้ง</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">กำลังเชื่อมต่อ launchpad…</string>
+	<string name="midiDevicesNotDetected">ไม่พบอุปกรณ์ MIDI</string>
+	<string name="signal_SpeedFirst">ความเร็วก่อน</string>
+	<string name="signal_avoidAfterimage">หลีกเลี่ยงภาพค้าง</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">ไม่สามารถออกขณะกำลังดาวน์โหลด pack</string>
+	<string name="UnableToAccessServer">ไม่สามารถเข้าถึงเซิร์ฟเวอร์</string>
+
+	<!--Theme-->
+	<string name="theme">ธีม</string>
+	<string name="themeDownload">ดาวน์โหลดธีม</string>
+	<string name="requireRestart">ต้องเริ่มแอปใหม่</string>
+	<string name="doYouWantToRestartApp">คุณต้องการเริ่มแอปใหม่หรือไม่?</string>
+
+	<string name="theme_import">นำเข้าธีม</string>
+	<string name="theme_import_success">นำเข้าธีมสำเร็จ</string>
+	<string name="theme_import_failed">นำเข้าธีมล้มเหลว</string>
+	<string name="theme_import_invalid">ไฟล์ธีมไม่ถูกต้อง</string>
+	<string name="theme_delete_title">ลบธีม</string>
+	<string name="theme_delete_confirm">ลบ \"%s\" หรือไม่?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">ข้อมูล</string>
+	<string name="settings_storage">พื้นที่จัดเก็บ</string>
+	<string name="settings_theme">ธีม</string>
+	<string name="settings_storage_download">พื้นที่จัดเก็บดาวน์โหลด</string>
+	<string name="settings_developer">นักพัฒนา</string>
+	<string name="settings_app">แอปพลิเคชัน</string>
+	<string name="settings_user">ผู้ใช้</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">จำนวน UniPack</string>
+	<string name="MTP_size">ขนาด UniPack</string>
+	<string name="MPT_playCount">จำนวนครั้งที่เล่น</string>
+	<string name="MPT_theme">ธีม</string>
+	<string name="sort_title">ชื่อ</string>
+	<string name="sort_producer">ผู้ผลิต</string>
+	<string name="sort_play_count">จำนวนครั้งที่เล่น</string>
+	<string name="sort_last_opened_date">เปิดล่าสุด</string>
+	<string name="sort_download_date">วันที่ดาวน์โหลด</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">ขนาด Pad</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">ไฟล์เสียง</string>
+	<string name="MPP_ledEvents">เหตุการณ์ Led</string>
+	<string name="MPP_fileSize">ขนาดไฟล์</string>
+	<string name="MPP_playCount">จำนวนครั้งที่เล่น</string>
+	<string name="MPP_downloadedDate">วันที่ดาวน์โหลด</string>
+	<string name="MPP_lastPlayed">เล่นล่าสุด</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPack ในร้านค้า</string>
+	<string name="STP_downloadedCount">UniPack ที่ดาวน์โหลด</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">จำนวนดาวน์โหลด</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">เว็บไซต์</string>
+	<string name="cd_bookmark">บุ๊กมาร์ก</string>
+	<string name="cd_delete">ลบ</string>
+	<string name="cd_logo">โลโก้ UniPad</string>
+	<string name="cd_autoplay_prev">ก่อนหน้า</string>
+	<string name="cd_autoplay_play">เล่น</string>
+	<string name="cd_autoplay_pause">หยุดชั่วคราว</string>
+	<string name="cd_autoplay_next">ถัดไป</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">เอกสาร (Android 10)</string>
+	<string name="workspace_app_storage">พื้นที่แอป (แนะนำ)</string>
+	<string name="workspace_internal_storage">พื้นที่จัดเก็บภายใน</string>
+	<string name="workspace_internal_sd_card">SD Card ภายใน</string>
+	<string name="workspace_external_sd_card_format">SD Card ภายนอก %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">พื้นที่จัดเก็บเฉพาะแอป ไม่ต้องขอสิทธิ์ จะถูกลบเมื่อถอนการติดตั้งแอป</string>
+	<string name="workspace_desc_documents_android10">โฟลเดอร์เอกสารที่ใช้ร่วมกัน ใช้ได้เฉพาะบน Android 10</string>
+	<string name="workspace_desc_external_sd">พื้นที่จัดเก็บบน SD Card ภายนอก สามารถย้ายระหว่างอุปกรณ์ได้</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">ต้องการสิทธิ์เข้าถึงเพื่อตรวจสอบเนื้อหา</string>
+	<string name="migration_grant_access">ให้สิทธิ์เข้าถึง</string>
+	<string name="migration_same_as_source">เหมือนกับต้นทาง</string>
+	<string name="migration_result">ผลลัพธ์</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">ข้อผิดพลาดเซิร์ฟเวอร์\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

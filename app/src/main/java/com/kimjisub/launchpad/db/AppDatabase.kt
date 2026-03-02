@@ -15,22 +15,19 @@ abstract class AppDatabase : RoomDatabase() {
 	abstract fun unipackDAO(): UnipackDao
 
 	companion object {
+		private const val DATABASE_NAME = "UniPad.db"
+		@Volatile
 		private var INSTANCE: AppDatabase? = null
 
-		fun getInstance(context: Context): AppDatabase? {
-			if (INSTANCE == null) {
-				synchronized(AppDatabase::class) {
-					INSTANCE = Room.databaseBuilder(
-						context.applicationContext,
-						AppDatabase::class.java, "UniPad.db"
-					).fallbackToDestructiveMigration().build()
+		fun getInstance(context: Context): AppDatabase {
+			return INSTANCE ?: synchronized(this) {
+				INSTANCE ?: Room.databaseBuilder(
+					context.applicationContext,
+					AppDatabase::class.java, DATABASE_NAME
+				).fallbackToDestructiveMigration(dropAllTables = true).build().also {
+					INSTANCE = it
 				}
 			}
-			return INSTANCE
-		}
-
-		fun destroyInstance() {
-			INSTANCE = null
 		}
 	}
 }

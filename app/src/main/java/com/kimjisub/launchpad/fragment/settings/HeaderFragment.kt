@@ -6,9 +6,9 @@ import androidx.preference.PreferenceFragmentCompat
 import com.kimjisub.launchpad.R
 
 class HeaderFragment(val callback: (Category) -> Unit) : PreferenceFragmentCompat() {
-	private val infoPreference: Preference by lazy { findPreference("info")!! }
-	private val storagePreference: Preference by lazy { findPreference("storage")!! }
-	private val themePreference: Preference by lazy { findPreference("theme")!! }
+	private val infoPreference: Preference by lazy { checkNotNull(findPreference("info")) }
+	private val storagePreference: Preference by lazy { checkNotNull(findPreference("storage")) }
+	private val themePreference: Preference by lazy { checkNotNull(findPreference("theme")) }
 
 	private val preferences by lazy {
 		arrayOf(infoPreference, storagePreference, themePreference)

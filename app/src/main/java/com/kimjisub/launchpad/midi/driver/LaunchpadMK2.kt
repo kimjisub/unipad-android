@@ -44,10 +44,10 @@ class LaunchpadMK2 : DriverRef() {
 
 	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLed(c + 8, velocity)
+			sendFunctionKeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
+	override fun sendFunctionKeyLed(f: Int, velocity: Int) {
 		if (f in 0..15)
 			sendSignal(circleCode[f][0], circleCode[f][1], circleCode[f][2], velocity)
 	}
@@ -56,6 +56,6 @@ class LaunchpadMK2 : DriverRef() {
 		for (i in 0..7)
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
-		for (i in 0..15) sendFunctionkeyLed(i, 0)
+		for (i in 0..15) sendFunctionKeyLed(i, 0)
 	}
 }

@@ -57,12 +57,12 @@ class LaunchpadMK3 : DriverRef() {
 				onFunctionKeyTouch(c + 8, velocity != 0)
 			}
 			if (note in 1..8) {
-				onChainTouch(8 - note + 16 - 8, velocity != 0)
-				onFunctionKeyTouch(8 - note + 16, velocity != 0)
+				onChainTouch(16 - note, velocity != 0)
+				onFunctionKeyTouch(24 - note, velocity != 0)
 			}
 			if (note in 10..80 && note % 10 == 0) {
-				onChainTouch(note / 10 - 1 + 24 - 8, velocity != 0)
-				onFunctionKeyTouch(note / 10 - 1 + 24, velocity != 0)
+				onChainTouch(note / 10 + 15, velocity != 0)
+				onFunctionKeyTouch(note / 10 + 23, velocity != 0)
 			}
 		} else {
 			onUnknownReceived(cmd, sig, note, velocity)
@@ -85,10 +85,10 @@ class LaunchpadMK3 : DriverRef() {
 
 	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLed(c + 8, velocity)
+			sendFunctionKeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
+	override fun sendFunctionKeyLed(f: Int, velocity: Int) {
 		if (f in 0..31)
 			sendSignal(
 				circleCode[f][0].toByte(),
@@ -104,6 +104,6 @@ class LaunchpadMK3 : DriverRef() {
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
 		for (i in 0..31)
-			sendFunctionkeyLed(i, 0)
+			sendFunctionKeyLed(i, 0)
 	}
 }

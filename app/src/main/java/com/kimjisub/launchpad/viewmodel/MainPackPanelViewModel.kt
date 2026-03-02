@@ -1,22 +1,23 @@
+@file:Suppress("EmptyMethod") // private set on mutableStateOf generates empty setter bytecode
+
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.tool.Event
-import com.kimjisub.launchpad.tool.emit
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
-import java.lang.reflect.InvocationTargetException
 
 
 class MainPackPanelViewModel(
@@ -25,47 +26,49 @@ class MainPackPanelViewModel(
 ) : AndroidViewModel(app) {
 	private val repo: UnipackRepository by app.inject()
 
-	//val downloadedDate = Date(unipack.lastModified())
-	val soundCount = MutableLiveData<Int?>()
-	val ledCount = MutableLiveData<Int?>()
-	val fileSize = MutableLiveData<String?>()
+	var soundCount by mutableStateOf<Int?>(null)
+		private set
+	var ledCount by mutableStateOf<Int?>(null)
+		private set
+	var fileSize by mutableStateOf<String?>(null)
+		private set
 
-	//val bookmark = MutableLiveData<Boolean>()
 	val unipackEnt = repo.find(unipack.id)
 
-	val eventDelete = MutableLiveData<Event<Unit>>()
+	var deleteRequested by mutableStateOf(false)
+		private set
 
 	init {
-		CoroutineScope(Dispatchers.IO).launch {
+		viewModelScope.launch(Dispatchers.IO) {
 			repo.getOrCreate(unipack.id)
 		}
 
-		CoroutineScope(Dispatchers.IO).launch {
+		viewModelScope.launch(Dispatchers.IO) {
 			val fileSizeString =
 				FileManager.byteToMB(unipack.getByteSize()) + " MB"
 			withContext(Dispatchers.Main) {
-				fileSize.value = (fileSizeString)
+				fileSize = fileSizeString
 			}
 		}
 
 		if (unipack.detailLoaded) {
-			soundCount.value = unipack.soundCount
-			ledCount.value = unipack.ledTableCount
+			soundCount = unipack.soundCount
+			ledCount = unipack.ledTableCount
 		} else {
-			soundCount.value = null
-			ledCount.value = null
-			CoroutineScope(Dispatchers.IO).launch {
+			soundCount = null
+			ledCount = null
+			viewModelScope.launch(Dispatchers.IO) {
 				unipack.loadDetail()
 				withContext(Dispatchers.Main) {
-					soundCount.value = unipack.soundCount
-					ledCount.value = unipack.ledTableCount
+					soundCount = unipack.soundCount
+					ledCount = unipack.ledTableCount
 				}
 			}
 		}
 	}
 
 	fun bookmarkToggle() {
-		CoroutineScope(Dispatchers.IO).launch {
+		viewModelScope.launch(Dispatchers.IO) {
 			repo.toggleBookmark(unipack.id)
 		}
 	}
@@ -79,56 +82,21 @@ class MainPackPanelViewModel(
 	}
 
 	fun delete() {
-		eventDelete.emit()
+		deleteRequested = true
 	}
 
-	/*b.packPanel.onEventListener = object : MainPackPanel.OnEventListener {
-
-		override fun onFuncClick(v: View) {
-			val item = selected
-			if (item != null) AlertDialog.Builder(this@MainActivity)
-				.setTitle(getString(R.string.warning))
-				.setMessage(getString(R.string.doYouWantToRemapUniPack))
-				.setPositiveButton(getString(R.string.accept)) { _: DialogInterface?, _: Int ->
-					autoMapping(
-						item.unipack
-					)
-				}.setNegativeButton(
-					getString(R.string.cancel),
-					null
-				)
-				.show()
-		}
-
-		override fun onDeleteClick(v: View) {
-
-		}
-	}*/
+	fun clearDeleteRequest() {
+		deleteRequested = false
+	}
 
 	class Factory(
 		private val app: Application,
 		private val unipack: UniPack,
-	) : ViewModelProvider.NewInstanceFactory() {
+	) : ViewModelProvider.Factory {
 
+		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			if (ViewModel::class.java.isAssignableFrom(modelClass)) {
-				try {
-					return modelClass.getConstructor(
-						Application::class.java,
-						UniPack::class.java
-					)
-						.newInstance(app, unipack)
-				} catch (e: NoSuchMethodException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: IllegalAccessException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: InstantiationException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: InvocationTargetException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				}
-			}
-			return super.create(modelClass)
+			return MainPackPanelViewModel(app, unipack) as T
 		}
 	}
 }

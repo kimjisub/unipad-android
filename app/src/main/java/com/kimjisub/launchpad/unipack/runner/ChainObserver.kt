@@ -1,7 +1,7 @@
 package com.kimjisub.launchpad.unipack.runner
 
 class ChainObserver {
-	var range: IntRange = Integer.MIN_VALUE..Integer.MAX_VALUE
+	var range: IntRange = Int.MIN_VALUE..Int.MAX_VALUE
 	var value: Int = 0
 		set(value) {
 			val realValue =
@@ -16,7 +16,7 @@ class ChainObserver {
 			refresh(field, prev)
 		}
 
-	private val observerList: ArrayList<(curr: Int, prev: Int) -> Unit> = ArrayList()
+	private val observerList: MutableList<(curr: Int, prev: Int) -> Unit> = mutableListOf()
 
 	fun refresh(curr: Int = value, prev: Int = value) {
 		for (observer in observerList)

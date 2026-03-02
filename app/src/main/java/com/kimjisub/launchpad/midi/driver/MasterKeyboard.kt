@@ -1,8 +1,6 @@
 package com.kimjisub.launchpad.midi.driver
 
 class MasterKeyboard : DriverRef() {
-	companion object;
-
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		val x: Int
 		val y: Int
@@ -31,6 +29,6 @@ class MasterKeyboard : DriverRef() {
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {}
 	override fun sendChainLed(c: Int, velocity: Int) {}
-	override fun sendFunctionkeyLed(f: Int, velocity: Int) {}
+	override fun sendFunctionKeyLed(f: Int, velocity: Int) {}
 	override fun sendClearLed() {}
 }

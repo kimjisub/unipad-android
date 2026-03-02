@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.tool
 
 import android.app.PendingIntent
+import android.os.SystemClock
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
@@ -19,6 +20,7 @@ import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 
 class UniPackDownloader(
 	private val context: Context,
@@ -28,7 +30,14 @@ class UniPackDownloader(
 	folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
+	scope: CoroutineScope,
 ) {
+	companion object {
+		private const val DOWNLOAD_BUFFER_SIZE = 1024
+		private const val PROGRESS_UPDATE_INTERVAL_MS = 20
+		private const val PERCENT_MULTIPLIER = 100
+	}
+
 	interface Listener {
 		fun onInstallStart()
 		fun onGetFileSize(fileSize: Long, contentLength: Long, preKnownFileSize: Long)
@@ -44,7 +53,7 @@ class UniPackDownloader(
 
 	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
 
-	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
+	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
 		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
@@ -61,23 +70,24 @@ class UniPackDownloader(
 					context,
 					1,
 					intent,
-					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 				)
 			setContentIntent(pIntent)
 		}
 		builder
 	}
 
-	val contentResolver = context.contentResolver
+	val contentResolver: android.content.ContentResolver = context.contentResolver
 
 
 	init {
-		CoroutineScope(Dispatchers.IO).launch {
+		scope.launch(Dispatchers.IO) {
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val call = FileApi.service.download(url)
-				val responseBody = call.execute().body()!!
+				val responseBody = call.execute().body()
+				?: throw IOException("Empty response body")
 				val contentLength = responseBody.contentLength()
 				val fileSize = contentLength.coerceAtLeast(preKnownFileSize)
 				withContext(Dispatchers.Main) {
@@ -90,58 +100,57 @@ class UniPackDownloader(
 
 				contentResolver.openFileDescriptor(unipackFile.toUri(), "w")?.use {
 					FileOutputStream(it.fileDescriptor).use { outputStream ->
-						val inputStream = responseBody.byteStream()
+						responseBody.byteStream().use { inputStream ->
+							val buf = ByteArray(DOWNLOAD_BUFFER_SIZE)
+							var downloadedSize = 0L
+							var n: Int
+							var prevPercent = -1
+							var prevMillis = SystemClock.elapsedRealtime()
+							while (true) {
+								n = inputStream.read(buf)
+								if (n == -1)
+									break
 
-						//val outputStream = contentResolver.openOutputStream(unipackFile.toUri())!!
-						val buf = ByteArray(1024)
-						var downloadedSize = 0L
-						var n: Int
-						var prevPercent: Int = -1
-						var prevMillis = System.currentTimeMillis()
-						while (true) {
-							n = inputStream.read(buf)
-							if (n == -1)
-								break
-
-							outputStream.write(buf, 0, n)
-							downloadedSize += n.toLong()
-							val millis = System.currentTimeMillis()
-							if (millis - prevMillis > 20) {
-								val percent = (downloadedSize.toFloat() / fileSize * 100).toInt()
-								withContext(Dispatchers.Main) {
-									onDownloadProgress(
-										percent,
-										downloadedSize,
-										fileSize
-									)
-								}
-								prevMillis = millis
-
-								if (prevPercent != percent) {
+								outputStream.write(buf, 0, n)
+								downloadedSize += n.toLong()
+								val millis = SystemClock.elapsedRealtime()
+								if (millis - prevMillis > PROGRESS_UPDATE_INTERVAL_MS) {
+									val percent = (downloadedSize.toFloat() / fileSize * PERCENT_MULTIPLIER).toInt()
 									withContext(Dispatchers.Main) {
-										onDownloadProgressPercent(
+										onDownloadProgress(
 											percent,
 											downloadedSize,
 											fileSize
 										)
 									}
-									prevPercent = percent
+									prevMillis = millis
+
+									if (prevPercent != percent) {
+										withContext(Dispatchers.Main) {
+											onDownloadProgressPercent(
+												percent,
+												downloadedSize,
+												fileSize
+											)
+										}
+										prevPercent = percent
+									}
 								}
 							}
 						}
-						inputStream.close()
-						outputStream.close()
 
 						withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-						val zip = ZipFile(unipackFile)
-						zip.extractAll(folder.path)
+						ZipFile(unipackFile).use { zip ->
+							zip.extractAll(folder.path)
+						}
 						FileManager.removeDoubleFolder(folder.path)
 						val unipack = UniPackFolder(folder).loadDetail()
 						if (unipack.criticalError) {
-							Log.err(unipack.errorDetail!!)
+							val errorMsg = unipack.errorDetail ?: "Unknown error"
+							Log.err(errorMsg)
 							FileManager.deleteDirectory(folder)
-							throw UniPackCriticalErrorException(unipack.errorDetail!!)
+							throw UniPackCriticalErrorException(errorMsg)
 						}
 
 						withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
@@ -151,7 +160,7 @@ class UniPackDownloader(
 
 
 			} catch (e: Exception) {
-				e.printStackTrace()
+				Log.err("Download failed", e)
 				withContext(Dispatchers.Main) { onException(e) }
 				FileManager.deleteDirectory(folder)
 			}
@@ -222,7 +231,7 @@ class UniPackDownloader(
 	}
 
 	private fun onException(throwable: Throwable) {
-		throwable.printStackTrace()
+		Log.err("Download exception", throwable)
 		notificationBuilder.apply {
 			setContentTitle(title)
 			setContentText(context.getString(R.string.downloadWaiting))

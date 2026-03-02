@@ -1,12 +1,16 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
 	id('com.android.application')
-	id('kotlin-android')
-	id('kotlin-kapt')
+	id('com.google.devtools.ksp')
 	id('kotlinx-serialization')
 	id('com.google.gms.google-services')
 	id('com.google.firebase.firebase-perf')
 	id('com.google.firebase.crashlytics')
 	id("com.google.android.gms.oss-licenses-plugin")
+	id('org.jetbrains.kotlin.plugin.compose')
+	id('jacoco')
 }
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -22,26 +26,27 @@ android {
 			keyPassword keystoreProperties['keyPassword']
 		}
 	}
-	compileSdk 34
+	compileSdk = 36
 	defaultConfig {
-		applicationId "com.kimjisub.launchpad"
-		minSdkVersion 21
-		targetSdkVersion 34
-		versionCode 103
-		versionName "4.0.1"
-		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-		vectorDrawables.useSupportLibrary true
+		applicationId = "com.kimjisub.launchpad"
+		minSdkVersion 23
+		targetSdkVersion 36
+		versionCode = 103
+		versionName = "4.0.1"
+		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
 		// renderscriptSupportModeEnabled true
 	}
 	buildTypes {
 		release {
 			manifestPlaceholders = [appName: "@string/app_name"]
-			signingConfig signingConfigs.release
-			debuggable false
+			signingConfig = signingConfigs.release
+			debuggable = false
 
-			minifyEnabled true
-			proguardFile getDefaultProguardFile('proguard-android.txt')
+			minifyEnabled = true
+			shrinkResources = true
+			proguardFile getDefaultProguardFile('proguard-android-optimize.txt')
 			proguardFile 'proguard-rules.pro'
 			proguardFile 'proguard-common.pro'
 			proguardFile 'proguard-firebase.pro'
@@ -50,103 +55,199 @@ android {
 		}
 		debug {
 			manifestPlaceholders = [appName: "@string/app_name_test"]
-			applicationIdSuffix ".dev"
-			signingConfig signingConfigs.debug
-			debuggable true
+			applicationIdSuffix = ".dev"
+			signingConfig = signingConfigs.debug
+			debuggable = true
 
-			minifyEnabled false
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+			minifyEnabled = false
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 		}
 	}
 	buildFeatures {
-		viewBinding true
-		dataBinding true
+		viewBinding = true
+		buildConfig = true
+		compose = true
 	}
 	compileOptions {
-		sourceCompatibility JavaVersion.VERSION_1_8
-		targetCompatibility JavaVersion.VERSION_1_8
+		coreLibraryDesugaringEnabled = true
+		sourceCompatibility JavaVersion.VERSION_21
+		targetCompatibility JavaVersion.VERSION_21
 	}
-	kotlinOptions {
-		jvmTarget = '1.8'
+	tasks.withType(KotlinCompile).configureEach {
+		compilerOptions {
+			jvmTarget = JvmTarget.JVM_21
+		}
 	}
-	namespace 'com.kimjisub.launchpad'
+	namespace = 'com.kimjisub.launchpad'
+
+	// Disable lint check that crashes with Kotlin 2.x (known bug in lifecycle-lint)
+	lint {
+		disable += ['NullSafeMutableLiveData', 'IconXmlAndPng', 'QueryAllPackagesPermission']
+	}
+
+	// Test reporting configuration
+	testOptions {
+		unitTests {
+			includeAndroidResources = true
+			returnDefaultValues = true
+		}
+		animationsDisabled = true
+		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
+
+		// Managed Devices for multi-API testing
+		managedDevices {
+			localDevices {
+				// API 29 (Android 10) - minSdk, Scoped Storage baseline
+				pixel2Api29 {
+					device = "Pixel 2"
+					apiLevel = 29
+					systemImageSource = "google"
+				}
+				// API 33 (Android 13) - Notification Runtime Permission introduced
+				pixel2Api33 {
+					device = "Pixel 2"
+					apiLevel = 33
+					systemImageSource = "google"
+				}
+				// API 35 (Android 15) - targetSdk (latest)
+				pixel2Api35 {
+					device = "Pixel 2"
+					apiLevel = 35
+					systemImageSource = "google"
+				}
+			}
+			groups {
+				// All supported API levels
+				allApis {
+					targetDevices.add(localDevices.pixel2Api29)
+					targetDevices.add(localDevices.pixel2Api33)
+					targetDevices.add(localDevices.pixel2Api35)
+				}
+				// Minimum and maximum only (fastest)
+				minAndMax {
+					targetDevices.add(localDevices.pixel2Api29)
+					targetDevices.add(localDevices.pixel2Api35)
+				}
+			}
+		}
+	}
+}
+
+// Workaround: OSS Licenses plugin doesn't declare proper task dependencies for Gradle 9.x
+// Disable the cleanup tasks to avoid deadlock when running 'clean assembleDebug'
+tasks.configureEach { task ->
+	if (task.name.endsWith('OssLicensesCleanUp')) {
+		task.enabled = false
+	}
+}
+
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+tasks.register('jacocoTestReport', JacocoReport) {
+	dependsOn 'testDebugUnitTest'
+
+	reports {
+		xml.required = true
+		html.required = true
+		html.outputLocation = layout.buildDirectory.dir('reports/jacoco')
+	}
+
+	def fileFilter = [
+		'**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+		'**/*Test*.*', '**/com/kimjisub/launchpad/databinding/**',
+		'**/com/kimjisub/launchpad/BR.*'
+	]
+
+	def debugTree = fileTree(
+		dir: layout.buildDirectory.dir('intermediates/classes/debug/transformDebugClassesWithAsm/dirs'),
+		excludes: fileFilter
+	)
+
+	def mainSrc = "${project.projectDir}/src/main/java"
+
+	sourceDirectories.setFrom(files([mainSrc]))
+	classDirectories.setFrom(files([debugTree]))
+	executionData.setFrom(fileTree(
+		dir: layout.buildDirectory,
+		includes: ['jacoco/testDebugUnitTest.exec']
+	))
 }
 
 dependencies {
+	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0"
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-	implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.20-Beta'
-	implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+	implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0'
 
-	implementation 'androidx.appcompat:appcompat:1.6.1'
-	implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-	implementation 'androidx.core:core-ktx:1.12.0'
+	implementation 'androidx.appcompat:appcompat:1.7.1'
+	implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+	implementation 'androidx.core:core-ktx:1.17.0'
 	implementation 'androidx.preference:preference-ktx:1.2.1'
-	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
-	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
-	implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-	implementation 'androidx.lifecycle:lifecycle-common-java8:2.6.2'
+	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0'
+	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
+	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.10.0'
 
+	// Compose
+	implementation platform('androidx.compose:compose-bom:2026.02.01')
+	implementation 'androidx.compose.material3:material3'
+	implementation 'androidx.compose.material:material-icons-core'
+	implementation 'androidx.compose.material:material-icons-extended'
+	implementation 'androidx.compose.ui:ui'
+	implementation 'androidx.compose.ui:ui-tooling-preview'
+	implementation 'androidx.compose.runtime:runtime-livedata'
+	implementation 'androidx.activity:activity-compose:1.12.4'
+	debugImplementation 'androidx.compose.ui:ui-tooling'
 
-	implementation 'com.google.guava:guava:32.1.2-jre'
-	implementation 'androidx.preference:preference-ktx:1.2.1'
-	implementation 'com.google.android.material:material:1.11.0'
-	implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+	implementation 'com.google.android.material:material:1.13.0'
 
 	// Test
 	testImplementation 'junit:junit:4.13.2'
-	androidTestImplementation 'androidx.test:runner:1.5.2'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-	debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
+	testImplementation 'io.mockk:mockk:1.14.7'
+	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2'
+	testImplementation "io.insert-koin:koin-test:$koin_version"
+	androidTestImplementation 'androidx.test:runner:1.7.0'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+	androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+	androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+	androidTestImplementation 'androidx.test:rules:1.7.0'
+	androidTestUtil 'androidx.test:orchestrator:1.6.1'
+	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
 	// splitties
 	implementation("com.louiscad.splitties:splitties-activities:$splitties_version")
-	implementation("com.louiscad.splitties:splitties-toast:$splitties_version")
-	implementation("com.louiscad.splitties:splitties-snackbar:$splitties_version")
 	implementation("com.louiscad.splitties:splitties-alertdialog:$splitties_version")
 
 	// Room
 	implementation "androidx.room:room-ktx:$room_version"
 	implementation "androidx.room:room-runtime:$room_version"
-	kapt "androidx.room:room-compiler:$room_version"
+	ksp "androidx.room:room-compiler:$room_version"
 	implementation "io.insert-koin:koin-android:$koin_version"
 
 
-	// Firebase
-	implementation platform('com.google.firebase:firebase-bom:32.2.3')
-	implementation 'com.google.firebase:firebase-core:21.1.1'
-	implementation 'com.google.firebase:firebase-firestore:24.10.0'
-	implementation 'com.google.firebase:firebase-database:20.3.0'
-	implementation 'com.google.firebase:firebase-messaging:23.4.0'
-	implementation 'com.google.firebase:firebase-perf:20.5.1'
-	implementation 'com.google.firebase:firebase-config:21.6.0'
-	implementation 'com.google.firebase:firebase-crashlytics-ktx:18.6.0'
-	implementation 'com.google.firebase:firebase-analytics-ktx:21.5.0'
+	// Firebase (using BOM for version management)
+	implementation platform('com.google.firebase:firebase-bom:34.10.0')
+	implementation 'com.google.firebase:firebase-firestore'
+	implementation 'com.google.firebase:firebase-database'
+	implementation 'com.google.firebase:firebase-messaging'
+	implementation 'com.google.firebase:firebase-perf'
+	implementation 'com.google.firebase:firebase-config'
+	implementation 'com.google.firebase:firebase-crashlytics'
+	implementation 'com.google.firebase:firebase-analytics'
 
 	// Retrofit 2
-	implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-	implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-	implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
-	implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.0.0-alpha.10'
+	implementation 'com.squareup.retrofit2:retrofit:2.11.0'
+	implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
+	implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
 
 	// etc
-	// implementation 'com.github.bumptech.glide:glide:4.11.0'
-	// kapt 'com.github.bumptech.glide:compiler:4.11.0'
-	implementation 'com.azoft.carousellayoutmanager:carousel:1.2.1'
-	implementation 'com.github.clans:fab:1.6.4'
-	implementation 'gun0912.ted:tedpermission:2.2.3'
 	implementation 'com.orhanobut:logger:2.2.0'
-	implementation 'cn.aigestudio.wheelpicker:WheelPicker:1.1.3'
-	implementation 'com.yarolegovich:discrete-scrollview:1.5.1'
-	implementation 'net.lingala.zip4j:zip4j:2.11.5'
-	implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.10'
-	implementation 'com.liulishuo.okdownload:okhttp:1.0.7'
+	implementation 'net.lingala.zip4j:zip4j:2.11.6'
+	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+	//noinspection GradleDependency
 	implementation 'com.google.android.gms:play-services-oss-licenses:17.0.1'
-	implementation 'com.polyak:icon-switch:1.0.0'
-
 	api project(':design')
 }
 

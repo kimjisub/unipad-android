@@ -7,13 +7,6 @@
 	<string name="MTP_size">유니팩 용량</string>
 	<string name="MPT_playCount">플레이 횟수</string>
 	<string name="MPT_theme">테마</string>
-	<array name="packSortMethod">
-		<item>제목</item>
-		<item>제작자</item>
-		<item>플레이 횟수</item>
-		<item>최근 연 날짜</item>
-		<item>다운로드 날짜</item>
-	</array>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">패드 크기</string>
@@ -33,9 +26,5 @@
 	<!--Store Pack Panel-->
 	<string name="SPP_downloadCount">다운로드 수</string>
 
-	<!--File Explorer-->
-	<string name="FE_accept">확인</string>
-	<string name="FE_folderErr">폴더를 읽을 수 없습니다.</string>
-	<string name="FE_fileErr">파일을 읽을 수 없습니다.</string>
 	<string name="mb">MB</string>
 </resources>

@@ -2,18 +2,19 @@ package com.kimjisub.launchpad.unipack.runner
 
 import android.media.AudioAttributes
 import android.media.SoundPool
-import android.os.Handler
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SoundRunner(
 	private val unipack: UniPack,
 	private val chain: ChainObserver,
 	private val loadingListener: LoadingListener,
+	private val scope: CoroutineScope,
 ) {
 
 	private var soundPool: SoundPool
@@ -27,22 +28,24 @@ class SoundRunner(
 	}
 
 	init {
+		val table = unipack.soundTable
 		var soundCount = 0
-		for (i in 0 until unipack.chain)
-			for (j in 0 until unipack.buttonX)
-				for (k in 0 until unipack.buttonY)
-					if (unipack.soundTable!![i][j][k] != null)
-						soundCount += unipack.soundTable!![i][j][k]!!.size
+		if (table != null) {
+			for (i in 0 until unipack.chain)
+				for (j in 0 until unipack.buttonX)
+					for (k in 0 until unipack.buttonY)
+						if (table[i][j][k] != null)
+							soundCount += table[i][j][k]?.size ?: 0
+		}
 
-		val aa = AudioAttributes.Builder()
+		val audioAttributes = AudioAttributes.Builder()
 			.setUsage(AudioAttributes.USAGE_GAME)
 			.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-			//.setAllowedCapturePolicy(AudioAttributes.ALLOW_CAPTURE_BY_ALL)
 			.build()
 		Log.play("soundCount: $soundCount")
 		soundPool = SoundPool.Builder()
 			.setMaxStreams(soundCount.coerceAtLeast(1))
-			.setAudioAttributes(aa)
+			.setAudioAttributes(audioAttributes)
 			.build()
 		stopID = Array(unipack.chain) {
 			Array(unipack.buttonX) {
@@ -54,16 +57,15 @@ class SoundRunner(
 
 		loadingListener.onStart(soundCount)
 
-		CoroutineScope(Dispatchers.IO).launch {
+		scope.launch(Dispatchers.IO) {
 			try {
 				for (i in 0 until unipack.chain) {
 					for (j in 0 until unipack.buttonX) {
 						for (k in 0 until unipack.buttonY) {
-							val arrayList: ArrayList<*>? = unipack.soundTable!![i][j][k]
-							if (arrayList != null) {
-								for (l in arrayList.indices) {
-									val e: Sound = unipack.soundTable!![i][j][k]!![l]
-									e.id = soundPool.load(e.file.path, 1)
+							val sounds = table?.get(i)?.get(j)?.get(k)
+							if (sounds != null) {
+								for (sound in sounds) {
+									sound.id = soundPool.load(sound.file.path, 1)
 									loadingListener.onProgressTick()
 								}
 							}
@@ -72,47 +74,49 @@ class SoundRunner(
 				}
 				loadingListener.onEnd()
 
-			} catch (e: Exception) {
-				Log.err("[08] doInBackground")
-				e.printStackTrace()
+			} catch (e: RuntimeException) {
+				Log.err("[08] doInBackground", e)
 				loadingListener.onException(e)
 			}
 		}
 	}
 
 	fun soundOn(x: Int, y: Int) {
-		Log.play("soundPool is null? " + if (soundPool == null) "null" else "not null")
-		Log.play("stopID[chain.value][x][y] is null? " + if (stopID[chain.value][x][y] == null) "null" else "not null")
 		soundPool.stop(stopID[chain.value][x][y])
-		val e: Sound? = unipack.Sound_get(chain.value, x, y)
-		if (e != null) {
-			stopID[chain.value][x][y] = soundPool.play(e.id, 1.0f, 1.0f, 0, e.loop, 1.0f)
-			unipack.Sound_push(chain.value, x, y)
-			if (e.wormhole != -1)
-				Handler().postDelayed({ chain.value = e.wormhole }, 100)
+		val sound: Sound? = unipack.soundGet(chain.value, x, y)
+		if (sound != null) {
+			stopID[chain.value][x][y] = soundPool.play(sound.id, 1.0f, 1.0f, 0, sound.loop, 1.0f)
+			unipack.soundPush(chain.value, x, y)
+			if (sound.wormhole != Sound.NO_WORMHOLE)
+				scope.launch(Dispatchers.Main) {
+					delay(100)
+					chain.value = sound.wormhole
+				}
 		}
 	}
 
 	fun soundOff(x: Int, y: Int) {
-		val e = unipack.Sound_get(chain.value, x, y)
-		if (e != null && e.loop == -1)
+		val sound = unipack.soundGet(chain.value, x, y)
+		if (sound != null && sound.loop == -1)
 			soundPool.stop(stopID[chain.value][x][y])
 	}
 
 	fun destroy() {
-		for (i in unipack.soundTable!!)
-			for (j in i)
-				for (arrayList in j) {
-					if (arrayList != null) {
-						for (sound in arrayList) {
-							try {
-								soundPool.unload(sound.id)
-							} catch (e: Exception) {
-								e.printStackTrace()
+		unipack.soundTable?.let { table ->
+			for (i in table)
+				for (j in i)
+					for (arrayList in j) {
+						if (arrayList != null) {
+							for (sound in arrayList) {
+								try {
+									soundPool.unload(sound.id)
+								} catch (e: RuntimeException) {
+									Log.err("Sound unload failed", e)
+								}
 							}
 						}
 					}
-				}
+		}
 		soundPool.release()
 	}
 }

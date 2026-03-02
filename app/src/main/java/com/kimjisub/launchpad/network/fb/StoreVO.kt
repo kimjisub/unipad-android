@@ -12,5 +12,6 @@ data class StoreVO(
 	@JvmField
 	var isLED: Boolean = false,
 	var downloadCount: Int = 0,
+	@Suppress("PropertyName")
 	var URL: String? = null,
 )

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+	tools:keep="@color/gray3,@color/wb2,@color/wb5,
+		@dimen/text_big,@dimen/text,@dimen/text_small,@dimen/imgbtn,
+		@drawable/chainled,@drawable/ic_edit_24dp,@drawable/ic_sort_asc,@drawable/ic_sort_desc,
+		@drawable/phantom_,
+		@mipmap/ic_launcher_round,
+		@string/date_format,@string/delete,@string/edit,
+		@string/ignore,@string/information,@string/languageCode,
+		@string/MPP_fileSize,@string/MPP_notPlayedYet,@string/MPP_playCount,
+		@string/MPT_theme,
+		@string/path,@string/select_theme,@string/settings_app,
+		@string/settings_storage_download,
+		@string/settings_user,@string/sort_last_opened_date,@string/sort_play_count,
+		@string/storage_location,@string/using,@string/website,
+		@xml/setting" />

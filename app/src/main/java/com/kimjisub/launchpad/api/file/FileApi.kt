@@ -1,47 +1,22 @@
 package com.kimjisub.launchpad.api.file
 
 import com.kimjisub.launchpad.api.BaseApiService
-import com.kimjisub.launchpad.tool.Log
-import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
-import okhttp3.logging.HttpLoggingInterceptor.Level
-import okhttp3.logging.HttpLoggingInterceptor.Logger
 import retrofit2.Call
-import retrofit2.Retrofit
-import retrofit2.Retrofit.Builder
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-class FileApi : BaseApiService() {
+object FileApi {
+	private const val API_BASE_URL = "https://api.unipad.io"
 
-	companion object {
-		private const val URL = "https://api.unipad.io"
+	val service: FileService by lazy {
+		BaseApiService.createRetrofitService(API_BASE_URL, FileService::class.java)
+	}
 
-		val service: FileService by lazy {
-			val httpLoggingInterceptor = HttpLoggingInterceptor { message -> Log.network(message) }
-			httpLoggingInterceptor.level = Level.BODY
-			val client: OkHttpClient = unsafeOkHttpClient
-				.addInterceptor(httpLoggingInterceptor)
-				.build()
-			val retrofit: Retrofit = Builder()
-				.baseUrl(URL)
-				.addConverterFactory(GsonConverterFactory.create(gson))
-				.client(client)
-				.build()
-			retrofit.create(FileService::class.java)
-		}
-
-		interface FileService {
-
-			// unishare
-
-			@GET
-			@Streaming
-			fun download(@Url url: String): Call<ResponseBody>
-		}
-
+	interface FileService {
+		@GET
+		@Streaming
+		fun download(@Url url: String): Call<ResponseBody>
 	}
 }

@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import com.kimjisub.launchpad.R.layout
 import com.kimjisub.launchpad.databinding.ItemSettingBinding
 
 data class DialogListItem(
@@ -19,12 +18,22 @@ class DialogListAdapter(
 ) : BaseAdapter() {
 
 	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-		val view = LayoutInflater.from(parent.context).inflate(layout.item_setting, parent, false)
-		val bind = ItemSettingBinding.bind(view)
+		val bind: ItemSettingBinding = if (convertView != null) {
+			ItemSettingBinding.bind(convertView)
+		} else {
+			ItemSettingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+		}
 
 		val item = list[position]
-
-		bind.data = item
+		bind.title.text = item.title
+		bind.subtitle.text = item.subtitle
+		if (item.iconResId != null) {
+			bind.icon.setImageResource(item.iconResId)
+			bind.icon.visibility = View.VISIBLE
+		} else {
+			bind.icon.setImageDrawable(null)
+			bind.icon.visibility = View.GONE
+		}
 
 		return bind.root
 	}

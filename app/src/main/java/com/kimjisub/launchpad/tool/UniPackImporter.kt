@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
@@ -17,21 +16,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.progress.ProgressMonitor
+import net.lingala.zip4j.ZipFile
 import java.io.File
-import java.util.zip.ZipInputStream
 
 class UniPackImporter(
 	private var context: Context,
 	private var uri: Uri,
 	workspace: File,
 	private var onEventListener: OnEventListener,
+	scope: CoroutineScope,
 ) {
 	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
 	private val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
 	private val targetFolder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")
 
-	private val notificationId = (Math.random() * Integer.MAX_VALUE).toInt()
+	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
 		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
@@ -43,16 +42,13 @@ class UniPackImporter(
 			intent.action = Intent.ACTION_MAIN
 			intent.addCategory(Intent.CATEGORY_LAUNCHER)
 			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+			// minSdk 29+ always requires FLAG_IMMUTABLE (introduced in API 23)
 			val pIntent: PendingIntent =
 				PendingIntent.getActivity(
 					context,
 					1,
 					intent,
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-						PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-					} else {
-						PendingIntent.FLAG_UPDATE_CURRENT
-					}
+					PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 				)
 			setContentIntent(pIntent)
 		}
@@ -60,40 +56,37 @@ class UniPackImporter(
 	}
 
 	init {
-		CoroutineScope(Dispatchers.IO).launch {
+		scope.launch(Dispatchers.IO) {
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
 
 				targetFolder.mkdir()
 
-				context.contentResolver.openInputStream(uri)?.use { inputStream ->
-					ZipInputStream(inputStream).use { input ->
-						var entry = input.nextEntry
-						while (entry != null) {
-							File(targetFolder.path, entry.name).apply {
-								if (entry.isDirectory) {
-									mkdirs()
-								} else {
-									outputStream().use { output ->
-										input.copyTo(output)
-									}
-								}
-							}
-							entry = input.nextEntry
+				val tempZip = File.createTempFile("unipack_import_", ".zip", context.cacheDir)
+				try {
+					context.contentResolver.openInputStream(uri)?.use { inputStream ->
+						tempZip.outputStream().use { output ->
+							inputStream.copyTo(output)
 						}
 					}
+					ZipFile(tempZip).use { zip ->
+						zip.extractAll(targetFolder.path)
+					}
+				} finally {
+					tempZip.delete()
 				}
 
 				val unipack = UniPackFolder(targetFolder).load()
 				if (unipack.criticalError) {
-					Log.err(unipack.errorDetail!!)
+					val errorMsg = unipack.errorDetail ?: "Unknown error"
+					Log.err(errorMsg)
 					FileManager.deleteDirectory(targetFolder)
-					throw UniPackCriticalErrorException(unipack.errorDetail!!)
+					throw UniPackCriticalErrorException(errorMsg)
 				}
 
 				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack) }
 			} catch (e: Exception) {
-				e.printStackTrace()
+				Log.err("Import failed", e)
 				withContext(Dispatchers.Main) { onException(e) }
 				FileManager.deleteDirectory(targetFolder)
 			}
@@ -110,15 +103,6 @@ class UniPackImporter(
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
 		onEventListener.onImportStart()
-	}
-
-	private fun onImportProgress(processMonitor: ProgressMonitor) {
-		notificationBuilder.apply {
-			setProgress(100, processMonitor.percentDone, false)
-			setOngoing(false)
-		}
-
-		onEventListener.onImportProgress(processMonitor)
 	}
 
 	private fun onImportComplete(folder: File, unipack: UniPack) {
@@ -148,16 +132,10 @@ class UniPackImporter(
 	interface OnEventListener {
 		fun onImportStart()
 
-		fun onImportProgress(processMonitor: ProgressMonitor)
-
 		fun onImportComplete(folder: File, unipack: UniPack)
 
 		fun onException(throwable: Throwable)
 	}
 
 	class UniPackCriticalErrorException(message: String) : Exception(message)
-
-	companion object {
-		const val PROGRESS_INTERVAL = 10L
-	}
 }

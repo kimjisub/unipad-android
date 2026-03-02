@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.fragment.settings
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
@@ -11,27 +13,33 @@ import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import com.kimjisub.launchpad.tool.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.manager.putClipboard
 import splitties.activities.start
-import splitties.toast.toast
+import com.google.android.material.snackbar.Snackbar
 
 class InfoFragment : PreferenceFragmentCompat() {
-	private val appPreference: Preference by lazy { findPreference("app")!! }
-	private val fcmTokenPreference: Preference by lazy { findPreference("fcm_token")!! }
-	private val githubPreference: Preference by lazy { findPreference("github")!! }
-	private val ossLicencePreference: Preference by lazy { findPreference("oss_licence")!! }
-	private val communityPreference: Preference by lazy { findPreference("community")!! }
+	private val appPreference: Preference by lazy { checkNotNull(findPreference("app")) }
+	private val fcmTokenPreference: Preference by lazy { checkNotNull(findPreference("fcm_token")) }
+	private val githubPreference: Preference by lazy { checkNotNull(findPreference("github")) }
+	private val ossLicensePreference: Preference by lazy { checkNotNull(findPreference("oss_license")) }
+	private val communityPreference: Preference by lazy { checkNotNull(findPreference("community")) }
 
 	override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
 		setPreferencesFromResource(R.xml.preferences_info, rootKey)
 
 		val context = requireContext()
 
-		val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+		val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+		} else {
+			@Suppress("DEPRECATION")
+			context.packageManager.getPackageInfo(context.packageName, 0)
+		}
 		val appName = getString(R.string.app_name)
 		val versionName = packageInfo.versionName
 		val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
@@ -41,11 +49,11 @@ class InfoFragment : PreferenceFragmentCompat() {
 			try {
 				FirebaseMessaging.getInstance().token.addOnCompleteListener {
 					putClipboard(it.result)
-					toast(R.string.copied)
+					Snackbar.make(requireView(), R.string.copied, Snackbar.LENGTH_SHORT).show()
 				}
-			} catch (e: Exception) {
-				e.printStackTrace()
-				toast(e.toString())
+			} catch (e: IllegalStateException) {
+				Log.err("FCM token copy failed", e)
+				Snackbar.make(requireView(), e.toString(), Snackbar.LENGTH_SHORT).show()
 			}
 			false
 		}
@@ -54,14 +62,14 @@ class InfoFragment : PreferenceFragmentCompat() {
 			startActivity(
 				Intent(
 					Intent.ACTION_VIEW,
-					"http://github.com/kimjisub/unipad-android".toUri()
+					"https://github.com/kimjisub/unipad-android".toUri()
 				)
 			)
 
 			false
 		}
 
-		ossLicencePreference.setOnPreferenceClickListener {
+		ossLicensePreference.setOnPreferenceClickListener {
 			requireActivity().start<OssLicensesMenuActivity>()
 			false
 		}
@@ -110,7 +118,7 @@ class InfoFragment : PreferenceFragmentCompat() {
 					R.string.naverCafe,
 					R.string.naverCafe_,
 					R.drawable.community_cafe,
-					"http://cafe.naver.com/unipad",
+					"https://cafe.naver.com/unipad",
 					Intent.ACTION_VIEW
 				),
 				Item(
@@ -124,7 +132,7 @@ class InfoFragment : PreferenceFragmentCompat() {
 					R.string.kakaotalk,
 					R.string.kakaotalk_,
 					R.drawable.community_kakaotalk,
-					"http://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
+					"https://qr.kakao.com/talk/R4p8KwFLXRZsqEjA1FrAnACDyfc-",
 					Intent.ACTION_VIEW
 				),
 				Item(
@@ -136,7 +144,7 @@ class InfoFragment : PreferenceFragmentCompat() {
 				)
 			)
 			val listView = ListView(context)
-			val data = ArrayList<DialogListItem>()
+			val data = mutableListOf<DialogListItem>()
 			for (i in list.indices) data.add(list[i].toListItem())
 			listView.adapter = DialogListAdapter(data.toTypedArray())
 			listView.onItemClickListener =

@@ -37,7 +37,7 @@ abstract class DriverRef {
 
 		fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int)
 		fun onChainTouch(c: Int, upDown: Boolean)
-		fun onFunctionkeyTouch(f: Int, upDown: Boolean)
+		fun onFunctionKeyTouch(f: Int, upDown: Boolean)
 	}
 
 	////
@@ -60,7 +60,7 @@ abstract class DriverRef {
 
 	fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 		Log.midiDetail("onFunctionKeyTouch($f, $upDown)")
-		onReceiveSignalListener?.onFunctionkeyTouch(f, upDown)
+		onReceiveSignalListener?.onFunctionKeyTouch(f, upDown)
 	}
 
 	fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velocity: Int) {
@@ -92,6 +92,6 @@ abstract class DriverRef {
 
 	abstract fun sendPadLed(x: Int, y: Int, velocity: Int)
 	abstract fun sendChainLed(c: Int, velocity: Int)
-	abstract fun sendFunctionkeyLed(f: Int, velocity: Int)
+	abstract fun sendFunctionKeyLed(f: Int, velocity: Int)
 	abstract fun sendClearLed()
 }

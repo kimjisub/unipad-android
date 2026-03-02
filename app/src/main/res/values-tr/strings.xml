@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">tr</string>
+	<string name="language">Turkish</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Kabul Et</string>
+	<string name="cancel">İptal</string>
+	<string name="warning">Uyarı</string>
+	<string name="error">HATA</string>
+	<string name="errOccur">Bir hata oluştu.</string>
+	<string name="wait_a_sec">Bir an bekleyin…</string>
+	<string name="importing">İçe aktarılıyor</string>
+	<string name="loading">Yükleniyor</string>
+	<string name="download">İndir</string>
+	<string name="downloadWaiting">İndirme Bekleniyor</string>
+	<string name="downloading">İndiriliyor</string>
+	<string name="downloaded">İndirildi</string>
+	<string name="success">Başarılı</string>
+	<string name="failed">Başarısız</string>
+	<string name="delete">Sil</string>
+	<string name="edit">Düzenle</string>
+	<string name="update">Güncelle</string>
+	<string name="ignore">Yoksay</string>
+	<string name="apply">Uygula</string>
+	<string name="restart">Yeniden Başlat</string>
+	<string name="using">Kullanılıyor</string>
+	<string name="path">Yol</string>
+	<string name="quit">Çık</string>
+	<string name="menu">Menü</string>
+	<string name="website">Web Sitesi</string>
+	<string name="measuring">Ölçülüyor…</string>
+	<string name="general">Genel</string>
+	<string name="notice">Bildirim</string>
+	<string name="newUniPack">Yeni UniPack</string>
+	<string name="exceptionOccurred">İstisna Oluştu</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Launchpad\'ı Yeniden Bağla</string>
+	<string name="import_unipack">UniPack İçe Aktar</string>
+	<string name="store">Mağaza</string>
+
+	<!--Setting-->
+	<string name="setting">Ayarlar</string>
+	<string name="information">Bilgi</string>
+	<string name="select_theme">Tema Seç</string>
+	<string name="storage_location">Depolama Konumu</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Açık Kaynak Lisansı</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Topluluk</string>
+	<string name="officialHomepage">Resmi Web Sitesi</string>
+	<string name="officialHomepage_">UniPad Resmi Web Sitesi</string>
+	<string name="officialFacebook">Resmi Facebook</string>
+	<string name="officialFacebook_">Teknik Destek</string>
+	<string name="facebookCommunity">Facebook Topluluğu</string>
+	<string name="facebookCommunity_">İngilizce</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Korece</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">Geliştirici kimjisub\'a KakaoTalk</string>
+	<string name="kakaotalk_">Teknik Destek Dışında</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Teknik Destek Dışında</string>
+
+	<!--UniPack Info-->
+	<string name="title">Başlık</string>
+	<string name="producerName">Yapımcı</string>
+	<string name="padSize">Pad Boyutu</string>
+	<string name="numChain">Zincirler</string>
+	<string name="fileSize">Dosya Boyutu</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Otomatik Oynatma</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Geri bildirim ışığı</string>
+	<string name="traceLog">İzleme Günlüğü</string>
+	<string name="traceLogClear">İzleme günlüğü sıfırlandı.</string>
+	<string name="record">Kaydet</string>
+	<string name="hideUI">Arayüzü Gizle</string>
+	<string name="watermark">Filigran</string>
+	<string name="proLightMode">Pro Işık Modu</string>
+
+	<!--Version-->
+	<string name="newVersionFound">Yeni sürüm tespit edildi.</string>
+
+	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
+	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>
+	<string name="unipackNotFound">UniPack bulunamadı.</string>
+	<string name="clickToAddUniPack">UniPack eklemek için tıklayın.</string>
+	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
+	<string name="remapDone">AutoPlay yeniden eşlemesi başarıyla tamamlandı.</string>
+	<string name="remapFail">AutoPlay mevcut değil</string>
+	<string name="importComplete">Analiz tamamlandı!</string>
+	<string name="importFailed">Analiz başarısız…</string>
+	<string name="copied">Panoya kopyalandı.</string>
+	<string name="skinMemoryErr">Tema uygulanamadı.\nUygulamayı yeniden başlatın.</string>
+	<string name="skinErr">Tema uygulanamadı.\nTemayı sıfırlayın.</string>
+
+	<string name="outOfMemory">Yetersiz bellek..\nBelleği boşaltın ve tekrar deneyin.</string>
+	<string name="outOfCPU">Telefon özellikleri nedeniyle\npak başlatılamadı…\nTekrar deneyin.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Launchpad bağlanıyor…</string>
+	<string name="midiDevicesNotDetected">MIDI Cihazları Algılanmadı</string>
+	<string name="signal_SpeedFirst">Önce hız</string>
+	<string name="signal_avoidAfterimage">Gölge görüntüden kaçın</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Pak indirilirken çıkılamaz</string>
+	<string name="UnableToAccessServer">Sunucuya erişilemiyor.</string>
+
+	<!--Theme-->
+	<string name="theme">Tema</string>
+	<string name="themeDownload">Tema İndir</string>
+	<string name="requireRestart">Uygulama yeniden başlatılmalı.</string>
+	<string name="doYouWantToRestartApp">Uygulamayı yeniden başlatmak istiyor musunuz?</string>
+
+	<string name="theme_import">Tema İçe Aktar</string>
+	<string name="theme_import_success">Tema başarıyla içe aktarıldı.</string>
+	<string name="theme_import_failed">Tema içe aktarılamadı.</string>
+	<string name="theme_import_invalid">Geçersiz tema dosyası.</string>
+	<string name="theme_delete_title">Temayı Sil</string>
+	<string name="theme_delete_confirm">\"%s\" silinsin mi?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Bilgi</string>
+	<string name="settings_storage">Depolama</string>
+	<string name="settings_theme">Tema</string>
+	<string name="settings_storage_download">İndirme Deposu</string>
+	<string name="settings_developer">Geliştirici</string>
+	<string name="settings_app">Uygulama</string>
+	<string name="settings_user">Kullanıcı</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td.%1$tm.%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPack Sayısı</string>
+	<string name="MTP_size">UniPack Boyutu</string>
+	<string name="MPT_playCount">Oynatma Sayısı</string>
+	<string name="MPT_theme">Tema</string>
+	<string name="sort_title">Başlık</string>
+	<string name="sort_producer">Yapımcı</string>
+	<string name="sort_play_count">Oynatma Sayısı</string>
+	<string name="sort_last_opened_date">Son Açılma</string>
+	<string name="sort_download_date">İndirme Tarihi</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Pad Boyutu</string>
+	<string name="MPP_chain">Zincir</string>
+	<string name="MPP_soundFiles">Ses Dosyaları</string>
+	<string name="MPP_ledEvents">Led Olayları</string>
+	<string name="MPP_fileSize">Dosya Boyutu</string>
+	<string name="MPP_playCount">Oynatma Sayısı</string>
+	<string name="MPP_downloadedDate">İndirme Tarihi</string>
+	<string name="MPP_lastPlayed">Son Oynama</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">Mağazadaki UniPack</string>
+	<string name="STP_downloadedCount">İndirilen UniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">İndirme sayısı</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Web Sitesi</string>
+	<string name="cd_bookmark">Yer İmi</string>
+	<string name="cd_delete">Sil</string>
+	<string name="cd_logo">UniPad Logosu</string>
+	<string name="cd_autoplay_prev">Önceki</string>
+	<string name="cd_autoplay_play">Oynat</string>
+	<string name="cd_autoplay_pause">Duraklat</string>
+	<string name="cd_autoplay_next">Sonraki</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Belgeler (Android 10)</string>
+	<string name="workspace_app_storage">Uygulama Deposu (Önerilen)</string>
+	<string name="workspace_internal_storage">Dahili Depolama</string>
+	<string name="workspace_internal_sd_card">Dahili SD Kart</string>
+	<string name="workspace_external_sd_card_format">Harici SD Kart %d</string>
+	<string name="workspace_unipack_count">%d UniPack</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">Uygulamaya özel depolama. İzin gerektirmez. Uygulama kaldırıldığında silinir.</string>
+	<string name="workspace_desc_documents_android10">Paylaşılan Belgeler klasörü. Yalnızca Android 10\'da kullanılabilir.</string>
+	<string name="workspace_desc_external_sd">Harici SD kart deposu. Cihazlar arasında taşınabilir.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">İçeriği kontrol etmek için erişim gerekli</string>
+	<string name="migration_grant_access">Erişim Ver</string>
+	<string name="migration_same_as_source">Kaynakla aynı</string>
+	<string name="migration_result">Sonuç</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">sunucu hatası\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

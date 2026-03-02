@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">ja</string>
+	<string name="language">Japanese</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">承諾</string>
+	<string name="cancel">キャンセル</string>
+	<string name="warning">警告</string>
+	<string name="error">エラー</string>
+	<string name="errOccur">エラーが発生しました。</string>
+	<string name="wait_a_sec">少々お待ちください…</string>
+	<string name="importing">インポート中</string>
+	<string name="loading">読み込み中</string>
+	<string name="download">ダウンロード</string>
+	<string name="downloadWaiting">ダウンロード待機中</string>
+	<string name="downloading">ダウンロード中</string>
+	<string name="downloaded">ダウンロード済み</string>
+	<string name="success">成功</string>
+	<string name="failed">失敗</string>
+	<string name="delete">削除</string>
+	<string name="edit">編集</string>
+	<string name="update">更新</string>
+	<string name="ignore">無視</string>
+	<string name="apply">適用</string>
+	<string name="restart">再起動</string>
+	<string name="using">使用中</string>
+	<string name="path">パス</string>
+	<string name="quit">終了</string>
+	<string name="menu">メニュー</string>
+	<string name="website">ウェブサイト</string>
+	<string name="measuring">計測中…</string>
+	<string name="general">一般</string>
+	<string name="notice">お知らせ</string>
+	<string name="newUniPack">新しいUniPack</string>
+	<string name="exceptionOccurred">例外が発生しました</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Launchpadを再接続</string>
+	<string name="import_unipack">UniPackをインポート</string>
+	<string name="store">ストア</string>
+
+	<!--Setting-->
+	<string name="setting">設定</string>
+	<string name="information">情報</string>
+	<string name="select_theme">テーマを選択</string>
+	<string name="storage_location">保存先</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">オープンソースライセンス</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">コミュニティ</string>
+	<string name="officialHomepage">公式ウェブサイト</string>
+	<string name="officialHomepage_">UniPad公式ウェブサイト</string>
+	<string name="officialFacebook">公式Facebook</string>
+	<string name="officialFacebook_">テクニカルサポート</string>
+	<string name="facebookCommunity">Facebookコミュニティ</string>
+	<string name="facebookCommunity_">英語</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">韓国語</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">開発者kimjisub宛KakaoTalk</string>
+	<string name="kakaotalk_">テクニカルサポート以外</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">テクニカルサポート以外</string>
+
+	<!--UniPack Info-->
+	<string name="title">タイトル</string>
+	<string name="producerName">制作者</string>
+	<string name="padSize">パッドサイズ</string>
+	<string name="numChain">チェーン</string>
+	<string name="fileSize">ファイルサイズ</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">自動再生</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">フィードバックライト</string>
+	<string name="traceLog">トレースログ</string>
+	<string name="traceLogClear">トレースログがリセットされました。</string>
+	<string name="record">録音</string>
+	<string name="hideUI">UIを非表示</string>
+	<string name="watermark">ウォーターマーク</string>
+	<string name="proLightMode">Proライトモード</string>
+
+	<!--Version-->
+	<string name="newVersionFound">新しいバージョンが見つかりました。</string>
+
+	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
+	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
+	<string name="unipackNotFound">UniPackが見つかりません。</string>
+	<string name="clickToAddUniPack">クリックしてUniPackを追加してください。</string>
+	<string name="doYouWantToDeleteUniPack">このプロジェクトを削除しますか？</string>
+	<string name="remapDone">AutoPlayのリマッピングが正常に完了しました。</string>
+	<string name="remapFail">AutoPlayが存在しません</string>
+	<string name="importComplete">分析完了！</string>
+	<string name="importFailed">分析に失敗しました…</string>
+	<string name="copied">クリップボードにコピーしました。</string>
+	<string name="skinMemoryErr">スキンの適用に失敗しました。\nアプリを再起動します。</string>
+	<string name="skinErr">スキンの適用に失敗しました。\nスキンをリセットします。</string>
+
+	<string name="outOfMemory">メモリ不足です。\nメモリを解放してから再試行してください。</string>
+	<string name="outOfCPU">端末のスペックにより\nパックを開始できませんでした…\nもう一度お試しください。</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Launchpadに接続中…</string>
+	<string name="midiDevicesNotDetected">MIDIデバイスが検出されません</string>
+	<string name="signal_SpeedFirst">速度優先</string>
+	<string name="signal_avoidAfterimage">残像を防止</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">パックのダウンロード中は終了できません</string>
+	<string name="UnableToAccessServer">サーバーにアクセスできません。</string>
+
+	<!--Theme-->
+	<string name="theme">テーマ</string>
+	<string name="themeDownload">テーマをダウンロード</string>
+	<string name="requireRestart">アプリの再起動が必要です。</string>
+	<string name="doYouWantToRestartApp">アプリを再起動しますか？</string>
+
+	<string name="theme_import">テーマをインポート</string>
+	<string name="theme_import_success">テーマのインポートに成功しました。</string>
+	<string name="theme_import_failed">テーマのインポートに失敗しました。</string>
+	<string name="theme_import_invalid">無効なテーマファイルです。</string>
+	<string name="theme_delete_title">テーマを削除</string>
+	<string name="theme_delete_confirm">\"%s\" を削除しますか？</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">情報</string>
+	<string name="settings_storage">ストレージ</string>
+	<string name="settings_theme">テーマ</string>
+	<string name="settings_storage_download">ダウンロードストレージ</string>
+	<string name="settings_developer">開発者</string>
+	<string name="settings_app">アプリケーション</string>
+	<string name="settings_user">ユーザー</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$tY/%1$tm/%1$td</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPack数</string>
+	<string name="MTP_size">UniPackサイズ</string>
+	<string name="MPT_playCount">再生回数</string>
+	<string name="MPT_theme">テーマ</string>
+	<string name="sort_title">タイトル</string>
+	<string name="sort_producer">制作者</string>
+	<string name="sort_play_count">再生回数</string>
+	<string name="sort_last_opened_date">最終オープン日</string>
+	<string name="sort_download_date">ダウンロード日</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">パッドサイズ</string>
+	<string name="MPP_chain">チェーン</string>
+	<string name="MPP_soundFiles">サウンドファイル</string>
+	<string name="MPP_ledEvents">Ledイベント</string>
+	<string name="MPP_fileSize">ファイルサイズ</string>
+	<string name="MPP_playCount">再生回数</string>
+	<string name="MPP_downloadedDate">ダウンロード日</string>
+	<string name="MPP_lastPlayed">最終再生</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">ストアのUniPack</string>
+	<string name="STP_downloadedCount">ダウンロード済みUniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">ダウンロード数</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">ウェブサイト</string>
+	<string name="cd_bookmark">ブックマーク</string>
+	<string name="cd_delete">削除</string>
+	<string name="cd_logo">UniPadロゴ</string>
+	<string name="cd_autoplay_prev">前へ</string>
+	<string name="cd_autoplay_play">再生</string>
+	<string name="cd_autoplay_pause">一時停止</string>
+	<string name="cd_autoplay_next">次へ</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">ドキュメント (Android 10)</string>
+	<string name="workspace_app_storage">アプリストレージ（推奨）</string>
+	<string name="workspace_internal_storage">内部ストレージ</string>
+	<string name="workspace_internal_sd_card">内蔵SDカード</string>
+	<string name="workspace_external_sd_card_format">外部SDカード %d</string>
+	<string name="workspace_unipack_count">%d個のUniPack</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">アプリ専用ストレージ。権限不要。アプリのアンインストール時に削除。</string>
+	<string name="workspace_desc_documents_android10">共有ドキュメントフォルダ。Android 10でのみ利用可能。</string>
+	<string name="workspace_desc_external_sd">外部SDカードストレージ。デバイス間で持ち運び可能。</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">内容を確認するにはアクセス権が必要です</string>
+	<string name="migration_grant_access">アクセスを許可</string>
+	<string name="migration_same_as_source">移行元と同じ</string>
+	<string name="migration_result">結果</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">サーバーエラー\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

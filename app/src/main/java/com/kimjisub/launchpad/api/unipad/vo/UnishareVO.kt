@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.api.unipad.vo
 
 data class UnishareVO(
+	@Suppress("PropertyName")
 	var _id: String? = null,
 	var title: String? = null,
 	var producer: String? = null,
@@ -8,7 +9,7 @@ data class UnishareVO(
 	var website: String? = null,
 	var youtube: String? = null,
 	var fileSize: Long = 0,
-	var isPublic: Boolean = false,//todo remove is
+	var isPublic: Boolean = false,
 	var password: String? = null,
 	var downloadCount: Int = 0,
 )

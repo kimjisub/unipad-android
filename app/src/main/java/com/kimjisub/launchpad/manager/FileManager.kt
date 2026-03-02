@@ -1,15 +1,23 @@
 package com.kimjisub.launchpad.manager
 
-import android.annotation.SuppressLint
+import android.content.Context
 import android.media.MediaPlayer
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.CoroutineScope
+import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import java.io.*
-import java.util.*
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.FileWriter
+import java.io.IOException
+import java.util.Locale
 
 object FileManager {
+	private const val COPY_BUFFER_SIZE = 4096
+	private const val BYTES_PER_MB = 1024 * 1024
+	private const val DEFAULT_DURATION_MS = 10000
+	private val FILENAME_FILTER_REGEX = "[|\\\\?*<\":>/]+".toRegex()
 
 	fun removeDoubleFolder(path: String) {
 		try {
@@ -21,41 +29,22 @@ object FileManager {
 						moveDirectory(doubleFolder, rootFolder)
 				}
 			}
-		} catch (e: Exception) {
-			e.printStackTrace()
+		} catch (e: IOException) {
+			Log.err("removeDoubleFolder failed", e)
 		}
 	}
 
-	// ============================================================================================= Tools
-
-
 	fun sortByTime(files: Array<File>): Array<File> {
-		for (i in 0 until files.size - 1) {
-			for (j in 0 until files.size - (i + 1)) {
-				if (getInnerFileLastModified(files[j]) < getInnerFileLastModified(files[j + 1])) {
-					val tmp = files[j + 1]
-					files[j + 1] = files[j]
-					files[j] = tmp
-				}
-			}
-		}
-		return files
+		return files.sortedByDescending { getInnerFileLastModified(it) }.toTypedArray()
 	}
 
 	fun sortByName(files: Array<File>): Array<File> {
-		Arrays.sort(
-			files,
-			Comparator { object1: Any, object2: Any ->
-				(object1 as File).name.lowercase(Locale.getDefault())
-					.compareTo((object2 as File).name.lowercase(Locale.getDefault()))
-			} as Comparator<Any>
-		)
-		return files
+		return files.sortedWith(compareBy { it.name.lowercase() }).toTypedArray()
 	}
 
 	fun getInnerFileLastModified(target: File): Long {
 		var time: Long = 0
-		if (target.isDirectory) for (file in target.listFiles()) {
+		if (target.isDirectory) for (file in target.listFiles().orEmpty()) {
 			if (file.isFile) {
 				time = file.lastModified()
 				break
@@ -77,78 +66,52 @@ object FileManager {
 		return ret
 	}
 
-	fun filterFilename(orgnStr: String): String {
-		val regExpr = "[|\\\\?*<\":>/]+"
-		return orgnStr.replace(regExpr.toRegex(), "")
-
-		//return tmpStr.replaceAll("[ ]", "_");
-
+	fun filterFilename(originalStr: String): String {
+		return originalStr.replace(FILENAME_FILTER_REGEX, "")
 	}
 
-	// ============================================================================================= Make, Move, Copy, Delete
-
-
-	fun moveDirectory(F_source: File, F_target: File) {
+	fun moveDirectory(sourceDir: File, targetDir: File) {
 		try {
-			if (!F_target.isDirectory) F_target.mkdir()
-			val sourceList: Array<File> = F_source.listFiles()
+			if (!targetDir.isDirectory) targetDir.mkdir()
+			val sourceList = sourceDir.listFiles() ?: return
 			for (source in sourceList) {
-				val target = File(F_target.absolutePath + "/" + source.name)
+				val target = File(targetDir, source.name)
 				if (source.isDirectory) {
 					target.mkdir()
 					moveDirectory(source, target)
 				} else {
-					var fis: FileInputStream? = null
-					var fos: FileOutputStream? = null
 					try {
-						fis = FileInputStream(source)
-						fos = FileOutputStream(target)
-						val b = ByteArray(4096)
-						var cnt = 0
-						while (fis.read(b).also { cnt = it } != -1) {
-							fos.write(b, 0, cnt)
+						FileInputStream(source).use { fis ->
+							FileOutputStream(target).use { fos ->
+								val b = ByteArray(COPY_BUFFER_SIZE)
+								var cnt = 0
+								while (fis.read(b).also { cnt = it } != -1) {
+									fos.write(b, 0, cnt)
+								}
+							}
 						}
-					} catch (e: Exception) {
-						e.printStackTrace()
-					} finally {
-						try {
-							fis!!.close()
-							fos!!.close()
-						} catch (e: IOException) {
-							e.printStackTrace()
-						}
+					} catch (e: IOException) {
+						Log.err("moveDirectory: copy failed", e)
 					}
 				}
 				target.setLastModified(source.lastModified())
 			}
-			F_target.setLastModified(F_source.lastModified())
-			deleteDirectory(F_source)
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-	}
-
-	fun deleteDirectory(file: DocumentFile) {
-		try {
-			if (file.isDirectory) {
-				val childFileList: Array<DocumentFile> = file.listFiles()
-				for (childFile in childFileList) deleteDirectory(childFile)
-				file.delete()
-			} else file.delete()
-		} catch (e: Exception) {
-			e.printStackTrace()
+			targetDir.setLastModified(sourceDir.lastModified())
+			deleteDirectory(sourceDir)
+		} catch (e: IOException) {
+			Log.err("moveDirectory failed", e)
 		}
 	}
 
 	fun deleteDirectory(file: File) {
 		try {
 			if (file.isDirectory) {
-				val childFileList: Array<File> = file.listFiles()
+				val childFileList = file.listFiles() ?: return
 				for (childFile in childFileList) deleteDirectory(childFile)
 				file.delete()
 			} else file.delete()
-		} catch (e: Exception) {
-			e.printStackTrace()
+		} catch (e: SecurityException) {
+			Log.err("deleteDirectory failed", e)
 		}
 	}
 
@@ -158,67 +121,109 @@ object FileManager {
 				if (dir.isFile) dir.delete()
 				dir.mkdir()
 			}
-		} catch (e: Exception) {
-			e.printStackTrace()
+		} catch (e: SecurityException) {
+			Log.err("makeDirWhenNotExist failed", e)
 		}
 
 	}
-
-	// ============================================================================================= Get Info
-
 
 	fun makeNomedia(parent: File?) {
 		try {
 			val nomedia = File(parent, ".nomedia")
 			if (!nomedia.isFile) {
 				try {
-					FileWriter(nomedia).close()
+					FileWriter(nomedia).use { }
 				} catch (e: IOException) {
-					e.printStackTrace()
+					Log.err("makeNomedia: write failed", e)
 				}
 			}
-		} catch (e: Exception) {
-			e.printStackTrace()
+		} catch (e: SecurityException) {
+			Log.err("makeNomedia failed", e)
 		}
 	}
 
-	@SuppressLint("DefaultLocale")
 	fun byteToMB(b: Long, format: String = "%.2f"): String {
-		return String.format(format, b.toFloat() / 1024 / 1024)
+		return String.format(Locale.US, format, b.toFloat() / BYTES_PER_MB)
 	}
 
-	suspend fun getFolderSize(file: File): Long {
-		val job = CoroutineScope(Dispatchers.IO).async {
-			var totalMemory: Long = 0
-			when {
-				file.isFile -> {
-					return@async file.length()
-				}
-
-				file.isDirectory -> {
-					val childFileList: Array<out File> = file.listFiles() ?: return@async 0
-					for (childFile in childFileList) totalMemory += getFolderSize(childFile)
-					return@async totalMemory
-				}
-
-				else -> return@async 0
+	suspend fun getFolderSize(file: File): Long = withContext(Dispatchers.IO) {
+		when {
+			file.isFile -> file.length()
+			file.isDirectory -> {
+				val childFileList: Array<out File> = file.listFiles() ?: return@withContext 0L
+				childFileList.sumOf { getFolderSize(it) }
 			}
+			else -> 0L
 		}
-		return job.await()
 	}
 
-	// ============================================================================================= Etc
-
-
-	fun wavDuration(mplayer: MediaPlayer, URL: String?): Int {
+	fun wavDuration(mplayer: MediaPlayer, url: String?): Int {
 		return try {
 			mplayer.reset()
-			mplayer.setDataSource(URL)
+			mplayer.setDataSource(url)
 			mplayer.prepare()
 			mplayer.duration
 		} catch (e: IOException) {
-			e.printStackTrace()
-			10000
+			Log.err("wavDuration failed", e)
+			mplayer.reset()
+			DEFAULT_DURATION_MS
+		}
+	}
+
+	fun copyDirectory(source: File, target: File) {
+		if (source.isDirectory) {
+			if (!target.exists()) target.mkdirs()
+			source.listFiles()?.forEach { child ->
+				copyDirectory(child, File(target, child.name))
+			}
+		} else {
+			source.inputStream().use { input ->
+				FileOutputStream(target).use { output ->
+					val buffer = ByteArray(COPY_BUFFER_SIZE)
+					var count: Int
+					while (input.read(buffer).also { count = it } != -1) {
+						output.write(buffer, 0, count)
+					}
+				}
+			}
+		}
+	}
+
+	fun copyDocumentTreeToFile(context: Context, source: DocumentFile, target: File) {
+		if (source.isDirectory) {
+			if (!target.exists()) target.mkdirs()
+			for (child in source.listFiles()) {
+				copyDocumentTreeToFile(context, child, File(target, child.name ?: "unknown"))
+			}
+		} else {
+			context.contentResolver.openInputStream(source.uri)?.use { input ->
+				FileOutputStream(target).use { output ->
+					val buffer = ByteArray(COPY_BUFFER_SIZE)
+					var count: Int
+					while (input.read(buffer).also { count = it } != -1) {
+						output.write(buffer, 0, count)
+					}
+				}
+			}
+		}
+	}
+
+	fun copyFileToDocumentTree(context: Context, source: File, targetParent: DocumentFile) {
+		if (source.isDirectory) {
+			val dirDoc = targetParent.createDirectory(source.name)
+				?: targetParent.findFile(source.name) ?: return
+			source.listFiles()?.forEach { child ->
+				copyFileToDocumentTree(context, child, dirDoc)
+			}
+		} else {
+			val mimeType = when (source.extension.lowercase()) {
+				"wav" -> "audio/wav"; "mp3" -> "audio/mpeg"; "ogg" -> "audio/ogg"
+				else -> "application/octet-stream"
+			}
+			val fileDoc = targetParent.createFile(mimeType, source.nameWithoutExtension) ?: return
+			context.contentResolver.openOutputStream(fileDoc.uri)?.use { output ->
+				source.inputStream().use { input -> input.copyTo(output, COPY_BUFFER_SIZE) }
+			}
 		}
 	}
 }

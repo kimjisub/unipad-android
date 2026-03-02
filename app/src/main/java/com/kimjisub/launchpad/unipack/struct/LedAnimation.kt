@@ -5,12 +5,16 @@ class LedAnimation(
 	val loop: Int,
 	val num: Int,
 ) {
-	interface LedEvent {
+	companion object {
+		const val DEFAULT_VELOCITY = 4
+	}
+
+	sealed interface LedEvent {
 		class On(
 			val x: Int,
 			val y: Int,
 			val color: Int = -1,
-			val velocity: Int = 4,
+			val velocity: Int = DEFAULT_VELOCITY,
 		) : LedEvent
 
 		class Off(

@@ -1,57 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:focusable="false"
+	android:gravity="center_vertical"
+	android:orientation="horizontal"
+	android:padding="8dp">
 
-	<data>
-
-		<variable
-			name="data"
-			type="com.kimjisub.launchpad.adapter.DialogListItem" />
-
-		<import type="android.view.View" />
-	</data>
+	<ImageView
+		android:id="@+id/icon"
+		android:importantForAccessibility="no"
+		android:layout_width="45dp"
+		android:layout_height="45dp"
+		android:layout_margin="7dp"
+		android:scaleType="fitCenter"
+		android:visibility="gone" />
 
 	<LinearLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:focusable="false"
-		android:gravity="center_vertical"
-		android:orientation="horizontal"
-		android:padding="8dp">
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="7dp"
+		android:orientation="vertical">
 
-		<ImageView
-			android:id="@+id/icon"
-			android:layout_width="45dp"
-			android:layout_height="45dp"
-			android:layout_margin="7dp"
-			android:scaleType="fitCenter"
-			android:visibility="@{data.iconResId != null ? View.VISIBLE : View.GONE}"
-			app:imgRes="@{data.iconResId}" />
-
-		<LinearLayout
-			android:layout_width="wrap_content"
+		<TextView
+			android:id="@+id/title"
+			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_marginStart="7dp"
-			android:orientation="vertical">
+			android:gravity="center_vertical"
+			android:textColor="@color/title"
+			android:textSize="17sp" />
 
-			<TextView
-				android:id="@+id/title"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center_vertical"
-				android:text="@{data.title}"
-				android:textColor="@color/title"
-				android:textSize="17dp" />
-
-			<TextView
-				android:id="@+id/subtitle"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:gravity="center_vertical"
-				android:text="@{data.subtitle}"
-				android:textColor="@color/subtitle"
-				android:textSize="13dp" />
-		</LinearLayout>
-
+		<TextView
+			android:id="@+id/subtitle"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_vertical"
+			android:textColor="@color/subtitle"
+			android:textSize="13sp" />
 	</LinearLayout>
-</layout>
+
+</LinearLayout>

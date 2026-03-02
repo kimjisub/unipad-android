@@ -30,36 +30,24 @@
 	<string name="using">사용중</string>
 	<string name="path">경로</string>
 	<string name="quit">나가기</string>
+	<string name="menu">메뉴</string>
 	<string name="website">웹사이트</string>
 	<string name="measuring">측정중…</string>
 	<string name="general">일반</string>
 	<string name="notice">공지</string>
 	<string name="newUniPack">새로운 유니팩</string>
-	<string name="notFound">찾을 수 없습니다.</string>
 	<string name="exceptionOccurred">예외 오류 발생</string>
-	<string name="openDirectory">폴더 열기</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">런치패드 다시 연결하기</string>
-	<string name="list_refresh">목록 새로고침</string>
 	<string name="import_unipack">유니팩 불러오기</string>
 	<string name="store">스토어</string>
 
 	<!--Setting-->
 	<string name="setting">설정</string>
 	<string name="information">정보</string>
-	<string name="payment">결제</string>
 	<string name="select_theme">테마 선택</string>
 	<string name="storage_location">저장소 위치</string>
-	<string name="use_sd_card">SD 카드 사용</string>
-	<string name="plan_restorePurchases">구입항목 복원하기</string>
-	<string name="plan_restorePurchases_">결제 후에 앱을 재시작해주세요.</string>
-	<string name="plan_pro">UniPad Pro</string>
-	<string name="plan_pro_">전문가 기능</string>
-	<string name="donation">Donate to UniPad</string>
-	<string name="donation_">Donate for the better UniPad.</string>
-	<string name="purchase">구매하기</string>
-	<string name="purchaseComplete">결제가 완료되었습니다.</string>
 	<string name="github">Github</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
@@ -102,28 +90,25 @@
 
 	<!--Version-->
 	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
-	<string name="currentVersion">현재 버전</string>
-	<string name="newVersion">최신 버전</string>
 
 	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
 	<string name="unipackNotFound">유니팩이 발견되지 않았습니다.</string>
 	<string name="clickToAddUniPack">유니팩을 추가하려면 클릭하세요.</string>
+	<string name="guide_download_new">새로운 팩 다운로드</string>
+	<string name="guide_import_external">다운로드한 팩 불러오기</string>
+	<string name="guide_restore_packs">사라진 팩 복구하기</string>
 	<string name="doYouWantToDeleteUniPack">유니팩을 삭제하시겠습니까?</string>
-	<string name="doYouWantToRemapUniPack">이 유니팩의 자동재생을 자동매핑 하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="importComplete">불러오기 성공!</string>
 	<string name="importFailed">불러오기 실패…</string>
-	<string name="isNotAnUniPack">유니팩이 아닙니다.</string>
-	<string name="pressAgainToGoBack">종료하시려면\n한번 더 눌러주세요</string>
 	<string name="copied">클립보드에 복사되었습니다.</string>
 	<string name="skinMemoryErr">스킨을 불러오는 도중 메모리 문제가 발생하였습니다.\n앱을 재시작합니다.</string>
 	<string name="skinErr">스킨에 문제가 있습니다.\n스킨을 초기화합니다.</string>
 
 	<string name="outOfMemory">메모리 공간이 부족합니다.\n메모리 확보 후 다시 시도해주세요.</string>
 	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
-	<string name="doNotSee">더이상 보지 않기</string>
 
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">런치패드 연결중…</string>
@@ -141,20 +126,30 @@
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
 
+	<string name="theme_import">테마 불러오기</string>
+	<string name="theme_import_success">테마를 불러왔습니다.</string>
+	<string name="theme_import_failed">테마 불러오기에 실패했습니다.</string>
+	<string name="theme_import_invalid">유효하지 않은 테마 파일입니다.</string>
+	<string name="theme_add_title">테마 추가</string>
+	<string name="theme_add_store_desc">Google Play 스토어에서 테마 앱을 검색합니다.</string>
+	<string name="theme_add_zip_desc">기기에서 .zip 테마 파일을 가져옵니다.</string>
+	<string name="theme_add_store">Play 스토어에서 검색</string>
+	<string name="theme_add_zip">ZIP 파일 가져오기</string>
+	<string name="theme_delete_title">테마 삭제</string>
+	<string name="theme_delete_confirm">\"%s\" 테마를 삭제할까요?</string>
+
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
 	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_device">기기</string>
 	<string name="settings_info">정보</string>
 	<string name="settings_storage">저장소</string>
 	<string name="settings_theme">테마</string>
-	<string name="settings_ads_payment">광고 및 결제</string>
-	<string name="settings_storage_active">사용하는 저장소</string>
-	<string name="settings_storage_download">다운로드 저장소</string>
+	<string name="settings_storage_download">다운로드 위치</string>
 	<string name="settings_developer">개발자</string>
 	<string name="settings_app">애플리케이션</string>
 	<string name="settings_user">사용자</string>
-	<string name="settings_payment">결제</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$tY-%1$tm-%1$td</string>
@@ -188,9 +183,95 @@
 	<!--Store Pack Panel-->
 	<string name="SPP_downloadCount">다운로드 수</string>
 
-	<!--File Explorer-->
-	<string name="FE_accept">확인</string>
-	<string name="FE_folderErr">폴더를 읽을 수 없습니다.</string>
-	<string name="FE_fileErr">파일을 읽을 수 없습니다.</string>
 	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">유튜브</string>
+	<string name="cd_website">웹사이트</string>
+	<string name="cd_bookmark">북마크</string>
+	<string name="cd_delete">삭제</string>
+	<string name="cd_logo">UniPad 로고</string>
+	<string name="cd_autoplay_prev">이전</string>
+	<string name="cd_autoplay_play">재생</string>
+	<string name="cd_autoplay_pause">일시정지</string>
+	<string name="cd_autoplay_next">다음</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_backup_documents">Documents/UniPack (백업)</string>
+	<string name="workspace_documents_android10">Documents/Unipad (백업)</string>
+	<string name="workspace_app_storage">앱 저장소 (권장)</string>
+	<string name="workspace_internal_storage">내부 저장소</string>
+	<string name="workspace_internal_sd_card">내장 SD 카드</string>
+	<string name="workspace_external_sd_card_format">외장 SD 카드 %d</string>
+	<string name="workspace_unipack_count">%d개의 유니팩</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">앱 전용 저장소. 권한 불필요. 앱 삭제 시 함께 삭제.</string>
+	<string name="workspace_desc_documents_android10">공용 문서 폴더. Android 10에서만 사용 가능.</string>
+	<string name="workspace_desc_external_sd">외장 SD 카드 저장소. 기기 간 이동 가능.</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">유니팩 전송</string>
+	<string name="transfer_button">전송</string>
+	<string name="transfer_source">원본</string>
+	<string name="transfer_target">대상</string>
+	<string name="transfer_mode_label">모드</string>
+	<string name="transfer_mode_copy">복사</string>
+	<string name="transfer_mode_move">이동</string>
+	<string name="transfer_select_all">전체 선택</string>
+	<string name="transfer_deselect_all">전체 해제</string>
+	<string name="transfer_selected_count">%d개 선택됨</string>
+	<string name="transfer_start">시작</string>
+	<string name="transfer_copying">복사 중: %s</string>
+	<string name="transfer_moving">이동 중: %s</string>
+	<string name="transfer_result_transferred">전송됨</string>
+	<string name="transfer_result_skipped">건너뜀 (이미 존재)</string>
+	<string name="transfer_result_failed">실패</string>
+	<string name="transfer_done">완료</string>
+	<string name="transfer_no_items">선택된 유니팩이 없습니다</string>
+	<string name="transfer_select_target">대상을 선택하세요</string>
+	<string name="transfer_select_source">원본을 선택하세요</string>
+	<string name="transfer_format_label">포맷</string>
+	<string name="transfer_format_folder">폴더</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">유니팩 검색</string>
+	<string name="backup_title">백업</string>
+	<string name="restore_title">복구</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">내용을 확인하려면 접근 권한이 필요합니다</string>
+	<string name="migration_grant_access">접근 권한 부여</string>
+	<string name="migration_same_as_source">원본과 동일</string>
+	<string name="migration_result">결과</string>
+
+	<!--Backup-->
+	<string name="backup_section">백업</string>
+	<string name="backup_description">Documents/Unipad 폴더에 연결</string>
+	<string name="backup_grant_access">백업 폴더 연결</string>
+	<string name="backup_revoke">백업 폴더 연결 해제</string>
+	<string name="backup_invalid_folder">Documents/Unipad 폴더를 선택해주세요</string>
+	<string name="backup_backup_button">백업</string>
+	<string name="backup_backup_description">유니팩을 백업 폴더에 복사</string>
+	<string name="backup_restore_button">복구</string>
+	<string name="backup_restore_description">백업 폴더에서 유니팩 복사</string>
+	<string name="backup_guide_title">백업 폴더 연결</string>
+	<string name="backup_guide_description">유니팩을 백업하거나 복구하려면 Documents/Unipad 폴더를 연결하세요.\n이 폴더는 앱을 삭제해도 유지됩니다.</string>
+	<string name="backup_guide_step1">1. 폴더 선택 화면이 열립니다</string>
+	<string name="backup_guide_step2">2. Documents/Unipad 폴더가 있으면 선택하세요</string>
+	<string name="backup_guide_step3">3. 없으면 Documents에 "Unipad" 폴더를 만든 후 선택하세요</string>
+	<string name="backup_guide_continue">계속</string>
+	<string name="backup_recovery_title">유니팩 발견</string>
+	<string name="backup_recovery_message">백업 폴더에서 %d개의 유니팩을 발견했습니다.\n복구하시겠습니까?</string>
+	<string name="backup_recovery_restore">복구</string>
+	<string name="backup_recovery_later">나중에</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">서버 오류\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+	<string name="option_indicator_format">%s ●</string>
 </resources>

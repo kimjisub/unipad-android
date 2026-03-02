@@ -1,8 +1,6 @@
 package com.kimjisub.launchpad.midi.driver
 
 class MidiFighter : DriverRef() {
-	companion object;
-
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		val x: Int
 		val y: Int
@@ -30,21 +28,17 @@ class MidiFighter : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
-		var x = x
-		var y = y
-		x += 1
-		y += 1
-		if (y in 1..4)
-			sendSignal(9, -110, -4 * x + y + 67, velocity) else if (y in 5..8) sendSignal(
-			9,
-			-110,
-			-4 * x + y + 95,
-			velocity
-		)
+		val padX = x + 1
+		val padY = y + 1
+		if (padY in 1..4) {
+			sendSignal(9, -110, -4 * padX + padY + 67, velocity)
+		} else if (padY in 5..8) {
+			sendSignal(9, -110, -4 * padX + padY + 95, velocity)
+		}
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {}
-	override fun sendFunctionkeyLed(f: Int, velocity: Int) {}
+	override fun sendFunctionKeyLed(f: Int, velocity: Int) {}
 	override fun sendClearLed() {
 		for (i in 0..7)
 			for (j in 0..7)

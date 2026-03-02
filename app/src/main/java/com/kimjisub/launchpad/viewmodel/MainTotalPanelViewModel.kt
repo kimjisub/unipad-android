@@ -1,10 +1,16 @@
+@file:Suppress("EmptyMethod") // private set on mutableStateOf generates empty setter bytecode
+
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
@@ -12,13 +18,8 @@ import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
-import com.kimjisub.launchpad.tool.Event
-import com.kimjisub.launchpad.tool.emit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.lang.reflect.InvocationTargetException
 
 
 class MainTotalPanelViewModel(
@@ -35,62 +36,63 @@ class MainTotalPanelViewModel(
 		SortMethod(app.getString(R.string.sort_producer), false) { a, b ->
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
-		// todo 이거 정렬 안됨
-		/*SortMethod(app.getString(R.string.sort_play_count), true) { a, b ->
-			val aCount = repo.openCountSync(a.unipack.id)
-			val bCount = repo.openCountSync(b.unipack.id)
-			-aCount.compareTo(bCount)
-		},
-		SortMethod(app.getString(R.string.sort_last_opened_date), true) { a, b ->
-			val aDate = repo.lastOpenedAt(a.unipack.id) ?: Date(0)
-			val bDate = repo.lastOpenedAt(b.unipack.id) ?: Date(0)
-			-aDate.compareTo(bDate)
-		},*/
 		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->
 			val aDate = a.unipack.lastModified()
 			val bDate = b.unipack.lastModified()
 			-aDate.compareTo(bDate)
 		}
 	)
-	val sortMethodTitleList = sortMethodList.map { return@map it.name }
+	val sortMethodTitleList = sortMethodList.map { it.name }
 
-	val version = MutableLiveData<String>()
-	val premium = MutableLiveData<Boolean>()
+	var version by mutableStateOf("")
+		private set
+	var premium by mutableStateOf(false)
 
-	val unipackCount = MutableLiveData<Int?>()
-	val unipackCapacity = MutableLiveData<String?>()
+	var unipackCount by mutableStateOf<Int?>(null)
+		private set
+	var unipackCapacity by mutableStateOf<String?>(null)
+		private set
 	val openCount = repo.totalOpenCount()
-	val sortMethod = MutableLiveData<Int>()
-	val sortOrder = MutableLiveData<Boolean>()
-	val eventSort = MutableLiveData<Event<Pair<SortMethod, Boolean>>>()
+
+	var sortMethod by mutableIntStateOf(0)
+		private set
+
+	var sortOrder by mutableStateOf(true)
+		private set
+
+	var onSortChanged: ((SortMethod, Boolean) -> Unit)? = null
+
+	fun updateSortMethod(value: Int) {
+		sortMethod = value
+		p.sortMethod = value
+		sortOrder = sortMethodList[value].defaultOrder
+		p.sortOrder = sortOrder
+		sortChange()
+	}
+
+	fun updateSortOrder(value: Boolean) {
+		sortOrder = value
+		p.sortOrder = value
+		sortChange()
+	}
 
 	init {
-		version.value = BuildConfig.VERSION_NAME
+		version = BuildConfig.VERSION_NAME
 
-		sortMethod.value = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
-		sortOrder.value = p.sortOrder
-
-		sortMethod.observeForever {
-			p.sortMethod = it
-			sortOrder.value = sortMethodList[sortMethod.value!!].defaultOrder
-
-		}
-		sortOrder.observeForever {
-			p.sortOrder = it
-			sortChange()
-		}
+		sortMethod = p.sortMethod.coerceAtMost(sortMethodList.size - 1)
+		sortOrder = p.sortOrder
 	}
 
 	fun update() {
-		CoroutineScope(Dispatchers.Main).launch {
-			unipackCapacity.value = null
-			val size = ws.getActiveWorkspacesSize()
-			unipackCapacity.value = FileManager.byteToMB(size, "%.0f")
+		viewModelScope.launch {
+			unipackCapacity = null
+			val size = ws.getAvailableWorkspacesSize()
+			unipackCapacity = FileManager.byteToMB(size, "%.0f")
 		}
 
-		CoroutineScope(Dispatchers.Main).launch {
-			unipackCount.value = null
-			unipackCount.value = ws.getUnipacks().size
+		viewModelScope.launch {
+			unipackCount = null
+			unipackCount = ws.getUnipacks().size
 		}
 	}
 
@@ -99,11 +101,11 @@ class MainTotalPanelViewModel(
 	private var prevSortOrder: Boolean? = null
 
 	private fun sortChange() {
-		if (sortMethod.value!! != prevSortMethod || sortOrder.value!! != prevSortOrder)
-			eventSort.emit(Pair(sortMethodList[sortMethod.value!!], sortOrder.value!!))
+		if (sortMethod != prevSortMethod || sortOrder != prevSortOrder)
+			onSortChanged?.invoke(sortMethodList[sortMethod], sortOrder)
 
-		prevSortMethod = sortMethod.value
-		prevSortOrder = sortOrder.value
+		prevSortMethod = sortMethod
+		prevSortOrder = sortOrder
 
 	}
 
@@ -117,32 +119,11 @@ class MainTotalPanelViewModel(
 		private val app: Application,
 		private val p: PreferenceManager,
 		private val ws: WorkspaceManager,
-	) : ViewModelProvider.NewInstanceFactory() {
+	) : ViewModelProvider.Factory {
 
+		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			if (ViewModel::class.java.isAssignableFrom(modelClass)) {
-				try {
-					return modelClass.getConstructor(
-						Application::class.java,
-						PreferenceManager::class.java,
-						WorkspaceManager::class.java
-					)
-						.newInstance(app, p, ws)
-				} catch (e: NoSuchMethodException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: IllegalAccessException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: InstantiationException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				} catch (e: InvocationTargetException) {
-					throw RuntimeException("Cannot create an instance of $modelClass", e)
-				}
-			}
-			return super.create(modelClass)
+			return MainTotalPanelViewModel(app, p, ws) as T
 		}
 	}
-
-
 }
-
-

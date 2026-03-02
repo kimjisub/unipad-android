@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">in</string>
+	<string name="language">Indonesian</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Terima</string>
+	<string name="cancel">Batal</string>
+	<string name="warning">Peringatan</string>
+	<string name="error">KESALAHAN</string>
+	<string name="errOccur">Terjadi kesalahan.</string>
+	<string name="wait_a_sec">Tunggu sebentar…</string>
+	<string name="importing">Mengimpor</string>
+	<string name="loading">Memuat</string>
+	<string name="download">Unduh</string>
+	<string name="downloadWaiting">Menunggu Unduhan</string>
+	<string name="downloading">Mengunduh</string>
+	<string name="downloaded">Terunduh</string>
+	<string name="success">Berhasil</string>
+	<string name="failed">Gagal</string>
+	<string name="delete">Hapus</string>
+	<string name="edit">Edit</string>
+	<string name="update">Perbarui</string>
+	<string name="ignore">Abaikan</string>
+	<string name="apply">Terapkan</string>
+	<string name="restart">Mulai Ulang</string>
+	<string name="using">Digunakan</string>
+	<string name="path">Jalur</string>
+	<string name="quit">Keluar</string>
+	<string name="menu">Menu</string>
+	<string name="website">Situs Web</string>
+	<string name="measuring">Mengukur…</string>
+	<string name="general">Umum</string>
+	<string name="notice">Pemberitahuan</string>
+	<string name="newUniPack">UniPack Baru</string>
+	<string name="exceptionOccurred">Terjadi Pengecualian</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Sambungkan Ulang Launchpad</string>
+	<string name="import_unipack">Impor UniPack</string>
+	<string name="store">Toko</string>
+
+	<!--Setting-->
+	<string name="setting">Pengaturan</string>
+	<string name="information">Informasi</string>
+	<string name="select_theme">Pilih Tema</string>
+	<string name="storage_location">Lokasi Penyimpanan</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Lisensi Sumber Terbuka</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Komunitas</string>
+	<string name="officialHomepage">Situs Resmi</string>
+	<string name="officialHomepage_">Situs Resmi UniPad</string>
+	<string name="officialFacebook">Facebook Resmi</string>
+	<string name="officialFacebook_">Dukungan Teknis</string>
+	<string name="facebookCommunity">Komunitas Facebook</string>
+	<string name="facebookCommunity_">Inggris</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Korea</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk ke Dev. kimjisub</string>
+	<string name="kakaotalk_">Selain Dukungan Teknis</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Selain Dukungan Teknis</string>
+
+	<!--UniPack Info-->
+	<string name="title">Judul</string>
+	<string name="producerName">Produser</string>
+	<string name="padSize">Ukuran Pad</string>
+	<string name="numChain">Chain</string>
+	<string name="fileSize">Ukuran File</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Putar Otomatis</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Lampu umpan balik</string>
+	<string name="traceLog">Log Jejak</string>
+	<string name="traceLogClear">Log Jejak telah direset.</string>
+	<string name="record">Rekam</string>
+	<string name="hideUI">Sembunyikan UI</string>
+	<string name="watermark">Watermark</string>
+	<string name="proLightMode">Mode Pro Light</string>
+
+	<!--Version-->
+	<string name="newVersionFound">Versi baru terdeteksi.</string>
+
+	<string name="permissionRequire">Akses penyimpanan eksternal diperlukan untuk menyimpan file proyek.\nDapatkan izin untuk hak ini.</string>
+	<string name="permissionDenied">Aplikasi memerlukan akses ke penyimpanan eksternal.\nSilakan aktifkan izin di [Pengaturan] > [Izin]</string>
+	<string name="unipackNotFound">UniPack tidak ditemukan.</string>
+	<string name="clickToAddUniPack">Klik untuk menambahkan UniPack.</string>
+	<string name="doYouWantToDeleteUniPack">Apakah Anda ingin menghapus proyek ini?</string>
+	<string name="remapDone">Pemetaan ulang AutoPlay telah berhasil diselesaikan.</string>
+	<string name="remapFail">AutoPlay tidak ada</string>
+	<string name="importComplete">Analisis selesai!</string>
+	<string name="importFailed">Gagal menganalisis…</string>
+	<string name="copied">Disalin ke clipboard.</string>
+	<string name="skinMemoryErr">Gagal menerapkan skin.\nMulai ulang aplikasi.</string>
+	<string name="skinErr">Gagal menerapkan skin.\nReset skin.</string>
+
+	<string name="outOfMemory">Kehabisan memori..\nKosongkan memori dan coba lagi.</string>
+	<string name="outOfCPU">Tidak bisa memulai pack\nkarena spesifikasi ponsel…\nCoba lagi.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Menghubungkan launchpad…</string>
+	<string name="midiDevicesNotDetected">Perangkat MIDI Tidak Terdeteksi</string>
+	<string name="signal_SpeedFirst">Kecepatan utama</string>
+	<string name="signal_avoidAfterimage">Hindari bayangan</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Tidak bisa keluar saat mengunduh pack</string>
+	<string name="UnableToAccessServer">Tidak dapat mengakses server.</string>
+
+	<!--Theme-->
+	<string name="theme">Tema</string>
+	<string name="themeDownload">Unduh Tema</string>
+	<string name="requireRestart">Memerlukan restart aplikasi.</string>
+	<string name="doYouWantToRestartApp">Apakah Anda ingin memulai ulang aplikasi?</string>
+
+	<string name="theme_import">Impor Tema</string>
+	<string name="theme_import_success">Tema berhasil diimpor.</string>
+	<string name="theme_import_failed">Gagal mengimpor tema.</string>
+	<string name="theme_import_invalid">File tema tidak valid.</string>
+	<string name="theme_delete_title">Hapus Tema</string>
+	<string name="theme_delete_confirm">Hapus \"%s\"?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Informasi</string>
+	<string name="settings_storage">Penyimpanan</string>
+	<string name="settings_theme">Tema</string>
+	<string name="settings_storage_download">Penyimpanan Unduhan</string>
+	<string name="settings_developer">Pengembang</string>
+	<string name="settings_app">Aplikasi</string>
+	<string name="settings_user">Pengguna</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">Jumlah UniPack</string>
+	<string name="MTP_size">Ukuran UniPack</string>
+	<string name="MPT_playCount">Jumlah Main</string>
+	<string name="MPT_theme">Tema</string>
+	<string name="sort_title">Judul</string>
+	<string name="sort_producer">Produser</string>
+	<string name="sort_play_count">Jumlah Main</string>
+	<string name="sort_last_opened_date">Terakhir Dibuka</string>
+	<string name="sort_download_date">Tanggal Unduh</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Ukuran Pad</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">File Suara</string>
+	<string name="MPP_ledEvents">Event Led</string>
+	<string name="MPP_fileSize">Ukuran File</string>
+	<string name="MPP_playCount">Jumlah Main</string>
+	<string name="MPP_downloadedDate">Tanggal Unduh</string>
+	<string name="MPP_lastPlayed">Terakhir Dimainkan</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPack di Toko</string>
+	<string name="STP_downloadedCount">UniPack Terunduh</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Jumlah unduhan</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Situs Web</string>
+	<string name="cd_bookmark">Bookmark</string>
+	<string name="cd_delete">Hapus</string>
+	<string name="cd_logo">Logo UniPad</string>
+	<string name="cd_autoplay_prev">Sebelumnya</string>
+	<string name="cd_autoplay_play">Putar</string>
+	<string name="cd_autoplay_pause">Jeda</string>
+	<string name="cd_autoplay_next">Berikutnya</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Dokumen (Android 10)</string>
+	<string name="workspace_app_storage">Penyimpanan Aplikasi (Disarankan)</string>
+	<string name="workspace_internal_storage">Penyimpanan Internal</string>
+	<string name="workspace_internal_sd_card">Kartu SD Internal</string>
+	<string name="workspace_external_sd_card_format">Kartu SD Eksternal %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">Penyimpanan khusus aplikasi. Tidak perlu izin. Dihapus saat aplikasi dihapus.</string>
+	<string name="workspace_desc_documents_android10">Folder Dokumen bersama. Hanya tersedia di Android 10.</string>
+	<string name="workspace_desc_external_sd">Penyimpanan kartu SD eksternal. Dapat dipindahkan antar perangkat.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">Akses diperlukan untuk memeriksa isi</string>
+	<string name="migration_grant_access">Berikan Akses</string>
+	<string name="migration_same_as_source">Sama dengan sumber</string>
+	<string name="migration_result">Hasil</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">kesalahan server\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

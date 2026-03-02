@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.unipack
 
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
@@ -10,27 +11,20 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 
-
 class UniPackFolder(private val rootFolder: File) : UniPack() {
 
-	var F_info: File? = null
-	var F_sounds: File? = null
-	var F_keySound: File? = null
-	var F_keyLed: File? = null
-	var F_autoPlay: File? = null
+	private var infoFile: File? = null
+	private var soundsDir: File? = null
+	private var keySoundFile: File? = null
+	private var keyLedDir: File? = null
+	private var autoPlayFile: File? = null
 	override val id: String
 		get() = rootFolder.name
 
-	override val infoExist
-		get() = F_info != null
-	override val soundExist
-		get() = F_sounds != null
-	override val keySoundExist
-		get() = F_keySound != null
 	override val keyLedExist
-		get() = F_keyLed != null
+		get() = keyLedDir != null
 	override val autoPlayExist
-		get() = F_autoPlay != null
+		get() = autoPlayFile != null
 
 	override fun lastModified(): Long {
 		return FileManager.getInnerFileLastModified(rootFolder)
@@ -57,28 +51,26 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		return this
 	}
 
-
 	override fun toString(): String {
 		return "UniPackFolder(folderName=${rootFolder.name})"
 	}
 
-
 	override fun checkFile() {
-		rootFolder.listFiles().forEach {
+		rootFolder.listFiles()?.forEach {
 			when (it.name.lowercase()) {
-				"info" -> F_info = if (it.isFile) it else null
-				"sounds" -> F_sounds = if (it.isDirectory) it else null
-				"keysound" -> F_keySound = if (it.isFile) it else null
-				"keyled" -> F_keyLed = if (it.isDirectory) it else null
-				"autoplay" -> F_autoPlay = if (it.isFile) it else null
+				"info" -> infoFile = if (it.isFile) it else null
+				"sounds" -> soundsDir = if (it.isDirectory) it else null
+				"keysound" -> keySoundFile = if (it.isFile) it else null
+				"keyled" -> keyLedDir = if (it.isDirectory) it else null
+				"autoplay" -> autoPlayFile = if (it.isFile) it else null
 			}
 		}
 
-		if (F_info == null) addErr("info doesn't exist")
-		if (F_keySound == null) addErr("keySound doesn't exist")
-		if (F_info == null && F_keySound == null) addErr("It does not seem to be UniPack.")
+		if (infoFile == null) addErr("info doesn't exist")
+		if (keySoundFile == null) addErr("keySound doesn't exist")
+		if (infoFile == null && keySoundFile == null) addErr("It does not seem to be UniPack.")
 
-		if (F_info == null || F_keySound == null)
+		if (infoFile == null || keySoundFile == null)
 			criticalError = true
 	}
 
@@ -91,8 +83,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 	}
 
 	private fun info() {
-		if (F_info != null) {
-			val reader = BufferedReader(InputStreamReader(FileInputStream(F_info!!)))
+		val file = infoFile ?: return
+		BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
 			while (true) {
 				val s = reader.readLine() ?: break
 				if (s.isEmpty()) continue
@@ -103,9 +95,9 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					when (key) {
 						"title" -> title = value
 						"producerName" -> producerName = value
-						"buttonX" -> buttonX = Integer.parseInt(value)
-						"buttonY" -> buttonY = Integer.parseInt(value)
-						"chain" -> chain = Integer.parseInt(value)
+						"buttonX" -> buttonX = value.toInt()
+						"buttonY" -> buttonY = value.toInt()
+						"chain" -> chain = value.toInt()
 						"squareButton" -> squareButton = value == "true"
 						"website" -> website = value
 					}
@@ -113,29 +105,29 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					addErr("info : [$s] format is not found")
 				}
 			}
-			if (title == null) addErr("info : title was missing")
-			if (producerName == null) addErr("info : producerName was missing")
-			if (buttonX == 0) addErr("info : buttonX was missing")
-			if (buttonY == 0) addErr("info : buttonY was missing")
-			if (chain == 0) addErr("info : chain was missing")
-			if (chain !in 1..24) {
-				addErr("info : chain out of range")
-				criticalError = true
-			}
-			reader.close()
+		}
+		if (title.isEmpty()) addErr("info : title was missing")
+		if (producerName.isEmpty()) addErr("info : producerName was missing")
+		if (buttonX == 0) addErr("info : buttonX was missing")
+		if (buttonY == 0) addErr("info : buttonY was missing")
+		if (chain == 0) addErr("info : chain was missing")
+		if (chain !in 1..24) {
+			addErr("info : chain out of range")
+			criticalError = true
 		}
 	}
 
 	private fun keySound() {
-		if (F_keySound != null) {
-			soundTable = Array(chain) {
-				Array(buttonX) {
-					arrayOfNulls<ArrayList<Sound>>(buttonY)
-				}
+		val keySoundFile = keySoundFile ?: return
+		val soundsDir = soundsDir
+		val table = Array(chain) {
+			Array(buttonX) {
+				arrayOfNulls<ArrayDeque<Sound>>(buttonY)
 			}
-			soundCount = 0
-			val reader =
-				BufferedReader(InputStreamReader(FileInputStream(F_keySound!!)))
+		}
+		soundTable = table
+		soundCount = 0
+		BufferedReader(InputStreamReader(FileInputStream(keySoundFile))).use { reader ->
 			while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
@@ -144,17 +136,17 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 				var y: Int
 				var soundURL: String
 				var loop = 0
-				var wormhole = -1
+				var wormhole = Sound.NO_WORMHOLE
 				try {
 					if (split.size <= 2) continue
-					c = Integer.parseInt(split[0]) - 1
-					x = Integer.parseInt(split[1]) - 1
-					y = Integer.parseInt(split[2]) - 1
+					c = split[0].toInt() - 1
+					x = split[1].toInt() - 1
+					y = split[2].toInt() - 1
 					soundURL = split[3]
-					if (split.size >= 5) loop = Integer.parseInt(split[4]) - 1
+					if (split.size >= 5) loop = split[4].toInt() - 1
 					if (split.size >= 6) {
-						loop = Integer.parseInt(split[4]) - 1
-						wormhole = Integer.parseInt(split[5]) - 1
+						loop = split[4].toInt() - 1
+						wormhole = split[5].toInt() - 1
 					}
 				} catch (e: NumberFormatException) {
 					addErr("keySound : [$s] format is incorrect")
@@ -171,38 +163,42 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					"keySound : [$s] y is incorrect"
 				) else {
 					try {
-
-						val soundFile = File(F_sounds!!.path + "/" + soundURL)
+						if (soundsDir == null) {
+							addErr("keySound : [$s] sounds directory not found")
+							continue
+						}
+						val soundFile = File(soundsDir, soundURL)
 						val sound = Sound(soundFile, loop, wormhole)
 						if (!sound.file.isFile) {
 							addErr("keySound : [$s] sound was not found")
 							continue
 						}
-						if (soundTable!![c][x][y] == null)
-							soundTable!![c][x][y] = ArrayList()
-						sound.num = soundTable!![c][x][y]!!.size
-						soundTable!![c][x][y]!!.add(sound)
+						if (table[c][x][y] == null)
+							table[c][x][y] = ArrayDeque()
+						sound.num = table[c][x][y]?.size ?: 0
+						table[c][x][y]?.addLast(sound)
 						soundCount++
 					} catch (e: Exception) {
-						e.printStackTrace()
+						Log.err("keySound parse error: [$s]", e)
 						addErr("keySound : [$s] sound was not found")
 						continue
 					}
 				}
 			}
-			reader.close()
 		}
 	}
 
 	private fun keyLed() {
-		if (F_keyLed != null) {
-			ledAnimationTable = Array(chain) {
-				Array(buttonX) {
-					arrayOfNulls<ArrayList<LedAnimation>?>(buttonY)
-				}
+		val keyLedDir = keyLedDir ?: return
+		val table = Array(chain) {
+			Array(buttonX) {
+				arrayOfNulls<ArrayDeque<LedAnimation>?>(buttonY)
 			}
-			ledTableCount = 0
-			val fileList = F_keyLed!!.listFiles().sortedBy { it.name.lowercase() } // todo 작동확인
+		}
+		ledAnimationTable = table
+		ledTableCount = 0
+		run {
+			val fileList = (keyLedDir.listFiles() ?: return).sortedBy { it.name.lowercase() }
 			for (file in fileList) {
 				if (file.isFile) {
 					val fileName: String = file.name
@@ -213,10 +209,10 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					var loop = 1
 					try {
 						if (split1.size <= 2) continue
-						c = Integer.parseInt(split1[0]) - 1
-						x = Integer.parseInt(split1[1]) - 1
-						y = Integer.parseInt(split1[2]) - 1
-						if (split1.size >= 4) loop = Integer.parseInt(split1[3])
+						c = split1[0].toInt() - 1
+						x = split1[1].toInt() - 1
+						y = split1[2].toInt() - 1
+						if (split1.size >= 4) loop = split1[3].toInt()
 						if (c < 0 || c >= chain) {
 							addErr("keyLed : [$fileName] chain is incorrect")
 							continue
@@ -238,103 +234,101 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 						continue
 					}
 					val ledList = ArrayList<LedAnimation.LedEvent>()
-					val reader =
-						BufferedReader(InputStreamReader(FileInputStream(file!!)))
-					loop@ while (true) {
-						val s = reader.readLine() ?: break
-						val split2 = s.split(" ").toTypedArray()
-						var option: String
-						var _x = -1
-						var _y = -1
-						var _color = -1
-						var _velo = 4
-						var _delay = -1
-						try {
-							if (split2[0] == "") continue
-							option = split2[0]
-							when (option) {
-								"on", "o" -> {
-									try {
-										_x = Integer.parseInt(split2[1]) - 1
-									} catch (e: NumberFormatException) {
-									}
-									_y = Integer.parseInt(split2[2]) - 1
-									if (split2.size == 4) _color =
-										Integer.parseInt(
-											split2[3],
-											16
-										) + -0x1000000 else if (split2.size == 5) {
-										if (split2[3] == "auto" || split2[3] == "a") {
-											_velo = Integer.parseInt(split2[4])
-											_color = ARGB[_velo].toInt()
-										} else {
-											_velo = Integer.parseInt(split2[4])
-											_color = Integer.parseInt(split2[3], 16) + -0x1000000
+					BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
+						loop@ while (true) {
+							val s = reader.readLine() ?: break
+							val split2 = s.split(" ").toTypedArray()
+							var option: String
+							var ledX = -1
+							var ledY = -1
+							var ledColor = -1
+							var ledVelocity = 4
+							var ledDelay = -1
+							try {
+								if (split2[0] == "") continue
+								option = split2[0]
+								when (option) {
+									"on", "o" -> {
+										try {
+											ledX = split2[1].toInt() - 1
+										} catch (_: NumberFormatException) {
+											// Intentional: ledX retains default value on parse failure
 										}
-									} else {
+										ledY = split2[2].toInt() - 1
+										if (split2.size == 4) ledColor =
+											split2[3].toInt(16) + -0x1000000 else if (split2.size == 5) {
+											if (split2[3] == "auto" || split2[3] == "a") {
+												ledVelocity = split2[4].toInt()
+												ledColor = ARGB[ledVelocity].toInt()
+											} else {
+												ledVelocity = split2[4].toInt()
+												ledColor = split2[3].toInt(16) + -0x1000000
+											}
+										} else {
+											addErr("keyLed : [$fileName].[$s] format is incorrect")
+											continue@loop
+										}
+									}
+
+									"off", "f" -> {
+										try {
+											ledX = split2[1].toInt() - 1
+										} catch (_: NumberFormatException) {
+											// Intentional: ledX retains default value on parse failure
+										}
+										ledY = split2[2].toInt() - 1
+									}
+
+									"delay", "d" -> ledDelay = split2[1].toInt()
+									else -> {
 										addErr("keyLed : [$fileName].[$s] format is incorrect")
 										continue@loop
 									}
 								}
-
-								"off", "f" -> {
-									try {
-										_x = Integer.parseInt(split2[1]) - 1
-									} catch (e: NumberFormatException) {
-									}
-									_y = Integer.parseInt(split2[2]) - 1
-								}
-
-								"delay", "d" -> _delay = Integer.parseInt(split2[1])
-								else -> {
-									addErr("keyLed : [$fileName].[$s] format is incorrect")
-									continue@loop
-								}
+							} catch (e: NumberFormatException) {
+								addErr("keyLed : [$fileName].[$s] format is incorrect")
+								continue
+							} catch (e: IndexOutOfBoundsException) {
+								addErr("keyLed : [$fileName].[$s] format is incorrect")
+								continue
 							}
-						} catch (e: NumberFormatException) {
-							addErr("keyLed : [$fileName].[$s] format is incorrect")
-							continue
-						} catch (e: IndexOutOfBoundsException) {
-							addErr("keyLed : [$fileName].[$s] format is incorrect")
-							continue
-						}
-						when (option) {
-							"on", "o" -> ledList.add(
-								LedAnimation.LedEvent.On(
-									_x,
-									_y,
-									_color,
-									_velo
+							when (option) {
+								"on", "o" -> ledList.add(
+									LedAnimation.LedEvent.On(
+										ledX,
+										ledY,
+										ledColor,
+										ledVelocity
+									)
 								)
-							)
 
-							"off", "f" -> ledList.add(LedAnimation.LedEvent.Off(_x, _y))
-							"delay", "d" -> ledList.add(LedAnimation.LedEvent.Delay(_delay))
+								"off", "f" -> ledList.add(LedAnimation.LedEvent.Off(ledX, ledY))
+								"delay", "d" -> ledList.add(LedAnimation.LedEvent.Delay(ledDelay))
+							}
 						}
 					}
-					if (ledAnimationTable!![c][x][y] == null)
-						ledAnimationTable!![c][x][y] = ArrayList()
-					ledAnimationTable!![c][x][y]!!.add(
+					if (table[c][x][y] == null)
+						table[c][x][y] = ArrayDeque()
+					table[c][x][y]?.addLast(
 						LedAnimation(
 							ledList,
 							loop,
-							ledAnimationTable!![c][x][y]!!.size
+							table[c][x][y]?.size ?: 0
 						)
 					)
 					ledTableCount++
-					reader.close()
-				} else addErr("keyLed : " + file.name + " is not file")
+				} else addErr("keyLed : ${file.name} is not file")
 			}
 		}
 	}
 
-	private inline fun autoPlay() {
-		if (F_autoPlay != null) {
-			autoPlayTable = AutoPlay(ArrayList())
-			val map = Array(buttonX) { IntArray(buttonY) }
-			var currChain = 0
-			val reader =
-				BufferedReader(InputStreamReader(FileInputStream(F_autoPlay!!)))
+	private fun autoPlay() {
+		val autoPlayFile = autoPlayFile ?: return
+		val autoPlay = AutoPlay(ArrayList())
+		autoPlayTable = autoPlay
+		val map = Array(buttonX) { IntArray(buttonY) }
+		var currChain = 0
+		BufferedReader(InputStreamReader(FileInputStream(autoPlayFile))).use { reader ->
 			loop@ while (true) {
 				val s = reader.readLine() ?: break
 				val split = s.split(" ").toTypedArray()
@@ -348,8 +342,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					option = split[0]
 					when (option) {
 						"on", "o" -> {
-							x = Integer.parseInt(split[1]) - 1
-							y = Integer.parseInt(split[2]) - 1
+							x = split[1].toInt() - 1
+							y = split[2].toInt() - 1
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -361,8 +355,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 						}
 
 						"off", "f" -> {
-							x = Integer.parseInt(split[1]) - 1
-							y = Integer.parseInt(split[2]) - 1
+							x = split[1].toInt() - 1
+							y = split[2].toInt() - 1
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -373,8 +367,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 						}
 
 						"touch", "t" -> {
-							x = Integer.parseInt(split[1]) - 1
-							y = Integer.parseInt(split[2]) - 1
+							x = split[1].toInt() - 1
+							y = split[2].toInt() - 1
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -385,14 +379,14 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 						}
 
 						"chain", "c" -> {
-							chain = Integer.parseInt(split[1]) - 1
+							chain = split[1].toInt() - 1
 							if (chain < 0 || chain >= this.chain) {
 								addErr("autoPlay : [$s] chain is incorrect")
 								continue@loop
 							}
 						}
 
-						"delay", "d" -> delay = Integer.parseInt(split[1])
+						"delay", "d" -> delay = split[1].toInt()
 						else -> {
 							addErr("autoPlay : [$s] format is incorrect")
 							continue@loop
@@ -407,7 +401,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 				}
 				when (option) {
 					"on", "o" -> {
-						autoPlayTable!!.elements.add(
+						autoPlay.elements.add(
 							AutoPlay.Element.On(
 								x,
 								y,
@@ -415,25 +409,17 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								map[x][y]
 							)
 						)
-						val sound = Sound_get(currChain, x, y, map[x][y])
+						val sound = soundGet(currChain, x, y, map[x][y])
 						map[x][y]++
-						if (sound != null && sound.wormhole != -1) {
-							autoPlayTable!!.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
+						if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
+							autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
 								currChain = it
 							}))
-							var i = 0
-							while (i < buttonX) {
-								var j = 0
-								while (j < buttonY) {
-									map[i][j] = 0
-									j++
-								}
-								i++
-							}
+							map.forEach { row -> row.fill(0) }
 						}
 					}
 
-					"off", "f" -> autoPlayTable!!.elements.add(
+					"off", "f" -> autoPlay.elements.add(
 						AutoPlay.Element.Off(
 							x,
 							y,
@@ -442,7 +428,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					)
 
 					"touch", "t" -> {
-						autoPlayTable!!.elements.add(
+						autoPlay.elements.add(
 							AutoPlay.Element.On(
 								x,
 								y,
@@ -450,34 +436,24 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 								map[x][y]
 							)
 						)
-						autoPlayTable!!.elements.add(AutoPlay.Element.Off(x, y, currChain))
+						autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
 						map[x][y]++
 					}
 
 					"chain", "c" -> {
-						autoPlayTable!!.elements.add(AutoPlay.Element.Chain(chain.also {
+						autoPlay.elements.add(AutoPlay.Element.Chain(chain.also {
 							currChain = it
 						}))
-						var i = 0
-						while (i < buttonX) {
-							var j = 0
-							while (j < buttonY) {
-								map[i][j] = 0
-								j++
-							}
-							i++
-						}
+						map.forEach { row -> row.fill(0) }
 					}
 
-					"delay", "d" -> autoPlayTable!!.elements.add(
+					"delay", "d" -> autoPlay.elements.add(
 						AutoPlay.Element.Delay(
-							delay,
-							currChain
+							delay
 						)
 					)
 				}
 			}
-			reader.close()
 		}
 	}
 
@@ -485,7 +461,7 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		return getFolderSize(rootFolder)
 	}
 
-	fun getFolderSize(file: File): Long {
+	private fun getFolderSize(file: File): Long {
 		var totalMemory: Long = 0
 		if (file.isFile) {
 			return file.length()

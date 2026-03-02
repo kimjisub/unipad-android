@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">my</string>
+	<string name="language">Burmese</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">လက်ခံသည်</string>
+	<string name="cancel">ပယ်ဖျက်</string>
+	<string name="warning">သတိပေးချက်</string>
+	<string name="error">အမှား</string>
+	<string name="errOccur">အမှားတစ်ခုဖြစ်ပွားခဲ့သည်။</string>
+	<string name="wait_a_sec">ခဏစောင့်ပါ…</string>
+	<string name="importing">ထည့်သွင်းနေသည်</string>
+	<string name="loading">ဖွင့်နေသည်</string>
+	<string name="download">ဒေါင်းလုဒ်</string>
+	<string name="downloadWaiting">ဒေါင်းလုဒ်စောင့်နေသည်</string>
+	<string name="downloading">ဒေါင်းလုဒ်ဆွဲနေသည်</string>
+	<string name="downloaded">ဒေါင်းလုဒ်ပြီး</string>
+	<string name="success">အောင်မြင်သည်</string>
+	<string name="failed">မအောင်မြင်ပါ</string>
+	<string name="delete">ဖျက်မည်</string>
+	<string name="edit">ပြင်ဆင်</string>
+	<string name="update">အပ်ဒိတ်</string>
+	<string name="ignore">လျစ်လျူရှု</string>
+	<string name="apply">အသုံးပြု</string>
+	<string name="restart">ပြန်စတင်</string>
+	<string name="using">အသုံးပြုနေသည်</string>
+	<string name="path">လမ်းကြောင်း</string>
+	<string name="quit">ထွက်မည်</string>
+	<string name="menu">မီနူး</string>
+	<string name="website">ဝက်ဘ်ဆိုက်</string>
+	<string name="measuring">တိုင်းတာနေသည်…</string>
+	<string name="general">အထွေထွေ</string>
+	<string name="notice">အသိပေးချက်</string>
+	<string name="newUniPack">UniPack အသစ်</string>
+	<string name="exceptionOccurred">ခြွင်းချက်ဖြစ်ပွားခဲ့သည်</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Launchpad ပြန်ချိတ်ဆက်</string>
+	<string name="import_unipack">UniPack ထည့်သွင်း</string>
+	<string name="store">စတိုး</string>
+
+	<!--Setting-->
+	<string name="setting">ဆက်တင်</string>
+	<string name="information">အချက်အလက်</string>
+	<string name="select_theme">အပြင်အဆင်ရွေးချယ်</string>
+	<string name="storage_location">သိုလှောင်ခန်းတည်နေရာ</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Open Source လိုင်စင်</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">အသိုင်းအဝိုင်း</string>
+	<string name="officialHomepage">တရားဝင်ဝက်ဘ်ဆိုက်</string>
+	<string name="officialHomepage_">UniPad တရားဝင်ဝက်ဘ်ဆိုက်</string>
+	<string name="officialFacebook">တရားဝင် Facebook</string>
+	<string name="officialFacebook_">နည်းပညာပံ့ပိုးမှု</string>
+	<string name="facebookCommunity">Facebook အသိုင်းအဝိုင်း</string>
+	<string name="facebookCommunity_">အင်္ဂလိပ်</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">ကိုရီးယား</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">Dev. kimjisub ထံ KakaoTalk</string>
+	<string name="kakaotalk_">နည်းပညာပံ့ပိုးမှုမှလွဲ၍</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">နည်းပညာပံ့ပိုးမှုမှလွဲ၍</string>
+
+	<!--UniPack Info-->
+	<string name="title">ခေါင်းစဉ်</string>
+	<string name="producerName">ထုတ်လုပ်သူ</string>
+	<string name="padSize">Pad အရွယ်အစား</string>
+	<string name="numChain">Chain များ</string>
+	<string name="fileSize">ဖိုင်အရွယ်အစား</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">အလိုအလျောက်ဖွင့်</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">တုံ့ပြန်မှုမီး</string>
+	<string name="traceLog">ခြေရာခံမှတ်တမ်း</string>
+	<string name="traceLogClear">ခြေရာခံမှတ်တမ်း ပြန်လည်သတ်မှတ်ပြီး။</string>
+	<string name="record">အသံဖမ်း</string>
+	<string name="hideUI">UI ဖျောက်</string>
+	<string name="watermark">ရေစာ</string>
+	<string name="proLightMode">Pro Light မုဒ်</string>
+
+	<!--Version-->
+	<string name="newVersionFound">ဗားရှင်းအသစ်တွေ့ရှိသည်။</string>
+
+	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
+	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>
+	<string name="unipackNotFound">UniPack မတွေ့ပါ။</string>
+	<string name="clickToAddUniPack">UniPack ထည့်ရန် နှိပ်ပါ။</string>
+	<string name="doYouWantToDeleteUniPack">ဤပရောဂျက်ကို ဖျက်လိုပါသလား?</string>
+	<string name="remapDone">AutoPlay ပြန်လည်ချိတ်ဆက်ခြင်း အောင်မြင်စွာပြီးဆုံးပါပြီ။</string>
+	<string name="remapFail">AutoPlay မရှိပါ</string>
+	<string name="importComplete">ခွဲခြမ်းစိတ်ဖြာခြင်း ပြီးဆုံးပါပြီ!</string>
+	<string name="importFailed">ခွဲခြမ်းစိတ်ဖြာခြင်း မအောင်မြင်ပါ…</string>
+	<string name="copied">ကလစ်ဘုတ်သို့ ကူးယူပြီး။</string>
+	<string name="skinMemoryErr">Skin အသုံးပြုခြင်း မအောင်မြင်ပါ။\nအက်ပ် ပြန်စတင်ပါ။</string>
+	<string name="skinErr">Skin အသုံးပြုခြင်း မအောင်မြင်ပါ။\nSkin ပြန်လည်သတ်မှတ်ပါ။</string>
+
+	<string name="outOfMemory">မမ်မိုရီ ကုန်သွားပါပြီ..\nမမ်မိုရီ ရှင်းလင်းပြီး ထပ်ကြိုးစားပါ။</string>
+	<string name="outOfCPU">ဖုန်းစွမ်းဆောင်ရည်ကြောင့်\npack စတင်၍မရပါ…\nထပ်ကြိုးစားပါ။</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Launchpad ချိတ်ဆက်နေသည်…</string>
+	<string name="midiDevicesNotDetected">MIDI စက်ပစ္စည်းများ မတွေ့ပါ</string>
+	<string name="signal_SpeedFirst">အမြန်နှုန်းဦးစားပေး</string>
+	<string name="signal_avoidAfterimage">ပုံရိပ်ကျန်ခြင်း ရှောင်ကြဉ်</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Pack ဒေါင်းလုဒ်ဆွဲနေစဉ် ထွက်၍မရပါ</string>
+	<string name="UnableToAccessServer">ဆာဗာသို့ ချိတ်ဆက်၍မရပါ။</string>
+
+	<!--Theme-->
+	<string name="theme">အပြင်အဆင်</string>
+	<string name="themeDownload">အပြင်အဆင် ဒေါင်းလုဒ်</string>
+	<string name="requireRestart">အက်ပ် ပြန်စတင်ရန် လိုအပ်သည်။</string>
+	<string name="doYouWantToRestartApp">အက်ပ် ပြန်စတင်လိုပါသလား?</string>
+
+	<string name="theme_import">အပြင်အဆင် ထည့်သွင်း</string>
+	<string name="theme_import_success">အပြင်အဆင် အောင်မြင်စွာ ထည့်သွင်းပြီး။</string>
+	<string name="theme_import_failed">အပြင်အဆင် ထည့်သွင်းခြင်း မအောင်မြင်ပါ။</string>
+	<string name="theme_import_invalid">မမှန်ကန်သော အပြင်အဆင်ဖိုင်။</string>
+	<string name="theme_delete_title">အပြင်အဆင် ဖျက်မည်</string>
+	<string name="theme_delete_confirm">\"%s\" ဖျက်မည်လား?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">အချက်အလက်</string>
+	<string name="settings_storage">သိုလှောင်ခန်း</string>
+	<string name="settings_theme">အပြင်အဆင်</string>
+	<string name="settings_storage_download">ဒေါင်းလုဒ်သိုလှောင်ခန်း</string>
+	<string name="settings_developer">ဆော့ဖ်ဝဲရေးသားသူ</string>
+	<string name="settings_app">အပလီကေးရှင်း</string>
+	<string name="settings_user">အသုံးပြုသူ</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPack အရေအတွက်</string>
+	<string name="MTP_size">UniPack အရွယ်အစား</string>
+	<string name="MPT_playCount">ဖွင့်သည့်အကြိမ်</string>
+	<string name="MPT_theme">အပြင်အဆင်</string>
+	<string name="sort_title">ခေါင်းစဉ်</string>
+	<string name="sort_producer">ထုတ်လုပ်သူ</string>
+	<string name="sort_play_count">ဖွင့်သည့်အကြိမ်</string>
+	<string name="sort_last_opened_date">နောက်ဆုံးဖွင့်သည့်ရက်</string>
+	<string name="sort_download_date">ဒေါင်းလုဒ်ရက်စွဲ</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Pad အရွယ်အစား</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">အသံဖိုင်များ</string>
+	<string name="MPP_ledEvents">Led ဖြစ်ရပ်များ</string>
+	<string name="MPP_fileSize">ဖိုင်အရွယ်အစား</string>
+	<string name="MPP_playCount">ဖွင့်သည့်အကြိမ်</string>
+	<string name="MPP_downloadedDate">ဒေါင်းလုဒ်ရက်စွဲ</string>
+	<string name="MPP_lastPlayed">နောက်ဆုံးဖွင့်ခဲ့သည်</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">စတိုးရှိ UniPack</string>
+	<string name="STP_downloadedCount">ဒေါင်းလုဒ်ပြီး UniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">ဒေါင်းလုဒ်အရေအတွက်</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">ဝက်ဘ်ဆိုက်</string>
+	<string name="cd_bookmark">စာညှပ်</string>
+	<string name="cd_delete">ဖျက်မည်</string>
+	<string name="cd_logo">UniPad လိုဂို</string>
+	<string name="cd_autoplay_prev">ရှေ့တစ်ခု</string>
+	<string name="cd_autoplay_play">ဖွင့်</string>
+	<string name="cd_autoplay_pause">ခဏရပ်</string>
+	<string name="cd_autoplay_next">နောက်တစ်ခု</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">စာရွက်စာတမ်းများ (Android 10)</string>
+	<string name="workspace_app_storage">အက်ပ်သိုလှောင်ခန်း (အကြံပြု)</string>
+	<string name="workspace_internal_storage">အတွင်းသိုလှောင်ခန်း</string>
+	<string name="workspace_internal_sd_card">အတွင်း SD ကတ်</string>
+	<string name="workspace_external_sd_card_format">ပြင်ပ SD ကတ် %d</string>
+	<string name="workspace_unipack_count">UniPack %d ခု</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">အက်ပ်သီးသန့် သိုလှောင်ခန်း။ ခွင့်ပြုချက် မလိုအပ်။ အက်ပ်ဖျက်လျှင် ပါသွားမည်။</string>
+	<string name="workspace_desc_documents_android10">မျှဝေ စာရွက်စာတမ်းများ ဖိုဒါ။ Android 10 တွင်သာ ရရှိနိုင်။</string>
+	<string name="workspace_desc_external_sd">ပြင်ပ SD ကတ် သိုလှောင်ခန်း။ စက်ပစ္စည်းများကြား သယ်ယူနိုင်။</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">အကြောင်းအရာ စစ်ဆေးရန် ခွင့်ပြုချက် လိုအပ်</string>
+	<string name="migration_grant_access">ခွင့်ပြုချက် ပေး</string>
+	<string name="migration_same_as_source">ရင်းမြစ်နှင့် တူညီ</string>
+	<string name="migration_result">ရလဒ်</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">ဆာဗာအမှား\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

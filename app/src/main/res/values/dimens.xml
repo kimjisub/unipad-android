@@ -6,4 +6,9 @@
 	<dimen name="text_small">10sp</dimen>
 
 	<dimen name="imgbtn">40dp</dimen>
+
+	<!--Play Activity-->
+	<dimen name="autoplay_button_size">48dp</dimen>
+	<dimen name="autoplay_button_padding">8dp</dimen>
+
 </resources>

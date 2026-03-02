@@ -3,141 +3,90 @@ package com.kimjisub.launchpad.manager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.os.Environment
 import androidx.core.content.edit
-import java.io.File
 
 class PreferenceManager(
 	val context: Context,
 ) {
-	private val name = "data"
-	private val pref: SharedPreferences = context.getSharedPreferences(name, MODE_PRIVATE)
+	private val pref: SharedPreferences = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
 
-	private val launchpadConnectMethodTag = "LaunchpadConnectMethod"
 	var launchpadConnectMethod: Int
 		get() {
-			return pref.getInt(launchpadConnectMethodTag, 0)
+			return pref.getInt(KEY_LAUNCHPAD_CONNECT_METHOD, 0)
 		}
 		set(value) {
 			pref.edit {
-				putInt(launchpadConnectMethodTag, value)
+				putInt(KEY_LAUNCHPAD_CONNECT_METHOD, value)
 			}
 		}
 
-	private val fileExplorerPathTag = "FileExplorerPath"
-	var fileExplorerPath: String
-		get() {
-			var url: String = pref.getString(
-				fileExplorerPathTag,
-				"${System.getenv("SECONDARY_STORAGE")}/Download"
-			) ?: ""
-			if (!File(url).isDirectory) url = Environment.getExternalStorageDirectory().path
-			if (!File(url).isDirectory) url = "/"
-			return url
-		}
-		set(value) {
-			pref.edit {
-				putString(fileExplorerPathTag, value)
-			}
-		}
-
-	private val storageActiveTag = "storage_active"
-	var storageActive: Set<String>
-		get() {
-			return pref.getStringSet(storageActiveTag, setOf()) ?: setOf()
-		}
-		set(value) {
-			pref.edit {
-				putStringSet(storageActiveTag, value)
-			}
-		}
-
-	private val mainStorageTag = "MainStorage"
-	var mainStorage: String
-		get() {
-			return pref.getString(mainStorageTag, "") ?: ""
-		}
-		set(value) {
-			pref.edit {
-				putString(mainStorageTag, value)
-			}
-		}
-
-	private val prevAdsShowTimeTag = "PrevAdsShowTime"
-	var prevAdsShowTime: Long
-		get() {
-			return pref.getLong(prevAdsShowTimeTag, 0)
-		}
-		set(value) {
-			pref.edit {
-				putLong(prevAdsShowTimeTag, value)
-			}
-		}
-
-	private val selectedThemeTag = "SelectedTheme"
 	var selectedTheme: String
 		get() {
-			return pref.getString(selectedThemeTag, "com.kimjisub.launchpad")
-				?: "com.kimjisub.launchpad"
+			return pref.getString(KEY_SELECTED_THEME, context.packageName)
+				?: context.packageName
 		}
 		set(value) {
 			pref.edit {
-				putString(selectedThemeTag, value)
+				putString(KEY_SELECTED_THEME, value)
 			}
 		}
 
-	private val prevStoreCountTag = "PrevStoreCount"
 	var prevStoreCount: Long
 		get() {
-			return pref.getLong(prevStoreCountTag, 0)
+			return pref.getLong(KEY_PREV_STORE_COUNT, 0)
 		}
 		set(value) {
 			pref.edit {
-				putLong(prevStoreCountTag, value)
+				putLong(KEY_PREV_STORE_COUNT, value)
 			}
 		}
 
-	private val sortMethodTag = "SortMethod"
 	var sortMethod: Int
 		get() {
-			return pref.getInt(sortMethodTag, 4)
+			return pref.getInt(KEY_SORT_METHOD, 4)
 		}
 		set(value) {
 			pref.edit {
-				putInt(sortMethodTag, value)
+				putInt(KEY_SORT_METHOD, value)
 			}
 		}
 
-	private val sortOrderTag = "SortOrder"
 	var sortOrder: Boolean
 		get() {
-			return pref.getBoolean(sortOrderTag, true)
+			return pref.getBoolean(KEY_SORT_ORDER, true)
 		}
 		set(value) {
 			pref.edit {
-				putBoolean(sortOrderTag, value)
+				putBoolean(KEY_SORT_ORDER, value)
 			}
 		}
 
-	private val downloadCouponCountTag = "DownloadCouponCount"
-	var downloadCouponCount: Int
-		get() {
-			return pref.getInt(downloadCouponCountTag, 0)
-		}
+	var downloadStoragePath: String?
+		get() = pref.getString(KEY_DOWNLOAD_STORAGE_PATH, null)
 		set(value) {
 			pref.edit {
-				putInt(downloadCouponCountTag, value)
+				if (value != null) putString(KEY_DOWNLOAD_STORAGE_PATH, value)
+				else remove(KEY_DOWNLOAD_STORAGE_PATH)
 			}
 		}
 
-	private val playCouponCountTag = "PlayCouponCount"
-	var playCouponCount: Int
-		get() {
-			return pref.getInt(playCouponCountTag, 0)
-		}
+	var backupSafUri: String?
+		get() = pref.getString(KEY_BACKUP_SAF_URI, null)
 		set(value) {
 			pref.edit {
-				putInt(playCouponCountTag, value)
+				if (value != null) putString(KEY_BACKUP_SAF_URI, value)
+				else remove(KEY_BACKUP_SAF_URI)
 			}
 		}
+
+	companion object {
+		private const val PREF_NAME = "data"
+		private const val KEY_LAUNCHPAD_CONNECT_METHOD = "LaunchpadConnectMethod"
+		private const val KEY_SELECTED_THEME = "SelectedTheme"
+		private const val KEY_PREV_STORE_COUNT = "PrevStoreCount"
+		private const val KEY_SORT_METHOD = "SortMethod"
+		private const val KEY_SORT_ORDER = "SortOrder"
+		private const val KEY_DOWNLOAD_STORAGE_PATH = "download_storage_path"
+		private const val KEY_BACKUP_SAF_URI = "backup_saf_uri"
+	}
 }

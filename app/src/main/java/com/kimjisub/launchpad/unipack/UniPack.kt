@@ -1,3 +1,5 @@
+@file:Suppress("EmptyMethod") // internal set generates empty setter bytecode - idiomatic Kotlin
+
 package com.kimjisub.launchpad.unipack
 
 import android.content.Context
@@ -10,30 +12,42 @@ import com.kimjisub.launchpad.unipack.struct.Sound
 
 
 abstract class UniPack {
-	var errorDetail: String? = null
+	private val errors = mutableListOf<String>()
+	val errorDetail: String?
+		get() = if (errors.isEmpty()) null else errors.joinToString("\n")
 	var criticalError = false
+		internal set
 
 	abstract val id: String
 
 
 	var title: String = ""
+		internal set
 	var producerName: String = ""
+		internal set
 	var buttonX = 0
+		internal set
 	var buttonY = 0
+		internal set
 	var chain = 0
+		internal set
 	var squareButton = true
+		internal set
 	var website: String? = null
+		internal set
 
 	var soundCount = 0
+		internal set
 	var ledTableCount = 0
+		internal set
 
-	var soundTable: Array<Array<Array<ArrayList<Sound>?>>>? = null
-	var ledAnimationTable: Array<Array<Array<ArrayList<LedAnimation>?>>>? = null
+	var soundTable: Array<Array<Array<ArrayDeque<Sound>?>>>? = null
+		internal set
+	var ledAnimationTable: Array<Array<Array<ArrayDeque<LedAnimation>?>>>? = null
+		internal set
 	var autoPlayTable: AutoPlay? = null
+		internal set
 
-	open val infoExist: Boolean = false
-	open val soundExist: Boolean = false
-	open val keySoundExist: Boolean = false
 	open val keyLedExist: Boolean = false
 	open val autoPlayExist: Boolean = false
 
@@ -41,10 +55,11 @@ abstract class UniPack {
 	abstract fun lastModified(): Long
 
 	var detailLoaded: Boolean = false
+		internal set
 	abstract fun loadInfo(): UniPack
 	abstract fun loadDetail(): UniPack
 
-	// 파일 구조를 확인하여 정상적인 유니팩인지 감지합니다.
+	// Validates the file structure to detect a valid unipack.
 	abstract fun checkFile()
 
 
@@ -52,10 +67,8 @@ abstract class UniPack {
 
 	abstract fun getPathString(): String
 
-	init {
-	}
-
 	var loaded: Boolean = false
+		private set
 	fun load(): UniPack {
 		if (!loaded)
 			checkFile()
@@ -67,92 +80,87 @@ abstract class UniPack {
 
 	// Circular Queue
 
-	fun Sound_get(c: Int, x: Int, y: Int): Sound? {
+	fun soundGet(c: Int, x: Int, y: Int): Sound? {
 		return try {
-			soundTable!![c][x][y]!![0]
-		} catch (e: NullPointerException) {
-			null
-		} catch (ee: IndexOutOfBoundsException) {
-			err("Sound_get ($c, $x, $y)")
-			null
-		}
-	}
-
-	fun Sound_get(c: Int, x: Int, y: Int, num: Int): Sound? {
-		return try {
-			val sound = soundTable!![c][x][y]
-			soundTable!![c][x][y]!![num % sound!!.size]
-		} catch (e: NullPointerException) {
-			null
+			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return null
+			sounds[0]
 		} catch (e: IndexOutOfBoundsException) {
-			err("Sound_get ($c, $x, $y)")
+			err("soundGet ($c, $x, $y)")
 			null
 		}
 	}
 
-	fun Sound_push(c: Int, x: Int, y: Int) {
-		try {
-			val item = soundTable!![c][x][y]!!.removeAt(0)
-			soundTable!![c][x][y]!!.add(item)
-		} catch (e: NullPointerException) {
-		} catch (ee: IndexOutOfBoundsException) {
-			err("Sound_push ($c, $x, $y)")
+	fun soundGet(c: Int, x: Int, y: Int, num: Int): Sound? {
+		return try {
+			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return null
+			sounds[num % sounds.size]
+		} catch (e: IndexOutOfBoundsException) {
+			err("soundGet ($c, $x, $y)")
+			null
 		}
 	}
 
-	fun Sound_push(c: Int, x: Int, y: Int, num: Int) {
+	fun soundPush(c: Int, x: Int, y: Int) {
 		try {
-			val e = soundTable!![c][x][y]
-			if (soundTable!![c][x][y]!![0].num != num)
+			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
+			val item = sounds.removeFirst()
+			sounds.addLast(item)
+		} catch (e: IndexOutOfBoundsException) {
+			err("soundPush ($c, $x, $y)")
+		}
+	}
+
+	fun soundPush(c: Int, x: Int, y: Int, num: Int) {
+		try {
+			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
+			val targetNum = num % sounds.size
+			if (sounds[0].num != targetNum)
 				while (true) {
-					val tmp = e!![0]
-					e.removeAt(0)
-					e.add(tmp)
-					if (e[0].num == num % e.size)
+					val item = sounds.removeFirst()
+					sounds.addLast(item)
+					if (sounds[0].num == targetNum)
 						break
 				}
-		} catch (e: NullPointerException) {
-		} catch (ee: IndexOutOfBoundsException) {
-			err("Sound_push ($c, $x, $y, $num)")
-		} catch (ee: ArithmeticException) {
-			err("ArithmeticException : Sound_push ($c, $x, $y, $num)")
-		}
-	}
-
-
-	fun led_get(c: Int, x: Int, y: Int): LedAnimation? {
-		return try {
-			ledAnimationTable!![c][x][y]!![0]
-		} catch (e: NullPointerException) {
-			null
-		} catch (ee: IndexOutOfBoundsException) {
-			err("LED_get ($c, $x, $y)")
-			null
-		}
-	}
-
-	fun led_push(c: Int, x: Int, y: Int) {
-		try {
-			val item = ledAnimationTable!![c][x][y]!!.removeAt(0)
-			ledAnimationTable!![c][x][y]!!.add(item)
-		} catch (e: NullPointerException) {
 		} catch (e: IndexOutOfBoundsException) {
-			err("LED_push ($c, $x, $y)")
+			err("soundPush ($c, $x, $y, $num)")
+		} catch (e: ArithmeticException) {
+			err("ArithmeticException : soundPush ($c, $x, $y, $num)")
 		}
 	}
 
-	fun led_push(c: Int, x: Int, y: Int, num: Int) {
+
+	fun ledGet(c: Int, x: Int, y: Int): LedAnimation? {
+		return try {
+			val leds = ledAnimationTable?.get(c)?.get(x)?.get(y) ?: return null
+			leds[0]
+		} catch (e: IndexOutOfBoundsException) {
+			err("ledGet ($c, $x, $y)")
+			null
+		}
+	}
+
+	fun ledPush(c: Int, x: Int, y: Int) {
 		try {
-			val e: ArrayList<LedAnimation>? = ledAnimationTable!![c][x][y]
-			if (e!![0].num != num)
+			val leds = ledAnimationTable?.get(c)?.get(x)?.get(y) ?: return
+			val item = leds.removeFirst()
+			leds.addLast(item)
+		} catch (e: IndexOutOfBoundsException) {
+			err("ledPush ($c, $x, $y)")
+		}
+	}
+
+	fun ledPush(c: Int, x: Int, y: Int, num: Int) {
+		try {
+			val leds = ledAnimationTable?.get(c)?.get(x)?.get(y) ?: return
+			val targetNum = num % leds.size
+			if (leds[0].num != targetNum)
 				while (true) {
-					val item = e.removeAt(0)
-					e.add(item)
-					if (e[0].num == num % e.size) break
+					val item = leds.removeFirst()
+					leds.addLast(item)
+					if (leds[0].num == targetNum) break
 				}
-		} catch (e: NullPointerException) {
-		} catch (ee: IndexOutOfBoundsException) {
-			err("LED_push ($c, $x, $y, $num)")
+		} catch (e: IndexOutOfBoundsException) {
+			err("ledPush ($c, $x, $y, $num)")
 		}
 	}
 
@@ -160,18 +168,16 @@ abstract class UniPack {
 
 
 	fun addErr(content: String) {
-		if (errorDetail == null)
-			errorDetail = content
-		else
-			errorDetail += "\n" + content
+		errors.add(content)
 	}
 
 	fun infoToString(context: Context): String {
-		return context.resources.getString(string.title) + " : " + title + "\n" +
-				context.resources.getString(string.producerName) + " : " + producerName + "\n" +
-				context.resources.getString(string.padSize) + " : " + buttonX.toString() + " x " + buttonY.toString() + "\n" +
-				context.resources.getString(string.numChain) + " : " + chain.toString() + "\n" +
-				context.resources.getString(string.fileSize) + " : " + byteToMB(getByteSize()) + " MB"
+		val res = context.resources
+		return "${res.getString(string.title)} : $title\n" +
+				"${res.getString(string.producerName)} : $producerName\n" +
+				"${res.getString(string.padSize)} : $buttonX x $buttonY\n" +
+				"${res.getString(string.numChain)} : $chain\n" +
+				"${res.getString(string.fileSize)} : ${byteToMB(getByteSize())} MB"
 	}
 
 	abstract fun getByteSize(): Long
@@ -181,6 +187,8 @@ abstract class UniPack {
 			return false
 		return id == other.id
 	}
+
+	override fun hashCode(): Int = id.hashCode()
 
 	override fun toString(): String {
 		return "UniPack(id=$id)"

@@ -5,10 +5,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.fragment.app.Fragment
+import com.kimjisub.launchpad.R
 
 fun Context.putClipboard(text: String) {
 	val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-	val clip: ClipData = ClipData.newPlainText("UniPad", text)
+	val clip: ClipData = ClipData.newPlainText(getString(R.string.app_name), text)
 	clipboard.setPrimaryClip(clip)
 }
 

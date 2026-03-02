@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">hi</string>
+	<string name="language">Hindi</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">स्वीकार करें</string>
+	<string name="cancel">रद्द करें</string>
+	<string name="warning">चेतावनी</string>
+	<string name="error">त्रुटि</string>
+	<string name="errOccur">एक त्रुटि हुई है।</string>
+	<string name="wait_a_sec">कृपया प्रतीक्षा करें…</string>
+	<string name="importing">आयात हो रहा है</string>
+	<string name="loading">लोड हो रहा है</string>
+	<string name="download">डाउनलोड</string>
+	<string name="downloadWaiting">डाउनलोड प्रतीक्षा</string>
+	<string name="downloading">डाउनलोड हो रहा है</string>
+	<string name="downloaded">डाउनलोड हुआ</string>
+	<string name="success">सफल</string>
+	<string name="failed">विफल</string>
+	<string name="delete">हटाएं</string>
+	<string name="edit">संपादित करें</string>
+	<string name="update">अपडेट</string>
+	<string name="ignore">अनदेखा करें</string>
+	<string name="apply">लागू करें</string>
+	<string name="restart">पुनः आरंभ</string>
+	<string name="using">उपयोग में</string>
+	<string name="path">पथ</string>
+	<string name="quit">बाहर निकलें</string>
+	<string name="menu">मेनू</string>
+	<string name="website">वेबसाइट</string>
+	<string name="measuring">माप रहा है…</string>
+	<string name="general">सामान्य</string>
+	<string name="notice">सूचना</string>
+	<string name="newUniPack">नया UniPack</string>
+	<string name="exceptionOccurred">अपवाद हुआ</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Launchpad पुनः कनेक्ट करें</string>
+	<string name="import_unipack">UniPack आयात करें</string>
+	<string name="store">स्टोर</string>
+
+	<!--Setting-->
+	<string name="setting">सेटिंग</string>
+	<string name="information">जानकारी</string>
+	<string name="select_theme">थीम चुनें</string>
+	<string name="storage_location">स्टोरेज स्थान</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">समुदाय</string>
+	<string name="officialHomepage">आधिकारिक वेबसाइट</string>
+	<string name="officialHomepage_">UniPad आधिकारिक वेबसाइट</string>
+	<string name="officialFacebook">आधिकारिक Facebook</string>
+	<string name="officialFacebook_">तकनीकी सहायता</string>
+	<string name="facebookCommunity">Facebook समुदाय</string>
+	<string name="facebookCommunity_">अंग्रेज़ी</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">कोरियाई</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk Dev. kimjisub को</string>
+	<string name="kakaotalk_">तकनीकी सहायता के अलावा</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">तकनीकी सहायता के अलावा</string>
+
+	<!--UniPack Info-->
+	<string name="title">शीर्षक</string>
+	<string name="producerName">निर्माता</string>
+	<string name="padSize">पैड आकार</string>
+	<string name="numChain">चेन</string>
+	<string name="fileSize">फ़ाइल आकार</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">ऑटोप्ले</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">फीडबैक लाइट</string>
+	<string name="traceLog">ट्रेस लॉग</string>
+	<string name="traceLogClear">ट्रेस लॉग रीसेट हो गया है।</string>
+	<string name="record">रिकॉर्ड</string>
+	<string name="hideUI">UI छुपाएं</string>
+	<string name="watermark">वॉटरमार्क</string>
+	<string name="proLightMode">प्रो लाइट मोड</string>
+
+	<!--Version-->
+	<string name="newVersionFound">नया संस्करण पाया गया।</string>
+
+	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
+	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
+	<string name="unipackNotFound">UniPack नहीं मिला।</string>
+	<string name="clickToAddUniPack">UniPack जोड़ने के लिए क्लिक करें।</string>
+	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
+	<string name="remapDone">AutoPlay रीमैपिंग सफलतापूर्वक पूर्ण हुई।</string>
+	<string name="remapFail">AutoPlay मौजूद नहीं है</string>
+	<string name="importComplete">विश्लेषण पूर्ण!</string>
+	<string name="importFailed">विश्लेषण विफल…</string>
+	<string name="copied">क्लिपबोर्ड पर कॉपी हुआ।</string>
+	<string name="skinMemoryErr">स्किन लागू करने में विफल।\nऐप पुनः आरंभ करें।</string>
+	<string name="skinErr">स्किन लागू करने में विफल।\nस्किन रीसेट करें।</string>
+
+	<string name="outOfMemory">मेमोरी समाप्त..\nकुछ मेमोरी खाली करें और पुनः प्रयास करें।</string>
+	<string name="outOfCPU">फोन की विशेषताओं के कारण\nपैक शुरू नहीं हो सका…\nपुनः प्रयास करें।</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Launchpad कनेक्ट हो रहा है…</string>
+	<string name="midiDevicesNotDetected">MIDI डिवाइस नहीं मिले</string>
+	<string name="signal_SpeedFirst">गति पहले</string>
+	<string name="signal_avoidAfterimage">अवशिष्ट छवि से बचें</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">पैक डाउनलोड के दौरान बाहर नहीं निकल सकते</string>
+	<string name="UnableToAccessServer">सर्वर तक पहुंच नहीं हो पा रही।</string>
+
+	<!--Theme-->
+	<string name="theme">थीम</string>
+	<string name="themeDownload">थीम डाउनलोड करें</string>
+	<string name="requireRestart">ऐप पुनः आरंभ आवश्यक है।</string>
+	<string name="doYouWantToRestartApp">क्या आप ऐप पुनः आरंभ करना चाहते हैं?</string>
+
+	<string name="theme_import">थीम आयात करें</string>
+	<string name="theme_import_success">थीम सफलतापूर्वक आयात हुई।</string>
+	<string name="theme_import_failed">थीम आयात विफल।</string>
+	<string name="theme_import_invalid">अमान्य थीम फ़ाइल।</string>
+	<string name="theme_delete_title">थीम हटाएं</string>
+	<string name="theme_delete_confirm">\"%s\" हटाएं?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">जानकारी</string>
+	<string name="settings_storage">स्टोरेज</string>
+	<string name="settings_theme">थीम</string>
+	<string name="settings_storage_download">डाउनलोड स्टोरेज</string>
+	<string name="settings_developer">डेवलपर</string>
+	<string name="settings_app">एप्लिकेशन</string>
+	<string name="settings_user">उपयोगकर्ता</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">UniPack की संख्या</string>
+	<string name="MTP_size">UniPack का आकार</string>
+	<string name="MPT_playCount">प्ले गिनती</string>
+	<string name="MPT_theme">थीम</string>
+	<string name="sort_title">शीर्षक</string>
+	<string name="sort_producer">निर्माता</string>
+	<string name="sort_play_count">प्ले गिनती</string>
+	<string name="sort_last_opened_date">अंतिम खोला</string>
+	<string name="sort_download_date">डाउनलोड तिथि</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">पैड आकार</string>
+	<string name="MPP_chain">चेन</string>
+	<string name="MPP_soundFiles">साउंड फ़ाइलें</string>
+	<string name="MPP_ledEvents">Led इवेंट</string>
+	<string name="MPP_fileSize">फ़ाइल आकार</string>
+	<string name="MPP_playCount">प्ले गिनती</string>
+	<string name="MPP_downloadedDate">डाउनलोड तिथि</string>
+	<string name="MPP_lastPlayed">अंतिम खेला</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">स्टोर UniPack</string>
+	<string name="STP_downloadedCount">डाउनलोड किए UniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">डाउनलोड गिनती</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">वेबसाइट</string>
+	<string name="cd_bookmark">बुकमार्क</string>
+	<string name="cd_delete">हटाएं</string>
+	<string name="cd_logo">UniPad लोगो</string>
+	<string name="cd_autoplay_prev">पिछला</string>
+	<string name="cd_autoplay_play">चलाएं</string>
+	<string name="cd_autoplay_pause">रुकें</string>
+	<string name="cd_autoplay_next">अगला</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">दस्तावेज़ (Android 10)</string>
+	<string name="workspace_app_storage">ऐप स्टोरेज (अनुशंसित)</string>
+	<string name="workspace_internal_storage">आंतरिक स्टोरेज</string>
+	<string name="workspace_internal_sd_card">आंतरिक SD कार्ड</string>
+	<string name="workspace_external_sd_card_format">बाहरी SD कार्ड %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">ऐप-विशिष्ट स्टोरेज। अनुमति अनावश्यक। ऐप अनइंस्टॉल पर हटता है।</string>
+	<string name="workspace_desc_documents_android10">साझा दस्तावेज़ फ़ोल्डर। केवल Android 10 पर उपलब्ध।</string>
+	<string name="workspace_desc_external_sd">बाहरी SD कार्ड स्टोरेज। उपकरणों के बीच पोर्टेबल।</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">सामग्री जांचने के लिए एक्सेस आवश्यक</string>
+	<string name="migration_grant_access">एक्सेस दें</string>
+	<string name="migration_same_as_source">स्रोत के समान</string>
+	<string name="migration_result">परिणाम</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">सर्वर त्रुटि\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

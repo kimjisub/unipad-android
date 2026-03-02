@@ -3,7 +3,7 @@ package com.kimjisub.launchpad.unipack.struct
 class AutoPlay(
 	val elements: ArrayList<Element>,
 ) {
-	interface Element {
+	sealed interface Element {
 		class On(
 			val x: Int,
 			val y: Int,
@@ -23,7 +23,6 @@ class AutoPlay(
 
 		class Delay(
 			var delay: Int,
-			val currChain: Int,
 		) : Element
 	}
 }

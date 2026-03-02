@@ -13,5 +13,14 @@
 
 -keep class com.kimjisub.launchpad.activity.MainActivity { *; }
 
+# Keep MIDI driver classes instantiated via reflection in MidiSelectActivity
+-keep class com.kimjisub.launchpad.midi.driver.LaunchpadS { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.LaunchpadMK2 { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.LaunchpadPRO { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.LaunchpadX { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.LaunchpadMK3 { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.Matrix { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.MidiFighter { <init>(); }
+-keep class com.kimjisub.launchpad.midi.driver.MasterKeyboard { <init>(); }
 
 # End: Common Proguard rules

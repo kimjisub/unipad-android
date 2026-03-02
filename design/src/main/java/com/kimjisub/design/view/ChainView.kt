@@ -35,11 +35,6 @@ class ChainView
 	//========================================================================================= LED
 
 
-	fun setLedBackground(drawable: Drawable?): ChainView {
-		b.led.background = drawable
-		return this
-	}
-
 	fun setLedBackgroundColor(color: Int): ChainView {
 		b.led.setBackgroundColor(color)
 		return this
@@ -58,8 +53,4 @@ class ChainView
 		return this
 	}
 
-	fun setPhantomRotation(rotation: Float): ChainView {
-		b.phantom.rotation = rotation
-		return this
-	}
 }

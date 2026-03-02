@@ -1,8 +1,19 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import android.os.SystemClock
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -10,22 +21,28 @@ class AutoPlayRunner(
 	private val chain: ChainObserver,
 	private val loopDelay: Long = 1L,
 ) {
+	@Volatile
 	var playmode = true
+	@Volatile
 	var beforeStartPlaying = true
+	@Volatile
 	var afterMatchChain = false
+	@Volatile
 	var beforeChain = -1
-	var guideItems: ArrayList<AutoPlay.Element.On>? = ArrayList()
-	var achieve = 0
+	var guideItems: MutableList<AutoPlay.Element.On> = CopyOnWriteArrayList()
+	val achieve = AtomicInteger(0)
 
+	@Volatile
 	var progress = 0
 		set(value) {
 			field = value
 			listener.onProgressUpdate(progress)
 		}
 
-	private var thread: Thread? = null
+	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+	private var job: Job? = null
 	val active: Boolean
-		get() = !(thread?.isInterrupted ?: true)
+		get() = job?.isActive == true
 
 	interface Listener {
 		fun onStart()
@@ -42,81 +59,77 @@ class AutoPlayRunner(
 		fun onEnd()
 	}
 
-	// Thread
-
-	private val runnable = java.lang.Runnable {
-		Log.thread("[AutoPlay] 2. Start Thread")
-		progress = 0
-		listener.onStart()
-
-		try {
-			var delay: Long = 0
-			val startTime = System.currentTimeMillis()
-			while (progress < unipack.autoPlayTable!!.elements.size && active) {
-				val currTime = System.currentTimeMillis()
-				if (playmode) {
-					beforeStartPlaying()
-					if (delay <= currTime - startTime) {
-						Log.play("[AutoPlay] progress $progress")
-						when (val e: AutoPlay.Element =
-							unipack.autoPlayTable!!.elements[progress]) {
-							is AutoPlay.Element.On -> {
-								Log.play("[AutoPlay] on ${e.x} ${e.y}")
-								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
-								unipack.Sound_push(e.currChain, e.x, e.y, e.num)
-								unipack.led_push(e.currChain, e.x, e.y, e.num)
-								listener.onPadTouchOn(e.x, e.y)
-							}
-
-							is AutoPlay.Element.Off -> {
-								Log.play("[AutoPlay] off ${e.x} ${e.y}")
-								if (chain.value != e.currChain) listener.onChainChange(e.currChain)
-								listener.onPadTouchOff(e.x, e.y)
-							}
-							//is AutoPlay.Element.Chain -> listener.onChainChange(e.c)
-							is AutoPlay.Element.Delay -> {
-								Log.play("[AutoPlay] delay ${e.delay}")
-								delay += e.delay.toLong()
-							}
-						}
-						progress++
-					}
-				} else {
-					beforeStartPlaying = true
-					if (delay <= currTime - startTime) delay = currTime - startTime
-					if (guideItems!!.size > 0 && guideItems!![0].currChain !== chain.value) { // 현재 체인이 다음 연습 체인이 아닌 경우
-
-						if (beforeChain == -1 || beforeChain != chain.value) {
-							beforeChain = chain.value
-							afterMatchChain = true
-							listener.onRemoveGuide()
-							listener.onGuideChainOn(guideItems!![0].currChain)
-						}
-					} else {
-						afterMatchChain()
-						guideCheck()
-					}
-				}
-				Thread.sleep(loopDelay)
-			}
-		} catch (e: InterruptedException) {
-		}
-		Log.thread("[AutoPlay] 4. End Thread")
-		thread = null
-		listener.onEnd()
-	}
+	// Coroutine
 
 	fun launch() {
-		Log.thread("[AutoPlay] 1. Request Thread")
-		if (thread == null) {
-			thread = Thread(runnable)
-			thread!!.start()
+		Log.thread("[AutoPlay] 1. Request Coroutine")
+		if (job?.isActive != true) {
+			job = scope.launch {
+				Log.thread("[AutoPlay] 2. Start Coroutine")
+				progress = 0
+				listener.onStart()
+
+				val autoPlay = unipack.autoPlayTable ?: return@launch
+				try {
+					var delayAccum: Long = 0
+					val startTime = SystemClock.elapsedRealtime()
+					while (progress < autoPlay.elements.size && isActive) {
+						val currTime = SystemClock.elapsedRealtime()
+						if (playmode) {
+							beforeStartPlaying()
+							if (delayAccum <= currTime - startTime) {
+								when (val element: AutoPlay.Element =
+									autoPlay.elements[progress]) {
+									is AutoPlay.Element.On -> {
+										if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+										unipack.soundPush(element.currChain, element.x, element.y, element.num)
+										unipack.ledPush(element.currChain, element.x, element.y, element.num)
+										listener.onPadTouchOn(element.x, element.y)
+									}
+
+									is AutoPlay.Element.Off -> {
+										if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+										listener.onPadTouchOff(element.x, element.y)
+									}
+									is AutoPlay.Element.Delay -> {
+										delayAccum += element.delay.toLong()
+									}
+									is AutoPlay.Element.Chain -> {
+										listener.onChainChange(element.c)
+									}
+								}
+								progress++
+							}
+						} else {
+							beforeStartPlaying = true
+							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
+							if (guideItems.isNotEmpty() && guideItems[0].currChain != chain.value) {
+								if (beforeChain == -1 || beforeChain != chain.value) {
+									beforeChain = chain.value
+									afterMatchChain = true
+									listener.onRemoveGuide()
+									listener.onGuideChainOn(guideItems[0].currChain)
+								}
+							} else {
+								afterMatchChain()
+								guideCheck()
+							}
+						}
+						delay(loopDelay)
+					}
+				} catch (_: CancellationException) {
+					// Normal cancellation, no action needed
+				}
+				Log.thread("[AutoPlay] 4. End Coroutine")
+				listener.onEnd()
+			}
 		}
 	}
 
 	fun stop() {
 		Log.thread("[AutoPlay] 3. Request Stop")
-		thread?.interrupt()
+		job?.cancel()
+		job = null
 	}
 
 	// Functions
@@ -124,7 +137,6 @@ class AutoPlayRunner(
 	private fun beforeStartPlaying() {
 		if (beforeStartPlaying) {
 			beforeStartPlaying = false
-			Log.log("beforeStartPlaying")
 			listener.onRemoveGuide()
 		}
 	}
@@ -135,10 +147,13 @@ class AutoPlayRunner(
 			listener.chainButsRefresh()
 			for (i in 0 until unipack.chain) listener.onGuideChainOff(i)
 			beforeChain = -1
-			for (i in guideItems!!.indices) {
-				val e: AutoPlay.Element = guideItems!![i]
-				when (e) {
-					is AutoPlay.Element.On -> listener.onGuidePadOn(e.x, e.y)
+			for (i in guideItems.indices) {
+				val element: AutoPlay.Element = guideItems[i]
+				when (element) {
+					is AutoPlay.Element.On -> listener.onGuidePadOn(element.x, element.y)
+					is AutoPlay.Element.Off,
+					is AutoPlay.Element.Chain,
+					is AutoPlay.Element.Delay -> {}
 				}
 			}
 		}
@@ -158,30 +173,35 @@ class AutoPlayRunner(
 
 
 	fun guideCheck() {
-		if (achieve >= guideItems!!.size || achieve == -1) {
-			achieve = 0
-			for (i in guideItems!!.indices) {
-				val e: AutoPlay.Element = guideItems!![i]
-				when (e) {
-					is AutoPlay.Element.On -> listener.onGuidePadOff(e.x, e.y)
+		if (achieve.get() >= guideItems.size || achieve.get() == -1) {
+			achieve.set(0)
+			for (i in guideItems.indices) {
+				val element: AutoPlay.Element = guideItems[i]
+				when (element) {
+					is AutoPlay.Element.On -> listener.onGuidePadOff(element.x, element.y)
+					is AutoPlay.Element.Off,
+					is AutoPlay.Element.Chain,
+					is AutoPlay.Element.Delay -> {}
 				}
 			}
-			guideItems!!.clear()
+			guideItems.clear()
+			val autoPlay = unipack.autoPlayTable ?: return
 			var addedDelay = 0
 			var complete = false
-			while (progress < unipack.autoPlayTable!!.elements.size && (addedDelay <= 20 || !complete)) {
-				val e: AutoPlay.Element = unipack.autoPlayTable!!.elements[progress]
-				when (e) {
+			while (progress < autoPlay.elements.size && addedDelay <= 20) {
+				val element: AutoPlay.Element = autoPlay.elements[progress]
+				when (element) {
 					is AutoPlay.Element.On -> {
-						unipack.Sound_push(e.currChain, e.x, e.y, e.num)
-						unipack.led_push(e.currChain, e.x, e.y, e.num)
-						listener.onGuidePadOn(e.x, e.y)
+						unipack.soundPush(element.currChain, element.x, element.y, element.num)
+						unipack.ledPush(element.currChain, element.x, element.y, element.num)
+						listener.onGuidePadOn(element.x, element.y)
 						complete = true
-						guideItems!!.add(e)
-						Log.log(e.currChain.toString() + " " + e.x.toString() + " " + e.y)
+						guideItems.add(element)
 					}
 
-					is AutoPlay.Element.Delay -> if (complete) addedDelay += e.delay
+					is AutoPlay.Element.Delay -> if (complete) addedDelay += element.delay
+					is AutoPlay.Element.Off,
+					is AutoPlay.Element.Chain -> {}
 				}
 				progress++
 			}

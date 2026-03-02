@@ -11,28 +11,33 @@
 
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<!--
-<uses-permission android:name="android.permission.STORAGE" />
-	<uses-permission android:name="android.permission.PERMISSIONS_STORAGE" />
-	<uses-permission android:name="android.permission.REQUEST_EXTERNAL_STORAGE" />
-    -->
+
+	<!-- Storage permission for Android 10 only (API 29) -->
+	<!-- Android 11+ uses app-specific storage + SAF, no runtime permission needed -->
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+		android:maxSdkVersion="29" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+		android:maxSdkVersion="29"
+		tools:ignore="ScopedStorage" />
+
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+		tools:ignore="QueryAllPackagesPermission" />
 
 	<application
 		android:name=".BaseApplication"
-		android:allowBackup="true"
-		android:fullBackupContent="true"
+		android:allowBackup="false"
+		android:dataExtractionRules="@xml/data_extraction_rules"
+		android:fullBackupContent="@xml/backup_rules"
 		android:hardwareAccelerated="true"
+		tools:replace="android:allowBackup"
 		android:icon="@mipmap/ic_launcher"
 		android:label="${appName}"
 		android:largeHeap="true"
+		android:networkSecurityConfig="@xml/network_security_config"
 		android:requestLegacyExternalStorage="true"
 		android:supportsRtl="true"
-		android:theme="@style/AppTheme"
-		android:usesCleartextTraffic="true">
-		<!-- Todo network cleartext traffic -->
+		android:theme="@style/AppTheme">
 		<meta-data
 			android:name="com.google.firebase.messaging.default_notification_icon"
 			android:resource="@mipmap/ic_launcher" />
@@ -45,7 +50,7 @@
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:exported="true"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity">
+			tools:ignore="DiscouragedApi,LockedOrientationActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 
@@ -56,34 +61,30 @@
 			android:name=".activity.MainActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity" />
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 		<activity
 			android:name=".activity.FBStoreActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity" />
-		<activity
-			android:name=".activity.StoreActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity" />
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 		<activity
 			android:name=".activity.PlayActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity" />
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 		<activity
 			android:name=".activity.ThemeActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
-			tools:ignore="LockedOrientationActivity" />
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
 		<activity
 			android:name=".activity.MidiSelectActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:exported="true"
 			android:launchMode="singleInstance"
-			android:screenOrientation="sensorLandscape">
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="DiscouragedApi,LockedOrientationActivity">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 			</intent-filter>
@@ -91,27 +92,6 @@
 			<meta-data
 				android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
 				android:resource="@xml/device_filter" />
-		</activity>
-		<activity
-			android:name=".activity.ImportPackByFileActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:exported="true"
-			android:launchMode="singleInstance"
-			android:theme="@style/PopupTheme">
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-
-				<data
-					android:host="*"
-					android:mimeType="*/*"
-					android:scheme="file" />
-				<data android:pathPattern=".*\.zip" />
-				<data android:pathPattern=".*\.zip.uni" />
-				<data android:pathPattern=".*\.uni" />
-			</intent-filter>
 		</activity>
 		<activity
 			android:name=".activity.ImportPackByUrlActivity"
@@ -136,7 +116,14 @@
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			android:theme="@style/SettingTheme"
-			tools:ignore="LockedOrientationActivity" />
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+		<activity
+			android:name=".activity.TransferActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:screenOrientation="sensorLandscape"
+			android:theme="@style/SettingTheme"
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
+
 		<activity
 			android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
 			android:theme="@style/SettingTheme" />
@@ -146,7 +133,7 @@
 
 		<service
 			android:name=".service.MyFirebaseMessagingService"
-			android:exported="true">
+			android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.firebase.MESSAGING_EVENT" />
 			</intent-filter>

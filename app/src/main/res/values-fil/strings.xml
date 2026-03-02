@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">fil</string>
+	<string name="language">Filipino</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Tanggapin</string>
+	<string name="cancel">Kanselahin</string>
+	<string name="warning">Babala</string>
+	<string name="error">ERROR</string>
+	<string name="errOccur">May naganap na error.</string>
+	<string name="wait_a_sec">Sandali lang…</string>
+	<string name="importing">Ini-import</string>
+	<string name="loading">Naglo-load</string>
+	<string name="download">I-download</string>
+	<string name="downloadWaiting">Naghihintay ng Download</string>
+	<string name="downloading">Nagda-download</string>
+	<string name="downloaded">Na-download na</string>
+	<string name="success">Tagumpay</string>
+	<string name="failed">Nabigo</string>
+	<string name="delete">Tanggalin</string>
+	<string name="edit">I-edit</string>
+	<string name="update">I-update</string>
+	<string name="ignore">Balewalain</string>
+	<string name="apply">Ilapat</string>
+	<string name="restart">I-restart</string>
+	<string name="using">Ginagamit</string>
+	<string name="path">Path</string>
+	<string name="quit">Lumabas</string>
+	<string name="menu">Menu</string>
+	<string name="website">Website</string>
+	<string name="measuring">Sinusukat…</string>
+	<string name="general">Pangkalahatan</string>
+	<string name="notice">Abiso</string>
+	<string name="newUniPack">Bagong UniPack</string>
+	<string name="exceptionOccurred">May Naganap na Exception</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Ikonekta Muli ang Launchpad</string>
+	<string name="import_unipack">Mag-import ng UniPack</string>
+	<string name="store">Tindahan</string>
+
+	<!--Setting-->
+	<string name="setting">Setting</string>
+	<string name="information">Impormasyon</string>
+	<string name="select_theme">Pumili ng Tema</string>
+	<string name="storage_location">Lokasyon ng Storage</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Open Source na Lisensya</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Komunidad</string>
+	<string name="officialHomepage">Opisyal na Website</string>
+	<string name="officialHomepage_">Opisyal na Website ng UniPad</string>
+	<string name="officialFacebook">Opisyal na Facebook</string>
+	<string name="officialFacebook_">Teknikal na Suporta</string>
+	<string name="facebookCommunity">Komunidad sa Facebook</string>
+	<string name="facebookCommunity_">Ingles</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Koreano</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk kay Dev. kimjisub</string>
+	<string name="kakaotalk_">Maliban sa Teknikal na Suporta</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Maliban sa Teknikal na Suporta</string>
+
+	<!--UniPack Info-->
+	<string name="title">Pamagat</string>
+	<string name="producerName">Producer</string>
+	<string name="padSize">Laki ng Pad</string>
+	<string name="numChain">Mga Chain</string>
+	<string name="fileSize">Laki ng File</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Autoplay</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Feedback light</string>
+	<string name="traceLog">Trace Log</string>
+	<string name="traceLogClear">Na-reset na ang Trace Log.</string>
+	<string name="record">I-record</string>
+	<string name="hideUI">Itago ang UI</string>
+	<string name="watermark">Watermark</string>
+	<string name="proLightMode">Pro Light Mode</string>
+
+	<!--Version-->
+	<string name="newVersionFound">May nakitang bagong bersyon.</string>
+
+	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
+	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>
+	<string name="unipackNotFound">Hindi nahanap ang UniPack.</string>
+	<string name="clickToAddUniPack">Mag-click para magdagdag ng mga UniPack.</string>
+	<string name="doYouWantToDeleteUniPack">Gusto mo bang tanggalin ang project na ito?</string>
+	<string name="remapDone">Matagumpay na nakumpleto ang AutoPlay remapping.</string>
+	<string name="remapFail">Walang AutoPlay</string>
+	<string name="importComplete">Tapos na ang pagsusuri!</string>
+	<string name="importFailed">Nabigong magsuri…</string>
+	<string name="copied">Kinopya sa clipboard.</string>
+	<string name="skinMemoryErr">Nabigong i-apply ang skin.\nI-restart ang app.</string>
+	<string name="skinErr">Nabigong i-apply ang skin.\nI-reset ang skin.</string>
+
+	<string name="outOfMemory">Walang sapat na memorya..\nMagpalaya ng memorya at subukan muli.</string>
+	<string name="outOfCPU">Hindi nasimulan ang pack\ndahil sa specs ng telepono…\nSubukan muli.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Kumokonekta sa launchpad…</string>
+	<string name="midiDevicesNotDetected">Hindi Nakita ang mga MIDI Device</string>
+	<string name="signal_SpeedFirst">Bilis muna</string>
+	<string name="signal_avoidAfterimage">Iwasan ang afterimage</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Hindi makakalabas habang nagda-download ng pack</string>
+	<string name="UnableToAccessServer">Hindi ma-access ang server.</string>
+
+	<!--Theme-->
+	<string name="theme">Tema</string>
+	<string name="themeDownload">Mag-download ng Tema</string>
+	<string name="requireRestart">Kailangan i-restart ang app.</string>
+	<string name="doYouWantToRestartApp">Gusto mo bang i-restart ang app?</string>
+
+	<string name="theme_import">Mag-import ng Tema</string>
+	<string name="theme_import_success">Matagumpay na na-import ang tema.</string>
+	<string name="theme_import_failed">Nabigong mag-import ng tema.</string>
+	<string name="theme_import_invalid">Hindi valid na file ng tema.</string>
+	<string name="theme_delete_title">Tanggalin ang Tema</string>
+	<string name="theme_delete_confirm">Tanggalin ang \"%s\"?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Impormasyon</string>
+	<string name="settings_storage">Storage</string>
+	<string name="settings_theme">Tema</string>
+	<string name="settings_storage_download">Download Storage</string>
+	<string name="settings_developer">Developer</string>
+	<string name="settings_app">Aplikasyon</string>
+	<string name="settings_user">User</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$tm/%1$td/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">Bilang ng UniPack</string>
+	<string name="MTP_size">Laki ng UniPack</string>
+	<string name="MPT_playCount">Bilang ng Paglalaro</string>
+	<string name="MPT_theme">Tema</string>
+	<string name="sort_title">Pamagat</string>
+	<string name="sort_producer">Producer</string>
+	<string name="sort_play_count">Bilang ng Paglalaro</string>
+	<string name="sort_last_opened_date">Huling Binuksan</string>
+	<string name="sort_download_date">Petsa ng Download</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Laki ng Pad</string>
+	<string name="MPP_chain">Chain</string>
+	<string name="MPP_soundFiles">Mga Sound file</string>
+	<string name="MPP_ledEvents">Mga Led Event</string>
+	<string name="MPP_fileSize">Laki ng File</string>
+	<string name="MPP_playCount">Bilang ng Paglalaro</string>
+	<string name="MPP_downloadedDate">Petsa ng Download</string>
+	<string name="MPP_lastPlayed">Huling Nilaro</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPack sa Tindahan</string>
+	<string name="STP_downloadedCount">Na-download na UniPack</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Bilang ng download</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Website</string>
+	<string name="cd_bookmark">Bookmark</string>
+	<string name="cd_delete">Tanggalin</string>
+	<string name="cd_logo">Logo ng UniPad</string>
+	<string name="cd_autoplay_prev">Nakaraan</string>
+	<string name="cd_autoplay_play">I-play</string>
+	<string name="cd_autoplay_pause">I-pause</string>
+	<string name="cd_autoplay_next">Susunod</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Mga Dokumento (Android 10)</string>
+	<string name="workspace_app_storage">App Storage (Inirerekomenda)</string>
+	<string name="workspace_internal_storage">Internal Storage</string>
+	<string name="workspace_internal_sd_card">Internal SD Card</string>
+	<string name="workspace_external_sd_card_format">External SD Card %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">App-specific storage. Hindi kailangan ng permission. Mabubura kapag in-uninstall ang app.</string>
+	<string name="workspace_desc_documents_android10">Shared Documents folder. Available lang sa Android 10.</string>
+	<string name="workspace_desc_external_sd">External SD card storage. Maaaring ilipat sa ibang device.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">Kailangan ng access para suriin ang nilalaman</string>
+	<string name="migration_grant_access">Bigyan ng Access</string>
+	<string name="migration_same_as_source">Kapareho ng pinagmulan</string>
+	<string name="migration_result">Resulta</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">error sa server\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

@@ -1,9 +1,11 @@
 package com.kimjisub.launchpad.activity
 
-import android.content.Context
+import android.app.Activity
+import android.app.Application
 import android.content.DialogInterface
 import android.content.Intent
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import androidx.appcompat.app.AlertDialog
@@ -11,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
-import com.kimjisub.launchpad.manager.ColorManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
@@ -21,58 +22,65 @@ import splitties.activities.start
 open class BaseActivity : AppCompatActivity() {
 
 	companion object {
-		private var activityList = ArrayList<BaseActivity>()
-		internal fun onStartActivity(activity: BaseActivity) {
-			activityList.add(activity)
-			printActivityLog(activity.getActivityName() + " start")
-		}
+		private val activities = mutableListOf<BaseActivity>()
 
-		internal fun onFinishActivity(activity: BaseActivity) {
-			var exist = false
-			val size = activityList.size
-			for (i in 0 until size) {
-				if (activityList[i] === activity) {
-					activityList[i].finish()
-					activityList.removeAt(i)
-					exist = true
-					break
+		private val lifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
+			override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+				if (activity is BaseActivity) {
+					activities.add(activity)
+					printActivityLog("${activity.getActivityName()} start")
 				}
 			}
-			printActivityLog(activity.getActivityName() + " finish" + if (exist) "" else " error")
+
+			override fun onActivityDestroyed(activity: Activity) {
+				if (activity is BaseActivity) {
+					val removed = activities.remove(activity)
+					printActivityLog("${activity.getActivityName()} finish${if (removed) "" else " error"}")
+				}
+			}
+
+			override fun onActivityStarted(activity: Activity) {}
+			override fun onActivityResumed(activity: Activity) {}
+			override fun onActivityPaused(activity: Activity) {}
+			override fun onActivityStopped(activity: Activity) {}
+			override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+		}
+
+		private var callbacksRegistered = false
+
+		internal fun registerCallbacks(application: Application) {
+			if (!callbacksRegistered) {
+				application.registerActivityLifecycleCallbacks(lifecycleCallbacks)
+				callbacksRegistered = true
+			}
 		}
 
 		private fun restartApp(activity: BaseActivity) {
-			val size = activityList.size
-			for (i in size - 1 downTo 0) {
-				activityList[i].finish()
-				activityList.removeAt(i)
+			for (a in activities.asReversed()) {
+				a.finish()
 			}
+			activities.clear()
 			activity.start<MainActivity>()
-			printActivityLog(activity.getActivityName() + " requestRestart")
+			printActivityLog("${activity.getActivityName()} requestRestart")
 			Process.killProcess(Process.myPid())
 		}
 
 		private fun printActivityLog(log: String) {
-			val str = StringBuilder("ACTIVITY STACK - $log[")
-			val size = activityList.size
-			for (i in 0 until size) {
-				val activity = activityList[i]
-				str.append(", ").append(activity.getActivityName())
-			}
-			Log.activity("$str]")
+			val stack = activities.joinToString(", ") { it.getActivityName() }
+			Log.activity("ACTIVITY STACK - $log[$stack]")
 		}
 
-		fun requestRestart(context: Context) {
-			AlertDialog.Builder(context)
-				.setTitle(context.getString(string.requireRestart))
-				.setMessage(context.getString(string.doYouWantToRestartApp))
-				.setPositiveButton(context.getString(string.restart)) { dialog: DialogInterface, _: Int ->
-					restartApp(context as BaseActivity)
+		fun requestRestart(activity: BaseActivity) {
+			AlertDialog.Builder(activity)
+				.setTitle(activity.getString(string.requireRestart))
+				.setMessage(activity.getString(string.doYouWantToRestartApp))
+				.setPositiveButton(activity.getString(string.restart)) { dialog: DialogInterface, _: Int ->
+					restartApp(activity)
 					dialog.dismiss()
 				}
-				.setNegativeButton(context.getString(string.cancel)) { dialog: DialogInterface, _: Int ->
+				.setNegativeButton(activity.getString(string.cancel)) { dialog: DialogInterface, _: Int ->
 					dialog.dismiss()
-					(context as BaseActivity).finish()
+					activity.finish()
 				}
 				.show()
 		}
@@ -82,70 +90,55 @@ open class BaseActivity : AppCompatActivity() {
 	val ws: WorkspaceManager by inject()
 	val unipackRepo: UnipackRepository by inject()
 
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
 	fun getActivityName(): String {
-		return this.localClassName.split('.').last()
+		return localClassName.split('.').last()
 	}
-
-	// ============================================================================================= Show Things, Get Resources
-
-
-	val colors by lazy { ColorManager(this) }
-
-
-	// ============================================================================================= Activity Cycle
-
 
 	override fun startActivity(intent: Intent) {
 		super.startActivity(intent)
-		overridePendingTransition(anim.activity_in, anim.activity_out)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+			overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, anim.activity_in, anim.activity_out)
+		} else {
+			@Suppress("DEPRECATION")
+			overridePendingTransition(anim.activity_in, anim.activity_out)
+		}
 	}
 
-	public override fun onCreate(savedInstanceState: Bundle?) {
-		Log.activity("onCreate " + getActivityName())
+	override fun onCreate(savedInstanceState: Bundle?) {
+		Log.activity("onCreate ${getActivityName()}")
 		super.onCreate(savedInstanceState)
 
-		/*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread paramThread, Throwable paramThrowable) {
-				paramThrowable.printStackTrace();
-			}
-		});*/
-
-		onStartActivity(this)
+		registerCallbacks(application)
 	}
 
-	public override fun onStart() {
-		Log.activity("onStart " + getActivityName())
+	override fun onStart() {
+		Log.activity("onStart ${getActivityName()}")
 		super.onStart()
 	}
 
-	public override fun onResume() {
-		Log.activity("onResume " + getActivityName())
+	override fun onResume() {
+		Log.activity("onResume ${getActivityName()}")
 		super.onResume()
-		this.volumeControlStream = AudioManager.STREAM_MUSIC
+		volumeControlStream = AudioManager.STREAM_MUSIC
 	}
 
-	public override fun onPause() {
-		Log.activity("onPause " + getActivityName())
+	override fun onPause() {
+		Log.activity("onPause ${getActivityName()}")
 		super.onPause()
 	}
 
-	public override fun onStop() {
-		Log.activity("onStop " + getActivityName())
+	override fun onStop() {
+		Log.activity("onStop ${getActivityName()}")
 		super.onStop()
 	}
 
-	public override fun onRestart() {
-		Log.activity("onRestart " + getActivityName())
+	override fun onRestart() {
+		Log.activity("onRestart ${getActivityName()}")
 		super.onRestart()
 	}
 
-	public override fun onDestroy() {
-		Log.activity("onDestroy " + getActivityName())
+	override fun onDestroy() {
+		Log.activity("onDestroy ${getActivityName()}")
 		super.onDestroy()
-		onFinishActivity(this)
 	}
 }

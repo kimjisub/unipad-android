@@ -5,45 +5,14 @@ import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity
-class Unipack(
+data class Unipack(
 	@PrimaryKey
-	var id: String,
-	var bookmark: Boolean,
-	var openCount: Long,
-	var lastOpenedAt: Date?,
-	// var deleted: Boolean,
-	// var downloadedAt: Date,
-	// var downloadFrom: String,
-	var createdAt: Date,
+	val id: String,
+	val bookmark: Boolean,
+	val openCount: Long,
+	val lastOpenedAt: Date?,
+	val createdAt: Date,
 ) {
-	override fun toString(): String {
-		return "Unipack(id='$id', bookmark=$bookmark, openCount=$openCount, lastOpenedAt=$lastOpenedAt, createdAt=$createdAt)"
-	}
-
-	override fun equals(other: Any?): Boolean {
-		if (this === other) return true
-		if (javaClass != other?.javaClass) return false
-
-		other as Unipack
-
-		if (id != other.id) return false
-		if (bookmark != other.bookmark) return false
-		if (openCount != other.openCount) return false
-		if (lastOpenedAt != other.lastOpenedAt) return false
-		if (createdAt != other.createdAt) return false
-
-		return true
-	}
-
-	override fun hashCode(): Int {
-		var result = id.hashCode()
-		result = 31 * result + bookmark.hashCode()
-		result = 31 * result + openCount.hashCode()
-		result = 31 * result + lastOpenedAt.hashCode()
-		result = 31 * result + createdAt.hashCode()
-		return result
-	}
-
 	companion object {
 		fun create(id: String) = Unipack(id, false, 0, null, Date())
 	}

@@ -31,40 +31,28 @@
 	<string name="using">使用中</string>
 	<string name="path">路径</string>
 	<string name="quit">退出</string>
+	<string name="menu">菜单</string>
 	<string name="website">网站</string>
 	<string name="measuring">测量中…</string>
 	<string name="general">常规</string>
 	<string name="notice">通知</string>
 	<string name="newUniPack">新 UniPack</string>
-	<string name="notFound">未找到</string>
 	<string name="exceptionOccurred">发生异常</string>
-	<string name="openDirectory">打开目录</string>
 
 	<!--Menu-->
 	<string name="reconnect_launchpad">重新连接 Launchpad</string>
-	<string name="list_refresh">刷新列表</string>
 	<string name="import_unipack">导入 UniPack</string>
 	<string name="store">商店</string>
 
 	<!--Setting-->
 	<string name="setting">设置</string>
 	<string name="information">信息</string>
-	<string name="payment">支付</string>
 	<string name="select_theme">选择主题</string>
 	<string name="storage_location">存储位置</string>
-	<string name="use_sd_card">使用SD卡</string>
-	<string name="plan_restorePurchases">恢复购买</string>
-	<string name="plan_restorePurchases_">购买后，请重新启动应用。</string>
-	<string name="plan_pro">UniPad Pro</string>
-	<string name="plan_pro_">解锁专业功能</string>
-	<string name="donation">捐款</string>
-	<string name="donation_">为UniPad的开发捐款。</string>
-	<string name="purchase">购买</string>
-	<string name="purchaseComplete">购买完成</string>
 	<string name="github">Github</string>
 	<string name="openSourceLicense">开源许可</string>
 	<string name="FCMToken">FCM 令牌</string>
-	<string name="copyright">ⓒ 2016-2024. UniPad. 版权所有。</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. 版权所有。</string>
 
 	<!--Community-->
 	<string name="community">社区</string>
@@ -103,28 +91,22 @@
 
 	<!--Version-->
 	<string name="newVersionFound">检测到新版本。</string>
-	<string name="currentVersion">当前版本</string>
-	<string name="newVersion">最新版本</string>
 
 	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
 	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>
 	<string name="unipackNotFound">找不到 UniPack。</string>
 	<string name="clickToAddUniPack">点击以添加 UniPacks。</string>
 	<string name="doYouWantToDeleteUniPack">您想删除此项目吗？</string>
-	<string name="doYouWantToRemapUniPack">您想重新映射此项目的自动播放吗？</string>
 	<string name="remapDone">自动播放重映射成功完成。</string>
 	<string name="remapFail">没有自动播放</string>
 	<string name="importComplete">分析完成！</string>
 	<string name="importFailed">分析失败…</string>
-	<string name="isNotAnUniPack">不是 UniPack</string>
-	<string name="pressAgainToGoBack">再按一次\n以退出。</string>
 	<string name="copied">已复制到剪贴板。</string>
 	<string name="skinMemoryErr">皮肤应用失败。\n重新启动应用程序。</string>
 	<string name="skinErr">皮肤应用失败。\n重置皮肤。</string>
 
 	<string name="outOfMemory">内存不足..\n释放一些内存并重试。</string>
-	<string name="outOfCPU">由于手机规格无法启动包...\n请重试。</string>
-	<string name="doNotSee">不再查看</string>
+	<string name="outOfCPU">由于手机规格无法启动包…\n请重试。</string>
 
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">正在连接 launchpad…</string>
@@ -142,6 +124,13 @@
 	<string name="requireRestart">需要重启应用。</string>
 	<string name="doYouWantToRestartApp">您想重新启动应用吗？</string>
 
+	<string name="theme_import">导入主题</string>
+	<string name="theme_import_success">主题导入成功。</string>
+	<string name="theme_import_failed">主题导入失败。</string>
+	<string name="theme_import_invalid">无效的主题文件。</string>
+	<string name="theme_delete_title">删除主题</string>
+	<string name="theme_delete_confirm">删除 \"%s\"？</string>
+
 	<!--ThemePack-->
 	<string name="theme_name">默认主题</string>
 	<string name="theme_description">这是 UniPad 的默认主题</string>
@@ -149,13 +138,10 @@
 	<string name="settings_info">信息</string>
 	<string name="settings_storage">存储</string>
 	<string name="settings_theme">主题</string>
-	<string name="settings_ads_payment">广告和付款</string>
-	<string name="settings_storage_active">活跃存储</string>
 	<string name="settings_storage_download">下载存储</string>
 	<string name="settings_developer">开发者</string>
 	<string name="settings_app">应用</string>
 	<string name="settings_user">用户</string>
-	<string name="settings_payment">支付</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -189,9 +175,79 @@
 	<!--Store Pack Panel-->
 	<string name="SPP_downloadCount">下载量</string>
 
-	<!--File Explorer-->
-	<string name="FE_accept">接受</string>
-	<string name="FE_folderErr">无法读取文件夹。</string>
-	<string name="FE_fileErr">无法读取文件。</string>
 	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">网站</string>
+	<string name="cd_bookmark">书签</string>
+	<string name="cd_delete">删除</string>
+	<string name="cd_logo">UniPad 标志</string>
+	<string name="cd_autoplay_prev">上一个</string>
+	<string name="cd_autoplay_play">播放</string>
+	<string name="cd_autoplay_pause">暂停</string>
+	<string name="cd_autoplay_next">下一个</string>
+
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">文档 (Android 10)</string>
+	<string name="workspace_app_storage">应用存储 (推荐)</string>
+	<string name="workspace_internal_storage">内部存储</string>
+	<string name="workspace_internal_sd_card">内置 SD 卡</string>
+	<string name="workspace_external_sd_card_format">外置 SD 卡 %d</string>
+	<string name="workspace_unipack_count">%d 个 UniPack</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">应用专用存储。无需权限。卸载应用时删除。</string>
+	<string name="workspace_desc_documents_android10">共享文档文件夹。仅在 Android 10 上可用。</string>
+	<string name="workspace_desc_external_sd">外置 SD 卡存储。可在设备间转移。</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">需要访问权限来检查内容</string>
+	<string name="migration_grant_access">授予访问权限</string>
+	<string name="migration_same_as_source">与来源相同</string>
+	<string name="migration_result">结果</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">服务器错误\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+	<string name="option_indicator_format">%s ●</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
 </resources>

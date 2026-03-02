@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.kimjisub.launchpad.db.ent.Unipack
-import java.util.*
+import java.util.Date
 
 @Dao
 interface UnipackDao {
@@ -15,11 +15,8 @@ interface UnipackDao {
 	@Query("SELECT * FROM Unipack WHERE id=:id")
 	fun find(id: String): LiveData<Unipack>
 
-	@Query("SELECT SUM(openCount) FROM Unipack")
+	@Query("SELECT COALESCE(SUM(openCount), 0) FROM Unipack")
 	fun totalOpenCount(): LiveData<Long>
-
-	@Query("SELECT MAX(lastOpenedAt) FROM Unipack")
-	fun lastOpenedAt(): LiveData<Date>
 
 	// Update
 
@@ -38,8 +35,8 @@ interface UnipackDao {
 	@Query("SELECT openCount FROM Unipack WHERE id=:id")
 	fun openCount(id: String): LiveData<Long>
 
-	@Query("SELECT openCount FROM Unipack WHERE id=:id")
-	fun openCountSync(id: String): Long
+	@Query("SELECT EXISTS(SELECT 1 FROM Unipack WHERE id = :id)")
+	fun exists(id: String): Boolean
 
 	@Query("SELECT lastOpenedAt FROM Unipack WHERE id=:id")
 	fun lastOpenedAt(id: String): LiveData<Date>

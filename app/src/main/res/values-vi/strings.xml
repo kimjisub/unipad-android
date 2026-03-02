@@ -1,0 +1,251 @@
+<resources>
+	<string name="languageCode">vi</string>
+	<string name="language">Vietnamese</string>
+	<string name="translated_by">Translated by AI</string>
+
+	<string name="app_name">UniPad</string>
+	<string name="app_name_test">UniPad Test</string>
+
+	<!--Word-->
+	<string name="accept">Chấp nhận</string>
+	<string name="cancel">Hủy</string>
+	<string name="warning">Cảnh báo</string>
+	<string name="error">LỖI</string>
+	<string name="errOccur">Đã xảy ra lỗi.</string>
+	<string name="wait_a_sec">Chờ một chút…</string>
+	<string name="importing">Đang nhập</string>
+	<string name="loading">Đang tải</string>
+	<string name="download">Tải xuống</string>
+	<string name="downloadWaiting">Chờ Tải xuống</string>
+	<string name="downloading">Đang tải xuống</string>
+	<string name="downloaded">Đã tải xuống</string>
+	<string name="success">Thành công</string>
+	<string name="failed">Thất bại</string>
+	<string name="delete">Xóa</string>
+	<string name="edit">Chỉnh sửa</string>
+	<string name="update">Cập nhật</string>
+	<string name="ignore">Bỏ qua</string>
+	<string name="apply">Áp dụng</string>
+	<string name="restart">Khởi động lại</string>
+	<string name="using">Đang dùng</string>
+	<string name="path">Đường dẫn</string>
+	<string name="quit">Thoát</string>
+	<string name="menu">Menu</string>
+	<string name="website">Trang web</string>
+	<string name="measuring">Đang đo…</string>
+	<string name="general">Chung</string>
+	<string name="notice">Thông báo</string>
+	<string name="newUniPack">UniPack Mới</string>
+	<string name="exceptionOccurred">Đã Xảy Ra Ngoại Lệ</string>
+
+	<!--Menu-->
+	<string name="reconnect_launchpad">Kết nối lại Launchpad</string>
+	<string name="import_unipack">Nhập UniPack</string>
+	<string name="store">Cửa hàng</string>
+
+	<!--Setting-->
+	<string name="setting">Cài đặt</string>
+	<string name="information">Thông tin</string>
+	<string name="select_theme">Chọn Giao diện</string>
+	<string name="storage_location">Vị trí Lưu trữ</string>
+	<string name="github">Github</string>
+	<string name="openSourceLicense">Giấy phép Mã nguồn Mở</string>
+	<string name="FCMToken">FCM Token</string>
+	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+
+	<!--Community-->
+	<string name="community">Cộng đồng</string>
+	<string name="officialHomepage">Trang chủ Chính thức</string>
+	<string name="officialHomepage_">Trang chủ Chính thức UniPad</string>
+	<string name="officialFacebook">Facebook Chính thức</string>
+	<string name="officialFacebook_">Hỗ trợ Kỹ thuật</string>
+	<string name="facebookCommunity">Cộng đồng Facebook</string>
+	<string name="facebookCommunity_">Tiếng Anh</string>
+	<string name="naverCafe">Naver Cafe</string>
+	<string name="naverCafe_">Tiếng Hàn</string>
+	<string name="discord">Discord</string>
+	<string name="discord_">Discord</string>
+	<string name="kakaotalk">KakaoTalk tới Dev. kimjisub</string>
+	<string name="kakaotalk_">Ngoài Hỗ trợ Kỹ thuật</string>
+	<string name="email">0226unipad@gmail.com</string>
+	<string name="email_">Ngoài Hỗ trợ Kỹ thuật</string>
+
+	<!--UniPack Info-->
+	<string name="title">Tiêu đề</string>
+	<string name="producerName">Nhà sản xuất</string>
+	<string name="padSize">Kích thước Pad</string>
+	<string name="numChain">Chuỗi</string>
+	<string name="fileSize">Kích thước File</string>
+
+	<!--UniPack Function-->
+	<string name="led">Led</string>
+	<string name="autoPlay">Tự động phát</string>
+	<string name="option_indicator_format">%s ●</string>
+	<string name="feedbackLight">Đèn phản hồi</string>
+	<string name="traceLog">Nhật ký Truy vết</string>
+	<string name="traceLogClear">Nhật ký truy vết đã được đặt lại.</string>
+	<string name="record">Ghi âm</string>
+	<string name="hideUI">Ẩn UI</string>
+	<string name="watermark">Watermark</string>
+	<string name="proLightMode">Chế độ Pro Light</string>
+
+	<!--Version-->
+	<string name="newVersionFound">Phát hiện phiên bản mới.</string>
+
+	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
+	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>
+	<string name="unipackNotFound">Không tìm thấy UniPack.</string>
+	<string name="clickToAddUniPack">Nhấn để thêm UniPack.</string>
+	<string name="doYouWantToDeleteUniPack">Bạn có muốn xóa dự án này không?</string>
+	<string name="remapDone">Ánh xạ lại AutoPlay đã hoàn tất thành công.</string>
+	<string name="remapFail">AutoPlay không tồn tại</string>
+	<string name="importComplete">Phân tích hoàn tất!</string>
+	<string name="importFailed">Phân tích thất bại…</string>
+	<string name="copied">Đã sao chép vào clipboard.</string>
+	<string name="skinMemoryErr">Không thể áp dụng skin.\nKhởi động lại ứng dụng.</string>
+	<string name="skinErr">Không thể áp dụng skin.\nĐặt lại skin.</string>
+
+	<string name="outOfMemory">Hết bộ nhớ..\nGiải phóng bộ nhớ và thử lại.</string>
+	<string name="outOfCPU">Không thể khởi động pack\ndo cấu hình điện thoại…\nThử lại.</string>
+
+	<!--Launchpad Connection-->
+	<string name="launchpadConnecting">Đang kết nối launchpad…</string>
+	<string name="midiDevicesNotDetected">Không Phát Hiện Thiết Bị MIDI</string>
+	<string name="signal_SpeedFirst">Ưu tiên tốc độ</string>
+	<string name="signal_avoidAfterimage">Tránh bóng mờ</string>
+
+	<!--Store-->
+	<string name="canNotQuitWhileDownloading">Không thể thoát khi đang tải pack</string>
+	<string name="UnableToAccessServer">Không thể truy cập máy chủ.</string>
+
+	<!--Theme-->
+	<string name="theme">Giao diện</string>
+	<string name="themeDownload">Tải Giao diện</string>
+	<string name="requireRestart">Cần khởi động lại ứng dụng.</string>
+	<string name="doYouWantToRestartApp">Bạn có muốn khởi động lại ứng dụng không?</string>
+
+	<string name="theme_import">Nhập Giao diện</string>
+	<string name="theme_import_success">Nhập giao diện thành công.</string>
+	<string name="theme_import_failed">Nhập giao diện thất bại.</string>
+	<string name="theme_import_invalid">File giao diện không hợp lệ.</string>
+	<string name="theme_delete_title">Xóa Giao diện</string>
+	<string name="theme_delete_confirm">Xóa \"%s\"?</string>
+
+	<!--ThemePack-->
+	<string name="theme_name">Default Theme</string>
+	<string name="theme_description">This is Default UniPad Theme</string>
+	<string name="theme_author">UniPad dev.</string>
+	<string name="settings_info">Thông tin</string>
+	<string name="settings_storage">Bộ nhớ</string>
+	<string name="settings_theme">Giao diện</string>
+	<string name="settings_storage_download">Bộ nhớ Tải xuống</string>
+	<string name="settings_developer">Nhà phát triển</string>
+	<string name="settings_app">Ứng dụng</string>
+	<string name="settings_user">Người dùng</string>
+
+	<!--String Format-->
+	<string name="date_format">%1$td/%1$tm/%1$tY</string>
+
+	<!--Main Total Panel-->
+	<string name="MTP_count">Số lượng UniPack</string>
+	<string name="MTP_size">Kích thước UniPack</string>
+	<string name="MPT_playCount">Số lần Chơi</string>
+	<string name="MPT_theme">Giao diện</string>
+	<string name="sort_title">Tiêu đề</string>
+	<string name="sort_producer">Nhà sản xuất</string>
+	<string name="sort_play_count">Số lần Chơi</string>
+	<string name="sort_last_opened_date">Mở Lần cuối</string>
+	<string name="sort_download_date">Ngày Tải xuống</string>
+
+	<!--Main Pack Panel-->
+	<string name="MPP_padSize">Kích thước Pad</string>
+	<string name="MPP_chain">Chuỗi</string>
+	<string name="MPP_soundFiles">File Âm thanh</string>
+	<string name="MPP_ledEvents">Sự kiện Led</string>
+	<string name="MPP_fileSize">Kích thước File</string>
+	<string name="MPP_playCount">Số lần Chơi</string>
+	<string name="MPP_downloadedDate">Ngày Tải xuống</string>
+	<string name="MPP_lastPlayed">Chơi Lần cuối</string>
+	<string name="MPP_notPlayedYet">-</string>
+
+	<!--Store Total Panel-->
+	<string name="STP_count">UniPack trong Cửa hàng</string>
+	<string name="STP_downloadedCount">UniPack Đã tải</string>
+
+	<!--Store Pack Panel-->
+	<string name="SPP_downloadCount">Số lượt tải</string>
+
+	<string name="mb">MB</string>
+
+	<!--Content Descriptions (Accessibility)-->
+	<string name="cd_youtube">YouTube</string>
+	<string name="cd_website">Trang web</string>
+	<string name="cd_bookmark">Đánh dấu</string>
+	<string name="cd_delete">Xóa</string>
+	<string name="cd_logo">Logo UniPad</string>
+	<string name="cd_autoplay_prev">Trước</string>
+	<string name="cd_autoplay_play">Phát</string>
+	<string name="cd_autoplay_pause">Tạm dừng</string>
+	<string name="cd_autoplay_next">Tiếp theo</string>
+
+
+	<!--Workspace-->
+	<string name="workspace_documents_android10">Tài liệu (Android 10)</string>
+	<string name="workspace_app_storage">Bộ nhớ Ứng dụng (Khuyến nghị)</string>
+	<string name="workspace_internal_storage">Bộ nhớ Trong</string>
+	<string name="workspace_internal_sd_card">Thẻ SD Trong</string>
+	<string name="workspace_external_sd_card_format">Thẻ SD Ngoài %d</string>
+	<string name="workspace_unipack_count">%d UniPacks</string>
+
+	<!--Workspace descriptions-->
+	<string name="workspace_desc_app_storage">Bộ nhớ riêng của ứng dụng. Không cần quyền. Xóa khi gỡ ứng dụng.</string>
+	<string name="workspace_desc_documents_android10">Thư mục Tài liệu chia sẻ. Chỉ có trên Android 10.</string>
+	<string name="workspace_desc_external_sd">Bộ nhớ thẻ SD ngoài. Có thể chuyển giữa các thiết bị.</string>
+
+	<!--Shared (used by TransferActivity)-->
+	<string name="migration_source_status_no_access">Cần quyền truy cập để kiểm tra nội dung</string>
+	<string name="migration_grant_access">Cấp Quyền</string>
+	<string name="migration_same_as_source">Giống với nguồn</string>
+	<string name="migration_result">Kết quả</string>
+
+	<!--Transfer-->
+	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_button">Transfer</string>
+	<string name="transfer_source">Source</string>
+	<string name="transfer_target">Target</string>
+	<string name="transfer_mode_label">Mode</string>
+	<string name="transfer_mode_copy">Copy</string>
+	<string name="transfer_mode_move">Move</string>
+	<string name="transfer_select_all">Select All</string>
+	<string name="transfer_deselect_all">Deselect All</string>
+	<string name="transfer_selected_count">%d selected</string>
+	<string name="transfer_start">Start</string>
+	<string name="transfer_copying">Copying: %s</string>
+	<string name="transfer_moving">Moving: %s</string>
+	<string name="transfer_result_transferred">Transferred</string>
+	<string name="transfer_result_skipped">Skipped (already exist)</string>
+	<string name="transfer_result_failed">Failed</string>
+	<string name="transfer_done">Done</string>
+	<string name="transfer_no_items">No UniPacks selected</string>
+	<string name="transfer_select_target">Select a destination</string>
+	<string name="transfer_select_source">Select a source</string>
+
+	<!--Format-->
+	<string name="countdown_format">%d</string>
+	<string name="import_pack_code_format">#%s</string>
+	<string name="import_pack_title_format">%1$s #%2$s</string>
+	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
+	<string name="server_error_format">lỗi máy chủ\n%s</string>
+	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!--Backup-->
+	<string name="backup_section">Backup</string>
+	<string name="backup_description">Connect to Documents/Unipad folder</string>
+	<string name="backup_grant_access">Connect Backup Folder</string>
+	<string name="backup_revoke">Disconnect Backup Folder</string>
+	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_backup_button">Backup</string>
+	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
+	<string name="backup_restore_button">Restore</string>
+	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+</resources>

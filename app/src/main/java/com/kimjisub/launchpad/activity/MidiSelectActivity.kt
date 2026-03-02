@@ -1,190 +1,307 @@
 package com.kimjisub.launchpad.activity
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.hardware.usb.UsbManager
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.core.content.res.ResourcesCompat
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kimjisub.launchpad.R
-import com.kimjisub.launchpad.R.color
-import com.kimjisub.launchpad.adapter.MidiDeviceAdapter
-import com.kimjisub.launchpad.adapter.MidiDeviceItem
-import com.kimjisub.launchpad.databinding.ActivityMidiSelectBinding
 import com.kimjisub.launchpad.midi.MidiConnection
-import com.kimjisub.launchpad.midi.driver.*
+import com.kimjisub.launchpad.ui.theme.Background1
+import com.kimjisub.launchpad.ui.theme.Gray1
+import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
+import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
+import com.kimjisub.launchpad.midi.driver.LaunchpadPRO
+import com.kimjisub.launchpad.midi.driver.LaunchpadS
+import com.kimjisub.launchpad.midi.driver.LaunchpadX
+import com.kimjisub.launchpad.midi.driver.MasterKeyboard
+import com.kimjisub.launchpad.midi.driver.Matrix
+import com.kimjisub.launchpad.midi.driver.MidiFighter
 import com.kimjisub.launchpad.tool.AutorunTimer
-import com.yarolegovich.discretescrollview.transform.ScaleTransformer
+import kotlin.math.absoluteValue
+import kotlin.reflect.KClass
 
 class MidiSelectActivity : BaseActivity() {
-	private lateinit var b: ActivityMidiSelectBinding
-	private val midiDeviceList = lazy {
-		arrayListOf(
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_s, null)!!,
-				getString(R.string.midi_lp_s),
-				LaunchpadS::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk2, null)!!,
-				getString(R.string.midi_lp_mk2),
-				LaunchpadMK2::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_pro, null)!!,
-				getString(R.string.midi_lp_pro),
-				LaunchpadPRO::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_x, null)!!,
-				getString(R.string.midi_lp_x),
-				LaunchpadX::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_lp_mk3, null)!!,
-				getString(R.string.midi_lp_mk3),
-				LaunchpadMK3::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_midifighter, null)!!,
-				getString(R.string.midi_midi_fighter),
-				MidiFighter::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_matrix, null)!!,
-				getString(R.string.midi_matrix),
-				Matrix::class
-			),
-			MidiDeviceItem(
-				ResourcesCompat.getDrawable(resources, R.drawable.midi_master_keyboard, null)!!,
-				getString(R.string.midi_master_keyboard),
-				MasterKeyboard::class
-			)
-		)
+	companion object {
+		private const val AUTORUN_TIMER_DURATION_MS = 60000L
 	}
 
-	private val modeViewList: Array<LinearLayout> by lazy {
-		arrayOf(
-			b.speedFirst,
-			b.avoidAfterimage
-		)
-	}
-
-	private fun userInteract() {
-		autorunTimer.cancel()
-	}
+	private val timerText = mutableStateOf<String?>(null)
+	private val showError = mutableStateOf(false)
+	private val logText = mutableStateOf("")
+	private val currentMode = mutableIntStateOf(0)
+	private val targetScrollPage = mutableIntStateOf(-1)
 
 	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
 		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
-			runOnUiThread {
-				b.timer.text = (leftTime / 1000 - 1).toString()
-			}
+			timerText.value = getString(R.string.countdown_format, leftTime / 1000 - 1)
 		}
 
 		override fun onTimeOut() {
-			runOnUiThread {
-				finish()
-			}
+			finish()
 		}
 
 		override fun onCanceled() {
-			runOnUiThread {
-				b.timer.text = ""
-			}
+			timerText.value = null
 		}
+	}, AUTORUN_TIMER_DURATION_MS)
 
-	}, 60000)
-
-	@SuppressLint("ClickableViewAccessibility")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		b = ActivityMidiSelectBinding.inflate(layoutInflater)
-		setContentView(b.root)
 		autorunTimer.start()
-
-		b.root.setOnTouchListener { _, _ ->
-			userInteract()
-			true
-		}
-
-		val adapter = MidiDeviceAdapter(midiDeviceList.value)
-		b.picker.setSlideOnFling(true)
-		b.picker.adapter = adapter
-		b.picker.addOnItemChangedListener { _, adapterPosition ->
-			val item = midiDeviceList.value[adapterPosition]
-			MidiConnection.driver = item.driver.java.newInstance() as DriverRef
-		}
-		b.picker.setItemTransitionTimeMillis(50)
-		b.picker.setItemTransformer(
-			ScaleTransformer.Builder()
-				.setMinScale(0.7f)
-				.build()
-		)
-
-
-		val service = (getSystemService(Context.USB_SERVICE) as UsbManager)
-
 
 		MidiConnection.listener = object : MidiConnection.Listener {
 			override fun onConnectedListener() {
-				b.err.visibility = View.GONE
+				showError.value = false
 			}
 
 			override fun onChangeDriver(driverRef: DriverRef) {
-				for ((i, item) in midiDeviceList.value.withIndex()) {
-					if (item.driver == driverRef::class)
-						b.picker.scrollToPosition(i)
+				for ((i, device) in midiDevices.withIndex()) {
+					if (device.driverClass == driverRef::class) {
+						targetScrollPage.intValue = i
+						break
+					}
 				}
 			}
 
 			override fun onChangeMode(mode: Int) {
-				showMode(mode)
+				currentMode.intValue = mode
+				p.launchpadConnectMethod = mode
 			}
 
 			override fun onUiLog(log: String) {
-				b.log.append(log + "\n")
+				logText.value += log + "\n"
 			}
 		}
 		MidiConnection.mode = p.launchpadConnectMethod
+
+		val service = getSystemService(USB_SERVICE) as UsbManager
 		MidiConnection.initConnection(intent, service)
 
-
-	}
-
-	// Select Mode
-
-	fun selectModeXml(v: View) {
-		MidiConnection.mode = Integer.parseInt(v.tag as String)
-	}
-
-	fun showMode(mode: Int) {
-		for (i in modeViewList.indices) {
-			if (mode == i)
-				changeViewColor(modeViewList[i], color.gray1, color.background1)
-			else
-				changeViewColor(modeViewList[i], color.background1, color.gray1)
-		}
-		p.launchpadConnectMethod = mode
-	}
-
-	// Functions
-
-	private fun changeViewColor(layout: ViewGroup, backgroundColorRes: Int, textColorRes: Int) {
-		layout.setBackgroundColor(colors.get(backgroundColorRes))
-		val count = layout.childCount
-		for (j in 0 until count) {
-			val textView = layout.getChildAt(j) as TextView
-			textView.setTextColor(colors.get(textColorRes))
+		setContent {
+			MidiSelectScreen(
+				timerText = timerText.value,
+				showError = showError.value,
+				logText = logText.value,
+				currentMode = currentMode.intValue,
+				targetScrollPage = targetScrollPage.intValue,
+				onDeviceChanged = { index ->
+					val device = midiDevices[index]
+					val driver = device.driverClass.java.getDeclaredConstructor()
+						.newInstance() as? DriverRef ?: return@MidiSelectScreen
+					MidiConnection.driver = driver
+				},
+				onModeSelect = { mode ->
+					MidiConnection.mode = mode
+				},
+				onUserInteract = { autorunTimer.cancel() },
+			)
 		}
 	}
 
-	// ActivityCycle
-
-	@SuppressLint("StaticFieldLeak")
 	override fun onDestroy() {
+		MidiConnection.listener = null
 		super.onDestroy()
+	}
+}
+
+private data class MidiDeviceData(
+	val iconResId: Int,
+	val nameResId: Int,
+	val driverClass: KClass<*>,
+)
+
+private val midiDevices = listOf(
+	MidiDeviceData(R.drawable.midi_lp_s, R.string.midi_lp_s, LaunchpadS::class),
+	MidiDeviceData(R.drawable.midi_lp_mk2, R.string.midi_lp_mk2, LaunchpadMK2::class),
+	MidiDeviceData(R.drawable.midi_lp_pro, R.string.midi_lp_pro, LaunchpadPRO::class),
+	MidiDeviceData(R.drawable.midi_lp_x, R.string.midi_lp_x, LaunchpadX::class),
+	MidiDeviceData(R.drawable.midi_lp_mk3, R.string.midi_lp_mk3, LaunchpadMK3::class),
+	MidiDeviceData(R.drawable.midi_midifighter, R.string.midi_midi_fighter, MidiFighter::class),
+	MidiDeviceData(R.drawable.midi_matrix, R.string.midi_matrix, Matrix::class),
+	MidiDeviceData(R.drawable.midi_master_keyboard, R.string.midi_master_keyboard, MasterKeyboard::class),
+)
+
+private val grayColor = Gray1
+private val bgColor = Background1
+
+@Composable
+private fun MidiSelectScreen(
+	timerText: String?,
+	showError: Boolean,
+	logText: String,
+	currentMode: Int,
+	targetScrollPage: Int,
+	onDeviceChanged: (Int) -> Unit,
+	onModeSelect: (Int) -> Unit,
+	onUserInteract: () -> Unit,
+) {
+	val pagerState = rememberPagerState { midiDevices.size }
+
+	LaunchedEffect(targetScrollPage) {
+		if (targetScrollPage >= 0) {
+			pagerState.scrollToPage(targetScrollPage)
+		}
+	}
+
+	LaunchedEffect(pagerState) {
+		snapshotFlow { pagerState.currentPage }.collect { page ->
+			onDeviceChanged(page)
+		}
+	}
+
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.clickable { onUserInteract() },
+	) {
+		Column(
+			modifier = Modifier.fillMaxSize(),
+			horizontalAlignment = Alignment.CenterHorizontally,
+		) {
+			Text(
+				text = stringResource(R.string.launchpadConnecting),
+				color = grayColor,
+				fontSize = 30.sp,
+				modifier = Modifier.padding(top = 16.dp, bottom = 10.dp),
+			)
+
+			if (timerText != null) {
+				Text(
+					text = timerText,
+					color = grayColor,
+					fontSize = 30.sp,
+					modifier = Modifier.padding(bottom = 10.dp),
+				)
+			}
+
+			HorizontalPager(
+				state = pagerState,
+				modifier = Modifier.weight(1f),
+				contentPadding = PaddingValues(horizontal = 80.dp),
+			) { page ->
+				Column(
+					horizontalAlignment = Alignment.CenterHorizontally,
+					verticalArrangement = Arrangement.Center,
+					modifier = Modifier
+						.fillMaxSize()
+						.graphicsLayer {
+							val pageOffset = ((pagerState.currentPage - page) +
+								pagerState.currentPageOffsetFraction).absoluteValue
+							val scale = 1f - 0.3f * pageOffset.coerceIn(0f, 1f)
+							scaleX = scale
+							scaleY = scale
+						},
+				) {
+					val device = midiDevices[page]
+					Image(
+						painter = painterResource(device.iconResId),
+						contentDescription = stringResource(device.nameResId),
+						modifier = Modifier.size(150.dp),
+					)
+					Text(
+						text = stringResource(device.nameResId),
+						color = Color.White,
+						modifier = Modifier.padding(top = 5.dp),
+					)
+				}
+			}
+		}
+
+		// Mode selection buttons (bottom-end)
+		Column(
+			modifier = Modifier
+				.align(Alignment.BottomEnd)
+				.padding(10.dp),
+		) {
+			ModeButton(
+				text = stringResource(R.string.signal_SpeedFirst),
+				isSelected = currentMode == 0,
+				onClick = {
+					onUserInteract()
+					onModeSelect(0)
+				},
+			)
+			ModeButton(
+				text = stringResource(R.string.signal_avoidAfterimage),
+				isSelected = currentMode == 1,
+				onClick = {
+					onUserInteract()
+					onModeSelect(1)
+				},
+			)
+		}
+
+		// Log text (top-start)
+		if (logText.isNotEmpty()) {
+			Text(
+				text = logText,
+				color = grayColor,
+				fontSize = 12.sp,
+				modifier = Modifier
+					.align(Alignment.TopStart)
+					.padding(4.dp),
+			)
+		}
+
+		// Error overlay
+		if (showError) {
+			Box(
+				modifier = Modifier.fillMaxSize(),
+				contentAlignment = Alignment.Center,
+			) {
+				Text(
+					text = stringResource(R.string.midiDevicesNotDetected),
+					color = grayColor,
+					fontSize = 30.sp,
+				)
+			}
+		}
+	}
+}
+
+@Composable
+private fun ModeButton(
+	text: String,
+	isSelected: Boolean,
+	onClick: () -> Unit,
+) {
+	val textColor = if (isSelected) bgColor else grayColor
+
+	Row(
+		modifier = Modifier
+			.clickable { onClick() }
+			.padding(10.dp),
+	) {
+		Text(
+			text = text,
+			color = textColor,
+			fontSize = 15.sp,
+		)
 	}
 }

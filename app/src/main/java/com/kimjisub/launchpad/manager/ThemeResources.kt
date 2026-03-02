@@ -2,111 +2,165 @@ package com.kimjisub.launchpad.manager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
+import android.os.Build
 import androidx.core.content.res.ResourcesCompat
 import com.kimjisub.launchpad.BuildConfig
-import com.kimjisub.launchpad.R.*
+import com.kimjisub.launchpad.R.color
+import com.kimjisub.launchpad.R.drawable
+import com.kimjisub.launchpad.R.string
 
-class ThemeResources(
+/**
+ * 기본 테마: 앱 자체 리소스를 직접 사용 (PackageManager 불필요)
+ */
+class DefaultThemeResources(
 	context: Context,
-	private val packageName: String = BuildConfig.APPLICATION_ID,
 	fullLoad: Boolean = false,
-) {
-	var resources: Resources
-	var defaultRes: Resources
+) : IThemeResources {
+	private val res: Resources = context.resources
 
-	var icon: Drawable
-	var name: String
-	var description: String
-	var author: String
-	var version: String
+	override var icon: Drawable = requireNotNull(ResourcesCompat.getDrawable(res, drawable.theme_ic, null))
+	override var name: String = res.getString(string.theme_name)
+	override var author: String = res.getString(string.theme_author)
+	override var version: String = BuildConfig.VERSION_NAME
 
-	var playbg: Drawable? = null
-	var custom_logo: Drawable? = null
-	var btn: Drawable? = null
-	var btn_: Drawable? = null
-	var chainled: Drawable? = null
-	var chain: Drawable? = null
-	var chain_: Drawable? = null
-	var chain__: Drawable? = null
-	var phantom: Drawable? = null
-	var phantom_: Drawable? = null
-	var xml_prev: Drawable? = null
-	var xml_play: Drawable? = null
-	var xml_pause: Drawable? = null
-	var xml_next: Drawable? = null
-	var checkbox: Int? = null
-	var trace_log: Int? = null
-	var option_window: Int? = null
-	var option_window_checkbox: Int? = null
-	var option_window_btn: Int? = null
-	var option_window_btn_text: Int? = null
-	var isChainLed = true
+	override var playbg: Drawable? = null
+	override var customLogo: Drawable? = null
+	override var btn: Drawable? = null
+	override var btnPressed: Drawable? = null
+	override var chainled: Drawable? = null
+	override var chain: Drawable? = null
+	override var chainSelected: Drawable? = null
+	override var chainGuide: Drawable? = null
+	override var phantom: Drawable? = null
+	override var phantomVariant: Drawable? = null
+	override var xmlPrev: Drawable? = null
+	override var xmlPlay: Drawable? = null
+	override var xmlPause: Drawable? = null
+	override var xmlNext: Drawable? = null
+	override var checkbox: Int? = null
+	override var traceLog: Int? = null
+	override var optionWindow: Int? = null
+	override var optionWindowCheckbox: Int? = null
+	override var isChainLed = true
 
 	init {
+		if (fullLoad) {
+			playbg = ResourcesCompat.getDrawable(res, drawable.playbg, null)
+			btn = ResourcesCompat.getDrawable(res, drawable.btn, null)
+			btnPressed = ResourcesCompat.getDrawable(res, drawable.btn_, null)
+			chainled = ResourcesCompat.getDrawable(res, drawable.chainled, null)
+			phantom = ResourcesCompat.getDrawable(res, drawable.phantom, null)
+			xmlPrev = ResourcesCompat.getDrawable(res, drawable.xml_prev, null)
+			xmlPlay = ResourcesCompat.getDrawable(res, drawable.xml_play, null)
+			xmlPause = ResourcesCompat.getDrawable(res, drawable.xml_pause, null)
+			xmlNext = ResourcesCompat.getDrawable(res, drawable.xml_next, null)
+			checkbox = ResourcesCompat.getColor(res, color.checkbox, null)
+			traceLog = ResourcesCompat.getColor(res, color.trace_log, null)
+			optionWindow = ResourcesCompat.getColor(res, color.option_window, null)
+			optionWindowCheckbox = ResourcesCompat.getColor(res, color.option_window_checkbox, null)
+		}
+	}
+}
 
-		defaultRes = context.resources
-		resources = if (packageName == context.packageName)
-			context.resources
-		else
-			context.packageManager.getResourcesForApplication(packageName)
+/**
+ * 외부 테마 패키지: PackageManager를 통해 다른 앱의 리소스 로드
+ */
+class ThemeResources(
+	context: Context,
+	private val packageName: String,
+	fullLoad: Boolean = false,
+) : IThemeResources {
+	var resources: Resources = try {
+		context.packageManager.getResourcesForApplication(packageName)
+	} catch (_: PackageManager.NameNotFoundException) {
+		context.resources
+	}
+	var defaultRes: Resources = context.resources
 
+	override var icon: Drawable
+	override var name: String
+	override var author: String
+	override var version: String
 
-		icon = getDrawable("theme_ic", drawable.theme_ic)!!
-		version = context.packageManager.getPackageInfo(packageName, 0).versionName
-		name = getString("theme_name", string.theme_name)!!
-		description = getString("theme_description", string.theme_description)!!
-		author = getString("theme_author", string.theme_author)!!
+	override var playbg: Drawable? = null
+	override var customLogo: Drawable? = null
+	override var btn: Drawable? = null
+	override var btnPressed: Drawable? = null
+	override var chainled: Drawable? = null
+	override var chain: Drawable? = null
+	override var chainSelected: Drawable? = null
+	override var chainGuide: Drawable? = null
+	override var phantom: Drawable? = null
+	override var phantomVariant: Drawable? = null
+	override var xmlPrev: Drawable? = null
+	override var xmlPlay: Drawable? = null
+	override var xmlPause: Drawable? = null
+	override var xmlNext: Drawable? = null
+	override var checkbox: Int? = null
+	override var traceLog: Int? = null
+	override var optionWindow: Int? = null
+	override var optionWindowCheckbox: Int? = null
+	override var isChainLed = true
+
+	init {
+		icon = requireNotNull(getDrawable("theme_ic", drawable.theme_ic))
+		version = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			context.packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0)).versionName ?: "unknown"
+		} else {
+			@Suppress("DEPRECATION")
+			context.packageManager.getPackageInfo(packageName, 0).versionName ?: "unknown"
+		}
+		name = requireNotNull(getString("theme_name", string.theme_name))
+		author = requireNotNull(getString("theme_author", string.theme_author))
 		if (fullLoad) {
 			playbg = getDrawable("playbg", drawable.playbg)
-			custom_logo = try {
+			customLogo = try {
 				getDrawable("custom_logo")
-			} catch (e: Exception) {
+			} catch (_: Resources.NotFoundException) {
 				null
 			}
 			btn = getDrawable("btn", drawable.btn)
-			btn_ = getDrawable("btn_", drawable.btn_)
+			btnPressed = getDrawable("btn_", drawable.btn_)
 			try {
 				chainled = getDrawable("chainled")
-			} catch (e: Exception) {
+			} catch (_: Resources.NotFoundException) {
 				isChainLed = false
 				chain = getDrawable("chain", drawable.chain)
-				chain_ = getDrawable("chain_", drawable.chain_)
-				chain__ = getDrawable("chain__", drawable.chain__)
+				chainSelected = getDrawable("chain_", drawable.chain_)
+				chainGuide = getDrawable("chain__", drawable.chain__)
 			}
 			phantom = getDrawable("phantom", drawable.phantom)
-			phantom_ = try {
+			phantomVariant = try {
 				getDrawable("phantom_")
-			} catch (e: Exception) {
+			} catch (_: Resources.NotFoundException) {
 				null
 			}
-			xml_prev = getDrawable("xml_prev", drawable.xml_prev)
-			xml_play = getDrawable("xml_play", drawable.xml_play)
-			xml_pause = getDrawable("xml_pause", drawable.xml_pause)
-			xml_next = getDrawable("xml_next", drawable.xml_next)
+			xmlPrev = getDrawable("xml_prev", drawable.xml_prev)
+			xmlPlay = getDrawable("xml_play", drawable.xml_play)
+			xmlPause = getDrawable("xml_pause", drawable.xml_pause)
+			xmlNext = getDrawable("xml_next", drawable.xml_next)
 			checkbox = getColor("checkbox", color.checkbox)
-			trace_log = getColor("trace_log", color.trace_log)
-			option_window = getColor("option_window", color.option_window)
-			option_window_checkbox =
+			traceLog = getColor("trace_log", color.trace_log)
+			optionWindow = getColor("option_window", color.option_window)
+			optionWindowCheckbox =
 				getColor("option_window_checkbox", color.option_window_checkbox)
-			option_window_btn = getColor("option_window_btn", color.option_window_btn)
-			option_window_btn_text =
-				getColor("option_window_btn_text", color.option_window_btn_text)
 		}
 	}
 
-	@Throws(Exception::class)
+	@SuppressLint("DiscouragedApi")
+	@Throws(Resources.NotFoundException::class)
 	private fun getResourceId(resources: Resources, type: String, customId: String): Int {
 		return resources.getIdentifier(customId, type, packageName)
 	}
 
-	@SuppressLint("UseCompatLoadingForDrawables")
 	fun getDrawable(resName: String, defaultId: Int? = null): Drawable? {
 		return try {
 			val resId = getResourceId(resources, "drawable", resName)
 			ResourcesCompat.getDrawable(resources, resId, null)
-		} catch (e: Exception) {
+		} catch (e: Resources.NotFoundException) {
 			if (defaultId != null)
 				ResourcesCompat.getDrawable(defaultRes, defaultId, null)
 			else
@@ -114,12 +168,11 @@ class ThemeResources(
 		}
 	}
 
-	@SuppressLint("UseCompatLoadingForDrawables")
 	fun getColor(resName: String, defaultId: Int? = 0): Int? {
 		return try {
 			val resId = getResourceId(resources, "color", resName)
 			ResourcesCompat.getColor(resources, resId, null)
-		} catch (e: Exception) {
+		} catch (e: Resources.NotFoundException) {
 			if (defaultId != null)
 				ResourcesCompat.getColor(defaultRes, defaultId, null)
 			else
@@ -127,16 +180,32 @@ class ThemeResources(
 		}
 	}
 
-	@SuppressLint("UseCompatLoadingForDrawables")
 	fun getString(resName: String, defaultId: Int?): String? {
 		return try {
 			val resId = getResourceId(resources, "string", resName)
 			resources.getString(resId)
-		} catch (e: Exception) {
+		} catch (e: Resources.NotFoundException) {
 			if (defaultId != null)
 				defaultRes.getString(defaultId)
 			else
 				throw e
+		}
+	}
+}
+
+fun loadTheme(context: Context, themeId: String, fullLoad: Boolean = false): IThemeResources {
+	return when {
+		themeId.startsWith("zip://") -> {
+			val folderName = themeId.removePrefix("zip://")
+			val themesDir = context.getExternalFilesDir(null)?.let { java.io.File(it, "themes/$folderName") }
+				?: throw java.io.FileNotFoundException("External files dir not available")
+			ZipThemeResources(context, themesDir, fullLoad)
+		}
+		themeId == context.packageName || themeId == BuildConfig.APPLICATION_ID -> {
+			DefaultThemeResources(context, fullLoad)
+		}
+		else -> {
+			ThemeResources(context, themeId, fullLoad)
 		}
 	}
 }

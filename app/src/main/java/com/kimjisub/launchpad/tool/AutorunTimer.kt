@@ -1,11 +1,19 @@
 package com.kimjisub.launchpad.tool
 
-import java.util.Timer
-import java.util.TimerTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 class AutorunTimer(val listener: OnListener, val timeout: Long) {
-	private val everySecTimer = Timer()
-	private val timeoutTimer = Timer()
+	companion object {
+		private const val TIMER_INTERVAL_MS = 1000L
+	}
+
+	private var scope: CoroutineScope? = null
 	private var elapsedTime: Long = 0
 	var running = false
 
@@ -17,26 +25,28 @@ class AutorunTimer(val listener: OnListener, val timeout: Long) {
 
 	fun start() {
 		running = true
-		everySecTimer.schedule(object : TimerTask() {
-			override fun run() {
+		val newScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+		scope = newScope
+
+		newScope.launch {
+			while (isActive) {
 				listener.onEverySec(timeout - elapsedTime, elapsedTime)
-				elapsedTime += 1000
+				elapsedTime += TIMER_INTERVAL_MS
+				delay(TIMER_INTERVAL_MS)
 			}
+		}
 
-		}, 0, 1000)
-
-		timeoutTimer.schedule(object : TimerTask() {
-			override fun run() {
-				timeout()
-			}
-		}, timeout)
+		newScope.launch {
+			delay(timeout)
+			timeout()
+		}
 	}
 
 	fun cancel() {
 		if (running) {
 			running = false
-			timeoutTimer.cancel()
-			everySecTimer.cancel()
+			scope?.cancel()
+			scope = null
 			listener.onCanceled()
 		}
 	}
@@ -44,8 +54,8 @@ class AutorunTimer(val listener: OnListener, val timeout: Long) {
 	fun timeout() {
 		if (running) {
 			running = false
-			timeoutTimer.cancel()
-			everySecTimer.cancel()
+			scope?.cancel()
+			scope = null
 			listener.onTimeOut()
 		}
 	}

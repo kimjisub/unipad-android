@@ -12,15 +12,14 @@ class UnipackRepository(
 		return unipackDao.find(id)
 	}
 
-	suspend fun getOrCreate(id: String): LiveData<Unipack> {
-		val unipack = unipackDao.find(id).value
-		if (unipack == null) {
+	fun getOrCreate(id: String): LiveData<Unipack> {
+		if (!unipackDao.exists(id)) {
 			unipackDao.insert(Unipack.create(id))
 		}
 		return unipackDao.find(id)
 	}
 
-	suspend fun toggleBookmark(id: String) {
+	fun toggleBookmark(id: String) {
 		unipackDao.toggleBookmark(id)
 	}
 
@@ -36,7 +35,7 @@ class UnipackRepository(
 		return unipackDao.lastOpenedAt(id)
 	}
 
-	suspend fun recordOpen(id: String) {
+	fun recordOpen(id: String) {
 		unipackDao.addOpenCount(id)
 		unipackDao.setLastOpenedAt(id, Date())
 	}

@@ -1,13 +1,13 @@
-# Begin: Proguard rules for Firebase
+# Begin: Proguard rules for Firebase (BOM 33.x)
 
-# Authentication
+# Firebase SDK bundles its own consumer ProGuard rules.
+# These rules cover app-specific Firebase data model classes.
+
 -keepattributes *Annotation*
-
-# Realtime database
 -keepattributes Signature
 
--keepattributes Signature
--keepclassmembers class com.kimjisub.launchpad.network.fb.* {
+# Keep Firebase data model classes used with Firestore/Realtime Database
+-keepclassmembers class com.kimjisub.launchpad.network.fb.** {
   *;
 }
 

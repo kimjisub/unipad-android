@@ -46,10 +46,10 @@ class LaunchpadS : DriverRef() {
 
 	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
-			sendFunctionkeyLed(c + 8, velocity)
+			sendFunctionKeyLed(c + 8, velocity)
 	}
 
-	override fun sendFunctionkeyLed(f: Int, velocity: Int) {
+	override fun sendFunctionKeyLed(f: Int, velocity: Int) {
 		if (f in 0..15)
 			sendSignal(
 				circleCode[f][0].toByte(),
@@ -64,6 +64,6 @@ class LaunchpadS : DriverRef() {
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
 		for (i in 0..15)
-			sendFunctionkeyLed(i, 0)
+			sendFunctionKeyLed(i, 0)
 	}
 }

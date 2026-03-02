@@ -1,42 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<attr name="flagColor" format="reference|integer" />
-	<attr name="toggle" format="boolean" />
-
 	<attr name="title" format="string" />
 	<attr name="subtitle" format="string" />
-	<attr name="subscription" format="string" />
-
-	<attr name="option1Name" format="string" />
-	<attr name="option2Name" format="string" />
-
-	<attr name="option1" format="boolean" />
-	<attr name="option2" format="boolean" />
-
-	<declare-styleable name="PackView">
-		<attr name="flagColor" />
-		<attr name="toggle" />
-
-		<attr name="title" />
-		<attr name="subtitle" />
-
-		<attr name="option1Name" />
-		<attr name="option2Name" />
-
-		<attr name="option1" />
-		<attr name="option2" />
-
-	</declare-styleable>
-
-	<declare-styleable name="TotalPanel" />
-
-	<declare-styleable name="MainPackPanel" />
-
-	<declare-styleable name="StorePackPanel" />
-
-	<declare-styleable name="MidiItemView">
-		<attr name="title" />
-		<attr name="subscription" />
-	</declare-styleable>
-
 </resources>

@@ -30,7 +30,7 @@
 
 		<Preference
 			app:iconSpaceReserved="false"
-			app:key="oss_licence"
+			app:key="oss_license"
 			app:title="@string/openSourceLicense" />
 
 		<Preference
