@@ -144,8 +144,13 @@
 	<string name="theme_add_zip_desc">Import a .zip theme file from your device.</string>
 	<string name="theme_add_store">Search on Play Store</string>
 	<string name="theme_add_zip">Import ZIP file</string>
+	<string name="theme_add_create">Create your own theme</string>
+	<string name="theme_add_create_desc">Learn how to create a custom theme.</string>
 	<string name="theme_delete_title">Delete Theme</string>
 	<string name="theme_delete_confirm">Delete \"%s\"?</string>
+	<string name="theme_type_builtin">Built-in</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>

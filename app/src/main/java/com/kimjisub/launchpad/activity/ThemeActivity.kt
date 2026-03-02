@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -67,8 +68,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -78,6 +77,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.ThemeItem
 import com.kimjisub.launchpad.adapter.ThemeTool
+import com.kimjisub.launchpad.adapter.ThemeType
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -106,6 +106,9 @@ class ThemeActivity : BaseActivity() {
 				},
 				onBrowseStore = {
 					browse("https://play.google.com/store/search?q=com.kimjisub.launchpad.theme.")
+				},
+				onCreateGuide = {
+					browse("https://github.com/kimjisub/unipad-android/blob/main/docs/THEME_CREATION_GUIDE.md")
 				},
 				onImport = { uri ->
 					try {
@@ -155,6 +158,7 @@ private fun ThemeScreen(
 	onBackClick: () -> Unit,
 	onApply: (Int) -> Unit,
 	onBrowseStore: () -> Unit,
+	onCreateGuide: () -> Unit,
 	onImport: (Uri) -> Unit,
 	onDelete: (ThemeItem) -> Unit,
 ) {
@@ -263,7 +267,6 @@ private fun ThemeScreen(
 						text = stringResource(R.string.theme),
 						color = Color.White,
 						fontSize = 24.sp,
-						fontFamily = FontFamily(Font(R.font.quicksand_bold)),
 						modifier = Modifier.weight(1f),
 					)
 					IconButton(onClick = { selectedIndex = themes.size }) {
@@ -296,28 +299,33 @@ private fun ThemeScreen(
 						AddThemeGuideItem(
 							isSelected = selectedIndex == themes.size,
 							onClick = { selectedIndex = themes.size },
-							onBrowseStore = onBrowseStore,
-							onImportZip = {
-								filePickerLauncher.launch("application/zip")
-							},
 						)
 					}
 				}
 			}
 
-			// Right panel: full-bleed preview (clickable for fullscreen toggle)
+			// Right panel
 			Box(
 				modifier = Modifier
 					.weight(1f)
-					.fillMaxHeight()
-					.clickable { isFullscreen = !isFullscreen },
+					.fillMaxHeight(),
 			) {
-				Crossfade(
-					targetState = previewBitmaps,
-					animationSpec = tween(400),
-					label = "themePreview",
-				) { bitmaps ->
-					ThemePreview(bitmaps)
+				if (selectedIndex == themes.size) {
+					AddThemePanel(
+						onBrowseStore = onBrowseStore,
+						onCreateGuide = onCreateGuide,
+						onImportZip = { filePickerLauncher.launch("application/zip") },
+					)
+				} else {
+					Box(modifier = Modifier.fillMaxSize().clickable { isFullscreen = !isFullscreen }) {
+						Crossfade(
+							targetState = previewBitmaps,
+							animationSpec = tween(400),
+							label = "themePreview",
+						) { bitmaps ->
+							ThemePreview(bitmaps)
+						}
+					}
 				}
 			}
 		}
@@ -373,13 +381,19 @@ private fun ThemeListItem(
 				maxLines = 1,
 				overflow = TextOverflow.Ellipsis,
 			)
-			Text(
-				text = "${theme.author}  ${theme.version ?: ""}".trim(),
-				color = Color.White.copy(alpha = 0.6f),
-				fontSize = 11.sp,
-				maxLines = 1,
-				overflow = TextOverflow.Ellipsis,
-			)
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				ThemeTypeBadge(theme.type)
+				Spacer(modifier = Modifier.width(6.dp))
+				Text(
+					text = "${theme.author}  ${theme.version ?: ""}".trim(),
+					color = Color.White.copy(alpha = 0.6f),
+					fontSize = 11.sp,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis,
+				)
+			}
 		}
 		if (isApplied) {
 			Icon(
@@ -407,16 +421,33 @@ private fun ThemeListItem(
 }
 
 @Composable
+private fun ThemeTypeBadge(type: ThemeType) {
+	val (label, color) = when (type) {
+		ThemeType.BUILTIN -> stringResource(R.string.theme_type_builtin) to Color(0xFF4CAF50)
+		ThemeType.ZIP -> stringResource(R.string.theme_type_zip) to Color(0xFF42A5F5)
+		ThemeType.APK -> stringResource(R.string.theme_type_apk) to Color(0xFFAB47BC)
+	}
+	Text(
+		text = label,
+		color = color,
+		fontSize = 9.sp,
+		maxLines = 1,
+		modifier = Modifier
+			.border(1.dp, color.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
+			.padding(horizontal = 4.dp, vertical = 1.dp),
+	)
+}
+
+@Composable
 private fun AddThemeGuideItem(
 	isSelected: Boolean,
 	onClick: () -> Unit,
-	onBrowseStore: () -> Unit,
-	onImportZip: () -> Unit,
 ) {
 	val borderColor = if (isSelected) Orange else Color.Transparent
 	val bgColor = if (isSelected) Color.White.copy(alpha = 0.12f) else Color.Transparent
 
-	Column(
+	Row(
+		verticalAlignment = Alignment.CenterVertically,
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(vertical = 3.dp)
@@ -426,84 +457,141 @@ private fun AddThemeGuideItem(
 			.clickable(onClick = onClick)
 			.padding(horizontal = 12.dp, vertical = 10.dp),
 	) {
-		Row(verticalAlignment = Alignment.CenterVertically) {
-			Icon(
-				imageVector = Icons.Default.Add,
-				contentDescription = null,
-				tint = Orange,
-				modifier = Modifier.size(24.dp),
-			)
-			Spacer(modifier = Modifier.width(10.dp))
+		Icon(
+			imageVector = Icons.Default.Add,
+			contentDescription = null,
+			tint = Orange,
+			modifier = Modifier.size(24.dp),
+		)
+		Spacer(modifier = Modifier.width(10.dp))
+		Text(
+			text = stringResource(R.string.theme_add_title),
+			color = Color.White,
+			fontSize = 15.sp,
+		)
+	}
+}
+
+@Composable
+private fun AddThemePanel(
+	onBrowseStore: () -> Unit,
+	onCreateGuide: () -> Unit,
+	onImportZip: () -> Unit,
+) {
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(Color(0xFF161E2B)),
+		contentAlignment = Alignment.Center,
+	) {
+		Column(
+			modifier = Modifier
+				.width(320.dp)
+				.padding(24.dp),
+		) {
 			Text(
 				text = stringResource(R.string.theme_add_title),
 				color = Color.White,
-				fontSize = 15.sp,
+				fontSize = 20.sp,
 			)
-		}
-
-		if (isSelected) {
-			Spacer(modifier = Modifier.height(12.dp))
+			Spacer(modifier = Modifier.height(20.dp))
 
 			// Play Store option
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.fillMaxWidth()
-					.clip(RoundedCornerShape(8.dp))
+					.clip(RoundedCornerShape(12.dp))
 					.background(Color.White.copy(alpha = 0.08f))
 					.clickable(onClick = onBrowseStore)
-					.padding(12.dp),
+					.padding(16.dp),
 			) {
 				Icon(
 					imageVector = Icons.Default.Search,
 					contentDescription = null,
-					tint = Color.White.copy(alpha = 0.7f),
-					modifier = Modifier.size(20.dp),
+					tint = Orange,
+					modifier = Modifier.size(28.dp),
 				)
-				Spacer(modifier = Modifier.width(10.dp))
+				Spacer(modifier = Modifier.width(14.dp))
 				Column(modifier = Modifier.weight(1f)) {
 					Text(
 						text = stringResource(R.string.theme_add_store),
 						color = Color.White,
-						fontSize = 13.sp,
+						fontSize = 15.sp,
 					)
+					Spacer(modifier = Modifier.height(2.dp))
 					Text(
 						text = stringResource(R.string.theme_add_store_desc),
 						color = Color.White.copy(alpha = 0.5f),
-						fontSize = 11.sp,
+						fontSize = 12.sp,
 					)
 				}
 			}
 
-			Spacer(modifier = Modifier.height(8.dp))
+			Spacer(modifier = Modifier.height(12.dp))
 
 			// ZIP import option
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.fillMaxWidth()
-					.clip(RoundedCornerShape(8.dp))
+					.clip(RoundedCornerShape(12.dp))
 					.background(Color.White.copy(alpha = 0.08f))
 					.clickable(onClick = onImportZip)
-					.padding(12.dp),
+					.padding(16.dp),
 			) {
 				Icon(
 					imageVector = Icons.Outlined.FolderOpen,
 					contentDescription = null,
-					tint = Color.White.copy(alpha = 0.7f),
-					modifier = Modifier.size(20.dp),
+					tint = Orange,
+					modifier = Modifier.size(28.dp),
 				)
-				Spacer(modifier = Modifier.width(10.dp))
+				Spacer(modifier = Modifier.width(14.dp))
 				Column(modifier = Modifier.weight(1f)) {
 					Text(
 						text = stringResource(R.string.theme_add_zip),
 						color = Color.White,
-						fontSize = 13.sp,
+						fontSize = 15.sp,
 					)
+					Spacer(modifier = Modifier.height(2.dp))
 					Text(
 						text = stringResource(R.string.theme_add_zip_desc),
 						color = Color.White.copy(alpha = 0.5f),
-						fontSize = 11.sp,
+						fontSize = 12.sp,
+					)
+				}
+			}
+
+			Spacer(modifier = Modifier.height(12.dp))
+
+			// Create theme guide option
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier
+					.fillMaxWidth()
+					.clip(RoundedCornerShape(12.dp))
+					.background(Color.White.copy(alpha = 0.08f))
+					.clickable(onClick = onCreateGuide)
+					.padding(16.dp),
+			) {
+				Icon(
+					imageVector = Icons.Outlined.Edit,
+					contentDescription = null,
+					tint = Orange,
+					modifier = Modifier.size(28.dp),
+				)
+				Spacer(modifier = Modifier.width(14.dp))
+				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = stringResource(R.string.theme_add_create),
+						color = Color.White,
+						fontSize = 15.sp,
+					)
+					Spacer(modifier = Modifier.height(2.dp))
+					Text(
+						text = stringResource(R.string.theme_add_create_desc),
+						color = Color.White.copy(alpha = 0.5f),
+						fontSize = 12.sp,
 					)
 				}
 			}

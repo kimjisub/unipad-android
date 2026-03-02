@@ -195,6 +195,10 @@ class ThemeResources(
 
 fun loadTheme(context: Context, themeId: String, fullLoad: Boolean = false): IThemeResources {
 	return when {
+		themeId.startsWith("asset://") -> {
+			val themeName = themeId.removePrefix("asset://")
+			AssetThemeResources(context, "themes/$themeName", fullLoad)
+		}
 		themeId.startsWith("zip://") -> {
 			val folderName = themeId.removePrefix("zip://")
 			val themesDir = context.getExternalFilesDir(null)?.let { java.io.File(it, "themes/$folderName") }

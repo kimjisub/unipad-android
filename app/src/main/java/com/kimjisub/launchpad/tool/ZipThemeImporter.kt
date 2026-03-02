@@ -58,15 +58,12 @@ object ZipThemeImporter {
 	}
 
 	fun isBundled(context: Context, folderName: String): Boolean {
-		val assetThemes = try {
-			context.assets.list("themes")
-				?.filter { it.endsWith(".zip") }
-				?.map { it.removeSuffix(".zip") }
-				?: emptyList()
+		return try {
+			val files = context.assets.list("themes/$folderName") ?: return false
+			"theme.json" in files
 		} catch (_: Exception) {
-			emptyList()
+			false
 		}
-		return folderName in assetThemes
 	}
 
 	fun delete(context: Context, folderName: String): Boolean {
