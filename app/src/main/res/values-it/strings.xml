@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Nuova versione rilevata.</string>
+	<string name="update_available">Aggiornamento disponibile</string>
 
 	<string name="permissionRequire">È necessario l\'accesso alla memoria esterna per salvare i file del progetto.\nConcedi l\'autorizzazione.</string>
 	<string name="permissionDenied">L\'app richiede l\'accesso alla memoria esterna.\nAttiva le autorizzazioni in [Impostazioni] > [Autorizzazioni]</string>
 	<string name="unipackNotFound">UniPack non trovato.</string>
 	<string name="clickToAddUniPack">Clicca per aggiungere UniPack.</string>
+	<string name="guide_download_new">Scarica nuovi pack</string>
+	<string name="guide_import_external">Importa pack scaricati</string>
+	<string name="guide_restore_packs">Recupera pack mancanti</string>
 	<string name="doYouWantToDeleteUniPack">Vuoi eliminare questo progetto?</string>
 	<string name="remapDone">La rimappatura di AutoPlay è stata completata con successo.</string>
 	<string name="remapFail">AutoPlay non esiste</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">File tema non valido.</string>
 	<string name="theme_delete_title">Elimina Tema</string>
 	<string name="theme_delete_confirm">Eliminare \"%s\"?</string>
+	<string name="theme_add_title">Aggiungi Tema</string>
+	<string name="theme_add_store">Cerca su Play Store</string>
+	<string name="theme_add_store_desc">Cerca app di temi su Google Play Store.</string>
+	<string name="theme_add_zip">Importa file ZIP</string>
+	<string name="theme_add_zip_desc">Importa un file tema .zip dal tuo dispositivo.</string>
+	<string name="theme_add_create">Crea il tuo tema</string>
+	<string name="theme_add_create_desc">Scopri come creare un tema personalizzato.</string>
+	<string name="theme_type_builtin">Integrato</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Sviluppatore</string>
 	<string name="settings_app">Applicazione</string>
 	<string name="settings_user">Utente</string>
+	<string name="settings_device">Dispositivo</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">Archivio specifico dell\'app. Nessun permesso necessario. Eliminato alla disinstallazione dell\'app.</string>
 	<string name="workspace_desc_documents_android10">Cartella Documenti condivisa. Disponibile solo su Android 10.</string>
 	<string name="workspace_desc_external_sd">Archivio su scheda SD esterna. Trasferibile tra dispositivi.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Backup)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Accesso necessario per verificare il contenuto</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Formato</string>
+	<string name="transfer_format_folder">Cartella</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">Cerca UniPacks</string>
+	<string name="backup_title">Backup</string>
+	<string name="restore_title">Ripristino</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Collega cartella di backup</string>
+	<string name="backup_guide_description">Collega la cartella Documents/Unipad per eseguire il backup o il ripristino dei tuoi UniPacks.\nQuesta cartella persiste anche dopo la disinstallazione.</string>
+	<string name="backup_guide_step1">1. Si aprirà un selettore di cartelle</string>
+	<string name="backup_guide_step2">2. Se Documents/Unipad esiste, selezionala</string>
+	<string name="backup_guide_step3">3. In caso contrario, crea una cartella "Unipad" in Documents e selezionala</string>
+	<string name="backup_guide_continue">Continua</string>
+	<string name="backup_recovery_title">UniPacks trovati</string>
+	<string name="backup_recovery_message">%d UniPacks trovati nella cartella di backup.\nVuoi ripristinarli?</string>
+	<string name="backup_recovery_restore">Ripristina</string>
+	<string name="backup_recovery_later">Più tardi</string>
 </resources>

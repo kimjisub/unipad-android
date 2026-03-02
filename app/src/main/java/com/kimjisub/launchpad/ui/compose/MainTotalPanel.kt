@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.ui.theme.Blue
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 
@@ -39,6 +40,7 @@ import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 fun MainTotalPanelScreen(
 	vm: MainTotalPanelViewModel,
 	onSettingsClick: () -> Unit = {},
+	onUpdateClick: () -> Unit = {},
 ) {
 	val version = vm.version
 	val premium = vm.premium
@@ -102,6 +104,19 @@ fun MainTotalPanelScreen(
 						value = if (unipackCapacity != null) "$unipackCapacity ${stringResource(R.string.mb)}" else "-",
 					)
 				}
+			}
+
+			// Update notice (bottom-start)
+			if (vm.updateAvailable) {
+				Text(
+					text = stringResource(R.string.update_available),
+					color = Blue,
+					fontSize = 11.sp,
+					modifier = Modifier
+						.align(Alignment.BottomStart)
+						.clickable { onUpdateClick() }
+						.padding(12.dp),
+				)
 			}
 
 			// Settings icon at bottom-right

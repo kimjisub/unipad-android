@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">พบเวอร์ชันใหม่</string>
+	<string name="update_available">มีอัปเดตใหม่</string>
 
 	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
 	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>
 	<string name="unipackNotFound">ไม่พบ UniPack</string>
 	<string name="clickToAddUniPack">คลิกเพื่อเพิ่ม UniPack</string>
+	<string name="guide_download_new">ดาวน์โหลดแพ็คใหม่</string>
+	<string name="guide_import_external">นำเข้าแพ็คที่ดาวน์โหลด</string>
+	<string name="guide_restore_packs">กู้คืนแพ็คที่หายไป</string>
 	<string name="doYouWantToDeleteUniPack">คุณต้องการลบโปรเจกต์นี้หรือไม่?</string>
 	<string name="remapDone">การแมปใหม่ AutoPlay เสร็จสมบูรณ์</string>
 	<string name="remapFail">ไม่มี AutoPlay</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">ไฟล์ธีมไม่ถูกต้อง</string>
 	<string name="theme_delete_title">ลบธีม</string>
 	<string name="theme_delete_confirm">ลบ \"%s\" หรือไม่?</string>
+	<string name="theme_add_title">เพิ่มธีม</string>
+	<string name="theme_add_store">ค้นหาใน Play Store</string>
+	<string name="theme_add_store_desc">ค้นหาแอปธีมใน Google Play Store</string>
+	<string name="theme_add_zip">นำเข้าไฟล์ ZIP</string>
+	<string name="theme_add_zip_desc">นำเข้าไฟล์ธีม .zip จากอุปกรณ์ของคุณ</string>
+	<string name="theme_add_create">สร้างธีมของคุณเอง</string>
+	<string name="theme_add_create_desc">เรียนรู้วิธีสร้างธีมที่กำหนดเอง</string>
+	<string name="theme_type_builtin">ในตัว</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">นักพัฒนา</string>
 	<string name="settings_app">แอปพลิเคชัน</string>
 	<string name="settings_user">ผู้ใช้</string>
+	<string name="settings_device">อุปกรณ์</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">พื้นที่จัดเก็บเฉพาะแอป ไม่ต้องขอสิทธิ์ จะถูกลบเมื่อถอนการติดตั้งแอป</string>
 	<string name="workspace_desc_documents_android10">โฟลเดอร์เอกสารที่ใช้ร่วมกัน ใช้ได้เฉพาะบน Android 10</string>
 	<string name="workspace_desc_external_sd">พื้นที่จัดเก็บบน SD Card ภายนอก สามารถย้ายระหว่างอุปกรณ์ได้</string>
+	<string name="workspace_backup_documents">Documents/UniPack (สำรองข้อมูล)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">ต้องการสิทธิ์เข้าถึงเพื่อตรวจสอบเนื้อหา</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">รูปแบบ</string>
+	<string name="transfer_format_folder">โฟลเดอร์</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">ค้นหา UniPacks</string>
+	<string name="backup_title">สำรองข้อมูล</string>
+	<string name="restore_title">กู้คืน</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">เชื่อมต่อโฟลเดอร์สำรองข้อมูล</string>
+	<string name="backup_guide_description">เชื่อมต่อโฟลเดอร์ Documents/Unipad เพื่อสำรองหรือกู้คืน UniPacks ของคุณ\nโฟลเดอร์นี้จะยังคงอยู่แม้ถอนการติดตั้งแอป</string>
+	<string name="backup_guide_step1">1. ตัวเลือกโฟลเดอร์จะเปิดขึ้น</string>
+	<string name="backup_guide_step2">2. หาก Documents/Unipad มีอยู่ ให้เลือก</string>
+	<string name="backup_guide_step3">3. หากไม่มี ให้สร้างโฟลเดอร์ "Unipad" ใน Documents แล้วเลือก</string>
+	<string name="backup_guide_continue">ดำเนินการต่อ</string>
+	<string name="backup_recovery_title">พบ UniPacks</string>
+	<string name="backup_recovery_message">พบ %d UniPacks ในโฟลเดอร์สำรองข้อมูล\nคุณต้องการกู้คืนหรือไม่?</string>
+	<string name="backup_recovery_restore">กู้คืน</string>
+	<string name="backup_recovery_later">ภายหลัง</string>
 </resources>

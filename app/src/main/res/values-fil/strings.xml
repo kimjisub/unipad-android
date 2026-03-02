@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">May nakitang bagong bersyon.</string>
+	<string name="update_available">May available na update</string>
 
 	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
 	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>
 	<string name="unipackNotFound">Hindi nahanap ang UniPack.</string>
 	<string name="clickToAddUniPack">Mag-click para magdagdag ng mga UniPack.</string>
+	<string name="guide_download_new">Mag-download ng bagong packs</string>
+	<string name="guide_import_external">I-import ang na-download na packs</string>
+	<string name="guide_restore_packs">I-recover ang nawawalang packs</string>
 	<string name="doYouWantToDeleteUniPack">Gusto mo bang tanggalin ang project na ito?</string>
 	<string name="remapDone">Matagumpay na nakumpleto ang AutoPlay remapping.</string>
 	<string name="remapFail">Walang AutoPlay</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">Hindi valid na file ng tema.</string>
 	<string name="theme_delete_title">Tanggalin ang Tema</string>
 	<string name="theme_delete_confirm">Tanggalin ang \"%s\"?</string>
+	<string name="theme_add_title">Magdagdag ng Tema</string>
+	<string name="theme_add_store">Hanapin sa Play Store</string>
+	<string name="theme_add_store_desc">Maghanap ng tema apps sa Google Play Store.</string>
+	<string name="theme_add_zip">I-import ang ZIP file</string>
+	<string name="theme_add_zip_desc">Mag-import ng .zip tema file mula sa iyong device.</string>
+	<string name="theme_add_create">Gumawa ng sariling tema</string>
+	<string name="theme_add_create_desc">Alamin kung paano gumawa ng custom na tema.</string>
+	<string name="theme_type_builtin">Built-in</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Developer</string>
 	<string name="settings_app">Aplikasyon</string>
 	<string name="settings_user">User</string>
+	<string name="settings_device">Device</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$tm/%1$td/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">App-specific storage. Hindi kailangan ng permission. Mabubura kapag in-uninstall ang app.</string>
 	<string name="workspace_desc_documents_android10">Shared Documents folder. Available lang sa Android 10.</string>
 	<string name="workspace_desc_external_sd">External SD card storage. Maaaring ilipat sa ibang device.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Backup)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Kailangan ng access para suriin ang nilalaman</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Format</string>
+	<string name="transfer_format_folder">Folder</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">Maghanap ng UniPacks</string>
+	<string name="backup_title">Backup</string>
+	<string name="restore_title">I-restore</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Ikonekta ang Backup Folder</string>
+	<string name="backup_guide_description">Ikonekta ang Documents/Unipad folder para i-backup o i-restore ang iyong mga UniPack.\nAng folder na ito ay mananatili kahit i-uninstall ang app.</string>
+	<string name="backup_guide_step1">1. Magbubukas ang folder picker</string>
+	<string name="backup_guide_step2">2. Kung may Documents/Unipad, piliin ito</string>
+	<string name="backup_guide_step3">3. Kung wala, gumawa ng "Unipad" folder sa Documents at piliin ito</string>
+	<string name="backup_guide_continue">Magpatuloy</string>
+	<string name="backup_recovery_title">May Nakitang UniPacks</string>
+	<string name="backup_recovery_message">%d UniPacks ang nakita sa backup folder.\nGusto mo bang i-restore ang mga ito?</string>
+	<string name="backup_recovery_restore">I-restore</string>
+	<string name="backup_recovery_later">Mamaya na</string>
 </resources>

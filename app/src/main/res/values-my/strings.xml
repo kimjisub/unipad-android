@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">ဗားရှင်းအသစ်တွေ့ရှိသည်။</string>
+	<string name="update_available">အပ်ဒိတ်ရနိုင်ပါသည်</string>
 
 	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
 	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>
 	<string name="unipackNotFound">UniPack မတွေ့ပါ။</string>
 	<string name="clickToAddUniPack">UniPack ထည့်ရန် နှိပ်ပါ။</string>
+	<string name="guide_download_new">pack အသစ်များ ဒေါင်းလုဒ်လုပ်ရန်</string>
+	<string name="guide_import_external">ဒေါင်းလုဒ်လုပ်ထားသော pack များ တင်သွင်းရန်</string>
+	<string name="guide_restore_packs">ပျောက်ဆုံးနေသော pack များ ပြန်လည်ရယူရန်</string>
 	<string name="doYouWantToDeleteUniPack">ဤပရောဂျက်ကို ဖျက်လိုပါသလား?</string>
 	<string name="remapDone">AutoPlay ပြန်လည်ချိတ်ဆက်ခြင်း အောင်မြင်စွာပြီးဆုံးပါပြီ။</string>
 	<string name="remapFail">AutoPlay မရှိပါ</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">မမှန်ကန်သော အပြင်အဆင်ဖိုင်။</string>
 	<string name="theme_delete_title">အပြင်အဆင် ဖျက်မည်</string>
 	<string name="theme_delete_confirm">\"%s\" ဖျက်မည်လား?</string>
+	<string name="theme_add_title">အပြင်အဆင် ထည့်ရန်</string>
+	<string name="theme_add_store">Play Store တွင် ရှာရန်</string>
+	<string name="theme_add_store_desc">Google Play Store တွင် အပြင်အဆင် အက်ပ်များ ရှာဖွေပါ။</string>
+	<string name="theme_add_zip">ZIP ဖိုင် တင်သွင်းရန်</string>
+	<string name="theme_add_zip_desc">သင့်စက်မှ .zip အပြင်အဆင် ဖိုင်ကို တင်သွင်းပါ။</string>
+	<string name="theme_add_create">ကိုယ်ပိုင် အပြင်အဆင် ဖန်တီးရန်</string>
+	<string name="theme_add_create_desc">စိတ်ကြိုက် အပြင်အဆင် ဖန်တီးနည်းကို လေ့လာပါ။</string>
+	<string name="theme_type_builtin">တပ်ဆင်ပြီး</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">ဆော့ဖ်ဝဲရေးသားသူ</string>
 	<string name="settings_app">အပလီကေးရှင်း</string>
 	<string name="settings_user">အသုံးပြုသူ</string>
+	<string name="settings_device">စက်ပစ္စည်း</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">အက်ပ်သီးသန့် သိုလှောင်ခန်း။ ခွင့်ပြုချက် မလိုအပ်။ အက်ပ်ဖျက်လျှင် ပါသွားမည်။</string>
 	<string name="workspace_desc_documents_android10">မျှဝေ စာရွက်စာတမ်းများ ဖိုဒါ။ Android 10 တွင်သာ ရရှိနိုင်။</string>
 	<string name="workspace_desc_external_sd">ပြင်ပ SD ကတ် သိုလှောင်ခန်း။ စက်ပစ္စည်းများကြား သယ်ယူနိုင်။</string>
+	<string name="workspace_backup_documents">Documents/UniPack (အရန်သိမ်း)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">အကြောင်းအရာ စစ်ဆေးရန် ခွင့်ပြုချက် လိုအပ်</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">ဖော်မက်</string>
+	<string name="transfer_format_folder">ဖိုင်တွဲ</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">UniPacks ရှာရန်</string>
+	<string name="backup_title">အရန်သိမ်းခြင်း</string>
+	<string name="restore_title">ပြန်လည်ရယူခြင်း</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">အရန်ဖိုင်တွဲ ချိတ်ဆက်ရန်</string>
+	<string name="backup_guide_description">သင့် UniPacks များကို အရန်သိမ်းရန် သို့မဟုတ် ပြန်လည်ရယူရန် Documents/Unipad ဖိုင်တွဲကို ချိတ်ဆက်ပါ။\nဤဖိုင်တွဲသည် အက်ပ်ကို ဖယ်ရှားလျှင်ပင် ကျန်ရှိနေမည်ဖြစ်သည်။</string>
+	<string name="backup_guide_step1">1. ဖိုင်တွဲ ရွေးချယ်သူ ပွင့်လာမည်</string>
+	<string name="backup_guide_step2">2. Documents/Unipad ရှိပါက ၎င်းကို ရွေးပါ</string>
+	<string name="backup_guide_step3">3. မရှိပါက Documents တွင် "Unipad" ဖိုင်တွဲ ဖန်တီးပြီး ရွေးပါ</string>
+	<string name="backup_guide_continue">ဆက်လုပ်ရန်</string>
+	<string name="backup_recovery_title">UniPacks တွေ့ရှိပါသည်</string>
+	<string name="backup_recovery_message">အရန်ဖိုင်တွဲတွင် UniPacks %d ခု တွေ့ရှိပါသည်။\n၎င်းတို့ကို ပြန်လည်ရယူလိုပါသလား?</string>
+	<string name="backup_recovery_restore">ပြန်လည်ရယူရန်</string>
+	<string name="backup_recovery_later">နောက်မှ</string>
 </resources>

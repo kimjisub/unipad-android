@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Versi baharu dikesan.</string>
+	<string name="update_available">Kemas kini tersedia</string>
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>
 	<string name="unipackNotFound">UniPack tidak dijumpai.</string>
 	<string name="clickToAddUniPack">Klik untuk menambah UniPack.</string>
+	<string name="guide_download_new">Muat turun pack baru</string>
+	<string name="guide_import_external">Import pack yang dimuat turun</string>
+	<string name="guide_restore_packs">Pulihkan pack yang hilang</string>
 	<string name="doYouWantToDeleteUniPack">Adakah anda mahu memadamkan projek ini?</string>
 	<string name="remapDone">Pemetaan semula AutoPlay telah berjaya diselesaikan.</string>
 	<string name="remapFail">AutoPlay tidak wujud</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">Fail tema tidak sah.</string>
 	<string name="theme_delete_title">Padam Tema</string>
 	<string name="theme_delete_confirm">Padam \"%s\"?</string>
+	<string name="theme_add_title">Tambah Tema</string>
+	<string name="theme_add_store">Cari di Play Store</string>
+	<string name="theme_add_store_desc">Cari aplikasi tema di Google Play Store.</string>
+	<string name="theme_add_zip">Import fail ZIP</string>
+	<string name="theme_add_zip_desc">Import fail tema .zip dari peranti anda.</string>
+	<string name="theme_add_create">Cipta tema sendiri</string>
+	<string name="theme_add_create_desc">Ketahui cara mencipta tema tersuai.</string>
+	<string name="theme_type_builtin">Terbina dalam</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Pembangun</string>
 	<string name="settings_app">Aplikasi</string>
 	<string name="settings_user">Pengguna</string>
+	<string name="settings_device">Peranti</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">Storan khusus aplikasi. Tiada kebenaran diperlukan. Dipadam apabila aplikasi dinyahpasang.</string>
 	<string name="workspace_desc_documents_android10">Folder Dokumen dikongsi. Hanya tersedia pada Android 10.</string>
 	<string name="workspace_desc_external_sd">Storan kad SD luaran. Boleh dipindahkan antara peranti.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Sandaran)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Akses diperlukan untuk menyemak kandungan</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Format</string>
+	<string name="transfer_format_folder">Folder</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">Cari UniPacks</string>
+	<string name="backup_title">Sandaran</string>
+	<string name="restore_title">Pulihkan</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Sambung Folder Sandaran</string>
+	<string name="backup_guide_description">Sambungkan folder Documents/Unipad untuk membuat sandaran atau memulihkan UniPacks anda.\nFolder ini kekal walaupun aplikasi dinyahpasang.</string>
+	<string name="backup_guide_step1">1. Pemilih folder akan dibuka</string>
+	<string name="backup_guide_step2">2. Jika Documents/Unipad wujud, pilih ia</string>
+	<string name="backup_guide_step3">3. Jika tiada, cipta folder "Unipad" dalam Documents dan pilih ia</string>
+	<string name="backup_guide_continue">Teruskan</string>
+	<string name="backup_recovery_title">UniPacks Ditemui</string>
+	<string name="backup_recovery_message">%d UniPacks ditemui dalam folder sandaran.\nAdakah anda ingin memulihkannya?</string>
+	<string name="backup_recovery_restore">Pulihkan</string>
+	<string name="backup_recovery_later">Kemudian</string>
 </resources>

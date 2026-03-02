@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">नया संस्करण पाया गया।</string>
+	<string name="update_available">अपडेट उपलब्ध</string>
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
 	<string name="unipackNotFound">UniPack नहीं मिला।</string>
 	<string name="clickToAddUniPack">UniPack जोड़ने के लिए क्लिक करें।</string>
+	<string name="guide_download_new">नए पैक डाउनलोड करें</string>
+	<string name="guide_import_external">डाउनलोड किए पैक आयात करें</string>
+	<string name="guide_restore_packs">गायब पैक पुनर्प्राप्त करें</string>
 	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
 	<string name="remapDone">AutoPlay रीमैपिंग सफलतापूर्वक पूर्ण हुई।</string>
 	<string name="remapFail">AutoPlay मौजूद नहीं है</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">अमान्य थीम फ़ाइल।</string>
 	<string name="theme_delete_title">थीम हटाएं</string>
 	<string name="theme_delete_confirm">\"%s\" हटाएं?</string>
+	<string name="theme_add_title">थीम जोड़ें</string>
+	<string name="theme_add_store">Play Store पर खोजें</string>
+	<string name="theme_add_store_desc">Google Play Store पर थीम ऐप्स खोजें।</string>
+	<string name="theme_add_zip">ZIP फ़ाइल आयात करें</string>
+	<string name="theme_add_zip_desc">अपने डिवाइस से .zip थीम फ़ाइल आयात करें।</string>
+	<string name="theme_add_create">अपनी खुद की थीम बनाएं</string>
+	<string name="theme_add_create_desc">कस्टम थीम बनाने का तरीका जानें।</string>
+	<string name="theme_type_builtin">अंतर्निहित</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">डेवलपर</string>
 	<string name="settings_app">एप्लिकेशन</string>
 	<string name="settings_user">उपयोगकर्ता</string>
+	<string name="settings_device">डिवाइस</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">ऐप-विशिष्ट स्टोरेज। अनुमति अनावश्यक। ऐप अनइंस्टॉल पर हटता है।</string>
 	<string name="workspace_desc_documents_android10">साझा दस्तावेज़ फ़ोल्डर। केवल Android 10 पर उपलब्ध।</string>
 	<string name="workspace_desc_external_sd">बाहरी SD कार्ड स्टोरेज। उपकरणों के बीच पोर्टेबल।</string>
+	<string name="workspace_backup_documents">Documents/UniPack (बैकअप)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">सामग्री जांचने के लिए एक्सेस आवश्यक</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">फ़ॉर्मेट</string>
+	<string name="transfer_format_folder">फ़ोल्डर</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">UniPacks खोजें</string>
+	<string name="backup_title">बैकअप</string>
+	<string name="restore_title">पुनर्स्थापित</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">बैकअप फ़ोल्डर कनेक्ट करें</string>
+	<string name="backup_guide_description">अपने UniPacks का बैकअप या पुनर्स्थापना करने के लिए Documents/Unipad फ़ोल्डर कनेक्ट करें।\nयह फ़ोल्डर ऐप अनइंस्टॉल करने पर भी बना रहता है।</string>
+	<string name="backup_guide_step1">1. फ़ोल्डर चयनकर्ता खुलेगा</string>
+	<string name="backup_guide_step2">2. यदि Documents/Unipad मौजूद है, तो उसे चुनें</string>
+	<string name="backup_guide_step3">3. यदि नहीं, तो Documents में "Unipad" फ़ोल्डर बनाएं और उसे चुनें</string>
+	<string name="backup_guide_continue">जारी रखें</string>
+	<string name="backup_recovery_title">UniPacks मिले</string>
+	<string name="backup_recovery_message">बैकअप फ़ोल्डर में %d UniPacks मिले।\nक्या आप उन्हें पुनर्स्थापित करना चाहते हैं?</string>
+	<string name="backup_recovery_restore">पुनर्स्थापित करें</string>
+	<string name="backup_recovery_later">बाद में</string>
 </resources>

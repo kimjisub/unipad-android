@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">检测到新版本。</string>
+	<string name="update_available">有可用更新</string>
 
 	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
 	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>
 	<string name="unipackNotFound">找不到 UniPack。</string>
 	<string name="clickToAddUniPack">点击以添加 UniPacks。</string>
+	<string name="guide_download_new">下载新包</string>
+	<string name="guide_import_external">导入已下载的包</string>
+	<string name="guide_restore_packs">恢复丢失的包</string>
 	<string name="doYouWantToDeleteUniPack">您想删除此项目吗？</string>
 	<string name="remapDone">自动播放重映射成功完成。</string>
 	<string name="remapFail">没有自动播放</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">无效的主题文件。</string>
 	<string name="theme_delete_title">删除主题</string>
 	<string name="theme_delete_confirm">删除 \"%s\"？</string>
+	<string name="theme_add_title">添加主题</string>
+	<string name="theme_add_store">在 Play 商店搜索</string>
+	<string name="theme_add_store_desc">在 Google Play 商店搜索主题应用。</string>
+	<string name="theme_add_zip">导入 ZIP 文件</string>
+	<string name="theme_add_zip_desc">从设备导入 .zip 主题文件。</string>
+	<string name="theme_add_create">创建自己的主题</string>
+	<string name="theme_add_create_desc">了解如何创建自定义主题。</string>
+	<string name="theme_type_builtin">内置</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">默认主题</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">开发者</string>
 	<string name="settings_app">应用</string>
 	<string name="settings_user">用户</string>
+	<string name="settings_device">设备</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -202,6 +217,7 @@
 	<string name="workspace_desc_app_storage">应用专用存储。无需权限。卸载应用时删除。</string>
 	<string name="workspace_desc_documents_android10">共享文档文件夹。仅在 Android 10 上可用。</string>
 	<string name="workspace_desc_external_sd">外置 SD 卡存储。可在设备间转移。</string>
+	<string name="workspace_backup_documents">Documents/UniPack（备份）</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">需要访问权限来检查内容</string>
@@ -230,6 +246,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">格式</string>
+	<string name="transfer_format_folder">文件夹</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">搜索 UniPacks</string>
+	<string name="backup_title">备份</string>
+	<string name="restore_title">恢复</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -250,4 +272,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">连接备份文件夹</string>
+	<string name="backup_guide_description">连接 Documents/Unipad 文件夹以备份或恢复您的 UniPacks。\n即使卸载应用，此文件夹仍会保留。</string>
+	<string name="backup_guide_step1">1. 将打开文件夹选择器</string>
+	<string name="backup_guide_step2">2. 如果 Documents/Unipad 存在，请选择它</string>
+	<string name="backup_guide_step3">3. 如果不存在，请在 Documents 中创建 "Unipad" 文件夹并选择</string>
+	<string name="backup_guide_continue">继续</string>
+	<string name="backup_recovery_title">发现 UniPacks</string>
+	<string name="backup_recovery_message">在备份文件夹中发现 %d 个 UniPacks。\n是否要恢复？</string>
+	<string name="backup_recovery_restore">恢复</string>
+	<string name="backup_recovery_later">稍后</string>
 </resources>

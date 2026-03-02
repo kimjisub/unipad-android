@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Phát hiện phiên bản mới.</string>
+	<string name="update_available">Có bản cập nhật</string>
 
 	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
 	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>
 	<string name="unipackNotFound">Không tìm thấy UniPack.</string>
 	<string name="clickToAddUniPack">Nhấn để thêm UniPack.</string>
+	<string name="guide_download_new">Tải pack mới</string>
+	<string name="guide_import_external">Nhập pack đã tải</string>
+	<string name="guide_restore_packs">Khôi phục pack bị mất</string>
 	<string name="doYouWantToDeleteUniPack">Bạn có muốn xóa dự án này không?</string>
 	<string name="remapDone">Ánh xạ lại AutoPlay đã hoàn tất thành công.</string>
 	<string name="remapFail">AutoPlay không tồn tại</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">File giao diện không hợp lệ.</string>
 	<string name="theme_delete_title">Xóa Giao diện</string>
 	<string name="theme_delete_confirm">Xóa \"%s\"?</string>
+	<string name="theme_add_title">Thêm Giao Diện</string>
+	<string name="theme_add_store">Tìm trên Play Store</string>
+	<string name="theme_add_store_desc">Tìm ứng dụng giao diện trên Google Play Store.</string>
+	<string name="theme_add_zip">Nhập file ZIP</string>
+	<string name="theme_add_zip_desc">Nhập file giao diện .zip từ thiết bị của bạn.</string>
+	<string name="theme_add_create">Tạo giao diện riêng</string>
+	<string name="theme_add_create_desc">Tìm hiểu cách tạo giao diện tùy chỉnh.</string>
+	<string name="theme_type_builtin">Tích hợp</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Nhà phát triển</string>
 	<string name="settings_app">Ứng dụng</string>
 	<string name="settings_user">Người dùng</string>
+	<string name="settings_device">Thiết bị</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td/%1$tm/%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">Bộ nhớ riêng của ứng dụng. Không cần quyền. Xóa khi gỡ ứng dụng.</string>
 	<string name="workspace_desc_documents_android10">Thư mục Tài liệu chia sẻ. Chỉ có trên Android 10.</string>
 	<string name="workspace_desc_external_sd">Bộ nhớ thẻ SD ngoài. Có thể chuyển giữa các thiết bị.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Sao lưu)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Cần quyền truy cập để kiểm tra nội dung</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Định dạng</string>
+	<string name="transfer_format_folder">Thư mục</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">Tìm UniPacks</string>
+	<string name="backup_title">Sao lưu</string>
+	<string name="restore_title">Khôi phục</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Kết nối thư mục sao lưu</string>
+	<string name="backup_guide_description">Kết nối thư mục Documents/Unipad để sao lưu hoặc khôi phục UniPacks của bạn.\nThư mục này vẫn tồn tại ngay cả khi gỡ ứng dụng.</string>
+	<string name="backup_guide_step1">1. Trình chọn thư mục sẽ mở</string>
+	<string name="backup_guide_step2">2. Nếu Documents/Unipad tồn tại, hãy chọn nó</string>
+	<string name="backup_guide_step3">3. Nếu không, tạo thư mục "Unipad" trong Documents và chọn nó</string>
+	<string name="backup_guide_continue">Tiếp tục</string>
+	<string name="backup_recovery_title">Tìm thấy UniPacks</string>
+	<string name="backup_recovery_message">Tìm thấy %d UniPacks trong thư mục sao lưu.\nBạn có muốn khôi phục không?</string>
+	<string name="backup_recovery_restore">Khôi phục</string>
+	<string name="backup_recovery_later">Để sau</string>
 </resources>

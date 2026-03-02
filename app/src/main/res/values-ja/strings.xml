@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">新しいバージョンが見つかりました。</string>
+	<string name="update_available">アップデートがあります</string>
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
 	<string name="unipackNotFound">UniPackが見つかりません。</string>
 	<string name="clickToAddUniPack">クリックしてUniPackを追加してください。</string>
+	<string name="guide_download_new">新しいパックをダウンロード</string>
+	<string name="guide_import_external">ダウンロードしたパックをインポート</string>
+	<string name="guide_restore_packs">消えたパックを復元</string>
 	<string name="doYouWantToDeleteUniPack">このプロジェクトを削除しますか？</string>
 	<string name="remapDone">AutoPlayのリマッピングが正常に完了しました。</string>
 	<string name="remapFail">AutoPlayが存在しません</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">無効なテーマファイルです。</string>
 	<string name="theme_delete_title">テーマを削除</string>
 	<string name="theme_delete_confirm">\"%s\" を削除しますか？</string>
+	<string name="theme_add_title">テーマを追加</string>
+	<string name="theme_add_store">Play ストアで検索</string>
+	<string name="theme_add_store_desc">Google Play ストアでテーマアプリを検索します。</string>
+	<string name="theme_add_zip">ZIPファイルをインポート</string>
+	<string name="theme_add_zip_desc">デバイスから.zipテーマファイルをインポートします。</string>
+	<string name="theme_add_create">自分のテーマを作成</string>
+	<string name="theme_add_create_desc">カスタムテーマの作り方を学びましょう。</string>
+	<string name="theme_type_builtin">内蔵</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">開発者</string>
 	<string name="settings_app">アプリケーション</string>
 	<string name="settings_user">ユーザー</string>
+	<string name="settings_device">デバイス</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$tY/%1$tm/%1$td</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">アプリ専用ストレージ。権限不要。アプリのアンインストール時に削除。</string>
 	<string name="workspace_desc_documents_android10">共有ドキュメントフォルダ。Android 10でのみ利用可能。</string>
 	<string name="workspace_desc_external_sd">外部SDカードストレージ。デバイス間で持ち運び可能。</string>
+	<string name="workspace_backup_documents">Documents/UniPack（バックアップ）</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">内容を確認するにはアクセス権が必要です</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">フォーマット</string>
+	<string name="transfer_format_folder">フォルダ</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">UniPacksを検索</string>
+	<string name="backup_title">バックアップ</string>
+	<string name="restore_title">復元</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">バックアップフォルダを接続</string>
+	<string name="backup_guide_description">UniPacksのバックアップまたは復元のためにDocuments/Unipadフォルダを接続してください。\nこのフォルダはアプリをアンインストールしても保持されます。</string>
+	<string name="backup_guide_step1">1. フォルダ選択画面が開きます</string>
+	<string name="backup_guide_step2">2. Documents/Unipadが存在する場合、それを選択してください</string>
+	<string name="backup_guide_step3">3. ない場合、Documentsに"Unipad"フォルダを作成して選択してください</string>
+	<string name="backup_guide_continue">続行</string>
+	<string name="backup_recovery_title">UniPacksが見つかりました</string>
+	<string name="backup_recovery_message">バックアップフォルダに%d個のUniPacksが見つかりました。\n復元しますか？</string>
+	<string name="backup_recovery_restore">復元</string>
+	<string name="backup_recovery_later">後で</string>
 </resources>

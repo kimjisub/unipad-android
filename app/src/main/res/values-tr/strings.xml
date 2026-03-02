@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Yeni sürüm tespit edildi.</string>
+	<string name="update_available">Güncelleme mevcut</string>
 
 	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
 	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>
 	<string name="unipackNotFound">UniPack bulunamadı.</string>
 	<string name="clickToAddUniPack">UniPack eklemek için tıklayın.</string>
+	<string name="guide_download_new">Yeni paketler indir</string>
+	<string name="guide_import_external">İndirilen paketleri içe aktar</string>
+	<string name="guide_restore_packs">Kayıp paketleri kurtar</string>
 	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
 	<string name="remapDone">AutoPlay yeniden eşlemesi başarıyla tamamlandı.</string>
 	<string name="remapFail">AutoPlay mevcut değil</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">Geçersiz tema dosyası.</string>
 	<string name="theme_delete_title">Temayı Sil</string>
 	<string name="theme_delete_confirm">\"%s\" silinsin mi?</string>
+	<string name="theme_add_title">Tema Ekle</string>
+	<string name="theme_add_store">Play Store\'da Ara</string>
+	<string name="theme_add_store_desc">Google Play Store\'da tema uygulamalarını arayın.</string>
+	<string name="theme_add_zip">ZIP dosyası içe aktar</string>
+	<string name="theme_add_zip_desc">Cihazınızdan bir .zip tema dosyası içe aktarın.</string>
+	<string name="theme_add_create">Kendi temanızı oluşturun</string>
+	<string name="theme_add_create_desc">Özel tema oluşturmayı öğrenin.</string>
+	<string name="theme_type_builtin">Yerleşik</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Geliştirici</string>
 	<string name="settings_app">Uygulama</string>
 	<string name="settings_user">Kullanıcı</string>
+	<string name="settings_device">Cihaz</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td.%1$tm.%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">Uygulamaya özel depolama. İzin gerektirmez. Uygulama kaldırıldığında silinir.</string>
 	<string name="workspace_desc_documents_android10">Paylaşılan Belgeler klasörü. Yalnızca Android 10\'da kullanılabilir.</string>
 	<string name="workspace_desc_external_sd">Harici SD kart deposu. Cihazlar arasında taşınabilir.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Yedek)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">İçeriği kontrol etmek için erişim gerekli</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Biçim</string>
+	<string name="transfer_format_folder">Klasör</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">UniPacks Ara</string>
+	<string name="backup_title">Yedekleme</string>
+	<string name="restore_title">Geri Yükleme</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Yedek Klasörü Bağla</string>
+	<string name="backup_guide_description">UniPack\'larınızı yedeklemek veya geri yüklemek için Documents/Unipad klasörünü bağlayın.\nBu klasör uygulama kaldırılsa bile korunur.</string>
+	<string name="backup_guide_step1">1. Klasör seçici açılacak</string>
+	<string name="backup_guide_step2">2. Documents/Unipad varsa, onu seçin</string>
+	<string name="backup_guide_step3">3. Yoksa, Documents içinde "Unipad" klasörü oluşturun ve seçin</string>
+	<string name="backup_guide_continue">Devam</string>
+	<string name="backup_recovery_title">UniPack\'lar Bulundu</string>
+	<string name="backup_recovery_message">Yedek klasöründe %d UniPack bulundu.\nGeri yüklemek ister misiniz?</string>
+	<string name="backup_recovery_restore">Geri Yükle</string>
+	<string name="backup_recovery_later">Daha Sonra</string>
 </resources>

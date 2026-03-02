@@ -44,10 +44,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -118,8 +114,6 @@ class MainActivity : BaseActivity() {
 	private var listRefreshing by mutableStateOf(false)
 	private var currentSort by mutableStateOf<Pair<MainTotalPanelViewModel.SortMethod, Boolean>?>(null)
 
-	// Snackbar
-	private val snackbarHostState = SnackbarHostState()
 
 	// ViewModels
 	private lateinit var totalPanelVM: MainTotalPanelViewModel
@@ -405,16 +399,7 @@ class MainActivity : BaseActivity() {
 			Log.test("latestVersion $latestVersion")
 
 			if (!latestVersion) {
-				lifecycleScope.launch {
-					val result = snackbarHostState.showSnackbar(
-						message = getString(string.newVersionFound),
-						actionLabel = getString(string.update),
-						duration = SnackbarDuration.Long,
-					)
-					if (result == SnackbarResult.ActionPerformed) {
-						browse("https://play.google.com/store/apps/details?id=$packageName")
-					}
-				}
+				totalPanelVM.updateAvailable = true
 			}
 		} catch (e: RuntimeException) {
 			Log.test("versionCheck error $e")
@@ -519,6 +504,7 @@ class MainActivity : BaseActivity() {
 							MainTotalPanelScreen(
 								vm = totalPanelVM,
 								onSettingsClick = onSettingsClick,
+								onUpdateClick = { browse("https://play.google.com/store/apps/details?id=$packageName") },
 							)
 						} else {
 							val packVM = remember(item.unipack.getPathString()) {
@@ -613,11 +599,6 @@ class MainActivity : BaseActivity() {
 				}
 			}
 
-			// Snackbar host
-			SnackbarHost(
-				hostState = snackbarHostState,
-				modifier = Modifier.align(Alignment.BottomCenter),
-			)
 		}
 	}
 

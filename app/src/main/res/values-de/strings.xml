@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Neue Version erkannt.</string>
+	<string name="update_available">Aktualisierung verfügbar</string>
 
 	<string name="permissionRequire">Zugriff auf externen Speicher wird zum Speichern von Projektdateien benötigt.\nErteilen Sie die Berechtigung.</string>
 	<string name="permissionDenied">Die App benötigt Zugriff auf den externen Speicher.\nBitte aktivieren Sie die Berechtigungen unter [Einstellungen] > [Berechtigungen]</string>
 	<string name="unipackNotFound">UniPack nicht gefunden.</string>
 	<string name="clickToAddUniPack">Klicken Sie, um UniPacks hinzuzufügen.</string>
+	<string name="guide_download_new">Neue Packs herunterladen</string>
+	<string name="guide_import_external">Heruntergeladene Packs importieren</string>
+	<string name="guide_restore_packs">Fehlende Packs wiederherstellen</string>
 	<string name="doYouWantToDeleteUniPack">Möchten Sie dieses Projekt löschen?</string>
 	<string name="remapDone">AutoPlay-Neuzuordnung wurde erfolgreich abgeschlossen.</string>
 	<string name="remapFail">AutoPlay existiert nicht</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">Ungültige Designdatei.</string>
 	<string name="theme_delete_title">Design löschen</string>
 	<string name="theme_delete_confirm">\"%s\" löschen?</string>
+	<string name="theme_add_title">Design hinzufügen</string>
+	<string name="theme_add_store">Im Play Store suchen</string>
+	<string name="theme_add_store_desc">Nach Design-Apps im Google Play Store suchen.</string>
+	<string name="theme_add_zip">ZIP-Datei importieren</string>
+	<string name="theme_add_zip_desc">Eine .zip-Designdatei von Ihrem Gerät importieren.</string>
+	<string name="theme_add_create">Eigenes Design erstellen</string>
+	<string name="theme_add_create_desc">Erfahren Sie, wie Sie ein eigenes Design erstellen.</string>
+	<string name="theme_type_builtin">Integriert</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Entwickler</string>
 	<string name="settings_app">Anwendung</string>
 	<string name="settings_user">Benutzer</string>
+	<string name="settings_device">Gerät</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td.%1$tm.%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">App-spezifischer Speicher. Keine Berechtigung nötig. Wird bei App-Deinstallation gelöscht.</string>
 	<string name="workspace_desc_documents_android10">Gemeinsamer Dokumente-Ordner. Nur unter Android 10 verfügbar.</string>
 	<string name="workspace_desc_external_sd">Externer SD-Karten-Speicher. Zwischen Geräten übertragbar.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Backup)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Zugriff erforderlich um Inhalte zu prüfen</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Format</string>
+	<string name="transfer_format_folder">Ordner</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">UniPacks suchen</string>
+	<string name="backup_title">Sicherung</string>
+	<string name="restore_title">Wiederherstellung</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Backup-Ordner verbinden</string>
+	<string name="backup_guide_description">Verbinden Sie den Documents/Unipad-Ordner, um Ihre UniPacks zu sichern oder wiederherzustellen.\nDieser Ordner bleibt auch bei App-Deinstallation erhalten.</string>
+	<string name="backup_guide_step1">1. Ein Ordnerauswahldialog wird geöffnet</string>
+	<string name="backup_guide_step2">2. Wenn Documents/Unipad existiert, wählen Sie ihn aus</string>
+	<string name="backup_guide_step3">3. Wenn nicht, erstellen Sie einen "Unipad"-Ordner in Documents und wählen Sie ihn aus</string>
+	<string name="backup_guide_continue">Weiter</string>
+	<string name="backup_recovery_title">UniPacks gefunden</string>
+	<string name="backup_recovery_message">%d UniPacks im Backup-Ordner gefunden.\nMöchten Sie sie wiederherstellen?</string>
+	<string name="backup_recovery_restore">Wiederherstellen</string>
+	<string name="backup_recovery_later">Später</string>
 </resources>

@@ -91,11 +91,15 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Обнаружена новая версия.</string>
+	<string name="update_available">Доступно обновление</string>
 
 	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
 	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>
 	<string name="unipackNotFound">UniPack не найден.</string>
 	<string name="clickToAddUniPack">Нажмите, чтобы добавить UniPack.</string>
+	<string name="guide_download_new">Скачать новые паки</string>
+	<string name="guide_import_external">Импортировать скачанные паки</string>
+	<string name="guide_restore_packs">Восстановить потерянные паки</string>
 	<string name="doYouWantToDeleteUniPack">Вы хотите удалить этот проект?</string>
 	<string name="remapDone">Переназначение AutoPlay успешно завершено.</string>
 	<string name="remapFail">AutoPlay отсутствует</string>
@@ -130,6 +134,16 @@
 	<string name="theme_import_invalid">Недопустимый файл темы.</string>
 	<string name="theme_delete_title">Удалить тему</string>
 	<string name="theme_delete_confirm">Удалить \"%s\"?</string>
+	<string name="theme_add_title">Добавить тему</string>
+	<string name="theme_add_store">Искать в Play Store</string>
+	<string name="theme_add_store_desc">Искать приложения тем в Google Play Store.</string>
+	<string name="theme_add_zip">Импортировать ZIP-файл</string>
+	<string name="theme_add_zip_desc">Импортировать .zip файл темы с вашего устройства.</string>
+	<string name="theme_add_create">Создать свою тему</string>
+	<string name="theme_add_create_desc">Узнайте, как создать пользовательскую тему.</string>
+	<string name="theme_type_builtin">Встроенная</string>
+	<string name="theme_type_zip">ZIP</string>
+	<string name="theme_type_apk">APK</string>
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
@@ -142,6 +156,7 @@
 	<string name="settings_developer">Разработчик</string>
 	<string name="settings_app">Приложение</string>
 	<string name="settings_user">Пользователь</string>
+	<string name="settings_device">Устройство</string>
 
 	<!--String Format-->
 	<string name="date_format">%1$td.%1$tm.%1$tY</string>
@@ -201,6 +216,7 @@
 	<string name="workspace_desc_app_storage">Хранилище приложения. Разрешение не требуется. Удаляется при удалении приложения.</string>
 	<string name="workspace_desc_documents_android10">Общая папка Документы. Доступна только на Android 10.</string>
 	<string name="workspace_desc_external_sd">Хранилище внешней SD-карты. Переносимое между устройствами.</string>
+	<string name="workspace_backup_documents">Documents/UniPack (Резервная копия)</string>
 
 	<!--Shared (used by TransferActivity)-->
 	<string name="migration_source_status_no_access">Требуется доступ для проверки содержимого</string>
@@ -229,6 +245,12 @@
 	<string name="transfer_no_items">No UniPacks selected</string>
 	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_format_label">Формат</string>
+	<string name="transfer_format_folder">Папка</string>
+	<string name="transfer_format_zip">ZIP</string>
+	<string name="transfer_search">Поиск UniPacks</string>
+	<string name="backup_title">Резервная копия</string>
+	<string name="restore_title">Восстановление</string>
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
@@ -248,4 +270,14 @@
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>
 	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_guide_title">Подключить папку резервного копирования</string>
+	<string name="backup_guide_description">Подключите папку Documents/Unipad для резервного копирования или восстановления ваших UniPacks.\nЭта папка сохраняется даже при удалении приложения.</string>
+	<string name="backup_guide_step1">1. Откроется выбор папки</string>
+	<string name="backup_guide_step2">2. Если Documents/Unipad существует, выберите её</string>
+	<string name="backup_guide_step3">3. Если нет, создайте папку "Unipad" в Documents и выберите её</string>
+	<string name="backup_guide_continue">Продолжить</string>
+	<string name="backup_recovery_title">UniPacks найдены</string>
+	<string name="backup_recovery_message">Найдено %d UniPacks в папке резервного копирования.\nХотите восстановить их?</string>
+	<string name="backup_recovery_restore">Восстановить</string>
+	<string name="backup_recovery_later">Позже</string>
 </resources>

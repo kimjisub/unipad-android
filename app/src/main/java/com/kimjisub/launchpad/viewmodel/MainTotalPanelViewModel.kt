@@ -48,6 +48,8 @@ class MainTotalPanelViewModel(
 		private set
 	var premium by mutableStateOf(false)
 
+	var updateAvailable by mutableStateOf(false)
+
 	var unipackCount by mutableStateOf<Int?>(null)
 		private set
 	var unipackCapacity by mutableStateOf<String?>(null)
