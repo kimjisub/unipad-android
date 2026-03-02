@@ -790,7 +790,7 @@ class MainActivity : BaseActivity() {
 			label = "flagColor",
 		)
 		val contentOffset by animateDpAsState(
-			targetValue = if (isSelected) 80.dp else 0.dp,
+			targetValue = if (isSelected) 95.dp else 0.dp,
 			animationSpec = tween(FLAG_ANIMATION_MS),
 			label = "contentOffset",
 		)
@@ -806,12 +806,15 @@ class MainActivity : BaseActivity() {
 			hasAutoPlay = item.unipack.autoPlayExist,
 			isBookmarked = isBookmarked,
 			flagColor = flagColor,
-			flagWidth = 90.dp,
+			flagWidth = 105.dp,
 			contentStartPadding = 10.dp + contentOffset,
 			flagClickable = isSelected,
 			onFlagClick = onPlayClick,
 			flagContent = {
-				Column(horizontalAlignment = Alignment.CenterHorizontally) {
+				Row(
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.Center,
+				) {
 					Icon(
 						imageVector = Icons.Filled.PlayArrow,
 						contentDescription = "Play",
@@ -821,7 +824,7 @@ class MainActivity : BaseActivity() {
 					Text(
 						text = "Play",
 						color = Color.White,
-						fontSize = 10.sp,
+						fontSize = 13.sp,
 					)
 				}
 			},

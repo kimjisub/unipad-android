@@ -38,6 +38,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -457,23 +459,103 @@ class PlayActivity : BaseActivity() {
 	private fun OptionWindow() {
 		val owBg = theme?.optionWindow?.let { Color(it) } ?: colorResource(R.color.option_window)
 		val owCbColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: colorResource(R.color.option_window_checkbox)
-		Column(modifier = Modifier.width(400.dp).background(owBg, RoundedCornerShape(3.dp)).padding(8.dp)) {
-			Row(modifier = Modifier.weight(1f, fill = false), horizontalArrangement = Arrangement.SpaceEvenly) {
+		val sectionTitleColor = owCbColor.copy(alpha = 0.5f)
+
+		Column(
+			modifier = Modifier
+				.width(360.dp)
+				.background(owBg, RoundedCornerShape(12.dp))
+				.padding(top = 20.dp, bottom = 12.dp, start = 4.dp, end = 4.dp),
+		) {
+			// Title
+			Text(
+				text = stringResource(string.setting),
+				color = owCbColor,
+				fontSize = 18.sp,
+				modifier = Modifier.padding(start = 16.dp, bottom = 12.dp),
+			)
+
+			// Two-column options
+			Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+				// Left: Performance
 				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = "Performance",
+						color = sectionTitleColor,
+						fontSize = 11.sp,
+						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
+					)
 					PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, owCbColor)
 					PlayCheckBox(vm.scbLed, string.led, owCbColor)
 					PlayCheckBox(vm.scbAutoPlay, string.autoPlay, owCbColor)
-					PlayCheckBox(vm.scbTraceLog, string.traceLog, owCbColor)
-					PlayCheckBox(vm.scbRecord, string.record, owCbColor)
 				}
-				Column {
+				// Right: Display
+				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = "Display",
+						color = sectionTitleColor,
+						fontSize = 11.sp,
+						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
+					)
 					PlayCheckBox(vm.scbHideUI, string.hideUI, owCbColor)
 					PlayCheckBox(vm.scbWatermark, string.watermark, owCbColor)
 					PlayCheckBox(vm.scbProLightMode, string.proLightMode, owCbColor)
 				}
 			}
-			IconButton(onClick = { finish() }, modifier = Modifier.align(Alignment.End)) {
-				Icon(painter = painterResource(R.drawable.ic_exit), contentDescription = stringResource(string.quit))
+
+			// Divider
+			Box(
+				modifier = Modifier
+					.padding(horizontal = 16.dp, vertical = 8.dp)
+					.fillMaxWidth()
+					.height(1.dp)
+					.background(owCbColor.copy(alpha = 0.15f)),
+			)
+
+			// Tools
+			Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = "Tools",
+						color = sectionTitleColor,
+						fontSize = 11.sp,
+						modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
+					)
+					PlayCheckBox(vm.scbTraceLog, string.traceLog, owCbColor, hasLongClick = true)
+					PlayCheckBox(vm.scbRecord, string.record, owCbColor)
+				}
+				androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
+			}
+
+			// Divider
+			Box(
+				modifier = Modifier
+					.padding(horizontal = 16.dp, vertical = 8.dp)
+					.fillMaxWidth()
+					.height(1.dp)
+					.background(owCbColor.copy(alpha = 0.15f)),
+			)
+
+			// Quit button
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.clickable { finish() }
+					.padding(horizontal = 16.dp, vertical = 8.dp),
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				Icon(
+					painter = painterResource(R.drawable.ic_exit),
+					contentDescription = stringResource(string.quit),
+					tint = owCbColor,
+					modifier = Modifier.size(20.dp),
+				)
+				Text(
+					text = stringResource(string.quit),
+					color = owCbColor,
+					fontSize = 14.sp,
+					modifier = Modifier.padding(start = 8.dp),
+				)
 			}
 		}
 	}
