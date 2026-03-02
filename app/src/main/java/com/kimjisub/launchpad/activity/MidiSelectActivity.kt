@@ -3,36 +3,52 @@ package com.kimjisub.launchpad.activity
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection
-import com.kimjisub.launchpad.ui.theme.Background1
-import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
@@ -43,7 +59,7 @@ import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
 import com.kimjisub.launchpad.tool.AutorunTimer
-import kotlin.math.absoluteValue
+import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import kotlin.reflect.KClass
 
 class MidiSelectActivity : BaseActivity() {
@@ -52,10 +68,10 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	private val timerText = mutableStateOf<String?>(null)
-	private val showError = mutableStateOf(false)
+	private val isConnected = mutableStateOf(false)
 	private val logText = mutableStateOf("")
 	private val currentMode = mutableIntStateOf(0)
-	private val targetScrollPage = mutableIntStateOf(-1)
+	private val selectedIndex = mutableIntStateOf(0)
 
 	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
 		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
@@ -77,13 +93,13 @@ class MidiSelectActivity : BaseActivity() {
 
 		MidiConnection.listener = object : MidiConnection.Listener {
 			override fun onConnectedListener() {
-				showError.value = false
+				isConnected.value = true
 			}
 
 			override fun onChangeDriver(driverRef: DriverRef) {
 				for ((i, device) in midiDevices.withIndex()) {
 					if (device.driverClass == driverRef::class) {
-						targetScrollPage.intValue = i
+						selectedIndex.intValue = i
 						break
 					}
 				}
@@ -104,23 +120,27 @@ class MidiSelectActivity : BaseActivity() {
 		MidiConnection.initConnection(intent, service)
 
 		setContent {
-			MidiSelectScreen(
-				timerText = timerText.value,
-				showError = showError.value,
-				logText = logText.value,
-				currentMode = currentMode.intValue,
-				targetScrollPage = targetScrollPage.intValue,
-				onDeviceChanged = { index ->
-					val device = midiDevices[index]
-					val driver = device.driverClass.java.getDeclaredConstructor()
-						.newInstance() as? DriverRef ?: return@MidiSelectScreen
-					MidiConnection.driver = driver
-				},
-				onModeSelect = { mode ->
-					MidiConnection.mode = mode
-				},
-				onUserInteract = { autorunTimer.cancel() },
-			)
+			UniPadTheme {
+				MidiSelectScreen(
+					timerText = timerText.value,
+					isConnected = isConnected.value,
+					logText = logText.value,
+					currentMode = currentMode.intValue,
+					selectedIndex = selectedIndex.intValue,
+					onDeviceSelect = { index ->
+						selectedIndex.intValue = index
+						val device = midiDevices[index]
+						val driver = device.driverClass.java.getDeclaredConstructor()
+							.newInstance() as? DriverRef ?: return@MidiSelectScreen
+						MidiConnection.driver = driver
+					},
+					onModeSelect = { mode ->
+						MidiConnection.mode = mode
+					},
+					onUserInteract = { autorunTimer.cancel() },
+					onClose = { finish() },
+				)
+			}
 		}
 	}
 
@@ -147,138 +167,185 @@ private val midiDevices = listOf(
 	MidiDeviceData(R.drawable.midi_master_keyboard, R.string.midi_master_keyboard, MasterKeyboard::class),
 )
 
-private val grayColor = Gray1
-private val bgColor = Background1
-
 @Composable
 private fun MidiSelectScreen(
 	timerText: String?,
-	showError: Boolean,
+	isConnected: Boolean,
 	logText: String,
 	currentMode: Int,
-	targetScrollPage: Int,
-	onDeviceChanged: (Int) -> Unit,
+	selectedIndex: Int,
+	onDeviceSelect: (Int) -> Unit,
 	onModeSelect: (Int) -> Unit,
 	onUserInteract: () -> Unit,
+	onClose: () -> Unit,
 ) {
-	val pagerState = rememberPagerState { midiDevices.size }
-
-	LaunchedEffect(targetScrollPage) {
-		if (targetScrollPage >= 0) {
-			pagerState.scrollToPage(targetScrollPage)
-		}
-	}
-
-	LaunchedEffect(pagerState) {
-		snapshotFlow { pagerState.currentPage }.collect { page ->
-			onDeviceChanged(page)
-		}
-	}
-
-	Box(
+	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.clickable { onUserInteract() },
+			.background(MaterialTheme.colorScheme.background),
 	) {
+		// Left panel (~35%) - Selected device preview + settings
 		Column(
-			modifier = Modifier.fillMaxSize(),
+			modifier = Modifier
+				.weight(0.35f)
+				.fillMaxHeight()
+				.padding(20.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
+			// Connection status
 			Text(
-				text = stringResource(R.string.launchpadConnecting),
-				color = grayColor,
-				fontSize = 30.sp,
-				modifier = Modifier.padding(top = 16.dp, bottom = 10.dp),
+				text = if (isConnected)
+					stringResource(R.string.launchpadConnecting)
+				else
+					stringResource(R.string.midiDevicesNotDetected),
+				color = if (isConnected)
+					MaterialTheme.colorScheme.onBackground
+				else
+					MaterialTheme.colorScheme.error,
+				style = MaterialTheme.typography.titleSmall,
 			)
 
 			if (timerText != null) {
 				Text(
 					text = timerText,
-					color = grayColor,
-					fontSize = 30.sp,
-					modifier = Modifier.padding(bottom = 10.dp),
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					style = MaterialTheme.typography.bodySmall,
+					modifier = Modifier.padding(top = 2.dp),
 				)
 			}
 
-			HorizontalPager(
-				state = pagerState,
-				modifier = Modifier.weight(1f),
-				contentPadding = PaddingValues(horizontal = 80.dp),
-			) { page ->
+			Spacer(modifier = Modifier.height(12.dp))
+
+			// Selected device large preview
+			Crossfade(
+				targetState = selectedIndex,
+				label = "devicePreview",
+			) { index ->
+				val device = midiDevices[index]
 				Column(
 					horizontalAlignment = Alignment.CenterHorizontally,
-					verticalArrangement = Arrangement.Center,
-					modifier = Modifier
-						.fillMaxSize()
-						.graphicsLayer {
-							val pageOffset = ((pagerState.currentPage - page) +
-								pagerState.currentPageOffsetFraction).absoluteValue
-							val scale = 1f - 0.3f * pageOffset.coerceIn(0f, 1f)
-							scaleX = scale
-							scaleY = scale
-						},
 				) {
-					val device = midiDevices[page]
 					Image(
 						painter = painterResource(device.iconResId),
 						contentDescription = stringResource(device.nameResId),
-						modifier = Modifier.size(150.dp),
+						modifier = Modifier.size(120.dp),
 					)
+					Spacer(modifier = Modifier.height(8.dp))
 					Text(
 						text = stringResource(device.nameResId),
-						color = Color.White,
-						modifier = Modifier.padding(top = 5.dp),
+						color = MaterialTheme.colorScheme.onBackground,
+						style = MaterialTheme.typography.titleMedium,
+						textAlign = TextAlign.Center,
 					)
 				}
 			}
-		}
 
-		// Mode selection buttons (bottom-end)
-		Column(
-			modifier = Modifier
-				.align(Alignment.BottomEnd)
-				.padding(10.dp),
-		) {
-			ModeButton(
-				text = stringResource(R.string.signal_SpeedFirst),
-				isSelected = currentMode == 0,
-				onClick = {
-					onUserInteract()
-					onModeSelect(0)
-				},
-			)
-			ModeButton(
-				text = stringResource(R.string.signal_avoidAfterimage),
-				isSelected = currentMode == 1,
-				onClick = {
-					onUserInteract()
-					onModeSelect(1)
-				},
-			)
-		}
+			Spacer(modifier = Modifier.height(16.dp))
 
-		// Log text (top-start)
-		if (logText.isNotEmpty()) {
+			HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+			Spacer(modifier = Modifier.height(16.dp))
+
+			// Signal Mode
 			Text(
-				text = logText,
-				color = grayColor,
-				fontSize = 12.sp,
-				modifier = Modifier
-					.align(Alignment.TopStart)
-					.padding(4.dp),
+				text = "Signal Mode",
+				color = MaterialTheme.colorScheme.onBackground,
+				style = MaterialTheme.typography.titleSmall,
+				modifier = Modifier.fillMaxWidth(),
 			)
+
+			Spacer(modifier = Modifier.height(8.dp))
+
+			SingleChoiceSegmentedButtonRow(
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				SegmentedButton(
+					selected = currentMode == 0,
+					onClick = {
+						onUserInteract()
+						onModeSelect(0)
+					},
+					shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+				) {
+					Text(
+						text = stringResource(R.string.signal_SpeedFirst),
+						fontSize = 12.sp,
+						maxLines = 1,
+					)
+				}
+				SegmentedButton(
+					selected = currentMode == 1,
+					onClick = {
+						onUserInteract()
+						onModeSelect(1)
+					},
+					shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+				) {
+					Text(
+						text = stringResource(R.string.signal_avoidAfterimage),
+						fontSize = 12.sp,
+						maxLines = 1,
+					)
+				}
+			}
+
+			Spacer(modifier = Modifier.weight(1f))
+
+			// Log
+			if (logText.isNotEmpty()) {
+				HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+				Spacer(modifier = Modifier.height(8.dp))
+				Text(
+					text = "Log",
+					color = MaterialTheme.colorScheme.onBackground,
+					style = MaterialTheme.typography.titleSmall,
+					modifier = Modifier.fillMaxWidth(),
+				)
+				Spacer(modifier = Modifier.height(4.dp))
+				Text(
+					text = logText,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					fontSize = 11.sp,
+					lineHeight = 14.sp,
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(80.dp)
+						.verticalScroll(rememberScrollState()),
+				)
+				Spacer(modifier = Modifier.height(12.dp))
+			}
+
+			// Close button
+			Button(
+				onClick = {
+					onUserInteract()
+					onClose()
+				},
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text(text = stringResource(android.R.string.ok))
+			}
 		}
 
-		// Error overlay
-		if (showError) {
-			Box(
-				modifier = Modifier.fillMaxSize(),
-				contentAlignment = Alignment.Center,
-			) {
-				Text(
-					text = stringResource(R.string.midiDevicesNotDetected),
-					color = grayColor,
-					fontSize = 30.sp,
+		// Right panel (~65%) - Device grid
+		LazyVerticalGrid(
+			columns = GridCells.Fixed(4),
+			modifier = Modifier
+				.weight(0.65f)
+				.fillMaxHeight()
+				.padding(16.dp),
+			horizontalArrangement = Arrangement.spacedBy(12.dp),
+			verticalArrangement = Arrangement.spacedBy(12.dp),
+			contentPadding = PaddingValues(vertical = 8.dp),
+		) {
+			itemsIndexed(midiDevices) { index, device ->
+				DeviceCard(
+					device = device,
+					isSelected = index == selectedIndex,
+					onClick = {
+						onUserInteract()
+						onDeviceSelect(index)
+					},
 				)
 			}
 		}
@@ -286,22 +353,44 @@ private fun MidiSelectScreen(
 }
 
 @Composable
-private fun ModeButton(
-	text: String,
+private fun DeviceCard(
+	device: MidiDeviceData,
 	isSelected: Boolean,
 	onClick: () -> Unit,
 ) {
-	val textColor = if (isSelected) bgColor else grayColor
+	val borderColor by animateColorAsState(
+		targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+		label = "borderColor",
+	)
+	val backgroundColor by animateColorAsState(
+		targetValue = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerHighest,
+		label = "backgroundColor",
+	)
 
-	Row(
+	Column(
 		modifier = Modifier
+			.clip(RoundedCornerShape(12.dp))
+			.background(backgroundColor)
+			.border(2.dp, borderColor, RoundedCornerShape(12.dp))
 			.clickable { onClick() }
-			.padding(10.dp),
+			.padding(12.dp),
+		horizontalAlignment = Alignment.CenterHorizontally,
+		verticalArrangement = Arrangement.Center,
 	) {
+		Image(
+			painter = painterResource(device.iconResId),
+			contentDescription = stringResource(device.nameResId),
+			modifier = Modifier.size(48.dp),
+		)
+		Spacer(modifier = Modifier.height(6.dp))
 		Text(
-			text = text,
-			color = textColor,
-			fontSize = 15.sp,
+			text = stringResource(device.nameResId),
+			color = MaterialTheme.colorScheme.onSurface,
+			fontSize = 11.sp,
+			textAlign = TextAlign.Center,
+			minLines = 2,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis,
 		)
 	}
 }
