@@ -1120,6 +1120,7 @@ private fun ExecutingContent(state: TransferState.Executing) {
 				modifier = Modifier.fillMaxWidth(),
 				color = Accent,
 				trackColor = CardBg,
+			drawStopIndicator = {},
 			)
 			Spacer(Modifier.height(16.dp))
 			Text(

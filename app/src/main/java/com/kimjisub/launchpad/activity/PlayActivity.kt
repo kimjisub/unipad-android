@@ -404,6 +404,7 @@ class PlayActivity : BaseActivity() {
 						.padding(vertical = 4.dp),
 					color = Color(0xFF4283E6),
 					trackColor = Color(0xFF2A3648),
+					drawStopIndicator = {},
 				)
 
 				Text(
@@ -438,7 +439,8 @@ class PlayActivity : BaseActivity() {
 		Column(horizontalAlignment = Alignment.CenterHorizontally) {
 			LinearProgressIndicator(
 				progress = { if (vm.autoPlayProgressMax > 0) vm.autoPlayProgress.toFloat() / vm.autoPlayProgressMax else 0f },
-				modifier = Modifier.width(120.dp)
+				modifier = Modifier.width(120.dp),
+				drawStopIndicator = {},
 			)
 			Row {
 				DrawableButton(theme?.xmlPrev, stringResource(string.cd_autoplay_prev)) { vm.autoPlayPrev() }

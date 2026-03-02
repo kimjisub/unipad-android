@@ -209,6 +209,7 @@ private fun DownloadProgressSection(
 				.clip(RoundedCornerShape(3.dp)),
 			color = Color(0xFF4283E6),
 			trackColor = Color(0xFFE0E0E0),
+		drawStopIndicator = {},
 		)
 		Spacer(Modifier.height(4.dp))
 		Text(
