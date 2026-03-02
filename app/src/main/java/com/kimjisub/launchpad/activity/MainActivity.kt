@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -709,46 +711,52 @@ class MainActivity : BaseActivity() {
 		onRestoreClick: () -> Unit,
 		modifier: Modifier = Modifier,
 	) {
-		Column(
-			modifier = modifier.fillMaxWidth(),
-			verticalArrangement = Arrangement.spacedBy(6.dp),
+		Row(
+			modifier = modifier
+				.fillMaxWidth()
+				.height(IntrinsicSize.Min),
+			horizontalArrangement = Arrangement.spacedBy(6.dp),
 		) {
-			GuidingRow(
+			GuidingChip(
 				icon = R.drawable.baseline_shopping_basket_white_24,
 				text = stringResource(string.guide_download_new),
 				onClick = onStoreClick,
+				modifier = Modifier.weight(1f),
 			)
-			GuidingRow(
+			GuidingChip(
 				icon = R.drawable.baseline_folder_open_white_24,
 				text = stringResource(string.guide_import_external),
 				onClick = onLoadUniPackClick,
+				modifier = Modifier.weight(1f),
 			)
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-				GuidingRow(
+				GuidingChip(
 					icon = R.drawable.baseline_settings_white_24,
 					text = stringResource(string.guide_restore_packs),
 					onClick = onRestoreClick,
+					modifier = Modifier.weight(1f),
 				)
 			}
 		}
 	}
 
 	@Composable
-	private fun GuidingRow(
+	private fun GuidingChip(
 		icon: Int,
 		text: String,
 		onClick: () -> Unit,
+		modifier: Modifier = Modifier,
 	) {
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			modifier = Modifier
-				.fillMaxWidth()
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			modifier = modifier
+				.fillMaxHeight()
 				.background(
 					MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
 					RoundedCornerShape(8.dp),
 				)
 				.clickable(onClick = onClick)
-				.padding(horizontal = 14.dp, vertical = 10.dp),
+				.padding(horizontal = 10.dp, vertical = 10.dp),
 		) {
 			Icon(
 				painter = painterResource(icon),
@@ -756,11 +764,12 @@ class MainActivity : BaseActivity() {
 				modifier = Modifier.size(18.dp),
 				tint = Gray1,
 			)
-			Spacer(Modifier.size(10.dp))
+			Spacer(Modifier.size(6.dp))
 			Text(
 				text = text,
-				fontSize = 13.sp,
+				fontSize = 11.sp,
 				color = Gray1,
+				textAlign = TextAlign.Center,
 			)
 		}
 	}
