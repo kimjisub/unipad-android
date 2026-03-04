@@ -1,15 +1,11 @@
 package com.kimjisub.launchpad.activity
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.ProgressBar
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AlertDialog.Builder
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -45,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -73,6 +70,9 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
+import com.kimjisub.launchpad.ui.compose.ImportResult
+import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.midi.MidiConnection.controller
@@ -94,10 +94,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import splitties.activities.start
-import splitties.alertdialog.alertDialog
-import splitties.alertdialog.message
-import splitties.alertdialog.okButton
-import splitties.alertdialog.title
 import java.io.File
 
 
@@ -113,7 +109,9 @@ class MainActivity : BaseActivity() {
 	private var lastPlayIndex by mutableIntStateOf(-1)
 	private var listRefreshing by mutableStateOf(false)
 	private var currentSort by mutableStateOf<Pair<MainTotalPanelViewModel.SortMethod, Boolean>?>(null)
-
+	private var importingState by mutableStateOf(false)
+	private var importResult by mutableStateOf<ImportResult?>(null)
+	private var deleteTargetItem by mutableStateOf<UniPackItem?>(null)
 
 	// ViewModels
 	private lateinit var totalPanelVM: MainTotalPanelViewModel
@@ -221,6 +219,40 @@ class MainActivity : BaseActivity() {
 					onItemClick = { item -> togglePlay(item) },
 					onPlayClick = { item -> pressPlay(item) },
 				)
+
+				if (importingState) {
+					ImportProgressDialog()
+				}
+
+				importResult?.let { result ->
+					ImportResultDialog(
+						result = result,
+						onDismiss = { importResult = null },
+					)
+				}
+
+				deleteTargetItem?.let { item ->
+					androidx.compose.material3.AlertDialog(
+						onDismissRequest = { deleteTargetItem = null },
+						title = { Text(stringResource(string.warning)) },
+						text = { Text(stringResource(string.doYouWantToDeleteUniPack)) },
+						confirmButton = {
+							TextButton(onClick = {
+								deleteTargetItem = null
+								item.unipack.delete()
+								selectedItem = null
+								update()
+							}) {
+								Text(stringResource(string.accept))
+							}
+						},
+						dismissButton = {
+							TextButton(onClick = { deleteTargetItem = null }) {
+								Text(stringResource(string.cancel))
+							}
+						},
+					)
+				}
 			}
 		}
 
@@ -319,58 +351,32 @@ class MainActivity : BaseActivity() {
 	// UniPack import
 
 	private fun importUniPack(unipackUri: Uri) {
-		lateinit var progressBar: ProgressBar
-		lateinit var dialog: AlertDialog
-
 		UniPackImporter(
 			context = applicationContext,
 			uri = unipackUri,
 			workspace = ws.downloadWorkspace.file,
 			onEventListener = object : UniPackImporter.OnEventListener {
 				override fun onImportStart() {
-					progressBar = ProgressBar(
-						this@MainActivity, null, android.R.attr.progressBarStyleHorizontal
-					).apply {
-						setPadding(48, 16, 48, 16)
-						max = 100
-					}
-					dialog = Builder(this@MainActivity)
-						.setTitle(getString(string.importing))
-						.setMessage(getString(string.wait_a_sec))
-						.setView(progressBar)
-						.setCancelable(false)
-						.show()
+					importingState = true
 				}
 
 				override fun onImportComplete(folder: File, unipack: UniPack) {
-					dialog.cancel()
+					importingState = false
 					when (unipack.errorDetail) {
 						null -> {
-							alertDialog {
-								title = getString(string.importComplete)
-								message = unipack.infoToString(this@MainActivity)
-								okButton()
-							}.show()
+							importResult = ImportResult.Success(unipack)
 							update()
 						}
 
 						else -> {
-							alertDialog {
-								title = getString(string.warning)
-								message = unipack.errorDetail.orEmpty()
-								okButton()
-							}.show()
+							importResult = ImportResult.Warning(unipack.errorDetail.orEmpty())
 						}
 					}
 				}
 
 				override fun onException(throwable: Throwable) {
-					dialog.cancel()
-					alertDialog {
-						title = getString(string.importFailed)
-						message = throwable.toString()
-						okButton()
-					}.show()
+					importingState = false
+					importResult = ImportResult.Error(throwable.toString())
 				}
 			},
 			scope = lifecycleScope,
@@ -432,16 +438,7 @@ class MainActivity : BaseActivity() {
 	// Delete confirmation
 
 	private fun showDeleteConfirmation(item: UniPackItem) {
-		Builder(this)
-			.setTitle(string.warning)
-			.setMessage(string.doYouWantToDeleteUniPack)
-			.setPositiveButton(string.accept) { _: DialogInterface?, _: Int ->
-				item.unipack.delete()
-				selectedItem = null
-				update()
-			}
-			.setNegativeButton(string.cancel, null)
-			.show()
+		deleteTargetItem = item
 	}
 
 	// Activity lifecycle

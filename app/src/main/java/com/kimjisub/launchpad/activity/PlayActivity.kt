@@ -1,8 +1,6 @@
 package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
-import android.content.DialogInterface
-import android.content.DialogInterface.OnClickListener
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
@@ -23,7 +21,6 @@ import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AlertDialog.Builder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -57,8 +54,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -72,6 +73,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModelProvider
@@ -108,6 +111,11 @@ import kotlin.math.roundToInt
 class PlayActivity : BaseActivity() {
 
 	private lateinit var vm: PlayActivityViewModel
+
+	// Dialog state
+	private var unipackErrorDialog by mutableStateOf<Pair<String, String>?>(null) // title, message
+	private var unipackErrorIsCritical by mutableStateOf(false)
+	private var showRestartDialog by mutableStateOf(false)
 
 	// UI - Theme
 	private var theme: IThemeResources? = null
@@ -213,17 +221,11 @@ class PlayActivity : BaseActivity() {
 		try {
 			val unipack = vm.loadUnipack(path)
 			if (unipack.errorDetail != null) {
-				Builder(this@PlayActivity)
-					.setTitle(
-						if (unipack.criticalError) getString(string.error) else getString(string.warning)
-					)
-					.setMessage(unipack.errorDetail)
-					.setPositiveButton(
-						if (unipack.criticalError) getString(string.quit) else getString(string.accept),
-						if (unipack.criticalError) OnClickListener { _: DialogInterface?, _: Int -> finish() } else null
-					)
-					.setCancelable(false)
-					.show()
+				unipackErrorIsCritical = unipack.criticalError
+				unipackErrorDialog = Pair(
+					if (unipack.criticalError) getString(string.error) else getString(string.warning),
+					unipack.errorDetail.orEmpty(),
+				)
 			}
 			if (!unipack.criticalError) start()
 		} catch (e: OutOfMemoryError) {
@@ -246,6 +248,46 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				PlayScreen()
+
+				unipackErrorDialog?.let { (title, message) ->
+					androidx.compose.material3.AlertDialog(
+						onDismissRequest = {},
+						title = { Text(title) },
+						text = { Text(message) },
+						confirmButton = {
+							TextButton(onClick = {
+								unipackErrorDialog = null
+								if (unipackErrorIsCritical) finish()
+							}) {
+								Text(stringResource(if (unipackErrorIsCritical) string.quit else string.accept))
+							}
+						},
+					)
+				}
+
+				if (showRestartDialog) {
+					androidx.compose.material3.AlertDialog(
+						onDismissRequest = {},
+						title = { Text(stringResource(string.requireRestart)) },
+						text = { Text(stringResource(string.doYouWantToRestartApp)) },
+						confirmButton = {
+							TextButton(onClick = {
+								showRestartDialog = false
+								restartApp(this@PlayActivity)
+							}) {
+								Text(stringResource(string.restart))
+							}
+						},
+						dismissButton = {
+							TextButton(onClick = {
+								showRestartDialog = false
+								finish()
+							}) {
+								Text(stringResource(string.cancel))
+							}
+						},
+					)
+				}
 			}
 		}
 	}
@@ -266,7 +308,7 @@ class PlayActivity : BaseActivity() {
 		} catch (e: OutOfMemoryError) {
 			Log.err("Theme OOM: $themeId", e)
 			Snackbar.make(findViewById(android.R.id.content), "${getString(string.skinMemoryErr)}\n$themeId", Snackbar.LENGTH_SHORT).show()
-			requestRestart(this)
+			showRestartDialog = true
 			null
 		} catch (e: Exception) {
 			Log.err("Theme load failed: $themeId", e)
@@ -481,13 +523,63 @@ class PlayActivity : BaseActivity() {
 				.verticalScroll(rememberScrollState())
 				.padding(vertical = 24.dp),
 		) {
-			// Title
-			Text(
-				text = stringResource(string.menu),
-				color = textColor,
-				fontSize = 22.sp,
-				modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-			)
+			// Title with close button
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(horizontal = 24.dp, vertical = 8.dp),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.SpaceBetween,
+			) {
+				Text(
+					text = stringResource(string.menu),
+					color = textColor,
+					fontSize = 22.sp,
+				)
+				Icon(
+					painter = painterResource(R.drawable.ic_exit),
+					contentDescription = stringResource(string.quit),
+					tint = Color(0xFFFF6B6B),
+					modifier = Modifier
+						.size(24.dp)
+						.clickable { finish() },
+				)
+			}
+
+			Spacer(modifier = Modifier.height(8.dp))
+
+			// UniPack info
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(horizontal = 24.dp)
+					.background(Color.White.copy(alpha = 0.06f), shape = RoundedCornerShape(12.dp))
+					.padding(16.dp),
+			) {
+				Text(
+					text = vm.unipack.title.ifEmpty { "Untitled" },
+					color = textColor,
+					fontSize = 16.sp,
+					fontWeight = FontWeight.SemiBold,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis,
+				)
+				if (vm.unipack.producerName.isNotEmpty()) {
+					Text(
+						text = vm.unipack.producerName,
+						color = sectionColor,
+						fontSize = 13.sp,
+						maxLines = 1,
+						overflow = TextOverflow.Ellipsis,
+					)
+				}
+				Spacer(modifier = Modifier.height(8.dp))
+				Text(
+					text = "${vm.unipack.buttonX}×${vm.unipack.buttonY}  ·  ${vm.unipack.chain} chain",
+					color = sectionColor,
+					fontSize = 12.sp,
+				)
+			}
 
 			Spacer(modifier = Modifier.height(16.dp))
 

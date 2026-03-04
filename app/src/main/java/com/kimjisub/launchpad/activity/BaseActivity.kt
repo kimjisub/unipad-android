@@ -2,16 +2,13 @@ package com.kimjisub.launchpad.activity
 
 import android.app.Activity
 import android.app.Application
-import android.content.DialogInterface
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
-import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -55,7 +52,12 @@ open class BaseActivity : AppCompatActivity() {
 			}
 		}
 
-		private fun restartApp(activity: BaseActivity) {
+		private fun printActivityLog(log: String) {
+			val stack = activities.joinToString(", ") { it.getActivityName() }
+			Log.activity("ACTIVITY STACK - $log[$stack]")
+		}
+
+		fun restartApp(activity: BaseActivity) {
 			for (a in activities.asReversed()) {
 				a.finish()
 			}
@@ -63,26 +65,6 @@ open class BaseActivity : AppCompatActivity() {
 			activity.start<MainActivity>()
 			printActivityLog("${activity.getActivityName()} requestRestart")
 			Process.killProcess(Process.myPid())
-		}
-
-		private fun printActivityLog(log: String) {
-			val stack = activities.joinToString(", ") { it.getActivityName() }
-			Log.activity("ACTIVITY STACK - $log[$stack]")
-		}
-
-		fun requestRestart(activity: BaseActivity) {
-			AlertDialog.Builder(activity)
-				.setTitle(activity.getString(string.requireRestart))
-				.setMessage(activity.getString(string.doYouWantToRestartApp))
-				.setPositiveButton(activity.getString(string.restart)) { dialog: DialogInterface, _: Int ->
-					restartApp(activity)
-					dialog.dismiss()
-				}
-				.setNegativeButton(activity.getString(string.cancel)) { dialog: DialogInterface, _: Int ->
-					dialog.dismiss()
-					activity.finish()
-				}
-				.show()
 		}
 	}
 
