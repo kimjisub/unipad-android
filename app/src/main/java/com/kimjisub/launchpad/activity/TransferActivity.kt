@@ -814,12 +814,10 @@ private fun ConfigurationContent(
 					)
 
 					// Build filtered list with original indices
-					val filteredItems = remember(searchQuery, state.items.size, state.items.hashCode()) {
-						state.items.mapIndexedNotNull { index, item ->
-							if (searchQuery.isBlank() || item.name.contains(searchQuery, ignoreCase = true)) {
-								index to item
-							} else null
-						}
+					val filteredItems = state.items.mapIndexedNotNull { index, item ->
+						if (searchQuery.isBlank() || item.name.contains(searchQuery, ignoreCase = true)) {
+							index to item
+						} else null
 					}
 
 					// Select all row (operates on filtered items)
@@ -861,6 +859,9 @@ private fun ConfigurationContent(
 
 					LazyColumn(modifier = Modifier.weight(1f)) {
 						itemsIndexed(filteredItems) { _, (originalIndex, item) ->
+							// Read selected state directly from snapshot state list
+							// to ensure LazyColumn items recompose on changes
+							val isSelected = state.items[originalIndex].selected
 							Row(
 								verticalAlignment = Alignment.CenterVertically,
 								modifier = Modifier
@@ -869,7 +870,7 @@ private fun ConfigurationContent(
 									.padding(vertical = 2.dp),
 							) {
 								Checkbox(
-									checked = item.selected,
+									checked = isSelected,
 									onCheckedChange = { onItemToggle(originalIndex) },
 									colors = CheckboxDefaults.colors(
 										checkedColor = Accent,
@@ -898,7 +899,7 @@ private fun ConfigurationContent(
 								Spacer(Modifier.width(6.dp))
 								Text(
 									text = item.name,
-									color = if (item.selected) TextPrimary else TextSecondary,
+									color = if (isSelected) TextPrimary else TextSecondary,
 									fontSize = 13.sp,
 								)
 							}
