@@ -86,12 +86,12 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		val file = infoFile ?: return
 		BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
 			while (true) {
-				val s = reader.readLine() ?: break
+				val s = reader.readLine()?.trim() ?: break
 				if (s.isEmpty()) continue
 				try {
 					val split = s.split("=", limit = 2)
-					val key = split[0]
-					val value = split[1]
+					val key = split[0].trim()
+					val value = split[1].trim()
 					when (key) {
 						"title" -> title = value
 						"producerName" -> producerName = value
@@ -129,8 +129,9 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		soundCount = 0
 		BufferedReader(InputStreamReader(FileInputStream(keySoundFile))).use { reader ->
 			while (true) {
-				val s = reader.readLine() ?: break
-				val split = s.split(" ").toTypedArray()
+				val s = reader.readLine()?.trim() ?: break
+				if (s.isEmpty()) continue
+				val split = s.trim().split("\\s+".toRegex()).toTypedArray()
 				var c: Int
 				var x: Int
 				var y: Int
@@ -201,8 +202,8 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 			val fileList = (keyLedDir.listFiles() ?: return).sortedBy { it.name.lowercase() }
 			for (file in fileList) {
 				if (file.isFile) {
-					val fileName: String = file.name
-					val split1 = fileName.split(" ").toTypedArray()
+					val fileName: String = file.name.trim()
+					val split1 = fileName.trim().split("\\s+".toRegex()).toTypedArray()
 					var c: Int
 					var x: Int
 					var y: Int
@@ -236,8 +237,9 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 					val ledList = ArrayList<LedAnimation.LedEvent>()
 					BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
 						loop@ while (true) {
-							val s = reader.readLine() ?: break
-							val split2 = s.split(" ").toTypedArray()
+							val s = reader.readLine()?.trim() ?: break
+							if (s.isEmpty()) continue@loop
+							val split2 = s.trim().split("\\s+".toRegex()).toTypedArray()
 							var option: String
 							var ledX = -1
 							var ledY = -1
@@ -245,16 +247,21 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 							var ledVelocity = 4
 							var ledDelay = -1
 							try {
-								if (split2[0] == "") continue
 								option = split2[0]
 								when (option) {
 									"on", "o" -> {
-										try {
-											ledX = split2[1].toInt() - 1
-										} catch (_: NumberFormatException) {
-											// Intentional: ledX retains default value on parse failure
+										val xToken = split2[1]
+										if (xToken == "*" || xToken == "mc") {
+											// Round/chain LED: o * {y} ... or o mc {y} ...
+											ledX = -1
+											ledY = split2[2].toInt() - 1
+										} else if (xToken == "l") {
+											// Logo LED: o l ... — not supported, skip
+											continue@loop
+										} else {
+											ledX = xToken.toInt() - 1
+											ledY = split2[2].toInt() - 1
 										}
-										ledY = split2[2].toInt() - 1
 										if (split2.size == 4) ledColor =
 											split2[3].toInt(16) + -0x1000000 else if (split2.size == 5) {
 											if (split2[3] == "auto" || split2[3] == "a") {
@@ -271,15 +278,20 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 									}
 
 									"off", "f" -> {
-										try {
-											ledX = split2[1].toInt() - 1
-										} catch (_: NumberFormatException) {
-											// Intentional: ledX retains default value on parse failure
+										val xToken = split2[1]
+										if (xToken == "*" || xToken == "mc") {
+											ledX = -1
+											ledY = split2[2].toInt() - 1
+										} else if (xToken == "l") {
+											continue@loop
+										} else {
+											ledX = xToken.toInt() - 1
+											ledY = split2[2].toInt() - 1
 										}
-										ledY = split2[2].toInt() - 1
 									}
 
 									"delay", "d" -> ledDelay = split2[1].toInt()
+									"chain", "c" -> continue@loop // Unitor extension: chain command in keyLed, skip
 									else -> {
 										addErr("keyLed : [$fileName].[$s] format is incorrect")
 										continue@loop
@@ -330,15 +342,15 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 		var currChain = 0
 		BufferedReader(InputStreamReader(FileInputStream(autoPlayFile))).use { reader ->
 			loop@ while (true) {
-				val s = reader.readLine() ?: break
-				val split = s.split(" ").toTypedArray()
+				val s = reader.readLine()?.trim() ?: break
+				if (s.isEmpty()) continue@loop
+				val split = s.trim().split("\\s+".toRegex()).toTypedArray()
 				var option: String
 				var x = -1
 				var y = -1
 				var chain = -1
 				var delay = -1
 				try {
-					if (split[0] == "") continue
 					option = split[0]
 					when (option) {
 						"on", "o" -> {
