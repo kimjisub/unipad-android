@@ -22,12 +22,13 @@ object FileManager {
 	fun removeDoubleFolder(path: String) {
 		try {
 			val rootFolder = File(path)
-			if (rootFolder.isDirectory) {
-				val doubleFolder = File(rootFolder, rootFolder.name)
+			if (!rootFolder.isDirectory) return
 
-				if (doubleFolder.isDirectory) {
-						moveDirectory(doubleFolder, rootFolder)
-				}
+			val children = rootFolder.listFiles() ?: return
+			val nonHidden = children.filter { !it.name.startsWith(".") }
+
+			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
+				moveDirectory(nonHidden[0], rootFolder)
 			}
 		} catch (e: IOException) {
 			Log.err("removeDoubleFolder failed", e)
@@ -36,10 +37,6 @@ object FileManager {
 
 	fun sortByTime(files: Array<File>): Array<File> {
 		return files.sortedByDescending { getInnerFileLastModified(it) }.toTypedArray()
-	}
-
-	fun sortByName(files: Array<File>): Array<File> {
-		return files.sortedWith(compareBy { it.name.lowercase() }).toTypedArray()
 	}
 
 	fun getInnerFileLastModified(target: File): Long {

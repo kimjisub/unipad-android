@@ -156,23 +156,6 @@ class FileManagerTest {
 		assertFalse(subdir.exists())
 	}
 
-	// sortByName tests
-
-	@Test
-	fun sortByName_sortsCaseInsensitive() {
-		val a = File(tempDir, "banana")
-		val b = File(tempDir, "Apple")
-		val c = File(tempDir, "cherry")
-		a.createNewFile()
-		b.createNewFile()
-		c.createNewFile()
-
-		val sorted = FileManager.sortByName(arrayOf(a, b, c))
-		assertEquals("Apple", sorted[0].name)
-		assertEquals("banana", sorted[1].name)
-		assertEquals("cherry", sorted[2].name)
-	}
-
 	// sortByTime tests
 
 	@Test
@@ -233,6 +216,49 @@ class FileManagerTest {
 
 		assertTrue(File(outer, "file.txt").exists())
 		assertEquals("content", File(outer, "file.txt").readText())
+		assertFalse(inner.exists())
+	}
+
+	@Test
+	fun removeDoubleFolder_flattensSingleSubfolderWithDifferentName() {
+		val outer = File(tempDir, "extract_target").apply { mkdirs() }
+		val inner = File(outer, "some_random_folder").apply { mkdirs() }
+		File(inner, "info").apply { createNewFile(); writeText("unipack info") }
+		File(inner, "keysound").apply { createNewFile(); writeText("keysound data") }
+		File(File(inner, "sounds").apply { mkdirs() }, "1.wav").apply { createNewFile() }
+
+		FileManager.removeDoubleFolder(outer.absolutePath)
+
+		assertTrue(File(outer, "info").exists())
+		assertEquals("unipack info", File(outer, "info").readText())
+		assertTrue(File(outer, "keysound").exists())
+		assertTrue(File(outer, "sounds/1.wav").exists())
+		assertFalse(inner.exists())
+	}
+
+	@Test
+	fun removeDoubleFolder_doesNothingWhenMultipleChildren() {
+		val outer = File(tempDir, "multi").apply { mkdirs() }
+		File(outer, "info").apply { createNewFile(); writeText("info") }
+		File(outer, "keysound").apply { createNewFile(); writeText("ks") }
+
+		FileManager.removeDoubleFolder(outer.absolutePath)
+
+		assertTrue(File(outer, "info").exists())
+		assertTrue(File(outer, "keysound").exists())
+	}
+
+	@Test
+	fun removeDoubleFolder_ignoresHiddenFilesWhenDetecting() {
+		val outer = File(tempDir, "withhidden").apply { mkdirs() }
+		File(outer, ".nomedia").apply { createNewFile() }
+		val inner = File(outer, "actual_content").apply { mkdirs() }
+		File(inner, "info").apply { createNewFile(); writeText("data") }
+
+		FileManager.removeDoubleFolder(outer.absolutePath)
+
+		assertTrue(File(outer, "info").exists())
+		assertEquals("data", File(outer, "info").readText())
 		assertFalse(inner.exists())
 	}
 
