@@ -42,7 +42,7 @@ class LaunchpadX : DriverRef() {
 		if (cmd == 25) {
 			val x = 9 - note / 10
 			val y = note % 10
-			if (y in 1..8)
+			if (x in 1..8 && y in 1..8)
 				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 		} else if (cmd == 27 && sig == -80) {
 			if (note in 91..98) {
