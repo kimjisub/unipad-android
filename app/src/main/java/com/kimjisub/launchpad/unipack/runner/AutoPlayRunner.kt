@@ -103,12 +103,13 @@ class AutoPlayRunner(
 						} else {
 							beforeStartPlaying = true
 							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
-							if (guideItems.isNotEmpty() && guideItems[0].currChain != chain.value) {
+							val firstGuide = guideItems.firstOrNull()
+							if (firstGuide != null && firstGuide.currChain != chain.value) {
 								if (beforeChain == -1 || beforeChain != chain.value) {
 									beforeChain = chain.value
 									afterMatchChain = true
 									listener.onRemoveGuide()
-									listener.onGuideChainOn(guideItems[0].currChain)
+									listener.onGuideChainOn(firstGuide.currChain)
 								}
 							} else {
 								afterMatchChain()
