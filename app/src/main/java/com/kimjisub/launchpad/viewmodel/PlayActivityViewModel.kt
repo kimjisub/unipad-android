@@ -279,7 +279,12 @@ class PlayActivityViewModel(
 							if (unipack.squareButton) autoPlayControlVisible = true
 							autoPlayProgressMax = unipack.autoPlayTable?.elements?.size ?: 0
 							autoPlayProgress = 0
-							autoPlayPlay()
+							if (startAsPractice) {
+								startAsPractice = false
+								autoPlayStop()
+							} else {
+								autoPlayPlay()
+							}
 						}
 					}
 
@@ -579,6 +584,20 @@ class PlayActivityViewModel(
 	}
 
 	// autoPlay
+
+	private var startAsPractice = false
+
+	fun practiceStart() {
+		log("practiceStart")
+		val runner = autoPlayRunner ?: return
+		if (scbAutoPlay.isChecked()) {
+			autoPlayStop()
+		} else {
+			startAsPractice = true
+			runner.playmode = false
+			scbAutoPlay.setChecked(true)
+		}
+	}
 
 	fun autoPlayPlay() {
 		log("autoPlayPlay")

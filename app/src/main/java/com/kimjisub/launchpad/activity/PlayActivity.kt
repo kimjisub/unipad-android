@@ -24,6 +24,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -66,10 +67,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutModifier
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -355,11 +363,15 @@ class PlayActivity : BaseActivity() {
 					)
 				}
 			}
-			DrawableView(
-				drawable = theme?.customLogo,
-				scaleType = ImageView.ScaleType.FIT_START,
-				modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).width(90.dp)
-			)
+			theme?.customLogo?.let { logo ->
+				val bitmap = remember(logo) { logo.toBitmap().asImageBitmap() }
+				Image(
+					bitmap = bitmap,
+					contentDescription = null,
+					contentScale = ContentScale.Fit,
+					modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).width(90.dp)
+				)
+			}
 			Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
 				if (vm.optionViewVisible) {
 					SideCheckPanel(modifier = Modifier.align(Alignment.CenterStart))
@@ -491,13 +503,16 @@ class PlayActivity : BaseActivity() {
 	private fun SideCheckPanel(modifier: Modifier = Modifier) {
 		val cbColor = theme?.checkbox?.let { Color(it) } ?: colorResource(R.color.checkbox)
 		Column(modifier = modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
-			Column {
+			Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
 				PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, cbColor)
 				PlayCheckBox(vm.scbLed, string.led, cbColor)
 				PlayCheckBox(vm.scbAutoPlay, string.autoPlay, cbColor)
 				if (vm.autoPlayControlVisible) AutoPlayControls()
+				if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked && !vm.autoPlayControlVisible) {
+					PracticeModeButton(cbColor)
+				}
 			}
-			Column {
+			Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
 				PlayCheckBox(vm.scbTraceLog, string.traceLog, cbColor, hasLongClick = true)
 				PlayCheckBox(vm.scbRecord, string.record, cbColor)
 			}
@@ -520,6 +535,27 @@ class PlayActivity : BaseActivity() {
 				) { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayStop() else vm.autoPlayPlay() }
 				DrawableButton(ResourcesCompat.getDrawable(resources, R.drawable.xml_next, null), stringResource(string.cd_autoplay_next)) { vm.autoPlayNext() }
 			}
+		}
+	}
+
+	@Composable
+	private fun PracticeModeButton(color: Color) {
+		val scale = 0.75f
+		Row(
+			modifier = Modifier
+				.graphicsLayer(scaleX = scale, scaleY = scale, transformOrigin = TransformOrigin(0f, 0f))
+				.then(scaleLayoutModifier(scale))
+				.clickable { vm.practiceStart() }
+				.padding(horizontal = 4.dp, vertical = 2.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Icon(
+				imageVector = Icons.Default.PlayArrow,
+				contentDescription = null,
+				tint = color,
+				modifier = Modifier.size(16.dp).padding(end = 4.dp),
+			)
+			Text(text = stringResource(string.practiceMode), color = color, fontSize = 13.sp)
 		}
 	}
 
@@ -603,6 +639,28 @@ class PlayActivity : BaseActivity() {
 			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, accentColor)
 			OptionSwitch(vm.scbLed, string.led, textColor, accentColor)
 			OptionSwitch(vm.scbAutoPlay, string.autoPlay, textColor, accentColor)
+			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
+				Row(
+					modifier = Modifier
+						.fillMaxWidth()
+						.clickable { vm.practiceStart(); vm.toggleOptionWindow(false) }
+						.padding(horizontal = 24.dp, vertical = 10.dp),
+					verticalAlignment = Alignment.CenterVertically,
+				) {
+					Text(
+						text = stringResource(string.practiceMode),
+						color = textColor,
+						fontSize = 14.sp,
+						modifier = Modifier.weight(1f),
+					)
+					Icon(
+						imageVector = Icons.Default.PlayArrow,
+						contentDescription = stringResource(string.practiceMode),
+						tint = accentColor,
+						modifier = Modifier.size(20.dp),
+					)
+				}
+			}
 
 			Spacer(modifier = Modifier.height(16.dp))
 
@@ -701,8 +759,11 @@ class PlayActivity : BaseActivity() {
 	private fun PlayCheckBox(state: CheckBoxState, textResId: Int, color: Color, hasLongClick: Boolean = false) {
 		if (!state.visible) return
 		val alpha = if (state.locked) LOCKED_ALPHA else 1f
+		val scale = 0.75f
 		Row(
 			modifier = Modifier
+				.graphicsLayer(scaleX = scale, scaleY = scale, transformOrigin = TransformOrigin(0f, 0f))
+				.then(scaleLayoutModifier(scale))
 				.alpha(alpha)
 				.then(
 					if (!state.locked) {
@@ -712,7 +773,7 @@ class PlayActivity : BaseActivity() {
 							Modifier.clickable { state.toggleChecked() }
 					} else Modifier
 				)
-				.padding(horizontal = 3.dp, vertical = 1.dp),
+				.padding(horizontal = 4.dp, vertical = 2.dp),
 			verticalAlignment = Alignment.CenterVertically,
 		) {
 			Switch(
@@ -725,9 +786,18 @@ class PlayActivity : BaseActivity() {
 					uncheckedTrackColor = Color.Transparent,
 					uncheckedBorderColor = color.copy(alpha = 0.3f),
 				),
-				modifier = Modifier.size(width = 32.dp, height = 18.dp).padding(end = 4.dp),
+				modifier = Modifier.size(width = 40.dp, height = 24.dp).padding(end = 6.dp),
 			)
-			Text(text = stringResource(textResId), color = color, fontSize = 10.sp)
+			Text(text = stringResource(textResId), color = color, fontSize = 13.sp)
+		}
+	}
+
+	private fun scaleLayoutModifier(scale: Float): Modifier = object : LayoutModifier {
+		override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+			val placeable = measurable.measure(constraints)
+			return layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
+				placeable.place(0, 0)
+			}
 		}
 	}
 

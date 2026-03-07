@@ -75,6 +75,7 @@ object MidiConnection {
 			try {
 				field = value
 				setDriverListener()
+				field.initialize()
 				if (isRun)
 					field.onConnected()
 			} catch (e: IllegalAccessException) {
@@ -145,6 +146,13 @@ object MidiConnection {
 				}
 			}
 
+			override fun onSendRaw(bytes: ByteArray, cableNumber: Int) {
+				if (usbDeviceConnection != null) {
+					ioScope.launch {
+						sendRawBuffer(bytes, cableNumber)
+					}
+				}
+			}
 		}
 
 		onReceiveSignalListener = object : DriverRef.OnReceiveSignalListener {
@@ -170,6 +178,8 @@ object MidiConnection {
 		}
 
 		setDriverListener()
+		Log.midiDetail("Calling driver.initialize(), driver=${driver::class.simpleName}, usbConnection=${usbDeviceConnection != null}, endpointOut=${usbEndpointOut != null}")
+		driver.initialize()
 	}
 
 	private fun initDevice(device: UsbDevice?) {
@@ -268,7 +278,57 @@ object MidiConnection {
 		} catch (_: RuntimeException) {
 			// Intentional: silently ignore send failures (device may be disconnected)
 		}
+	}
 
+	internal fun sendRawBuffer(bytes: ByteArray, cableNumber: Int = 0) {
+		try {
+			val packets = encodeSysEx(bytes, cableNumber)
+			Log.midiDetail("sendRawBuffer: raw=${bytes.joinToString(" ") { "%02X".format(it) }}, cable=$cableNumber")
+			Log.midiDetail("sendRawBuffer: encoded=${packets.joinToString(" ") { "%02X".format(it) }}")
+			val result = usbDeviceConnection?.bulkTransfer(usbEndpointOut, packets, packets.size, 1000)
+			Log.midiDetail("sendRawBuffer: bulkTransfer result=$result, endpoint=${usbEndpointOut != null}, connection=${usbDeviceConnection != null}")
+		} catch (e: RuntimeException) {
+			Log.err("sendRawBuffer failed", e)
+		}
+	}
+
+	private fun encodeSysEx(sysex: ByteArray, cableNumber: Int = 0): ByteArray {
+		val cablePrefix = (cableNumber shl 4).toByte()
+		val packets = mutableListOf<Byte>()
+		var i = 0
+		while (i < sysex.size) {
+			val remaining = sysex.size - i
+			if (remaining >= 3 && sysex[i + 2] != 0xF7.toByte()) {
+				// SysEx start or continue: CIN = 0x04
+				packets.add((cablePrefix + 0x04).toByte())
+				packets.add(sysex[i])
+				packets.add(sysex[i + 1])
+				packets.add(sysex[i + 2])
+				i += 3
+			} else if (remaining == 1) {
+				// SysEx end with 1 byte: CIN = 0x05
+				packets.add((cablePrefix + 0x05).toByte())
+				packets.add(sysex[i])
+				packets.add(0x00)
+				packets.add(0x00)
+				i += 1
+			} else if (remaining == 2) {
+				// SysEx end with 2 bytes: CIN = 0x06
+				packets.add((cablePrefix + 0x06).toByte())
+				packets.add(sysex[i])
+				packets.add(sysex[i + 1])
+				packets.add(0x00)
+				i += 2
+			} else {
+				// SysEx end with 3 bytes: CIN = 0x07
+				packets.add((cablePrefix + 0x07).toByte())
+				packets.add(sysex[i])
+				packets.add(sysex[i + 1])
+				packets.add(sysex[i + 2])
+				i += 3
+			}
+		}
+		return packets.toByteArray()
 	}
 
 	private fun startReceiveLoop() {

@@ -80,6 +80,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
+	<string name="practiceMode">Practice</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback light</string>
 	<string name="traceLog">Trace Log</string>

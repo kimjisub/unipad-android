@@ -78,6 +78,7 @@ abstract class DriverRef {
 
 	interface OnSendSignalListener {
 		fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte)
+		fun onSendRaw(bytes: ByteArray, cableNumber: Int)
 	}
 
 	////
@@ -89,6 +90,12 @@ abstract class DriverRef {
 	internal fun sendSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		sendSignal(cmd.toByte(), sig.toByte(), note.toByte(), velocity.toByte())
 	}
+
+	internal fun sendRawSignal(bytes: ByteArray, cableNumber: Int = 0) {
+		onSendSignalListener?.onSendRaw(bytes, cableNumber)
+	}
+
+	open fun initialize() {}
 
 	abstract fun sendPadLed(x: Int, y: Int, velocity: Int)
 	abstract fun sendChainLed(c: Int, velocity: Int)

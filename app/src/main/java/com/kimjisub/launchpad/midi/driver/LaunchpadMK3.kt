@@ -40,6 +40,18 @@ class LaunchpadMK3 : DriverRef() {
 		)
 	}
 
+	override fun initialize() {
+		// SysEx must be sent on Cable 1 (DAW port)
+		// Step 1: Switch to Standalone mode (Interface: 0x10, value: 0x00)
+		sendRawSignal(byteArrayOf(
+			0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0D, 0x10, 0x00, 0xF7.toByte()
+		), cableNumber = 1)
+		// Step 2: Select Programmer mode (Mode: 0x0E, value: 0x01)
+		sendRawSignal(byteArrayOf(
+			0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0D, 0x0E, 0x01, 0xF7.toByte()
+		), cableNumber = 1)
+	}
+
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		if (cmd == 9) {
 			val x = 9 - note / 10

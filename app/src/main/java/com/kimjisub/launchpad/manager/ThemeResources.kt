@@ -42,6 +42,7 @@ class DefaultThemeResources(
 	init {
 		if (fullLoad) {
 			playbg = ResourcesCompat.getDrawable(res, drawable.playbg, null)
+			customLogo = ResourcesCompat.getDrawable(res, drawable.custom_logo, null)
 			btn = ResourcesCompat.getDrawable(res, drawable.btn, null)
 			btnPressed = ResourcesCompat.getDrawable(res, drawable.btn_, null)
 			chainled = ResourcesCompat.getDrawable(res, drawable.chainled, null)

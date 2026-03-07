@@ -75,6 +75,7 @@ class UniPackImporter(
 				} finally {
 					tempZip.delete()
 				}
+				FileManager.removeDoubleFolder(targetFolder.path)
 
 				val unipack = UniPackFolder(targetFolder).load()
 				if (unipack.criticalError) {
