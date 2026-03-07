@@ -17,6 +17,10 @@ class SoundRunner(
 	private val scope: CoroutineScope,
 ) {
 
+	companion object {
+		private const val MAX_STREAMS = 30
+	}
+
 	private var soundPool: SoundPool
 	private var stopID: Array<Array<Array<Int>>>
 
@@ -44,7 +48,7 @@ class SoundRunner(
 			.build()
 		Log.play("soundCount: $soundCount")
 		soundPool = SoundPool.Builder()
-			.setMaxStreams(soundCount.coerceAtLeast(1))
+			.setMaxStreams(soundCount.coerceIn(1, MAX_STREAMS))
 			.setAudioAttributes(audioAttributes)
 			.build()
 		stopID = Array(unipack.chain) {
