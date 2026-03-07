@@ -26,8 +26,8 @@ class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
-	workspace: File,
-	folderName: String,
+	private val workspace: File,
+	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
 	scope: CoroutineScope,
@@ -48,10 +48,6 @@ class UniPackDownloader(
 
 		fun onException(throwable: Throwable)
 	}
-
-	private val unipackFile: File = FileManager.makeNextPath(workspace, folderName, ".zip")
-
-	private val folder: File = FileManager.makeNextPath(workspace, folderName, "/")
 
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
@@ -83,6 +79,9 @@ class UniPackDownloader(
 	init {
 		scope.launch(Dispatchers.IO) {
 			try {
+				val unipackFile = FileManager.makeNextPath(workspace, folderName, ".zip")
+				val folder = FileManager.makeNextPath(workspace, folderName, "/")
+
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val call = FileApi.service.download(url)
