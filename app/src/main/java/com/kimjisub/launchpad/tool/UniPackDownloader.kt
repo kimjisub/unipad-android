@@ -78,10 +78,9 @@ class UniPackDownloader(
 
 	init {
 		scope.launch(Dispatchers.IO) {
+			val unipackFile = FileManager.makeNextPath(workspace, folderName, ".zip")
+			val folder = FileManager.makeNextPath(workspace, folderName, "/")
 			try {
-				val unipackFile = FileManager.makeNextPath(workspace, folderName, ".zip")
-				val folder = FileManager.makeNextPath(workspace, folderName, "/")
-
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val call = FileApi.service.download(url)
