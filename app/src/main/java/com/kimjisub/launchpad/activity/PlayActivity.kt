@@ -22,6 +22,8 @@ import android.widget.RelativeLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -406,6 +408,19 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 			}
+			// Menu button (bottom-right)
+			if (vm.optionViewVisible && !vm.isOptionWindowVisible) {
+				Icon(
+					imageVector = Icons.Default.Menu,
+					contentDescription = stringResource(string.menu),
+					tint = Color.White.copy(alpha = 0.7f),
+					modifier = Modifier
+						.align(Alignment.BottomEnd)
+						.padding(16.dp)
+						.size(32.dp)
+						.clickable { vm.toggleOptionWindow(true) },
+				)
+			}
 			AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
 				Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable { vm.toggleOptionWindow(false) })
 			}
@@ -697,7 +712,7 @@ class PlayActivity : BaseActivity() {
 							Modifier.clickable { state.toggleChecked() }
 					} else Modifier
 				)
-				.padding(horizontal = 4.dp, vertical = 2.dp),
+				.padding(horizontal = 3.dp, vertical = 1.dp),
 			verticalAlignment = Alignment.CenterVertically,
 		) {
 			Switch(
@@ -710,9 +725,9 @@ class PlayActivity : BaseActivity() {
 					uncheckedTrackColor = Color.Transparent,
 					uncheckedBorderColor = color.copy(alpha = 0.3f),
 				),
-				modifier = Modifier.size(width = 40.dp, height = 24.dp).padding(end = 6.dp),
+				modifier = Modifier.size(width = 32.dp, height = 18.dp).padding(end = 4.dp),
 			)
-			Text(text = stringResource(textResId), color = color, fontSize = 13.sp)
+			Text(text = stringResource(textResId), color = color, fontSize = 10.sp)
 		}
 	}
 
