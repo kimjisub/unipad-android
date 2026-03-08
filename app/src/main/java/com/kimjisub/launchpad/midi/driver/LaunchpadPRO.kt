@@ -40,15 +40,22 @@ class LaunchpadPRO : DriverRef() {
 		)
 	}
 
+	override fun getInitSysEx(): Pair<List<ByteArray>, Int> {
+		// Launchpad Pro (original, PID 81~96) uses SysEx header 02 10
+		// 1) Live/Ableton mode (0x21 0x00) — launchpad.py uses this for pad control
+		// 2) Session layout (0x22 0x00) — note mapping: 81-89, 71-79, ... 11-19
+		return Pair(listOf(
+			byteArrayOf(0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x10, 0x21, 0x00, 0xF7.toByte()),
+			byteArrayOf(0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x10, 0x22, 0x00, 0xF7.toByte()),
+		), 0)
+	}
+
 	override fun initialize() {
-		// Step 1: Switch to Standalone mode (Interface: 0x10, value: 0x00)
-		sendRawSignal(byteArrayOf(
-			0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0E, 0x10, 0x00, 0xF7.toByte()
-		))
-		// Step 2: Select Programmer mode (Mode: 0x0E, value: 0x01)
-		sendRawSignal(byteArrayOf(
-			0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x0E, 0x0E, 0x01, 0xF7.toByte()
-		))
+		val (messages, _) = getInitSysEx()
+		// Send to all cables (0 and 1) to ensure the correct port receives the SysEx
+		for (cable in 0..1) {
+			sendRawSignals(messages, cableNumber = cable)
+		}
 	}
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {

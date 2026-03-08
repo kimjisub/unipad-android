@@ -44,27 +44,22 @@ abstract class DriverRef {
 
 
 	open fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
-		Log.midiDetail("onReceived($cmd, $sig, $note, $velocity)")
 		onReceiveSignalListener?.onReceived(cmd, sig, note, velocity)
 	}
 
 	fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
-		Log.midiDetail("onPadTouch($x, $y, $upDown, $velocity)")
 		onReceiveSignalListener?.onPadTouch(x, y, upDown, velocity)
 	}
 
 	fun onChainTouch(c: Int, upDown: Boolean) {
-		Log.midiDetail("onChainTouch($c, $upDown)")
 		onReceiveSignalListener?.onChainTouch(c, upDown)
 	}
 
 	fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
-		Log.midiDetail("onFunctionKeyTouch($f, $upDown)")
 		onReceiveSignalListener?.onFunctionKeyTouch(f, upDown)
 	}
 
 	fun onUnknownReceived(cmd: Int, sig: Int, note: Int, velocity: Int) {
-		Log.midiDetail("onUnknownReceived($cmd, $sig, $note, $velocity)")
 		onReceiveSignalListener?.onUnknownReceived(cmd, sig, note, velocity)
 	}
 
@@ -78,7 +73,7 @@ abstract class DriverRef {
 
 	interface OnSendSignalListener {
 		fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte)
-		fun onSendRaw(bytes: ByteArray, cableNumber: Int)
+		fun onSendRaw(messages: List<ByteArray>, cableNumber: Int)
 	}
 
 	////
@@ -92,10 +87,17 @@ abstract class DriverRef {
 	}
 
 	internal fun sendRawSignal(bytes: ByteArray, cableNumber: Int = 0) {
-		onSendSignalListener?.onSendRaw(bytes, cableNumber)
+		onSendSignalListener?.onSendRaw(listOf(bytes), cableNumber)
+	}
+
+	internal fun sendRawSignals(messages: List<ByteArray>, cableNumber: Int = 0) {
+		onSendSignalListener?.onSendRaw(messages, cableNumber)
 	}
 
 	open fun initialize() {}
+
+	/** Returns SysEx messages and cable number for initialization, or null if none needed. */
+	open fun getInitSysEx(): Pair<List<ByteArray>, Int>? = null
 
 	abstract fun sendPadLed(x: Int, y: Int, velocity: Int)
 	abstract fun sendChainLed(c: Int, velocity: Int)

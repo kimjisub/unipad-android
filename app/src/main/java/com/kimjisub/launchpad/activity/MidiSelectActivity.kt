@@ -29,9 +29,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,18 +61,17 @@ import kotlin.reflect.KClass
 
 class MidiSelectActivity : BaseActivity() {
 	companion object {
-		private const val AUTORUN_TIMER_DURATION_MS = 60000L
+		private const val AUTORUN_TIMER_DURATION_MS = 5000L
 	}
 
-	private val timerText = mutableStateOf<String?>(null)
+	private val remainingSeconds = mutableStateOf<Long?>(null)
 	private val isConnected = mutableStateOf(false)
 	private val logText = mutableStateOf("")
-	private val currentMode = mutableIntStateOf(0)
 	private val selectedIndex = mutableIntStateOf(0)
 
 	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
 		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
-			timerText.value = getString(R.string.countdown_format, leftTime / 1000 - 1)
+			remainingSeconds.value = leftTime / 1000
 		}
 
 		override fun onTimeOut() {
@@ -83,7 +79,7 @@ class MidiSelectActivity : BaseActivity() {
 		}
 
 		override fun onCanceled() {
-			timerText.value = null
+			remainingSeconds.value = null
 		}
 	}, AUTORUN_TIMER_DURATION_MS)
 
@@ -105,27 +101,20 @@ class MidiSelectActivity : BaseActivity() {
 				}
 			}
 
-			override fun onChangeMode(mode: Int) {
-				currentMode.intValue = mode
-				p.launchpadConnectMethod = mode
-			}
-
 			override fun onUiLog(log: String) {
 				logText.value += log + "\n"
 			}
 		}
-		MidiConnection.mode = p.launchpadConnectMethod
 
 		val service = getSystemService(USB_SERVICE) as UsbManager
-		MidiConnection.initConnection(intent, service)
+		MidiConnection.initConnection(intent, service, this)
 
 		setContent {
 			UniPadTheme {
 				MidiSelectScreen(
-					timerText = timerText.value,
+					remainingSeconds = remainingSeconds.value,
 					isConnected = isConnected.value,
 					logText = logText.value,
-					currentMode = currentMode.intValue,
 					selectedIndex = selectedIndex.intValue,
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
@@ -133,9 +122,6 @@ class MidiSelectActivity : BaseActivity() {
 						val driver = device.driverClass.java.getDeclaredConstructor()
 							.newInstance() as? DriverRef ?: return@MidiSelectScreen
 						MidiConnection.driver = driver
-					},
-					onModeSelect = { mode ->
-						MidiConnection.mode = mode
 					},
 					onUserInteract = { autorunTimer.cancel() },
 					onClose = { finish() },
@@ -169,13 +155,11 @@ private val midiDevices = listOf(
 
 @Composable
 private fun MidiSelectScreen(
-	timerText: String?,
+	remainingSeconds: Long?,
 	isConnected: Boolean,
 	logText: String,
-	currentMode: Int,
 	selectedIndex: Int,
 	onDeviceSelect: (Int) -> Unit,
-	onModeSelect: (Int) -> Unit,
 	onUserInteract: () -> Unit,
 	onClose: () -> Unit,
 ) {
@@ -204,15 +188,6 @@ private fun MidiSelectScreen(
 					MaterialTheme.colorScheme.error,
 				style = MaterialTheme.typography.titleSmall,
 			)
-
-			if (timerText != null) {
-				Text(
-					text = timerText,
-					color = MaterialTheme.colorScheme.onSurfaceVariant,
-					style = MaterialTheme.typography.bodySmall,
-					modifier = Modifier.padding(top = 2.dp),
-				)
-			}
 
 			Spacer(modifier = Modifier.height(12.dp))
 
@@ -247,48 +222,6 @@ private fun MidiSelectScreen(
 			Spacer(modifier = Modifier.height(16.dp))
 
 			// Signal Mode
-			Text(
-				text = "Signal Mode",
-				color = MaterialTheme.colorScheme.onBackground,
-				style = MaterialTheme.typography.titleSmall,
-				modifier = Modifier.fillMaxWidth(),
-			)
-
-			Spacer(modifier = Modifier.height(8.dp))
-
-			SingleChoiceSegmentedButtonRow(
-				modifier = Modifier.fillMaxWidth(),
-			) {
-				SegmentedButton(
-					selected = currentMode == 0,
-					onClick = {
-						onUserInteract()
-						onModeSelect(0)
-					},
-					shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-				) {
-					Text(
-						text = stringResource(R.string.signal_SpeedFirst),
-						fontSize = 12.sp,
-						maxLines = 1,
-					)
-				}
-				SegmentedButton(
-					selected = currentMode == 1,
-					onClick = {
-						onUserInteract()
-						onModeSelect(1)
-					},
-					shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-				) {
-					Text(
-						text = stringResource(R.string.signal_avoidAfterimage),
-						fontSize = 12.sp,
-						maxLines = 1,
-					)
-				}
-			}
-
 			Spacer(modifier = Modifier.weight(1f))
 
 			// Log
@@ -324,6 +257,12 @@ private fun MidiSelectScreen(
 				modifier = Modifier.fillMaxWidth(),
 			) {
 				Text(text = stringResource(android.R.string.ok))
+				if (remainingSeconds != null) {
+					Text(
+						text = " ($remainingSeconds)",
+						fontSize = 12.sp,
+					)
+				}
 			}
 		}
 
