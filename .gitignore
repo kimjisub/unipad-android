@@ -59,3 +59,5 @@ ralph.bat
 
 inspection-results/
 .mcp.json
+
+.idea/inspectionProfiles/Project_Default.xml

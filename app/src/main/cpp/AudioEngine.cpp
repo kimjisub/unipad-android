@@ -22,6 +22,8 @@ bool AudioEngine::start() {
            ->setSharingMode(oboe::SharingMode::Exclusive)
            ->setFormat(oboe::AudioFormat::I16)
            ->setChannelCount(oboe::ChannelCount::Stereo)
+           ->setUsage(oboe::Usage::Game)
+           ->setContentType(oboe::ContentType::Sonification)
            ->setDataCallback(this);
 
     oboe::Result result = builder.openStream(stream_);
