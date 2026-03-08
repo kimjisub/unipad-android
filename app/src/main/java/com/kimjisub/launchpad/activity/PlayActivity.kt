@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.activity
 import android.annotation.SuppressLint
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import android.media.AudioManager
 import android.net.Uri
@@ -25,6 +24,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -220,6 +223,10 @@ class PlayActivity : BaseActivity() {
 
 		override fun stopGuideAnimation(x: Int, y: Int) {
 			padViews[x][y]?.stopGuideAnimation()
+		}
+
+		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {
+			driver.sendPadLed(x, y, velocity)
 		}
 	}
 
@@ -538,17 +545,36 @@ class PlayActivity : BaseActivity() {
 	@Composable
 	private fun SideCheckPanel(modifier: Modifier = Modifier) {
 		val cbColor = theme?.checkbox?.let { Color(it) } ?: colorResource(R.color.checkbox)
-		Column(modifier = modifier.fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
-			Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+		val panelBg = Color.Black.copy(alpha = 0.35f)
+		val panelShape = RoundedCornerShape(12.dp)
+
+		Column(
+			modifier = modifier.fillMaxHeight(),
+			verticalArrangement = Arrangement.SpaceBetween,
+		) {
+			// Top group: performance controls
+			Column(
+				modifier = Modifier
+					.background(panelBg, panelShape)
+					.padding(horizontal = 6.dp, vertical = 8.dp),
+				verticalArrangement = Arrangement.spacedBy(2.dp),
+			) {
 				PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, cbColor)
 				PlayCheckBox(vm.scbLed, string.led, cbColor)
 				PlayCheckBox(vm.scbAutoPlay, string.autoPlay, cbColor)
-				if (vm.autoPlayControlVisible) AutoPlayControls()
+				if (vm.autoPlayControlVisible) AutoPlayControls(cbColor)
 				if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked && !vm.autoPlayControlVisible) {
 					PracticeModeButton(cbColor)
 				}
 			}
-			Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+
+			// Bottom group: tools
+			Column(
+				modifier = Modifier
+					.background(panelBg, panelShape)
+					.padding(horizontal = 6.dp, vertical = 8.dp),
+				verticalArrangement = Arrangement.spacedBy(2.dp),
+			) {
 				PlayCheckBox(vm.scbTraceLog, string.traceLog, cbColor, hasLongClick = true)
 				PlayCheckBox(vm.scbRecord, string.record, cbColor)
 			}
@@ -556,20 +582,70 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun AutoPlayControls() {
-		Column(horizontalAlignment = Alignment.CenterHorizontally) {
+	private fun AutoPlayControls(accentColor: Color) {
+		val progressFraction = if (vm.autoPlayProgressMax > 0) vm.autoPlayProgress.toFloat() / vm.autoPlayProgressMax else 0f
+
+		Column(
+			modifier = Modifier.padding(top = 4.dp),
+			horizontalAlignment = Alignment.CenterHorizontally,
+		) {
+			// Progress bar
 			LinearProgressIndicator(
-				progress = { if (vm.autoPlayProgressMax > 0) vm.autoPlayProgress.toFloat() / vm.autoPlayProgressMax else 0f },
-				modifier = Modifier.width(120.dp),
+				progress = { progressFraction },
+				modifier = Modifier
+					.width(120.dp)
+					.height(3.dp),
+				color = accentColor,
+				trackColor = Color.White.copy(alpha = 0.15f),
 				drawStopIndicator = {},
 			)
-			Row {
-				DrawableButton(ResourcesCompat.getDrawable(resources, R.drawable.xml_prev, null), stringResource(string.cd_autoplay_prev)) { vm.autoPlayPrev() }
-				DrawableButton(
-					ResourcesCompat.getDrawable(resources, if (vm.isAutoPlayPlaying) R.drawable.xml_pause else R.drawable.xml_play, null),
-					stringResource(if (vm.isAutoPlayPlaying) string.cd_autoplay_pause else string.cd_autoplay_play)
-				) { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayStop() else vm.autoPlayPlay() }
-				DrawableButton(ResourcesCompat.getDrawable(resources, R.drawable.xml_next, null), stringResource(string.cd_autoplay_next)) { vm.autoPlayNext() }
+
+			// Transport controls
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.spacedBy(2.dp),
+				modifier = Modifier.padding(top = 2.dp),
+			) {
+				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.size(32.dp)) {
+					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(18.dp))
+				}
+				IconButton(
+					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayStop() else vm.autoPlayPlay() },
+					modifier = Modifier.size(36.dp),
+				) {
+					Icon(
+						imageVector = if (vm.isAutoPlayPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+						contentDescription = stringResource(if (vm.isAutoPlayPlaying) string.cd_autoplay_pause else string.cd_autoplay_play),
+						tint = Color.White,
+						modifier = Modifier.size(22.dp),
+					)
+				}
+				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.size(32.dp)) {
+					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(18.dp))
+				}
+			}
+
+			// Practice/Playback mode toggle
+			val isPractice = vm.isPracticeMode
+			val modeText = if (isPractice) stringResource(string.practiceMode) else stringResource(string.autoPlay)
+			val modeColor = if (isPractice) Color(0xFF66BB6A) else Color.White.copy(alpha = 0.6f)
+
+			Row(
+				modifier = Modifier
+					.padding(top = 2.dp)
+					.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+					.clickable { vm.togglePracticeMode() }
+					.padding(horizontal = 8.dp, vertical = 3.dp),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.spacedBy(4.dp),
+			) {
+				Icon(
+					imageVector = Icons.Default.FiberManualRecord,
+					contentDescription = null,
+					tint = modeColor,
+					modifier = Modifier.size(6.dp),
+				)
+				Text(text = modeText, color = modeColor, fontSize = 10.sp)
 			}
 		}
 	}
@@ -581,15 +657,17 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier
 				.graphicsLayer(scaleX = scale, scaleY = scale, transformOrigin = TransformOrigin(0f, 0f))
 				.then(scaleLayoutModifier(scale))
+				.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
 				.clickable { vm.practiceStart() }
-				.padding(horizontal = 4.dp, vertical = 2.dp),
+				.padding(horizontal = 8.dp, vertical = 4.dp),
 			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(4.dp),
 		) {
 			Icon(
 				imageVector = Icons.Default.PlayArrow,
 				contentDescription = null,
 				tint = color,
-				modifier = Modifier.size(16.dp).padding(end = 4.dp),
+				modifier = Modifier.size(14.dp),
 			)
 			Text(text = stringResource(string.practiceMode), color = color, fontSize = 13.sp)
 		}
@@ -795,11 +873,9 @@ class PlayActivity : BaseActivity() {
 	private fun PlayCheckBox(state: CheckBoxState, textResId: Int, color: Color, hasLongClick: Boolean = false) {
 		if (!state.visible) return
 		val alpha = if (state.locked) LOCKED_ALPHA else 1f
-		val scale = 0.75f
+		val indicatorColor = if (state.checked) color else color.copy(alpha = 0.25f)
 		Row(
 			modifier = Modifier
-				.graphicsLayer(scaleX = scale, scaleY = scale, transformOrigin = TransformOrigin(0f, 0f))
-				.then(scaleLayoutModifier(scale))
 				.alpha(alpha)
 				.then(
 					if (!state.locked) {
@@ -809,22 +885,21 @@ class PlayActivity : BaseActivity() {
 							Modifier.clickable { state.toggleChecked() }
 					} else Modifier
 				)
-				.padding(horizontal = 4.dp, vertical = 2.dp),
+				.padding(horizontal = 2.dp, vertical = 4.dp),
 			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(6.dp),
 		) {
-			Switch(
-				checked = state.checked,
-				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
-				colors = SwitchDefaults.colors(
-					checkedThumbColor = Color.White,
-					checkedTrackColor = color,
-					uncheckedThumbColor = color.copy(alpha = 0.5f),
-					uncheckedTrackColor = Color.Transparent,
-					uncheckedBorderColor = color.copy(alpha = 0.3f),
-				),
-				modifier = Modifier.size(width = 40.dp, height = 24.dp).padding(end = 6.dp),
+			// Dot indicator instead of switch
+			Box(
+				modifier = Modifier
+					.size(8.dp)
+					.background(indicatorColor, RoundedCornerShape(50)),
 			)
-			Text(text = stringResource(textResId), color = color, fontSize = 13.sp)
+			Text(
+				text = stringResource(textResId),
+				color = if (state.checked) Color.White else Color.White.copy(alpha = 0.5f),
+				fontSize = 12.sp,
+			)
 		}
 	}
 
@@ -841,22 +916,6 @@ class PlayActivity : BaseActivity() {
 	private fun DrawableView(drawable: Drawable?, modifier: Modifier = Modifier, scaleType: ImageView.ScaleType = ImageView.ScaleType.FIT_CENTER) {
 		if (drawable == null) return
 		AndroidView(factory = { ctx -> ImageView(ctx).apply { importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO; this.scaleType = scaleType; setImageDrawable(drawable) } }, modifier = modifier)
-	}
-
-	@Composable
-	private fun DrawableButton(drawable: Drawable?, contentDescription: String, onClick: () -> Unit) {
-		AndroidView(
-			factory = { ctx -> ImageView(ctx).apply {
-				layoutParams = LayoutParams(resources.getDimensionPixelSize(R.dimen.autoplay_button_size), resources.getDimensionPixelSize(R.dimen.autoplay_button_size))
-				val pad = resources.getDimensionPixelSize(R.dimen.autoplay_button_padding)
-				setPadding(pad, pad, pad, pad)
-				this.contentDescription = contentDescription
-				isFocusable = true; isClickable = true; background = drawable
-				setOnClickListener { onClick() }
-			} },
-			update = { it.background = drawable },
-			modifier = Modifier.size(48.dp)
-		)
 	}
 
 	// endregion
@@ -1003,12 +1062,21 @@ class PlayActivity : BaseActivity() {
 		if (item != null) driver.sendFunctionKeyLed(c, item.code) else driver.sendFunctionKeyLed(c, 0)
 	}
 
+	private fun redrawAllLaunchpadLeds() {
+		driver.sendClearLed()
+		for (x in 0 until vm.unipack.buttonX)
+			for (y in 0 until vm.unipack.buttonY)
+				setLedLaunchpad(x, y)
+		for (c in 0 until CIRCLE_ARRAY_SIZE)
+			setLedLaunchpadChain(c)
+	}
+
 	// endregion
 
 	// region MIDI controller
 
 	private var midiController: MidiController? = object : MidiController() {
-		override fun onAttach() { vm.chain.refresh(); vm.refreshWatermark() }
+		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
 		override fun onDetach() {}
 		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
 			if (!vm.isOptionWindowVisible) vm.padTouch(x, y, upDown)
@@ -1084,6 +1152,8 @@ class PlayActivity : BaseActivity() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
+		driver.sendClearLed()
+		midiController?.let { removeController(it) }
 	}
 
 	override fun onDestroy() {

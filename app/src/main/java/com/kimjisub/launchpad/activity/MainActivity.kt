@@ -49,6 +49,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -108,6 +109,9 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayIndex by mutableIntStateOf(-1)
 	private var listRefreshing by mutableStateOf(false)
+	private var scrollToTopTrigger by mutableIntStateOf(0)
+	private var scrollToCenterIndex by mutableIntStateOf(-1)
+	private var scrollToCenterTrigger by mutableIntStateOf(0)
 	private var currentSort by mutableStateOf<Pair<MainTotalPanelViewModel.SortMethod, Boolean>?>(null)
 	private var importingState by mutableStateOf(false)
 	private var importResult by mutableStateOf<ImportResult?>(null)
@@ -138,6 +142,7 @@ class MainActivity : BaseActivity() {
 		object : MidiController() {
 			override fun onAttach() {
 				Log.driverCycle("MainActivity onConnected()")
+				driver.sendClearLed()
 				updateLP()
 			}
 
@@ -291,6 +296,7 @@ class MainActivity : BaseActivity() {
 					if (selectedItem == null) lastPlayIndex = -1
 				}
 
+				scrollToTopTrigger++
 				listRefreshing = false
 			}
 		}
@@ -298,7 +304,7 @@ class MainActivity : BaseActivity() {
 		totalPanelVM.update()
 	}
 
-	private fun togglePlay(target: UniPackItem?) {
+	private fun togglePlay(target: UniPackItem?, scrollToCenter: Boolean = false) {
 		if (target == null) {
 			selectedItem = null
 			return
@@ -312,6 +318,10 @@ class MainActivity : BaseActivity() {
 		} else {
 			lastPlayIndex = index
 			selectedItem = target
+			if (scrollToCenter) {
+							scrollToCenterIndex = index
+							scrollToCenterTrigger++
+						}
 		}
 		showSelectLPUI()
 	}
@@ -337,11 +347,11 @@ class MainActivity : BaseActivity() {
 	private fun havePrev(): Boolean = lastPlayIndex > 0
 
 	private fun next() {
-		if (haveNext()) togglePlay(unipackList[lastPlayIndex + 1])
+		if (haveNext()) togglePlay(unipackList[lastPlayIndex + 1], scrollToCenter = true)
 	}
 
 	private fun prev() {
-		if (havePrev()) togglePlay(unipackList[lastPlayIndex - 1])
+		if (havePrev()) togglePlay(unipackList[lastPlayIndex - 1], scrollToCenter = true)
 	}
 
 	private fun currentClick() {
@@ -549,6 +559,17 @@ class MainActivity : BaseActivity() {
 							}
 						} else {
 							val listState = rememberLazyListState()
+
+							LaunchedEffect(scrollToTopTrigger) {
+								listState.scrollToItem(0)
+							}
+
+							LaunchedEffect(scrollToCenterTrigger) {
+								if (scrollToCenterIndex < 0) return@LaunchedEffect
+								val visibleCount = listState.layoutInfo.visibleItemsInfo.size
+								val targetIndex = maxOf(0, scrollToCenterIndex - visibleCount / 2)
+								listState.animateScrollToItem(targetIndex)
+							}
 
 							Column {
 								if (unipackList.isNotEmpty()) {

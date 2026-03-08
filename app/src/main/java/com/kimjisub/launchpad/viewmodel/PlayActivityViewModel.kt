@@ -92,6 +92,7 @@ class PlayActivityViewModel(
 		fun setChainViewVisibility(index: Int, visibility: Int)
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
 		fun stopGuideAnimation(x: Int, y: Int)
+		fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int)
 	}
 
 	var uiCallback: UiCallback? = null
@@ -117,6 +118,7 @@ class PlayActivityViewModel(
 	var autoPlayProgress by mutableIntStateOf(0)
 	var autoPlayProgressMax by mutableIntStateOf(0)
 	var isAutoPlayPlaying by mutableStateOf(false)
+	var isPracticeMode by mutableStateOf(false)
 	var optionViewVisible by mutableStateOf(true)
 	var isOptionWindowVisible by mutableStateOf(false)
 	var startReady by mutableStateOf(false)
@@ -219,6 +221,7 @@ class PlayActivityViewModel(
 				autoPlayRunner?.launch()
 			} else {
 				autoPlayRunner?.practiceGuide = false
+				isPracticeMode = false
 				autoPlayRunner?.stop()
 				padInit()
 				ledInit()
@@ -320,6 +323,10 @@ class PlayActivityViewModel(
 						viewModelScope.launch { autoPlayGuidePad(x, y, false) }
 					}
 
+					override fun onGuideLedUpdate(x: Int, y: Int, velocity: Int) {
+						viewModelScope.launch { uiCallback?.sendGuideLedToLaunchpad(x, y, velocity) }
+					}
+
 					override fun onGuideChainOn(c: Int) {
 						viewModelScope.launch {
 							channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, -1, LED_ORANGE)
@@ -342,6 +349,7 @@ class PlayActivityViewModel(
 					override fun onEnd() {
 						viewModelScope.launch {
 							autoPlayRunner?.practiceGuide = false
+							isPracticeMode = false
 							scbAutoPlay.setChecked(false)
 							if (unipack.ledAnimationTable != null) {
 								scbLed.setChecked(true)
@@ -603,9 +611,11 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		if (scbAutoPlay.isChecked()) {
 			runner.practiceGuide = false
+			isPracticeMode = false
 			scbAutoPlay.setChecked(false)
 		} else {
 			runner.practiceGuide = true
+			isPracticeMode = true
 			scbAutoPlay.setChecked(true)
 		}
 	}
@@ -649,6 +659,23 @@ class PlayActivityViewModel(
 		padInit()
 		ledInit()
 		runner.progressOffset(40)
+	}
+
+	fun togglePracticeMode() {
+		log("togglePracticeMode")
+		val runner = autoPlayRunner ?: return
+		val newMode = !runner.practiceGuide
+		runner.practiceGuide = newMode
+		isPracticeMode = newMode
+		if (!newMode) {
+			// Switching to playback — re-enable LED and feedback
+			if (unipack.keyLedExist) {
+				scbLed.setChecked(true)
+				scbFeedbackLight.setChecked(false)
+			} else {
+				scbFeedbackLight.setChecked(true)
+			}
+		}
 	}
 
 	private fun autoPlayGuidePad(x: Int, y: Int, onOff: Boolean, targetWallTimeMs: Long = 0) {

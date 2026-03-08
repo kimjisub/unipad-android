@@ -46,6 +46,7 @@ class AutoPlayRunner(
 		fun onChainChange(c: Int)
 		fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long)
 		fun onGuidePadOff(x: Int, y: Int)
+		fun onGuideLedUpdate(x: Int, y: Int, velocity: Int)
 		fun onGuideChainOn(c: Int)
 		fun onRemoveGuide()
 		fun chainButsRefresh()
@@ -60,9 +61,17 @@ class AutoPlayRunner(
 	private var waitingForChain = -1
 	private var waitStartTime = 0L
 
+	// Active guide tracking for LED brightness + auto-expiration
+	private val activeGuides = mutableMapOf<Int, Long>() // key = x*256+y, value = targetWallTimeMs
+	private var lastGuideUpdateMs = 0L
+
 	companion object {
 		const val GUIDE_LOOKAHEAD_MS = 800L
+		private const val GUIDE_LED_UPDATE_INTERVAL_MS = 50L
+		private val GUIDE_VELOCITIES = intArrayOf(1, 2, 3, 21) // dim white → bright white → green
 	}
+
+	private fun guideKey(x: Int, y: Int) = x * 256 + y
 
 	private fun buildGuideTimeline(autoPlay: AutoPlay): List<GuideEvent> {
 		val events = mutableListOf<GuideEvent>()
@@ -93,13 +102,39 @@ class AutoPlayRunner(
 					guideTimeline = buildGuideTimeline(autoPlay)
 					guideIndex = 0
 					waitingForChain = -1
+					activeGuides.clear()
 				}
 
 				try {
 					var delayAccum: Long = 0
 					var startTime = SystemClock.elapsedRealtime()
+					var prevPracticeGuide = practiceGuide
 					while (progress < autoPlay.elements.size && isActive) {
 						val currTime = SystemClock.elapsedRealtime()
+
+						// Detect mid-run practice mode toggle
+						if (practiceGuide != prevPracticeGuide) {
+							if (practiceGuide) {
+								// Switched TO practice mode — initialize guide state
+								guideTimeline = buildGuideTimeline(autoPlay)
+								val elapsed = currTime - startTime
+								guideIndex = guideTimeline.indexOfFirst { it.timeMs > elapsed - GUIDE_LOOKAHEAD_MS }
+									.let { if (it < 0) guideTimeline.size else it }
+								waitingForChain = -1
+								activeGuides.clear()
+							} else {
+								// Switched FROM practice mode — clean up guides
+								for ((key, _) in activeGuides) {
+									listener.onGuideLedUpdate(key / 256, key % 256, 0)
+								}
+								activeGuides.clear()
+								guideTimeline = emptyList()
+								waitingForChain = -1
+								listener.onRemoveGuide()
+							}
+							prevPracticeGuide = practiceGuide
+						}
+
 						if (playmode) {
 							// Practice mode: waiting for chain change
 							if (practiceGuide && waitingForChain >= 0) {
@@ -125,23 +160,51 @@ class AutoPlayRunner(
 												// Chain mismatch — pause and show chain indicator
 												waitingForChain = event.chain
 												waitStartTime = currTime
+												for ((key, _) in activeGuides) {
+													listener.onGuideLedUpdate(key / 256, key % 256, 0)
+												}
+												activeGuides.clear()
 												listener.onRemoveGuide()
 												listener.onGuideChainOn(event.chain)
 												break
 											}
-											listener.onGuidePadOn(event.x, event.y, startTime + event.timeMs)
+											val targetWallTimeMs = startTime + event.timeMs
+											activeGuides[guideKey(event.x, event.y)] = targetWallTimeMs
+											listener.onGuidePadOn(event.x, event.y, targetWallTimeMs)
 											guideIndex++
 										} else break
 									}
+
+									// Guide expiration + launchpad LED brightness update
+									if (activeGuides.isNotEmpty()) {
+										val throttle = currTime - lastGuideUpdateMs >= GUIDE_LED_UPDATE_INTERVAL_MS
+										val iter = activeGuides.iterator()
+										while (iter.hasNext()) {
+											val (key, targetMs) = iter.next()
+											val gx = key / 256
+											val gy = key % 256
+											if (currTime >= targetMs) {
+												// Guide expired — auto-remove
+												iter.remove()
+												listener.onGuideLedUpdate(gx, gy, 0)
+												listener.onGuidePadOff(gx, gy)
+											} else if (throttle) {
+												val remaining = targetMs - currTime
+												val p = (1f - remaining.toFloat() / GUIDE_LOOKAHEAD_MS).coerceIn(0f, 1f)
+												val idx = (p * GUIDE_VELOCITIES.size).toInt().coerceIn(0, GUIDE_VELOCITIES.lastIndex)
+												listener.onGuideLedUpdate(gx, gy, GUIDE_VELOCITIES[idx])
+											}
+										}
+										if (throttle) lastGuideUpdateMs = currTime
+									}
 								}
 
-								if (waitingForChain < 0 && delayAccum <= currTime - startTime) {
+								while (waitingForChain < 0 && delayAccum <= currTime - startTime
+									&& progress < autoPlay.elements.size) {
 									when (val element: AutoPlay.Element =
 										autoPlay.elements[progress]) {
 										is AutoPlay.Element.On -> {
-											if (practiceGuide) {
-												listener.onGuidePadOff(element.x, element.y)
-											} else {
+											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
 												unipack.soundPush(element.currChain, element.x, element.y, element.num)
 												unipack.ledPush(element.currChain, element.x, element.y, element.num)
@@ -187,6 +250,7 @@ class AutoPlayRunner(
 		Log.thread("[AutoPlay] 3. Request Stop")
 		job?.cancel()
 		job = null
+		activeGuides.clear()
 	}
 
 	private fun beforeStartPlaying() {
