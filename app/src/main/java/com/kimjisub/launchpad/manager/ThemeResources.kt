@@ -47,6 +47,7 @@ class DefaultThemeResources(
 			btnPressed = ResourcesCompat.getDrawable(res, drawable.btn_, null)
 			chainled = ResourcesCompat.getDrawable(res, drawable.chainled, null)
 			phantom = ResourcesCompat.getDrawable(res, drawable.phantom, null)
+			phantomVariant = ResourcesCompat.getDrawable(res, drawable.phantom_, null)
 			checkbox = ResourcesCompat.getColor(res, color.checkbox, null)
 			traceLog = ResourcesCompat.getColor(res, color.trace_log, null)
 			optionWindow = ResourcesCompat.getColor(res, color.option_window, null)
