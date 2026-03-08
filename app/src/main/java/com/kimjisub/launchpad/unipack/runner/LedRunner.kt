@@ -98,6 +98,10 @@ class LedRunner(
 									is LedAnimation.LedEvent.Delay -> {
 										state.delay += event.delay.toLong()
 									}
+
+									is LedAnimation.LedEvent.Chain -> {
+										chain.value = event.chain
+									}
 								}
 							} catch (ex: ArrayIndexOutOfBoundsException) {
 								Log.err("LED event ArrayIndexOutOfBounds", ex)

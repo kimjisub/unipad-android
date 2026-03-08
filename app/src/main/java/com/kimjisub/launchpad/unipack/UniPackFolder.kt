@@ -291,7 +291,11 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 									}
 
 									"delay", "d" -> ledDelay = split2[1].toInt()
-									"chain", "c" -> continue@loop // Unitor extension: chain command in keyLed, skip
+									"chain", "c" -> {
+										val chainValue = split2[1].toInt() - 1
+										ledList.add(LedAnimation.LedEvent.Chain(chainValue))
+										continue@loop
+									}
 									else -> {
 										addErr("keyLed : [$fileName].[$s] format is incorrect")
 										continue@loop

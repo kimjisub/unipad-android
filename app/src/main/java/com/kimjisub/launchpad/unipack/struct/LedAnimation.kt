@@ -25,5 +25,9 @@ class LedAnimation(
 		class Delay(
 			val delay: Int,
 		) : LedEvent
+
+		class Chain(
+			val chain: Int,
+		) : LedEvent
 	}
 }
