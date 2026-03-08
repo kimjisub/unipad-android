@@ -26,6 +26,7 @@ android {
 			keyPassword keystoreProperties['keyPassword']
 		}
 	}
+	ndkVersion = '27.2.12479018'
 	compileSdk = 36
 	defaultConfig {
 		applicationId = "com.kimjisub.launchpad"
@@ -37,6 +38,19 @@ android {
 		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
 		// renderscriptSupportModeEnabled true
+
+		externalNativeBuild {
+			cmake {
+				cppFlags '-std=c++17'
+				arguments '-DANDROID_STL=c++_shared'
+			}
+		}
+	}
+	externalNativeBuild {
+		cmake {
+			path 'src/main/cpp/CMakeLists.txt'
+			version '3.22.1'
+		}
 	}
 	buildTypes {
 		release {
@@ -67,6 +81,7 @@ android {
 		viewBinding = true
 		buildConfig = true
 		compose = true
+		prefab = true
 	}
 	compileOptions {
 		coreLibraryDesugaringEnabled = true
@@ -241,6 +256,9 @@ dependencies {
 	implementation 'com.squareup.retrofit2:retrofit:2.11.0'
 	implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 	implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+
+	// Oboe - Low-latency audio engine (NDK)
+	implementation 'com.google.oboe:oboe:1.9.3'
 
 	// etc
 	implementation 'com.orhanobut:logger:2.2.0'
