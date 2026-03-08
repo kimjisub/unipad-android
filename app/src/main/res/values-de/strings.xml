@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">Bitte warten…</string>
 	<string name="importing">Importieren</string>
 	<string name="loading">Laden</string>
+	<string name="loading_phase_info">Info wird gelesen…</string>
+	<string name="loading_phase_keysound">Sounds werden geladen…</string>
+	<string name="loading_phase_keyled">LEDs werden geladen…</string>
+	<string name="loading_phase_autoplay">Autoplay wird geladen…</string>
+	<string name="loading_phase_audio">Audio wird geladen…</string>
 	<string name="download">Herunterladen</string>
 	<string name="downloadWaiting">Download wartet</string>
 	<string name="downloading">Wird heruntergeladen</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Open-Source-Lizenz</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Community</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Automatische Wiedergabe</string>
+	<string name="practiceMode">Übung</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback-Licht</string>
 	<string name="traceLog">Ablaufprotokoll</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">Ergebnis</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">UniPacks übertragen</string>
+	<string name="transfer_button">Übertragen</string>
+	<string name="transfer_source">Quelle</string>
+	<string name="transfer_target">Ziel</string>
+	<string name="transfer_mode_label">Modus</string>
+	<string name="transfer_mode_copy">Kopieren</string>
+	<string name="transfer_mode_move">Verschieben</string>
+	<string name="transfer_select_all">Alle auswählen</string>
+	<string name="transfer_deselect_all">Alle abwählen</string>
+	<string name="transfer_selected_count">%d ausgewählt</string>
+	<string name="transfer_start">Starten</string>
+	<string name="transfer_copying">Kopiere: %s</string>
+	<string name="transfer_moving">Verschiebe: %s</string>
+	<string name="transfer_result_transferred">Übertragen</string>
+	<string name="transfer_result_skipped">Übersprungen (bereits vorhanden)</string>
+	<string name="transfer_result_failed">Fehlgeschlagen</string>
+	<string name="transfer_done">Fertig</string>
+	<string name="transfer_no_items">Keine UniPacks ausgewählt</string>
+	<string name="transfer_select_target">Ziel auswählen</string>
+	<string name="transfer_select_source">Quelle auswählen</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Ordner</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">Sicherung</string>
+	<string name="backup_description">Mit Documents/Unipad-Ordner verbinden</string>
+	<string name="backup_grant_access">Backup-Ordner verbinden</string>
+	<string name="backup_revoke">Backup-Ordner trennen</string>
+	<string name="backup_invalid_folder">Bitte wählen Sie den Documents/Unipad-Ordner</string>
+	<string name="backup_backup_button">Sichern</string>
+	<string name="backup_backup_description">UniPacks in Backup-Ordner kopieren</string>
+	<string name="backup_restore_button">Wiederherstellen</string>
+	<string name="backup_restore_description">UniPacks aus Backup-Ordner kopieren</string>
 	<string name="backup_guide_title">Backup-Ordner verbinden</string>
 	<string name="backup_guide_description">Verbinden Sie den Documents/Unipad-Ordner, um Ihre UniPacks zu sichern oder wiederherzustellen.\nDieser Ordner bleibt auch bei App-Deinstallation erhalten.</string>
 	<string name="backup_guide_step1">1. Ein Ordnerauswahldialog wird geöffnet</string>

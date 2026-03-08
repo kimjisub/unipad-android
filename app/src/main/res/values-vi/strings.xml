@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">Chờ một chút…</string>
 	<string name="importing">Đang nhập</string>
 	<string name="loading">Đang tải</string>
+	<string name="loading_phase_info">Đang đọc thông tin…</string>
+	<string name="loading_phase_keysound">Đang tải âm thanh…</string>
+	<string name="loading_phase_keyled">Đang tải LED…</string>
+	<string name="loading_phase_autoplay">Đang tải tự động phát…</string>
+	<string name="loading_phase_audio">Đang tải audio…</string>
 	<string name="download">Tải xuống</string>
 	<string name="downloadWaiting">Chờ Tải xuống</string>
 	<string name="downloading">Đang tải xuống</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Giấy phép Mã nguồn Mở</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Cộng đồng</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Tự động phát</string>
+	<string name="practiceMode">Luyện tập</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Đèn phản hồi</string>
 	<string name="traceLog">Nhật ký Truy vết</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">Kết quả</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">Chuyển UniPacks</string>
+	<string name="transfer_button">Chuyển</string>
+	<string name="transfer_source">Nguồn</string>
+	<string name="transfer_target">Đích</string>
+	<string name="transfer_mode_label">Chế độ</string>
+	<string name="transfer_mode_copy">Sao chép</string>
+	<string name="transfer_mode_move">Di chuyển</string>
+	<string name="transfer_select_all">Chọn tất cả</string>
+	<string name="transfer_deselect_all">Bỏ chọn tất cả</string>
+	<string name="transfer_selected_count">Đã chọn %d</string>
+	<string name="transfer_start">Bắt đầu</string>
+	<string name="transfer_copying">Đang sao chép: %s</string>
+	<string name="transfer_moving">Đang di chuyển: %s</string>
+	<string name="transfer_result_transferred">Đã chuyển</string>
+	<string name="transfer_result_skipped">Đã bỏ qua (đã tồn tại)</string>
+	<string name="transfer_result_failed">Thất bại</string>
+	<string name="transfer_done">Hoàn tất</string>
+	<string name="transfer_no_items">Chưa chọn UniPack nào</string>
+	<string name="transfer_select_target">Chọn đích đến</string>
+	<string name="transfer_select_source">Chọn nguồn</string>
 	<string name="transfer_format_label">Định dạng</string>
 	<string name="transfer_format_folder">Thư mục</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">Sao lưu</string>
+	<string name="backup_description">Kết nối với thư mục Documents/Unipad</string>
+	<string name="backup_grant_access">Kết nối thư mục sao lưu</string>
+	<string name="backup_revoke">Ngắt kết nối thư mục sao lưu</string>
+	<string name="backup_invalid_folder">Vui lòng chọn thư mục Documents/Unipad</string>
+	<string name="backup_backup_button">Sao lưu</string>
+	<string name="backup_backup_description">Sao chép UniPacks vào thư mục sao lưu</string>
+	<string name="backup_restore_button">Khôi phục</string>
+	<string name="backup_restore_description">Sao chép UniPacks từ thư mục sao lưu</string>
 	<string name="backup_guide_title">Kết nối thư mục sao lưu</string>
 	<string name="backup_guide_description">Kết nối thư mục Documents/Unipad để sao lưu hoặc khôi phục UniPacks của bạn.\nThư mục này vẫn tồn tại ngay cả khi gỡ ứng dụng.</string>
 	<string name="backup_guide_step1">1. Trình chọn thư mục sẽ mở</string>

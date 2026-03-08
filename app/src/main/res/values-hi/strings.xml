@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">कृपया प्रतीक्षा करें…</string>
 	<string name="importing">आयात हो रहा है</string>
 	<string name="loading">लोड हो रहा है</string>
+	<string name="loading_phase_info">जानकारी पढ़ रहा है…</string>
+	<string name="loading_phase_keysound">ध्वनियां लोड हो रही हैं…</string>
+	<string name="loading_phase_keyled">LED लोड हो रहे हैं…</string>
+	<string name="loading_phase_autoplay">ऑटोप्ले लोड हो रहा है…</string>
+	<string name="loading_phase_audio">ऑडियो लोड हो रहा है…</string>
 	<string name="download">डाउनलोड</string>
 	<string name="downloadWaiting">डाउनलोड प्रतीक्षा</string>
 	<string name="downloading">डाउनलोड हो रहा है</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">समुदाय</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">ऑटोप्ले</string>
+	<string name="practiceMode">अभ्यास</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">फीडबैक लाइट</string>
 	<string name="traceLog">ट्रेस लॉग</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">परिणाम</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">UniPacks स्थानांतरित करें</string>
+	<string name="transfer_button">स्थानांतरित</string>
+	<string name="transfer_source">स्रोत</string>
+	<string name="transfer_target">लक्ष्य</string>
+	<string name="transfer_mode_label">मोड</string>
+	<string name="transfer_mode_copy">कॉपी</string>
+	<string name="transfer_mode_move">स्थानांतरित</string>
+	<string name="transfer_select_all">सभी चुनें</string>
+	<string name="transfer_deselect_all">सभी हटाएं</string>
+	<string name="transfer_selected_count">%d चयनित</string>
+	<string name="transfer_start">शुरू</string>
+	<string name="transfer_copying">कॉपी हो रहा है: %s</string>
+	<string name="transfer_moving">स्थानांतरित हो रहा है: %s</string>
+	<string name="transfer_result_transferred">स्थानांतरित</string>
+	<string name="transfer_result_skipped">छोड़ा गया (पहले से मौजूद)</string>
+	<string name="transfer_result_failed">विफल</string>
+	<string name="transfer_done">पूर्ण</string>
+	<string name="transfer_no_items">कोई UniPack चयनित नहीं</string>
+	<string name="transfer_select_target">गंतव्य चुनें</string>
+	<string name="transfer_select_source">स्रोत चुनें</string>
 	<string name="transfer_format_label">फ़ॉर्मेट</string>
 	<string name="transfer_format_folder">फ़ोल्डर</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">बैकअप</string>
+	<string name="backup_description">Documents/Unipad फ़ोल्डर से कनेक्ट करें</string>
+	<string name="backup_grant_access">बैकअप फ़ोल्डर कनेक्ट करें</string>
+	<string name="backup_revoke">बैकअप फ़ोल्डर डिस्कनेक्ट करें</string>
+	<string name="backup_invalid_folder">कृपया Documents/Unipad फ़ोल्डर चुनें</string>
+	<string name="backup_backup_button">बैकअप</string>
+	<string name="backup_backup_description">UniPacks को बैकअप फ़ोल्डर में कॉपी करें</string>
+	<string name="backup_restore_button">पुनर्स्थापित</string>
+	<string name="backup_restore_description">बैकअप फ़ोल्डर से UniPacks कॉपी करें</string>
 	<string name="backup_guide_title">बैकअप फ़ोल्डर कनेक्ट करें</string>
 	<string name="backup_guide_description">अपने UniPacks का बैकअप या पुनर्स्थापना करने के लिए Documents/Unipad फ़ोल्डर कनेक्ट करें।\nयह फ़ोल्डर ऐप अनइंस्टॉल करने पर भी बना रहता है।</string>
 	<string name="backup_guide_step1">1. फ़ोल्डर चयनकर्ता खुलेगा</string>

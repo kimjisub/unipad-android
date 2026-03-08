@@ -16,6 +16,11 @@
 	<string name="wait_a_sec">请稍等…</string>
 	<string name="importing">导入中</string>
 	<string name="loading">加载中</string>
+	<string name="loading_phase_info">读取信息中…</string>
+	<string name="loading_phase_keysound">加载音效中…</string>
+	<string name="loading_phase_keyled">加载LED中…</string>
+	<string name="loading_phase_autoplay">加载自动播放中…</string>
+	<string name="loading_phase_audio">加载音频中…</string>
 	<string name="download">下载</string>
 	<string name="downloadWaiting">等待下载</string>
 	<string name="downloading">下载中</string>
@@ -52,7 +57,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">开源许可</string>
 	<string name="FCMToken">FCM 令牌</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. 版权所有。</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. 版权所有。</string>
 
 	<!--Community-->
 	<string name="community">社区</string>
@@ -81,6 +86,7 @@
 	<!--UniPack Function-->
 	<string name="led">灯光</string>
 	<string name="autoPlay">自动播放</string>
+	<string name="practiceMode">练习</string>
 	<string name="feedbackLight">反馈灯光</string>
 	<string name="traceLog">记录按键</string>
 	<string name="traceLogClear">按键记录已重置。</string>
@@ -224,26 +230,26 @@
 	<string name="migration_result">结果</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">传输 UniPacks</string>
+	<string name="transfer_button">传输</string>
+	<string name="transfer_source">来源</string>
+	<string name="transfer_target">目标</string>
+	<string name="transfer_mode_label">模式</string>
+	<string name="transfer_mode_copy">复制</string>
+	<string name="transfer_mode_move">移动</string>
+	<string name="transfer_select_all">全选</string>
+	<string name="transfer_deselect_all">取消全选</string>
+	<string name="transfer_selected_count">已选择 %d 个</string>
+	<string name="transfer_start">开始</string>
+	<string name="transfer_copying">复制中: %s</string>
+	<string name="transfer_moving">移动中: %s</string>
+	<string name="transfer_result_transferred">已传输</string>
+	<string name="transfer_result_skipped">已跳过（已存在）</string>
+	<string name="transfer_result_failed">失败</string>
+	<string name="transfer_done">完成</string>
+	<string name="transfer_no_items">未选择 UniPacks</string>
+	<string name="transfer_select_target">请选择目标</string>
+	<string name="transfer_select_source">请选择来源</string>
 	<string name="transfer_format_label">格式</string>
 	<string name="transfer_format_folder">文件夹</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -261,15 +267,15 @@
 	<string name="option_indicator_format">%s ●</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">备份</string>
+	<string name="backup_description">连接 Documents/Unipad 文件夹</string>
+	<string name="backup_grant_access">连接备份文件夹</string>
+	<string name="backup_revoke">断开备份文件夹</string>
+	<string name="backup_invalid_folder">请选择 Documents/Unipad 文件夹</string>
+	<string name="backup_backup_button">备份</string>
+	<string name="backup_backup_description">将 UniPacks 复制到备份文件夹</string>
+	<string name="backup_restore_button">恢复</string>
+	<string name="backup_restore_description">从备份文件夹复制 UniPacks</string>
 	<string name="backup_guide_title">连接备份文件夹</string>
 	<string name="backup_guide_description">连接 Documents/Unipad 文件夹以备份或恢复您的 UniPacks。\n即使卸载应用，此文件夹仍会保留。</string>
 	<string name="backup_guide_step1">1. 将打开文件夹选择器</string>

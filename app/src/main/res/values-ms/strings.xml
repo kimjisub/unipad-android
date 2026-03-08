@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">Tunggu sebentar…</string>
 	<string name="importing">Mengimport</string>
 	<string name="loading">Memuatkan</string>
+	<string name="loading_phase_info">Membaca maklumat…</string>
+	<string name="loading_phase_keysound">Memuatkan bunyi…</string>
+	<string name="loading_phase_keyled">Memuatkan LED…</string>
+	<string name="loading_phase_autoplay">Memuatkan main auto…</string>
+	<string name="loading_phase_audio">Memuatkan audio…</string>
 	<string name="download">Muat Turun</string>
 	<string name="downloadWaiting">Menunggu Muat Turun</string>
 	<string name="downloading">Memuat Turun</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Lesen Sumber Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Komuniti</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Main Auto</string>
+	<string name="practiceMode">Latihan</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu maklum balas</string>
 	<string name="traceLog">Log Jejak</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">Keputusan</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">Pindahkan UniPacks</string>
+	<string name="transfer_button">Pindahkan</string>
+	<string name="transfer_source">Sumber</string>
+	<string name="transfer_target">Sasaran</string>
+	<string name="transfer_mode_label">Mod</string>
+	<string name="transfer_mode_copy">Salin</string>
+	<string name="transfer_mode_move">Pindah</string>
+	<string name="transfer_select_all">Pilih Semua</string>
+	<string name="transfer_deselect_all">Nyahpilih Semua</string>
+	<string name="transfer_selected_count">%d dipilih</string>
+	<string name="transfer_start">Mula</string>
+	<string name="transfer_copying">Menyalin: %s</string>
+	<string name="transfer_moving">Memindahkan: %s</string>
+	<string name="transfer_result_transferred">Dipindahkan</string>
+	<string name="transfer_result_skipped">Dilangkau (sudah wujud)</string>
+	<string name="transfer_result_failed">Gagal</string>
+	<string name="transfer_done">Selesai</string>
+	<string name="transfer_no_items">Tiada UniPack dipilih</string>
+	<string name="transfer_select_target">Pilih destinasi</string>
+	<string name="transfer_select_source">Pilih sumber</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Folder</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">Sandaran</string>
+	<string name="backup_description">Sambung ke folder Documents/Unipad</string>
+	<string name="backup_grant_access">Sambung Folder Sandaran</string>
+	<string name="backup_revoke">Putuskan Folder Sandaran</string>
+	<string name="backup_invalid_folder">Sila pilih folder Documents/Unipad</string>
+	<string name="backup_backup_button">Sandarkan</string>
+	<string name="backup_backup_description">Salin UniPacks ke folder sandaran</string>
+	<string name="backup_restore_button">Pulihkan</string>
+	<string name="backup_restore_description">Salin UniPacks dari folder sandaran</string>
 	<string name="backup_guide_title">Sambung Folder Sandaran</string>
 	<string name="backup_guide_description">Sambungkan folder Documents/Unipad untuk membuat sandaran atau memulihkan UniPacks anda.\nFolder ini kekal walaupun aplikasi dinyahpasang.</string>
 	<string name="backup_guide_step1">1. Pemilih folder akan dibuka</string>

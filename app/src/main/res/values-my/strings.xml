@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">ခဏစောင့်ပါ…</string>
 	<string name="importing">ထည့်သွင်းနေသည်</string>
 	<string name="loading">ဖွင့်နေသည်</string>
+	<string name="loading_phase_info">အချက်အလက် ဖတ်နေသည်…</string>
+	<string name="loading_phase_keysound">အသံများ ဖွင့်နေသည်…</string>
+	<string name="loading_phase_keyled">LED များ ဖွင့်နေသည်…</string>
+	<string name="loading_phase_autoplay">အလိုအလျောက်ဖွင့်ခြင်း ဖွင့်နေသည်…</string>
+	<string name="loading_phase_audio">အော်ဒီယို ဖွင့်နေသည်…</string>
 	<string name="download">ဒေါင်းလုဒ်</string>
 	<string name="downloadWaiting">ဒေါင်းလုဒ်စောင့်နေသည်</string>
 	<string name="downloading">ဒေါင်းလုဒ်ဆွဲနေသည်</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Open Source လိုင်စင်</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">အသိုင်းအဝိုင်း</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">အလိုအလျောက်ဖွင့်</string>
+	<string name="practiceMode">လေ့ကျင့်ခန်း</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">တုံ့ပြန်မှုမီး</string>
 	<string name="traceLog">ခြေရာခံမှတ်တမ်း</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">ရလဒ်</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">UniPacks လွှဲပြောင်း</string>
+	<string name="transfer_button">လွှဲပြောင်း</string>
+	<string name="transfer_source">ရင်းမြစ်</string>
+	<string name="transfer_target">ဦးတည်ရာ</string>
+	<string name="transfer_mode_label">မုဒ်</string>
+	<string name="transfer_mode_copy">ကူးယူ</string>
+	<string name="transfer_mode_move">ရွှေ့</string>
+	<string name="transfer_select_all">အားလုံးရွေး</string>
+	<string name="transfer_deselect_all">အားလုံးဖြုတ်</string>
+	<string name="transfer_selected_count">%d ခု ရွေးထား</string>
+	<string name="transfer_start">စတင်</string>
+	<string name="transfer_copying">ကူးယူနေသည်: %s</string>
+	<string name="transfer_moving">ရွှေ့နေသည်: %s</string>
+	<string name="transfer_result_transferred">လွှဲပြောင်းပြီး</string>
+	<string name="transfer_result_skipped">ကျော်လိုက်သည် (ရှိပြီးသား)</string>
+	<string name="transfer_result_failed">မအောင်မြင်ပါ</string>
+	<string name="transfer_done">ပြီးဆုံး</string>
+	<string name="transfer_no_items">UniPack မရွေးရသေးပါ</string>
+	<string name="transfer_select_target">ဦးတည်ရာ ရွေးပါ</string>
+	<string name="transfer_select_source">ရင်းမြစ် ရွေးပါ</string>
 	<string name="transfer_format_label">ဖော်မက်</string>
 	<string name="transfer_format_folder">ဖိုင်တွဲ</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">အရန်သိမ်း</string>
+	<string name="backup_description">Documents/Unipad ဖိုင်တွဲသို့ ချိတ်ဆက်</string>
+	<string name="backup_grant_access">အရန်ဖိုင်တွဲ ချိတ်ဆက်</string>
+	<string name="backup_revoke">အရန်ဖိုင်တွဲ ချိတ်ဆက်မှု ဖြုတ်</string>
+	<string name="backup_invalid_folder">Documents/Unipad ဖိုင်တွဲကို ရွေးပါ</string>
+	<string name="backup_backup_button">အရန်သိမ်း</string>
+	<string name="backup_backup_description">UniPacks ကို အရန်ဖိုင်တွဲသို့ ကူးယူ</string>
+	<string name="backup_restore_button">ပြန်လည်ရယူ</string>
+	<string name="backup_restore_description">အရန်ဖိုင်တွဲမှ UniPacks ကူးယူ</string>
 	<string name="backup_guide_title">အရန်ဖိုင်တွဲ ချိတ်ဆက်ရန်</string>
 	<string name="backup_guide_description">သင့် UniPacks များကို အရန်သိမ်းရန် သို့မဟုတ် ပြန်လည်ရယူရန် Documents/Unipad ဖိုင်တွဲကို ချိတ်ဆက်ပါ။\nဤဖိုင်တွဲသည် အက်ပ်ကို ဖယ်ရှားလျှင်ပင် ကျန်ရှိနေမည်ဖြစ်သည်။</string>
 	<string name="backup_guide_step1">1. ဖိုင်တွဲ ရွေးချယ်သူ ပွင့်လာမည်</string>

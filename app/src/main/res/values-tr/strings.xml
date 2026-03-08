@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">Bir an bekleyin…</string>
 	<string name="importing">İçe aktarılıyor</string>
 	<string name="loading">Yükleniyor</string>
+	<string name="loading_phase_info">Bilgi okunuyor…</string>
+	<string name="loading_phase_keysound">Sesler yükleniyor…</string>
+	<string name="loading_phase_keyled">LED\'ler yükleniyor…</string>
+	<string name="loading_phase_autoplay">Otomatik oynatma yükleniyor…</string>
+	<string name="loading_phase_audio">Ses yükleniyor…</string>
 	<string name="download">İndir</string>
 	<string name="downloadWaiting">İndirme Bekleniyor</string>
 	<string name="downloading">İndiriliyor</string>
@@ -51,7 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Açık Kaynak Lisansı</string>
 	<string name="FCMToken">FCM Token</string>
-	<string name="copyright">ⓒ 2016–2024. UniPad. All rights reserved.</string>
+	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
 	<string name="community">Topluluk</string>
@@ -80,6 +85,7 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Otomatik Oynatma</string>
+	<string name="practiceMode">Alıştırma</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Geri bildirim ışığı</string>
 	<string name="traceLog">İzleme Günlüğü</string>
@@ -223,26 +229,26 @@
 	<string name="migration_result">Sonuç</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
-	<string name="transfer_button">Transfer</string>
-	<string name="transfer_source">Source</string>
-	<string name="transfer_target">Target</string>
-	<string name="transfer_mode_label">Mode</string>
-	<string name="transfer_mode_copy">Copy</string>
-	<string name="transfer_mode_move">Move</string>
-	<string name="transfer_select_all">Select All</string>
-	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
-	<string name="transfer_start">Start</string>
-	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
-	<string name="transfer_result_transferred">Transferred</string>
-	<string name="transfer_result_skipped">Skipped (already exist)</string>
-	<string name="transfer_result_failed">Failed</string>
-	<string name="transfer_done">Done</string>
-	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
-	<string name="transfer_select_source">Select a source</string>
+	<string name="transfer_title">UniPack Aktarımı</string>
+	<string name="transfer_button">Aktar</string>
+	<string name="transfer_source">Kaynak</string>
+	<string name="transfer_target">Hedef</string>
+	<string name="transfer_mode_label">Mod</string>
+	<string name="transfer_mode_copy">Kopyala</string>
+	<string name="transfer_mode_move">Taşı</string>
+	<string name="transfer_select_all">Tümünü Seç</string>
+	<string name="transfer_deselect_all">Tümünü Kaldır</string>
+	<string name="transfer_selected_count">%d seçili</string>
+	<string name="transfer_start">Başlat</string>
+	<string name="transfer_copying">Kopyalanıyor: %s</string>
+	<string name="transfer_moving">Taşınıyor: %s</string>
+	<string name="transfer_result_transferred">Aktarıldı</string>
+	<string name="transfer_result_skipped">Atlandı (zaten mevcut)</string>
+	<string name="transfer_result_failed">Başarısız</string>
+	<string name="transfer_done">Tamamlandı</string>
+	<string name="transfer_no_items">UniPack seçilmedi</string>
+	<string name="transfer_select_target">Hedef seçin</string>
+	<string name="transfer_select_source">Kaynak seçin</string>
 	<string name="transfer_format_label">Biçim</string>
 	<string name="transfer_format_folder">Klasör</string>
 	<string name="transfer_format_zip">ZIP</string>
@@ -259,15 +265,15 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
-	<string name="backup_section">Backup</string>
-	<string name="backup_description">Connect to Documents/Unipad folder</string>
-	<string name="backup_grant_access">Connect Backup Folder</string>
-	<string name="backup_revoke">Disconnect Backup Folder</string>
-	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
-	<string name="backup_backup_button">Backup</string>
-	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
-	<string name="backup_restore_button">Restore</string>
-	<string name="backup_restore_description">Copy UniPacks from backup folder</string>
+	<string name="backup_section">Yedekleme</string>
+	<string name="backup_description">Documents/Unipad klasörüne bağlan</string>
+	<string name="backup_grant_access">Yedek Klasörü Bağla</string>
+	<string name="backup_revoke">Yedek Klasörü Bağlantısını Kes</string>
+	<string name="backup_invalid_folder">Lütfen Documents/Unipad klasörünü seçin</string>
+	<string name="backup_backup_button">Yedekle</string>
+	<string name="backup_backup_description">UniPack\'ları yedek klasörüne kopyala</string>
+	<string name="backup_restore_button">Geri Yükle</string>
+	<string name="backup_restore_description">Yedek klasöründen UniPack\'ları kopyala</string>
 	<string name="backup_guide_title">Yedek Klasörü Bağla</string>
 	<string name="backup_guide_description">UniPack\'larınızı yedeklemek veya geri yüklemek için Documents/Unipad klasörünü bağlayın.\nBu klasör uygulama kaldırılsa bile korunur.</string>
 	<string name="backup_guide_step1">1. Klasör seçici açılacak</string>
