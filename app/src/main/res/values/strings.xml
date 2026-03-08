@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">Just wait a moment…</string>
 	<string name="importing">Importing</string>
 	<string name="loading">Loading</string>
+	<string name="loading_phase_info">Reading info…</string>
+	<string name="loading_phase_keysound">Loading sounds…</string>
+	<string name="loading_phase_keyled">Loading LEDs…</string>
+	<string name="loading_phase_autoplay">Loading autoplay…</string>
+	<string name="loading_phase_audio">Loading audio…</string>
 	<string name="download">Download</string>
 	<string name="downloadWaiting">Download Waiting</string>
 	<string name="downloading">Downloading</string>
@@ -122,7 +127,8 @@
 	<string name="midi_lp_mk2" translatable="false">Launchpad MK2</string>
 	<string name="midi_lp_pro" translatable="false">Launchpad PRO</string>
 	<string name="midi_lp_x" translatable="false">Launchpad X</string>
-	<string name="midi_lp_mk3" translatable="false">Launchpad MK3</string>
+	<string name="midi_lp_mini_mk3" translatable="false">Launchpad Mini MK3</string>
+	<string name="midi_lp_mk3" translatable="false">Launchpad Pro MK3</string>
 	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
 	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>

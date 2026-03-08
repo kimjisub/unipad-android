@@ -39,10 +39,18 @@ class UniPackFolder(private val rootFolder: File) : UniPack() {
 	}
 
 	override fun loadDetail(): UniPack {
+		return loadDetailWithProgress { _, _, _ -> }
+	}
+
+	override fun loadDetailWithProgress(onPhase: (String, Int, Int) -> Unit): UniPack {
 		if (!criticalError) {
 			if (!detailLoaded) {
+				val totalPhases = 3
+				onPhase("keySound", 0, totalPhases)
 				keySound()
+				onPhase("keyLed", 1, totalPhases)
 				keyLed()
+				onPhase("autoPlay", 2, totalPhases)
 				autoPlay()
 				detailLoaded = true
 			}

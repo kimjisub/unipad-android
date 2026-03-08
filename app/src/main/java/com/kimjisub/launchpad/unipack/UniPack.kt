@@ -59,6 +59,14 @@ abstract class UniPack {
 	abstract fun loadInfo(): UniPack
 	abstract fun loadDetail(): UniPack
 
+	/**
+	 * Load detail with progress callback.
+	 * @param onPhase called with (phaseName, phaseIndex, totalPhases) before each phase starts.
+	 */
+	open fun loadDetailWithProgress(onPhase: (String, Int, Int) -> Unit): UniPack {
+		return loadDetail()
+	}
+
 	// Validates the file structure to detect a valid unipack.
 	abstract fun checkFile()
 

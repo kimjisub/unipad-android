@@ -21,7 +21,6 @@ import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
-import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -91,6 +90,8 @@ class PlayActivityViewModel(
 		fun finishActivity()
 		fun copyToClipboard(text: String)
 		fun setChainViewVisibility(index: Int, visibility: Int)
+		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
+		fun stopGuideAnimation(x: Int, y: Int)
 	}
 
 	var uiCallback: UiCallback? = null
@@ -120,6 +121,13 @@ class PlayActivityViewModel(
 	var isOptionWindowVisible by mutableStateOf(false)
 	var startReady by mutableStateOf(false)
 
+	// Unipack loading state
+	var unipackLoading by mutableStateOf(true)
+	var unipackLoadError by mutableStateOf<String?>(null)
+	var loadingPhase by mutableStateOf("")
+	var loadingPhaseIndex by mutableIntStateOf(0)
+	var loadingPhaseTotal by mutableIntStateOf(1)
+
 	// Sound loading state
 	var soundLoadingActive by mutableStateOf(false)
 	var soundLoadingProgress by mutableIntStateOf(0)
@@ -141,9 +149,17 @@ class PlayActivityViewModel(
 	lateinit var traceLogTable: Array<Array<Array<ArrayList<Int>>>>
 	lateinit var traceLogNextNum: IntArray
 
-	/** Load unipack from path. Returns true if loaded without critical error. */
+	/** Load unipack from path with progress reporting. */
 	fun loadUnipack(path: String): UniPack {
-		val pack = UniPackFolder(File(path)).load().loadDetail()
+		loadingPhase = "info"
+		loadingPhaseIndex = 0
+		loadingPhaseTotal = 4 // info, keySound, keyLed, autoPlay
+		val pack = UniPackFolder(File(path)).load()
+		loadingPhaseIndex = 1
+		pack.loadDetailWithProgress { phase, index, _ ->
+			loadingPhase = phase
+			loadingPhaseIndex = index + 1 // +1 because info is phase 0
+		}
 		unipack = pack
 		return pack
 	}
@@ -202,6 +218,7 @@ class PlayActivityViewModel(
 			if (bool) {
 				autoPlayRunner?.launch()
 			} else {
+				autoPlayRunner?.practiceGuide = false
 				autoPlayRunner?.stop()
 				padInit()
 				ledInit()
@@ -279,12 +296,7 @@ class PlayActivityViewModel(
 							if (unipack.squareButton) autoPlayControlVisible = true
 							autoPlayProgressMax = unipack.autoPlayTable?.elements?.size ?: 0
 							autoPlayProgress = 0
-							if (startAsPractice) {
-								startAsPractice = false
-								autoPlayStop()
-							} else {
-								autoPlayPlay()
-							}
+							autoPlayPlay()
 						}
 					}
 
@@ -300,8 +312,8 @@ class PlayActivityViewModel(
 						viewModelScope.launch { chain.value = c }
 					}
 
-					override fun onGuidePadOn(x: Int, y: Int) {
-						viewModelScope.launch { autoPlayGuidePad(x, y, true) }
+					override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {
+						viewModelScope.launch { autoPlayGuidePad(x, y, true, targetWallTimeMs) }
 					}
 
 					override fun onGuidePadOff(x: Int, y: Int) {
@@ -309,11 +321,10 @@ class PlayActivityViewModel(
 					}
 
 					override fun onGuideChainOn(c: Int) {
-						viewModelScope.launch { autoPlayGuideChain(c, true) }
-					}
-
-					override fun onGuideChainOff(c: Int) {
-						viewModelScope.launch { autoPlayGuideChain(c, false) }
+						viewModelScope.launch {
+							channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, -1, LED_ORANGE)
+							uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
+						}
 					}
 
 					override fun onRemoveGuide() {
@@ -330,6 +341,7 @@ class PlayActivityViewModel(
 
 					override fun onEnd() {
 						viewModelScope.launch {
+							autoPlayRunner?.practiceGuide = false
 							scbAutoPlay.setChecked(false)
 							if (unipack.ledAnimationTable != null) {
 								scbLed.setChecked(true)
@@ -350,9 +362,11 @@ class PlayActivityViewModel(
 			loadingListener = object : SoundRunner.LoadingListener {
 				override fun onStart(soundCount: Int) {
 					viewModelScope.launch {
+						loadingPhase = "audio"
 						soundLoadingMax = soundCount
 						soundLoadingProgress = 0
 						soundLoadingActive = true
+						unipackLoading = false
 					}
 				}
 
@@ -431,7 +445,6 @@ class PlayActivityViewModel(
 					uiCallback?.setLedPad(x, y)
 				}
 				ledRunner?.eventOn(x, y)
-				autoPlayCheckGuide(x, y)
 			} else {
 				soundRunner?.soundOff(x, y)
 				channelManager.remove(x, y, Channel.PRESSED)
@@ -585,16 +598,14 @@ class PlayActivityViewModel(
 
 	// autoPlay
 
-	private var startAsPractice = false
-
 	fun practiceStart() {
 		log("practiceStart")
 		val runner = autoPlayRunner ?: return
 		if (scbAutoPlay.isChecked()) {
-			autoPlayStop()
+			runner.practiceGuide = false
+			scbAutoPlay.setChecked(false)
 		} else {
-			startAsPractice = true
-			runner.playmode = false
+			runner.practiceGuide = true
 			scbAutoPlay.setChecked(true)
 		}
 	}
@@ -622,9 +633,6 @@ class PlayActivityViewModel(
 		padInit()
 		ledInit()
 		isAutoPlayPlaying = false
-		runner.achieve.set(-1)
-		scbFeedbackLight.setChecked(false)
-		scbLed.setChecked(false)
 	}
 
 	fun autoPlayPrev() {
@@ -633,10 +641,6 @@ class PlayActivityViewModel(
 		padInit()
 		ledInit()
 		runner.progressOffset(-40)
-		if (!runner.playmode) {
-			runner.achieve.set(-1)
-			runner.guideCheck()
-		}
 	}
 
 	fun autoPlayNext() {
@@ -645,31 +649,17 @@ class PlayActivityViewModel(
 		padInit()
 		ledInit()
 		runner.progressOffset(40)
-		if (!runner.playmode) {
-			runner.achieve.set(-1)
-			runner.guideCheck()
-		}
 	}
 
-	private fun autoPlayGuidePad(x: Int, y: Int, onOff: Boolean) {
+	private fun autoPlayGuidePad(x: Int, y: Int, onOff: Boolean, targetWallTimeMs: Long = 0) {
 		if (onOff) {
 			channelManager.add(x, y, Channel.GUIDE, -1, LED_ORANGE)
 			uiCallback?.setLedPad(x, y)
+			uiCallback?.startGuideAnimation(x, y, targetWallTimeMs)
 		} else {
 			channelManager.remove(x, y, Channel.GUIDE)
 			uiCallback?.setLedPad(x, y)
-		}
-	}
-
-	private fun autoPlayGuideChain(c: Int, onOff: Boolean) {
-		log("autoPlayGuideChain ($c, $onOff)")
-		if (onOff) {
-			channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, -1, LED_ORANGE)
-			uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
-		} else {
-			channelManager.remove(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE)
-			uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
-			chainBtnsRefresh()
+			uiCallback?.stopGuideAnimation(x, y)
 		}
 	}
 
@@ -679,6 +669,7 @@ class PlayActivityViewModel(
 			for (i in 0 until unipack.buttonX) for (j in 0 until unipack.buttonY) {
 				channelManager.remove(i, j, Channel.GUIDE)
 				uiCallback?.setLedPad(i, j)
+				uiCallback?.stopGuideAnimation(i, j)
 			}
 			for (i in 0 until CIRCLE_ARRAY_SIZE) {
 				channelManager.remove(-1, i, Channel.GUIDE)
@@ -687,19 +678,6 @@ class PlayActivityViewModel(
 			chainBtnsRefresh()
 		} catch (e: IndexOutOfBoundsException) {
 			Log.err("autoPlayRemoveGuide failed", e)
-		}
-	}
-
-	private fun autoPlayCheckGuide(x: Int, y: Int) {
-		val runner = autoPlayRunner ?: return
-		if (runner.active && !runner.playmode) {
-			val guideItems: MutableList<AutoPlay.Element.On> = runner.guideItems
-			for (autoPlay in guideItems) {
-				if (x == autoPlay.x && y == autoPlay.y && chain.value == autoPlay.currChain) {
-					runner.achieve.incrementAndGet()
-					break
-				}
-			}
 		}
 	}
 

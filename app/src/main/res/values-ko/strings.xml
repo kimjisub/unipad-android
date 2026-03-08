@@ -15,6 +15,11 @@
 	<string name="wait_a_sec">잠시만 기다려주세요…</string>
 	<string name="importing">불러오는 중</string>
 	<string name="loading">로딩중</string>
+	<string name="loading_phase_info">정보 읽는 중…</string>
+	<string name="loading_phase_keysound">사운드 로딩 중…</string>
+	<string name="loading_phase_keyled">LED 로딩 중…</string>
+	<string name="loading_phase_autoplay">오토플레이 로딩 중…</string>
+	<string name="loading_phase_audio">오디오 로딩 중…</string>
 	<string name="download">다운로드</string>
 	<string name="downloadWaiting">다운로드 대기중</string>
 	<string name="downloading">다운로드 중</string>

@@ -114,7 +114,9 @@ import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.MAX_CHAI
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.TOP_BAR_COUNT
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.VOLUME_LEVELS
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.CheckBoxState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import kotlin.math.roundToInt
 
@@ -128,7 +130,7 @@ class PlayActivity : BaseActivity() {
 	private var showRestartDialog by mutableStateOf(false)
 
 	// UI - Theme
-	private var theme: IThemeResources? = null
+	private var theme by mutableStateOf<IThemeResources?>(null)
 
 	// UI - AndroidView references
 	private var padsContainer: LinearLayout? = null
@@ -211,6 +213,14 @@ class PlayActivity : BaseActivity() {
 		override fun setChainViewVisibility(index: Int, visibility: Int) {
 			chainViews[index]?.visibility = visibility
 		}
+
+		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {
+			padViews[x][y]?.startGuideAnimation(targetWallTimeMs)
+		}
+
+		override fun stopGuideAnimation(x: Int, y: Int) {
+			padViews[x][y]?.stopGuideAnimation()
+		}
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -226,26 +236,6 @@ class PlayActivity : BaseActivity() {
 		val path = intent.getStringExtra("path") ?: run {
 			finish()
 			return
-		}
-
-		try {
-			val unipack = vm.loadUnipack(path)
-			if (unipack.errorDetail != null) {
-				unipackErrorIsCritical = unipack.criticalError
-				unipackErrorDialog = Pair(
-					if (unipack.criticalError) getString(string.error) else getString(string.warning),
-					unipack.errorDetail.orEmpty(),
-				)
-			}
-			if (!unipack.criticalError) start()
-		} catch (e: OutOfMemoryError) {
-			Log.err("UniPack load failed (OOM)", e)
-			Snackbar.make(findViewById(android.R.id.content), string.outOfMemory, Snackbar.LENGTH_SHORT).show()
-			finish()
-		} catch (e: Exception) {
-			Log.err("UniPack load failed", e)
-			Snackbar.make(findViewById(android.R.id.content), "${getString(string.exceptionOccurred)}\n${e.message}", Snackbar.LENGTH_SHORT).show()
-			finish()
 		}
 
 		setContent {
@@ -300,14 +290,46 @@ class PlayActivity : BaseActivity() {
 				}
 			}
 		}
+
+		// Load theme and unipack asynchronously after first frame
+		lifecycleScope.launch {
+			// Load theme on main thread (needs resource access) after first frame is drawn
+			initTheme()
+
+			try {
+				val unipack = withContext(Dispatchers.IO) {
+					vm.loadUnipack(path)
+				}
+				if (unipack.errorDetail != null) {
+					unipackErrorIsCritical = unipack.criticalError
+					unipackErrorDialog = Pair(
+						if (unipack.criticalError) getString(string.error) else getString(string.warning),
+						unipack.errorDetail.orEmpty(),
+					)
+				}
+				if (!unipack.criticalError) {
+					start()
+				} else {
+					vm.unipackLoading = false
+				}
+			} catch (e: OutOfMemoryError) {
+				Log.err("UniPack load failed (OOM)", e)
+				vm.unipackLoading = false
+				vm.unipackLoadError = getString(string.outOfMemory)
+				finish()
+			} catch (e: Exception) {
+				Log.err("UniPack load failed", e)
+				vm.unipackLoading = false
+				vm.unipackLoadError = "${getString(string.exceptionOccurred)}\n${e.message}"
+				finish()
+			}
+		}
 	}
 
 	private fun start() {
 		vm.initState()
 		padViews = Array(vm.unipack.buttonX) { Array(vm.unipack.buttonY) { null } }
 		chainViews = Array(CIRCLE_ARRAY_SIZE) { null }
-
-		initTheme()
 		vm.startReady = theme != null
 	}
 
@@ -331,27 +353,82 @@ class PlayActivity : BaseActivity() {
 	// region Compose UI
 
 	@Composable
-	private fun PlayScreen() {
-		if (!vm.startReady) return
+	private fun LoadingContent() {
+		val isSoundLoading = vm.soundLoadingActive
+		val phaseLabel: String
+		val progress: Float
 
+		if (isSoundLoading) {
+			phaseLabel = stringResource(string.loading_phase_audio)
+			progress = if (vm.soundLoadingMax > 0)
+				vm.soundLoadingProgress.toFloat() / vm.soundLoadingMax.toFloat()
+			else 0f
+		} else {
+			phaseLabel = when (vm.loadingPhase) {
+				"info" -> stringResource(string.loading_phase_info)
+				"keySound" -> stringResource(string.loading_phase_keysound)
+				"keyLed" -> stringResource(string.loading_phase_keyled)
+				"autoPlay" -> stringResource(string.loading_phase_autoplay)
+				else -> stringResource(string.loading)
+			}
+			progress = vm.loadingPhaseIndex.toFloat() / vm.loadingPhaseTotal.toFloat()
+		}
+
+		Column(
+			modifier = Modifier
+				.width(280.dp)
+				.background(
+					Color(0x99000000),
+					RoundedCornerShape(16.dp),
+				)
+				.padding(24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally,
+		) {
+			Text(
+				text = stringResource(string.loading),
+				color = Color.White,
+				fontSize = 18.sp,
+				fontWeight = FontWeight.Bold,
+			)
+			Spacer(modifier = Modifier.height(16.dp))
+			LinearProgressIndicator(
+				progress = { progress },
+				modifier = Modifier.fillMaxWidth().height(6.dp),
+				color = Color(0xFF4FC3F7),
+				trackColor = Color(0xFF333333),
+			)
+			Spacer(modifier = Modifier.height(12.dp))
+			Text(
+				text = if (isSoundLoading) "$phaseLabel (${vm.soundLoadingProgress}/${vm.soundLoadingMax})" else phaseLabel,
+				color = Color(0xFFCCCCCC),
+				fontSize = 13.sp,
+			)
+		}
+	}
+
+	@Composable
+	private fun PlayScreen() {
 		val density = LocalDensity.current
 		val paddingPx = with(density) { 8.dp.toPx().toInt() }
 
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
-				.onSizeChanged { size ->
-					if (!vm.uiLoaded && size.width > 0 && size.height > 0) {
-						// Post to run after the current layout pass so that native views
-						// added in initLayout are measured in the next Compose layout pass
-						Handler(Looper.getMainLooper()).post {
-							initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
-							vm.initRunner()
-							vm.initSetting()
+				.let { mod ->
+					if (vm.startReady) {
+						mod.onSizeChanged { size ->
+							if (!vm.uiLoaded && size.width > 0 && size.height > 0) {
+								Handler(Looper.getMainLooper()).post {
+									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
+									vm.initRunner()
+									vm.initSetting()
+								}
+							}
 						}
-					}
+					} else mod
 				}
 		) {
+			// Background - always visible
 			Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 				theme?.playbg?.let { bg ->
 					val bitmap = remember(bg) { bg.toBitmap().asImageBitmap() }
@@ -372,132 +449,91 @@ class PlayActivity : BaseActivity() {
 					modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).width(90.dp)
 				)
 			}
-			Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-				if (vm.optionViewVisible) {
-					SideCheckPanel(modifier = Modifier.align(Alignment.CenterStart))
-				}
-				// Custom layout that centers pads independently and positions chains relative to pads
-				// Replicates the old RelativeLayout behavior where pads were layout_centerHorizontal/Vertical
-				// and chains were layout_toStartOf/toEndOf pads
-				Layout(
-					content = {
-						AndroidView(
-							factory = { ctx -> LinearLayout(ctx).apply {
-								orientation = LinearLayout.VERTICAL
-								layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-							}.also { chainsLeftContainer = it } },
-							modifier = Modifier.wrapContentSize()
-						)
-						AndroidView(
-							factory = { ctx -> LinearLayout(ctx).apply {
-								orientation = LinearLayout.VERTICAL
-								layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-							}.also { padsContainer = it } },
-							modifier = Modifier.wrapContentSize()
-						)
-						AndroidView(
-							factory = { ctx -> LinearLayout(ctx).apply {
-								orientation = LinearLayout.VERTICAL
-								layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-							}.also { chainsRightContainer = it } },
-							modifier = Modifier.wrapContentSize()
-						)
-					},
-					modifier = Modifier.fillMaxSize()
-				) { measurables, constraints ->
-					val unconstrained = constraints.copy(minWidth = 0, minHeight = 0)
-					val leftPlaceable = measurables[0].measure(unconstrained)
-					val padPlaceable = measurables[1].measure(unconstrained)
-					val rightPlaceable = measurables[2].measure(unconstrained)
-					layout(constraints.maxWidth, constraints.maxHeight) {
-						// Center pads independently
-						val padX = (constraints.maxWidth - padPlaceable.width) / 2
-						val padY = (constraints.maxHeight - padPlaceable.height) / 2
-						padPlaceable.place(padX, padY)
-						// Position chains relative to pads (aligned to top of pads)
-						leftPlaceable.place(padX - leftPlaceable.width, padY)
-						rightPlaceable.place(padX + padPlaceable.width, padY)
+
+			if (vm.startReady) {
+				// Main play content
+				Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+					if (vm.optionViewVisible) {
+						SideCheckPanel(modifier = Modifier.align(Alignment.CenterStart))
+					}
+					// Custom layout that centers pads independently and positions chains relative to pads
+					Layout(
+						content = {
+							AndroidView(
+								factory = { ctx -> LinearLayout(ctx).apply {
+									orientation = LinearLayout.VERTICAL
+									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+								}.also { chainsLeftContainer = it } },
+								modifier = Modifier.wrapContentSize()
+							)
+							AndroidView(
+								factory = { ctx -> LinearLayout(ctx).apply {
+									orientation = LinearLayout.VERTICAL
+									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+								}.also { padsContainer = it } },
+								modifier = Modifier.wrapContentSize()
+							)
+							AndroidView(
+								factory = { ctx -> LinearLayout(ctx).apply {
+									orientation = LinearLayout.VERTICAL
+									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+								}.also { chainsRightContainer = it } },
+								modifier = Modifier.wrapContentSize()
+							)
+						},
+						modifier = Modifier.fillMaxSize()
+					) { measurables, constraints ->
+						val unconstrained = constraints.copy(minWidth = 0, minHeight = 0)
+						val leftPlaceable = measurables[0].measure(unconstrained)
+						val padPlaceable = measurables[1].measure(unconstrained)
+						val rightPlaceable = measurables[2].measure(unconstrained)
+						layout(constraints.maxWidth, constraints.maxHeight) {
+							val padX = (constraints.maxWidth - padPlaceable.width) / 2
+							val padY = (constraints.maxHeight - padPlaceable.height) / 2
+							padPlaceable.place(padX, padY)
+							leftPlaceable.place(padX - leftPlaceable.width, padY)
+							rightPlaceable.place(padX + padPlaceable.width, padY)
+						}
 					}
 				}
-			}
-			// Menu button (bottom-right)
-			if (vm.optionViewVisible && !vm.isOptionWindowVisible) {
-				Icon(
-					imageVector = Icons.Default.Menu,
-					contentDescription = stringResource(string.menu),
-					tint = Color.White.copy(alpha = 0.7f),
-					modifier = Modifier
-						.align(Alignment.BottomEnd)
-						.padding(16.dp)
-						.size(32.dp)
-						.clickable { vm.toggleOptionWindow(true) },
-				)
-			}
-			AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
-				Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable { vm.toggleOptionWindow(false) })
-			}
-			AnimatedVisibility(
-				visible = vm.isOptionWindowVisible,
-				enter = slideInHorizontally(tween(300)) { it },
-				exit = slideOutHorizontally(tween(250)) { it },
-				modifier = Modifier.align(Alignment.CenterEnd),
-			) {
-				OptionPanel()
+				// Menu button (bottom-right)
+				if (vm.optionViewVisible && !vm.isOptionWindowVisible) {
+					Icon(
+						imageVector = Icons.Default.Menu,
+						contentDescription = stringResource(string.menu),
+						tint = Color.White.copy(alpha = 0.7f),
+						modifier = Modifier
+							.align(Alignment.BottomEnd)
+							.padding(16.dp)
+							.size(32.dp)
+							.clickable { vm.toggleOptionWindow(true) },
+					)
+				}
+				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+					Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable { vm.toggleOptionWindow(false) })
+				}
+				AnimatedVisibility(
+					visible = vm.isOptionWindowVisible,
+					enter = slideInHorizontally(tween(300)) { it },
+					exit = slideOutHorizontally(tween(250)) { it },
+					modifier = Modifier.align(Alignment.CenterEnd),
+				) {
+					OptionPanel()
+				}
 			}
 
-			// Sound loading overlay
-			if (vm.soundLoadingActive) {
-				SoundLoadingOverlay(
-					progress = vm.soundLoadingProgress,
-					max = vm.soundLoadingMax,
-				)
+			// Loading overlay (unipack parsing or sound loading)
+			if (vm.unipackLoading || vm.soundLoadingActive) {
+				Box(
+					modifier = Modifier.fillMaxSize(),
+					contentAlignment = Alignment.Center,
+				) {
+					LoadingContent()
+				}
 			}
 		}
 	}
 
-	@Composable
-	private fun SoundLoadingOverlay(progress: Int, max: Int) {
-		Box(
-			modifier = Modifier
-				.fillMaxSize()
-				.background(Color(0xCC000000)),
-			contentAlignment = Alignment.Center,
-		) {
-			Column(
-				horizontalAlignment = Alignment.CenterHorizontally,
-				modifier = Modifier
-					.background(Color(0xFF1E2736), RoundedCornerShape(12.dp))
-					.padding(horizontal = 32.dp, vertical = 24.dp),
-			) {
-				Text(
-					text = stringResource(string.loading),
-					color = Color.White,
-					fontSize = 16.sp,
-				)
-
-				androidx.compose.foundation.layout.Spacer(
-					modifier = Modifier.padding(top = 12.dp),
-				)
-
-				LinearProgressIndicator(
-					progress = { if (max > 0) progress.toFloat() / max else 0f },
-					modifier = Modifier
-						.width(200.dp)
-						.padding(vertical = 4.dp),
-					color = Color(0xFF4283E6),
-					trackColor = Color(0xFF2A3648),
-					drawStopIndicator = {},
-				)
-
-				Text(
-					text = "$progress / $max",
-					color = Color(0xFFA6B4C9),
-					fontSize = 12.sp,
-					modifier = Modifier.padding(top = 4.dp),
-				)
-			}
-		}
-	}
 
 	@Composable
 	private fun SideCheckPanel(modifier: Modifier = Modifier) {
