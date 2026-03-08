@@ -21,6 +21,13 @@
 		android:layout_height="match_parent"
 		android:importantForAccessibility="no" />
 
+	<com.kimjisub.design.view.GuideTimingView
+		android:id="@+id/guideTiming"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:visibility="gone"
+		android:importantForAccessibility="no" />
+
 	<TextView
 		android:id="@+id/traceLog"
 		android:layout_width="wrap_content"

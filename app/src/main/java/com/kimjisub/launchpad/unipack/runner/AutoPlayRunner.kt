@@ -12,8 +12,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.atomic.AtomicInteger
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -25,12 +23,9 @@ class AutoPlayRunner(
 	var playmode = true
 	@Volatile
 	var beforeStartPlaying = true
+
 	@Volatile
-	var afterMatchChain = false
-	@Volatile
-	var beforeChain = -1
-	var guideItems: MutableList<AutoPlay.Element.On> = CopyOnWriteArrayList()
-	val achieve = AtomicInteger(0)
+	var practiceGuide = false
 
 	@Volatile
 	var progress = 0
@@ -49,14 +44,37 @@ class AutoPlayRunner(
 		fun onPadTouchOn(x: Int, y: Int)
 		fun onPadTouchOff(x: Int, y: Int)
 		fun onChainChange(c: Int)
-		fun onGuidePadOn(x: Int, y: Int)
+		fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long)
 		fun onGuidePadOff(x: Int, y: Int)
 		fun onGuideChainOn(c: Int)
-		fun onGuideChainOff(c: Int)
 		fun onRemoveGuide()
 		fun chainButsRefresh()
 		fun onProgressUpdate(progress: Int)
 		fun onEnd()
+	}
+
+	// Guide timeline for practice mode
+	private data class GuideEvent(val timeMs: Long, val x: Int, val y: Int, val chain: Int)
+	private var guideTimeline: List<GuideEvent> = emptyList()
+	private var guideIndex = 0
+	private var waitingForChain = -1
+	private var waitStartTime = 0L
+
+	companion object {
+		const val GUIDE_LOOKAHEAD_MS = 800L
+	}
+
+	private fun buildGuideTimeline(autoPlay: AutoPlay): List<GuideEvent> {
+		val events = mutableListOf<GuideEvent>()
+		var time = 0L
+		for (element in autoPlay.elements) {
+			when (element) {
+				is AutoPlay.Element.Delay -> time += element.delay
+				is AutoPlay.Element.On -> events.add(GuideEvent(time, element.x, element.y, element.currChain))
+				else -> {}
+			}
+		}
+		return events
 	}
 
 	// Coroutine
@@ -70,51 +88,89 @@ class AutoPlayRunner(
 				listener.onStart()
 
 				val autoPlay = unipack.autoPlayTable ?: return@launch
+
+				if (practiceGuide) {
+					guideTimeline = buildGuideTimeline(autoPlay)
+					guideIndex = 0
+					waitingForChain = -1
+				}
+
 				try {
 					var delayAccum: Long = 0
-					val startTime = SystemClock.elapsedRealtime()
+					var startTime = SystemClock.elapsedRealtime()
 					while (progress < autoPlay.elements.size && isActive) {
 						val currTime = SystemClock.elapsedRealtime()
 						if (playmode) {
-							beforeStartPlaying()
-							if (delayAccum <= currTime - startTime) {
-								when (val element: AutoPlay.Element =
-									autoPlay.elements[progress]) {
-									is AutoPlay.Element.On -> {
-										if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-										unipack.soundPush(element.currChain, element.x, element.y, element.num)
-										unipack.ledPush(element.currChain, element.x, element.y, element.num)
-										listener.onPadTouchOn(element.x, element.y)
-									}
-
-									is AutoPlay.Element.Off -> {
-										if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-										listener.onPadTouchOff(element.x, element.y)
-									}
-									is AutoPlay.Element.Delay -> {
-										delayAccum += element.delay.toLong()
-									}
-									is AutoPlay.Element.Chain -> {
-										listener.onChainChange(element.c)
-									}
-								}
-								progress++
-							}
-						} else {
-							beforeStartPlaying = true
-							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
-							val firstGuide = guideItems.firstOrNull()
-							if (firstGuide != null && firstGuide.currChain != chain.value) {
-								if (beforeChain == -1 || beforeChain != chain.value) {
-									beforeChain = chain.value
-									afterMatchChain = true
+							// Practice mode: waiting for chain change
+							if (practiceGuide && waitingForChain >= 0) {
+								if (chain.value == waitingForChain) {
+									// User switched to correct chain — resume
+									startTime += currTime - waitStartTime
+									waitingForChain = -1
 									listener.onRemoveGuide()
-									listener.onGuideChainOn(firstGuide.currChain)
+								} else {
+									// Keep delayAccum in sync while waiting
+									if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
 								}
 							} else {
-								afterMatchChain()
-								guideCheck()
+								beforeStartPlaying()
+
+								// Guide lookahead
+								if (practiceGuide) {
+									val elapsed = currTime - startTime
+									while (guideIndex < guideTimeline.size) {
+										val event = guideTimeline[guideIndex]
+										if (event.timeMs <= elapsed + GUIDE_LOOKAHEAD_MS) {
+											if (event.chain != chain.value) {
+												// Chain mismatch — pause and show chain indicator
+												waitingForChain = event.chain
+												waitStartTime = currTime
+												listener.onRemoveGuide()
+												listener.onGuideChainOn(event.chain)
+												break
+											}
+											listener.onGuidePadOn(event.x, event.y, startTime + event.timeMs)
+											guideIndex++
+										} else break
+									}
+								}
+
+								if (waitingForChain < 0 && delayAccum <= currTime - startTime) {
+									when (val element: AutoPlay.Element =
+										autoPlay.elements[progress]) {
+										is AutoPlay.Element.On -> {
+											if (practiceGuide) {
+												listener.onGuidePadOff(element.x, element.y)
+											} else {
+												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+												unipack.soundPush(element.currChain, element.x, element.y, element.num)
+												unipack.ledPush(element.currChain, element.x, element.y, element.num)
+												listener.onPadTouchOn(element.x, element.y)
+											}
+										}
+
+										is AutoPlay.Element.Off -> {
+											if (!practiceGuide) {
+												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+												listener.onPadTouchOff(element.x, element.y)
+											}
+										}
+										is AutoPlay.Element.Delay -> {
+											delayAccum += element.delay.toLong()
+										}
+										is AutoPlay.Element.Chain -> {
+											if (!practiceGuide) {
+												listener.onChainChange(element.c)
+											}
+										}
+									}
+									progress++
+								}
 							}
+						} else {
+							// Paused: keep delayAccum in sync so resume is seamless
+							beforeStartPlaying = true
+							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
 						}
 						delay(loopDelay)
 					}
@@ -133,30 +189,10 @@ class AutoPlayRunner(
 		job = null
 	}
 
-	// Functions
-
 	private fun beforeStartPlaying() {
 		if (beforeStartPlaying) {
 			beforeStartPlaying = false
 			listener.onRemoveGuide()
-		}
-	}
-
-	private fun afterMatchChain() {
-		if (afterMatchChain) {
-			afterMatchChain = false
-			listener.chainButsRefresh()
-			for (i in 0 until unipack.chain) listener.onGuideChainOff(i)
-			beforeChain = -1
-			for (i in guideItems.indices) {
-				val element: AutoPlay.Element = guideItems[i]
-				when (element) {
-					is AutoPlay.Element.On -> listener.onGuidePadOn(element.x, element.y)
-					is AutoPlay.Element.Off,
-					is AutoPlay.Element.Chain,
-					is AutoPlay.Element.Delay -> {}
-				}
-			}
 		}
 	}
 
@@ -170,42 +206,5 @@ class AutoPlayRunner(
 				range.last < targetProgress -> range.last
 				else -> targetProgress
 			}
-	}
-
-
-	fun guideCheck() {
-		if (achieve.get() >= guideItems.size || achieve.get() == -1) {
-			achieve.set(0)
-			for (i in guideItems.indices) {
-				val element: AutoPlay.Element = guideItems[i]
-				when (element) {
-					is AutoPlay.Element.On -> listener.onGuidePadOff(element.x, element.y)
-					is AutoPlay.Element.Off,
-					is AutoPlay.Element.Chain,
-					is AutoPlay.Element.Delay -> {}
-				}
-			}
-			guideItems.clear()
-			val autoPlay = unipack.autoPlayTable ?: return
-			var addedDelay = 0
-			var complete = false
-			while (progress < autoPlay.elements.size && addedDelay <= 20) {
-				val element: AutoPlay.Element = autoPlay.elements[progress]
-				when (element) {
-					is AutoPlay.Element.On -> {
-						unipack.soundPush(element.currChain, element.x, element.y, element.num)
-						unipack.ledPush(element.currChain, element.x, element.y, element.num)
-						listener.onGuidePadOn(element.x, element.y)
-						complete = true
-						guideItems.add(element)
-					}
-
-					is AutoPlay.Element.Delay -> if (complete) addedDelay += element.delay
-					is AutoPlay.Element.Off,
-					is AutoPlay.Element.Chain -> {}
-				}
-				progress++
-			}
-		}
 	}
 }

@@ -57,6 +57,18 @@ class PadView
 		return this
 	}
 
+	//========================================================================================= GuideTiming
+
+	fun startGuideAnimation(targetTimeMs: Long): PadView {
+		b.guideTiming.startAnimation(targetTimeMs)
+		return this
+	}
+
+	fun stopGuideAnimation(): PadView {
+		b.guideTiming.stopAnimation()
+		return this
+	}
+
 	//========================================================================================= TraceLog
 
 
