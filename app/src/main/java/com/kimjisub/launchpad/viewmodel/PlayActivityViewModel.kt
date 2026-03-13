@@ -137,6 +137,7 @@ class PlayActivityViewModel(
 
 	// Core
 	lateinit var channelManager: ChannelManager
+	val isChannelManagerInitialized get() = ::channelManager.isInitialized
 
 	// Runners
 	var ledRunner: LedRunner? = null

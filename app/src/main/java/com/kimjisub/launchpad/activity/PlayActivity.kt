@@ -121,6 +121,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
+import android.content.Intent
 import kotlin.math.roundToInt
 
 class PlayActivity : BaseActivity() {
@@ -1125,6 +1126,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun updateVolumeUI() {
+		if (!::vm.isInitialized || !vm.isChannelManagerInitialized) return
 		val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
 		val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
 		var level = (volume / maxVolume * VOLUME_LEVELS).roundToInt() + 1
@@ -1154,6 +1156,12 @@ class PlayActivity : BaseActivity() {
 		contentResolver.unregisterContentObserver(volumeObserver)
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
+	}
+
+	override fun shouldShowMidiConnectedBanner(): Boolean = true
+
+	override fun onMidiBannerAction() {
+		startActivity(Intent(applicationContext, MidiSelectActivity::class.java))
 	}
 
 	override fun onDestroy() {
