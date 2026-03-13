@@ -280,7 +280,9 @@ class MainActivity : BaseActivity() {
 			} ?: Comparator { _, _ -> 0 }
 
 			val sorted = try {
-				newList.sortedWith(comparator)
+				newList
+					.distinctBy { it.unipack.getPathString() }
+					.sortedWith(comparator)
 			} catch (e: RuntimeException) {
 				Log.err("List sort failed", e)
 				newList
@@ -466,6 +468,12 @@ class MainActivity : BaseActivity() {
 		super.onPause()
 		removeController(midiController)
 		fbStoreCount.attachEventListener(false)
+	}
+
+	override fun shouldShowMidiConnectedBanner(): Boolean = true
+
+	override fun onMidiBannerAction() {
+		startActivity(Intent(applicationContext, MidiSelectActivity::class.java))
 	}
 
 	override fun onDestroy() {
