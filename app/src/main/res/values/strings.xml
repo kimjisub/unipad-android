@@ -121,6 +121,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Connecting launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
+	<string name="midi_open_panel">Open</string>
+	<string name="midi_connected_banner">MIDI connected: %1$s</string>
+	<string name="midi_disconnected">Disconnected</string>
 	<string name="signal_SpeedFirst">Speed first</string>
 	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 	<string name="midi_lp_s" translatable="false">Launchpad S</string>

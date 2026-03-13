@@ -1158,12 +1158,6 @@ class PlayActivity : BaseActivity() {
 		midiController?.let { removeController(it) }
 	}
 
-	override fun shouldShowMidiConnectedBanner(): Boolean = true
-
-	override fun onMidiBannerAction() {
-		startActivity(Intent(applicationContext, MidiSelectActivity::class.java))
-	}
-
 	override fun onDestroy() {
 		super.onDestroy()
 		vm.uiCallback = null

@@ -77,12 +77,12 @@
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
 		<activity
-			android:name=".activity.MidiSelectActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:name=".activity.UsbMidiHandlerActivity"
 			android:exported="true"
 			android:launchMode="singleInstance"
-			android:screenOrientation="sensorLandscape"
-			tools:ignore="DiscouragedApi,LockedOrientationActivity">
+			android:theme="@android:style/Theme.NoDisplay"
+			android:noHistory="true"
+			tools:ignore="DiscouragedApi">
 			<intent-filter>
 				<action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
 			</intent-filter>
@@ -91,6 +91,12 @@
 				android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
 				android:resource="@xml/device_filter" />
 		</activity>
+
+		<activity
+			android:name=".activity.MidiSelectActivity"
+			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+			android:screenOrientation="sensorLandscape"
+			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 		<activity
 			android:name=".activity.ImportPackByUrlActivity"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"

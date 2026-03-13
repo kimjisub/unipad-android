@@ -470,12 +470,6 @@ class MainActivity : BaseActivity() {
 		fbStoreCount.attachEventListener(false)
 	}
 
-	override fun shouldShowMidiConnectedBanner(): Boolean = true
-
-	override fun onMidiBannerAction() {
-		startActivity(Intent(applicationContext, MidiSelectActivity::class.java))
-	}
-
 	override fun onDestroy() {
 		super.onDestroy()
 		removeController(midiController)

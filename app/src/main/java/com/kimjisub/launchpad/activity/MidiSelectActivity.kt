@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.activity
 
-import android.hardware.usb.UsbManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
@@ -23,9 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -56,83 +53,41 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
-import com.kimjisub.launchpad.tool.AutorunTimer
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import kotlin.reflect.KClass
 
 class MidiSelectActivity : BaseActivity() {
-	companion object {
-		private const val AUTORUN_TIMER_DURATION_MS = 5000L
-	}
 
-	private val remainingSeconds = mutableStateOf<Long?>(null)
 	private val isConnected = mutableStateOf(false)
-	private val logText = mutableStateOf("")
 	private val selectedIndex = mutableIntStateOf(0)
-
-	private val autorunTimer: AutorunTimer = AutorunTimer(object : AutorunTimer.OnListener {
-		override fun onEverySec(leftTime: Long, elapsedTime: Long) {
-			remainingSeconds.value = leftTime / 1000
-		}
-
-		override fun onTimeOut() {
-			finish()
-		}
-
-		override fun onCanceled() {
-			remainingSeconds.value = null
-		}
-	}, AUTORUN_TIMER_DURATION_MS)
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		autorunTimer.start()
 
-		MidiConnection.listener = object : MidiConnection.Listener {
-			override fun onConnectedListener() {
-				isConnected.value = true
-			}
+		isConnected.value = MidiConnection.connectedDevice != null
 
-			override fun onChangeDriver(driverRef: DriverRef) {
-				for ((i, device) in midiDevices.withIndex()) {
-					if (device.driverClass == driverRef::class) {
-						selectedIndex.intValue = i
-						break
-					}
-				}
-			}
-
-			override fun onUiLog(log: String) {
-				logText.value += log + "\n"
+		val currentDriver = MidiConnection.driver
+		for ((i, device) in midiDevices.withIndex()) {
+			if (device.driverClass == currentDriver::class) {
+				selectedIndex.intValue = i
+				break
 			}
 		}
-
-		val service = getSystemService(USB_SERVICE) as UsbManager
-		MidiConnection.initConnection(intent, service, this)
 
 		setContent {
 			UniPadTheme {
 				MidiSelectScreen(
-					remainingSeconds = remainingSeconds.value,
 					isConnected = isConnected.value,
-					logText = logText.value,
 					selectedIndex = selectedIndex.intValue,
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
-						val device = midiDevices[index]
-						val driver = device.createDriver()
+						val driver = midiDevices[index].createDriver()
 						MidiConnection.driver = driver
 					},
-					onUserInteract = { autorunTimer.cancel() },
 					onClose = { finish() },
 				)
 			}
 		}
-	}
-
-	override fun onDestroy() {
-		MidiConnection.listener = null
-		super.onDestroy()
 	}
 }
 
@@ -157,12 +112,9 @@ private val midiDevices = listOf(
 
 @Composable
 private fun MidiSelectScreen(
-	remainingSeconds: Long?,
 	isConnected: Boolean,
-	logText: String,
 	selectedIndex: Int,
 	onDeviceSelect: (Int) -> Unit,
-	onUserInteract: () -> Unit,
 	onClose: () -> Unit,
 ) {
 	Row(
@@ -170,7 +122,7 @@ private fun MidiSelectScreen(
 			.fillMaxSize()
 			.background(MaterialTheme.colorScheme.background),
 	) {
-		// Left panel (~35%) - Selected device preview + settings
+		// Left panel (~35%) - Selected device preview
 		Column(
 			modifier = Modifier
 				.weight(0.35f)
@@ -178,7 +130,6 @@ private fun MidiSelectScreen(
 				.padding(20.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			// Connection status
 			Text(
 				text = if (isConnected)
 					stringResource(R.string.launchpadConnecting)
@@ -193,7 +144,6 @@ private fun MidiSelectScreen(
 
 			Spacer(modifier = Modifier.height(12.dp))
 
-			// Selected device large preview
 			Crossfade(
 				targetState = selectedIndex,
 				label = "devicePreview",
@@ -221,50 +171,13 @@ private fun MidiSelectScreen(
 
 			HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 
-			Spacer(modifier = Modifier.height(16.dp))
-
-			// Signal Mode
 			Spacer(modifier = Modifier.weight(1f))
 
-			// Log
-			if (logText.isNotEmpty()) {
-				HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-				Spacer(modifier = Modifier.height(8.dp))
-				Text(
-					text = "Log",
-					color = MaterialTheme.colorScheme.onBackground,
-					style = MaterialTheme.typography.titleSmall,
-					modifier = Modifier.fillMaxWidth(),
-				)
-				Spacer(modifier = Modifier.height(4.dp))
-				Text(
-					text = logText,
-					color = MaterialTheme.colorScheme.onSurfaceVariant,
-					fontSize = 11.sp,
-					lineHeight = 14.sp,
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(80.dp)
-						.verticalScroll(rememberScrollState()),
-				)
-				Spacer(modifier = Modifier.height(12.dp))
-			}
-
-			// Close button
 			Button(
-				onClick = {
-					onUserInteract()
-					onClose()
-				},
+				onClick = { onClose() },
 				modifier = Modifier.fillMaxWidth(),
 			) {
 				Text(text = stringResource(android.R.string.ok))
-				if (remainingSeconds != null) {
-					Text(
-						text = " ($remainingSeconds)",
-						fontSize = 12.sp,
-					)
-				}
 			}
 		}
 
@@ -283,10 +196,7 @@ private fun MidiSelectScreen(
 				DeviceCard(
 					device = device,
 					isSelected = index == selectedIndex,
-					onClick = {
-						onUserInteract()
-						onDeviceSelect(index)
-					},
+					onClick = { onDeviceSelect(index) },
 				)
 			}
 		}

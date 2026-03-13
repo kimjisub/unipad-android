@@ -128,6 +128,11 @@ object MidiConnection {
 	private var onCycleListener: DriverRef.OnCycleListener? = null
 	private var onReceiveSignalListener: DriverRef.OnReceiveSignalListener? = null
 	private var onSendSignalListener: DriverRef.OnSendSignalListener? = null
+	@Volatile
+	var connectedDevice: ConnectedDeviceSnapshot? = null
+		private set
+	@Volatile
+	var connectionObserver: ConnectionObserver? = null
 
 	@Volatile
 	var driver: DriverRef = Noting()
@@ -277,12 +282,15 @@ object MidiConnection {
 				Log.midiDetail("Driver: ${entry.name}$idStr (PID=0x${"%04X".format(pid)})")
 				interfaceNum = entry.interfaceNum
 				driver = entry.factory()
+				publishConnectedDevice(entry.name)
 			} else if (pid and MATRIX_PRODUCT_ID_MASK == MATRIX_PRODUCT_ID_BASE) {
 				listener?.onUiLog("prediction : 203 Matrix")
 				driver = Matrix()
+				publishConnectedDevice("Matrix")
 			} else {
 				listener?.onUiLog("prediction : unknown (PID=$pid)")
 				driver = MasterKeyboard()
+				publishConnectedDevice("Master Keyboard")
 			}
 		} catch (e: SecurityException) {
 			Log.err("USB driver selection failed", e)
@@ -351,6 +359,7 @@ object MidiConnection {
 		}
 
 		listener?.onConnectedListener()
+		connectedDevice?.let { connectionObserver?.onConnected(it) }
 
 		// Try MIDI API for SysEx first, then claim USB interface
 		initMidiApiDevice(device)
@@ -630,8 +639,17 @@ object MidiConnection {
 
 			withContext(Dispatchers.Main) {
 				driver.onDisconnected()
+				connectedDevice = null
+				connectionObserver?.onDisconnected()
 			}
 		}
+	}
+
+	private fun publishConnectedDevice(name: String) {
+		connectedDevice = ConnectedDeviceSnapshot(
+			name = name,
+			eventId = SystemClock.elapsedRealtime()
+		)
 	}
 
 	// Driver
@@ -667,4 +685,14 @@ object MidiConnection {
 
 		fun onUiLog(log: String)
 	}
+
+	interface ConnectionObserver {
+		fun onConnected(snapshot: ConnectedDeviceSnapshot)
+		fun onDisconnected()
+	}
+
+	data class ConnectedDeviceSnapshot(
+		val name: String,
+		val eventId: Long,
+	)
 }

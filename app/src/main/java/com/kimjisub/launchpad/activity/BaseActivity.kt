@@ -71,6 +71,12 @@ open class BaseActivity : AppCompatActivity() {
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
 	val unipackRepo: UnipackRepository by inject()
+	private val midiBannerController by lazy {
+		MidiBannerController(
+			activity = this,
+			onAction = { onMidiBannerAction() }
+		)
+	}
 
 	fun getActivityName(): String {
 		return localClassName.split('.').last()
@@ -102,10 +108,12 @@ open class BaseActivity : AppCompatActivity() {
 		Log.activity("onResume ${getActivityName()}")
 		super.onResume()
 		volumeControlStream = AudioManager.STREAM_MUSIC
+		midiBannerController.onResume()
 	}
 
 	override fun onPause() {
 		Log.activity("onPause ${getActivityName()}")
+		midiBannerController.onPause()
 		super.onPause()
 	}
 
@@ -121,6 +129,11 @@ open class BaseActivity : AppCompatActivity() {
 
 	override fun onDestroy() {
 		Log.activity("onDestroy ${getActivityName()}")
+		midiBannerController.onDestroy()
 		super.onDestroy()
+	}
+
+	protected open fun onMidiBannerAction() {
+		startActivity(android.content.Intent(this, MidiSelectActivity::class.java))
 	}
 }
