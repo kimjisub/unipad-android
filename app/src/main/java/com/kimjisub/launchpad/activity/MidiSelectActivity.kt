@@ -120,8 +120,7 @@ class MidiSelectActivity : BaseActivity() {
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
 						val device = midiDevices[index]
-						val driver = device.driverClass.java.getDeclaredConstructor()
-							.newInstance() as? DriverRef ?: return@MidiSelectScreen
+						val driver = device.createDriver()
 						MidiConnection.driver = driver
 					},
 					onUserInteract = { autorunTimer.cancel() },
@@ -140,19 +139,20 @@ class MidiSelectActivity : BaseActivity() {
 private data class MidiDeviceData(
 	val iconResId: Int,
 	val nameResId: Int,
-	val driverClass: KClass<*>,
+	val driverClass: KClass<out DriverRef>,
+	val createDriver: () -> DriverRef,
 )
 
 private val midiDevices = listOf(
-	MidiDeviceData(R.drawable.midi_lp_s, R.string.midi_lp_s, LaunchpadS::class),
-	MidiDeviceData(R.drawable.midi_lp_mk2, R.string.midi_lp_mk2, LaunchpadMK2::class),
-	MidiDeviceData(R.drawable.midi_lp_pro, R.string.midi_lp_pro, LaunchpadPRO::class),
-	MidiDeviceData(R.drawable.midi_lp_x, R.string.midi_lp_x, LaunchpadX::class),
-	MidiDeviceData(R.drawable.midi_lp_mini_mk3, R.string.midi_lp_mini_mk3, LaunchpadMiniMK3::class),
-	MidiDeviceData(R.drawable.midi_lp_mk3, R.string.midi_lp_mk3, LaunchpadMK3::class),
-	MidiDeviceData(R.drawable.midi_midifighter, R.string.midi_midi_fighter, MidiFighter::class),
-	MidiDeviceData(R.drawable.midi_matrix, R.string.midi_matrix, Matrix::class),
-	MidiDeviceData(R.drawable.midi_master_keyboard, R.string.midi_master_keyboard, MasterKeyboard::class),
+	MidiDeviceData(R.drawable.midi_lp_s, R.string.midi_lp_s, LaunchpadS::class) { LaunchpadS() },
+	MidiDeviceData(R.drawable.midi_lp_mk2, R.string.midi_lp_mk2, LaunchpadMK2::class) { LaunchpadMK2() },
+	MidiDeviceData(R.drawable.midi_lp_pro, R.string.midi_lp_pro, LaunchpadPRO::class) { LaunchpadPRO() },
+	MidiDeviceData(R.drawable.midi_lp_x, R.string.midi_lp_x, LaunchpadX::class) { LaunchpadX() },
+	MidiDeviceData(R.drawable.midi_lp_mini_mk3, R.string.midi_lp_mini_mk3, LaunchpadMiniMK3::class) { LaunchpadMiniMK3() },
+	MidiDeviceData(R.drawable.midi_lp_mk3, R.string.midi_lp_mk3, LaunchpadMK3::class) { LaunchpadMK3() },
+	MidiDeviceData(R.drawable.midi_midifighter, R.string.midi_midi_fighter, MidiFighter::class) { MidiFighter() },
+	MidiDeviceData(R.drawable.midi_matrix, R.string.midi_matrix, Matrix::class) { Matrix() },
+	MidiDeviceData(R.drawable.midi_master_keyboard, R.string.midi_master_keyboard, MasterKeyboard::class) { MasterKeyboard() },
 )
 
 @Composable
