@@ -440,6 +440,9 @@ class PlayActivityViewModel(
 	fun padTouch(x: Int, y: Int, upDown: Boolean) {
 		try {
 			if (upDown) {
+				if (autoPlayRunner?.stepMode == true) {
+					autoPlayRunner?.stepPadPressed(x, y)
+				}
 				soundRunner?.soundOn(x, y)
 				if (scbRecord.isChecked()) {
 					val currTime = SystemClock.elapsedRealtime()
@@ -624,6 +627,9 @@ class PlayActivityViewModel(
 	fun autoPlayPlay() {
 		log("autoPlayPlay")
 		val runner = autoPlayRunner ?: return
+		runner.stepMode = false
+		runner.resetStepState()
+		autoPlayRemoveGuide()
 		padInit()
 		ledInit()
 		runner.playmode = true
@@ -644,6 +650,9 @@ class PlayActivityViewModel(
 		padInit()
 		ledInit()
 		isAutoPlayPlaying = false
+		if (isPracticeMode) {
+			runner.stepMode = true
+		}
 	}
 
 	fun autoPlayPrev() {
@@ -651,6 +660,7 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		padInit()
 		ledInit()
+		autoPlayRemoveGuide()
 		runner.progressOffset(-40)
 	}
 
@@ -659,6 +669,7 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		padInit()
 		ledInit()
+		autoPlayRemoveGuide()
 		runner.progressOffset(40)
 	}
 
@@ -669,13 +680,17 @@ class PlayActivityViewModel(
 		runner.practiceGuide = newMode
 		isPracticeMode = newMode
 		if (!newMode) {
-			// Switching to playback — re-enable LED and feedback
+			runner.stepMode = false
+			runner.resetStepState()
+			autoPlayRemoveGuide()
 			if (unipack.keyLedExist) {
 				scbLed.setChecked(true)
 				scbFeedbackLight.setChecked(false)
 			} else {
 				scbFeedbackLight.setChecked(true)
 			}
+		} else if (!isAutoPlayPlaying) {
+			runner.stepMode = true
 		}
 	}
 

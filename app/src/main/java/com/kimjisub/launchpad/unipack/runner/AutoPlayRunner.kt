@@ -28,6 +28,9 @@ class AutoPlayRunner(
 	var practiceGuide = false
 
 	@Volatile
+	var stepMode = false
+
+	@Volatile
 	var progress = 0
 		set(value) {
 			field = value
@@ -65,10 +68,19 @@ class AutoPlayRunner(
 	private val activeGuides = mutableMapOf<Int, Long>() // key = x*256+y, value = targetWallTimeMs
 	private var lastGuideUpdateMs = 0L
 
+	// Step mode state
+	private val stepPendingPads = mutableSetOf<Int>()
+	private val pressedKeysQueue = mutableListOf<Int>()
+	private val pressedKeysLock = Any()
+	private var stepScanned = false
+	private var stepStartProgress = 0
+	private var stepChainValue = -1
+
 	companion object {
 		const val GUIDE_LOOKAHEAD_MS = 800L
 		private const val GUIDE_LED_UPDATE_INTERVAL_MS = 50L
 		private val GUIDE_VELOCITIES = intArrayOf(1, 2, 3, 21) // dim white → bright white → green
+		private const val STEP_GROUP_THRESHOLD_MS = 50L
 	}
 
 	private fun guideKey(x: Int, y: Int) = x * 256 + y
@@ -231,8 +243,50 @@ class AutoPlayRunner(
 								}
 							}
 						} else {
-							// Paused: keep delayAccum in sync so resume is seamless
 							beforeStartPlaying = true
+
+							if (stepMode && practiceGuide) {
+								drainPressedKeys()
+
+								val currentChain = chain.value
+
+								if (currentChain != stepChainValue && stepChainValue >= 0) {
+									synchronized(stepPendingPads) {
+										if (stepScanned) {
+											progress = stepStartProgress
+											stepPendingPads.clear()
+											stepScanned = false
+										}
+									}
+									waitingForChain = -1
+								}
+								stepChainValue = currentChain
+
+								var needsScan = false
+
+								if (waitingForChain >= 0) {
+									if (currentChain == waitingForChain) {
+										waitingForChain = -1
+										needsScan = true
+									}
+								} else {
+									synchronized(stepPendingPads) {
+										if (!stepScanned || stepPendingPads.isEmpty()) {
+											needsScan = true
+										}
+									}
+								}
+
+								if (needsScan) {
+									listener.onRemoveGuide()
+									stepStartProgress = progress
+									stepScanNext(autoPlay)
+									synchronized(stepPendingPads) {
+										stepScanned = stepPendingPads.isNotEmpty() || waitingForChain >= 0
+									}
+								}
+							}
+
 							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
 						}
 						delay(loopDelay)
@@ -251,6 +305,7 @@ class AutoPlayRunner(
 		job?.cancel()
 		job = null
 		activeGuides.clear()
+		resetStepState()
 	}
 
 	private fun beforeStartPlaying() {
@@ -270,5 +325,88 @@ class AutoPlayRunner(
 				range.last < targetProgress -> range.last
 				else -> targetProgress
 			}
+		if (stepMode) {
+			resetStepState()
+			listener.onRemoveGuide()
+		}
+	}
+
+	fun resetStepState() {
+		synchronized(pressedKeysLock) {
+			pressedKeysQueue.clear()
+		}
+		synchronized(stepPendingPads) {
+			stepPendingPads.clear()
+			stepScanned = false
+			stepStartProgress = 0
+			stepChainValue = -1
+		}
+	}
+
+	fun stepPadPressed(x: Int, y: Int) {
+		val key = guideKey(x, y)
+		synchronized(pressedKeysLock) {
+			pressedKeysQueue.add(key)
+		}
+	}
+
+	private fun drainPressedKeys() {
+		val keys: List<Int>
+		synchronized(pressedKeysLock) {
+			keys = pressedKeysQueue.toList()
+			pressedKeysQueue.clear()
+		}
+
+		val removedKeys = mutableListOf<Int>()
+		synchronized(stepPendingPads) {
+			for (key in keys) {
+				if (stepPendingPads.remove(key)) {
+					removedKeys.add(key)
+				}
+			}
+		}
+
+		for (key in removedKeys) {
+			listener.onGuideLedUpdate(key / 256, key % 256, 0)
+			listener.onGuidePadOff(key / 256, key % 256)
+		}
+	}
+
+	private fun stepScanNext(autoPlay: AutoPlay) {
+		val newPending = mutableSetOf<Int>()
+		var totalDelayMs = 0L
+
+		scanLoop@ while (progress < autoPlay.elements.size) {
+			when (val element = autoPlay.elements[progress]) {
+				is AutoPlay.Element.On -> {
+					if (chain.value != element.currChain) {
+						if (newPending.isEmpty()) {
+							waitingForChain = element.currChain
+							listener.onGuideChainOn(element.currChain)
+						}
+						break@scanLoop
+					}
+					val key = guideKey(element.x, element.y)
+					newPending.add(key)
+					listener.onGuidePadOn(element.x, element.y, 0)
+					listener.onGuideLedUpdate(element.x, element.y, GUIDE_VELOCITIES.last())
+					progress++
+				}
+				is AutoPlay.Element.Off -> progress++
+				is AutoPlay.Element.Delay -> {
+					totalDelayMs += element.delay.toLong()
+					if (newPending.isNotEmpty() && totalDelayMs >= STEP_GROUP_THRESHOLD_MS) {
+						break@scanLoop
+					}
+					progress++
+				}
+				is AutoPlay.Element.Chain -> progress++
+			}
+		}
+
+		synchronized(stepPendingPads) {
+			stepPendingPads.clear()
+			stepPendingPads.addAll(newPending)
+		}
 	}
 }
