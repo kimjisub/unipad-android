@@ -117,6 +117,7 @@ import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.MAX_CHAI
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.TOP_BAR_COUNT
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.VOLUME_LEVELS
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.CheckBoxState
+import com.kimjisub.launchpad.viewmodel.PlayMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -595,11 +596,10 @@ class PlayActivity : BaseActivity() {
 			) {
 				PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, cbColor)
 				PlayCheckBox(vm.scbLed, string.led, cbColor)
-				PlayCheckBox(vm.scbAutoPlay, string.autoPlay, cbColor)
-				if (vm.autoPlayControlVisible) AutoPlayControls(cbColor)
-				if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked && !vm.autoPlayControlVisible) {
-					PracticeModeButton(cbColor)
+				if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
+					PlayModeSelector(cbColor)
 				}
+				if (vm.autoPlayControlVisible) AutoPlayTransportControls(cbColor)
 			}
 
 			// Bottom group: tools
@@ -616,14 +616,78 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun AutoPlayControls(accentColor: Color) {
+	private fun PlayModeSelector(accentColor: Color) {
+		val currentMode = vm.playMode
+		Column(
+			modifier = Modifier.padding(top = 4.dp),
+			verticalArrangement = Arrangement.spacedBy(2.dp),
+		) {
+			PlayModeButton(
+				label = stringResource(string.autoPlay),
+				icon = Icons.Default.PlayArrow,
+				isActive = currentMode == PlayMode.AutoPlay,
+				accentColor = accentColor,
+				onClick = { vm.switchPlayMode(PlayMode.AutoPlay) },
+			)
+			PlayModeButton(
+				label = stringResource(string.guidePlay),
+				icon = Icons.Default.PlayArrow,
+				isActive = currentMode == PlayMode.GuidePlay,
+				accentColor = Color(0xFF4FC3F7),
+				onClick = { vm.switchPlayMode(PlayMode.GuidePlay) },
+			)
+			PlayModeButton(
+				label = stringResource(string.stepPractice),
+				icon = Icons.Default.PlayArrow,
+				isActive = currentMode == PlayMode.StepPractice,
+				accentColor = Color(0xFF66BB6A),
+				onClick = { vm.switchPlayMode(PlayMode.StepPractice) },
+			)
+		}
+	}
+
+	@Composable
+	private fun PlayModeButton(
+		label: String,
+		icon: androidx.compose.ui.graphics.vector.ImageVector,
+		isActive: Boolean,
+		accentColor: Color,
+		onClick: () -> Unit,
+	) {
+		val bgAlpha = if (isActive) 0.2f else 0.06f
+		val textColor = if (isActive) accentColor else Color.White.copy(alpha = 0.5f)
+
+		Row(
+			modifier = Modifier
+				.background(accentColor.copy(alpha = bgAlpha), RoundedCornerShape(8.dp))
+				.clickable(onClick = onClick)
+				.padding(horizontal = 8.dp, vertical = 5.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			Icon(
+				imageVector = icon,
+				contentDescription = null,
+				tint = textColor,
+				modifier = Modifier.size(12.dp),
+			)
+			Text(
+				text = label,
+				color = textColor,
+				fontSize = 11.sp,
+				fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+			)
+		}
+	}
+
+	@Composable
+	private fun AutoPlayTransportControls(accentColor: Color) {
 		val progressFraction = if (vm.autoPlayProgressMax > 0) vm.autoPlayProgress.toFloat() / vm.autoPlayProgressMax else 0f
 
 		Column(
 			modifier = Modifier.padding(top = 4.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			// Progress bar
 			LinearProgressIndicator(
 				progress = { progressFraction },
 				modifier = Modifier
@@ -634,7 +698,6 @@ class PlayActivity : BaseActivity() {
 				drawStopIndicator = {},
 			)
 
-			// Transport controls
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -644,7 +707,7 @@ class PlayActivity : BaseActivity() {
 					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(18.dp))
 				}
 				IconButton(
-					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayStop() else vm.autoPlayPlay() },
+					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
 					modifier = Modifier.size(36.dp),
 				) {
 					Icon(
@@ -658,52 +721,6 @@ class PlayActivity : BaseActivity() {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(18.dp))
 				}
 			}
-
-			// Practice/Playback mode toggle
-			val isPractice = vm.isPracticeMode
-			val modeText = if (isPractice) stringResource(string.practiceMode) else stringResource(string.autoPlay)
-			val modeColor = if (isPractice) Color(0xFF66BB6A) else Color.White.copy(alpha = 0.6f)
-
-			Row(
-				modifier = Modifier
-					.padding(top = 2.dp)
-					.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-					.clickable { vm.togglePracticeMode() }
-					.padding(horizontal = 8.dp, vertical = 3.dp),
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.spacedBy(4.dp),
-			) {
-				Icon(
-					imageVector = Icons.Default.FiberManualRecord,
-					contentDescription = null,
-					tint = modeColor,
-					modifier = Modifier.size(6.dp),
-				)
-				Text(text = modeText, color = modeColor, fontSize = 10.sp)
-			}
-		}
-	}
-
-	@Composable
-	private fun PracticeModeButton(color: Color) {
-		val scale = 0.75f
-		Row(
-			modifier = Modifier
-				.graphicsLayer(scaleX = scale, scaleY = scale, transformOrigin = TransformOrigin(0f, 0f))
-				.then(scaleLayoutModifier(scale))
-				.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-				.clickable { vm.practiceStart() }
-				.padding(horizontal = 8.dp, vertical = 4.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(4.dp),
-		) {
-			Icon(
-				imageVector = Icons.Default.PlayArrow,
-				contentDescription = null,
-				tint = color,
-				modifier = Modifier.size(14.dp),
-			)
-			Text(text = stringResource(string.practiceMode), color = color, fontSize = 13.sp)
 		}
 	}
 
@@ -786,28 +803,10 @@ class PlayActivity : BaseActivity() {
 			SectionTitle("Performance", sectionColor)
 			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, accentColor)
 			OptionSwitch(vm.scbLed, string.led, textColor, accentColor)
-			OptionSwitch(vm.scbAutoPlay, string.autoPlay, textColor, accentColor)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
-				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.clickable { vm.practiceStart(); vm.toggleOptionWindow(false) }
-						.padding(horizontal = 24.dp, vertical = 10.dp),
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					Text(
-						text = stringResource(string.practiceMode),
-						color = textColor,
-						fontSize = 14.sp,
-						modifier = Modifier.weight(1f),
-					)
-					Icon(
-						imageVector = Icons.Default.PlayArrow,
-						contentDescription = stringResource(string.practiceMode),
-						tint = accentColor,
-						modifier = Modifier.size(20.dp),
-					)
-				}
+				OptionModeButton(string.autoPlay, PlayMode.AutoPlay, textColor, accentColor)
+				OptionModeButton(string.guidePlay, PlayMode.GuidePlay, textColor, Color(0xFF4FC3F7))
+				OptionModeButton(string.stepPractice, PlayMode.StepPractice, textColor, Color(0xFF66BB6A))
 			}
 
 			Spacer(modifier = Modifier.height(16.dp))
@@ -898,6 +897,35 @@ class PlayActivity : BaseActivity() {
 					uncheckedTrackColor = Color.White.copy(alpha = 0.1f),
 					uncheckedBorderColor = Color.White.copy(alpha = 0.2f),
 				),
+			)
+		}
+	}
+
+	@Composable
+	private fun OptionModeButton(textResId: Int, mode: PlayMode, textColor: Color, accentColor: Color) {
+		val isActive = vm.playMode == mode
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.clickable {
+					vm.switchPlayMode(mode)
+					vm.toggleOptionWindow(false)
+				}
+				.padding(horizontal = 24.dp, vertical = 10.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Text(
+				text = stringResource(textResId),
+				color = if (isActive) accentColor else textColor,
+				fontSize = 14.sp,
+				fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+				modifier = Modifier.weight(1f),
+			)
+			Icon(
+				imageVector = if (isActive) Icons.Default.Pause else Icons.Default.PlayArrow,
+				contentDescription = stringResource(textResId),
+				tint = if (isActive) accentColor else textColor.copy(alpha = 0.5f),
+				modifier = Modifier.size(20.dp),
 			)
 		}
 	}
@@ -1129,7 +1157,7 @@ class PlayActivity : BaseActivity() {
 					when (f) {
 						0 -> vm.scbFeedbackLight.toggleChecked()
 						1 -> vm.scbLed.toggleChecked()
-						2 -> vm.scbAutoPlay.toggleChecked()
+						2 -> vm.cyclePlayMode()
 						3 -> vm.toggleOptionWindow()
 						4, 5, 6, 7 -> vm.scbWatermark.toggleChecked()
 					}
@@ -1137,7 +1165,7 @@ class PlayActivity : BaseActivity() {
 					if (f in 0 until TOP_BAR_COUNT) when (f) {
 						0 -> vm.scbFeedbackLight.toggleChecked()
 						1 -> vm.scbLed.toggleChecked()
-						2 -> vm.scbAutoPlay.toggleChecked()
+						2 -> vm.cyclePlayMode()
 						3 -> vm.toggleOptionWindow()
 						4 -> vm.scbHideUI.toggleChecked()
 						5 -> vm.scbWatermark.toggleChecked()

@@ -25,6 +25,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
+enum class PlayMode {
+	None,
+	AutoPlay,
+	GuidePlay,
+	StepPractice,
+}
+
 class PlayActivityViewModel(
 	private val unipackRepo: UnipackRepository,
 ) : ViewModel() {
@@ -74,6 +81,10 @@ class PlayActivityViewModel(
 			onCheckedChange?.invoke(value)
 		}
 
+		fun setCheckedSilently(value: Boolean) {
+			_checked = value
+		}
+
 		fun toggleChecked() {
 			if (!locked) forceSetChecked(!_checked)
 		}
@@ -120,6 +131,13 @@ class PlayActivityViewModel(
 	var autoPlayProgressMax by mutableIntStateOf(0)
 	var isAutoPlayPlaying by mutableStateOf(false)
 	var isPracticeMode by mutableStateOf(false)
+	val playMode: PlayMode
+		get() = when {
+			!scbAutoPlay.checked -> PlayMode.None
+			!isPracticeMode -> PlayMode.AutoPlay
+			isAutoPlayPlaying -> PlayMode.GuidePlay
+			else -> PlayMode.StepPractice
+		}
 	var optionViewVisible by mutableStateOf(true)
 	var isOptionWindowVisible by mutableStateOf(false)
 	var startReady by mutableStateOf(false)
@@ -219,16 +237,8 @@ class PlayActivityViewModel(
 			refreshWatermark()
 		}
 		scbAutoPlay.onCheckedChange = { bool ->
-			if (bool) {
-				autoPlayRunner?.launch()
-			} else {
-				autoPlayRunner?.practiceGuide = false
-				isPracticeMode = false
-				autoPlayRunner?.stop()
-				padInit()
-				ledInit()
-				autoPlayRemoveGuide()
-				autoPlayControlVisible = false
+			if (!bool && playMode != PlayMode.None) {
+				switchPlayMode(PlayMode.None)
 			}
 			refreshWatermark()
 		}
@@ -302,7 +312,6 @@ class PlayActivityViewModel(
 							if (unipack.squareButton) autoPlayControlVisible = true
 							autoPlayProgressMax = unipack.autoPlayTable?.elements?.size ?: 0
 							autoPlayProgress = 0
-							autoPlayPlay()
 						}
 					}
 
@@ -351,16 +360,19 @@ class PlayActivityViewModel(
 
 					override fun onEnd() {
 						viewModelScope.launch {
+							isAutoPlayPlaying = false
 							autoPlayRunner?.practiceGuide = false
+							autoPlayRunner?.stepMode = false
 							isPracticeMode = false
-							scbAutoPlay.setChecked(false)
+							scbAutoPlay.setCheckedSilently(false)
+							autoPlayControlVisible = false
 							if (unipack.ledAnimationTable != null) {
 								scbLed.setChecked(true)
 								scbFeedbackLight.setChecked(false)
 							} else {
 								scbFeedbackLight.setChecked(true)
 							}
-							autoPlayControlVisible = false
+							refreshWatermark()
 						}
 					}
 				})
@@ -542,7 +554,7 @@ class PlayActivityViewModel(
 			topBar[0] =
 				if (scbFeedbackLight.locked) 0 else if (scbFeedbackLight.isChecked()) LED_RED else LED_RED_DIM
 			topBar[1] = if (scbLed.locked) 0 else if (scbLed.isChecked()) LED_CYAN else LED_LIGHT_BLUE
-			topBar[2] = if (scbAutoPlay.locked) 0 else if (scbAutoPlay.isChecked()) LED_ORANGE else LED_YELLOW
+			topBar[2] = if (scbAutoPlay.locked) 0 else if (playMode != PlayMode.None) LED_ORANGE else LED_YELLOW
 			topBar[3] = 0
 			topBar[4] = if (scbHideUI.locked) 0 else if (scbHideUI.isChecked()) LED_RED else LED_RED_DIM
 			topBar[5] = if (scbWatermark.locked) 0 else if (scbWatermark.isChecked()) LED_GREEN else LED_WARM
@@ -612,22 +624,97 @@ class PlayActivityViewModel(
 
 	// autoPlay
 
-	fun practiceStart() {
-		log("practiceStart")
+	fun switchPlayMode(mode: PlayMode) {
+		log("switchPlayMode: $mode")
 		val runner = autoPlayRunner ?: return
-		if (scbAutoPlay.isChecked()) {
+		val currentMode = playMode
+
+		if (mode == currentMode) {
+			switchPlayMode(PlayMode.None)
+			return
+		}
+
+		if (mode == PlayMode.None) {
 			runner.practiceGuide = false
+			runner.stepMode = false
+			runner.resetStepState()
+			runner.playmode = false
+			autoPlayRemoveGuide()
+			if (runner.active) runner.stop()
+			padInit()
+			ledInit()
 			isPracticeMode = false
-			scbAutoPlay.setChecked(false)
+			isAutoPlayPlaying = false
+			scbAutoPlay.setCheckedSilently(false)
+			autoPlayControlVisible = false
+			if (unipack.keyLedExist) {
+				scbLed.setChecked(true)
+				scbFeedbackLight.setChecked(false)
+			} else {
+				scbFeedbackLight.setChecked(true)
+			}
+			refreshWatermark()
+			return
+		}
+
+		if (currentMode == PlayMode.None) {
+			// None → Active: runner 시작 필요
+			applyModeFlags(runner, mode)
+			scbAutoPlay.setCheckedSilently(true)
+			autoPlayControlVisible = unipack.squareButton
+			runner.launch()
 		} else {
-			runner.practiceGuide = true
-			isPracticeMode = true
-			scbAutoPlay.setChecked(true)
+			// Active → Active: 플래그만 변경
+			applyModeFlags(runner, mode)
+		}
+		refreshWatermark()
+	}
+
+	private fun applyModeFlags(runner: AutoPlayRunner, mode: PlayMode) {
+		when (mode) {
+			PlayMode.AutoPlay -> {
+				runner.practiceGuide = false
+				runner.stepMode = false
+				runner.resetStepState()
+				autoPlayRemoveGuide()
+				runner.playmode = true
+				isPracticeMode = false
+				isAutoPlayPlaying = true
+				runner.beforeStartPlaying = true
+			}
+			PlayMode.GuidePlay -> {
+				runner.practiceGuide = true
+				runner.stepMode = false
+				runner.resetStepState()
+				autoPlayRemoveGuide()
+				runner.playmode = true
+				isPracticeMode = true
+				isAutoPlayPlaying = true
+				runner.beforeStartPlaying = true
+			}
+			PlayMode.StepPractice -> {
+				runner.practiceGuide = true
+				runner.playmode = false
+				isPracticeMode = true
+				isAutoPlayPlaying = false
+				runner.stepMode = true
+			}
+			PlayMode.None -> {}
 		}
 	}
 
-	fun autoPlayPlay() {
-		log("autoPlayPlay")
+	fun cyclePlayMode() {
+		val next = when (playMode) {
+			PlayMode.None -> PlayMode.AutoPlay
+			PlayMode.AutoPlay -> PlayMode.GuidePlay
+			PlayMode.GuidePlay -> PlayMode.StepPractice
+			PlayMode.StepPractice -> PlayMode.None
+		}
+		switchPlayMode(next)
+	}
+
+	fun autoPlayResume() {
+		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
 		runner.stepMode = false
 		runner.resetStepState()
@@ -645,14 +732,14 @@ class PlayActivityViewModel(
 		runner.beforeStartPlaying = true
 	}
 
-	fun autoPlayStop() {
-		log("autoPlayStop")
+	fun autoPlayPause() {
+		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
 		padInit()
 		ledInit()
 		isAutoPlayPlaying = false
-		if (isPracticeMode) {
+		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
 		}
 	}
@@ -673,27 +760,6 @@ class PlayActivityViewModel(
 		ledInit()
 		autoPlayRemoveGuide()
 		runner.progressOffset(40)
-	}
-
-	fun togglePracticeMode() {
-		log("togglePracticeMode")
-		val runner = autoPlayRunner ?: return
-		val newMode = !runner.practiceGuide
-		runner.practiceGuide = newMode
-		isPracticeMode = newMode
-		if (!newMode) {
-			runner.stepMode = false
-			runner.resetStepState()
-			autoPlayRemoveGuide()
-			if (unipack.keyLedExist) {
-				scbLed.setChecked(true)
-				scbFeedbackLight.setChecked(false)
-			} else {
-				scbFeedbackLight.setChecked(true)
-			}
-		} else if (!isAutoPlayPlaying) {
-			runner.stepMode = true
-		}
 	}
 
 	private fun autoPlayGuidePad(x: Int, y: Int, onOff: Boolean, targetWallTimeMs: Long = 0) {
