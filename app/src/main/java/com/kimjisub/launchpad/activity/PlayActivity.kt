@@ -138,8 +138,16 @@ class PlayActivity : BaseActivity() {
 
 	// UI - AndroidView references
 	private var padsContainer: LinearLayout? = null
+	private var chainsTopContainer: LinearLayout? = null
 	private var chainsRightContainer: LinearLayout? = null
+	private var chainsBottomContainer: LinearLayout? = null
 	private var chainsLeftContainer: LinearLayout? = null
+
+	// UI - Layout dimensions (for relayout)
+	private var lastScreenWidth = 0
+	private var lastScreenHeight = 0
+	private var lastPaddingWidth = 0
+	private var lastPaddingHeight = 0
 
 	// UI - Pad/chain views
 	private lateinit var padViews: Array<Array<PadView?>>
@@ -228,6 +236,13 @@ class PlayActivity : BaseActivity() {
 
 		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {
 			driver.sendPadLed(x, y, velocity)
+		}
+
+		override fun onRequestRelayout() {
+			if (lastScreenWidth > 0 && lastScreenHeight > 0) {
+				vm.uiLoaded = false
+				initLayout(lastScreenWidth, lastScreenHeight, lastPaddingWidth, lastPaddingHeight)
+			}
 		}
 	}
 
@@ -469,6 +484,13 @@ class PlayActivity : BaseActivity() {
 						content = {
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
+									orientation = LinearLayout.HORIZONTAL
+									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+								}.also { chainsTopContainer = it } },
+								modifier = Modifier.wrapContentSize()
+							)
+							AndroidView(
+								factory = { ctx -> LinearLayout(ctx).apply {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsLeftContainer = it } },
@@ -488,24 +510,35 @@ class PlayActivity : BaseActivity() {
 								}.also { chainsRightContainer = it } },
 								modifier = Modifier.wrapContentSize()
 							)
+							AndroidView(
+								factory = { ctx -> LinearLayout(ctx).apply {
+									orientation = LinearLayout.HORIZONTAL
+									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+								}.also { chainsBottomContainer = it } },
+								modifier = Modifier.wrapContentSize()
+							)
 						},
 						modifier = Modifier.fillMaxSize()
 					) { measurables, constraints ->
 						val unconstrained = constraints.copy(minWidth = 0, minHeight = 0)
-						val leftPlaceable = measurables[0].measure(unconstrained)
-						val padPlaceable = measurables[1].measure(unconstrained)
-						val rightPlaceable = measurables[2].measure(unconstrained)
+						val topPlaceable = measurables[0].measure(unconstrained)
+						val leftPlaceable = measurables[1].measure(unconstrained)
+						val padPlaceable = measurables[2].measure(unconstrained)
+						val rightPlaceable = measurables[3].measure(unconstrained)
+						val bottomPlaceable = measurables[4].measure(unconstrained)
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							val padX = (constraints.maxWidth - padPlaceable.width) / 2
 							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
-							leftPlaceable.place(padX - leftPlaceable.width, padY)
-							rightPlaceable.place(padX + padPlaceable.width, padY)
+							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
+							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
+							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
+							bottomPlaceable.place(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
 						}
 					}
 				}
 				// Menu button (bottom-right)
-				if (vm.optionViewVisible && !vm.isOptionWindowVisible) {
+				if (!vm.isOptionWindowVisible) {
 					Icon(
 						imageVector = Icons.Default.Menu,
 						contentDescription = stringResource(string.menu),
@@ -924,6 +957,10 @@ class PlayActivity : BaseActivity() {
 	// region Layout initialization
 
 	private fun initLayout(screenWidth: Int, screenHeight: Int, paddingWidth: Int, paddingHeight: Int) {
+		lastScreenWidth = screenWidth
+		lastScreenHeight = screenHeight
+		lastPaddingWidth = paddingWidth
+		lastPaddingHeight = paddingHeight
 		try {
 			log("[05] Set Button Layout (squareButton = ${vm.unipack.squareButton})")
 			vm.setupCheckBoxVisibility()
@@ -931,7 +968,9 @@ class PlayActivity : BaseActivity() {
 			val buttonSizeX: Int
 			val buttonSizeY: Int
 			if (vm.unipack.squareButton) {
-				val s = (paddingWidth / vm.unipack.buttonX).coerceAtMost(paddingHeight / vm.unipack.buttonY)
+				val chainColumns = 2
+				val chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0
+				val s = (paddingWidth / (vm.unipack.buttonX + chainColumns)).coerceAtMost(paddingHeight / (vm.unipack.buttonY + chainRows))
 				buttonSizeX = s; buttonSizeY = s
 			} else {
 				buttonSizeX = screenWidth / vm.unipack.buttonY
@@ -941,7 +980,9 @@ class PlayActivity : BaseActivity() {
 
 			vm.setupCheckBoxListeners()
 			padsContainer?.removeAllViews()
+			chainsTopContainer?.removeAllViews()
 			chainsRightContainer?.removeAllViews()
+			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
 			setupPads(buttonSizeX, buttonSizeY)
 			setupChains(buttonSizeMin)
@@ -1004,8 +1045,10 @@ class PlayActivity : BaseActivity() {
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
-			if (c in 0 until TOP_BAR_COUNT) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-			if (c in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			if (i in 0..7) { chainsTopContainer?.addView(view) }
+			if (i in 8..15) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
+			if (i in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
+			if (i in 24..31) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
 		}
 	}
 
@@ -1033,29 +1076,27 @@ class PlayActivity : BaseActivity() {
 
 	private fun setLedUIChain(y: Int) {
 		if (y !in chainViews.indices) return
-		val c = y - CHAIN_INDEX_OFFSET
 		val item = vm.channelManager.get(-1, y)
 		val circle = chainViews[y] ?: return
-		if (c in 0 until MAX_CHAIN_BUTTONS)
-			if (theme?.isChainLed == true) {
-				if (item != null) {
-					when (item.channel) {
-						Channel.GUIDE -> circle.setLedBackgroundColor(item.color)
-						Channel.CHAIN -> circle.setLedBackgroundColor(item.color)
-						Channel.LED -> circle.setLedBackgroundColor(item.color)
-						else -> {}
-					}
-				} else circle.setLedBackgroundColor(0)
-			} else {
-				if (item != null) {
-					when (item.channel) {
-						Channel.GUIDE -> circle.setBackgroundImageDrawable(theme?.chainGuide)
-						Channel.CHAIN -> circle.setBackgroundImageDrawable(theme?.chainSelected)
-						Channel.LED -> circle.setBackgroundImageDrawable(theme?.chain)
-						else -> {}
-					}
-				} else circle.setBackgroundImageDrawable(theme?.chain)
-			}
+		if (theme?.isChainLed == true) {
+			if (item != null) {
+				when (item.channel) {
+					Channel.GUIDE -> circle.setLedBackgroundColor(item.color)
+					Channel.CHAIN -> circle.setLedBackgroundColor(item.color)
+					Channel.LED -> circle.setLedBackgroundColor(item.color)
+					else -> {}
+				}
+			} else circle.setLedBackgroundColor(0)
+		} else {
+			if (item != null) {
+				when (item.channel) {
+					Channel.GUIDE -> circle.setBackgroundImageDrawable(theme?.chainGuide)
+					Channel.CHAIN -> circle.setBackgroundImageDrawable(theme?.chainSelected)
+					Channel.LED -> circle.setBackgroundImageDrawable(theme?.chain)
+					else -> {}
+				}
+			} else circle.setBackgroundImageDrawable(theme?.chain)
+		}
 	}
 
 	private fun setLedLaunchpadChain(c: Int) {

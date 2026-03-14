@@ -93,6 +93,7 @@ class PlayActivityViewModel(
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
 		fun stopGuideAnimation(x: Int, y: Int)
 		fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int)
+		fun onRequestRelayout()
 	}
 
 	var uiCallback: UiCallback? = null
@@ -257,6 +258,7 @@ class PlayActivityViewModel(
 		}
 		scbProLightMode.onCheckedChange = { bool ->
 			proLightMode(bool)
+			uiCallback?.onRequestRelayout()
 			refreshWatermark()
 		}
 	}
