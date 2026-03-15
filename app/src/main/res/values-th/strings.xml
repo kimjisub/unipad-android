@@ -86,6 +86,8 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">เล่นอัตโนมัติ</string>
 	<string name="practiceMode">ฝึกซ้อม</string>
+	<string name="guidePlay">แนะนำ</string>
+	<string name="stepPractice">ทีละขั้น</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">ไฟตอบสนอง</string>
 	<string name="traceLog">บันทึกการติดตาม</string>
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">กำลังเชื่อมต่อ launchpad…</string>
 	<string name="midiDevicesNotDetected">ไม่พบอุปกรณ์ MIDI</string>
+	<string name="midi_open_panel">เปิด</string>
+	<string name="midi_connected_banner">เชื่อมต่อ MIDI แล้ว: %1$s</string>
+	<string name="midi_disconnected">ตัดการเชื่อมต่อแล้ว</string>
 	<string name="signal_SpeedFirst">ความเร็วก่อน</string>
 	<string name="signal_avoidAfterimage">หลีกเลี่ยงภาพค้าง</string>
 
@@ -178,7 +183,7 @@
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">ขนาด Pad</string>
-	<string name="MPP_chain">Chain</string>
+	<string name="MPP_chain">เชน</string>
 	<string name="MPP_soundFiles">ไฟล์เสียง</string>
 	<string name="MPP_ledEvents">เหตุการณ์ Led</string>
 	<string name="MPP_fileSize">ขนาดไฟล์</string>

@@ -87,6 +87,8 @@
 	<string name="led">灯光</string>
 	<string name="autoPlay">自动播放</string>
 	<string name="practiceMode">练习</string>
+	<string name="guidePlay">引导</string>
+	<string name="stepPractice">分步</string>
 	<string name="feedbackLight">反馈灯光</string>
 	<string name="traceLog">记录按键</string>
 	<string name="traceLogClear">按键记录已重置。</string>
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">正在连接 launchpad…</string>
 	<string name="midiDevicesNotDetected">未检测到 MIDI 设备</string>
+	<string name="midi_open_panel">打开</string>
+	<string name="midi_connected_banner">MIDI已连接: %1$s</string>
+	<string name="midi_disconnected">已断开</string>
 	<string name="signal_SpeedFirst">优先速度</string>
 	<string name="signal_avoidAfterimage">避免残影</string>
 

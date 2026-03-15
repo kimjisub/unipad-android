@@ -86,6 +86,8 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">Reprodução Automática</string>
 	<string name="practiceMode">Prática</string>
+	<string name="guidePlay">Guia</string>
+	<string name="stepPractice">Passo</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Luz de feedback</string>
 	<string name="traceLog">Registro de Sequência</string>
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Conectando launchpad…</string>
 	<string name="midiDevicesNotDetected">Dispositivos MIDI Não Detectados</string>
+	<string name="midi_open_panel">Abrir</string>
+	<string name="midi_connected_banner">MIDI conectado: %1$s</string>
+	<string name="midi_disconnected">Desconectado</string>
 	<string name="signal_SpeedFirst">Velocidade primeiro</string>
 	<string name="signal_avoidAfterimage">Evitar imagem residual</string>
 

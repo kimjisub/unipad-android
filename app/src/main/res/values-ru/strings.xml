@@ -86,6 +86,8 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">Автовоспроизведение</string>
 	<string name="practiceMode">Практика</string>
+	<string name="guidePlay">Гид</string>
+	<string name="stepPractice">Шаг</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Подсветка отклика</string>
 	<string name="traceLog">Журнал действий</string>
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Подключение launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI устройства не обнаружены</string>
+	<string name="midi_open_panel">Открыть</string>
+	<string name="midi_connected_banner">MIDI подключено: %1$s</string>
+	<string name="midi_disconnected">Отключено</string>
 	<string name="signal_SpeedFirst">Приоритет скорости</string>
 	<string name="signal_avoidAfterimage">Избежать послесвечения</string>
 

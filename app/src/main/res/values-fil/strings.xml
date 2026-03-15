@@ -77,7 +77,7 @@
 
 	<!--UniPack Info-->
 	<string name="title">Pamagat</string>
-	<string name="producerName">Producer</string>
+	<string name="producerName">Prodyuser</string>
 	<string name="padSize">Laki ng Pad</string>
 	<string name="numChain">Mga Chain</string>
 	<string name="fileSize">Laki ng File</string>
@@ -86,8 +86,10 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
 	<string name="practiceMode">Pagsasanay</string>
+	<string name="guidePlay">Gabay</string>
+	<string name="stepPractice">Hakbang</string>
 	<string name="option_indicator_format">%s ●</string>
-	<string name="feedbackLight">Feedback light</string>
+	<string name="feedbackLight">Feedback na ilaw</string>
 	<string name="traceLog">Trace Log</string>
 	<string name="traceLogClear">Na-reset na ang Trace Log.</string>
 	<string name="record">I-record</string>
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Kumokonekta sa launchpad…</string>
 	<string name="midiDevicesNotDetected">Hindi Nakita ang mga MIDI Device</string>
+	<string name="midi_open_panel">Buksan</string>
+	<string name="midi_connected_banner">MIDI nakakonekta: %1$s</string>
+	<string name="midi_disconnected">Nadiskonekta</string>
 	<string name="signal_SpeedFirst">Bilis muna</string>
 	<string name="signal_avoidAfterimage">Iwasan ang afterimage</string>
 
@@ -154,7 +159,7 @@
 	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Impormasyon</string>
-	<string name="settings_storage">Storage</string>
+	<string name="settings_storage">Imbakan</string>
 	<string name="settings_theme">Tema</string>
 	<string name="settings_storage_download">Download Storage</string>
 	<string name="settings_developer">Developer</string>
@@ -171,7 +176,7 @@
 	<string name="MPT_playCount">Bilang ng Paglalaro</string>
 	<string name="MPT_theme">Tema</string>
 	<string name="sort_title">Pamagat</string>
-	<string name="sort_producer">Producer</string>
+	<string name="sort_producer">Prodyuser</string>
 	<string name="sort_play_count">Bilang ng Paglalaro</string>
 	<string name="sort_last_opened_date">Huling Binuksan</string>
 	<string name="sort_download_date">Petsa ng Download</string>

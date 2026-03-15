@@ -86,6 +86,8 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">자동재생</string>
 	<string name="practiceMode">연습모드</string>
+	<string name="guidePlay">가이드</string>
+	<string name="stepPractice">스텝</string>
 	<string name="feedbackLight">피드백 표시</string>
 	<string name="traceLog">순서 기록</string>
 	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
@@ -131,7 +133,7 @@
 	<string name="UnableToAccessServer">서버에 접속할 수 없습니다.</string>
 
 	<!--Theme-->
-	<string name="theme">Theme</string>
+	<string name="theme">테마</string>
 	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>

@@ -86,13 +86,15 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">Tự động phát</string>
 	<string name="practiceMode">Luyện tập</string>
+	<string name="guidePlay">Hướng dẫn</string>
+	<string name="stepPractice">Từng bước</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Đèn phản hồi</string>
 	<string name="traceLog">Nhật ký Truy vết</string>
 	<string name="traceLogClear">Nhật ký truy vết đã được đặt lại.</string>
 	<string name="record">Ghi âm</string>
 	<string name="hideUI">Ẩn UI</string>
-	<string name="watermark">Watermark</string>
+	<string name="watermark">Hình mờ</string>
 	<string name="proLightMode">Chế độ Pro Light</string>
 
 	<!--Version-->
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Đang kết nối launchpad…</string>
 	<string name="midiDevicesNotDetected">Không Phát Hiện Thiết Bị MIDI</string>
+	<string name="midi_open_panel">Mở</string>
+	<string name="midi_connected_banner">MIDI đã kết nối: %1$s</string>
+	<string name="midi_disconnected">Đã ngắt kết nối</string>
 	<string name="signal_SpeedFirst">Ưu tiên tốc độ</string>
 	<string name="signal_avoidAfterimage">Tránh bóng mờ</string>
 

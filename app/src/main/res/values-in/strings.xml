@@ -27,7 +27,7 @@
 	<string name="success">Berhasil</string>
 	<string name="failed">Gagal</string>
 	<string name="delete">Hapus</string>
-	<string name="edit">Edit</string>
+	<string name="edit">Sunting</string>
 	<string name="update">Perbarui</string>
 	<string name="ignore">Abaikan</string>
 	<string name="apply">Terapkan</string>
@@ -86,13 +86,15 @@
 	<string name="led">Led</string>
 	<string name="autoPlay">Putar Otomatis</string>
 	<string name="practiceMode">Latihan</string>
+	<string name="guidePlay">Panduan</string>
+	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu umpan balik</string>
 	<string name="traceLog">Log Jejak</string>
 	<string name="traceLogClear">Log Jejak telah direset.</string>
 	<string name="record">Rekam</string>
 	<string name="hideUI">Sembunyikan UI</string>
-	<string name="watermark">Watermark</string>
+	<string name="watermark">Tanda air</string>
 	<string name="proLightMode">Mode Pro Light</string>
 
 	<!--Version-->
@@ -121,6 +123,9 @@
 	<!--Launchpad Connection-->
 	<string name="launchpadConnecting">Menghubungkan launchpad…</string>
 	<string name="midiDevicesNotDetected">Perangkat MIDI Tidak Terdeteksi</string>
+	<string name="midi_open_panel">Buka</string>
+	<string name="midi_connected_banner">MIDI terhubung: %1$s</string>
+	<string name="midi_disconnected">Terputus</string>
 	<string name="signal_SpeedFirst">Kecepatan utama</string>
 	<string name="signal_avoidAfterimage">Hindari bayangan</string>
 
@@ -178,7 +183,7 @@
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Ukuran Pad</string>
-	<string name="MPP_chain">Chain</string>
+	<string name="MPP_chain">Rantai</string>
 	<string name="MPP_soundFiles">File Suara</string>
 	<string name="MPP_ledEvents">Event Led</string>
 	<string name="MPP_fileSize">Ukuran File</string>
@@ -199,7 +204,7 @@
 	<!--Content Descriptions (Accessibility)-->
 	<string name="cd_youtube">YouTube</string>
 	<string name="cd_website">Situs Web</string>
-	<string name="cd_bookmark">Bookmark</string>
+	<string name="cd_bookmark">Penanda</string>
 	<string name="cd_delete">Hapus</string>
 	<string name="cd_logo">Logo UniPad</string>
 	<string name="cd_autoplay_prev">Sebelumnya</string>
@@ -229,7 +234,7 @@
 	<string name="migration_result">Hasil</string>
 
 	<!--Transfer-->
-	<string name="transfer_title">Transfer UniPacks</string>
+	<string name="transfer_title">Transfer UniPack</string>
 	<string name="transfer_button">Transfer</string>
 	<string name="transfer_source">Sumber</string>
 	<string name="transfer_target">Tujuan</string>
