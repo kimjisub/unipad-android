@@ -94,9 +94,7 @@ class PlayActivityViewModel(
 	interface UiCallback {
 		fun setLedPad(x: Int, y: Int)
 		fun setLedChain(c: Int)
-		fun updateTraceLogView(x: Int, y: Int)
-		fun showTraceLog()
-		fun clearTraceLogViews()
+		fun updateTraceLogOverlay()
 		fun showToast(resId: Int)
 		fun finishActivity()
 		fun copyToClipboard(text: String)
@@ -168,8 +166,8 @@ class PlayActivityViewModel(
 	private val logBuilder = StringBuilder()
 
 	// TraceLog
-	lateinit var traceLogTable: Array<Array<Array<ArrayList<Int>>>>
-	lateinit var traceLogNextNum: IntArray
+	lateinit var traceLogSequence: Array<ArrayList<Pair<Int, Int>>>
+	val isTraceLogSequenceInitialized get() = ::traceLogSequence.isInitialized
 
 	/** Load unipack from path with progress reporting. */
 	fun loadUnipack(path: String): UniPack {
@@ -433,7 +431,7 @@ class PlayActivityViewModel(
 					recPrevEventMs = currTime
 				}
 
-				uiCallback?.showTraceLog()
+				uiCallback?.updateTraceLogOverlay()
 			} catch (e: ArrayIndexOutOfBoundsException) {
 				Log.err("Chain observer ArrayIndexOutOfBounds", e)
 			}
@@ -796,24 +794,13 @@ class PlayActivityViewModel(
 
 	fun traceLogInit() {
 		log("traceLogInit")
-		traceLogTable = Array(unipack.chain) {
-			Array(unipack.buttonX) {
-				Array(unipack.buttonY) {
-					ArrayList()
-				}
-			}
-		}
-		traceLogNextNum = IntArray(unipack.chain)
-		for (i in 0 until unipack.chain) {
-			for (j in 0 until unipack.buttonX) for (k in 0 until unipack.buttonY) traceLogTable[i][j][k].clear()
-			traceLogNextNum[i] = 1
-		}
-		uiCallback?.clearTraceLogViews()
+		traceLogSequence = Array(unipack.chain) { ArrayList() }
+		uiCallback?.updateTraceLogOverlay()
 	}
 
 	private fun traceLogLog(x: Int, y: Int) {
-		traceLogTable[chain.value][x][y].add(traceLogNextNum[chain.value]++)
-		uiCallback?.updateTraceLogView(x, y)
+		traceLogSequence[chain.value].add(Pair(x, y))
+		uiCallback?.updateTraceLogOverlay()
 	}
 
 	private fun addLog(msg: String) {

@@ -94,6 +94,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -153,6 +154,7 @@ class PlayActivity : BaseActivity() {
 	// UI - Pad/chain views
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
+	private var traceLogOverlayView: TraceLogOverlayView? = null
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 
@@ -185,30 +187,11 @@ class PlayActivity : BaseActivity() {
 			}
 		}
 
-		override fun updateTraceLogView(x: Int, y: Int) {
-			val pad = padViews[x][y] ?: return
-			pad.setTraceLogText("")
-			for (i in vm.traceLogTable[vm.chain.value][x][y].indices) pad.appendTraceLog(
-				"${vm.traceLogTable[vm.chain.value][x][y][i]} "
-			)
-		}
-
-		override fun showTraceLog() {
-			for (i in 0 until vm.unipack.buttonX) {
-				for (j in 0 until vm.unipack.buttonY) {
-					val pad = padViews[i][j] ?: continue
-					pad.setTraceLogText("")
-					for (k in vm.traceLogTable[vm.chain.value][i][j].indices) pad.appendTraceLog(
-						"${vm.traceLogTable[vm.chain.value][i][j][k]} "
-					)
-				}
-			}
-		}
-
-		override fun clearTraceLogViews() {
-			if (::padViews.isInitialized) {
-				for (i in 0 until vm.unipack.buttonX) for (j in 0 until vm.unipack.buttonY) padViews[i][j]?.setTraceLogText("")
-			}
+		override fun updateTraceLogOverlay() {
+			val overlay = traceLogOverlayView ?: return
+			if (!vm.isTraceLogSequenceInitialized) return
+			val seq = vm.traceLogSequence[vm.chain.value]
+			overlay.setData(ArrayList(seq), vm.unipack.buttonX, vm.unipack.buttonY)
 		}
 
 		override fun showToast(resId: Int) {
@@ -518,6 +501,12 @@ class PlayActivity : BaseActivity() {
 								}.also { chainsBottomContainer = it } },
 								modifier = Modifier.wrapContentSize()
 							)
+							AndroidView(
+								factory = { ctx -> TraceLogOverlayView(ctx).also { overlay ->
+									traceLogOverlayView = overlay
+								} },
+								modifier = Modifier.wrapContentSize()
+							)
 						},
 						modifier = Modifier.fillMaxSize()
 					) { measurables, constraints ->
@@ -527,10 +516,14 @@ class PlayActivity : BaseActivity() {
 						val padPlaceable = measurables[2].measure(unconstrained)
 						val rightPlaceable = measurables[3].measure(unconstrained)
 						val bottomPlaceable = measurables[4].measure(unconstrained)
+						val overlayPlaceable = measurables[5].measure(
+							Constraints.fixed(padPlaceable.width, padPlaceable.height)
+						)
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							val padX = (constraints.maxWidth - padPlaceable.width) / 2
 							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
+							overlayPlaceable.place(padX, padY)
 							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
 							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
 							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
@@ -1034,7 +1027,6 @@ class PlayActivity : BaseActivity() {
 				val view = PadView(this)
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
-				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
 				view.setOnTouchListener { _, event ->
 					when (event?.action) {
 						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
