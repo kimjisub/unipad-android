@@ -205,3 +205,9 @@ If validation fails, the theme will not be installed and an error message will b
 - `phantom_.png` alternates with `phantom.png` in a 2x2 pattern when the pad size is even (e.g., 8x8). Use a slightly different design for visual distinction.
 - Chain Mode A (LED mode) dynamically applies LED colors to a single image, allowing diverse states with just one image.
 - Chain Mode B (Drawable mode) gives you direct control over each state's image, enabling more creative freedom in design.
+
+## Legacy APK Conversion Example
+
+An example conversion from a legacy APK theme to the current ZIP theme format is available here:
+
+- [Black Phantom conversion](theme-conversions/black-phantom/README.md)
