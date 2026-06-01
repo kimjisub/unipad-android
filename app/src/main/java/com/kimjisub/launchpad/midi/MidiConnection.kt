@@ -22,6 +22,7 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadPRO
+import com.kimjisub.launchpad.midi.driver.LaunchpadProCFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadS
 import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
@@ -268,10 +269,16 @@ object MidiConnection {
 			listener?.onUiLog("ProductId : ${device.productId}")
 
 			val pid = device.productId
+			val productName = device.productName
 			val exactEntry = driverRegistryExact[pid]
 			val rangeEntry = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }?.entry
 
-			val entry = exactEntry ?: rangeEntry
+			var entry = exactEntry ?: rangeEntry
+
+			if (productName?.contains("Launchpad Open", ignoreCase = true) == true) {
+				entry = DriverEntry("Launchpad Pro MK2 (CFW)", ::LaunchpadProCFW)
+			}
+
 			if (entry != null) {
 				val deviceId = if (rangeEntry != null) {
 					val range = driverRegistryRanges.first { pid in it.pidStart..it.pidEnd }

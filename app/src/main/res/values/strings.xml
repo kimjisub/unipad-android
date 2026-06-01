@@ -134,6 +134,7 @@
 	<string name="midi_lp_x" translatable="false">Launchpad X</string>
 	<string name="midi_lp_mini_mk3" translatable="false">Launchpad Mini MK3</string>
 	<string name="midi_lp_mk3" translatable="false">Launchpad Pro MK3</string>
+	<string name="midi_lp_pro_cfw" translatable="false">Launchpad Pro MK2 (CFW)</string>
 	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
 	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>
