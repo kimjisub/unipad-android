@@ -22,7 +22,7 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadPRO
-import com.kimjisub.launchpad.midi.driver.LaunchpadProCFW
+import com.kimjisub.launchpad.midi.driver.LaunchpadPROCFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadS
 import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
@@ -46,6 +46,13 @@ object MidiConnection {
 		val name: String,
 		val factory: () -> DriverRef,
 		val interfaceNum: Int = 0,
+		val productNameMatcher: ((String?) -> Boolean)? = null,
+	)
+
+	private val driverRegistryByName: List<DriverEntry> = listOf(
+		DriverEntry("Launchpad Pro MK2 (CFW)", ::LaunchpadPROCFW, productNameMatcher = {
+			it?.contains("Launchpad Open", ignoreCase = true) == true
+		})
 	)
 
 	// Exact PID matches (non-Novation devices or single-PID devices)
@@ -270,14 +277,11 @@ object MidiConnection {
 
 			val pid = device.productId
 			val productName = device.productName
+			val nameEntry = driverRegistryByName.firstOrNull { it.productNameMatcher?.invoke(productName) == true }
 			val exactEntry = driverRegistryExact[pid]
 			val rangeEntry = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }?.entry
 
-			var entry = exactEntry ?: rangeEntry
-
-			if (productName?.contains("Launchpad Open", ignoreCase = true) == true) {
-				entry = DriverEntry("Launchpad Pro MK2 (CFW)", ::LaunchpadProCFW)
-			}
+			var entry = nameEntry ?: exactEntry ?: rangeEntry
 
 			if (entry != null) {
 				val deviceId = if (rangeEntry != null) {

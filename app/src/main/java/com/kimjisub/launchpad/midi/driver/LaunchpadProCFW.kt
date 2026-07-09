@@ -1,6 +1,6 @@
 package com.kimjisub.launchpad.midi.driver
 
-class LaunchpadProCFW : DriverRef() {
+class LaunchpadPROCFW : DriverRef() {
 
 	companion object {
 
@@ -27,6 +27,8 @@ class LaunchpadProCFW : DriverRef() {
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		val cin = cmd and 0x0F
+		if (cin != 8 && cin != 9 && cin != 11) return
+
 		val isDown = (cin == 9 && velocity > 0) || (cin == 11 && velocity > 0)
 
 		when (note) {
