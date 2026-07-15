@@ -281,7 +281,7 @@ object MidiConnection {
 			val exactEntry = driverRegistryExact[pid]
 			val rangeEntry = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }?.entry
 
-			var entry = nameEntry ?: exactEntry ?: rangeEntry
+			val entry = nameEntry ?: exactEntry ?: rangeEntry
 
 			if (entry != null) {
 				val deviceId = if (rangeEntry != null) {
