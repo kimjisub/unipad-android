@@ -1,0 +1,2 @@
+json_key_file(ENV["PLAY_JSON_KEY_FILE"]) # Google Play service account JSON, materialized by op-bootstrap
+package_name("com.kimjisub.launchpad")

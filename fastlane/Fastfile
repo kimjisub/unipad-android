@@ -1,0 +1,55 @@
+# UniPad Android — Play Store deploy lanes.
+# Secrets (keystore, Play service-account JSON) are injected by the store-deploy skill's
+# op-bootstrap.sh at runtime; nothing sensitive lives in this file.
+#
+# Release signing itself is already wired in app/build.gradle via keystore.properties,
+# so a local `gradle bundleRelease` signs with the real upload key without extra config.
+
+default_platform(:android)
+
+BUILD_GRADLE = File.expand_path("../app/build.gradle", __dir__)
+
+# Reads the current versionCode from app/build.gradle.
+def current_version_code
+  File.read(BUILD_GRADLE).match(/versionCode\s*=\s*(\d+)/)[1].to_i
+end
+
+# Increments versionCode in app/build.gradle by one and returns the new value.
+# Play rejects an AAB whose versionCode is not strictly greater than the last upload.
+def bump_version_code!
+  contents = File.read(BUILD_GRADLE)
+  next_code = current_version_code + 1
+  File.write(BUILD_GRADLE, contents.sub(/versionCode\s*=\s*\d+/, "versionCode = #{next_code}"))
+  UI.success("versionCode -> #{next_code}")
+  next_code
+end
+
+platform :android do
+  desc "Build a signed release AAB without uploading (build/sign verification)."
+  lane :build_only do
+    gradle(task: "clean")
+    gradle(task: "bundle", build_type: "Release")
+    UI.success("AAB: #{lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]}")
+  end
+
+  desc "Build a signed AAB and upload to the given Play track. Pass track:internal|alpha|beta|production."
+  lane :deploy do |options|
+    track = options[:track] || "internal"
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+
+    bump_version_code! unless options[:no_bump]
+    gradle(task: "clean")
+    gradle(task: "bundle", build_type: "Release")
+
+    upload_to_play_store(
+      track: track,
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      release_status: track == "production" ? "completed" : "draft",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+    UI.success("Uploaded versionCode #{current_version_code} to Play track '#{track}'.")
+  end
+end
