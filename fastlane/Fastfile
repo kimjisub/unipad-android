@@ -14,13 +14,27 @@ def current_version_code
   File.read(BUILD_GRADLE).match(/versionCode\s*=\s*(\d+)/)[1].to_i
 end
 
-# Increments versionCode in app/build.gradle by one and returns the new value.
-# Play rejects an AAB whose versionCode is not strictly greater than the last upload.
+# Highest versionCode Play already knows about, across every track. The local
+# build.gradle can lag behind (a build made elsewhere, a manual upload), and Play
+# rejects an AAB whose versionCode is not strictly greater than the last upload.
+def highest_play_version_code
+  %w[internal alpha beta production].flat_map { |t|
+    begin
+      google_play_track_version_codes(track: t)
+    rescue StandardError
+      [] # track may not exist yet
+    end
+  }.map(&:to_i).max || 0
+end
+
+# Sets versionCode to one past whichever is higher: the local value or Play's.
 def bump_version_code!
   contents = File.read(BUILD_GRADLE)
-  next_code = current_version_code + 1
+  local = current_version_code
+  remote = highest_play_version_code
+  next_code = [local, remote].max + 1
   File.write(BUILD_GRADLE, contents.sub(/versionCode\s*=\s*\d+/, "versionCode = #{next_code}"))
-  UI.success("versionCode -> #{next_code}")
+  UI.success("versionCode -> #{next_code} (local was #{local}, Play had #{remote})")
   next_code
 end
 
