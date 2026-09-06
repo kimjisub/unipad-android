@@ -163,6 +163,37 @@ class WorkspaceManagerTest {
 	}
 
 	@Test
+	fun availableWorkspaces_skipsUnmountedExternalDirs() {
+		val sdCardDir = File(tempDir, "sdcard")
+		sdCardDir.mkdirs()
+
+		every { mockContext.getExternalFilesDir(null) } returns null
+		every { mockContext.filesDir } returns File(tempDir, "internal")
+		every { mockContext.getExternalFilesDirs("UniPack") } returns arrayOf(sdCardDir, null)
+
+		val manager = WorkspaceManager(mockContext)
+		val workspaces = manager.availableWorkspaces
+
+		assertEquals(
+			"Unmounted volume should be treated as absent",
+			listOf("External SD Card 1"),
+			workspaces.filter { it.name.contains("SD Card") }.map { it.name }
+		)
+	}
+
+	@Test
+	fun getLegacyUniPackDir_skipsUnmountedExternalDirs() {
+		val internalDir = File(tempDir, "storage/emulated/0/UniPack")
+		internalDir.mkdirs()
+
+		every { mockContext.getExternalFilesDirs("UniPack") } returns arrayOf(null, internalDir)
+
+		val manager = WorkspaceManager(mockContext)
+
+		assertEquals(internalDir, manager.getLegacyUniPackDir())
+	}
+
+	@Test
 	fun availableWorkspaces_appStoragePathEndsWithUnipad() {
 		val appDir = File(tempDir, "app_external")
 		appDir.mkdirs()
