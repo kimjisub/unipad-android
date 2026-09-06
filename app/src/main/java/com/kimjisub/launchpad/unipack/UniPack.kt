@@ -121,6 +121,7 @@ abstract class UniPack {
 	fun soundPush(c: Int, x: Int, y: Int, num: Int) {
 		try {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
+			if (sounds.isEmpty()) return
 			val targetNum = num % sounds.size
 			if (sounds[0].num != targetNum)
 				while (true) {
@@ -160,6 +161,7 @@ abstract class UniPack {
 	fun ledPush(c: Int, x: Int, y: Int, num: Int) {
 		try {
 			val leds = ledAnimationTable?.get(c)?.get(x)?.get(y) ?: return
+			if (leds.isEmpty()) return  // Crashlytics 313e518c: divide by zero on an empty cell
 			val targetNum = num % leds.size
 			if (leds[0].num != targetNum)
 				while (true) {

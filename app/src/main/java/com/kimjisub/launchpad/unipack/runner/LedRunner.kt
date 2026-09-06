@@ -51,6 +51,12 @@ class LedRunner(
 					while (true) {
 						// Counting Up Loop Progress
 						val ledEvents = state.ledAnimation?.ledEvents ?: break
+						// An empty keyLED file gives an animation with no events; with loop 0 the old code
+						// spun into ledEvents[0] on an empty list (Crashlytics a1376611).
+						if (ledEvents.isEmpty()) {
+							state.isPlaying = false
+							break
+						}
 						if (state.index >= ledEvents.size) {
 							state.loopProgress++
 							state.index = 0
@@ -103,8 +109,8 @@ class LedRunner(
 										chain.value = event.chain
 									}
 								}
-							} catch (ex: ArrayIndexOutOfBoundsException) {
-								Log.err("LED event ArrayIndexOutOfBounds", ex)
+							} catch (ex: IndexOutOfBoundsException) {
+								Log.err("LED event index out of bounds", ex)
 							}
 						} else break
 						state.index++

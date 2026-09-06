@@ -92,7 +92,10 @@ object BaseApiService {
 
 	fun <T> createRetrofitService(baseUrl: String, serviceClass: Class<T>): T {
 		val httpLoggingInterceptor = HttpLoggingInterceptor { message -> Log.network(message) }
-		httpLoggingInterceptor.level = Level.BODY
+		// Never BODY: the same client downloads UniPack ZIPs, and BODY buffers the whole
+		// response in memory before logging it (Crashlytics b1f34473 / 0a626898: OOM in
+		// okio.Segment during UniPackDownloader).
+		httpLoggingInterceptor.level = Level.HEADERS
 		val client = okHttpClientBuilder
 			.addInterceptor(httpLoggingInterceptor)
 			.build()
