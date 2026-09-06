@@ -70,6 +70,15 @@ class PreferenceManager(
 			}
 		}
 
+	/** Slide Mode: dragging a finger onto a pad presses it and releases the one it left (#26). */
+	var slideMode: Boolean
+		get() = pref.getBoolean(KEY_SLIDE_MODE, false)
+		set(value) {
+			pref.edit {
+				putBoolean(KEY_SLIDE_MODE, value)
+			}
+		}
+
 	var downloadStoragePath: String?
 		get() = pref.getString(KEY_DOWNLOAD_STORAGE_PATH, null)
 		set(value) {
@@ -98,5 +107,6 @@ class PreferenceManager(
 		private const val KEY_DOWNLOAD_STORAGE_PATH = "download_storage_path"
 		private const val KEY_BACKUP_SAF_URI = "backup_saf_uri"
 		private const val KEY_TRACE_LOG_CLASSIC = "TraceLogClassic"
+		private const val KEY_SLIDE_MODE = "SlideMode"
 	}
 }

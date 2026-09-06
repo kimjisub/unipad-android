@@ -173,6 +173,8 @@
 	<string name="settings_play">Play</string>
 	<string name="trace_log_classic">Classic trace log</string>
 	<string name="trace_log_classic_desc">Show the tap order as numbers on each pad instead of lines and dots</string>
+	<string name="slide_mode">Slide across pads</string>
+	<string name="slide_mode_desc">Dragging a finger onto a pad plays it and stops the pad it left</string>
 	<string name="settings_info">Information</string>
 	<string name="settings_storage">Storage</string>
 	<string name="settings_theme">Theme</string>
