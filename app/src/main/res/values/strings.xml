@@ -169,6 +169,9 @@
 	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_device">Device</string>
+	<string name="settings_play">Play</string>
+	<string name="trace_log_classic">Classic trace log</string>
+	<string name="trace_log_classic_desc">Show the tap order as numbers on each pad instead of lines and dots</string>
 	<string name="settings_info">Information</string>
 	<string name="settings_storage">Storage</string>
 	<string name="settings_theme">Theme</string>

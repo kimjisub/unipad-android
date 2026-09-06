@@ -61,6 +61,15 @@ class PreferenceManager(
 			}
 		}
 
+	/** Classic trace log: tap order as numbers on each pad (the pre-4.1 look) instead of the line-and-dot overlay. */
+	var traceLogClassic: Boolean
+		get() = pref.getBoolean(KEY_TRACE_LOG_CLASSIC, false)
+		set(value) {
+			pref.edit {
+				putBoolean(KEY_TRACE_LOG_CLASSIC, value)
+			}
+		}
+
 	var downloadStoragePath: String?
 		get() = pref.getString(KEY_DOWNLOAD_STORAGE_PATH, null)
 		set(value) {
@@ -88,5 +97,6 @@ class PreferenceManager(
 		private const val KEY_SORT_ORDER = "SortOrder"
 		private const val KEY_DOWNLOAD_STORAGE_PATH = "download_storage_path"
 		private const val KEY_BACKUP_SAF_URI = "backup_saf_uri"
+		private const val KEY_TRACE_LOG_CLASSIC = "TraceLogClassic"
 	}
 }

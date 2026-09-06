@@ -47,6 +47,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -234,6 +236,7 @@ private fun SettingsScreen(
 	onRestoreClick: () -> Unit = {},
 ) {
 	var selectedCategory by remember { mutableStateOf(initialCategory) }
+	var traceLogClassic by remember { mutableStateOf(prefManager.traceLogClassic) }
 
 	Row(
 		modifier = Modifier
@@ -265,6 +268,11 @@ private fun SettingsScreen(
 					onFcmTokenCopy = onFcmTokenCopy,
 					onCommunityItemClick = onCommunityItemClick,
 					onReconnectClick = onReconnectClick,
+					traceLogClassic = traceLogClassic,
+					onTraceLogClassicChange = {
+						prefManager.traceLogClassic = it
+						traceLogClassic = it
+					},
 				)
 
 				SettingsCategory.STORAGE -> StorageContent(
@@ -468,6 +476,8 @@ private fun InfoContent(
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
 	onReconnectClick: () -> Unit = {},
+	traceLogClassic: Boolean = false,
+	onTraceLogClassicChange: (Boolean) -> Unit = {},
 ) {
 	var showCommunityDialog by remember { mutableStateOf(false) }
 
@@ -484,6 +494,26 @@ private fun InfoContent(
 			SettingsRow(
 				title = stringResource(R.string.reconnect_launchpad),
 				onClick = onReconnectClick,
+			)
+		}
+
+		Spacer(Modifier.height(24.dp))
+
+		// -- Play section --
+		SectionLabel(stringResource(R.string.settings_play))
+
+		SettingsCard {
+			SettingsRow(
+				title = stringResource(R.string.trace_log_classic),
+				subtitle = stringResource(R.string.trace_log_classic_desc),
+				onClick = { onTraceLogClassicChange(!traceLogClassic) },
+				trailing = {
+					Switch(
+						checked = traceLogClassic,
+						onCheckedChange = onTraceLogClassicChange,
+						colors = SwitchDefaults.colors(checkedTrackColor = Accent),
+					)
+				},
 			)
 		}
 
