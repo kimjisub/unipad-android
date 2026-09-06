@@ -1,0 +1,3 @@
+4.1.5
+- Fixes eight more crashes found in crash reports: plugging in a Launchpad on some Android 16 phones, the top row of some Launchpad MK2 firmwares, packs with an empty LED file or an empty pad, changing the volume while a pack loads, opening a link without a browser app, copying the FCM token, and running out of memory while downloading a pack.
+- Crash reports from the audio engine now include symbols so they can be fixed faster.
