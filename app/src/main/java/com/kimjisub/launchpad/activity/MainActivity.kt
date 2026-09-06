@@ -244,9 +244,15 @@ class MainActivity : BaseActivity() {
 						confirmButton = {
 							TextButton(onClick = {
 								deleteTargetItem = null
-								item.unipack.delete()
 								selectedItem = null
-								update()
+								listRefreshing = true
+								lifecycleScope.launch(Dispatchers.IO) {
+									item.unipack.delete()
+									withContext(Dispatchers.Main) {
+										listRefreshing = false
+										update()
+									}
+								}
 							}) {
 								Text(stringResource(string.accept))
 							}
