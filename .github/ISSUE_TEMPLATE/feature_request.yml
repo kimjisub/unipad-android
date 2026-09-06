@@ -1,6 +1,7 @@
 name: Feature request
 description: Propose something new, or a change to how UniPad behaves
 title: "[Feature] "
+labels: ["enhancement", "platform:android", "waiting:agent"]
 body:
   - type: markdown
     attributes:

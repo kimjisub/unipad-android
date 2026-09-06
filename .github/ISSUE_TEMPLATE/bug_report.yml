@@ -1,6 +1,7 @@
 name: Bug report
 description: A crash, wrong behavior, or a Launchpad that does not work
 title: "[Bug] "
+labels: ["bug", "platform:android", "waiting:agent"]
 body:
   - type: markdown
     attributes:
@@ -44,7 +45,19 @@ body:
         - Launchpad Pro MK2 with custom firmware (CFW)
         - Matrix
         - Midi Fighter
+        - Master keyboard / other MIDI keyboard
         - Other (name it in the steps)
+    validations:
+      required: true
+  - type: dropdown
+    id: without-hardware
+    attributes:
+      label: Does it also happen with no Launchpad connected?
+      description: This tells us whether we can reproduce it on an emulator or need the hardware.
+      options:
+        - "Yes, it also happens with no Launchpad connected"
+        - "No, only when the Launchpad is connected"
+        - "Not applicable (I do not use a Launchpad)"
     validations:
       required: true
   - type: textarea
@@ -73,3 +86,5 @@ body:
     id: unipack
     attributes:
       label: UniPack (if it only happens with one)
+      description: Its name and where you got it (store link or download URL). To share the file itself, zip it and drag it into the steps box above.
+      placeholder: "Faded (store), or https://..."
