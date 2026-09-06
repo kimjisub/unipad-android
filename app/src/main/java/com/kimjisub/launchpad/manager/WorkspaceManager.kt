@@ -50,7 +50,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			val dirs = context.getExternalFilesDirs("UniPack")
 			var externalIndex = 1
 
-			dirs.forEach { file ->
+			dirs.filterNotNull().forEach { file ->
 				if (file.absolutePath.contains("/storage/emulated/0")) return@forEach
 
 				val name = context.getString(R.string.workspace_external_sd_card_format, externalIndex)
@@ -194,7 +194,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 	/** Legacy UniPack directory: getExternalFilesDirs("UniPack") on internal storage */
 	fun getLegacyUniPackDir(): File? {
 		val dirs = context.getExternalFilesDirs("UniPack")
-		val internal = dirs.firstOrNull { it.absolutePath.contains("/storage/emulated/0") }
+		val internal = dirs.filterNotNull().firstOrNull { it.absolutePath.contains("/storage/emulated/0") }
 		return if (internal != null && internal.exists() && internal.canRead()) internal else null
 	}
 
