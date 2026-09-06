@@ -55,5 +55,6 @@ private:
     ActiveVoice voices_[MAX_VOICES];
     SoundBank soundBank_;
     std::atomic<int> nextStopKey_{1};
+    std::atomic<bool> stopping_{false};
     int outputSampleRate_ = 48000;
 };

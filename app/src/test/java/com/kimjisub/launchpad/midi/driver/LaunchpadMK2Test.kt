@@ -42,6 +42,14 @@ class LaunchpadMK2Test {
 		verify { receiveListener.onPadTouch(0, 0, false, 0) }
 	}
 
+	@Test
+	fun getSignal_noteAboveTheGrid_isIgnored() {
+		// note=95: x=9-9=0, y=5 -> would be pad(-1, 4); some firmwares send the top row this way
+		driver.getSignal(cmd = 9, sig = 0, note = 95, velocity = 100)
+		verify(exactly = 0) { receiveListener.onPadTouch(any(), any(), any(), any()) }
+		verify(exactly = 0) { receiveListener.onChainTouch(any(), any()) }
+	}
+
 	// --- getSignal: chain and function keys ---
 
 	@Test

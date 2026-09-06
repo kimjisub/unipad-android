@@ -26,9 +26,11 @@ class LaunchpadMK2 : DriverRef() {
 		if (cmd == 9) {
 			val x = 9 - note / 10
 			val y = note % 10
-			if (y in 1..8)
+			// Notes 91..98 (x = 0) are the top row on some firmwares and would map to pad row -1
+			// (Crashlytics f2a35391: ArrayIndexOutOfBounds index=-1 in PlayActivity.setLedUI).
+			if (x in 1..8 && y in 1..8)
 				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
-			else if (y == 9) {
+			else if (y == 9 && x in 1..8) {
 				onChainTouch(x - 1, velocity != 0)
 				onFunctionKeyTouch(x - 1 + 8, velocity != 0)
 			}

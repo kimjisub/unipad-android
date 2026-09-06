@@ -57,6 +57,11 @@ android {
 			manifestPlaceholders = [appName: "@string/app_name"]
 			signingConfig = signingConfigs.release
 			debuggable = false
+			// Ship native debug symbols inside the bundle so Play vitals can resolve
+			// liboboe / libunipad_audio frames (#37).
+			ndk {
+				debugSymbolLevel = 'FULL'
+			}
 
 			minifyEnabled = true
 			shrinkResources = true

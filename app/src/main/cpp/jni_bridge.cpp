@@ -6,16 +6,19 @@
 #define LOG_TAG "UniPadAudioJNI"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
+// One engine for the life of the process. It used to be destroyed on every stop and
+// re-created on start; a callback still in flight on some low-end devices then hit a
+// destroyed mutex and the process aborted (Play vitals: SIGABRT in libc++ under liboboe,
+// unipad-android #37). Streams are opened and closed, the engine object stays.
 static std::unique_ptr<AudioEngine> sEngine;
 
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
 Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStart(JNIEnv*, jobject) {
-    if (sEngine) {
-        sEngine->stop();
+    if (!sEngine) {
+        sEngine = std::make_unique<AudioEngine>();
     }
-    sEngine = std::make_unique<AudioEngine>();
     return sEngine->start() ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -23,7 +26,6 @@ JNIEXPORT void JNICALL
 Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStop(JNIEnv*, jobject) {
     if (sEngine) {
         sEngine->stop();
-        sEngine.reset();
     }
 }
 

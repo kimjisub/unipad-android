@@ -1024,7 +1024,8 @@ class PlayActivity : BaseActivity() {
 	// region LED rendering
 
 	private fun setLedUI(x: Int, y: Int) {
-		val pad = padViews[x][y] ?: return
+		if (!::padViews.isInitialized) return
+		val pad = padViews.getOrNull(x)?.getOrNull(y) ?: return
 		val item = vm.channelManager.get(x, y)
 		if (item != null) {
 			when (item.channel) {
@@ -1042,7 +1043,8 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedUIChain(y: Int) {
-		if (y !in chainViews.indices) return
+		// The volume observer can fire before start() allocates chainViews (Crashlytics 89bc2683).
+		if (!::chainViews.isInitialized || y !in chainViews.indices) return
 		val item = vm.channelManager.get(-1, y)
 		val circle = chainViews[y] ?: return
 		if (theme?.isChainLed == true) {

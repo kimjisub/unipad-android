@@ -114,6 +114,7 @@
 	<string name="importComplete">Analysis complete!</string>
 	<string name="importFailed">Failed to analyze…</string>
 	<string name="copied">Copied to clipboard.</string>
+	<string name="no_app_for_link">No app on this device can open this link.</string>
 	<string name="skinMemoryErr">Failed to apply skin.\nRestart app.</string>
 	<string name="skinErr">Failed to apply skin.\nReset skin.</string>
 

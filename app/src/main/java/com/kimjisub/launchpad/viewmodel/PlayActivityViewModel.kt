@@ -382,6 +382,12 @@ class PlayActivityViewModel(
 	// pad, chain
 
 	fun padTouch(x: Int, y: Int, upDown: Boolean) {
+		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
+		// on the main thread, outside the catch below, so reject it here.
+		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
+			Log.err("padTouch out of range: ($x, $y)")
+			return
+		}
 		try {
 			if (upDown) {
 				if (autoPlayRunner?.stepMode == true) {

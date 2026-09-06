@@ -16,6 +16,8 @@ AudioEngine::~AudioEngine() {
 }
 
 bool AudioEngine::start() {
+    stop();
+    stopping_ = false;
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Output)
            ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
@@ -40,6 +42,7 @@ bool AudioEngine::start() {
     if (result != oboe::Result::OK) {
         LOGE("Failed to start stream: %s", oboe::convertToText(result));
         stream_->close();
+        stream_.reset();
         return false;
     }
 
@@ -48,10 +51,14 @@ bool AudioEngine::start() {
 }
 
 void AudioEngine::stop() {
-    if (stream_) {
-        stream_->requestStop();
-        stream_->close();
-        stream_.reset();
+    // Flag first so a callback that is already scheduled returns Stop instead of touching
+    // the voices while the stream is torn down.
+    stopping_ = true;
+    auto stream = stream_;
+    stream_.reset();
+    if (stream) {
+        stream->requestStop();
+        stream->close();
     }
 }
 
@@ -133,6 +140,8 @@ oboe::DataCallbackResult AudioEngine::onAudioReady(
 
     auto* output = static_cast<int16_t*>(audioData);
     std::memset(output, 0, numFrames * 2 * sizeof(int16_t)); // stereo
+
+    if (stopping_.load()) return oboe::DataCallbackResult::Stop;
 
     std::lock_guard<std::mutex> lock(voiceMutex_);
 

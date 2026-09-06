@@ -113,6 +113,7 @@
 	<string name="importComplete">불러오기 성공!</string>
 	<string name="importFailed">불러오기 실패…</string>
 	<string name="copied">클립보드에 복사되었습니다.</string>
+	<string name="no_app_for_link">이 링크를 열 수 있는 앱이 없습니다.</string>
 	<string name="skinMemoryErr">스킨을 불러오는 도중 메모리 문제가 발생하였습니다.\n앱을 재시작합니다.</string>
 	<string name="skinErr">스킨에 문제가 있습니다.\n스킨을 초기화합니다.</string>
 
