@@ -437,6 +437,7 @@ class PlayActivityViewModel(
 
 	fun refreshWatermark() {
 		log("refreshWatermark")
+		if (!isChannelManagerInitialized) return
 		val topBar = IntArray(TOP_BAR_COUNT)
 		val showUi: Boolean
 		val showUiUnipad: Boolean

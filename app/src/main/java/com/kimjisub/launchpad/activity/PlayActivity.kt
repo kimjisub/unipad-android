@@ -918,7 +918,7 @@ class PlayActivity : BaseActivity() {
 			vm.traceLogInit()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
 			vm.uiLoaded = true
-			vm.chainBtnsRefresh()
+			vm.refreshWatermark()
 			updateVolumeUI()
 			controller = midiController
 		} catch (e: RuntimeException) {
