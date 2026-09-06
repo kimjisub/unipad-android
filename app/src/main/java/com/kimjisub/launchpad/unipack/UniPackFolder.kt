@@ -9,6 +9,7 @@ import com.kimjisub.launchpad.unipack.struct.Sound
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.InputStreamReader
 
 class UniPackFolder(val rootFolder: File) : UniPack() {
@@ -93,7 +94,14 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 
 	private fun info() {
 		val file = infoFile ?: return
-		BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
+		val inputStream = try {
+			FileInputStream(file)
+		} catch (e: FileNotFoundException) {
+			addErr("info : file was not found")
+			criticalError = true
+			return
+		}
+		BufferedReader(InputStreamReader(inputStream)).use { reader ->
 			while (true) {
 				val s = reader.readLine()?.trim() ?: break
 				if (s.isEmpty()) continue
@@ -136,7 +144,14 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		}
 		soundTable = table
 		soundCount = 0
-		BufferedReader(InputStreamReader(FileInputStream(keySoundFile))).use { reader ->
+		val inputStream = try {
+			FileInputStream(keySoundFile)
+		} catch (e: FileNotFoundException) {
+			addErr("keySound : file was not found")
+			criticalError = true
+			return
+		}
+		BufferedReader(InputStreamReader(inputStream)).use { reader ->
 			while (true) {
 				val s = reader.readLine()?.trim() ?: break
 				if (s.isEmpty()) continue
@@ -244,7 +259,13 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						continue
 					}
 					val ledList = ArrayList<LedAnimation.LedEvent>()
-					BufferedReader(InputStreamReader(FileInputStream(file))).use { reader ->
+					val inputStream = try {
+						FileInputStream(file)
+					} catch (e: FileNotFoundException) {
+						addErr("keyLed : [$fileName] file was not found")
+						continue
+					}
+					BufferedReader(InputStreamReader(inputStream)).use { reader ->
 						loop@ while (true) {
 							val s = reader.readLine()?.trim() ?: break
 							if (s.isEmpty()) continue@loop
@@ -357,7 +378,13 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		autoPlayTable = autoPlay
 		val map = Array(buttonX) { IntArray(buttonY) }
 		var currChain = 0
-		BufferedReader(InputStreamReader(FileInputStream(autoPlayFile))).use { reader ->
+		val inputStream = try {
+			FileInputStream(autoPlayFile)
+		} catch (e: FileNotFoundException) {
+			addErr("autoPlay : file was not found")
+			return
+		}
+		BufferedReader(InputStreamReader(inputStream)).use { reader ->
 			loop@ while (true) {
 				val s = reader.readLine()?.trim() ?: break
 				if (s.isEmpty()) continue@loop
