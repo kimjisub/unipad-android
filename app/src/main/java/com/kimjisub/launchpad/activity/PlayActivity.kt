@@ -109,6 +109,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
+import com.kimjisub.launchpad.tool.TraceLogText
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -158,6 +159,11 @@ class PlayActivity : BaseActivity() {
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
 
+	// Classic trace log (numbers on pads): what is drawn right now, so one new tap only touches one pad.
+	private var classicTraceShown = false
+	private var classicTraceChain = -1
+	private var classicTraceCount = 0
+
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 
 	private val volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -190,10 +196,18 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun updateTraceLogOverlay() {
-			val overlay = traceLogOverlayView ?: return
 			if (!vm.isTraceLogSequenceInitialized) return
-			val seq = vm.traceLogSequence[vm.chain.value]
-			overlay.setData(ArrayList(seq), vm.unipack.buttonX, vm.unipack.buttonY)
+			val chain = vm.chain.value
+			val seq = vm.traceLogSequence[chain]
+			val buttonX = vm.unipack.buttonX
+			val buttonY = vm.unipack.buttonY
+			if (p.traceLogClassic) {
+				traceLogOverlayView?.setData(emptyList(), buttonX, buttonY)
+				renderClassicTraceLog(chain, seq)
+			} else {
+				clearClassicTraceLog()
+				traceLogOverlayView?.setData(ArrayList(seq), buttonX, buttonY)
+			}
 		}
 
 		override fun showToast(resId: Int) {
@@ -926,6 +940,30 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/** Classic trace log: prints the 1-based tap order on each pad (Settings > Play). */
+	private fun renderClassicTraceLog(chain: Int, seq: List<Pair<Int, Int>>) {
+		if (!::padViews.isInitialized) return
+		val appendOnly = classicTraceShown && chain == classicTraceChain && seq.size == classicTraceCount + 1
+		if (appendOnly) {
+			val (x, y) = seq.last()
+			padViews.getOrNull(x)?.getOrNull(y)?.appendTraceLog("${seq.size} ")
+		} else {
+			val texts = TraceLogText.perPad(seq, vm.unipack.buttonX, vm.unipack.buttonY)
+			for (x in texts.indices) for (y in texts[x].indices) padViews.getOrNull(x)?.getOrNull(y)?.setTraceLogText(texts[x][y])
+		}
+		classicTraceShown = true
+		classicTraceChain = chain
+		classicTraceCount = seq.size
+	}
+
+	private fun clearClassicTraceLog() {
+		if (!classicTraceShown) return
+		if (::padViews.isInitialized) for (row in padViews) for (pad in row) pad?.setTraceLogText("")
+		classicTraceShown = false
+		classicTraceChain = -1
+		classicTraceCount = 0
+	}
+
 	@SuppressLint("ClickableViewAccessibility")
 	private fun setupPads(buttonSizeX: Int, buttonSizeY: Int) {
 		for (x in 0 until vm.unipack.buttonX) {
@@ -935,6 +973,7 @@ class PlayActivity : BaseActivity() {
 				val view = PadView(this)
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
+				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
 				view.setOnTouchListener { _, event ->
 					when (event?.action) {
 						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
