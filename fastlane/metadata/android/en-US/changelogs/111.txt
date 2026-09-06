@@ -1,0 +1,3 @@
+4.1.4
+- Fixes seven crashes reported through Google Play: opening the app with an SD card removed, plugging in a Launchpad on some Galaxy devices, leaving practice mode, pressing Back while a pack is loading, packs with missing files, deleting a large pack, and the Open source licenses screen.
+- Settings > Play > Classic trace log: shows the tap order as numbers on each pad again, as before 4.1.
