@@ -162,6 +162,8 @@
 	<string name="settings_play">연주</string>
 	<string name="trace_log_classic">예전 방식 순서 기록</string>
 	<string name="trace_log_classic_desc">선과 점 대신 각 패드에 누른 순서를 숫자로 표시합니다</string>
+	<string name="slide_mode">패드 슬라이드</string>
+	<string name="slide_mode_desc">손가락을 끌어 다른 패드에 들어가면 그 패드가 울리고 벗어난 패드는 멈춥니다</string>
 	<string name="settings_info">정보</string>
 	<string name="settings_storage">저장소</string>
 	<string name="settings_theme">테마</string>

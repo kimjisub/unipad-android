@@ -245,6 +245,7 @@ private fun SettingsScreen(
 ) {
 	var selectedCategory by remember { mutableStateOf(initialCategory) }
 	var traceLogClassic by remember { mutableStateOf(prefManager.traceLogClassic) }
+	var slideMode by remember { mutableStateOf(prefManager.slideMode) }
 
 	Row(
 		modifier = Modifier
@@ -280,6 +281,11 @@ private fun SettingsScreen(
 					onTraceLogClassicChange = {
 						prefManager.traceLogClassic = it
 						traceLogClassic = it
+					},
+					slideMode = slideMode,
+					onSlideModeChange = {
+						prefManager.slideMode = it
+						slideMode = it
 					},
 				)
 
@@ -486,6 +492,8 @@ private fun InfoContent(
 	onReconnectClick: () -> Unit = {},
 	traceLogClassic: Boolean = false,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
+	slideMode: Boolean = false,
+	onSlideModeChange: (Boolean) -> Unit = {},
 ) {
 	var showCommunityDialog by remember { mutableStateOf(false) }
 
@@ -519,6 +527,19 @@ private fun InfoContent(
 					Switch(
 						checked = traceLogClassic,
 						onCheckedChange = onTraceLogClassicChange,
+						colors = SwitchDefaults.colors(checkedTrackColor = Accent),
+					)
+				},
+			)
+			CardDivider()
+			SettingsRow(
+				title = stringResource(R.string.slide_mode),
+				subtitle = stringResource(R.string.slide_mode_desc),
+				onClick = { onSlideModeChange(!slideMode) },
+				trailing = {
+					Switch(
+						checked = slideMode,
+						onCheckedChange = onSlideModeChange,
 						colors = SwitchDefaults.colors(checkedTrackColor = Accent),
 					)
 				},

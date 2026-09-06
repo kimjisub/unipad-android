@@ -95,6 +95,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
@@ -158,6 +159,7 @@ class PlayActivity : BaseActivity() {
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
+	private var slideTouchOverlayView: SlideTouchOverlayView? = null
 
 	// Classic trace log (numbers on pads): what is drawn right now, so one new tap only touches one pad.
 	private var classicTraceShown = false
@@ -521,6 +523,14 @@ class PlayActivity : BaseActivity() {
 								} },
 								modifier = Modifier.wrapContentSize()
 							)
+							// Slide Mode layer: GONE unless the setting is on, so pads keep their own touches
+							AndroidView(
+								factory = { ctx -> SlideTouchOverlayView(ctx).also { overlay ->
+									overlay.visibility = View.GONE
+									slideTouchOverlayView = overlay
+								} },
+								modifier = Modifier.wrapContentSize()
+							)
 							if (!vm.isOptionWindowVisible) {
 								ChromeColumn()
 							} else {
@@ -538,13 +548,17 @@ class PlayActivity : BaseActivity() {
 						val overlayPlaceable = measurables[5].measure(
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
-						val chromePlaceable = measurables[6].measure(unconstrained)
+						val slidePlaceable = measurables[6].measure(
+							Constraints.fixed(padPlaceable.width, padPlaceable.height)
+						)
+						val chromePlaceable = measurables[7].measure(unconstrained)
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							// Pads centered in the area excluding the right chrome strip
 							val padX = ((constraints.maxWidth - chromeStripPx) - padPlaceable.width) / 2
 							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
+							slidePlaceable.place(padX, padY)
 							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
 							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
 							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
@@ -929,6 +943,11 @@ class PlayActivity : BaseActivity() {
 			chainsLeftContainer?.removeAllViews()
 			setupPads(buttonSizeX, buttonSizeY)
 			setupChains(buttonSizeMin)
+			slideTouchOverlayView?.apply {
+				setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
+				listener = { x, y, down -> vm.padTouch(x, y, down) }
+				visibility = if (p.slideMode) View.VISIBLE else View.GONE
+			}
 			vm.traceLogInit()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
 			vm.uiLoaded = true
