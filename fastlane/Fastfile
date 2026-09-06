@@ -14,6 +14,12 @@ def current_version_code
   File.read(BUILD_GRADLE).match(/versionCode\s*=\s*(\d+)/)[1].to_i
 end
 
+# Reads versionName from app/build.gradle. supply otherwise names the Play release after
+# whatever it finds first, which showed "4.1.3" for the 4.1.4 upload.
+def current_version_name
+  File.read(BUILD_GRADLE).match(/versionName\s*=\s*"([^"]+)"/)[1]
+end
+
 # Highest versionCode Play already knows about, across every track. The local
 # build.gradle can lag behind (a build made elsewhere, a manual upload), and Play
 # rejects an AAB whose versionCode is not strictly greater than the last upload.
@@ -66,6 +72,7 @@ platform :android do
       # Without the R8 mapping, Play shows obfuscated frames ("Exception w30") and
       # cannot group crashes properly. gradle exposes the path after bundleRelease.
       mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
+      version_name: current_version_name,
       release_status: status,
       rollout: rollout,
       skip_upload_apk: true,
@@ -76,6 +83,26 @@ platform :android do
     UI.success("Uploaded versionCode #{current_version_code} to Play track '#{track}' (#{status}#{rollout ? ", rollout #{rollout}" : ""}).")
   end
 
+  desc "Promote an already-uploaded build (e.g. from internal) into production as a staged release. Pass version_code:NNN and fraction:0.1 (1 = everyone)."
+  lane :promote do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    fraction = (options[:fraction] || "0.1").to_s
+    from = options[:from] || "internal"
+    # `rollout` below only adjusts a release that is already on production; a build that
+    # lives on internal has to be promoted first, which is a different supply call.
+    upload_to_play_store(
+      track: from,
+      track_promote_to: "production",
+      track_promote_release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
+      version_code: options[:version_code] || current_version_code,
+      version_name: options[:version_name] || current_version_name,
+      rollout: fraction,
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("promoted #{options[:version_code] || current_version_code} from #{from} to production at #{fraction}")
+  end
+
   desc "Change the staged rollout fraction of the current production release. Pass fraction:0.5 (1 = complete) and version_code:NNN."
   lane :rollout do |options|
     UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
@@ -84,6 +111,7 @@ platform :android do
     upload_to_play_store(
       track: "production",
       version_code: options[:version_code] || current_version_code,
+      version_name: options[:version_name] || current_version_name,
       rollout: fraction,
       release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
       skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
