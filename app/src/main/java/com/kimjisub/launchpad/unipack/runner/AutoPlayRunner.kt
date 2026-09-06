@@ -114,7 +114,7 @@ class AutoPlayRunner(
 					guideTimeline = buildGuideTimeline(autoPlay)
 					guideIndex = 0
 					waitingForChain = -1
-					activeGuides.clear()
+					synchronized(activeGuides) { activeGuides.clear() }
 				}
 
 				try {
@@ -133,13 +133,15 @@ class AutoPlayRunner(
 								guideIndex = guideTimeline.indexOfFirst { it.timeMs > elapsed - GUIDE_LOOKAHEAD_MS }
 									.let { if (it < 0) guideTimeline.size else it }
 								waitingForChain = -1
-								activeGuides.clear()
+								synchronized(activeGuides) { activeGuides.clear() }
 							} else {
 								// Switched FROM practice mode — clean up guides
-								for ((key, _) in activeGuides) {
-									listener.onGuideLedUpdate(key / 256, key % 256, 0)
+								synchronized(activeGuides) {
+									for ((key, _) in activeGuides) {
+										listener.onGuideLedUpdate(key / 256, key % 256, 0)
+									}
+									activeGuides.clear()
 								}
-								activeGuides.clear()
 								guideTimeline = emptyList()
 								waitingForChain = -1
 								listener.onRemoveGuide()
@@ -172,42 +174,46 @@ class AutoPlayRunner(
 												// Chain mismatch — pause and show chain indicator
 												waitingForChain = event.chain
 												waitStartTime = currTime
-												for ((key, _) in activeGuides) {
-													listener.onGuideLedUpdate(key / 256, key % 256, 0)
+												synchronized(activeGuides) {
+													for ((key, _) in activeGuides) {
+														listener.onGuideLedUpdate(key / 256, key % 256, 0)
+													}
+													activeGuides.clear()
 												}
-												activeGuides.clear()
 												listener.onRemoveGuide()
 												listener.onGuideChainOn(event.chain)
 												break
 											}
 											val targetWallTimeMs = startTime + event.timeMs
-											activeGuides[guideKey(event.x, event.y)] = targetWallTimeMs
+											synchronized(activeGuides) { activeGuides[guideKey(event.x, event.y)] = targetWallTimeMs }
 											listener.onGuidePadOn(event.x, event.y, targetWallTimeMs)
 											guideIndex++
 										} else break
 									}
 
 									// Guide expiration + launchpad LED brightness update
-									if (activeGuides.isNotEmpty()) {
-										val throttle = currTime - lastGuideUpdateMs >= GUIDE_LED_UPDATE_INTERVAL_MS
-										val iter = activeGuides.iterator()
-										while (iter.hasNext()) {
-											val (key, targetMs) = iter.next()
-											val gx = key / 256
-											val gy = key % 256
-											if (currTime >= targetMs) {
-												// Guide expired — auto-remove
-												iter.remove()
-												listener.onGuideLedUpdate(gx, gy, 0)
-												listener.onGuidePadOff(gx, gy)
-											} else if (throttle) {
-												val remaining = targetMs - currTime
-												val p = (1f - remaining.toFloat() / GUIDE_LOOKAHEAD_MS).coerceIn(0f, 1f)
-												val idx = (p * GUIDE_VELOCITIES.size).toInt().coerceIn(0, GUIDE_VELOCITIES.lastIndex)
-												listener.onGuideLedUpdate(gx, gy, GUIDE_VELOCITIES[idx])
+									synchronized(activeGuides) {
+										if (activeGuides.isNotEmpty()) {
+											val throttle = currTime - lastGuideUpdateMs >= GUIDE_LED_UPDATE_INTERVAL_MS
+											val iter = activeGuides.iterator()
+											while (iter.hasNext()) {
+												val (key, targetMs) = iter.next()
+												val gx = key / 256
+												val gy = key % 256
+												if (currTime >= targetMs) {
+													// Guide expired — auto-remove
+													iter.remove()
+													listener.onGuideLedUpdate(gx, gy, 0)
+													listener.onGuidePadOff(gx, gy)
+												} else if (throttle) {
+													val remaining = targetMs - currTime
+													val p = (1f - remaining.toFloat() / GUIDE_LOOKAHEAD_MS).coerceIn(0f, 1f)
+													val idx = (p * GUIDE_VELOCITIES.size).toInt().coerceIn(0, GUIDE_VELOCITIES.lastIndex)
+													listener.onGuideLedUpdate(gx, gy, GUIDE_VELOCITIES[idx])
+												}
 											}
+											if (throttle) lastGuideUpdateMs = currTime
 										}
-										if (throttle) lastGuideUpdateMs = currTime
 									}
 								}
 
@@ -304,7 +310,7 @@ class AutoPlayRunner(
 		Log.thread("[AutoPlay] 3. Request Stop")
 		job?.cancel()
 		job = null
-		activeGuides.clear()
+		synchronized(activeGuides) { activeGuides.clear() }
 		resetStepState()
 	}
 
