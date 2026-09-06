@@ -414,43 +414,56 @@ object MidiConnection {
 
 		try {
 			manager.openDevice(targetInfo, { device ->
-				if (device != null) {
-					midiDevice = device
-					Log.midiDetail("MIDI API: Device opened successfully")
-
-					// Open all input ports and send SysEx
-					for (portInfo in targetInfo.ports) {
-						if (portInfo.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) {
-							val port = device.openInputPort(portInfo.portNumber)
-							if (port != null) {
-								midiInputPorts[portInfo.portNumber] = port
-								Log.midiDetail("MIDI API: Opened input port ${portInfo.portNumber} (${portInfo.name})")
-							}
-						}
-					}
-
-					// Send SysEx to ALL input ports (port names are empty, we don't know which is DAW)
-					val initData = driver.getInitSysEx()
-					if (initData != null && midiInputPorts.isNotEmpty()) {
-						val (messages, _) = initData
-						for ((portNum, _) in midiInputPorts) {
-							Log.midiDetail("MIDI API: Sending init SysEx (${messages.size} messages) to port $portNum")
-							sendViaMidiApi(messages, portNum)
-						}
-					}
-
-					// Delay to ensure SysEx is flushed before closing ports
-					Handler(Looper.getMainLooper()).postDelayed({
-						closeMidiApi()
-						claimUsbAndStart()
-					}, 500)
-				} else {
-					Log.midiDetail("MIDI API: Failed to open device, claiming USB interface directly")
+				// Runs later on the main Handler, outside the try below: a framework exception here
+				// (Crashlytics 9b99a871: SecurityException from openInputPort on Android 16) must fall
+				// back the same way a null device does.
+				try {
+					onMidiApiDeviceOpened(device, targetInfo)
+				} catch (e: RuntimeException) {
+					Log.err("MIDI API: device callback failed, claiming USB interface directly", e)
+					closeMidiApi()
 					claimUsbAndStart()
 				}
 			}, Handler(Looper.getMainLooper()))
 		} catch (e: RuntimeException) {
 			Log.err("MIDI API: openDevice failed, claiming USB interface directly", e)
+			claimUsbAndStart()
+		}
+	}
+
+	private fun onMidiApiDeviceOpened(device: MidiDevice?, targetInfo: MidiDeviceInfo) {
+		if (device != null) {
+			midiDevice = device
+			Log.midiDetail("MIDI API: Device opened successfully")
+
+			// Open all input ports and send SysEx
+			for (portInfo in targetInfo.ports) {
+				if (portInfo.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) {
+					val port = device.openInputPort(portInfo.portNumber)
+					if (port != null) {
+						midiInputPorts[portInfo.portNumber] = port
+						Log.midiDetail("MIDI API: Opened input port ${portInfo.portNumber} (${portInfo.name})")
+					}
+				}
+			}
+
+			// Send SysEx to ALL input ports (port names are empty, we don't know which is DAW)
+			val initData = driver.getInitSysEx()
+			if (initData != null && midiInputPorts.isNotEmpty()) {
+				val (messages, _) = initData
+				for ((portNum, _) in midiInputPorts) {
+					Log.midiDetail("MIDI API: Sending init SysEx (${messages.size} messages) to port $portNum")
+					sendViaMidiApi(messages, portNum)
+				}
+			}
+
+			// Delay to ensure SysEx is flushed before closing ports
+			Handler(Looper.getMainLooper()).postDelayed({
+				closeMidiApi()
+				claimUsbAndStart()
+			}, 500)
+		} else {
+			Log.midiDetail("MIDI API: Failed to open device, claiming USB interface directly")
 			claimUsbAndStart()
 		}
 	}
