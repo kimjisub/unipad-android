@@ -127,7 +127,7 @@ class WorkspaceManagerTest {
 	}
 
 	@Test
-	fun availableWorkspaces_includesInternalStorage() {
+	fun availableWorkspaces_fallsBackToInternalStorageWhenAppExternalDirIsUnavailable() {
 		val internalDir = File(tempDir, "internal")
 		internalDir.mkdirs()
 
@@ -138,10 +138,21 @@ class WorkspaceManagerTest {
 		val manager = WorkspaceManager(mockContext)
 		val workspaces = manager.availableWorkspaces
 
-		assertTrue(
-			"Should contain 'Internal Storage' workspace",
-			workspaces.any { it.name == "Internal Storage" }
-		)
+		assertEquals("Internal Storage", workspaces.first().name)
+		assertEquals(File(internalDir, "UniPack"), workspaces.first().file)
+	}
+
+	@Test
+	fun availableWorkspaces_doesNotAddInternalStorageWhenAppExternalDirExists() {
+		val appDir = File(tempDir, "app_external")
+		appDir.mkdirs()
+
+		every { mockContext.getExternalFilesDir(null) } returns appDir
+		every { mockContext.getExternalFilesDirs("UniPack") } returns arrayOf()
+
+		val manager = WorkspaceManager(mockContext)
+
+		assertTrue(manager.availableWorkspaces.none { it.name == "Internal Storage" })
 	}
 
 	@Test

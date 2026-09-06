@@ -44,6 +44,20 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 						appWorkspace
 					)
 				)
+			} ?: run {
+				// No app-specific external dir (primary volume unmounted or not ready): fall back
+				// to the internal app folder so the list is never empty. downloadWorkspace and
+				// validateWorkspace index [0] and would otherwise throw (#46).
+				val internalWorkspace = File(context.filesDir, "UniPack")
+				if (!internalWorkspace.exists()) {
+					internalWorkspace.mkdirs()
+				}
+				uniPackWorkspaces.add(
+					Workspace(
+						context.getString(R.string.workspace_internal_storage),
+						internalWorkspace
+					)
+				)
 			}
 
 			// External SD cards only (skip internal storage which duplicates App Storage)
