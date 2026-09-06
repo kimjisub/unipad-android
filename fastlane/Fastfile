@@ -55,15 +55,53 @@ platform :android do
     gradle(task: "clean")
     gradle(task: "bundle", build_type: "Release")
 
+    # rollout:0.1 stages a production release to 10% of users (status inProgress);
+    # omit it for the old behaviour (completed = everyone). Vitals showed the
+    # production build at 2.6-3.1% user-perceived crash rate, so stage first.
+    rollout = options[:rollout]&.to_s
+    status = if track == "production" then (rollout && rollout.to_f < 1.0 ? "inProgress" : "completed") else "draft" end
     upload_to_play_store(
       track: track,
       aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
-      release_status: track == "production" ? "completed" : "draft",
+      # Without the R8 mapping, Play shows obfuscated frames ("Exception w30") and
+      # cannot group crashes properly. gradle exposes the path after bundleRelease.
+      mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
+      release_status: status,
+      rollout: rollout,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
     )
-    UI.success("Uploaded versionCode #{current_version_code} to Play track '#{track}'.")
+    UI.success("Uploaded versionCode #{current_version_code} to Play track '#{track}' (#{status}#{rollout ? ", rollout #{rollout}" : ""}).")
+  end
+
+  desc "Change the staged rollout fraction of the current production release. Pass fraction:0.5 (1 = complete) and version_code:NNN."
+  lane :rollout do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    fraction = options[:fraction].to_s
+    UI.user_error!("pass fraction:0.1..1") if fraction.empty?
+    upload_to_play_store(
+      track: "production",
+      version_code: options[:version_code] || current_version_code,
+      rollout: fraction,
+      release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("production rollout -> #{fraction}")
+  end
+
+  desc "Halt the current staged production rollout (keeps the release, stops new users getting it)."
+  lane :halt do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    upload_to_play_store(
+      track: "production",
+      version_code: options[:version_code] || current_version_code,
+      release_status: "halted",
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("production rollout halted")
   end
 end
