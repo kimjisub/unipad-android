@@ -1,0 +1,90 @@
+name: Bug report
+description: A crash, wrong behavior, or a Launchpad that does not work
+title: "[Bug] "
+labels: ["bug", "platform:android", "waiting:agent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. English or Korean is fine (한국어로 써도 됩니다).
+        The version and device fields are what we need most; a report without them usually stalls on a follow-up question.
+  - type: input
+    id: app-version
+    attributes:
+      label: UniPad version
+      description: Settings > Info in the app, or the Play Store listing
+      placeholder: "4.1.3 (109)"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone or tablet model
+      placeholder: "Samsung Galaxy S23, Infinix X6731, ..."
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      placeholder: "14"
+    validations:
+      required: true
+  - type: dropdown
+    id: launchpad
+    attributes:
+      label: Launchpad or MIDI device
+      options:
+        - None (touch screen only)
+        - Launchpad S / Mini (original)
+        - Launchpad MK2
+        - Launchpad Pro
+        - Launchpad X
+        - Launchpad Mini MK3
+        - Launchpad Pro MK3
+        - Launchpad Pro MK2 with custom firmware (CFW)
+        - Matrix
+        - Midi Fighter
+        - Master keyboard / other MIDI keyboard
+        - Other (name it in the steps)
+    validations:
+      required: true
+  - type: dropdown
+    id: without-hardware
+    attributes:
+      label: Does it also happen with no Launchpad connected?
+      description: This tells us whether we can reproduce it on an emulator or need the hardware.
+      options:
+        - "Yes, it also happens with no Launchpad connected"
+        - "No, only when the Launchpad is connected"
+        - "Not applicable (I do not use a Launchpad)"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open UniPad
+        2. Plug in the Launchpad
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Crash log (if it crashed)
+      description: With the phone connected to a computer, run `adb logcat -d -b crash > crash.txt` and paste the FATAL EXCEPTION block. If you cannot, say so; we will look on our side.
+      render: text
+  - type: input
+    id: unipack
+    attributes:
+      label: UniPack (if it only happens with one)
+      description: Its name and where you got it (store link or download URL). To share the file itself, zip it and drag it into the steps box above.
+      placeholder: "Faded (store), or https://..."

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: UniPad Discord
+    url: https://discord.gg/ESDgyNs
+    about: Quick questions, sharing UniPacks, community help
+  - name: Docs (UniPack and theme formats)
+    url: https://unipad.io/docs
+    about: How UniPacks and themes are structured, and how to make one

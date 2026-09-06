@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose something new, or a change to how UniPad behaves
+title: "[Feature] "
+labels: ["enhancement", "platform:android", "waiting:agent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        English or Korean is fine (한국어로 써도 됩니다). The first question matters most: what are you trying to do?
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do that you cannot today?
+      placeholder: "When I ... I want ... but UniPad ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What should UniPad do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or other apps you have tried
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Where should this exist?
+      options:
+        - label: Android
+        - label: iOS
+        - label: Web (unipad.io)
+  - type: dropdown
+    id: unipack-compat
+    attributes:
+      label: Does this change how existing UniPacks load or play?
+      description: UniPack compatibility is the one thing UniPad never breaks. If yes, explain above.
+      options:
+        - "No"
+        - "Not sure"
+        - "Yes (explained above)"
+    validations:
+      required: true
