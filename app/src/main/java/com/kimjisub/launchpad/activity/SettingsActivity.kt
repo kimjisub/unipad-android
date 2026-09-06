@@ -175,9 +175,17 @@ class SettingsActivity : AppCompatActivity() {
 
 	private fun copyFcmToken() {
 		try {
-			FirebaseMessaging.getInstance().token.addOnCompleteListener {
-				putClipboard(it.result)
-				Snackbar.make(findViewById(android.R.id.content), R.string.copied, Snackbar.LENGTH_SHORT).show()
+			FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+				// task.result throws when the token fetch failed (Crashlytics 2f4ba056:
+				// IOException TOO_MANY_REGISTRATIONS on 4.1.4), so check first.
+				if (task.isSuccessful) {
+					putClipboard(task.result)
+					Snackbar.make(findViewById(android.R.id.content), R.string.copied, Snackbar.LENGTH_SHORT).show()
+				} else {
+					val e = task.exception
+					Log.err("FCM token fetch failed", e ?: IllegalStateException("no exception"))
+					Snackbar.make(findViewById(android.R.id.content), e?.message ?: "FCM token unavailable", Snackbar.LENGTH_SHORT).show()
+				}
 			}
 		} catch (e: IllegalStateException) {
 			Log.err("FCM token copy failed", e)
