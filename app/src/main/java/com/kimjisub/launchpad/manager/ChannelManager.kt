@@ -3,6 +3,9 @@ package com.kimjisub.launchpad.manager
 class ChannelManager(x: Int, y: Int) {
 	companion object {
 		private const val CIRCULAR_BUTTON_COUNT = 36
+		/** "No explicit colour, derive it from the LED code". Must not collide with a real ARGB
+		 *  value: -1 is 0xFFFFFFFF, an opaque white LED, which used to render as ARGB[code] (pink). */
+		const val NO_COLOR = Int.MIN_VALUE
 	}
 
 	private var btn: Array<Array<Array<Item?>>>
@@ -60,7 +63,7 @@ class ChannelManager(x: Int, y: Int) {
 	}
 
 	fun add(x: Int, y: Int, channel: Channel, color: Int, code: Int) {
-		val resolvedColor = if (color == -1) LaunchpadColor.ARGB[code].toInt() else color
+		val resolvedColor = if (color == NO_COLOR) LaunchpadColor.ARGB[code].toInt() else color
 		if (x != -1)
 			btn[x][y][channel.priority] = Item(channel, resolvedColor, code)
 		else

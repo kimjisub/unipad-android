@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.audio
 
 import android.media.MediaCodec
+import com.kimjisub.launchpad.tool.Log
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import java.io.File
@@ -89,8 +90,11 @@ object OboeAudioEngine {
 			extractor.selectTrack(trackIndex)
 			val format = extractor.getTrackFormat(trackIndex)
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
-			val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-			val channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+			var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+			var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+			// Ask for 16-bit PCM explicitly; FLAC/WAV tracks can otherwise decode to float, which
+			// asShortBuffer() would read as noise.
+			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
 
 			// Pre-allocate based on duration estimate
 			val durationUs = format.getLongOrDefault(MediaFormat.KEY_DURATION, 0L)
@@ -101,6 +105,7 @@ object OboeAudioEngine {
 			}
 
 			val codec = MediaCodec.createDecoderByType(mime)
+			try {
 			codec.configure(format, null, null, 0)
 			codec.start()
 
@@ -111,6 +116,10 @@ object OboeAudioEngine {
 			var inputDone = false
 			var outputDone = false
 			val timeoutUs = 5_000L
+			// Some OEM decoders answer TRY_AGAIN_LATER forever on a truncated file; without a
+			// budget the loading dialog never closes.
+			var idleRounds = 0
+			val maxIdleRounds = 2_000 // 2000 x 5 ms = 10 s of nothing after EOS
 
 			while (!outputDone) {
 				if (!inputDone) {
@@ -131,7 +140,19 @@ object OboeAudioEngine {
 				}
 
 				val outputIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs)
+				if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+					// HE-AAC (SBR) decodes at twice the container rate; keep the real output layout.
+					val out = codec.outputFormat
+					if (out.containsKey(MediaFormat.KEY_SAMPLE_RATE)) sampleRate = out.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+					if (out.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) channels = out.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+				} else if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+					if (inputDone && ++idleRounds > maxIdleRounds) {
+						Log.err("decode stalled after EOS: ${file.name}")
+						return null
+					}
+				}
 				if (outputIndex >= 0) {
+					idleRounds = 0
 					if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
 						outputDone = true
 					}
@@ -139,6 +160,8 @@ object OboeAudioEngine {
 					val outputBuffer = codec.getOutputBuffer(outputIndex)
 					if (outputBuffer != null && bufferInfo.size > 0) {
 						outputBuffer.order(ByteOrder.nativeOrder())
+						outputBuffer.position(bufferInfo.offset)
+						outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
 						val shortBuf = outputBuffer.asShortBuffer()
 						val numShorts = bufferInfo.size / 2
 
@@ -155,15 +178,21 @@ object OboeAudioEngine {
 			}
 
 			codec.stop()
-			codec.release()
 
 			if (totalSamples == 0) return null
 
 			// Trim to exact size
 			val finalPcm = if (pcm.size == totalSamples) pcm else pcm.copyOf(totalSamples)
 			val numFrames = totalSamples / channels
+			if (numFrames <= 0) return null
 			return DecodedAudio(finalPcm, numFrames, channels, sampleRate)
+			} finally {
+				// Released on every path; a codec leaked per failed file exhausted the device's
+				// codec instances and made every later sound fail to load.
+				codec.release()
+			}
 		} catch (e: Exception) {
+			Log.err("decode failed: ${file.name}", e)
 			return null
 		} finally {
 			extractor.release()

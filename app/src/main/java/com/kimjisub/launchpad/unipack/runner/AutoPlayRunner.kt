@@ -108,7 +108,12 @@ class AutoPlayRunner(
 				progress = 0
 				listener.onStart()
 
-				val autoPlay = unipack.autoPlayTable ?: return@launch
+				val autoPlay = unipack.autoPlayTable
+				if (autoPlay == null) {
+					// onStart already put the UI into "playing"; without onEnd it stays there.
+					listener.onEnd()
+					return@launch
+				}
 
 				if (practiceGuide) {
 					guideTimeline = buildGuideTimeline(autoPlay)
@@ -322,15 +327,8 @@ class AutoPlayRunner(
 	}
 
 	fun progressOffset(offset: Int) {
-		val range = 0 until Int.MAX_VALUE
-		val targetProgress = progress + offset
-
-		progress =
-			when {
-				range.first > targetProgress -> range.first
-				range.last < targetProgress -> range.last
-				else -> targetProgress
-			}
+		val size = unipack.autoPlayTable?.elements?.size ?: 0
+		progress = (progress + offset).coerceIn(0, size)
 		if (stepMode) {
 			resetStepState()
 			listener.onRemoveGuide()
@@ -347,6 +345,10 @@ class AutoPlayRunner(
 			stepStartProgress = 0
 			stepChainValue = -1
 		}
+		// A chain wait left over from step mode would otherwise resume with waitStartTime == 0 and
+		// push startTime far into the future, freezing autoplay (2026-09-07 review).
+		waitingForChain = -1
+		waitStartTime = SystemClock.elapsedRealtime()
 	}
 
 	fun stepPadPressed(x: Int, y: Int) {

@@ -156,15 +156,24 @@ class ChannelManagerTest {
 		assertEquals(ChannelManager.Channel.CHAIN, item.channel)
 	}
 
-	// === Color -1 conversion from LaunchpadColor.ARGB ===
+	// === NO_COLOR sentinel resolves through LaunchpadColor.ARGB ===
 
 	@Test
-	fun add_withNegativeOneColor_usesLaunchpadColorARGB() {
+	fun add_withNoColor_usesLaunchpadColorARGB() {
 		val code = 5 // LaunchpadColor.ARGB[5] = 0xFFef5350
-		manager.add(0, 0, ChannelManager.Channel.LED, -1, code)
+		manager.add(0, 0, ChannelManager.Channel.LED, ChannelManager.NO_COLOR, code)
 		val item = requireNotNull(manager.get(0, 0)) { "Expected item with ARGB color" }
 		assertEquals(LaunchpadColor.ARGB[code].toInt(), item.color)
 		assertEquals(code, item.code)
+	}
+
+	@Test
+	fun add_withOpaqueWhite_keepsWhite() {
+		// 0xFFFFFFFF is -1 as an Int; it used to be mistaken for the sentinel and rendered as ARGB[code].
+		val white = 0xFFFFFFFF.toInt()
+		manager.add(0, 0, ChannelManager.Channel.LED, white, 5)
+		val item = requireNotNull(manager.get(0, 0))
+		assertEquals(white, item.color)
 	}
 
 	// === Multi-channel conflict scenarios ===
