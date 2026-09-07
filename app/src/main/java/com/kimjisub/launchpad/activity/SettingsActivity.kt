@@ -848,6 +848,8 @@ private fun BackupSection(
 ) {
 	val context = LocalContext.current
 	val scope = rememberCoroutineScope()
+	// Resolved in composition so the snackbar text follows configuration changes (lint LocalContextGetResourceValueCall)
+	val invalidFolderMessage = stringResource(R.string.backup_invalid_folder)
 
 	var backupUri by remember { mutableStateOf(prefManager.backupSafUri) }
 	var unipackCount by remember { mutableIntStateOf(0) }
@@ -899,9 +901,7 @@ private fun BackupSection(
 				}
 			} else {
 				scope.launch {
-					snackbarHostState.showSnackbar(
-						context.getString(R.string.backup_invalid_folder)
-					)
+					snackbarHostState.showSnackbar(invalidFolderMessage)
 				}
 			}
 		}
