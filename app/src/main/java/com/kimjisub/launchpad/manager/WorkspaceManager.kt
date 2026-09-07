@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.tool.Log
 import java.io.File
 
 class WorkspaceManager(val context: Context) : KoinComponent {
@@ -60,11 +61,17 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 				)
 			}
 
-			// External SD cards only (skip internal storage which duplicates App Storage)
+			// External SD cards only (skip internal storage which duplicates App Storage).
+			// Compared by canonical path: the literal "/storage/emulated/0" missed secondary users
+			// and work profiles (/storage/emulated/10), so the primary volume was listed twice and
+			// a "move" between the two identical folders deleted the packs.
+			val known = uniPackWorkspaces.map { canonicalOrAbsolute(it.file) }.toMutableSet()
 			val dirs = context.getExternalFilesDirs("UniPack")
 			var externalIndex = 1
 
 			dirs.filterNotNull().forEach { file ->
+				val canonical = canonicalOrAbsolute(file)
+				if (!known.add(canonical)) return@forEach
 				if (file.absolutePath.contains("/storage/emulated/0")) return@forEach
 
 				val name = context.getString(R.string.workspace_external_sd_card_format, externalIndex)
@@ -241,14 +248,27 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 				files?.forEach {
 					if (!it.isDirectory) return@forEach
 
-					val unipack = UniPackFolder(it).load()
-					val unipackENT = repo.getOrCreate(unipack.id)
+					// One unreadable folder (SD card removed mid-scan, a permission-less directory)
+					// used to abort the whole list and take the activity down with it.
+					try {
+						val unipack = UniPackFolder(it).load()
+						val unipackENT = repo.getOrCreate(unipack.id)
 
-					val packItem = UniPackItem(unipack, unipackENT)
-					unipacks.add(packItem)
+						val packItem = UniPackItem(unipack, unipackENT)
+						unipacks.add(packItem)
+					} catch (e: Exception) {
+						Log.err("getUnipacks: skipping ${it.path}", e)
+					}
 				}
 			}
 
 			unipacks.toList()
+		}
+
+	private fun canonicalOrAbsolute(file: File): String =
+		try {
+			file.canonicalPath
+		} catch (e: java.io.IOException) {
+			file.absolutePath
 		}
 }

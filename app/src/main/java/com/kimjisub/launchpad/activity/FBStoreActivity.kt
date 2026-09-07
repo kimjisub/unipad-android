@@ -79,6 +79,8 @@ import java.text.NumberFormat
 class StoreItemState(
 	storeVO: StoreVO,
 	downloaded: Boolean = false,
+	/** Firebase child key: unique per entry, unlike the server-controlled, nullable `code`. */
+	val key: String = storeVO.code ?: "",
 ) {
 	var storeVO by mutableStateOf(storeVO)
 	var downloaded by mutableStateOf(downloaded)
@@ -153,7 +155,9 @@ class FBStoreActivity : BaseActivity() {
 				try {
 					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java) ?: return
 					val isDownloaded = downloadList.any { it.unipack.id == d.code }
-					storeItems.add(0, StoreItemState(d, isDownloaded))
+					val key = dataSnapshot.key ?: d.code ?: return
+					if (storeItems.any { it.key == key }) return
+					storeItems.add(0, StoreItemState(d, isDownloaded, key))
 				} catch (e: RuntimeException) {
 					Log.err("onChildAdded failed", e)
 				}
@@ -404,7 +408,8 @@ private fun StoreScreen(
 				) {
 					itemsIndexed(
 						storeItems,
-						key = { index, item -> item.storeVO.code ?: index },
+						// Two entries sharing a code (or two null codes) crashed the list with duplicate keys.
+						key = { _, item -> item.key },
 					) { _, item ->
 						StorePackListItem(
 							item = item,

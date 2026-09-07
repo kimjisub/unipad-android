@@ -8,6 +8,15 @@ import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
 import java.io.File
 
+/**
+ * Moves or copies packs between the app folder and a SAF tree.
+ *
+ * Two rules the transfer methods follow, both learned from lost packs:
+ * - a name collision is a *skip*: nothing was written, so the source is never deleted, even in
+ *   move mode (it used to be, and a stale copy at the destination was all that survived);
+ * - a copy that throws half-way removes the partial destination before the error is recorded,
+ *   otherwise the next attempt sees "exists" and skips the pack forever.
+ */
 class SafMigrationHelper(
 	private val context: Context,
 ) {
@@ -49,9 +58,13 @@ class SafMigrationHelper(
 				val dest = File(targetDir, name)
 				if (dest.exists()) {
 					skipped++
-					if (deleteSource) folder.delete()
 				} else {
-					FileManager.copyDocumentTreeToFile(context, folder, dest)
+					try {
+						FileManager.copyDocumentTreeToFile(context, folder, dest)
+					} catch (e: Exception) {
+						FileManager.deleteDirectory(dest)
+						throw e
+					}
 					transferred++
 					if (deleteSource) folder.delete()
 				}
@@ -85,9 +98,15 @@ class SafMigrationHelper(
 				val existing = targetTreeDoc.findFile(folder.name)
 				if (existing != null && existing.isDirectory) {
 					skipped++
-					if (deleteSource) folder.deleteRecursively()
 				} else {
-					FileManager.copyFileToDocumentTree(context, folder, targetTreeDoc)
+					try {
+						FileManager.copyFileToDocumentTree(context, folder, targetTreeDoc)
+					} catch (e: Exception) {
+						// The directory did not exist before this attempt, so removing it only drops
+						// the partial copy.
+						runCatching { targetTreeDoc.findFile(folder.name)?.takeIf { it.isDirectory }?.delete() }
+						throw e
+					}
 					transferred++
 					if (deleteSource) folder.deleteRecursively()
 				}
@@ -123,15 +142,21 @@ class SafMigrationHelper(
 				val existing = targetTreeDoc.findFile(zipName)
 				if (existing != null) {
 					skipped++
-					if (deleteSource) folder.deleteRecursively()
 				} else {
-					val tempZip = File(cacheDir, zipName)
+					// A unique temp name: zip4j *appends* to an existing archive, so a leftover from a
+					// crashed run produced a backup with two copies of every entry.
+					val tempZip = File.createTempFile("transfer-", ".zip", cacheDir).also { it.delete() }
 					try {
 						ZipFile(tempZip).addFolder(folder)
 						val newDoc = targetTreeDoc.createFile("application/zip", zipName)
 						if (newDoc != null) {
-							context.contentResolver.openOutputStream(newDoc.uri)?.use { out ->
-								tempZip.inputStream().use { it.copyTo(out) }
+							try {
+								context.contentResolver.openOutputStream(newDoc.uri)?.use { out ->
+									tempZip.inputStream().use { it.copyTo(out) }
+								} ?: throw java.io.IOException("openOutputStream returned null")
+							} catch (e: Exception) {
+								runCatching { newDoc.delete() }
+								throw e
 							}
 							transferred++
 							if (deleteSource) folder.deleteRecursively()
@@ -181,14 +206,18 @@ class SafMigrationHelper(
 				val dest = File(targetDir, folderName)
 				if (dest.exists()) {
 					skipped++
-					if (deleteSource) doc.delete()
 				} else {
-					val tempZip = File(cacheDir, zipName)
+					val tempZip = File.createTempFile("transfer-", ".zip", cacheDir)
 					try {
 						context.contentResolver.openInputStream(doc.uri)?.use { input ->
 							tempZip.outputStream().use { input.copyTo(it) }
+						} ?: throw java.io.IOException("openInputStream returned null")
+						try {
+							ZipFile(tempZip).extractAll(dest.absolutePath)
+						} catch (e: Exception) {
+							FileManager.deleteDirectory(dest)
+							throw e
 						}
-						ZipFile(tempZip).extractAll(dest.absolutePath)
 						transferred++
 						if (deleteSource) doc.delete()
 					} finally {
@@ -227,9 +256,13 @@ class SafMigrationHelper(
 				val dest = File(targetDir, folder.name)
 				if (dest.exists()) {
 					skipped++
-					if (deleteSource) folder.deleteRecursively()
 				} else {
-					FileManager.copyDirectory(folder, dest)
+					try {
+						FileManager.copyDirectory(folder, dest)
+					} catch (e: Exception) {
+						FileManager.deleteDirectory(dest)
+						throw e
+					}
 					transferred++
 					if (deleteSource) folder.deleteRecursively()
 				}

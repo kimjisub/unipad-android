@@ -49,6 +49,12 @@ class SplashActivity : BaseActivity() {
 	// Timer
 	private var splashJob: Job? = null
 	private var showPermissionDialog by mutableStateOf(false)
+	private var permissionsDone = false
+
+	// Notifications are optional: whatever the answer, the app proceeds.
+	private val notificationPermissionLauncher = registerForActivityResult(
+		ActivityResultContracts.RequestPermission()
+	) { proceedToMain() }
 
 	// Permission request launcher
 	private val permissionLauncher = registerForActivityResult(
@@ -100,7 +106,13 @@ class SplashActivity : BaseActivity() {
 		// Android 11+ (API 30+): No runtime storage permission needed
 		// App uses getExternalFilesDir() (no permission) + SAF for Documents access
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-			proceedToMain()
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+				ContextCompat.checkSelfPermission(this, permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+			) {
+				notificationPermissionLauncher.launch(permission.POST_NOTIFICATIONS)
+			} else {
+				proceedToMain()
+			}
 			return
 		}
 
@@ -124,11 +136,18 @@ class SplashActivity : BaseActivity() {
 	}
 
 	private fun proceedToMain() {
+		permissionsDone = true
 		splashJob = lifecycleScope.launch {
 			delay(SPLASH_DISPLAY_TIME_MS)
 			finish()
 			start<MainActivity>()
 		}
+	}
+
+	override fun onStart() {
+		super.onStart()
+		// onStop cancels the delay; coming back used to leave the app on the splash forever.
+		if (permissionsDone && splashJob?.isActive != true) proceedToMain()
 	}
 
 	override fun onStop() {

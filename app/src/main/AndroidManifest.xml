@@ -21,6 +21,8 @@
 		tools:ignore="ScopedStorage" />
 
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!-- Download/import progress notifications; without it they are dropped on Android 13+ -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 	<application
 		android:name=".BaseApplication"

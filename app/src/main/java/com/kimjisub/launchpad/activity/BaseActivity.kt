@@ -6,7 +6,6 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.db.repository.UnipackRepository
@@ -58,13 +57,18 @@ open class BaseActivity : AppCompatActivity() {
 		}
 
 		fun restartApp(activity: BaseActivity) {
+			printActivityLog("${activity.getActivityName()} requestRestart")
 			for (a in activities.asReversed()) {
 				a.finish()
 			}
 			activities.clear()
-			activity.start<MainActivity>()
-			printActivityLog("${activity.getActivityName()} requestRestart")
-			Process.killProcess(Process.myPid())
+			// A plain start followed by killProcess left the launcher with a dead task and no app.
+			// makeRestartActivityTask clears the task and the system relaunches the process for it.
+			val intent = Intent.makeRestartActivityTask(
+				android.content.ComponentName(activity, MainActivity::class.java)
+			)
+			activity.startActivity(intent)
+			Runtime.getRuntime().exit(0)
 		}
 	}
 
