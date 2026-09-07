@@ -158,7 +158,9 @@ class UniPackDownloader(
 					zip.extractAll(folder.path)
 				}
 				FileManager.removeDoubleFolder(folder.path)
-				val unipack = UniPackFolder(folder).loadDetail()
+				// load() runs checkFile + info; without it every parser returned early and criticalError
+				// was always false, so any archive installed as a pack.
+				val unipack = UniPackFolder(folder).load().loadDetail()
 				if (unipack.criticalError) {
 					val errorMsg = unipack.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)

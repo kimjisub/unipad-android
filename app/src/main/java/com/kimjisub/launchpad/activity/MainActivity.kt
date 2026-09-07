@@ -212,7 +212,8 @@ class MainActivity : BaseActivity() {
 							Intent(applicationContext, FBStoreActivity::class.java)
 						)
 					},
-					onLoadUniPackClick = { filePick.launch(arrayOf("*/*")) },
+					// Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j.
+					onLoadUniPackClick = { filePick.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
 					onRestoreClick = {
 						settingsActivityResultLauncher.launch(
 							Intent(applicationContext, SettingsActivity::class.java).apply {
@@ -388,6 +389,8 @@ class MainActivity : BaseActivity() {
 
 						else -> {
 							importResult = ImportResult.Warning(unipack.errorDetail.orEmpty())
+							// The pack was kept; without this it only appeared on the next resume.
+							update()
 						}
 					}
 				}

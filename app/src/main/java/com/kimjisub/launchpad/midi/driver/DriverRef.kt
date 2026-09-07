@@ -83,7 +83,9 @@ abstract class DriverRef {
 	}
 
 	internal fun sendSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
-		sendSignal(cmd.toByte(), sig.toByte(), note.toByte(), velocity.toByte())
+		// note/velocity are MIDI data bytes: a pack LED code of 200 went out as 0xC8, a status byte
+		// in a data position (web clamps the same way).
+		sendSignal(cmd.toByte(), sig.toByte(), note.coerceIn(0, 127).toByte(), velocity.coerceIn(0, 127).toByte())
 	}
 
 	internal fun sendRawSignal(bytes: ByteArray, cableNumber: Int = 0) {

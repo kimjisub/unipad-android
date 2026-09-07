@@ -123,12 +123,13 @@ abstract class UniPack {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
 			if (sounds.isEmpty()) return
 			val targetNum = num % sounds.size
+			// Bounded like iOS/web: a queue without the target num used to spin forever.
 			if (sounds[0].num != targetNum)
-				while (true) {
+				repeat(sounds.size) {
 					val item = sounds.removeFirst()
 					sounds.addLast(item)
 					if (sounds[0].num == targetNum)
-						break
+						return
 				}
 		} catch (e: IndexOutOfBoundsException) {
 			err("soundPush ($c, $x, $y, $num)")
@@ -164,10 +165,10 @@ abstract class UniPack {
 			if (leds.isEmpty()) return  // Crashlytics 313e518c: divide by zero on an empty cell
 			val targetNum = num % leds.size
 			if (leds[0].num != targetNum)
-				while (true) {
+				repeat(leds.size) {
 					val item = leds.removeFirst()
 					leds.addLast(item)
-					if (leds[0].num == targetNum) break
+					if (leds[0].num == targetNum) return
 				}
 		} catch (e: IndexOutOfBoundsException) {
 			err("ledPush ($c, $x, $y, $num)")

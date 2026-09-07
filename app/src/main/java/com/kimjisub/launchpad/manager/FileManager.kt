@@ -17,6 +17,7 @@ object FileManager {
 	private const val COPY_BUFFER_SIZE = 4096
 	private const val BYTES_PER_MB = 1024 * 1024
 	private const val DEFAULT_DURATION_MS = 10000
+	private const val MAX_UNWRAP_DEPTH = 8
 	private val FILENAME_FILTER_REGEX = "[|\\\\?*<\":>/]+".toRegex()
 
 	fun removeDoubleFolder(path: String) {
@@ -24,11 +25,17 @@ object FileManager {
 			val rootFolder = File(path)
 			if (!rootFolder.isDirectory) return
 
-			val children = rootFolder.listFiles() ?: return
-			val nonHidden = children.filter { !it.name.startsWith(".") }
-
-			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
-				moveDirectory(nonHidden[0], rootFolder)
+			// Repeats like iOS (Pack/Pack/Pack/info used to stay broken here), and Finder's
+			// __MACOSX sibling does not count as content (every Mac-zipped pack was rejected).
+			repeat(MAX_UNWRAP_DEPTH) {
+				val children = rootFolder.listFiles() ?: return
+				val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
+				if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
+					children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
+					moveDirectory(nonHidden[0], rootFolder)
+				} else {
+					return
+				}
 			}
 		} catch (e: IOException) {
 			Log.err("removeDoubleFolder failed", e)
