@@ -480,7 +480,9 @@ class PlayActivity : BaseActivity() {
 					)
 				}
 			}
-			theme?.customLogo?.let { logo ->
+			// "Hide UI" (optionViewVisible) was written by the view model and read nowhere: the
+			// switch only changed launchpad LEDs. It hides the logo and the chrome column, as web does.
+			if (vm.optionViewVisible) theme?.customLogo?.let { logo ->
 				val bitmap = remember(logo) { logo.toBitmap().asImageBitmap() }
 				Image(
 					bitmap = bitmap,
@@ -545,7 +547,7 @@ class PlayActivity : BaseActivity() {
 								} },
 								modifier = Modifier.wrapContentSize()
 							)
-							if (!vm.isOptionWindowVisible) {
+							if (!vm.isOptionWindowVisible && vm.optionViewVisible) {
 								ChromeColumn()
 							} else {
 								Spacer(modifier = Modifier.size(0.dp))
@@ -676,8 +678,9 @@ class PlayActivity : BaseActivity() {
 
 	@Composable
 	private fun OptionPanel() {
-		val panelBg = PlayPalette.panelBackground
-		val accentColor = PlayPalette.accent
+		// Theme colours (colors.json option_window / option_window_checkbox), as iOS and web apply them.
+		val panelBg = theme?.optionWindow?.let { Color(it).copy(alpha = 0.94f) } ?: PlayPalette.panelBackground
+		val accentColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: PlayPalette.accent
 		val textColor = Color.White
 		val sectionColor = textColor.copy(alpha = 0.65f)
 		var infoExpanded by remember { mutableStateOf(false) }
@@ -1066,7 +1069,8 @@ class PlayActivity : BaseActivity() {
 		if (item != null) {
 			when (item.channel) {
 				Channel.GUIDE -> pad.setLedBackgroundColor(item.color)
-				Channel.PRESSED -> pad.setLedBackground(theme?.btnPressed)
+				// A theme without btn_ used to show no press feedback at all; iOS/web fall back to the colour.
+				Channel.PRESSED -> theme?.btnPressed?.let { pad.setLedBackground(it) } ?: pad.setLedBackgroundColor(item.color)
 				Channel.LED -> pad.setLedBackgroundColor(item.color)
 				else -> {}
 			}

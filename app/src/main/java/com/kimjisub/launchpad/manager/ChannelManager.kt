@@ -63,7 +63,8 @@ class ChannelManager(x: Int, y: Int) {
 	}
 
 	fun add(x: Int, y: Int, channel: Channel, color: Int, code: Int) {
-		val resolvedColor = if (color == NO_COLOR) LaunchpadColor.ARGB[code].toInt() else color
+		// A pack LED code outside the 128-entry palette threw here; iOS/web resolve it to 0.
+		val resolvedColor = if (color == NO_COLOR) LaunchpadColor.ARGB.getOrNull(code)?.toInt() ?: 0 else color
 		if (x != -1)
 			btn[x][y][channel.priority] = Item(channel, resolvedColor, code)
 		else

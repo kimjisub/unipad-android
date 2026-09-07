@@ -40,14 +40,11 @@ object ZipThemeImporter {
 				tempZip.delete()
 			}
 
-			// Validate: theme.json and theme_ic.png must exist
+			// Validate: theme.json must exist. The icon is optional (the list falls back to the
+			// default icon), as on iOS and web.
 			val themeJson = File(targetDir, "theme.json")
-			val themeIcon = File(targetDir, "theme_ic.png")
 			if (!themeJson.exists()) {
 				throw InvalidThemeException("theme.json not found")
-			}
-			if (!themeIcon.exists()) {
-				throw InvalidThemeException("theme_ic.png not found")
 			}
 
 			return targetDir.name

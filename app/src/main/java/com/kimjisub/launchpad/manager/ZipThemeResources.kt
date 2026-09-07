@@ -82,9 +82,22 @@ class ZipThemeResources(
 		}
 	}
 
+	// iOS and web accept these alternate stems and .webp/.jpg; a theme authored against them lost
+	// images here.
+	private val nameAliases = mapOf(
+		"playbg" to listOf("play_bg"),
+		"custom_logo" to listOf("customlogo", "custom-logo", "logo"),
+		"btn_" to listOf("btn_pressed", "btn-pressed"),
+		"chain_" to listOf("chain_selected"),
+		"chain__" to listOf("chain_guide"),
+		"phantom_" to listOf("phantom_variant"),
+	)
+	private val imageExtensions = listOf("png", "webp", "jpg", "jpeg")
+
 	private fun loadPng(name: String): Drawable? {
-		val file = File(themeDir, "$name.png")
-		if (!file.exists()) return null
+		val stems = listOf(name) + (nameAliases[name] ?: emptyList())
+		val file = stems.flatMap { stem -> imageExtensions.map { File(themeDir, "$stem.$it") } }.firstOrNull { it.exists() }
+			?: return null
 		val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
 		return BitmapDrawable(context.resources, bitmap)
 	}

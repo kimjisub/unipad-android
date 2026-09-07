@@ -6,13 +6,55 @@ import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
+import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.Reader
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+
+/**
+ * Tokeniser shared by the text tables. `\s` in Java regex is ASCII-only, so a line separated by a
+ * no-break space (U+00A0) or an ideographic space (U+3000, Korean IME) was one token and dropped,
+ * while iOS and web split it. The class lists the Unicode space separators explicitly.
+ */
+private val TOKEN_SPLIT = Regex("[\\s\\u00A0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000]+")
+
+/** trim() plus the UTF-8 BOM, which Windows Notepad puts before the first key. */
+private fun String.trimLine(): String = trim { it.isWhitespace() || it == '\uFEFF' }
+
+/**
+ * A reader that honours a BOM: UTF-16 (FE FF / FF FE) as iOS does, UTF-8 with the BOM skipped,
+ * otherwise UTF-8 (Android's platform default). A UTF-16 info used to decode to garbage and reject
+ * the pack here while it played on iOS.
+ */
+private fun bomAwareReader(input: InputStream): Reader {
+	val buffered = BufferedInputStream(input)
+	buffered.mark(3)
+	val b = ByteArray(3)
+	val n = buffered.read(b)
+	val charset: Charset
+	val skip: Int
+	when {
+		n >= 2 && b[0] == 0xFE.toByte() && b[1] == 0xFF.toByte() -> { charset = StandardCharsets.UTF_16BE; skip = 2 }
+		n >= 2 && b[0] == 0xFF.toByte() && b[1] == 0xFE.toByte() -> { charset = StandardCharsets.UTF_16LE; skip = 2 }
+		n >= 3 && b[0] == 0xEF.toByte() && b[1] == 0xBB.toByte() && b[2] == 0xBF.toByte() -> { charset = StandardCharsets.UTF_8; skip = 3 }
+		else -> { charset = StandardCharsets.UTF_8; skip = 0 }
+	}
+	buffered.reset()
+	var toSkip = skip.toLong()
+	while (toSkip > 0) toSkip -= buffered.skip(toSkip)
+	return InputStreamReader(buffered, charset)
+}
 
 class UniPackFolder(val rootFolder: File) : UniPack() {
+	private companion object {
+		const val MAX_GRID_SIZE = 64
+	}
 
 	private var infoFile: File? = null
 	private var soundsDir: File? = null
@@ -101,9 +143,9 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			criticalError = true
 			return
 		}
-		BufferedReader(InputStreamReader(inputStream)).use { reader ->
+		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			while (true) {
-				val s = reader.readLine()?.trim() ?: break
+				val s = reader.readLine()?.trimLine() ?: break
 				if (s.isEmpty()) continue
 				try {
 					val split = s.split("=", limit = 2)
@@ -120,6 +162,10 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					}
 				} catch (e: IndexOutOfBoundsException) {
 					addErr("info : [$s] format is not found")
+				} catch (e: NumberFormatException) {
+					// Used to propagate out of load(): the pack vanished from the library with no
+					// message (WorkspaceManager's catch). iOS/web record it and carry on.
+					addErr("info : [$s] format is incorrect")
 				}
 			}
 		}
@@ -130,6 +176,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		if (chain == 0) addErr("info : chain was missing")
 		if (chain !in 1..24) {
 			addErr("info : chain out of range")
+			criticalError = true
+		}
+		// Same bound as iOS: a negative value threw NegativeArraySizeException in the table
+		// allocation and a huge one allocated chain * x * y cells.
+		if (buttonX !in 0..MAX_GRID_SIZE || buttonY !in 0..MAX_GRID_SIZE) {
+			addErr("info : buttonX/buttonY out of range")
 			criticalError = true
 		}
 	}
@@ -151,11 +203,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			criticalError = true
 			return
 		}
-		BufferedReader(InputStreamReader(inputStream)).use { reader ->
+		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			while (true) {
-				val s = reader.readLine()?.trim() ?: break
+				val s = reader.readLine()?.trimLine() ?: break
 				if (s.isEmpty()) continue
-				val split = s.trim().split("\\s+".toRegex()).toTypedArray()
+				val split = s.trim().split(TOKEN_SPLIT).toTypedArray()
 				var c: Int
 				var x: Int
 				var y: Int
@@ -227,7 +279,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			for (file in fileList) {
 				if (file.isFile) {
 					val fileName: String = file.name.trim()
-					val split1 = fileName.trim().split("\\s+".toRegex()).toTypedArray()
+					val split1 = fileName.trim().split(TOKEN_SPLIT).toTypedArray()
 					var c: Int
 					var x: Int
 					var y: Int
@@ -265,11 +317,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						addErr("keyLed : [$fileName] file was not found")
 						continue
 					}
-					BufferedReader(InputStreamReader(inputStream)).use { reader ->
+					BufferedReader(bomAwareReader(inputStream)).use { reader ->
 						loop@ while (true) {
-							val s = reader.readLine()?.trim() ?: break
+							val s = reader.readLine()?.trimLine() ?: break
 							if (s.isEmpty()) continue@loop
-							val split2 = s.trim().split("\\s+".toRegex()).toTypedArray()
+							val split2 = s.trim().split(TOKEN_SPLIT).toTypedArray()
 							var option: String
 							var ledX = -1
 							var ledY = -1
@@ -384,11 +436,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			addErr("autoPlay : file was not found")
 			return
 		}
-		BufferedReader(InputStreamReader(inputStream)).use { reader ->
+		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			loop@ while (true) {
-				val s = reader.readLine()?.trim() ?: break
+				val s = reader.readLine()?.trimLine() ?: break
 				if (s.isEmpty()) continue@loop
-				val split = s.trim().split("\\s+".toRegex()).toTypedArray()
+				val split = s.trim().split(TOKEN_SPLIT).toTypedArray()
 				var option: String
 				var x = -1
 				var y = -1

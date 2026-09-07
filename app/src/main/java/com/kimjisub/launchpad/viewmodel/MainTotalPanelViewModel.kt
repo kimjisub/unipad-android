@@ -62,7 +62,15 @@ class MainTotalPanelViewModel(
 	var sortOrder by mutableStateOf(true)
 		private set
 
+	// Fires once when the activity attaches: the saved sort used to be ignored until the user
+	// touched the sort control and the list came up in listFiles() order.
 	var onSortChanged: ((SortMethod, Boolean) -> Unit)? = null
+		set(value) {
+			field = value
+			value?.invoke(sortMethodList[sortMethod], sortOrder)
+			prevSortMethod = sortMethod
+			prevSortOrder = sortOrder
+		}
 
 	fun updateSortMethod(value: Int) {
 		sortMethod = value

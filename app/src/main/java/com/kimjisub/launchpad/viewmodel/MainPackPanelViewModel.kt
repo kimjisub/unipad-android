@@ -78,7 +78,7 @@ class MainPackPanelViewModel(
 	}
 
 	fun youtubeClick() {
-		app.browse("https://www.youtube.com/results?search_query=UniPad+${unipack.title}+${unipack.producerName}")
+		app.browse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode("UniPad ${unipack.title} ${unipack.producerName}"))
 	}
 
 	fun delete() {

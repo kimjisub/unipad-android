@@ -819,7 +819,9 @@ class PlayActivityViewModel(
 						isPracticeMode = false
 						scbAutoPlay.setCheckedSilently(false)
 						autoPlayControlVisible = false
-						if (unipack.ledAnimationTable != null) {
+						// keyLedExist, like switchPlayMode and both other platforms: an empty keyLed/
+						// directory has a non-null table but no animations.
+						if (unipack.keyLedExist) {
 							scbLed.setChecked(true)
 							scbFeedbackLight.setChecked(false)
 						} else {
@@ -864,6 +866,8 @@ class PlayActivityViewModel(
 			override fun onException(throwable: Throwable) {
 				autoMappingActive = false
 				Log.err("AutoMapping failed", throwable)
+				// iOS tells the user; here the bar just disappeared.
+				viewModelScope.launch { uiCallback?.showToast(string.failed) }
 			}
 		})
 	}

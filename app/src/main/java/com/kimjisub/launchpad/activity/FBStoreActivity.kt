@@ -150,10 +150,14 @@ class FBStoreActivity : BaseActivity() {
 					onYoutubeClick = {
 						val item = storeItems.firstOrNull { it.isToggle }
 						if (item != null) {
-							browse("https://www.youtube.com/results?search_query=UniPad+${item.storeVO.title}+${item.storeVO.producerName}")
+							browse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode("UniPad ${item.storeVO.title} ${item.storeVO.producerName}"))
 						}
 					},
-					onWebsiteClick = {},
+					onWebsiteClick = {
+						// The icon was rendered with an empty handler; iOS/web open the entry's URL.
+						val url = storeItems.firstOrNull { it.isToggle }?.storeVO?.URL
+						if (url != null && url.startsWith("http")) browse(url)
+					},
 				)
 			}
 		}
@@ -218,7 +222,8 @@ class FBStoreActivity : BaseActivity() {
 		UniPackDownloader(
 			context = this,
 			title = item.storeVO.title ?: "",
-			url = "$DOWNLOAD_BASE_URL?code=$itemCode",
+			// iOS/web prefer the entry's own URL and only fall back to the legacy Cloud Function.
+			url = item.storeVO.URL?.takeIf { it.startsWith("http") } ?: "$DOWNLOAD_BASE_URL?code=${android.net.Uri.encode(itemCode)}",
 			workspace = ws.downloadWorkspace.file,
 			folderName = item.storeVO.code ?: "",
 			listener = object : UniPackDownloader.Listener {

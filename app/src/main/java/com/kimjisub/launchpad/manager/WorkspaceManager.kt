@@ -77,6 +77,9 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 				val name = context.getString(R.string.workspace_external_sd_card_format, externalIndex)
 				externalIndex++
 
+				// App Storage gets one; the SD workspaces did not, so their samples showed up in the
+				// gallery and music apps.
+				FileManager.makeNomedia(file)
 				uniPackWorkspaces.add(
 					Workspace(name, file)
 				)
