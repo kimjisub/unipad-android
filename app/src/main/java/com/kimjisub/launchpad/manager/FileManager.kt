@@ -213,14 +213,19 @@ object FileManager {
 				copyFileToDocumentTree(context, child, dirDoc)
 			}
 		} else {
-			val mimeType = when (source.extension.lowercase()) {
-				"wav" -> "audio/wav"; "mp3" -> "audio/mpeg"; "ogg" -> "audio/ogg"
-				else -> "application/octet-stream"
-			}
-			val fileDoc = targetParent.createFile(mimeType, source.nameWithoutExtension) ?: return
+			// The provider derives the stored name from (mimeType, displayName): it keeps the name
+			// when the extension already matches the type and appends one otherwise. Passing the
+			// name without its extension lost every ".m4a"/".json" and keySound could no longer
+			// find the sounds; the mime type is therefore looked up from the real extension and
+			// the full name is passed, which leaves "info", "keySound", "clip.m4a" untouched.
+			val mimeType = android.webkit.MimeTypeMap.getSingleton()
+				.getMimeTypeFromExtension(source.extension.lowercase())
+				?: "application/octet-stream"
+			val fileDoc = targetParent.createFile(mimeType, source.name)
+				?: throw IOException("Could not create ${source.name} in ${targetParent.uri}")
 			context.contentResolver.openOutputStream(fileDoc.uri)?.use { output ->
 				source.inputStream().use { input -> input.copyTo(output, COPY_BUFFER_SIZE) }
-			}
+			} ?: throw IOException("Could not open ${fileDoc.uri} for writing")
 		}
 	}
 }

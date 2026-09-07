@@ -234,11 +234,13 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {
-			padViews[x][y]?.startGuideAnimation(targetWallTimeMs)
+			if (!::padViews.isInitialized) return
+			padViews.getOrNull(x)?.getOrNull(y)?.startGuideAnimation(targetWallTimeMs)
 		}
 
 		override fun stopGuideAnimation(x: Int, y: Int) {
-			padViews[x][y]?.stopGuideAnimation()
+			if (!::padViews.isInitialized) return
+			padViews.getOrNull(x)?.getOrNull(y)?.stopGuideAnimation()
 		}
 
 		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {
@@ -960,7 +962,9 @@ class PlayActivity : BaseActivity() {
 			vm.uiLoaded = true
 			vm.refreshWatermark()
 			updateVolumeUI()
-			controller = midiController
+			// initLayout runs from a posted runnable; if onPause already removed the controller,
+			// re-registering here would leave a paused activity receiving MIDI. onResume re-adds it.
+			if (lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) controller = midiController
 		} catch (e: RuntimeException) {
 			Log.err("initLayout failed", e)
 		}

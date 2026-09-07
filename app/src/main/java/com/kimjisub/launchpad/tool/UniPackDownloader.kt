@@ -14,6 +14,7 @@ import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -84,10 +85,16 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val call = FileApi.service.download(url)
-				val responseBody = call.execute().body()
-				?: throw IOException("Empty response body")
+				val response = call.execute()
+				val responseBody = response.body()
+				?: throw IOException("Empty response body (HTTP ${response.code()})")
+				if (!response.isSuccessful) {
+					responseBody.close()
+					throw IOException("HTTP ${response.code()}")
+				}
 				val contentLength = responseBody.contentLength()
-				val fileSize = contentLength.coerceAtLeast(preKnownFileSize)
+				// -1 (chunked) or 0 with no pre-known size gave Infinity% below
+				val fileSize = contentLength.coerceAtLeast(preKnownFileSize).coerceAtLeast(0L)
 				withContext(Dispatchers.Main) {
 					onGetFileSize(
 						fileSize,
@@ -96,67 +103,77 @@ class UniPackDownloader(
 					)
 				}
 
-				contentResolver.openFileDescriptor(unipackFile.toUri(), "w")?.use {
-					FileOutputStream(it.fileDescriptor).use { outputStream ->
-						responseBody.byteStream().use { inputStream ->
-							val buf = ByteArray(DOWNLOAD_BUFFER_SIZE)
-							var downloadedSize = 0L
-							var n: Int
-							var prevPercent = -1
-							var prevMillis = SystemClock.elapsedRealtime()
-							while (true) {
-								n = inputStream.read(buf)
-								if (n == -1)
-									break
+				// responseBody.use: a failed openFileDescriptor used to skip the whole block silently
+				// and leak the HTTP body; now it throws and the body is always closed.
+				responseBody.use { body ->
+					val pfd = contentResolver.openFileDescriptor(unipackFile.toUri(), "w")
+						?: throw IOException("Could not open ${unipackFile.path} for writing")
+					pfd.use {
+						FileOutputStream(it.fileDescriptor).use { outputStream ->
+							body.byteStream().use { inputStream ->
+								val buf = ByteArray(DOWNLOAD_BUFFER_SIZE)
+								var downloadedSize = 0L
+								var n: Int
+								var prevPercent = -1
+								var prevMillis = SystemClock.elapsedRealtime()
+								while (true) {
+									n = inputStream.read(buf)
+									if (n == -1)
+										break
 
-								outputStream.write(buf, 0, n)
-								downloadedSize += n.toLong()
-								val millis = SystemClock.elapsedRealtime()
-								if (millis - prevMillis > PROGRESS_UPDATE_INTERVAL_MS) {
-									val percent = (downloadedSize.toFloat() / fileSize * PERCENT_MULTIPLIER).toInt()
-									withContext(Dispatchers.Main) {
-										onDownloadProgress(
-											percent,
-											downloadedSize,
-											fileSize
-										)
-									}
-									prevMillis = millis
-
-									if (prevPercent != percent) {
+									outputStream.write(buf, 0, n)
+									downloadedSize += n.toLong()
+									val millis = SystemClock.elapsedRealtime()
+									if (millis - prevMillis > PROGRESS_UPDATE_INTERVAL_MS) {
+										val percent = if (fileSize > 0) (downloadedSize.toFloat() / fileSize * PERCENT_MULTIPLIER).toInt() else -1
 										withContext(Dispatchers.Main) {
-											onDownloadProgressPercent(
+											onDownloadProgress(
 												percent,
 												downloadedSize,
 												fileSize
 											)
 										}
-										prevPercent = percent
+										prevMillis = millis
+
+										if (prevPercent != percent) {
+											withContext(Dispatchers.Main) {
+												onDownloadProgressPercent(
+													percent,
+													downloadedSize,
+													fileSize
+												)
+											}
+											prevPercent = percent
+										}
 									}
 								}
 							}
 						}
-
-						withContext(Dispatchers.Main) { onImportStart(unipackFile) }
-
-						ZipFile(unipackFile).use { zip ->
-							zip.extractAll(folder.path)
-						}
-						FileManager.removeDoubleFolder(folder.path)
-						val unipack = UniPackFolder(folder).loadDetail()
-						if (unipack.criticalError) {
-							val errorMsg = unipack.errorDetail ?: "Unknown error"
-							Log.err(errorMsg)
-							FileManager.deleteDirectory(folder)
-							throw UniPackCriticalErrorException(errorMsg)
-						}
-
-						withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
-
 					}
 				}
 
+				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
+				ZipFile(unipackFile).use { zip ->
+					zip.extractAll(folder.path)
+				}
+				FileManager.removeDoubleFolder(folder.path)
+				val unipack = UniPackFolder(folder).loadDetail()
+				if (unipack.criticalError) {
+					val errorMsg = unipack.errorDetail ?: "Unknown error"
+					Log.err(errorMsg)
+					FileManager.deleteDirectory(folder)
+					throw UniPackCriticalErrorException(errorMsg)
+				}
+
+				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+
+			} catch (e: CancellationException) {
+				// The hosting scope was cancelled (activity destroyed): remove the half-written
+				// folder, but do not report it as a failure and do not swallow the cancellation.
+				FileManager.deleteDirectory(folder)
+				FileManager.deleteDirectory(unipackFile)
+				throw e
 			} catch (e: Exception) {
 				Log.err("Download failed", e)
 				withContext(Dispatchers.Main) { onException(e) }

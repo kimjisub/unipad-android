@@ -10,6 +10,9 @@
 # GSON
 -keepattributes *Annotation*
 -keep class com.google.gson.** { *; }
+# Gson models without @SerializedName: R8 renamed the fields, so every unipad:// import got a
+# UnishareVO with null fields and downloaded .../unishare/null/download in release builds.
+-keep class com.kimjisub.launchpad.api.**.vo.** { *; }
 
 -keep class com.kimjisub.launchpad.activity.MainActivity { *; }
 
