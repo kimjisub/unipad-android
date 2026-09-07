@@ -173,6 +173,8 @@ class PlayActivity : BaseActivity() {
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 
+	// Registered on the whole Settings.System tree: it fires for brightness, rotation, font scale...
+	// so only volume keys (or an unknown uri) refresh the UI.
 	private val volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
 		override fun onChange(selfChange: Boolean) {
 			log("changed volume 1")
@@ -181,8 +183,11 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun onChange(selfChange: Boolean, uri: Uri?) {
-			log("changed volume 2")
-			updateVolumeUI()
+			val key = uri?.lastPathSegment
+			if (key == null || key.contains("volume")) {
+				log("changed volume 2")
+				updateVolumeUI()
+			}
 			super.onChange(selfChange, uri)
 		}
 	}
@@ -325,7 +330,8 @@ class PlayActivity : BaseActivity() {
 
 		// Load theme and unipack asynchronously after first frame
 		lifecycleScope.launch {
-			// Load theme on main thread (needs resource access) after first frame is drawn
+			// Disk reads and up to ten BitmapFactory.decodeFile calls: off the main thread, with the
+			// Snackbar/dialog fallbacks still applied on main.
 			initTheme()
 
 			try {
@@ -365,10 +371,10 @@ class PlayActivity : BaseActivity() {
 		vm.startReady = theme != null
 	}
 
-	private fun initTheme() {
+	private suspend fun initTheme() {
 		val themeId = p.selectedTheme
 		theme = try {
-			loadTheme(this@PlayActivity, themeId, true)
+			withContext(Dispatchers.IO) { loadTheme(this@PlayActivity, themeId, true) }
 		} catch (e: OutOfMemoryError) {
 			Log.err("Theme OOM: $themeId", e)
 			Snackbar.make(findViewById(android.R.id.content), "${getString(string.skinMemoryErr)}\n$themeId", Snackbar.LENGTH_SHORT).show()

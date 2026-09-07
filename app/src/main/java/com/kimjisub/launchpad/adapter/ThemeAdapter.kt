@@ -58,13 +58,28 @@ class ThemeItem private constructor(
 			val themeJsonFile = File(dir, "theme.json")
 			val metadata = json.decodeFromString<ZipThemeMetadata>(themeJsonFile.readText())
 			val iconFile = File(dir, "theme_ic.png")
-			val icon: Drawable = if (iconFile.exists()) {
-				val bitmap = BitmapFactory.decodeFile(iconFile.absolutePath)
-				BitmapDrawable(context.resources, bitmap)
-			} else {
-				requireNotNull(ResourcesCompat.getDrawable(context.resources, R.drawable.theme_ic, null))
-			}
+			val icon: Drawable = decodeIconBounded(iconFile)?.let { BitmapDrawable(context.resources, it) }
+				?: requireNotNull(ResourcesCompat.getDrawable(context.resources, R.drawable.theme_ic, null))
 			return ThemeItem("zip://${dir.name}", icon, metadata.name, metadata.author, metadata.version, ThemeType.ZIP, isBundled)
+		}
+
+		private const val MAX_ICON_EDGE = 512
+
+		/** A user theme icon is arbitrary; a 4000x4000 PNG decoded at full size threw OOM out of composition. */
+		private fun decodeIconBounded(file: File): android.graphics.Bitmap? {
+			if (!file.exists()) return null
+			val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+			BitmapFactory.decodeFile(file.absolutePath, bounds)
+			if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+			var sample = 1
+			while (bounds.outWidth / sample > MAX_ICON_EDGE || bounds.outHeight / sample > MAX_ICON_EDGE) sample *= 2
+			val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+			return try {
+				BitmapFactory.decodeFile(file.absolutePath, opts)
+			} catch (e: OutOfMemoryError) {
+				Log.err("theme icon too large: ${file.path}", e)
+				null
+			}
 		}
 	}
 }

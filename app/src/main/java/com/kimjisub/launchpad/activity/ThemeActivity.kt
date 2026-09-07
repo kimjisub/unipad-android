@@ -82,6 +82,9 @@ import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.theme.Orange
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -91,8 +94,15 @@ class ThemeActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 
 		setContent {
-			var themes by remember { mutableStateOf(ThemeTool.getThemePackList(applicationContext)) }
+			// getThemePackList enumerates assets and external storage and decodes every icon; it
+			// ran inside composition on the main thread.
+			var themes by remember { mutableStateOf<List<ThemeItem>>(emptyList()) }
 			var appliedIndex by remember(themes) { mutableIntStateOf(getSavedTheme(themes)) }
+			val scope = rememberCoroutineScope()
+			suspend fun reloadThemes() {
+				themes = withContext(Dispatchers.IO) { ThemeTool.getThemePackList(applicationContext) }
+			}
+			LaunchedEffect(Unit) { reloadThemes() }
 
 			ThemeScreen(
 				themes = themes,
@@ -108,14 +118,17 @@ class ThemeActivity : BaseActivity() {
 					browse("https://github.com/kimjisub/unipad-android/blob/main/docs/THEME_CREATION_GUIDE.md")
 				},
 				onImport = { uri ->
-					try {
-						ZipThemeImporter.import(this, uri)
-						themes = ThemeTool.getThemePackList(applicationContext)
-						Toast.makeText(this, getString(R.string.theme_import_success), Toast.LENGTH_SHORT).show()
-					} catch (e: ZipThemeImporter.InvalidThemeException) {
-						Toast.makeText(this, "${getString(R.string.theme_import_invalid)}\n${e.message}", Toast.LENGTH_SHORT).show()
-					} catch (e: Exception) {
-						Toast.makeText(this, "${getString(R.string.theme_import_failed)}\n${e.message}", Toast.LENGTH_SHORT).show()
+					// Copying and extracting the ZIP used to run inside the click handler on main.
+					scope.launch {
+						try {
+							withContext(Dispatchers.IO) { ZipThemeImporter.import(this@ThemeActivity, uri) }
+							reloadThemes()
+							Toast.makeText(this@ThemeActivity, getString(R.string.theme_import_success), Toast.LENGTH_SHORT).show()
+						} catch (e: ZipThemeImporter.InvalidThemeException) {
+							Toast.makeText(this@ThemeActivity, "${getString(R.string.theme_import_invalid)}\n${e.message}", Toast.LENGTH_SHORT).show()
+						} catch (e: Exception) {
+							Toast.makeText(this@ThemeActivity, "${getString(R.string.theme_import_failed)}\n${e.message}", Toast.LENGTH_SHORT).show()
+						}
 					}
 				},
 				onDelete = { themeItem ->
@@ -124,7 +137,7 @@ class ThemeActivity : BaseActivity() {
 						if (p.selectedTheme == themeItem.id) {
 							p.selectedTheme = packageName
 						}
-						themes = ThemeTool.getThemePackList(applicationContext)
+						scope.launch { reloadThemes() }
 					}
 				},
 			)
@@ -194,6 +207,11 @@ private fun ThemeScreen(
 						customLogo = res.customLogo?.toBitmap()?.asImageBitmap(),
 					)
 				} catch (_: OutOfMemoryError) {
+					null
+				} catch (e: Exception) {
+					// A theme whose theme.json was removed under us throws IllegalArgumentException;
+					// only OOM was caught and the activity crashed.
+					Log.err("theme preview failed: $themeId", e)
 					null
 				}
 			}
