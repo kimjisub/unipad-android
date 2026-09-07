@@ -90,15 +90,25 @@ object BaseApiService {
 			}).create()
 	}
 
-	fun <T> createRetrofitService(baseUrl: String, serviceClass: Class<T>): T {
+	// One client for every service: each Retrofit service used to build its own connection pool,
+	// dispatcher, and thread pools. No callTimeout on purpose (a pack download may take minutes);
+	// connect/read timeouts stop a stalled socket from holding a download forever.
+	private val sharedClient: OkHttpClient by lazy {
 		val httpLoggingInterceptor = HttpLoggingInterceptor { message -> Log.network(message) }
 		// Never BODY: the same client downloads UniPack ZIPs, and BODY buffers the whole
 		// response in memory before logging it (Crashlytics b1f34473 / 0a626898: OOM in
 		// okio.Segment during UniPackDownloader).
 		httpLoggingInterceptor.level = Level.HEADERS
-		val client = okHttpClientBuilder
+		okHttpClientBuilder
+			.connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+			.readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+			.writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
 			.addInterceptor(httpLoggingInterceptor)
 			.build()
+	}
+
+	fun <T> createRetrofitService(baseUrl: String, serviceClass: Class<T>): T {
+		val client = sharedClient
 		return Retrofit.Builder()
 			.baseUrl(baseUrl)
 			.addConverterFactory(GsonConverterFactory.create(gson))

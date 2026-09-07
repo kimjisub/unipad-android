@@ -72,6 +72,7 @@ import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.unipack.UniPack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.text.NumberFormat
@@ -104,7 +105,14 @@ class FBStoreActivity : BaseActivity() {
 		super.onCreate(savedInstanceState)
 
 		lifecycleScope.launch(Dispatchers.IO) {
-			downloadList = ws.getUnipacks()
+			val list = ws.getUnipacks()
+			// Store entries that arrived before this finished were flagged "not downloaded" for good.
+			withContext(Dispatchers.Main) {
+				downloadList = list
+				for (item in storeItems) {
+					item.downloaded = list.any { it.unipack.id == item.storeVO.code }
+				}
+			}
 		}
 
 		setContent {
