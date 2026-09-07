@@ -96,17 +96,17 @@ UI tests are organized by feature area:
 
 #### Multi-API Level Testing
 
-The project supports Android 10+ (API 29+). Gradle Managed Devices test across key API levels for compatibility.
+The app builds with compileSdk/targetSdk 37 and minSdk 24. Gradle Managed Devices test across key API levels for compatibility.
 
 **Configured Test Devices:**
-- `pixel2Api29` - Android 10 (API 29, minSdk) - Scoped Storage baseline
+- `pixel2Api29` - Android 10 (API 29) - Scoped Storage baseline (minSdk is 24)
 - `pixel2Api33` - Android 13 (API 33) - Notification Runtime Permission
-- `pixel2Api35` - Android 15 (API 35, targetSdk) - Latest
+- `pixel2Api35` - Android 15 (API 35) - Latest managed image (targetSdk is 37; no managed image for it yet)
 
 **Why These API Levels?**
-- **API 29**: Minimum supported version (minSdk), Scoped Storage introduced
+- **API 29**: Scoped Storage introduced (minSdk is 24, but nothing below 29 is worth an emulator slot)
 - **API 33**: Notification runtime permission required
-- **API 35**: Target SDK (targetSdk), ensures latest Android compatibility
+- **API 35**: Newest system image available to Gradle Managed Devices; targetSdk itself is 37
 
 **Running Multi-API Tests:**
 
@@ -315,11 +315,11 @@ GUIDE (autoplay hints) > PRESSED (user touch) > LED (animation) > CHAIN (selecte
 ### Build Configuration (Full Modernization 2025-2026)
 The project was fully modernized with the following changes:
 
-1. **Gradle 8.0 → 9.3.1**: Updated for AGP 9.0+ support
-2. **AGP 8.2.2 → 9.0.1**: Built-in Kotlin support, compileSdk/targetSdk 36
-3. **Kotlin 1.9.0-Beta → 2.3.10**: Unified Kotlin version; `kotlin-android` plugin removed (AGP 9.0 built-in)
-4. **KSP 2.1.21-2.0.1 → 2.3.6**: New standalone versioning (no longer tied to Kotlin version)
-5. **Java target 1.8 → 17**: sourceCompatibility, targetCompatibility, and jvmTarget all set to 17
+1. **Gradle 8.0 → 9.7.1** (2026-09: 9.3.1 → 9.7.1)
+2. **AGP 8.2.2 → 9.4.0**: Built-in Kotlin support; compileSdk/targetSdk 37, minSdk 24, NDK 29.0.14206865 (2026-09)
+3. **Kotlin 1.9.0-Beta → 2.4.10**: Unified Kotlin version; `kotlin-android` plugin removed (AGP 9.0 built-in)
+4. **KSP 2.1.21-2.0.1 → 2.3.11**: New standalone versioning (no longer tied to Kotlin version)
+5. **Java target 1.8 → 21**: sourceCompatibility, targetCompatibility, and jvmTarget all set to 21 (JDK toolchain 21)
 6. **JCenter removed**: All repositories migrated to google(), mavenCentral(), and JitPack
 7. **JCenter library replacements**:
    - `com.polyak:icon-switch:1.0.0` → `com.github.polyak01:IconSwitch:09d0124d07` (JitPack)
@@ -350,16 +350,17 @@ Release builds use multiple ProGuard configs:
 - `proguard-retrofit2.pro`: Retrofit API rules
 
 ### Dependencies
-- **Kotlin 2.3.10** with coroutines 1.10.2 and serialization 1.10.0
-- **KSP 2.3.6**: Annotation processing for Room (standalone versioning)
-- **AndroidX**: AppCompat 1.7.1, ConstraintLayout 2.2.1, Core-KTX 1.17.0, Lifecycle 2.10.0, Room 2.8.4
-- **Koin 4.1.1**: Dependency injection
-- **Firebase BOM 34.10.0**: Firestore, Realtime Database, Messaging, Analytics, Crashlytics, Performance, Remote Config
-- **Compose BOM 2026.02.01**: Material3, UI, Runtime
-- **Retrofit 2.11.0** + OkHttp 4.12.0: API networking
-- **Material 1.13.0**: Material Design components
+- **Kotlin 2.4.10** with coroutines 1.11.0 and serialization 1.11.0
+- **KSP 2.3.11**: Annotation processing for Room (standalone versioning)
+- **AndroidX**: AppCompat 1.8.0, ConstraintLayout 2.2.2, Core-KTX 1.19.0, Lifecycle 2.11.0, Activity-Compose 1.13.0, Room 2.8.4
+- **Koin 4.2.2**: Dependency injection
+- **Firebase BOM 34.18.0**: Firestore, Realtime Database, Messaging, Analytics, Crashlytics, Performance, Remote Config
+- **Compose BOM 2026.08.00**: Material3, UI, Runtime
+- **Retrofit 3.0.0** + OkHttp 5.5.0: API networking (logging interceptor stays at HEADERS, see BaseApiService)
+- **Material 1.14.0**: Material Design components
 - **Splitties 3.0.0**: Android utilities
 - **zip4j 2.11.6**: UniPack archive handling
+- **Oboe 1.10.0**: low-latency audio (`app/src/main/cpp`), play-services-oss-licenses 17.5.1 (needs minSdk 24)
 
 ### Key Files
 - `app/build.gradle`: Build configuration, requires `keystore.properties` for release
