@@ -62,10 +62,10 @@ class LaunchpadPRO : DriverRef() {
 		if (cmd == 9) {
 			val x = 9 - note / 10
 			val y = note % 10
-			if (y in 1..8)
+			// Notes 91..98 (x = 0) are the top row and would map to pad row -1 (same as #52 in MK2).
+			if (x in 1..8 && y in 1..8)
 				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
-		}
-		if (cmd == 11 && sig == -80) {
+		} else if (cmd == 11 && sig == -80) {
 			if (note in 91..98) {
 				onFunctionKeyTouch(note - 91, velocity != 0)
 			}
@@ -98,11 +98,16 @@ class LaunchpadPRO : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		sendSignal(9, -112, 10 * (8 - x) + y + 1, velocity)
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {
-		if (c in 0..7)
+		// getSignal reports chains 0..23 (right column, bottom row, left column)
+		if (c in 0..23)
 			sendFunctionKeyLed(c + 8, velocity)
 	}
 

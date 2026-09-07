@@ -79,11 +79,16 @@ open class LaunchpadX : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		sendSignal(25, -112, 10 * (8 - x) + y + 1, velocity)
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {
-		if (c in 0..7)
+		// getSignal reports chains 0..23 (right column, bottom row, left column)
+		if (c in 0..23)
 			sendFunctionKeyLed(c + 8, velocity)
 	}
 

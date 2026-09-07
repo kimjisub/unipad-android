@@ -41,6 +41,10 @@ class LaunchpadMK2 : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		sendSignal(9, -112, 10 * (8 - x) + y + 1, velocity)
 	}
 

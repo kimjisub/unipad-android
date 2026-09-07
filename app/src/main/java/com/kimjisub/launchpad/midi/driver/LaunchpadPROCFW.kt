@@ -27,9 +27,13 @@ class LaunchpadPROCFW : DriverRef() {
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
 		val cin = cmd and 0x0F
-		if (cin != 8 && cin != 9 && cin != 11) return
+		if (cin != 8 && cin != 9 && cin != 11) {
+			// PlayActivity's Live Mode resync hook listens here, as it does for PRO/MK3.
+			onUnknownReceived(cmd, sig, note, velocity)
+			return
+		}
 
-		val isDown = (cin == 9 && velocity > 0) || (cin == 11 && velocity > 0)
+		val isDown = cin != 8 && velocity > 0
 
 		when (note) {
 			in 36..99 -> {
@@ -72,6 +76,10 @@ class LaunchpadPROCFW : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		// UniPad passes x as row, y as col
 		val rowInverted = 7 - x
 		val note = if (y < 4) {

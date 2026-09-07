@@ -77,20 +77,52 @@ class MatrixTest {
 		verify { receiveListener.onFunctionKeyTouch(8, false) }
 	}
 
-	// --- getSignal: note-on (cmd=9) extra function keys (108-115) ---
+	// --- getSignal: ring banks round-trip with circleCode ---
 
 	@Test
-	fun getSignal_extraFunctionKey_first() {
-		// note=108: c=8-(108-108)+8=16 → functionKey(16+8=24)
-		driver.getSignal(cmd = 9, sig = 0, note = 108, velocity = 127)
-		verify { receiveListener.onFunctionKeyTouch(24, true) }
+	fun getSignal_topRow_matchesCircleCode() {
+		// circleCode[0] = 28, circleCode[7] = 35
+		driver.getSignal(cmd = 9, sig = 0, note = 28, velocity = 127)
+		verify { receiveListener.onFunctionKeyTouch(0, true) }
+		driver.getSignal(cmd = 9, sig = 0, note = 35, velocity = 127)
+		verify { receiveListener.onFunctionKeyTouch(7, true) }
 	}
 
 	@Test
-	fun getSignal_extraFunctionKey_last() {
-		// note=115: c=8-(115-108)+8=9 → functionKey(9+8=17)
+	fun getSignal_bottomRow_matchesCircleCode() {
+		// circleCode[16] = 123 (chain 8), circleCode[23] = 116 (chain 15)
+		driver.getSignal(cmd = 9, sig = 0, note = 123, velocity = 127)
+		verify { receiveListener.onChainTouch(8, true) }
+		verify { receiveListener.onFunctionKeyTouch(16, true) }
+		driver.getSignal(cmd = 9, sig = 0, note = 116, velocity = 127)
+		verify { receiveListener.onChainTouch(15, true) }
+		verify { receiveListener.onFunctionKeyTouch(23, true) }
+	}
+
+	@Test
+	fun getSignal_leftColumn_matchesCircleCode() {
+		// circleCode[24] = 115 (chain 16), circleCode[31] = 108 (chain 23)
 		driver.getSignal(cmd = 9, sig = 0, note = 115, velocity = 127)
-		verify { receiveListener.onFunctionKeyTouch(17, true) }
+		verify { receiveListener.onChainTouch(16, true) }
+		verify { receiveListener.onFunctionKeyTouch(24, true) }
+		driver.getSignal(cmd = 9, sig = 0, note = 108, velocity = 127)
+		verify { receiveListener.onChainTouch(23, true) }
+		verify { receiveListener.onFunctionKeyTouch(31, true) }
+	}
+
+	@Test
+	fun getSignal_everyRingNote_lightsTheSameButton() {
+		for (f in 0..31) {
+			val note = Matrix.circleCode[f][2]
+			driver.getSignal(cmd = 9, sig = 0, note = note, velocity = 127)
+			verify { receiveListener.onFunctionKeyTouch(f, true) }
+		}
+	}
+
+	@Test
+	fun getSignal_noteOnVelocityZero_isRelease() {
+		driver.getSignal(cmd = 9, sig = 0, note = 36, velocity = 0)
+		verify { receiveListener.onPadTouch(7, 0, false, 0) }
 	}
 
 	// --- getSignal: note-off (cmd=8) ---
@@ -133,9 +165,31 @@ class MatrixTest {
 	}
 
 	@Test
-	fun sendChainLed_outOfRange_doesNotSend() {
+	fun sendChainLed_bottomRow_routesToFunctionKey() {
+		// chain 8 → f 16 → circleCode[16] = {9, -111, 123}
 		driver.sendChainLed(8, 60)
+		verify { sendListener.onSend(9.toByte(), (-111).toByte(), 123.toByte(), 60.toByte()) }
+	}
+
+	@Test
+	fun sendChainLed_outOfRange_doesNotSend() {
+		driver.sendChainLed(24, 60)
 		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun sendPadLed_outOfGrid_doesNotSend() {
+		driver.sendPadLed(8, 0, 60)
+		driver.sendPadLed(0, 8, 60)
+		driver.sendPadLed(-1, 0, 60)
+		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun sendClearLed_clearsRingToo() {
+		driver.sendClearLed()
+		// 64 pads + 32 ring buttons
+		verify(exactly = 96) { sendListener.onSend(any(), any(), any(), 0.toByte()) }
 	}
 
 	// --- sendFunctionKeyLed ---

@@ -115,6 +115,22 @@ class LaunchpadSTest {
 		verify { sendListener.onSend(9.toByte(), (-112).toByte(), 119.toByte(), LaunchpadColor.SCode[127].toByte()) }
 	}
 
+	@Test
+	fun sendPadLed_codeOutsidePalette_isClamped() {
+		// a pack LED code of 200 used to throw ArrayIndexOutOfBounds inside the driver
+		driver.sendPadLed(0, 0, 200)
+		verify { sendListener.onSend(9.toByte(), (-112).toByte(), 0.toByte(), LaunchpadColor.SCode[127].toByte()) }
+		driver.sendPadLed(0, 1, -3)
+		verify { sendListener.onSend(9.toByte(), (-112).toByte(), 1.toByte(), LaunchpadColor.SCode[0].toByte()) }
+	}
+
+	@Test
+	fun sendPadLed_outOfGrid_doesNotSend() {
+		// (8, 0) would be note 128 = 0x80, a status byte in a data position
+		driver.sendPadLed(8, 0, 60)
+		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
 	// --- sendChainLed ---
 
 	@Test

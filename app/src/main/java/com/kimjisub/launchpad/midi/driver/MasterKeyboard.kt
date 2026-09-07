@@ -14,7 +14,9 @@ class MasterKeyboard : DriverRef() {
 				y = 8 - (99 - note) % 4
 				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 			}
-		} else if (velocity == 0) {
+		} else if (cmd == 8) {
+			// Keyed on the command, not the data byte: a CC with value 0 used to release a pad, and a
+			// note-off with a release velocity was ignored and left the pad stuck.
 			if (note in 36..67) {
 				x = (67 - note) / 4 + 1
 				y = 4 - (67 - note) % 4

@@ -43,24 +43,36 @@ class Matrix : DriverRef() {
 		val y: Int
 		when (cmd) {
 			9 -> when (note) {
+				// A note-on with velocity 0 is a release; treating it as a press latched the pad.
 				in 36..67 -> {
 					x = (67 - note) / 4 + 1
 					y = 4 - (67 - note) % 4
-					onPadTouch(x - 1, y - 1, true, velocity)
+					onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 				}
 				in 68..99 -> {
 					x = (99 - note) / 4 + 1
 					y = 8 - (99 - note) % 4
-					onPadTouch(x - 1, y - 1, true, velocity)
+					onPadTouch(x - 1, y - 1, velocity != 0, velocity)
+				}
+				// Ring banks mirror circleCode: top 28..35 (f 0..7), right 100..107 (f 8..15),
+				// bottom 123..116 (f 16..23), left 115..108 (f 24..31).
+				in 28..35 -> {
+					onFunctionKeyTouch(note - 28, velocity != 0)
 				}
 				in 100..107 -> {
 					val c = note - 100
 					onChainTouch(c, velocity != 0)
 					onFunctionKeyTouch(c + 8, velocity != 0)
 				}
+				in 116..123 -> {
+					val f = 16 + (123 - note)
+					onChainTouch(f - 8, velocity != 0)
+					onFunctionKeyTouch(f, velocity != 0)
+				}
 				in 108..115 -> {
-					val c = 8 - (note - 108) + 8
-					onFunctionKeyTouch(c + 8, velocity != 0)
+					val f = 24 + (115 - note)
+					onChainTouch(f - 8, velocity != 0)
+					onFunctionKeyTouch(f, velocity != 0)
 				}
 			}
 			8 -> when (note) {
@@ -79,6 +91,10 @@ class Matrix : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		val padX = x + 1
 		val padY = y + 1
 		if (padY in 1..4) {
@@ -89,7 +105,7 @@ class Matrix : DriverRef() {
 	}
 
 	override fun sendChainLed(c: Int, velocity: Int) {
-		if (c in 0..7)
+		if (c in 0..23)
 			sendFunctionKeyLed(c + 8, velocity)
 	}
 
@@ -107,5 +123,8 @@ class Matrix : DriverRef() {
 		for (i in 0..7)
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
+		// The ring stayed lit after leaving PlayActivity or switching drivers.
+		for (i in 0..31)
+			sendFunctionKeyLed(i, 0)
 	}
 }

@@ -62,16 +62,24 @@ class MasterKeyboardTest {
 	// --- getSignal: note-off via velocity==0 with non-cmd-9 ---
 
 	@Test
-	fun getSignal_nonCmd9_velocityZero_lowerRange() {
-		// cmd=10, velocity=0 → note-off path
-		driver.getSignal(cmd = 10, sig = 0, note = 36, velocity = 0)
+	fun getSignal_noteOff_lowerRange() {
+		// cmd=8 → note-off path
+		driver.getSignal(cmd = 8, sig = 0, note = 36, velocity = 0)
 		verify { receiveListener.onPadTouch(7, 0, false, 0) }
 	}
 
 	@Test
-	fun getSignal_nonCmd9_velocityZero_upperRange() {
-		driver.getSignal(cmd = 10, sig = 0, note = 99, velocity = 0)
+	fun getSignal_noteOff_upperRange_withReleaseVelocity() {
+		// a note-off carrying a release velocity used to be ignored and left the pad stuck
+		driver.getSignal(cmd = 8, sig = 0, note = 99, velocity = 64)
 		verify { receiveListener.onPadTouch(0, 7, false, 0) }
+	}
+
+	@Test
+	fun getSignal_controlChangeWithZeroValue_noAction() {
+		// a CC (cmd=11) with value 0 and a controller number in the pad range is not a pad release
+		driver.getSignal(cmd = 11, sig = 0, note = 36, velocity = 0)
+		verify(exactly = 0) { receiveListener.onPadTouch(any(), any(), any(), any()) }
 	}
 
 	// --- getSignal: non-cmd-9 with non-zero velocity → no action ---

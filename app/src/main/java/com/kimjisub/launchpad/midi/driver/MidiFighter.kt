@@ -8,11 +8,11 @@ class MidiFighter : DriverRef() {
 			if (note in 36..67) {
 				x = (67 - note) / 4 + 1
 				y = 4 - (67 - note) % 4
-				onPadTouch(x - 1, y - 1, true, velocity)
+				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 			} else if (note in 68..99) {
 				x = (99 - note) / 4 + 1
 				y = 8 - (99 - note) % 4
-				onPadTouch(x - 1, y - 1, true, velocity)
+				onPadTouch(x - 1, y - 1, velocity != 0, velocity)
 			}
 		} else if (cmd == 8) {
 			if (note in 36..67) {
@@ -28,6 +28,10 @@ class MidiFighter : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
 		val padX = x + 1
 		val padY = y + 1
 		if (padY in 1..4) {
