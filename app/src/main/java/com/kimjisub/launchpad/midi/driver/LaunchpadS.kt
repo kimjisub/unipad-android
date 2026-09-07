@@ -41,8 +41,15 @@ class LaunchpadS : DriverRef() {
 	}
 
 	override fun sendPadLed(x: Int, y: Int, velocity: Int) {
-		sendSignal(9, -112, x * 16 + y, LaunchpadColor.SCode[velocity])
+		// x/y come from the pack's info file (buttonX/buttonY) and are not clamped upstream; an
+		// out-of-grid pad would address the ring, or on a 16-note layout put a status byte in a
+		// data position.
+		if (x !in 0..7 || y !in 0..7) return
+		sendSignal(9, -112, x * 16 + y, sCode(velocity))
 	}
+
+	// velocity is a LED code read out of a pack; SCode has 128 entries.
+	private fun sCode(velocity: Int): Int = LaunchpadColor.SCode[velocity.coerceIn(0, LaunchpadColor.SCode.lastIndex)]
 
 	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)
@@ -55,7 +62,7 @@ class LaunchpadS : DriverRef() {
 				circleCode[f][0].toByte(),
 				circleCode[f][1].toByte(),
 				circleCode[f][2].toByte(),
-				LaunchpadColor.SCode[velocity].toByte()
+				sCode(velocity).toByte()
 			)
 	}
 

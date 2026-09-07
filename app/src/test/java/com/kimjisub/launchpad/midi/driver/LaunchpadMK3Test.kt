@@ -133,6 +133,34 @@ class LaunchpadMK3Test {
 		verify { receiveListener.onUnknownReceived(99, 0, 0, 0) }
 	}
 
+	@Test
+	fun getSignal_topRowNote_doesNotReachPads() {
+		// note 91..98 → x = 0: used to call onPadTouch(-1, ...)
+		driver.getSignal(cmd = 9, sig = 0, note = 91, velocity = 100)
+		verify(exactly = 0) { receiveListener.onPadTouch(any(), any(), any(), any()) }
+		verify(exactly = 0) { receiveListener.onUnknownReceived(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun getSignal_padNote_isNotReportedAsUnknown() {
+		driver.getSignal(cmd = 9, sig = 0, note = 81, velocity = 100)
+		verify(exactly = 0) { receiveListener.onUnknownReceived(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun sendChainLed_bottomRow_routesToFunctionKey() {
+		// chain 8 → f 16 → circleCode[16] = {11, -80, 8}
+		driver.sendChainLed(8, 60)
+		verify { sendListener.onSend(11.toByte(), (-80).toByte(), 8.toByte(), 60.toByte()) }
+	}
+
+	@Test
+	fun sendPadLed_outOfGrid_doesNotSend() {
+		driver.sendPadLed(8, 0, 60)
+		driver.sendPadLed(0, -1, 60)
+		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
 	// --- sendPadLed ---
 
 	@Test
@@ -160,7 +188,7 @@ class LaunchpadMK3Test {
 
 	@Test
 	fun sendChainLed_outOfRange_doesNotSend() {
-		driver.sendChainLed(8, 60)
+		driver.sendChainLed(24, 60)
 		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
 	}
 

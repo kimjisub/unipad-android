@@ -124,6 +124,25 @@ class LaunchpadPROTest {
 	}
 
 	@Test
+	fun getSignal_topRowNote_doesNotReachPads() {
+		// note 91..98 → x = 0: used to call onPadTouch(-1, ...) (MainActivity forwarded it to sendPadLed)
+		driver.getSignal(cmd = 9, sig = 0, note = 98, velocity = 100)
+		verify(exactly = 0) { receiveListener.onPadTouch(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun getSignal_padNote_isNotReportedAsUnknown() {
+		driver.getSignal(cmd = 9, sig = 0, note = 81, velocity = 100)
+		verify(exactly = 0) { receiveListener.onUnknownReceived(any(), any(), any(), any()) }
+	}
+
+	@Test
+	fun sendPadLed_outOfGrid_doesNotSend() {
+		driver.sendPadLed(0, 8, 60)
+		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
+	@Test
 	fun getSignal_unknownSignal_callsUnknownReceived() {
 		driver.getSignal(cmd = 99, sig = 0, note = 0, velocity = 0)
 		verify { receiveListener.onUnknownReceived(99, 0, 0, 0) }

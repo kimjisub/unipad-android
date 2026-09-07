@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.activity
 
+import android.content.Intent
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -13,9 +14,22 @@ class UsbMidiHandlerActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		val usbManager = getSystemService(USB_SERVICE) as UsbManager
-		MidiConnection.initConnection(intent, usbManager, this)
-
+		handle(intent)
 		finish()
+	}
+
+	// singleInstance + noHistory: a second attach delivered to a live instance arrives here
+	// instead of onCreate and used to be dropped.
+	override fun onNewIntent(intent: Intent) {
+		super.onNewIntent(intent)
+		setIntent(intent)
+		handle(intent)
+		finish()
+	}
+
+	private fun handle(intent: Intent) {
+		// Devices without USB host support have no UsbManager; the manifest never required the feature.
+		val usbManager = getSystemService(USB_SERVICE) as? UsbManager ?: return
+		MidiConnection.initConnection(intent, usbManager, this)
 	}
 }

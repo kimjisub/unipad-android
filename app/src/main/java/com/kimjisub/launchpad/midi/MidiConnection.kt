@@ -30,14 +30,19 @@ import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
 import com.kimjisub.launchpad.midi.driver.Noting
 import com.kimjisub.launchpad.tool.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 
 object MidiConnection {
@@ -109,9 +114,13 @@ object MidiConnection {
 						offset += USB_MIDI_PACKET_SIZE
 					}
 
-					usbDeviceConnection?.bulkTransfer(
-						usbEndpointOut, batchBuffer, offset, USB_BULK_TIMEOUT_MS
-					)
+					// Read both fields once: teardown() nulls them in sequence from another thread.
+					val conn = usbDeviceConnection
+					val ep = usbEndpointOut
+					if (conn != null && ep != null) {
+						val written = conn.bulkTransfer(ep, batchBuffer, offset, USB_BULK_TIMEOUT_MS)
+						if (written < 0) Log.midiDetail("USB TX failed ($written), ${offset / USB_MIDI_PACKET_SIZE} packets dropped")
+					}
 				} catch (_: RuntimeException) {
 					// Device may be disconnected
 				}
@@ -128,7 +137,11 @@ object MidiConnection {
 	// Android MIDI API for SysEx delivery (used before USB interface claim)
 	private var midiManager: MidiManager? = null
 	private var midiDevice: MidiDevice? = null
-	private val midiInputPorts = mutableMapOf<Int, MidiInputPort>()
+	// Written from the init coroutine (IO) and closeMidiApi (main), read from sendRawBuffer (IO).
+	private val midiInputPorts = ConcurrentHashMap<Int, MidiInputPort>()
+	private var pendingInitJob: Job? = null
+	@Volatile
+	private var initSysExSent = false
 
 	// Deferred USB claim - stored for later use after MIDI API SysEx
 	private var pendingUsbClaim: (() -> Unit)? = null
@@ -154,10 +167,10 @@ object MidiConnection {
 				field.initialize()
 				if (isRun)
 					field.onConnected()
-			} catch (e: IllegalAccessException) {
+			} catch (e: RuntimeException) {
+				// initialize() sends the driver's init SysEx; a send failure must not take the
+				// caller (MidiSelectActivity's click, UsbMidiHandlerActivity.onCreate) down with it.
 				Log.err("Driver set failed", e)
-			} catch (e: InstantiationException) {
-				Log.err("Driver instantiation failed", e)
 			}
 
 			listener?.onChangeDriver(value)
@@ -193,9 +206,16 @@ object MidiConnection {
 		if ("android.hardware.usb.action.USB_DEVICE_ATTACHED" == intent.action)
 			initDevice(usbDevice)
 		else {
-			val deviceIterator = requireNotNull(usbManager).deviceList.values.iterator()
-			if (deviceIterator.hasNext())
-				initDevice(deviceIterator.next())
+			// Without an attach intent nothing was granted to us. Only a device we already hold
+			// permission for, and that looks like a MIDI device, is worth opening: the first entry
+			// of deviceList used to be a hub or a mouse and ended up published as "Master Keyboard".
+			val candidate = try {
+				usbManager.deviceList.values.firstOrNull { usbManager.hasPermission(it) && looksLikeMidiDevice(it) }
+			} catch (e: RuntimeException) {
+				Log.err("USB enumeration failed", e)
+				null
+			}
+			if (candidate != null) initDevice(candidate)
 		}
 
 		onCycleListener = object : DriverRef.OnCycleListener {
@@ -258,6 +278,10 @@ object MidiConnection {
 			Log.midiDetail("USB 에러 : device == null")
 			return
 		}
+
+		// A previous device (replug, or a second attach) must release its fd and stop its
+		// receive loop before its fields are overwritten.
+		teardown(notify = true)
 
 		try {
 			Log.midiDetail("DeviceName : ${device.deviceName}")
@@ -335,6 +359,7 @@ object MidiConnection {
 		}
 		val usbIf = usbInterface ?: run {
 			Log.midiDetail("USB 에러 : usbInterface == null")
+			connectedDevice = null
 			return
 		}
 		for (i in 0 until usbIf.endpointCount) {
@@ -348,13 +373,30 @@ object MidiConnection {
 				UsbConstants.USB_DIR_OUT -> usbEndpointOut = ep
 			}
 		}
-		val manager = usbManager ?: run {
-			Log.midiDetail("USB 에러 : usbManager == null")
+		val endpointIn = usbEndpointIn ?: run {
+			Log.midiDetail("USB 에러 : usbEndpointIn == null")
+			connectedDevice = null
 			return
 		}
-		val connection = manager.openDevice(device)
+		val manager = usbManager ?: run {
+			Log.midiDetail("USB 에러 : usbManager == null")
+			connectedDevice = null
+			return
+		}
+		// openDevice throws SecurityException for a device we were not granted (only the device
+		// that fired the attach intent is auto-granted).
+		val connection = try {
+			if (manager.hasPermission(device)) manager.openDevice(device) else {
+				Log.midiDetail("USB 에러 : no permission for ${device.deviceName}")
+				null
+			}
+		} catch (e: SecurityException) {
+			Log.err("USB openDevice failed", e)
+			null
+		}
 		if (connection == null) {
 			Log.midiDetail("USB 에러 : usbDeviceConnection == null")
+			connectedDevice = null
 			return
 		}
 		usbDeviceConnection = connection
@@ -362,10 +404,15 @@ object MidiConnection {
 		// Defer USB interface claim - MIDI API needs the interface first for SysEx
 		pendingUsbClaim = {
 			Log.midiDetail("USB: Claiming interface for MIDI communication")
-			if (connection.claimInterface(usbIf, true)) {
-				startReceiveLoop()
+			if (usbDeviceConnection !== connection) {
+				Log.midiDetail("USB: device changed before the claim, skipping")
+			} else if (connection.claimInterface(usbIf, true)) {
+				startReceiveLoop(connection, endpointIn)
 			} else {
+				// Announcing "connected" while owning no interface left the UI streaming LEDs
+				// to a device that never answered; report the disconnect instead.
 				Log.midiDetail("USB 에러 : claimInterface failed")
+				teardown(notify = true)
 			}
 		}
 
@@ -387,17 +434,24 @@ object MidiConnection {
 			return
 		}
 
-		@Suppress("DEPRECATION")
-		val deviceInfos = manager.devices
-		Log.midiDetail("MIDI API: ${deviceInfos.size} device(s) found")
-
-		val targetInfo = deviceInfos.firstOrNull { info ->
+		// Every call below is a binder round-trip into the MIDI service that produced the
+		// Android 16 NullPointerExceptions (#41/#49); openDevice was guarded, enumeration was not.
+		val targetInfo = try {
+			@Suppress("DEPRECATION")
+			val deviceInfos = manager.devices
+			Log.midiDetail("MIDI API: ${deviceInfos.size} device(s) found")
+			deviceInfos.firstOrNull { info ->
 			val props = info.properties
 			Log.midiDetail("MIDI API device: name=${props.getString(MidiDeviceInfo.PROPERTY_NAME)}, " +
 				"manufacturer=${props.getString(MidiDeviceInfo.PROPERTY_MANUFACTURER)}, " +
 				"product=${props.getString(MidiDeviceInfo.PROPERTY_PRODUCT)}, " +
 				"inputPorts=${info.inputPortCount}, outputPorts=${info.outputPortCount}")
-			info.inputPortCount > 0
+				info.inputPortCount > 0
+			}
+		} catch (e: RuntimeException) {
+			Log.err("MIDI API: enumeration failed, claiming USB interface directly", e)
+			claimUsbAndStart()
+			return
 		}
 
 		if (targetInfo == null) {
@@ -406,13 +460,12 @@ object MidiConnection {
 			return
 		}
 
-		Log.midiDetail("MIDI API: Opening device (inputPorts=${targetInfo.inputPortCount}, outputPorts=${targetInfo.outputPortCount})")
-		for (port in targetInfo.ports) {
-			val dir = if (port.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) "INPUT" else "OUTPUT"
-			Log.midiDetail("  MIDI API Port[${port.portNumber}]: $dir name=${port.name}")
-		}
-
 		try {
+			Log.midiDetail("MIDI API: Opening device (inputPorts=${targetInfo.inputPortCount}, outputPorts=${targetInfo.outputPortCount})")
+			for (port in targetInfo.ports) {
+				val dir = if (port.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) "INPUT" else "OUTPUT"
+				Log.midiDetail("  MIDI API Port[${port.portNumber}]: $dir name=${port.name}")
+			}
 			manager.openDevice(targetInfo, { device ->
 				// Runs later on the main Handler, outside the try below: a framework exception here
 				// (Crashlytics 9b99a871: SecurityException from openInputPort on Android 16) must fall
@@ -432,39 +485,57 @@ object MidiConnection {
 	}
 
 	private fun onMidiApiDeviceOpened(device: MidiDevice?, targetInfo: MidiDeviceInfo) {
-		if (device != null) {
-			midiDevice = device
-			Log.midiDetail("MIDI API: Device opened successfully")
-
-			// Open all input ports and send SysEx
-			for (portInfo in targetInfo.ports) {
-				if (portInfo.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) {
-					val port = device.openInputPort(portInfo.portNumber)
-					if (port != null) {
-						midiInputPorts[portInfo.portNumber] = port
-						Log.midiDetail("MIDI API: Opened input port ${portInfo.portNumber} (${portInfo.name})")
-					}
-				}
-			}
-
-			// Send SysEx to ALL input ports (port names are empty, we don't know which is DAW)
-			val initData = driver.getInitSysEx()
-			if (initData != null && midiInputPorts.isNotEmpty()) {
-				val (messages, _) = initData
-				for ((portNum, _) in midiInputPorts) {
-					Log.midiDetail("MIDI API: Sending init SysEx (${messages.size} messages) to port $portNum")
-					sendViaMidiApi(messages, portNum)
-				}
-			}
-
-			// Delay to ensure SysEx is flushed before closing ports
-			Handler(Looper.getMainLooper()).postDelayed({
-				closeMidiApi()
-				claimUsbAndStart()
-			}, 500)
-		} else {
+		if (device == null) {
 			Log.midiDetail("MIDI API: Failed to open device, claiming USB interface directly")
 			claimUsbAndStart()
+			return
+		}
+		midiDevice = device
+		Log.midiDetail("MIDI API: Device opened successfully")
+
+		// Port opening and the SysEx sends (blocking port.send + 50 ms sleeps per message, per
+		// port) used to run on the main thread inside the attach path; a Pro MK3 with several
+		// ports froze the UI. The job is owned so teardown() can cancel it on an early unplug.
+		val connectionAtOpen = usbDeviceConnection
+		pendingInitJob?.cancel()
+		pendingInitJob = ioScope.launch {
+			try {
+				try {
+					for (portInfo in targetInfo.ports) {
+						if (portInfo.type == MidiDeviceInfo.PortInfo.TYPE_INPUT) {
+							val port = device.openInputPort(portInfo.portNumber)
+							if (port != null) {
+								midiInputPorts[portInfo.portNumber] = port
+								Log.midiDetail("MIDI API: Opened input port ${portInfo.portNumber} (${portInfo.name})")
+							}
+						}
+					}
+
+					// Send SysEx to ALL input ports (port names are empty, we don't know which is DAW)
+					val initData = driver.getInitSysEx()
+					if (initData != null && midiInputPorts.isNotEmpty()) {
+						val (messages, _) = initData
+						var sent = false
+						for (portNum in midiInputPorts.keys) {
+							Log.midiDetail("MIDI API: Sending init SysEx (${messages.size} messages) to port $portNum")
+							if (sendViaMidiApi(messages, portNum)) sent = true
+						}
+						if (sent) initSysExSent = true
+					}
+				} catch (e: RuntimeException) {
+					// Crashlytics 9b99a871: SecurityException from openInputPort on Android 16.
+					Log.err("MIDI API: init over MIDI API failed, falling back to USB", e)
+				}
+				// Let the SysEx flush before the ports are closed
+				delay(500)
+			} finally {
+				withContext(NonCancellable + Dispatchers.Main) {
+					closeMidiApi()
+					// A device that was torn down while we slept must not have its stale
+					// interface claimed for whatever is plugged in now.
+					if (connectionAtOpen != null && usbDeviceConnection === connectionAtOpen) claimUsbAndStart()
+				}
+			}
 		}
 	}
 
@@ -491,7 +562,63 @@ object MidiConnection {
 	private fun claimUsbAndStart() {
 		pendingUsbClaim?.invoke()
 		pendingUsbClaim = null
+		if (usbDeviceConnection == null) return
 		startSendLoop()
+		if (!initSysExSent) {
+			// The MIDI API path did not deliver the init SysEx (no MidiManager, no input port, or
+			// the open failed). driver.initialize() at assignment time was dropped because the
+			// connection did not exist yet, so without this the launchpad stays in its default
+			// layout and every pad lands on the wrong coordinate. It now goes over the bulk endpoint.
+			Log.midiDetail("USB: sending init SysEx over bulk transfer")
+			driver.initialize()
+		}
+	}
+
+	/** Releases the USB interface and fd, stops the loops, and clears every per-device field. */
+	private fun teardown(notify: Boolean) {
+		pendingInitJob?.cancel()
+		pendingInitJob = null
+		pendingUsbClaim = null
+		initSysExSent = false
+		closeMidiApi()
+		// Null the connection first: the receive loop and the send path compare against it.
+		val conn = usbDeviceConnection
+		usbDeviceConnection = null
+		val iface = usbInterface
+		usbInterface = null
+		usbEndpointIn = null
+		usbEndpointOut = null
+		if (conn != null) {
+			try {
+				if (iface != null) conn.releaseInterface(iface)
+			} catch (e: RuntimeException) {
+				Log.err("USB releaseInterface failed", e)
+			}
+			try {
+				conn.close()
+			} catch (e: RuntimeException) {
+				Log.err("USB close failed", e)
+			}
+		}
+		val hadDevice = conn != null || connectedDevice != null
+		isRun = false
+		if (notify && hadDevice) {
+			driver.onDisconnected()
+			connectedDevice = null
+			connectionObserver?.onDisconnected()
+		}
+	}
+
+	private fun looksLikeMidiDevice(device: UsbDevice): Boolean {
+		val pid = device.productId
+		if (driverRegistryExact.containsKey(pid)) return true
+		if (driverRegistryRanges.any { pid in it.pidStart..it.pidEnd }) return true
+		if (pid and MATRIX_PRODUCT_ID_MASK == MATRIX_PRODUCT_ID_BASE) return true
+		for (i in 0 until device.interfaceCount) {
+			val ui = device.getInterface(i)
+			if (ui.interfaceClass == UsbConstants.USB_CLASS_AUDIO && ui.interfaceSubclass == 3) return true
+		}
+		return false
 	}
 
 	private fun sendViaMidiApi(messages: List<ByteArray>, cableNumber: Int): Boolean {
@@ -528,12 +655,20 @@ object MidiConnection {
 				val encoded = encodeSysEx(msg, cableNumber)
 				Log.midiDetail("TX SysEx (USB): ${msg.joinToString(" ") { "%02X".format(it) }} (cable=$cableNumber)")
 
+				val conn = usbDeviceConnection
+				val ep = usbEndpointOut
+				if (conn == null || ep == null) {
+					Log.midiDetail("TX SysEx (USB): no connection, message dropped")
+					return
+				}
 				var offset = 0
 				while (offset < encoded.size) {
 					val chunk = minOf(64, encoded.size - offset)
-					usbDeviceConnection?.bulkTransfer(
-						usbEndpointOut, encoded, offset, chunk, USB_BULK_TIMEOUT_MS
-					)
+					val written = conn.bulkTransfer(ep, encoded, offset, chunk, USB_BULK_TIMEOUT_MS)
+					if (written < 0) {
+						Log.midiDetail("TX SysEx (USB): bulkTransfer failed ($written) at offset $offset")
+						return
+					}
 					offset += chunk
 				}
 				// Delay between SysEx messages to allow device mode transitions
@@ -585,91 +720,91 @@ object MidiConnection {
 		return packets.toByteArray()
 	}
 
-	private fun startReceiveLoop() {
-		receiveJob?.cancel()
+	private fun startReceiveLoop(conn: UsbDeviceConnection, endpointIn: UsbEndpoint) {
+		val previous = receiveJob
 		receiveJob = ioScope.launch {
+			// cancel() alone cannot interrupt a blocking bulkTransfer; wait for the old loop so two
+			// loops never poll the same endpoint. The old loop sees a foreign connection in its
+			// finally and stays silent, so the new device's "connected" is not followed by a bogus
+			// "disconnected".
+			previous?.cancelAndJoin()
+			if (usbDeviceConnection !== conn) return@launch
+
+			isRun = true
 			withContext(Dispatchers.Main) {
 				driver.onConnected()
 			}
+			Log.midiDetail("USB 시작")
 
-			if (!isRun) {
-				isRun = true
-				Log.midiDetail("USB 시작")
+			val byteArray = ByteArray(endpointIn.maxPacketSize)
+			// Flat int array: [cmd0,sig0,note0,vel0, cmd1,sig1,note1,vel1, ...]
+			val eventBuf = IntArray(endpointIn.maxPacketSize)
+			var fastFailures = 0
 
-				val endpointIn = usbEndpointIn ?: run {
-					Log.midiDetail("USB 에러 : usbEndpointIn == null")
-					isRun = false
-					return@launch
-				}
-
-				var prevTime = SystemClock.elapsedRealtime()
-				var count = 0
-				val byteArray = ByteArray(endpointIn.maxPacketSize)
-				// Flat int array: [cmd0,sig0,note0,vel0, cmd1,sig1,note1,vel1, ...]
-				val eventBuf = IntArray(endpointIn.maxPacketSize)
-
-				while (isRun) {
-					try {
-						val conn = usbDeviceConnection ?: break
-						val length = conn.bulkTransfer(
-							endpointIn,
-							byteArray,
-							byteArray.size,
-							1000
-						)
-						if (length >= 4) {
-							var eventCount = 0
-							var i = 0
-							while (i < length) {
-								val b1 = byteArray[i + 1].toInt() and 0xFF
-								if (b1 == 0xF8) { // Skip MIDI Clock
-									i += 4
-									continue
-								}
-								val base = eventCount * 4
-								eventBuf[base] = byteArray[i].toInt()
-								eventBuf[base + 1] = byteArray[i + 1].toInt()
-								eventBuf[base + 2] = byteArray[i + 2].toInt()
-								eventBuf[base + 3] = byteArray[i + 3].toInt()
-								eventCount++
+			try {
+				while (isActive && usbDeviceConnection === conn) {
+					val started = SystemClock.elapsedRealtime()
+					val length = conn.bulkTransfer(
+						endpointIn,
+						byteArray,
+						byteArray.size,
+						1000
+					)
+					if (length >= 4) {
+						fastFailures = 0
+						var eventCount = 0
+						var i = 0
+						// Whole 4-byte packets only: an interrupt endpoint with maxPacketSize 9
+						// can return a length that is not a multiple of 4.
+						while (i + 3 < length) {
+							val b1 = byteArray[i + 1].toInt() and 0xFF
+							if (b1 == 0xF8) { // Skip MIDI Clock
 								i += 4
+								continue
 							}
-							if (eventCount > 0) {
-								// Copy to snapshot for safe Main thread dispatch
-								val snapshot = eventBuf.copyOf(eventCount * 4)
-								val n = eventCount
-								withContext(Dispatchers.Main) {
-									for (j in 0 until n) {
-										val base = j * 4
-										driver.getSignal(snapshot[base], snapshot[base + 1], snapshot[base + 2], snapshot[base + 3])
-									}
+							val base = eventCount * 4
+							eventBuf[base] = byteArray[i].toInt()
+							eventBuf[base + 1] = byteArray[i + 1].toInt()
+							eventBuf[base + 2] = byteArray[i + 2].toInt()
+							eventBuf[base + 3] = byteArray[i + 3].toInt()
+							eventCount++
+							i += 4
+						}
+						if (eventCount > 0) {
+							// Copy to snapshot for safe Main thread dispatch
+							val snapshot = eventBuf.copyOf(eventCount * 4)
+							val n = eventCount
+							withContext(Dispatchers.Main) {
+								for (j in 0 until n) {
+									val base = j * 4
+									driver.getSignal(snapshot[base], snapshot[base + 1], snapshot[base + 2], snapshot[base + 3])
 								}
-							}
-						} else if (length == -1) {
-							val currTime = SystemClock.elapsedRealtime()
-							if (prevTime != currTime) {
-								count = 0
-								prevTime = currTime
-							} else {
-								count++
-								if (count > 10)
-									break
 							}
 						}
-					} catch (e: RuntimeException) {
-						Log.err("MIDI receive loop error", e)
-						break
+					} else if (length < 0) {
+						// An idle device also returns -1, but only after the full 1000 ms timeout;
+						// a detached device fails within a few milliseconds. Counting only the fast
+						// failures tells the two apart without depending on the same-millisecond
+						// coincidence the old heuristic needed (on ROMs where a dead fd takes
+						// >= 1 ms to fail it never fired and the loop spun forever).
+						if (SystemClock.elapsedRealtime() - started < 50) {
+							if (++fastFailures > 10) break
+						} else {
+							fastFailures = 0
+						}
 					}
 				}
-
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: RuntimeException) {
+				Log.err("MIDI receive loop error", e)
+			} finally {
 				Log.midiDetail("USB 끝")
-			}
-			isRun = false
-
-			withContext(Dispatchers.Main) {
-				driver.onDisconnected()
-				connectedDevice = null
-				connectionObserver?.onDisconnected()
+				withContext(NonCancellable + Dispatchers.Main) {
+					// Only the loop that still owns the connection reports the disconnect;
+					// a superseded loop's device has already been torn down by initDevice.
+					if (usbDeviceConnection === conn) teardown(notify = true)
+				}
 			}
 		}
 	}

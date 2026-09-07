@@ -55,6 +55,18 @@ class MidiFighterTest {
 	// --- getSignal: note-off (cmd=8) ---
 
 	@Test
+	fun getSignal_noteOnVelocityZero_isRelease() {
+		driver.getSignal(cmd = 9, sig = 0, note = 36, velocity = 0)
+		verify { receiveListener.onPadTouch(7, 0, false, 0) }
+	}
+
+	@Test
+	fun sendPadLed_outOfGrid_doesNotSend() {
+		driver.sendPadLed(8, 0, 60)
+		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
+	}
+
+	@Test
 	fun getSignal_noteOff_lowerRange() {
 		// cmd=8 → upDown=false
 		driver.getSignal(cmd = 8, sig = 0, note = 36, velocity = 0)
