@@ -23,6 +23,7 @@ class SoundRunner(
 ) {
 
 	private var stopKey: Array<Array<Array<Int>>>
+	@Volatile
 	private var engineStarted = false
 
 	interface LoadingListener {
@@ -105,7 +106,7 @@ class SoundRunner(
 
 				// Phase 3: Load decoded PCM into native engine (sequential, fast)
 				for ((filePath, sounds) in uniqueFiles) {
-					val decoded = decodedCache[filePath] ?: continue
+					val decoded = decodedCache.remove(filePath) ?: continue  // drop the JVM copy as we go
 					val soundId = OboeAudioEngine.loadDecoded(decoded)
 					if (soundId < 0) {
 						Log.err("Failed to load into engine: $filePath")
@@ -117,7 +118,9 @@ class SoundRunner(
 				}
 
 				loadingListener.onEnd()
-			} catch (e: RuntimeException) {
+			} catch (e: Throwable) {
+				// OutOfMemoryError and UnsatisfiedLinkError are Errors, not RuntimeExceptions, and
+				// used to take the process down instead of reaching onException.
 				Log.err("[08] doInBackground", e)
 				loadingListener.onException(e)
 			}
@@ -170,6 +173,7 @@ class SoundRunner(
 					}
 		}
 		if (engineStarted) {
+			OboeAudioEngine.unloadAll() // ids assigned after destroy() started are freed too
 			OboeAudioEngine.stop()
 		}
 	}

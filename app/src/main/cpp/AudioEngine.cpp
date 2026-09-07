@@ -34,9 +34,19 @@ bool AudioEngine::start() {
         return false;
     }
 
+    // The mixer below assumes interleaved stereo I16. Oboe may hand back something else
+    // (mono, float); writing stereo frames into that buffer would run past its end.
+    if (stream_->getChannelCount() != 2 || stream_->getFormat() != oboe::AudioFormat::I16) {
+        LOGE("Unexpected stream layout: channels=%d format=%d",
+             stream_->getChannelCount(), static_cast<int>(stream_->getFormat()));
+        stream_->close();
+        stream_.reset();
+        return false;
+    }
+
     outputSampleRate_ = stream_->getSampleRate();
     LOGI("Opened stream: sampleRate=%d, framesPerBurst=%d",
-         outputSampleRate_, stream_->getFramesPerBurst());
+         outputSampleRate_.load(), stream_->getFramesPerBurst());
 
     result = stream_->requestStart();
     if (result != oboe::Result::OK) {
@@ -60,6 +70,10 @@ void AudioEngine::stop() {
         stream->requestStop();
         stream->close();
     }
+    // The engine now lives for the process; voices left active here would resume mixing
+    // whatever occupies their soundId slots the next time start() runs.
+    std::lock_guard<std::mutex> lock(voiceMutex_);
+    for (auto& v : voices_) v.active = false;
 }
 
 int AudioEngine::loadSound(const int16_t* data, int numFrames, int channels, int sampleRate) {
@@ -86,13 +100,15 @@ void AudioEngine::unloadAll() {
 }
 
 int AudioEngine::play(int soundId, float volumeL, float volumeR, int loop) {
-    const SoundBuffer* buf = soundBank_.get(soundId);
-    if (!buf) return 0;
-
-    double rate = static_cast<double>(buf->sampleRate) / outputSampleRate_;
-    int key = nextStopKey_.fetch_add(1);
-
+    // voiceMutex_ before the bank lookup: unloadSound frees buffers under voiceMutex_, so the
+    // pointer stays valid for as long as we hold it (same order as onAudioReady).
     std::lock_guard<std::mutex> lock(voiceMutex_);
+    const SoundBuffer* buf = soundBank_.get(soundId);
+    if (!buf || buf->numFrames <= 0) return 0;
+
+    double rate = static_cast<double>(buf->sampleRate) / outputSampleRate_.load();
+    int key = nextStopKey_.fetch_add(1);
+    if (key == 0) key = nextStopKey_.fetch_add(1); // 0 means "no voice" to stopVoice
 
     // Find a free voice slot
     for (auto& v : voices_) {
@@ -109,8 +125,18 @@ int AudioEngine::play(int soundId, float volumeL, float volumeR, int loop) {
         }
     }
 
-    // All voices busy - steal the oldest one (first in array)
-    auto& v = voices_[0];
+    // All voices busy: steal the oldest one-shot voice (smallest stopKey), never an infinite
+    // loop (the backing track) while a one-shot is available.
+    ActiveVoice* victim = nullptr;
+    for (auto& cand : voices_) {
+        if (cand.loopCount == -1) continue;
+        if (!victim || cand.stopKey < victim->stopKey) victim = &cand;
+    }
+    if (!victim) {
+        victim = &voices_[0];
+        for (auto& cand : voices_) if (cand.stopKey < victim->stopKey) victim = &cand;
+    }
+    auto& v = *victim;
     v.soundId = soundId;
     v.position = 0.0;
     v.playbackRate = rate;
@@ -141,7 +167,9 @@ oboe::DataCallbackResult AudioEngine::onAudioReady(
     auto* output = static_cast<int16_t*>(audioData);
     std::memset(output, 0, numFrames * 2 * sizeof(int16_t)); // stereo
 
-    if (stopping_.load()) return oboe::DataCallbackResult::Stop;
+    // Silence is already in the buffer; let stop()'s requestStop/close tear the stream down
+    // rather than also asking Oboe to stop from inside the callback.
+    if (stopping_.load()) return oboe::DataCallbackResult::Continue;
 
     std::lock_guard<std::mutex> lock(voiceMutex_);
 
@@ -149,7 +177,7 @@ oboe::DataCallbackResult AudioEngine::onAudioReady(
         if (!v.active) continue;
 
         const SoundBuffer* buf = soundBank_.get(v.soundId);
-        if (!buf) {
+        if (!buf || buf->numFrames <= 0) {
             v.active = false;
             continue;
         }
@@ -157,25 +185,28 @@ oboe::DataCallbackResult AudioEngine::onAudioReady(
         for (int frame = 0; frame < numFrames; frame++) {
             int idx = static_cast<int>(v.position);
 
-            if (idx >= buf->numFrames) {
-                // Handle looping
+            // Wrap until idx is back inside the buffer: one subtraction is not enough when the
+            // playback rate exceeds the buffer length (short click resampled from 192 kHz).
+            while (idx >= buf->numFrames) {
                 if (v.loopCount == -1) {
                     v.position -= buf->numFrames;
-                    idx = static_cast<int>(v.position);
                 } else if (v.loopCount > 0) {
                     v.loopCount--;
                     v.position -= buf->numFrames;
-                    idx = static_cast<int>(v.position);
                 } else {
                     v.active = false;
                     break;
                 }
+                idx = static_cast<int>(v.position);
             }
+            if (!v.active) break;
+            if (idx < 0) idx = 0;
 
-            // Linear interpolation between samples
+            // Linear interpolation between samples; a one-shot's last frame must not blend
+            // toward frame 0 (audible click), only loops wrap.
             float frac = static_cast<float>(v.position - idx);
             int nextIdx = idx + 1;
-            if (nextIdx >= buf->numFrames) nextIdx = 0;
+            if (nextIdx >= buf->numFrames) nextIdx = (v.loopCount == 0) ? idx : 0;
 
             float sampleL, sampleR;
             if (buf->channels == 2) {

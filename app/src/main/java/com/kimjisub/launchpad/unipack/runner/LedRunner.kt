@@ -39,6 +39,8 @@ class LedRunner(
 		fun onPadLedTurnOff(x: Int, y: Int)
 		fun onChainLedTurnOn(c: Int, color: Int, velocity: Int)
 		fun onChainLedTurnOff(c: Int)
+		/** A keyLED `c` event. Called on the runner thread; the listener decides where to apply it. */
+		fun onChainChange(c: Int)
 	}
 
 	private fun loop() {
@@ -48,12 +50,21 @@ class LedRunner(
 				if (state.isPlaying && !state.isShutdown) {
 					// Init if First
 					if (state.delay == 0L) state.delay = currTime
+					var processed = 0
 					while (true) {
 						// Counting Up Loop Progress
 						val ledEvents = state.ledAnimation?.ledEvents ?: break
 						// An empty keyLED file gives an animation with no events; with loop 0 the old code
 						// spun into ledEvents[0] on an empty list (Crashlytics a1376611).
 						if (ledEvents.isEmpty()) {
+							state.isPlaying = false
+							break
+						}
+						// An animation with no delay lines never pushes state.delay past currTime, so
+						// this loop would run forever while holding the monitor and the next padTouch
+						// would block into an ANR. One tick may consume at most one full pass per loop.
+						val loopCount = state.ledAnimation.loop.coerceAtLeast(1)
+						if (++processed > ledEvents.size * loopCount + 1) {
 							state.isPlaying = false
 							break
 						}
@@ -106,7 +117,9 @@ class LedRunner(
 									}
 
 									is LedAnimation.LedEvent.Chain -> {
-										chain.value = event.chain
+										// Not chain.value here: ChainObserver runs its observers synchronously and
+										// they touch UI state, so the listener applies the change on main.
+										listener.onChainChange(event.chain)
 									}
 								}
 							} catch (ex: IndexOutOfBoundsException) {
@@ -138,8 +151,7 @@ class LedRunner(
 			for (item in ledAnimationStatesAdd)
 				ledAnimationStates.add(item)
 			ledAnimationStatesAdd.clear()
-			ledAnimationStates =
-				ledAnimationStates.filter { !it.remove }.toMutableList()
+			ledAnimationStates.removeAll { it.remove }
 		}
 	}
 
@@ -164,6 +176,7 @@ class LedRunner(
 		Log.thread("[Led] 3. Request Stop")
 		job?.cancel()
 		job = null
+		synchronized(this) { ledAnimationStatesAdd.clear() }
 	}
 
 	// Functions
@@ -216,12 +229,12 @@ class LedRunner(
 	}
 
 	fun eventOffAll(x: Int, y: Int) {
-		if (active) {
-			synchronized(this) {
-				for (state in ledAnimationStates) {
-					if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
-						state.isShutdown = true
-					}
+		// No `active` guard: ledInit() calls this right after stop() to shut the looping
+		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
+		synchronized(this) {
+			for (state in ledAnimationStates) {
+				if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
+					state.isShutdown = true
 				}
 			}
 		}

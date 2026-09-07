@@ -56,5 +56,5 @@ private:
     SoundBank soundBank_;
     std::atomic<int> nextStopKey_{1};
     std::atomic<bool> stopping_{false};
-    int outputSampleRate_ = 48000;
+    std::atomic<int> outputSampleRate_{48000};
 };

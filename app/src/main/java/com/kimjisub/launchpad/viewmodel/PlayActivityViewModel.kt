@@ -303,7 +303,10 @@ class PlayActivityViewModel(
 						uiCallback?.setLedChain(c)
 					}
 
-					})
+					override fun onChainChange(c: Int) {
+						viewModelScope.launch { chain.value = c }
+					}
+				})
 		}
 
 		initAutoPlayRunner()
@@ -403,7 +406,7 @@ class PlayActivityViewModel(
 				if (scbTraceLog.isChecked())
 					traceLogLog(x, y)
 				if (scbFeedbackLight.isChecked()) {
-					channelManager.add(x, y, Channel.PRESSED, -1, LED_RED)
+					channelManager.add(x, y, Channel.PRESSED, ChannelManager.NO_COLOR, LED_RED)
 					uiCallback?.setLedPad(x, y)
 				}
 				ledRunner?.eventOn(x, y)
@@ -431,7 +434,7 @@ class PlayActivityViewModel(
 			for (c in 0 until MAX_CHAIN_BUTTONS) {
 				val y = CHAIN_INDEX_OFFSET + c
 				if (c == chain.value)
-					channelManager.add(-1, y, Channel.CHAIN, -1, LED_RED)
+					channelManager.add(-1, y, Channel.CHAIN, ChannelManager.NO_COLOR, LED_RED)
 				else
 					channelManager.remove(-1, y, Channel.CHAIN)
 				uiCallback?.setLedChain(y)
@@ -483,7 +486,7 @@ class PlayActivityViewModel(
 			topBar[7] = LED_BLUE
 			for (i in 0 until TOP_BAR_COUNT) {
 				if (topBar[i] != 0)
-					channelManager.add(-1, i, Channel.UI_UNIPAD, -1, topBar[i])
+					channelManager.add(-1, i, Channel.UI_UNIPAD, ChannelManager.NO_COLOR, topBar[i])
 				else channelManager.remove(-1, i, Channel.UI_UNIPAD)
 				uiCallback?.setLedChain(i)
 			}
@@ -500,7 +503,7 @@ class PlayActivityViewModel(
 			topBar[7] = LED_RED_BRIGHT
 			for (i in 0 until TOP_BAR_COUNT) {
 				if (topBar[i] != 0) channelManager.add(
-					-1, i, Channel.UI, -1, topBar[i]
+					-1, i, Channel.UI, ChannelManager.NO_COLOR, topBar[i]
 				) else channelManager.remove(-1, i, Channel.UI)
 				uiCallback?.setLedChain(i)
 			}
@@ -701,7 +704,7 @@ class PlayActivityViewModel(
 
 	private fun autoPlayGuidePad(x: Int, y: Int, onOff: Boolean, targetWallTimeMs: Long = 0) {
 		if (onOff) {
-			channelManager.add(x, y, Channel.GUIDE, -1, LED_ORANGE)
+			channelManager.add(x, y, Channel.GUIDE, ChannelManager.NO_COLOR, LED_ORANGE)
 			uiCallback?.setLedPad(x, y)
 			uiCallback?.startGuideAnimation(x, y, targetWallTimeMs)
 		} else {
@@ -749,6 +752,9 @@ class PlayActivityViewModel(
 	fun initAutoPlayRunner() {
 		if (!unipack.autoPlayExist) return
 		autoPlayRunner?.stop()
+		// onEnd of a stopped runner arrives asynchronously; by then autoPlayRunner may already be
+		// its replacement, whose flags the old one must not reset.
+		var created: AutoPlayRunner? = null
 		autoPlayRunner = AutoPlayRunner(
 			unipack = unipack,
 			chain = chain,
@@ -787,7 +793,7 @@ class PlayActivityViewModel(
 
 				override fun onGuideChainOn(c: Int) {
 					viewModelScope.launch {
-						channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, -1, LED_ORANGE)
+						channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, ChannelManager.NO_COLOR, LED_ORANGE)
 						uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
 					}
 				}
@@ -806,6 +812,7 @@ class PlayActivityViewModel(
 
 				override fun onEnd() {
 					viewModelScope.launch {
+						if (created != null && created !== autoPlayRunner) return@launch
 						isAutoPlayPlaying = false
 						autoPlayRunner?.practiceGuide = false
 						autoPlayRunner?.stepMode = false
@@ -822,6 +829,7 @@ class PlayActivityViewModel(
 					}
 				}
 			})
+		created = autoPlayRunner
 	}
 
 	fun autoMapping() {

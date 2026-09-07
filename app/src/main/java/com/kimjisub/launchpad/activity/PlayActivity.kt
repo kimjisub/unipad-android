@@ -99,6 +99,7 @@ import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
 import com.kimjisub.launchpad.manager.DefaultThemeResources
@@ -160,6 +161,10 @@ class PlayActivity : BaseActivity() {
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
 	private var slideTouchOverlayView: SlideTouchOverlayView? = null
+	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
+	// though the retained ViewModel says the UI was loaded, and two onSizeChanged calls before
+	// the posted runnable ran used to queue initLayout twice.
+	private var layoutRequested = false
 
 	// Classic trace log (numbers on pads): what is drawn right now, so one new tap only touches one pad.
 	private var classicTraceShown = false
@@ -443,7 +448,8 @@ class PlayActivity : BaseActivity() {
 				.let { mod ->
 					if (vm.startReady) {
 						mod.onSizeChanged { size ->
-							if (!vm.uiLoaded && size.width > 0 && size.height > 0) {
+							if (!layoutRequested && size.width > 0 && size.height > 0) {
+								layoutRequested = true
 								Handler(Looper.getMainLooper()).post {
 									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
 									vm.initRunner()
@@ -948,6 +954,7 @@ class PlayActivity : BaseActivity() {
 				listener = { x, y, down -> vm.padTouch(x, y, down) }
 				visibility = if (p.slideMode) View.VISIBLE else View.GONE
 			}
+			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
 			vm.traceLogInit()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
 			vm.uiLoaded = true
@@ -1163,7 +1170,7 @@ class PlayActivity : BaseActivity() {
 		val range = VOLUME_LEVELS downTo TOP_BAR_COUNT - level
 		for (c in 0 until TOP_BAR_COUNT) {
 			val y = CHAIN_INDEX_OFFSET + c
-			if (c in range) vm.channelManager.add(-1, y, Channel.UI, -1, LED_BLUE) else vm.channelManager.remove(-1, y, Channel.UI)
+			if (c in range) vm.channelManager.add(-1, y, Channel.UI, ChannelManager.NO_COLOR, LED_BLUE) else vm.channelManager.remove(-1, y, Channel.UI)
 			uiCallback.setLedChain(y)
 		}
 	}
@@ -1177,6 +1184,8 @@ class PlayActivity : BaseActivity() {
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		if (vm.uiLoaded) controller = midiController
+		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
+		slideTouchOverlayView?.let { if (vm.uiLoaded) it.visibility = if (p.slideMode) View.VISIBLE else View.GONE }
 	}
 
 	override fun onPause() {

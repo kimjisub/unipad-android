@@ -33,6 +33,9 @@ JNIEXPORT jint JNICALL
 Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeLoadSound(
         JNIEnv* env, jobject, jshortArray pcmData, jint numFrames, jint channels, jint sampleRate) {
     if (!sEngine) return -1;
+    if (numFrames <= 0 || channels <= 0) return -1;
+    const jsize len = env->GetArrayLength(pcmData);
+    if (static_cast<jlong>(numFrames) * channels > len) return -1; // caller lied about the size
 
     jshort* data = env->GetShortArrayElements(pcmData, nullptr);
     if (!data) return -1;

@@ -1,6 +1,7 @@
 #include "SoundBank.h"
 
 int SoundBank::load(const int16_t* data, int numFrames, int channels, int sampleRate) {
+    if (!data || numFrames <= 0 || channels <= 0 || sampleRate <= 0) return -1;
     auto buf = std::make_unique<SoundBuffer>();
     buf->numFrames = numFrames;
     buf->channels = channels;
