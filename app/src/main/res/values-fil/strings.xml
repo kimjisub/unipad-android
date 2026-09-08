@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">%d UniPacks ang nakita sa backup folder.\nGusto mo bang i-restore ang mga ito?</string>
 	<string name="backup_recovery_restore">I-restore</string>
 	<string name="backup_recovery_later">Mamaya na</string>
+	<string name="settings_play">Pagtugtog</string>
+	<string name="trace_log_classic">Klasikong tala ng pagkakasunod</string>
+	<string name="trace_log_classic_desc">Ipakita ang pagkakasunod ng pag-tap bilang mga numero sa bawat pad sa halip na mga linya at tuldok</string>
+	<string name="slide_mode">Mag-slide sa mga pad</string>
+	<string name="slide_mode_desc">Kapag hinila ang daliri papunta sa isang pad, tutunog ito at hihinto ang pad na iniwan</string>
+	<string name="no_app_for_link">Walang app sa device na ito ang makakapagbukas ng link na ito.</string>
 </resources>

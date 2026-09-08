@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">バックアップフォルダに%d個のUniPacksが見つかりました。\n復元しますか？</string>
 	<string name="backup_recovery_restore">復元</string>
 	<string name="backup_recovery_later">後で</string>
+	<string name="settings_play">演奏</string>
+	<string name="trace_log_classic">従来の順序表示</string>
+	<string name="trace_log_classic_desc">タップした順番を線と点ではなく各パッドの数字で表示します</string>
+	<string name="slide_mode">パッドをなぞる</string>
+	<string name="slide_mode_desc">指をなぞって別のパッドに入るとそのパッドが鳴り、離れたパッドは止まります</string>
+	<string name="no_app_for_link">この端末にはこのリンクを開けるアプリがありません。</string>
 </resources>

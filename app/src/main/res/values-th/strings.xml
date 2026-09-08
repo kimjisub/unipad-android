@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">พบ %d UniPacks ในโฟลเดอร์สำรองข้อมูล\nคุณต้องการกู้คืนหรือไม่?</string>
 	<string name="backup_recovery_restore">กู้คืน</string>
 	<string name="backup_recovery_later">ภายหลัง</string>
+	<string name="settings_play">การเล่น</string>
+	<string name="trace_log_classic">ลำดับการแตะแบบเดิม</string>
+	<string name="trace_log_classic_desc">แสดงลำดับการแตะเป็นตัวเลขบนแต่ละแพด แทนเส้นและจุด</string>
+	<string name="slide_mode">เลื่อนนิ้วข้ามแพด</string>
+	<string name="slide_mode_desc">การลากนิ้วไปยังแพดหนึ่งจะทำให้แพดนั้นดัง และหยุดแพดที่ออกมา</string>
+	<string name="no_app_for_link">ไม่มีแอปในอุปกรณ์นี้ที่เปิดลิงก์นี้ได้</string>
 </resources>
