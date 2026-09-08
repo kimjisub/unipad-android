@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">Tìm thấy %d UniPacks trong thư mục sao lưu.\nBạn có muốn khôi phục không?</string>
 	<string name="backup_recovery_restore">Khôi phục</string>
 	<string name="backup_recovery_later">Để sau</string>
+	<string name="settings_play">Chơi nhạc</string>
+	<string name="trace_log_classic">Thứ tự chạm kiểu cũ</string>
+	<string name="trace_log_classic_desc">Hiển thị thứ tự chạm bằng số trên từng pad thay vì đường kẻ và chấm</string>
+	<string name="slide_mode">Trượt qua các pad</string>
+	<string name="slide_mode_desc">Kéo ngón tay sang một pad sẽ phát pad đó và dừng pad vừa rời khỏi</string>
+	<string name="no_app_for_link">Không có ứng dụng nào trên thiết bị này mở được liên kết này.</string>
 </resources>

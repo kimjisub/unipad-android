@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">အရန်ဖိုင်တွဲတွင် UniPacks %d ခု တွေ့ရှိပါသည်။\n၎င်းတို့ကို ပြန်လည်ရယူလိုပါသလား?</string>
 	<string name="backup_recovery_restore">ပြန်လည်ရယူရန်</string>
 	<string name="backup_recovery_later">နောက်မှ</string>
+	<string name="settings_play">တီးခတ်ခြင်း</string>
+	<string name="trace_log_classic">ရိုးရာ အစဉ်ပြခြင်း</string>
+	<string name="trace_log_classic_desc">ထိထားသည့် အစဉ်ကို မျဉ်းနှင့် အစက်များအစား ပက်တစ်ခုစီပေါ်တွင် ဂဏန်းဖြင့် ပြပါ</string>
+	<string name="slide_mode">ပက်များပေါ် ပွတ်ဆွဲခြင်း</string>
+	<string name="slide_mode_desc">လက်ချောင်းကို ပက်တစ်ခုပေါ် ဆွဲတင်လျှင် ထိုပက် မြည်ပြီး ထွက်ခွာလာသော ပက် ရပ်သွားပါသည်</string>
+	<string name="no_app_for_link">ဤစက်ပစ္စည်းတွင် ဤလင့်ခ်ကို ဖွင့်နိုင်သော အက်ပ် မရှိပါ။</string>
 </resources>

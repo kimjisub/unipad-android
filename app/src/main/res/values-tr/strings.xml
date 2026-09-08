@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">Yedek klasöründe %d UniPack bulundu.\nGeri yüklemek ister misiniz?</string>
 	<string name="backup_recovery_restore">Geri Yükle</string>
 	<string name="backup_recovery_later">Daha Sonra</string>
+	<string name="settings_play">Çalma</string>
+	<string name="trace_log_classic">Klasik dokunma sırası</string>
+	<string name="trace_log_classic_desc">Dokunma sırasını çizgi ve nokta yerine her pad üzerinde sayı olarak gösterir</string>
+	<string name="slide_mode">Padler arasında kaydırma</string>
+	<string name="slide_mode_desc">Parmağı bir pad üzerine sürüklemek onu çalar ve ayrılan pad durur</string>
+	<string name="no_app_for_link">Bu cihazda bu bağlantıyı açabilecek bir uygulama yok.</string>
 </resources>
