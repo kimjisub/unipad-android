@@ -7,17 +7,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,11 +48,25 @@ import java.io.IOException
 class ImportPackByUrlActivity : BaseActivity() {
 	companion object {
 		private const val INSTALL_COMPLETE_DELAY_MS = 3000L
+
+		/** Shown with the question so the person can see where the file comes from. */
+		private const val UNISHARE_HOST = "api.unipad.io"
 	}
 
 	private val titleText = mutableStateOf("")
 	private val messageText = mutableStateOf("")
 	private val infoText = mutableStateOf("")
+
+	/**
+	 * The pack a deep link wants to install, held while the user decides.
+	 *
+	 * A `unipad://` link used to go straight from the metadata response into the
+	 * download. Anything that can open a link on this device could therefore make
+	 * the app fetch and unpack a file with no say from the person holding it. The
+	 * metadata call already ran by this point, so the question can name the pack
+	 * and its producer instead of asking about an anonymous download.
+	 */
+	private val pendingInstall = mutableStateOf<UnishareVO?>(null)
 
 	private val code: String? by lazy { intent?.data?.getQueryParameter("code") }
 
@@ -66,10 +85,14 @@ class ImportPackByUrlActivity : BaseActivity() {
 			val title by titleText
 			val message by messageText
 			val info by infoText
+			val pending by pendingInstall
 			ImportPackScreen(
 				titleText = title,
 				messageText = message,
 				infoText = info,
+				confirming = pending != null,
+				onAccept = { pending?.let { startInstall(it) } },
+				onCancel = { finish() },
 			)
 		}
 
@@ -85,7 +108,11 @@ class ImportPackByUrlActivity : BaseActivity() {
 					log("title: ${unishare.title}")
 					log("producerName: ${unishare.producer}")
 
-					startInstall(unishare)
+					// Ask first. The download starts from onAccept, not from here.
+					titleText.value = unishare.title.orEmpty()
+					messageText.value = unishare.producer.orEmpty()
+					infoText.value = getString(string.import_pack_confirm_source, UNISHARE_HOST)
+					pendingInstall.value = unishare
 				} else {
 					when (response.code()) {
 						404 -> {
@@ -105,6 +132,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 	}
 
 	fun startInstall(unishare: UnishareVO) {
+		pendingInstall.value = null
 		val packTitle = getString(string.import_pack_title_format, unishare.title, unishare._id)
 		UniPackDownloader(
 			context = this,
@@ -198,6 +226,9 @@ private fun ImportPackScreen(
 	titleText: String,
 	messageText: String,
 	infoText: String,
+	confirming: Boolean = false,
+	onAccept: () -> Unit = {},
+	onCancel: () -> Unit = {},
 ) {
 	Box(
 		modifier = Modifier
@@ -239,6 +270,27 @@ private fun ImportPackScreen(
 					fontSize = 18.sp,
 					textAlign = TextAlign.Center,
 				)
+
+				if (confirming) {
+					Text(
+						text = stringResource(string.import_pack_confirm),
+						color = grayColor,
+						fontSize = 14.sp,
+						textAlign = TextAlign.Center,
+						modifier = Modifier.padding(top = 12.dp),
+					)
+					Row(
+						modifier = Modifier.padding(top = 8.dp),
+						horizontalArrangement = Arrangement.spacedBy(8.dp),
+					) {
+						TextButton(onClick = onCancel) {
+							Text(text = stringResource(string.cancel), color = grayColor)
+						}
+						TextButton(onClick = onAccept) {
+							Text(text = stringResource(string.accept), color = grayColor)
+						}
+					}
+				}
 			}
 		}
 	}

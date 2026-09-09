@@ -305,4 +305,6 @@
 	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
 	<string name="server_error_format">server error\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+	<string name="import_pack_confirm">Install this pack?</string>
+	<string name="import_pack_confirm_source">from %s</string>
 </resources>

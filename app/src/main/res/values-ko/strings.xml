@@ -295,4 +295,6 @@
 	<string name="server_error_format">서버 오류\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 	<string name="option_indicator_format">%s ●</string>
+	<string name="import_pack_confirm">이 팩을 설치할까요?</string>
+	<string name="import_pack_confirm_source">%s 에서</string>
 </resources>
