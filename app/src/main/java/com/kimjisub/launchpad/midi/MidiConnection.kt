@@ -319,9 +319,13 @@ object MidiConnection {
 				driver = entry.factory()
 				publishConnectedDevice(entry.name)
 			} else if (pid and MATRIX_PRODUCT_ID_MASK == MATRIX_PRODUCT_ID_BASE) {
-				listener?.onUiLog("prediction : 203 Matrix")
+				// Detection stays on the product id. The device renamed itself in
+				// firmware (Matrix -> Mystrix) but the PID did not move, so only the
+				// name shown to the user needs to follow. iOS and the web match on the
+				// announced name and do have to carry both spellings.
+				listener?.onUiLog("prediction : 203 Mystrix")
 				driver = Matrix()
-				publishConnectedDevice("Matrix")
+				publishConnectedDevice("Mystrix")
 			} else {
 				listener?.onUiLog("prediction : unknown (PID=$pid)")
 				driver = MasterKeyboard()
