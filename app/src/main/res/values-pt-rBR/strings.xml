@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">%d UniPacks encontrados na pasta de backup.\nDeseja restaurá-los?</string>
 	<string name="backup_recovery_restore">Restaurar</string>
 	<string name="backup_recovery_later">Depois</string>
+	<string name="settings_play">Execução</string>
+	<string name="trace_log_classic">Ordem de toques clássica</string>
+	<string name="trace_log_classic_desc">Mostra a ordem dos toques como números em cada pad, em vez de linhas e pontos</string>
+	<string name="slide_mode">Deslizar pelos pads</string>
+	<string name="slide_mode_desc">Arrastar o dedo até um pad faz com que ele soe e para o pad que foi deixado</string>
+	<string name="no_app_for_link">Nenhum app neste dispositivo pode abrir este link.</string>
 </resources>

@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">बैकअप फ़ोल्डर में %d UniPacks मिले।\nक्या आप उन्हें पुनर्स्थापित करना चाहते हैं?</string>
 	<string name="backup_recovery_restore">पुनर्स्थापित करें</string>
 	<string name="backup_recovery_later">बाद में</string>
+	<string name="settings_play">बजाना</string>
+	<string name="trace_log_classic">क्लासिक टैप क्रम</string>
+	<string name="trace_log_classic_desc">टैप का क्रम रेखाओं और बिंदुओं के बजाय हर पैड पर संख्याओं में दिखाएँ</string>
+	<string name="slide_mode">पैड पर स्लाइड करें</string>
+	<string name="slide_mode_desc">उँगली खींचकर किसी पैड पर लाने से वह बजता है और छोड़ा गया पैड रुक जाता है</string>
+	<string name="no_app_for_link">इस डिवाइस पर कोई भी ऐप यह लिंक नहीं खोल सकता।</string>
 </resources>

@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">Найдено %d UniPacks в папке резервного копирования.\nХотите восстановить их?</string>
 	<string name="backup_recovery_restore">Восстановить</string>
 	<string name="backup_recovery_later">Позже</string>
+	<string name="settings_play">Игра</string>
+	<string name="trace_log_classic">Классический порядок нажатий</string>
+	<string name="trace_log_classic_desc">Показывать порядок нажатий цифрами на пэдах вместо линий и точек</string>
+	<string name="slide_mode">Скольжение по пэдам</string>
+	<string name="slide_mode_desc">Если провести пальцем на другой пэд, он зазвучит, а покинутый остановится</string>
+	<string name="no_app_for_link">На этом устройстве нет приложения, способного открыть эту ссылку.</string>
 </resources>

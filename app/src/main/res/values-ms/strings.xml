@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">%d UniPacks ditemui dalam folder sandaran.\nAdakah anda ingin memulihkannya?</string>
 	<string name="backup_recovery_restore">Pulihkan</string>
 	<string name="backup_recovery_later">Kemudian</string>
+	<string name="settings_play">Permainan</string>
+	<string name="trace_log_classic">Urutan ketikan klasik</string>
+	<string name="trace_log_classic_desc">Tunjukkan urutan ketikan sebagai nombor pada setiap pad, bukan garis dan titik</string>
+	<string name="slide_mode">Luncur pada pad</string>
+	<string name="slide_mode_desc">Menyeret jari ke sebuah pad akan membunyikannya dan menghentikan pad yang ditinggalkan</string>
+	<string name="no_app_for_link">Tiada aplikasi pada peranti ini yang boleh membuka pautan ini.</string>
 </resources>

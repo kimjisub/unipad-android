@@ -291,4 +291,10 @@
 	<string name="backup_recovery_message">在备份文件夹中发现 %d 个 UniPacks。\n是否要恢复？</string>
 	<string name="backup_recovery_restore">恢复</string>
 	<string name="backup_recovery_later">稍后</string>
+	<string name="settings_play">演奏</string>
+	<string name="trace_log_classic">经典顺序显示</string>
+	<string name="trace_log_classic_desc">在每个打击垫上用数字显示点击顺序，而不是线条和圆点</string>
+	<string name="slide_mode">滑过打击垫</string>
+	<string name="slide_mode_desc">手指滑到某个打击垫时该垫发声，离开的垫则停止</string>
+	<string name="no_app_for_link">此设备上没有可以打开该链接的应用。</string>
 </resources>

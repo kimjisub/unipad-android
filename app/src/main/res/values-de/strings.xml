@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">%d UniPacks im Backup-Ordner gefunden.\nMöchten Sie sie wiederherstellen?</string>
 	<string name="backup_recovery_restore">Wiederherstellen</string>
 	<string name="backup_recovery_later">Später</string>
+	<string name="settings_play">Spielen</string>
+	<string name="trace_log_classic">Klassische Reihenfolge-Anzeige</string>
+	<string name="trace_log_classic_desc">Zeigt die Reihenfolge der Berührungen als Zahlen auf den Pads statt als Linien und Punkte</string>
+	<string name="slide_mode">Über Pads streichen</string>
+	<string name="slide_mode_desc">Wenn ein Finger auf ein Pad gezogen wird, klingt dieses Pad und das verlassene hört auf</string>
+	<string name="no_app_for_link">Auf diesem Gerät kann keine App diesen Link öffnen.</string>
 </resources>

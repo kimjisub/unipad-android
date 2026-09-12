@@ -289,4 +289,10 @@
 	<string name="backup_recovery_message">%d UniPacks trouvés dans le dossier de sauvegarde.\nVoulez-vous les restaurer ?</string>
 	<string name="backup_recovery_restore">Restaurer</string>
 	<string name="backup_recovery_later">Plus tard</string>
+	<string name="settings_play">Jeu</string>
+	<string name="trace_log_classic">Ordre des appuis classique</string>
+	<string name="trace_log_classic_desc">Affiche l\'ordre des appuis sous forme de chiffres sur chaque pad au lieu de lignes et de points</string>
+	<string name="slide_mode">Glisser sur les pads</string>
+	<string name="slide_mode_desc">Faire glisser un doigt sur un pad le déclenche et arrête celui que l\'on quitte</string>
+	<string name="no_app_for_link">Aucune application de cet appareil ne peut ouvrir ce lien.</string>
 </resources>
