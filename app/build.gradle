@@ -163,6 +163,13 @@ tasks.configureEach { task ->
 	}
 }
 
+// Room writes one JSON per schema version here. They are committed: they are the only record of
+// what an installed database looks like, and MigrationTestHelper builds old databases from them.
+ksp {
+	arg("room.schemaLocation", "$projectDir/schemas")
+}
+android.sourceSets.androidTest.assets.srcDirs += files("$projectDir/schemas")
+
 jacoco {
 	toolVersion = "0.8.12"
 }
@@ -230,6 +237,9 @@ dependencies {
 	testImplementation 'io.mockk:mockk:1.14.11'
 	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0'
 	testImplementation "io.insert-koin:koin-test:$koin_version"
+	// Real SQLite on the JVM, so database migrations run in unit tests without a device
+	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
+	androidTestImplementation "androidx.room:room-testing:$room_version"
 	androidTestImplementation 'androidx.test:runner:1.7.0'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 	androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
