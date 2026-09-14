@@ -193,13 +193,11 @@ object MidiConnection {
 	// If Reflected feels backwards, flip this instead of the connection order.
 	@Volatile
 	var reflectedSwapSides: Boolean = false
-
-	private fun isFlippedForReflection(session: DeviceSession): Boolean {
-		if (!reflectedModeEnabled) return false
-		val isPrimary = session.usbDevice.deviceId == primarySessionId
-		return if (reflectedSwapSides) isPrimary else !isPrimary
+    private fun isFlippedForReflection(session: DeviceSession): Boolean {
+	if (!reflectedModeEnabled || _driver !is MultiplexDriver) return false
+	val isPrimary = session.usbDevice.deviceId == primarySessionId
+	return if (reflectedSwapSides) isPrimary else !isPrimary
 	}
-
 	// Builds a send listener scoped to a single session - it only ever delivers that
 	// session's own already-encoded output to that session's own USB/MIDI connection.
 	// Fan-out across multiple connected pads is handled one level up, by MultiplexDriver
@@ -507,15 +505,15 @@ object MidiConnection {
 			Log.midiDetail("USB 에러 : device == null")
 			return
 		}
-		if (sessions.containsKey(device.deviceId)) {
-			Log.midiDetail("Device ${device.deviceId} already connected, skipping")
-			return
-		}
 		if (!dualPadModeEnabled && sessions.isNotEmpty()) {
-			Log.midiDetail("Dual pad mode is off - ignoring additional device (${device.deviceName})")
-			listener?.onUiLog("Dual pad mode is off - ignoring ${device.deviceName}")
-			return
-		}
+	// Single-pad mode: a new attach replaces whatever is connected, as on main.
+	    for (old in sessions.values.toList()) teardownSession(old, notify = true)
+}
+
+        if (sessions.containsKey(device.deviceId)) {
+	Log.midiDetail("Device ${device.deviceId} already connected, skipping")
+	    return
+}
 
 		val session = DeviceSession(device)
 		var interfaceNum = 0
@@ -561,8 +559,8 @@ object MidiConnection {
 				// name shown to the user needs to follow. iOS and the web match on the
 				// announced name and do have to carry both spellings.
 				listener?.onUiLog("prediction : 203 Mystrix")
-				driver = Matrix()
-				publishConnectedDevice("Mystrix")
+                session.driver = Matrix()
+                session.name = "Mystrix"
 			} else {
 				listener?.onUiLog("prediction : unknown (PID=$pid)")
 				session.driver = MasterKeyboard()
