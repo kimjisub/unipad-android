@@ -193,11 +193,16 @@ object MidiConnection {
 	// If Reflected feels backwards, flip this instead of the connection order.
 	@Volatile
 	var reflectedSwapSides: Boolean = false
-    private fun isFlippedForReflection(session: DeviceSession): Boolean {
-	if (!reflectedModeEnabled || _driver !is MultiplexDriver) return false
-	val isPrimary = session.usbDevice.deviceId == primarySessionId
-	return if (reflectedSwapSides) isPrimary else !isPrimary
+
+	// Only while two pads are actually multiplexed. The LED flip lives in MultiplexDriver, so
+	// tying the input flip to the same condition keeps presses and lights on the same axis; a
+	// single pad left with the flags on used to play the mirrored pad's sound.
+	private fun isFlippedForReflection(session: DeviceSession): Boolean {
+		if (!reflectedModeEnabled || _driver !is MultiplexDriver) return false
+		val isPrimary = session.usbDevice.deviceId == primarySessionId
+		return if (reflectedSwapSides) isPrimary else !isPrimary
 	}
+
 	// Builds a send listener scoped to a single session - it only ever delivers that
 	// session's own already-encoded output to that session's own USB/MIDI connection.
 	// Fan-out across multiple connected pads is handled one level up, by MultiplexDriver
@@ -506,14 +511,14 @@ object MidiConnection {
 			return
 		}
 		if (!dualPadModeEnabled && sessions.isNotEmpty()) {
-	// Single-pad mode: a new attach replaces whatever is connected, as on main.
-	    for (old in sessions.values.toList()) teardownSession(old, notify = true)
-}
+			// Single-pad mode: a new attach replaces whatever is connected, as on main.
+			for (old in sessions.values.toList()) teardownSession(old, notify = true)
+		}
 
-        if (sessions.containsKey(device.deviceId)) {
-	Log.midiDetail("Device ${device.deviceId} already connected, skipping")
-	    return
-}
+		if (sessions.containsKey(device.deviceId)) {
+			Log.midiDetail("Device ${device.deviceId} already connected, skipping")
+			return
+		}
 
 		val session = DeviceSession(device)
 		var interfaceNum = 0
@@ -559,8 +564,8 @@ object MidiConnection {
 				// name shown to the user needs to follow. iOS and the web match on the
 				// announced name and do have to carry both spellings.
 				listener?.onUiLog("prediction : 203 Mystrix")
-                session.driver = Matrix()
-                session.name = "Mystrix"
+				session.driver = Matrix()
+				session.name = "Mystrix"
 			} else {
 				listener?.onUiLog("prediction : unknown (PID=$pid)")
 				session.driver = MasterKeyboard()
