@@ -1,0 +1,6 @@
+4.1.6
+- Slide Mode: drag a finger across the pads to play them (Settings > Play > Slide across pads).
+- Connect two Launchpads at once, mirrored or reflected, from the Reconnect Launchpad screen.
+- Fixes the most common crashes from crash reports, including when app storage is unavailable.
+- Bookmarks and play counts are no longer lost when the app's database is upgraded.
+- Shared pack links now ask before installing.
