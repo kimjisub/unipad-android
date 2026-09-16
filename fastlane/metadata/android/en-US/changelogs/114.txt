@@ -1,0 +1,3 @@
+4.1.7
+- Fixes custom ZIP skins, which failed to load in 4.1.6: the theme preview stayed empty and the play screen came up black. Skins made for 4.1.5 and earlier work again with no changes.
+- A skin that cannot be loaded now falls back to the default skin instead of a blank screen.
