@@ -82,22 +82,8 @@ class ZipThemeResources(
 		}
 	}
 
-	// iOS and web accept these alternate stems and .webp/.jpg; a theme authored against them lost
-	// images here.
-	private val nameAliases = mapOf(
-		"playbg" to listOf("play_bg"),
-		"custom_logo" to listOf("customlogo", "custom-logo", "logo"),
-		"btn_" to listOf("btn_pressed", "btn-pressed"),
-		"chain_" to listOf("chain_selected"),
-		"chain__" to listOf("chain_guide"),
-		"phantom_" to listOf("phantom_variant"),
-	)
-	private val imageExtensions = listOf("png", "webp", "jpg", "jpeg")
-
 	private fun loadPng(name: String): Drawable? {
-		val stems = listOf(name) + (nameAliases[name] ?: emptyList())
-		val file = stems.flatMap { stem -> imageExtensions.map { File(themeDir, "$stem.$it") } }.firstOrNull { it.exists() }
-			?: return null
+		val file = candidateFiles(themeDir, name).firstOrNull { it.exists() } ?: return null
 		val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
 		return BitmapDrawable(context.resources, bitmap)
 	}
@@ -116,6 +102,28 @@ class ZipThemeResources(
 			Color.parseColor(hex)
 		} catch (_: IllegalArgumentException) {
 			null
+		}
+	}
+
+	companion object {
+		// iOS and web accept these alternate stems and .webp/.jpg; a theme authored against them lost
+		// images here. They live in the companion, not in instance properties: `init` calls loadPng
+		// for the icon, and instance initializers below `init` are still null at that point, so every
+		// ZIP theme died with an NPE on 4.1.6 (113) (unipad-android#72).
+		private val nameAliases = mapOf(
+			"playbg" to listOf("play_bg"),
+			"custom_logo" to listOf("customlogo", "custom-logo", "logo"),
+			"btn_" to listOf("btn_pressed", "btn-pressed"),
+			"chain_" to listOf("chain_selected"),
+			"chain__" to listOf("chain_guide"),
+			"phantom_" to listOf("phantom_variant"),
+		)
+		private val imageExtensions = listOf("png", "webp", "jpg", "jpeg")
+
+		/** Every file a stem could resolve to, in lookup order. Pure, so a JVM test can check it. */
+		fun candidateFiles(themeDir: File, name: String): List<File> {
+			val stems = listOf(name) + (nameAliases[name] ?: emptyList())
+			return stems.flatMap { stem -> imageExtensions.map { File(themeDir, "$stem.$it") } }
 		}
 	}
 }

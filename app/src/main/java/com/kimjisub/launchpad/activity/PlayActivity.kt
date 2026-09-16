@@ -384,7 +384,9 @@ class PlayActivity : BaseActivity() {
 			Log.err("Theme load failed: $themeId", e)
 			Snackbar.make(findViewById(android.R.id.content), "${getString(string.skinErr)}\n$themeId", Snackbar.LENGTH_SHORT).show()
 			p.selectedTheme = getPackageName()
-			DefaultThemeResources(this@PlayActivity)
+			// fullLoad, or the fallback carries no playbg/btn/chain drawables and the play screen
+			// renders black instead of the default skin (unipad-android#72).
+			DefaultThemeResources(this@PlayActivity, true)
 		}
 	}
 
