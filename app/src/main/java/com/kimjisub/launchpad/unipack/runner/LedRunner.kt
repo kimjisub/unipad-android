@@ -63,9 +63,13 @@ class LedRunner(
 						// An animation with no delay lines never pushes state.delay past currTime, so
 						// this loop would run forever while holding the monitor and the next padTouch
 						// would block into an ANR. One tick may consume at most one full pass per loop.
+						// Only endless (loop 0) animations reach the cap: they yield to the next tick and
+						// keep playing, so eventOff still shuts them down and turns their LEDs off. The
+						// backlog is dropped, otherwise a strobe shorter than a tick falls further behind
+						// real time every tick and a GC stall leaves it lagging for many ticks.
 						val loopCount = state.ledAnimation.loop.coerceAtLeast(1)
 						if (++processed > ledEvents.size * loopCount + 1) {
-							state.isPlaying = false
+							state.delay = currTime
 							break
 						}
 						if (state.index >= ledEvents.size) {
