@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <memory>
+#include <mutex>
 #include "AudioEngine.h"
 
 #define LOG_TAG "UniPadAudioJNI"
@@ -11,14 +12,15 @@
 // destroyed mutex and the process aborted (Play vitals: SIGABRT in libc++ under liboboe,
 // unipad-android #37). Streams are opened and closed, the engine object stays.
 static std::unique_ptr<AudioEngine> sEngine;
+static std::once_flag sEngineOnce;
 
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
 Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStart(JNIEnv*, jobject) {
-    if (!sEngine) {
-        sEngine = std::make_unique<AudioEngine>();
-    }
+    // Two runners can start at once (leaving and reopening a pack quickly); both must see the
+    // same engine rather than each assigning its own.
+    std::call_once(sEngineOnce, [] { sEngine = std::make_unique<AudioEngine>(); });
     return sEngine->start() ? JNI_TRUE : JNI_FALSE;
 }
 

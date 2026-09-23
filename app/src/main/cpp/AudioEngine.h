@@ -50,6 +50,11 @@ public:
         int32_t numFrames) override;
 
 private:
+    void stopLocked();
+
+    // start()/stop() arrive from different threads (loader on IO, ViewModel teardown on main);
+    // openStream() writes stream_ in place, so an unguarded concurrent reset corrupts it.
+    std::mutex streamMutex_;
     std::shared_ptr<oboe::AudioStream> stream_;
     std::mutex voiceMutex_;
     ActiveVoice voices_[MAX_VOICES];
