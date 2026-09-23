@@ -391,6 +391,7 @@ class PlayActivityViewModel(
 			Log.err("padTouch out of range: ($x, $y)")
 			return
 		}
+		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
 				if (autoPlayRunner?.stepMode == true) {
@@ -430,6 +431,7 @@ class PlayActivityViewModel(
 
 	fun chainBtnsRefresh() {
 		log("chainBtnsRefresh")
+		if (!isChannelManagerInitialized) return
 		try {
 			for (c in 0 until MAX_CHAIN_BUTTONS) {
 				val y = CHAIN_INDEX_OFFSET + c
@@ -526,7 +528,7 @@ class PlayActivityViewModel(
 				)
 			}
 		}
-		channelManager.setCirIgnore(Channel.LED, !bool)
+		if (isChannelManagerInitialized) channelManager.setCirIgnore(Channel.LED, !bool)
 		chainBtnsRefresh()
 	}
 
@@ -539,6 +541,7 @@ class PlayActivityViewModel(
 
 	fun ledInit() {
 		log("ledInit")
+		if (!isChannelManagerInitialized) return
 		if (unipack.keyLedExist) {
 			val runner = ledRunner ?: return
 			try {
@@ -716,6 +719,7 @@ class PlayActivityViewModel(
 
 	fun autoPlayRemoveGuide() {
 		log("autoPlayRemoveGuide")
+		if (!isChannelManagerInitialized) return
 		try {
 			for (i in 0 until unipack.buttonX) for (j in 0 until unipack.buttonY) {
 				channelManager.remove(i, j, Channel.GUIDE)
