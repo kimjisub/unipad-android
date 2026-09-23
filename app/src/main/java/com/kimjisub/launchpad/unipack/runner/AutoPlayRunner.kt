@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -30,12 +31,26 @@ class AutoPlayRunner(
 	@Volatile
 	var stepMode = false
 
-	@Volatile
-	var progress = 0
-		set(value) {
-			field = value
-			listener.onProgressUpdate(progress)
-		}
+	// Written by both the runner coroutine and the UI (progressOffset), so every
+	// read-modify-write goes through the atomic and element reads use a snapshot index.
+	private val progressValue = AtomicInteger(0)
+	val progress: Int
+		get() = progressValue.get()
+
+	private fun setProgress(value: Int) {
+		progressValue.set(value)
+		listener.onProgressUpdate(value)
+	}
+
+	private fun elementAtProgress(autoPlay: AutoPlay): IndexedValue<AutoPlay.Element>? {
+		val index = progressValue.get()
+		return autoPlay.elements.getOrNull(index)?.let { IndexedValue(index, it) }
+	}
+
+	// Skipped when progress was moved elsewhere meanwhile, so a user jump is not overwritten.
+	private fun advanceProgressFrom(index: Int) {
+		if (progressValue.compareAndSet(index, index + 1)) listener.onProgressUpdate(index + 1)
+	}
 
 	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 	private var job: Job? = null
@@ -105,7 +120,7 @@ class AutoPlayRunner(
 		if (job?.isActive != true) {
 			job = scope.launch {
 				Log.thread("[AutoPlay] 2. Start Coroutine")
-				progress = 0
+				setProgress(0)
 				listener.onStart()
 
 				val autoPlay = unipack.autoPlayTable
@@ -222,10 +237,9 @@ class AutoPlayRunner(
 									}
 								}
 
-								while (waitingForChain < 0 && delayAccum <= currTime - startTime
-									&& progress < autoPlay.elements.size) {
-									when (val element: AutoPlay.Element =
-										autoPlay.elements[progress]) {
+								while (waitingForChain < 0 && delayAccum <= currTime - startTime) {
+									val (index, element) = elementAtProgress(autoPlay) ?: break
+									when (element) {
 										is AutoPlay.Element.On -> {
 											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
@@ -250,7 +264,7 @@ class AutoPlayRunner(
 											}
 										}
 									}
-									progress++
+									advanceProgressFrom(index)
 								}
 							}
 						} else {
@@ -264,7 +278,7 @@ class AutoPlayRunner(
 								if (currentChain != stepChainValue && stepChainValue >= 0) {
 									synchronized(stepPendingPads) {
 										if (stepScanned) {
-											progress = stepStartProgress
+											setProgress(stepStartProgress)
 											stepPendingPads.clear()
 											stepScanned = false
 										}
@@ -328,7 +342,7 @@ class AutoPlayRunner(
 
 	fun progressOffset(offset: Int) {
 		val size = unipack.autoPlayTable?.elements?.size ?: 0
-		progress = (progress + offset).coerceIn(0, size)
+		setProgress(progressValue.updateAndGet { (it + offset).coerceIn(0, size) })
 		if (stepMode) {
 			resetStepState()
 			listener.onRemoveGuide()
@@ -384,8 +398,9 @@ class AutoPlayRunner(
 		val newPending = mutableSetOf<Int>()
 		var totalDelayMs = 0L
 
-		scanLoop@ while (progress < autoPlay.elements.size) {
-			when (val element = autoPlay.elements[progress]) {
+		scanLoop@ while (true) {
+			val (index, element) = elementAtProgress(autoPlay) ?: break
+			when (element) {
 				is AutoPlay.Element.On -> {
 					if (chain.value != element.currChain) {
 						if (newPending.isEmpty()) {
@@ -398,17 +413,17 @@ class AutoPlayRunner(
 					newPending.add(key)
 					listener.onGuidePadOn(element.x, element.y, 0)
 					listener.onGuideLedUpdate(element.x, element.y, GUIDE_VELOCITIES.last())
-					progress++
+					advanceProgressFrom(index)
 				}
-				is AutoPlay.Element.Off -> progress++
+				is AutoPlay.Element.Off -> advanceProgressFrom(index)
 				is AutoPlay.Element.Delay -> {
 					totalDelayMs += element.delay.toLong()
 					if (newPending.isNotEmpty() && totalDelayMs >= STEP_GROUP_THRESHOLD_MS) {
 						break@scanLoop
 					}
-					progress++
+					advanceProgressFrom(index)
 				}
-				is AutoPlay.Element.Chain -> progress++
+				is AutoPlay.Element.Chain -> advanceProgressFrom(index)
 			}
 		}
 
