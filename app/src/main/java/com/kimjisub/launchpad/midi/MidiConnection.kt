@@ -31,6 +31,7 @@ import com.kimjisub.launchpad.midi.driver.MidiFighter
 import com.kimjisub.launchpad.midi.driver.Noting
 import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -88,7 +89,12 @@ object MidiConnection {
 	private const val MATRIX_PRODUCT_ID_MASK = 0xFFC0
 	private const val MATRIX_PRODUCT_ID_BASE = 0x1040
 
-	private var ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+	// USB/MIDI I/O races detach and the platform MIDI service; a failure in one of these
+	// coroutines must end that session's work, never the app.
+	private val ioExceptionHandler = CoroutineExceptionHandler { _, e ->
+		Log.err("MIDI IO coroutine failed", e)
+	}
+	private var ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + ioExceptionHandler)
 
 	private const val USB_MIDI_PACKET_SIZE = 4
 	private const val USB_BULK_TIMEOUT_MS = 50
@@ -752,6 +758,17 @@ object MidiConnection {
 			claimUsbAndStart(session)
 			return
 		}
+		if (sessions[session.usbDevice.deviceId] !== session) {
+			// The MIDI service answered after this device was unplugged or replaced; its
+			// ports must not be opened for, or SysEx sent to, a session that no longer exists.
+			Log.midiDetail("MIDI API: device gone before open completed, releasing (${session.name})")
+			try {
+				device.close()
+			} catch (e: Exception) {
+				Log.err("MIDI API: Failed to close device", e)
+			}
+			return
+		}
 		session.midiDevice = device
 		Log.midiDetail("MIDI API: Device opened successfully (${session.name})")
 
@@ -946,18 +963,20 @@ object MidiConnection {
 			previous?.cancelAndJoin()
 			if (session.usbDeviceConnection !== conn) return@launch
 
-			session.isRun = true
-			withContext(Dispatchers.Main) {
-				session.driver.onConnected()
-			}
-			Log.midiDetail("USB 시작 (${session.name})")
-
-			val byteArray = ByteArray(endpointIn.maxPacketSize)
-			// Flat int array: [cmd0,sig0,note0,vel0, cmd1,sig1,note1,vel1, ...]
-			val eventBuf = IntArray(endpointIn.maxPacketSize)
-			var fastFailures = 0
-
 			try {
+				// Inside the try: onConnected() redraws through the controller, and a failure
+				// there must tear this session down like any receive error.
+				session.isRun = true
+				withContext(Dispatchers.Main) {
+					session.driver.onConnected()
+				}
+				Log.midiDetail("USB 시작 (${session.name})")
+
+				val byteArray = ByteArray(endpointIn.maxPacketSize)
+				// Flat int array: [cmd0,sig0,note0,vel0, cmd1,sig1,note1,vel1, ...]
+				val eventBuf = IntArray(endpointIn.maxPacketSize)
+				var fastFailures = 0
+
 				while (isActive && session.usbDeviceConnection === conn) {
 					val started = SystemClock.elapsedRealtime()
 					val length = conn.bulkTransfer(
