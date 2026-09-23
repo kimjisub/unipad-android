@@ -16,7 +16,8 @@ AudioEngine::~AudioEngine() {
 }
 
 bool AudioEngine::start() {
-    stop();
+    std::lock_guard<std::mutex> streamLock(streamMutex_);
+    stopLocked();
     stopping_ = false;
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Output)
@@ -61,6 +62,11 @@ bool AudioEngine::start() {
 }
 
 void AudioEngine::stop() {
+    std::lock_guard<std::mutex> streamLock(streamMutex_);
+    stopLocked();
+}
+
+void AudioEngine::stopLocked() {
     // Flag first so a callback that is already scheduled returns Stop instead of touching
     // the voices while the stream is torn down.
     stopping_ = true;
