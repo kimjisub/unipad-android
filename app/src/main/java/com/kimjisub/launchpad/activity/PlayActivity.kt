@@ -125,6 +125,7 @@ import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.TOP_BAR_
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.Companion.VOLUME_LEVELS
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel.CheckBoxState
 import com.kimjisub.launchpad.viewmodel.PlayMode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -143,6 +144,7 @@ class PlayActivity : BaseActivity() {
 
 	// UI - Theme
 	private var theme by mutableStateOf<IThemeResources?>(null)
+	private var startReady by mutableStateOf(false)
 
 	// UI - AndroidView references
 	private var padsContainer: LinearLayout? = null
@@ -262,6 +264,7 @@ class PlayActivity : BaseActivity() {
 		override fun onRequestRelayout() {
 			if (lastScreenWidth > 0 && lastScreenHeight > 0) {
 				vm.uiLoaded = false
+				vm.traceLogInit()
 				initLayout(lastScreenWidth, lastScreenHeight, lastPaddingWidth, lastPaddingHeight)
 			}
 		}
@@ -342,9 +345,7 @@ class PlayActivity : BaseActivity() {
 			initTheme()
 
 			try {
-				val unipack = withContext(Dispatchers.IO) {
-					vm.loadUnipack(path)
-				}
+				val unipack = vm.loadUnipackOnce(path).await()
 				if (unipack.errorDetail != null) {
 					unipackErrorIsCritical = unipack.criticalError
 					unipackErrorDialog = Pair(
@@ -357,6 +358,9 @@ class PlayActivity : BaseActivity() {
 				} else {
 					vm.unipackLoading = false
 				}
+			} catch (e: CancellationException) {
+				// A recreated activity shares the same activity token, so finish() here would close it too.
+				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
 				vm.unipackLoading = false
@@ -375,13 +379,15 @@ class PlayActivity : BaseActivity() {
 		vm.initState()
 		padViews = Array(vm.unipack.buttonX) { Array(vm.unipack.buttonY) { null } }
 		chainViews = Array(CIRCLE_ARRAY_SIZE) { null }
-		vm.startReady = theme != null
+		startReady = theme != null
 	}
 
 	private suspend fun initTheme() {
 		val themeId = p.selectedTheme
 		theme = try {
 			withContext(Dispatchers.IO) { loadTheme(this@PlayActivity, themeId, true) }
+		} catch (e: CancellationException) {
+			throw e
 		} catch (e: OutOfMemoryError) {
 			Log.err("Theme OOM: $themeId", e)
 			Snackbar.make(findViewById(android.R.id.content), "${getString(string.skinMemoryErr)}\n$themeId", Snackbar.LENGTH_SHORT).show()
@@ -463,14 +469,13 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier
 				.fillMaxSize()
 				.let { mod ->
-					if (vm.startReady) {
+					if (startReady) {
 						mod.onSizeChanged { size ->
 							if (!layoutRequested && size.width > 0 && size.height > 0) {
 								layoutRequested = true
 								Handler(Looper.getMainLooper()).post {
 									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
-									vm.initRunner()
-									vm.initSetting()
+									vm.initPlayback()
 								}
 							}
 						}
@@ -501,7 +506,7 @@ class PlayActivity : BaseActivity() {
 				)
 			}
 
-			if (vm.startReady) {
+			if (startReady) {
 				// Main play content
 				Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
 					// Custom layout that centers pads independently and positions chains relative to pads
@@ -975,7 +980,9 @@ class PlayActivity : BaseActivity() {
 				visibility = if (p.slideMode) View.VISIBLE else View.GONE
 			}
 			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
-			vm.traceLogInit()
+			// A recreated activity keeps the retained trace log and redraws LEDs lit before it was rebuilt.
+			if (vm.isTraceLogSequenceInitialized) uiCallback.updateTraceLogOverlay() else vm.traceLogInit()
+			redrawAllLedUI()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
 			vm.uiLoaded = true
 			vm.refreshWatermark()
@@ -1084,6 +1091,14 @@ class PlayActivity : BaseActivity() {
 				else -> {}
 			}
 		} else pad.setLedBackgroundColor(0)
+	}
+
+	private fun redrawAllLedUI() {
+		for (x in 0 until vm.unipack.buttonX)
+			for (y in 0 until vm.unipack.buttonY)
+				setLedUI(x, y)
+		for (c in 0 until CIRCLE_ARRAY_SIZE)
+			setLedUIChain(c)
 	}
 
 	private fun setLedLaunchpad(x: Int, y: Int) {

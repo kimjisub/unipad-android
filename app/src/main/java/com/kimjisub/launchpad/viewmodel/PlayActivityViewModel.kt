@@ -23,7 +23,9 @@ import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -140,7 +142,6 @@ class PlayActivityViewModel(
 		}
 	var optionViewVisible by mutableStateOf(true)
 	var isOptionWindowVisible by mutableStateOf(false)
-	var startReady by mutableStateOf(false)
 
 	// Unipack loading state
 	var unipackLoading by mutableStateOf(true)
@@ -199,8 +200,17 @@ class PlayActivityViewModel(
 	lateinit var traceLogSequence: Array<ArrayList<Pair<Int, Int>>>
 	val isTraceLogSequenceInitialized get() = ::traceLogSequence.isInitialized
 
+	// This ViewModel outlives a recreated PlayActivity (e.g. a display size change). The pack, its
+	// runners and the open count belong to it and are set up once; the new activity only rebuilds views.
+	private var unipackLoad: Deferred<UniPack>? = null
+	private var stateInitialized = false
+	private var playbackInitialized = false
+
+	fun loadUnipackOnce(path: String): Deferred<UniPack> =
+		unipackLoad ?: viewModelScope.async(Dispatchers.IO) { loadUnipack(path) }.also { unipackLoad = it }
+
 	/** Load unipack from path with progress reporting. */
-	fun loadUnipack(path: String): UniPack {
+	private fun loadUnipack(path: String): UniPack {
 		loadingPhase = "info"
 		loadingPhaseIndex = 0
 		loadingPhaseTotal = 4 // info, keySound, keyLed, autoPlay
@@ -216,6 +226,8 @@ class PlayActivityViewModel(
 
 	/** Initialize core state after unipack is loaded. */
 	fun initState() {
+		if (stateInitialized) return
+		stateInitialized = true
 		viewModelScope.launch(Dispatchers.IO) {
 			unipackRepo.recordOpen(unipack.id)
 		}
@@ -297,7 +309,14 @@ class PlayActivityViewModel(
 		}
 	}
 
-	fun initRunner() {
+	fun initPlayback() {
+		if (playbackInitialized) return
+		playbackInitialized = true
+		initRunner()
+		initSetting()
+	}
+
+	private fun initRunner() {
 		if (unipack.keyLedExist) {
 			ledRunner = LedRunner(
 				unipack = unipack,
@@ -393,7 +412,7 @@ class PlayActivityViewModel(
 		}
 	}
 
-	fun initSetting() {
+	private fun initSetting() {
 		log("[06] Set CheckBox Checked")
 		if (unipack.keyLedExist) {
 			scbFeedbackLight.setChecked(false)
