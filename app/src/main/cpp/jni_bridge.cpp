@@ -71,4 +71,9 @@ Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStopVoice(
     if (sEngine) sEngine->stopVoice(stopKey);
 }
 
+JNIEXPORT void JNICALL
+Java_com_kimjisub_launchpad_audio_OboeAudioEngine_nativeStopAllVoices(JNIEnv*, jobject) {
+    if (sEngine) sEngine->stopAllVoices();
+}
+
 } // extern "C"

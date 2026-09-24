@@ -165,6 +165,11 @@ void AudioEngine::stopVoice(int stopKey) {
     }
 }
 
+void AudioEngine::stopAllVoices() {
+    std::lock_guard<std::mutex> lock(voiceMutex_);
+    for (auto& v : voices_) v.active = false;
+}
+
 oboe::DataCallbackResult AudioEngine::onAudioReady(
         oboe::AudioStream* stream,
         void* audioData,

@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
+import android.media.AudioManager
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -50,5 +51,15 @@ class PlayActivityViewModelTest {
 		val item = requireNotNull(vm.channelManager.get(-1, 7)) { "Expected UI top bar LED at function key 7" }
 		assertEquals(Channel.UI, item.channel)
 		assertEquals(PlayActivityViewModel.LED_RED_BRIGHT, item.code)
+	}
+
+	@Test
+	fun audioFocusChanges_doNotThrow_beforeRunnersExist() {
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+
+		assertFalse(vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.None, vm.playMode)
 	}
 }

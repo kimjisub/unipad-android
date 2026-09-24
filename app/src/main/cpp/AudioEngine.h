@@ -43,6 +43,8 @@ public:
     // Stop a specific voice by stopKey
     void stopVoice(int stopKey);
 
+    void stopAllVoices();
+
     // Oboe callback
     oboe::DataCallbackResult onAudioReady(
         oboe::AudioStream* stream,
