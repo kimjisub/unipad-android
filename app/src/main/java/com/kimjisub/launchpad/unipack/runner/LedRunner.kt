@@ -30,6 +30,7 @@ class LedRunner(
 
 	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 	private var job: Job? = null
+	private var pausedAt: Long? = null
 
 	val active: Boolean
 		get() = job?.isActive == true
@@ -163,6 +164,16 @@ class LedRunner(
 	fun launch() {
 		Log.thread("[Led] 1. Request Coroutine")
 		if (job?.isActive != true) {
+			// Finite animations survive stop() (eventOffAll only shuts loop 0 down). Their `delay` is an
+			// absolute deadline, so it is pushed back by the paused time: resuming neither replays what was
+			// scheduled while stopped in one burst nor cuts short a wait that was still pending.
+			synchronized(this) {
+				pausedAt?.let { since ->
+					val pausedFor = SystemClock.elapsedRealtime() - since
+					for (state in ledAnimationStates) if (state.delay != 0L) state.delay += pausedFor
+				}
+				pausedAt = null
+			}
 			job = scope.launch {
 				Log.thread("[Led] 2. Start Coroutine")
 				while (isActive) {
@@ -178,9 +189,13 @@ class LedRunner(
 
 	fun stop() {
 		Log.thread("[Led] 3. Request Stop")
+		val wasActive = active
 		job?.cancel()
 		job = null
-		synchronized(this) { ledAnimationStatesAdd.clear() }
+		synchronized(this) {
+			if (wasActive) pausedAt = SystemClock.elapsedRealtime()
+			ledAnimationStatesAdd.clear()
+		}
 	}
 
 	// Functions
