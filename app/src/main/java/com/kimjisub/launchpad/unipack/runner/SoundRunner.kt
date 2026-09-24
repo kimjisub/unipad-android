@@ -4,8 +4,10 @@ import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -25,6 +27,13 @@ class SoundRunner(
 	private var stopKey: Array<Array<Array<Int>>>
 	@Volatile
 	private var engineStarted = false
+
+	// The loader thread and destroy() both change the process-wide engine. Every engine start,
+	// sound load and release happens under this lock, so once destroy() has run nothing more is
+	// loaded and no id is freed twice.
+	private val engineLock = Any()
+	private var destroyed = false // guarded by engineLock
+	private val loadJob: Job
 
 	interface LoadingListener {
 		fun onStart(soundCount: Int)
@@ -56,10 +65,13 @@ class SoundRunner(
 
 		loadingListener.onStart(soundCount)
 
-		scope.launch(Dispatchers.IO) {
+		loadJob = scope.launch(Dispatchers.IO) {
 			try {
-				engineStarted = OboeAudioEngine.start()
-				if (!engineStarted) {
+				val started = synchronized(engineLock) {
+					if (destroyed) return@launch
+					OboeAudioEngine.start().also { engineStarted = it }
+				}
+				if (!started) {
 					throw RuntimeException("Failed to start Oboe audio engine")
 				}
 
@@ -107,17 +119,26 @@ class SoundRunner(
 				// Phase 3: Load decoded PCM into native engine (sequential, fast)
 				for ((filePath, sounds) in uniqueFiles) {
 					val decoded = decodedCache.remove(filePath) ?: continue  // drop the JVM copy as we go
-					val soundId = OboeAudioEngine.loadDecoded(decoded)
-					if (soundId < 0) {
-						Log.err("Failed to load into engine: $filePath")
-						continue
-					}
-					for (sound in sounds) {
-						sound.id = soundId
+					synchronized(engineLock) {
+						if (destroyed) {
+							Log.play("SoundRunner destroyed while loading; skipped the remaining files")
+							return@launch
+						}
+						val soundId = OboeAudioEngine.loadDecoded(decoded)
+						if (soundId < 0) {
+							Log.err("Failed to load into engine: $filePath")
+						} else {
+							for (sound in sounds) {
+								sound.id = soundId
+							}
+						}
 					}
 				}
 
 				loadingListener.onEnd()
+			} catch (e: CancellationException) {
+				// destroy() cancelled the load; this is not a loading failure to report.
+				throw e
 			} catch (e: Throwable) {
 				// OutOfMemoryError and UnsatisfiedLinkError are Errors, not RuntimeExceptions, and
 				// used to take the process down instead of reaching onException.
@@ -158,28 +179,35 @@ class SoundRunner(
 	}
 
 	fun destroy() {
-		// Collect unique sound IDs to avoid double-unload
-		val unloadedIds = mutableSetOf<Int>()
-		unipack.soundTable?.let { table ->
-			for (i in table)
-				for (j in i)
-					for (arrayList in j) {
-						if (arrayList != null) {
-							for (sound in arrayList) {
-								if (sound.id >= 0 && unloadedIds.add(sound.id)) {
-									try {
-										OboeAudioEngine.unloadSound(sound.id)
-									} catch (e: RuntimeException) {
-										Log.err("Sound unload failed", e)
+		loadJob.cancel()
+		synchronized(engineLock) {
+			if (destroyed) return
+			destroyed = true
+			// Collect unique sound IDs to avoid double-unload
+			val unloadedIds = mutableSetOf<Int>()
+			unipack.soundTable?.let { table ->
+				for (i in table)
+					for (j in i)
+						for (arrayList in j) {
+							if (arrayList != null) {
+								for (sound in arrayList) {
+									if (sound.id >= 0 && unloadedIds.add(sound.id)) {
+										try {
+											OboeAudioEngine.unloadSound(sound.id)
+										} catch (e: RuntimeException) {
+											Log.err("Sound unload failed", e)
+										}
 									}
+									// The engine reuses freed slots for the next pack's sounds.
+									sound.id = -1
 								}
 							}
 						}
-					}
-		}
-		if (engineStarted) {
-			OboeAudioEngine.unloadAll() // ids assigned after destroy() started are freed too
-			OboeAudioEngine.stop()
+			}
+			if (engineStarted) {
+				OboeAudioEngine.unloadAll()
+				OboeAudioEngine.stop()
+			}
 		}
 	}
 }
