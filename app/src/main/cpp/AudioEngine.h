@@ -18,7 +18,8 @@ struct ActiveVoice {
     int stopKey = 0;       // unique key for stop tracking
 };
 
-class AudioEngine : public oboe::AudioStreamDataCallback {
+class AudioEngine : public oboe::AudioStreamDataCallback,
+                    public oboe::AudioStreamErrorCallback {
 public:
     static constexpr int MAX_VOICES = 64;
 
@@ -49,7 +50,12 @@ public:
         void* audioData,
         int32_t numFrames) override;
 
+    // Runs on an Oboe thread after a disconnected stream (headphones unplugged, Bluetooth
+    // switch) has been closed; reopens on the new default device.
+    void onErrorAfterClose(oboe::AudioStream* stream, oboe::Result error) override;
+
 private:
+    bool openStreamLocked();
     void stopLocked();
 
     // start()/stop() arrive from different threads (loader on IO, ViewModel teardown on main);
