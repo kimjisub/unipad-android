@@ -19,6 +19,11 @@ bool AudioEngine::start() {
     std::lock_guard<std::mutex> streamLock(streamMutex_);
     stopLocked();
     stopping_ = false;
+    return openStreamLocked();
+}
+
+bool AudioEngine::openStreamLocked() {
+    // Both callbacks are raw pointers: the engine lives for the process (see jni_bridge.cpp).
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Output)
            ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
@@ -27,11 +32,13 @@ bool AudioEngine::start() {
            ->setChannelCount(oboe::ChannelCount::Stereo)
            ->setUsage(oboe::Usage::Game)
            ->setContentType(oboe::ContentType::Sonification)
-           ->setDataCallback(this);
+           ->setDataCallback(this)
+           ->setErrorCallback(this);
 
     oboe::Result result = builder.openStream(stream_);
     if (result != oboe::Result::OK) {
         LOGE("Failed to open stream: %s", oboe::convertToText(result));
+        stream_.reset();
         return false;
     }
 
@@ -45,9 +52,19 @@ bool AudioEngine::start() {
         return false;
     }
 
-    outputSampleRate_ = stream_->getSampleRate();
+    const int sampleRate = stream_->getSampleRate();
+    if (sampleRate != outputSampleRate_.exchange(sampleRate)) {
+        // A new device may run at another rate (Bluetooth 44.1 kHz vs speaker 48 kHz); voices
+        // that survive a reopen would otherwise play at the wrong pitch.
+        std::lock_guard<std::mutex> lock(voiceMutex_);
+        for (auto& v : voices_) {
+            if (!v.active) continue;
+            const SoundBuffer* buf = soundBank_.get(v.soundId);
+            if (buf) v.playbackRate = static_cast<double>(buf->sampleRate) / sampleRate;
+        }
+    }
     LOGI("Opened stream: sampleRate=%d, framesPerBurst=%d",
-         outputSampleRate_.load(), stream_->getFramesPerBurst());
+         sampleRate, stream_->getFramesPerBurst());
 
     result = stream_->requestStart();
     if (result != oboe::Result::OK) {
@@ -59,6 +76,20 @@ bool AudioEngine::start() {
 
     LOGI("Audio engine started successfully");
     return true;
+}
+
+void AudioEngine::onErrorAfterClose(oboe::AudioStream* stream, oboe::Result error) {
+    LOGE("Stream error: %s", oboe::convertToText(error));
+    if (error != oboe::Result::ErrorDisconnected) return;
+
+    std::lock_guard<std::mutex> streamLock(streamMutex_);
+    // stop() or a newer start() may have run while Oboe was closing this stream; only the
+    // stream we still own is replaced.
+    if (stopping_.load() || stream_.get() != stream) return;
+    stream_.reset();
+    if (openStreamLocked()) {
+        LOGI("Reopened stream after disconnect");
+    }
 }
 
 void AudioEngine::stop() {
