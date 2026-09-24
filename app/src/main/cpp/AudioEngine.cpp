@@ -117,28 +117,35 @@ int AudioEngine::loadSound(const int16_t* data, int numFrames, int channels, int
     return soundBank_.load(data, numFrames, channels, sampleRate);
 }
 
+// Both unloads detach buffers under voiceMutex_ (no voice or callback can reach them after
+// that) and free them once the lock is released, so onAudioReady never waits on a large free.
 void AudioEngine::unloadSound(int soundId) {
-    // Stop any voices playing this sound
-    std::lock_guard<std::mutex> lock(voiceMutex_);
-    for (auto& v : voices_) {
-        if (v.active && v.soundId == soundId) {
-            v.active = false;
+    std::unique_ptr<SoundBuffer> released;
+    {
+        std::lock_guard<std::mutex> lock(voiceMutex_);
+        for (auto& v : voices_) {
+            if (v.active && v.soundId == soundId) {
+                v.active = false;
+            }
         }
+        released = soundBank_.take(soundId);
     }
-    soundBank_.unload(soundId);
 }
 
 void AudioEngine::unloadAll() {
-    std::lock_guard<std::mutex> lock(voiceMutex_);
-    for (auto& v : voices_) {
-        v.active = false;
+    std::vector<std::unique_ptr<SoundBuffer>> released;
+    {
+        std::lock_guard<std::mutex> lock(voiceMutex_);
+        for (auto& v : voices_) {
+            v.active = false;
+        }
+        released = soundBank_.takeAll();
     }
-    soundBank_.unloadAll();
 }
 
 int AudioEngine::play(int soundId, float volumeL, float volumeR, int loop) {
-    // voiceMutex_ before the bank lookup: unloadSound frees buffers under voiceMutex_, so the
-    // pointer stays valid for as long as we hold it (same order as onAudioReady).
+    // voiceMutex_ before the bank lookup: unloads detach buffers from the bank under voiceMutex_,
+    // so the pointer stays valid for as long as we hold it (same order as onAudioReady).
     std::lock_guard<std::mutex> lock(voiceMutex_);
     const SoundBuffer* buf = soundBank_.get(soundId);
     if (!buf || buf->numFrames <= 0) return 0;

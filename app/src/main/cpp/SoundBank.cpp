@@ -1,4 +1,5 @@
 #include "SoundBank.h"
+#include <utility>
 
 int SoundBank::load(const int16_t* data, int numFrames, int channels, int sampleRate) {
     if (!data || numFrames <= 0 || channels <= 0 || sampleRate <= 0) return -1;
@@ -29,14 +30,13 @@ const SoundBuffer* SoundBank::get(int soundId) const {
     return sounds_[soundId].get();
 }
 
-void SoundBank::unload(int soundId) {
+std::unique_ptr<SoundBuffer> SoundBank::take(int soundId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (soundId >= 0 && soundId < static_cast<int>(sounds_.size())) {
-        sounds_[soundId].reset();
-    }
+    if (soundId < 0 || soundId >= static_cast<int>(sounds_.size())) return nullptr;
+    return std::move(sounds_[soundId]);
 }
 
-void SoundBank::unloadAll() {
+std::vector<std::unique_ptr<SoundBuffer>> SoundBank::takeAll() {
     std::lock_guard<std::mutex> lock(mutex_);
-    sounds_.clear();
+    return std::exchange(sounds_, {});
 }
