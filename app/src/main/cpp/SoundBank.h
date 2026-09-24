@@ -20,11 +20,12 @@ public:
     // Get a loaded sound buffer (nullptr if not found)
     const SoundBuffer* get(int soundId) const;
 
-    // Unload a specific sound
-    void unload(int soundId);
+    // Remove a sound from the bank and hand its buffer to the caller. Freeing a large buffer
+    // takes long enough to starve the audio callback, so callers drop it outside their locks.
+    std::unique_ptr<SoundBuffer> take(int soundId);
 
-    // Unload all sounds
-    void unloadAll();
+    // Remove every sound; same ownership rule as take().
+    std::vector<std::unique_ptr<SoundBuffer>> takeAll();
 
 private:
     mutable std::mutex mutex_;
