@@ -172,6 +172,11 @@ class PlayActivity : BaseActivity() {
 	private var classicTraceChain = -1
 	private var classicTraceCount = 0
 
+	// Runners write LEDs from their own threads; while paused the launchpad belongs to whatever is in
+	// front, so those writes are dropped here and onResume redraws the current state.
+	@Volatile
+	private var launchpadOutputEnabled = false
+
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
 	private val audioFocus by lazy { AudioFocusController(audioManager) { vm.audioFocusPolicy.onFocusChange(it) } }
 
@@ -251,7 +256,7 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {
-			driver.sendPadLed(x, y, velocity)
+			if (launchpadOutputEnabled) driver.sendPadLed(x, y, velocity)
 		}
 
 		override fun onRequestRelayout() {
@@ -1082,6 +1087,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedLaunchpad(x: Int, y: Int) {
+		if (!launchpadOutputEnabled) return
 		val item = vm.channelManager.get(x, y)
 		if (item != null) driver.sendPadLed(x, y, item.code) else driver.sendPadLed(x, y, 0)
 	}
@@ -1113,6 +1119,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	private fun setLedLaunchpadChain(c: Int) {
+		if (!launchpadOutputEnabled) return
 		val item = vm.channelManager.get(-1, c)
 		if (item != null) driver.sendFunctionKeyLed(c, item.code) else driver.sendFunctionKeyLed(c, 0)
 	}
@@ -1203,7 +1210,11 @@ class PlayActivity : BaseActivity() {
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		// Also retakes focus after a call ends, which resumes autoplay paused by a transient loss.
 		audioFocus.request()
-		if (vm.uiLoaded) controller = midiController
+		launchpadOutputEnabled = true
+		if (vm.uiLoaded) {
+			controller = midiController
+			redrawAllLaunchpadLeds()
+		}
 		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
 		slideTouchOverlayView?.let { if (vm.uiLoaded) it.visibility = if (p.slideMode) View.VISIBLE else View.GONE }
 	}
@@ -1212,8 +1223,26 @@ class PlayActivity : BaseActivity() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
+		launchpadOutputEnabled = false
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
+	}
+
+	override fun onStart() {
+		super.onStart()
+		vm.screenVisible = true
+	}
+
+	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
+	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
+	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
+	// asks for it again. The LED runner stops until onStart.
+	override fun onStop() {
+		super.onStop()
+		audioFocus.abandon()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+		vm.screenVisible = false
+		vm.ledInit()
 	}
 
 	override fun onDestroy() {

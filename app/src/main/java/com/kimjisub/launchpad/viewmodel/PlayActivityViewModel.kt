@@ -168,6 +168,18 @@ class PlayActivityViewModel(
 	var autoPlayRunner: AutoPlayRunner? = null
 	var soundRunner: SoundRunner? = null
 
+	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
+	// screen is in the background; the LED runner must not start until the screen is back.
+	var screenVisible = false
+		set(value) {
+			field = value
+			syncLedRunner()
+		}
+
+	private fun syncLedRunner() {
+		if (screenVisible && scbLed.isChecked()) ledRunner?.launch() else ledRunner?.stop()
+	}
+
 	val audioFocusPolicy = AudioFocusPolicy(object : AudioFocusPolicy.Target {
 		override val isAutoPlayPlaying
 			get() = playMode != PlayMode.None && autoPlayRunner?.playmode == true
@@ -243,12 +255,8 @@ class PlayActivityViewModel(
 		}
 		scbLed.onCheckedChange = { bool ->
 			if (unipack.keyLedExist) {
-				if (bool) {
-					ledRunner?.launch()
-				} else {
-					ledRunner?.stop()
-					ledInit()
-				}
+				syncLedRunner()
+				if (!bool) ledInit()
 			}
 			refreshWatermark()
 		}
