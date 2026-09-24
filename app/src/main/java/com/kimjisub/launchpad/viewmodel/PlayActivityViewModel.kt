@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -166,6 +167,17 @@ class PlayActivityViewModel(
 	var ledRunner: LedRunner? = null
 	var autoPlayRunner: AutoPlayRunner? = null
 	var soundRunner: SoundRunner? = null
+
+	val audioFocusPolicy = AudioFocusPolicy(object : AudioFocusPolicy.Target {
+		override val isAutoPlayPlaying
+			get() = playMode != PlayMode.None && autoPlayRunner?.playmode == true
+		override fun silence() { soundRunner?.stopAll() }
+		override fun pauseAutoPlay() = autoPlayPause()
+		override fun resumeAutoPlay() {
+			// The user may have turned autoplay off while focus was away.
+			if (playMode != PlayMode.None) autoPlayResume()
+		}
+	})
 
 	// Recording
 	private var recPrevEventMs: Long = 0

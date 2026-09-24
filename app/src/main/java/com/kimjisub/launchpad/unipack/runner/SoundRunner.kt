@@ -152,6 +152,11 @@ class SoundRunner(
 			OboeAudioEngine.stopVoice(stopKey[chain.value][x][y])
 	}
 
+	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
+	fun stopAll() {
+		if (engineStarted) OboeAudioEngine.stopAllVoices()
+	}
+
 	fun destroy() {
 		// Collect unique sound IDs to avoid double-unload
 		val unloadedIds = mutableSetOf<Int>()

@@ -99,6 +99,7 @@ import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.audio.AudioFocusController
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
@@ -172,6 +173,7 @@ class PlayActivity : BaseActivity() {
 	private var classicTraceCount = 0
 
 	private val audioManager: AudioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
+	private val audioFocus by lazy { AudioFocusController(audioManager) { vm.audioFocusPolicy.onFocusChange(it) } }
 
 	// Registered on the whole Settings.System tree: it fires for brightness, rotation, font scale...
 	// so only volume keys (or an unknown uri) refresh the UI.
@@ -1199,6 +1201,8 @@ class PlayActivity : BaseActivity() {
 		super.onResume()
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+		// Also retakes focus after a call ends, which resumes autoplay paused by a transient loss.
+		audioFocus.request()
 		if (vm.uiLoaded) controller = midiController
 		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
 		slideTouchOverlayView?.let { if (vm.uiLoaded) it.visibility = if (p.slideMode) View.VISIBLE else View.GONE }
@@ -1217,6 +1221,7 @@ class PlayActivity : BaseActivity() {
 		vm.uiCallback = null
 		vm.enable = false
 		midiController?.let { removeController(it) }
+		audioFocus.abandon()
 	}
 
 	// endregion

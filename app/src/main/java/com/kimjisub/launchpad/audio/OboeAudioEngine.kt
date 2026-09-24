@@ -52,6 +52,7 @@ object OboeAudioEngine {
 	}
 
 	fun stopVoice(stopKey: Int) = nativeStopVoice(stopKey)
+	fun stopAllVoices() = nativeStopAllVoices()
 
 	// ---- Native methods ----
 	private external fun nativeStart(): Boolean
@@ -61,6 +62,7 @@ object OboeAudioEngine {
 	private external fun nativeUnloadAll()
 	private external fun nativePlay(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int
 	private external fun nativeStopVoice(stopKey: Int)
+	private external fun nativeStopAllVoices()
 
 	// ---- Audio decoding ----
 
