@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -22,14 +23,36 @@ class AutoPlayRunner(
 ) {
 	@Volatile
 	var playmode = true
+		set(value) {
+			field = value
+			wake()
+		}
 	@Volatile
 	var beforeStartPlaying = true
 
 	@Volatile
 	var practiceGuide = false
+		set(value) {
+			field = value
+			wake()
+		}
 
 	@Volatile
 	var stepMode = false
+		set(value) {
+			field = value
+			wake()
+		}
+
+	// While not playing, the loop has nothing to do until a mode flag, the progress, a step pad or
+	// the chain changes, so it sleeps on this signal instead of polling every loopDelay. CONFLATED
+	// keeps a wake sent between the idle check and receive() from being lost.
+	private val wakeSignal = Channel<Unit>(Channel.CONFLATED)
+	private val wakeOnChainChange: (Int, Int) -> Unit = { _, _ -> wake() }
+
+	private fun wake() {
+		wakeSignal.trySend(Unit)
+	}
 
 	// Written by both the runner coroutine and the UI (progressOffset), so every
 	// read-modify-write goes through the atomic and element reads use a snapshot index.
@@ -137,10 +160,15 @@ class AutoPlayRunner(
 					synchronized(activeGuides) { activeGuides.clear() }
 				}
 
+				chain.addObserver(wakeOnChainChange)
 				try {
 					var delayAccum: Long = 0
 					var startTime = SystemClock.elapsedRealtime()
 					var prevPracticeGuide = practiceGuide
+					// Time spent not advancing is not owed to the sequence once playback continues.
+					fun skipIdleTime(now: Long) {
+						if (delayAccum <= now - startTime) delayAccum = now - startTime
+					}
 					while (progress < autoPlay.elements.size && isActive) {
 						val currTime = SystemClock.elapsedRealtime()
 
@@ -179,7 +207,7 @@ class AutoPlayRunner(
 									listener.onRemoveGuide()
 								} else {
 									// Keep delayAccum in sync while waiting
-									if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
+									skipIdleTime(currTime)
 								}
 							} else {
 								beforeStartPlaying()
@@ -312,12 +340,19 @@ class AutoPlayRunner(
 								}
 							}
 
-							if (delayAccum <= currTime - startTime) delayAccum = currTime - startTime
+							skipIdleTime(currTime)
 						}
-						delay(loopDelay)
+						if (!playmode && progress < autoPlay.elements.size) {
+							wakeSignal.receive()
+							skipIdleTime(SystemClock.elapsedRealtime())
+						} else {
+							delay(loopDelay)
+						}
 					}
 				} catch (_: CancellationException) {
 					// Normal cancellation, no action needed
+				} finally {
+					chain.removeObserver(wakeOnChainChange)
 				}
 				Log.thread("[AutoPlay] 4. End Coroutine")
 				listener.onEnd()
@@ -347,6 +382,7 @@ class AutoPlayRunner(
 			resetStepState()
 			listener.onRemoveGuide()
 		}
+		wake()
 	}
 
 	fun resetStepState() {
@@ -363,6 +399,7 @@ class AutoPlayRunner(
 		// push startTime far into the future, freezing autoplay (2026-09-07 review).
 		waitingForChain = -1
 		waitStartTime = SystemClock.elapsedRealtime()
+		wake()
 	}
 
 	fun stepPadPressed(x: Int, y: Int) {
@@ -370,6 +407,7 @@ class AutoPlayRunner(
 		synchronized(pressedKeysLock) {
 			pressedKeysQueue.add(key)
 		}
+		wake()
 	}
 
 	private fun drainPressedKeys() {
