@@ -6,6 +6,7 @@ import android.os.Environment
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -202,6 +203,69 @@ class WorkspaceManagerTest {
 		val manager = WorkspaceManager(mockContext)
 
 		assertEquals(internalDir, manager.getLegacyUniPackDir())
+	}
+
+	// === Home screen call paths (Play vitals, versionCode 109: NPE at WorkspaceManager.kt:54) ===
+
+	private fun managerWithExternalDirs(vararg dirs: File?): WorkspaceManager {
+		every { mockContext.getExternalFilesDir(null) } returns File(tempDir, "app_external").apply { mkdirs() }
+		every { mockContext.filesDir } returns File(tempDir, "internal")
+		every { mockContext.getExternalFilesDirs("UniPack") } returns arrayOf(*dirs)
+		return WorkspaceManager(mockContext)
+	}
+
+	private fun createSdCardWithPack(): File {
+		val sdCardDir = File(tempDir, "sdcard").apply { mkdirs() }
+		val pack = File(sdCardDir, "pack").apply { mkdirs() }
+		File(pack, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
+		File(pack, "keySound").writeText("1 1 1 a.wav\n")
+		File(pack, "sounds").mkdirs()
+		File(pack, "sounds/a.wav").writeText("")
+		return sdCardDir
+	}
+
+	@Test
+	fun getAvailableWorkspacesSize_emptyStorage() {
+		val manager = managerWithExternalDirs()
+
+		assertEquals(0L, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
+	@Test
+	fun getAvailableWorkspacesSize_unavailableVolume() {
+		val manager = managerWithExternalDirs(null)
+
+		assertEquals(0L, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
+	@Test
+	fun getAvailableWorkspacesSize_countsMountedFolderAndSkipsUnmountedVolume() {
+		val sdCardDir = createSdCardWithPack()
+		val expected = sdCardDir.walk().filter { it.isFile }.sumOf { it.length() }
+		val manager = managerWithExternalDirs(sdCardDir, null)
+
+		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
+	@Test
+	fun getUnipacks_emptyStorage() {
+		val manager = managerWithExternalDirs()
+
+		assertEquals(0, runBlocking { manager.getUnipacks() }.size)
+	}
+
+	@Test
+	fun getUnipacks_unavailableVolume() {
+		val manager = managerWithExternalDirs(null)
+
+		assertEquals(0, runBlocking { manager.getUnipacks() }.size)
+	}
+
+	@Test
+	fun getUnipacks_loadsPackFromMountedFolderAndSkipsUnmountedVolume() {
+		val manager = managerWithExternalDirs(createSdCardWithPack(), null)
+
+		assertEquals(listOf("Test"), runBlocking { manager.getUnipacks() }.map { it.unipack.title })
 	}
 
 	@Test
