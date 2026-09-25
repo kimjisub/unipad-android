@@ -54,6 +54,19 @@ class PlayActivityViewModelTest {
 	}
 
 	@Test
+	fun repeatedBackPressesDuringLoading_paintOnlyTheLastOptionWindowState() {
+		repeat(4) { vm.toggleOptionWindow() }
+		assertFalse(vm.isOptionWindowVisible)
+		vm.channelManager = ChannelManager(8, 8)
+
+		vm.refreshWatermark()
+
+		val item = requireNotNull(vm.channelManager.get(-1, 7)) { "Expected watermark LED at function key 7" }
+		assertEquals(Channel.UI_UNIPAD, item.channel)
+		assertEquals(PlayActivityViewModel.LED_BLUE, item.code)
+	}
+
+	@Test
 	fun audioFocusChanges_doNotThrow_beforeRunnersExist() {
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
