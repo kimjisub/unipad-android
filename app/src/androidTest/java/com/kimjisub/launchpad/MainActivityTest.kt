@@ -2,8 +2,9 @@ package com.kimjisub.launchpad
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -11,335 +12,165 @@ import org.junit.runner.RunWith
 
 /**
  * MainActivity Tests
- * Tests for main screen functionality (FAB menu, sorting, deletion)
+ * Tests for main screen functionality (action buttons, sorting, deletion, store navigation)
+ *
+ * The main screen is Compose: the old FAB menu (floatingMenu, store, setting, loadUniPack) was
+ * replaced by the sort bar's Store / Import icons, the total panel's Settings icon and the guide
+ * chips under the list. Elements are found by content description or text, not view id.
  */
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest : BaseUITest() {
 
+    private val prefs by lazy { PreferenceManager(context) }
+
+    /** Former FAB menu: every entry it offered is now a button on the main screen. */
     @Test
     fun testFloatingActionMenuInteraction() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
+        launchToMainScreen()
         takeScreenshot("fab_menu_before")
 
-        // Find and click the FAB menu button by Resource ID
-        val fabButton = device.findObject(By.res(PACKAGE_NAME, "floatingMenu"))
-        assertNotNull("Could not find the FAB button", fabButton)
+        assertNotNull("Store button not found", device.findObject(By.desc(str(R.string.store))))
+        assertNotNull("Import UniPack button not found", device.findObject(By.desc(str(R.string.import_unipack))))
+        assertNotNull("Settings button not found", device.findObject(By.desc(str(R.string.setting))))
 
-        // Open the FAB menu
-        fabButton.click()
-        Thread.sleep(2000)
+        device.findObject(By.desc(str(R.string.setting))).click()
+        assertTrue(
+            "Settings button did not open settings",
+            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+        )
         takeScreenshot("fab_menu_opened")
 
-        // Verify FAB sub-buttons appeared after the menu opened
-        // Material Design FAB with custom menu container
-        val menuOpened = waitForAnyElementWithPolling(
-            listOf(
-                By.res(PACKAGE_NAME, "fabMenuContainer"),
-                By.res(PACKAGE_NAME, "store"),
-                By.res(PACKAGE_NAME, "setting"),
-                By.res(PACKAGE_NAME, "loadUniPack"),
-                By.res(PACKAGE_NAME, "reconnectLaunchpad")
-            ),
-            timeoutMs = 8000L,
-            pollingIntervalMs = 500L
-        )
-        assertTrue("FAB menu did not open (could not find FAB sub-buttons)", menuOpened)
-
-        // Verify all FAB sub-buttons are accessible
-        val allButtonsAccessible = waitForAnyElementWithPolling(
-            listOf(
-                By.res(PACKAGE_NAME, "store"),
-                By.res(PACKAGE_NAME, "setting")
-            ),
-            timeoutMs = 5000L,
-            pollingIntervalMs = 500L
-        )
-        assertTrue("FAB sub-buttons are not accessible", allButtonsAccessible)
-
-        // Close the FAB menu (click again)
-        fabButton.click()
-        Thread.sleep(2000)
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("fab_menu_closed")
     }
 
     @Test
     fun testMainScreenSorting() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
+        val originalMethod = prefs.sortMethod
+        val originalOrder = prefs.sortOrder
+        try {
+            launchToMainScreen()
+            takeScreenshot("sorting_main_screen")
 
-        // Wait for main screen to load
-        Thread.sleep(10000)
+            val titles = listOf(
+                str(R.string.sort_title),
+                str(R.string.sort_producer),
+                str(R.string.sort_download_date),
+            )
 
-        takeScreenshot("sorting_main_screen")
+            for ((index, title) in titles.withIndex()) {
+                sortAnchor(titles).click()
+                val option = device.wait(Until.findObject(By.text(title).clickable(true)), 3000L)
+                    ?: device.wait(Until.findObject(By.text(title)), 1000L)
+                assertNotNull("Sort option '$title' not in the dropdown", option)
+                option!!.click()
+                assertTrue(
+                    "Sort method did not change to '$title'",
+                    waitUntil { prefs.sortMethod == index }
+                )
+                assertTrue(
+                    "Sort bar does not show '$title'",
+                    device.wait(Until.hasObject(By.text(title)), 3000L)
+                )
+                takeScreenshot("sort_by_$index")
+            }
 
-        // Swipe left to show the Total Panel
-        val displayWidth = device.displayWidth
-        val displayHeight = device.displayHeight
-        val centerY = displayHeight / 2
-
-        // Swipe from right to left (open Total Panel)
-        device.swipe(displayWidth - 50, centerY, 50, centerY, 10)
-        Thread.sleep(2000)
-
-        takeScreenshot("total_panel_opened")
-
-        // Find and click the sort order toggle button (ascending <-> descending)
-        val sortOrderSwitch = device.findObject(
-            UiSelector()
-                .resourceId("${PACKAGE_NAME}:id/sort_order")
-        )
-
-        if (sortOrderSwitch.exists()) {
-            println("Sort order switch found, clicking...")
-            sortOrderSwitch.click()
-            Thread.sleep(1500)
+            // Order toggle: the arrow icon inside the sort anchor
+            val orderBefore = prefs.sortOrder
+            sortOrderArrow(titles).click()
+            assertTrue("Sort order did not toggle", waitUntil { prefs.sortOrder != orderBefore })
+            closeSortDropdown(titles)
             takeScreenshot("sort_order_changed")
 
-            // Click again to restore original order
-            sortOrderSwitch.click()
-            Thread.sleep(1500)
+            sortOrderArrow(titles).click()
+            assertTrue("Sort order did not toggle back", waitUntil { prefs.sortOrder == orderBefore })
+            closeSortDropdown(titles)
             takeScreenshot("sort_order_restored")
-        } else {
-            println("Sort order switch not found, skipping...")
+
+            assertTrue("Main screen lost after sorting", waitForMainScreen(3000L))
+            takeScreenshot("sorting_test_end")
+        } finally {
+            prefs.sortMethod = originalMethod
+            prefs.sortOrder = originalOrder
         }
-
-        // Find and click the sort method spinner
-        val sortMethodSpinner = device.findObject(
-            UiSelector()
-                .resourceId("${PACKAGE_NAME}:id/spinner_sort_method")
-        )
-
-        if (sortMethodSpinner.exists()) {
-            println("Sort method spinner found, clicking...")
-            sortMethodSpinner.click()
-            Thread.sleep(1500)
-            takeScreenshot("sort_method_spinner_opened")
-
-            // Select the first option from the spinner (sort by title)
-            // The spinner dropdown is displayed as a ListView
-            try {
-                val firstOption = device.findObject(
-                    UiSelector()
-                        .className("android.widget.CheckedTextView")
-                        .instance(0)
-                )
-                if (firstOption.exists()) {
-                    firstOption.click()
-                    Thread.sleep(2000)
-                    takeScreenshot("sort_by_title")
-                }
-            } catch (e: Exception) {
-                println("Failed to select first sort option: ${e.message}")
-                device.pressBack() // Close spinner
-                Thread.sleep(1000)
-            }
-
-            // Open the spinner again
-            sortMethodSpinner.click()
-            Thread.sleep(1500)
-            takeScreenshot("sort_method_spinner_opened_again")
-
-            // Select the second option (sort by producer)
-            try {
-                val secondOption = device.findObject(
-                    UiSelector()
-                        .className("android.widget.CheckedTextView")
-                        .instance(1)
-                )
-                if (secondOption.exists()) {
-                    secondOption.click()
-                    Thread.sleep(2000)
-                    takeScreenshot("sort_by_producer")
-                }
-            } catch (e: Exception) {
-                println("Failed to select second sort option: ${e.message}")
-                device.pressBack() // Close spinner
-                Thread.sleep(1000)
-            }
-
-            // Open the spinner again
-            sortMethodSpinner.click()
-            Thread.sleep(1500)
-
-            // Select the third option (sort by download date)
-            try {
-                val thirdOption = device.findObject(
-                    UiSelector()
-                        .className("android.widget.CheckedTextView")
-                        .instance(2)
-                )
-                if (thirdOption.exists()) {
-                    thirdOption.click()
-                    Thread.sleep(2000)
-                    takeScreenshot("sort_by_download_date")
-                }
-            } catch (e: Exception) {
-                println("Failed to select third sort option: ${e.message}")
-                device.pressBack() // Close spinner
-                Thread.sleep(1000)
-            }
-        } else {
-            println("Sort method spinner not found, skipping...")
-        }
-
-        // Close the Total Panel (swipe from left to right)
-        device.swipe(50, centerY, displayWidth - 50, centerY, 10)
-        Thread.sleep(2000)
-
-        takeScreenshot("total_panel_closed")
-
-        // Verify the app is in a normal state
-        val stillRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("App terminated after sorting test", stillRunning)
-
-        takeScreenshot("sorting_test_end")
     }
 
     @Test
     fun testUnipackDeletion() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
+        launchToMainScreen()
         takeScreenshot("before_unipack_deletion")
 
-        // Click an item in the unipack list to open the Pack Panel
-        val displayWidth = device.displayWidth
-        val displayHeight = device.displayHeight
-        val itemX = displayWidth / 2
-        val itemY = displayHeight / 3
-
-        device.click(itemX, itemY)
-        Thread.sleep(2000)
-
+        selectTestPack()
         takeScreenshot("pack_panel_opened")
 
-        // Verify the Pack Panel appeared
-        val panelVisible = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            3000L
+        device.findObject(By.desc(str(R.string.cd_delete))).click()
+        assertTrue(
+            "Delete confirmation dialog did not appear",
+            device.wait(Until.hasObject(By.text(str(R.string.doYouWantToDeleteUniPack))), 5000L)
         )
-        assertTrue("Pack Panel did not open", panelVisible)
-
-        // Find and click the Delete button
-        // btnDelete is located in the top-right, so access by coordinates
-        val deleteBtnX = displayWidth - 80
-        val deleteBtnY = 180
-
-        device.click(deleteBtnX, deleteBtnY)
-        Thread.sleep(2000)
-
         takeScreenshot("after_delete_button_click")
 
-        // Handle the delete confirmation dialog
-        // Look for buttons like "OK", "Delete", etc.
-        var dialogHandled = false
-        val confirmTexts = listOf(
-            "확인", "OK", "ok",
-            "삭제", "Delete", "delete",
-            "예", "Yes", "yes"
-        )
-
-        for (confirmText in confirmTexts) {
-            try {
-                val confirmButton = device.findObject(
-                    UiSelector()
-                        .textMatches(".*${confirmText}.*")
-                        .clickable(true)
-                )
-
-                if (confirmButton.exists()) {
-                    println("Delete confirmation dialog found: $confirmText")
-                    confirmButton.click()
-                    Thread.sleep(2000)
-                    dialogHandled = true
-                    break
-                }
-            } catch (e: Exception) {
-                println("Error finding confirm button: ${e.message}")
-            }
-        }
-
+        device.findObject(By.text(str(R.string.accept))).click()
         takeScreenshot("after_deletion_confirm")
 
-        // Verify the app is still running after deletion
-        val stillRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
+        assertTrue("Test pack folder was not deleted", waitUntil(10000L) { !TestUniPack.exists(context) })
+        assertTrue(
+            "Deleted pack is still listed",
+            device.wait(Until.gone(By.textContains(TestUniPack.TITLE)), 10000L)
         )
-        assertTrue("App terminated after unipack deletion", stillRunning)
-
-        // Verify return to the main screen
-        Thread.sleep(2000)
+        assertTrue("Main screen lost after deletion", waitForMainScreen(5000L))
         takeScreenshot("after_unipack_deletion")
-
-        println("Unipack deletion test complete (dialog handled: $dialogHandled)")
     }
 
     @Test
     fun testStoreActivityNavigation() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
+        launchToMainScreen()
         takeScreenshot("before_store_navigation")
 
-        // Find and click the FAB menu button by Resource ID
-        val fabButton = device.findObject(By.res(PACKAGE_NAME, "floatingMenu"))
-        assertNotNull("Could not find the FAB button", fabButton)
-
-        // Open the FAB menu
-        fabButton.click()
-        Thread.sleep(2000)
-
-        // Click the Store button (Resource ID based)
-        val storeButton = device.wait(
-            Until.findObject(By.res(PACKAGE_NAME, "store")),
-            5000L
-        )
-        assertNotNull("Could not find the Store button", storeButton)
-        storeButton.click()
-        Thread.sleep(3000)
-
+        device.findObject(By.desc(str(R.string.store))).click()
+        assertTrue("Did not transition to the store screen", waitForStoreScreen())
         takeScreenshot("store_activity")
 
-        // Verify FBStoreActivity launched
-        val storeActivityRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("Did not transition to the store screen", storeActivityRunning)
-
-        // Navigate back to the main screen
         device.pressBack()
-        Thread.sleep(2000)
-
-        val backToMain = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("Could not return to the main screen", backToMain)
-
+        assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("back_from_store")
+    }
+
+    /**
+     * Tapping the order arrow currently also expands the sort dropdown (reported separately as an
+     * app issue). Close it so the next lookup finds the anchor, not a dropdown item.
+     */
+    private fun closeSortDropdown(titles: List<String>) {
+        if (titles.count { device.hasObject(By.text(it)) } > 1) {
+            device.pressBack()
+            assertTrue("Sort dropdown did not close", waitUntil { titles.count { device.hasObject(By.text(it)) } == 1 })
+        }
+    }
+
+    /**
+     * The order arrow drawn after the sort title. It has no description, so it is the clickable
+     * whose center lies on the title's row and past the title's right edge (before Store).
+     */
+    private fun sortOrderArrow(titles: List<String>): UiObject2 {
+        var arrow: UiObject2? = null
+        waitUntil {
+            val title = titles.firstNotNullOfOrNull { device.findObject(By.text(it)) } ?: return@waitUntil false
+            val t = title.visibleBounds
+            arrow = device.findObjects(By.pkg(PACKAGE_NAME).clickable(true)).firstOrNull {
+                val b = it.visibleBounds
+                b.centerY() in t.top..t.bottom && b.centerX() > t.right && b.centerX() < t.right + t.height() * 2
+            }
+            arrow != null
+        }
+        assertNotNull("Sort order arrow not found", arrow)
+        return arrow!!
+    }
+
+    /** The clickable sort dropdown anchor in the sort bar (shows the current method). */
+    private fun sortAnchor(titles: List<String>): UiObject2 {
+        val anchor = titles.firstNotNullOfOrNull { device.wait(Until.findObject(By.text(it)), 1000L) }
+        assertNotNull("Sort dropdown not found", anchor)
+        return clickableAncestor(anchor!!)
     }
 }

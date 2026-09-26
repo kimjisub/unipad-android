@@ -2,15 +2,23 @@ package com.kimjisub.launchpad
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Configurator
+import androidx.test.uiautomator.StaleObjectException
+import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
-import java.io.File
+import java.util.regex.Pattern
 
 /**
  * Base class for UI Automator tests
@@ -24,6 +32,11 @@ abstract class BaseUITest {
     companion object {
         const val LAUNCH_TIMEOUT = 10000L
         const val PACKAGE_NAME = "com.kimjisub.launchpad.dev" // debug build
+        const val MAIN_TIMEOUT = 20000L
+        const val PLAY_TIMEOUT = 20000L
+        private const val PLAY_FLAG_TAP_DP = 50
+        private val ANY_TEXT = Pattern.compile(".+")
+        private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
     }
 
     @Before
@@ -42,6 +55,8 @@ abstract class BaseUITest {
             androidx.test.uiautomator.Until.hasObject(By.pkg(launcherPackage).depth(0)),
             LAUNCH_TIMEOUT
         )
+
+        TestUniPack.install(context)
     }
 
     /**
@@ -168,19 +183,281 @@ abstract class BaseUITest {
         return false
     }
 
+    protected fun str(resId: Int): String = context.getString(resId)
+
     /**
-     * Save a screenshot
+     * Launch the app and wait until MainActivity's Compose screen is shown.
+     * The main screen has no view ids since the Compose rewrite, so it is recognised by the
+     * store / settings content descriptions and the guide chip text.
+     */
+    protected fun launchToMainScreen() {
+        launchApp()
+        assertTrue("App did not start", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT))
+        handlePermissionDialogs()
+        assertTrue("Main screen did not appear", waitForMainScreen())
+    }
+
+    protected fun waitForMainScreen(timeoutMs: Long = MAIN_TIMEOUT): Boolean =
+        waitForAnyElementWithPolling(
+            listOf(
+                By.pkg(PACKAGE_NAME).desc(str(R.string.store)),
+                By.pkg(PACKAGE_NAME).desc(str(R.string.setting)),
+                By.pkg(PACKAGE_NAME).textContains(str(R.string.guide_download_new)),
+            ),
+            timeoutMs
+        )
+
+    /** FBStoreActivity is shown when its total panel's pack count label appears. */
+    protected fun waitForStoreScreen(timeoutMs: Long = 10000L): Boolean =
+        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.STP_count))), timeoutMs)
+
+    /**
+     * The clickable list row of [TestUniPack], scrolled into view. The title also appears in the
+     * detail panel once the pack is selected; only the list copy sits inside a clickable row.
+     */
+    protected fun findTestPackRow(): UiObject2 {
+        val selector = By.text(TestUniPack.TITLE)
+        fun listRow() = device.findObjects(selector).firstNotNullOfOrNull { clickableAncestorOrNull(it) }
+        var row: UiObject2? = null
+        waitUntil(5000L) { row = listRow(); row != null }
+        if (row == null) {
+            device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
+            row = listRow()
+        }
+        assertNotNull("Test pack '${TestUniPack.TITLE}' is not in the list", row)
+        return row!!
+    }
+
+    protected fun clickableAncestor(node: UiObject2): UiObject2 {
+        val clickable = clickableAncestorOrNull(node)
+        assertNotNull("No clickable ancestor for '${node.text}'", clickable)
+        return clickable!!
+    }
+
+    private fun clickableAncestorOrNull(node: UiObject2): UiObject2? {
+        var current: UiObject2? = node
+        while (current != null && !current.isClickable) current = current.parent
+        return current
+    }
+
+    /** Tap the test pack's row so its detail panel opens and its Play flag slides out. */
+    protected fun selectTestPack(): UiObject2 {
+        findTestPackRow().click()
+        assertTrue(
+            "Pack panel did not open for the test pack",
+            device.wait(Until.hasObject(By.desc(str(R.string.cd_delete))), 5000L)
+        )
+        return findTestPackRow()
+    }
+
+    /** Select the test pack (unless already selected) and press its Play flag; returns once the play screen is ready. */
+    protected fun openTestPackInPlay() {
+        val row = if (device.hasObject(By.desc(str(R.string.cd_delete)))) findTestPackRow() else selectTestPack()
+        Thread.sleep(700) // Play flag slide-in animation (FLAG_ANIMATION_MS = 500)
+        val bounds = row.visibleBounds
+        val flagCenterX = bounds.left + (PLAY_FLAG_TAP_DP * context.resources.displayMetrics.density).toInt()
+        device.click(flagCenterX, bounds.centerY())
+        assertTrue("Play screen did not open", waitForPlayScreen())
+    }
+
+    /** PlayActivity is ready when its menu button is shown (after the loading overlay). */
+    protected fun waitForPlayScreen(timeoutMs: Long = PLAY_TIMEOUT): Boolean =
+        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).desc(str(R.string.menu))), timeoutMs)
+
+    /** Tap Menu until the option panel is open; Menu fades back in after the panel closes. */
+    protected fun openPlayOptions() {
+        val opened = waitUntil(5000L) {
+            isPlayOptionsOpen() || run {
+                clickFresh { device.findObject(By.desc(str(R.string.menu))) }
+                false
+            }
+        }
+        assertTrueWithLabels("Play option panel did not open", opened)
+    }
+
+    protected fun closePlayOptions() {
+        device.pressBack()
+        assertTrue("Play option panel did not close", waitUntil(5000L) { !isPlayOptionsOpen() })
+    }
+
+    /** A switch row label in the play option panel; the panel scrolls, so search both ways. */
+    protected fun playOption(labelRes: Int): UiObject2 {
+        val selector = By.text(str(labelRes))
+        device.wait(Until.findObject(selector), 1000L)?.let { return it }
+        val panel = device.findObject(By.pkg(PACKAGE_NAME).scrollable(true))
+        for (direction in listOf(Direction.DOWN, Direction.UP)) {
+            repeat(3) {
+                device.findObject(selector)?.let { return it }
+                panel?.scroll(direction, 0.8f)
+            }
+        }
+        val row = device.findObject(selector)
+        assertNotNull("Play option '${str(labelRes)}' not found", row)
+        return row!!
+    }
+
+    /** Toggle a play option and return its new checked state. */
+    protected fun togglePlayOption(labelRes: Int): Boolean {
+        val before = isPlayOptionChecked(labelRes)
+        assertTrue("Play option '${str(labelRes)}' could not be tapped", clickFresh { playOption(labelRes) })
+        assertTrue(
+            "Play option '${str(labelRes)}' did not toggle",
+            waitUntil { isPlayOptionChecked(labelRes) != before }
+        )
+        return !before
+    }
+
+    protected fun isPlayOptionChecked(labelRes: Int): Boolean = isSwitchNextToChecked(playOption(labelRes))
+
+    /**
+     * Checked state of the switch in the same row as [label]. Compose exposes the label text and
+     * the switch as separate nodes, so walk up from the label to the row that holds a switch.
+     */
+    protected fun isSwitchNextToChecked(label: UiObject2): Boolean {
+        var node: UiObject2? = label
+        while (node != null) {
+            node.findObject(By.checkable(true))?.let { return it.isChecked }
+            node = node.parent
+        }
+        return false
+    }
+
+    /** The play option panel is the only scrollable view on the play screen. */
+    protected fun isPlayOptionsOpen(): Boolean = device.hasObject(By.pkg(PACKAGE_NAME).scrollable(true))
+
+    /** The play screen is shown: its Menu button, or its option panel when that is open. */
+    protected fun isOnPlayScreen(): Boolean =
+        device.hasObject(By.pkg(PACKAGE_NAME).desc(str(R.string.menu))) || isPlayOptionsOpen()
+
+    /** Leave the play screen with the option panel's Quit (Back only toggles the panel). */
+    protected fun quitPlayToMain() {
+        if (!isPlayOptionsOpen()) openPlayOptions()
+        val clicked = clickFresh {
+            device.findObject(By.desc(str(R.string.quit)))
+                ?: device.findObject(By.pkg(PACKAGE_NAME).scrollable(true))
+                    ?.scrollUntil(Direction.UP, Until.findObject(By.desc(str(R.string.quit))))
+        }
+        assertTrue("Quit not found in the play option panel", clicked)
+        assertTrue("Did not return to the main screen after quitting play", waitForMainScreen())
+    }
+
+    /**
+     * Chain buttons of the play screen, top to bottom. They are the only unlabeled clickable
+     * views while the option panel is closed (Menu and the AutoPlay transport carry labels).
+     */
+    protected fun chainButtons(): List<Rect> {
+        var chains: List<Rect> = emptyList()
+        waitUntil {
+            try {
+                chains = device.findObjects(By.pkg(PACKAGE_NAME).clickable(true))
+                    .filter { it.contentDescription.isNullOrEmpty() && it.findObject(By.desc(ANY_TEXT)) == null }
+                    .map { it.visibleBounds }
+                    .filter { it.width() < device.displayWidth / 4 }
+                    .sortedBy { it.top }
+                true
+            } catch (e: StaleObjectException) {
+                false // pads and chains redraw while LEDs animate
+            }
+        }
+        return chains
+    }
+
+    /**
+     * assertTrue whose message lists the labels on screen. They are read only on failure: reading
+     * them touches every node and, while the play screen animates, took longer than AutoPlay itself.
+     */
+    protected fun assertTrueWithLabels(message: String, condition: Boolean) {
+        if (!condition) fail("$message; labels shown: ${visibleLabels()}")
+    }
+
+    /** Content descriptions and texts currently on screen, for failure messages. */
+    protected fun visibleLabels(): List<String> =
+        try {
+            device.findObjects(By.pkg(PACKAGE_NAME)).mapNotNull { o ->
+                listOfNotNull(o.contentDescription, o.text).firstOrNull { it.isNotEmpty() }
+            }.distinct()
+        } catch (e: StaleObjectException) {
+            emptyList()
+        }
+
+    /**
+     * Screen area of the 8x8 pad grid. The pads have no accessibility nodes; the grid is one chain
+     * button high per row and ends where the right chain column starts.
+     */
+    protected fun padArea(): Rect {
+        val chains = chainButtons()
+        assertTrue("Chain buttons not found on the play screen", chains.isNotEmpty())
+        val first = chains.first()
+        val cell = first.height()
+        return Rect(first.left - cell * 8, first.top, first.left, first.top + cell * 8)
+    }
+
+    /** Tap the pad at grid row [x], column [y] of the 8x8 test pack, both 0-based. */
+    protected fun tapPad(x: Int, y: Int) {
+        val area = padArea()
+        val cell = area.width() / 8
+        device.click(area.left + cell * y + cell / 2, area.top + cell * x + cell / 2)
+    }
+
+    protected fun tapChain(index: Int) {
+        val chains = chainButtons()
+        assertTrue("Chain button ${index + 1} not found (${chains.size} shown)", index < chains.size)
+        device.click(chains[index].centerX(), chains[index].centerY())
+    }
+
+    /** Hardware volume keys show the system volume panel over the right edge (Menu button). */
+    protected fun waitForVolumePanelGone() {
+        device.wait(Until.gone(By.pkg("com.android.systemui").res("com.android.systemui", "volume_dialog")), 8000L)
+    }
+
+    /**
+     * Click what [find] returns, looking it up again when the node went stale in between: the play
+     * screen recomposes its buttons while LEDs and AutoPlay run. Returns false if never found.
+     */
+    protected fun clickFresh(timeoutMs: Long = 3000L, find: () -> UiObject2?): Boolean =
+        waitUntil(timeoutMs) {
+            try {
+                find()?.click() != null
+            } catch (e: StaleObjectException) {
+                false
+            }
+        }
+
+    /**
+     * Run [block] with UI Automator's idle wait shortened to [idleTimeoutMs]. Every query first waits
+     * for the screen to go idle (10 s by default); while AutoPlay runs with Feedback light on, the
+     * play screen redraws on every pad and never goes idle, so each query would stall for 10 s.
+     */
+    protected fun <T> withShortIdleWait(idleTimeoutMs: Long = 500L, block: () -> T): T {
+        val configurator = Configurator.getInstance()
+        val previous = configurator.waitForIdleTimeout
+        configurator.waitForIdleTimeout = idleTimeoutMs
+        try {
+            return block()
+        } finally {
+            configurator.waitForIdleTimeout = previous
+        }
+    }
+
+    protected fun waitUntil(timeoutMs: Long = 3000L, condition: () -> Boolean): Boolean {
+        val end = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < end) {
+            if (condition()) return true
+            Thread.sleep(200)
+        }
+        return condition()
+    }
+
+    /**
+     * Save a screenshot to /data/local/tmp/unipad_tests (pull with adb). Taken by the shell: the app
+     * cannot write to shared storage on API 30+, which left the old /sdcard/Pictures path empty.
      */
     protected fun takeScreenshot(name: String) {
+        val path = "$SCREENSHOT_DIR/${name}_API${Build.VERSION.SDK_INT}.png"
         try {
-            val screenshotDir = File("/sdcard/Pictures/unipad_tests")
-            if (!screenshotDir.exists()) {
-                screenshotDir.mkdirs()
-            }
-
-            val screenshotFile = File(screenshotDir, "${name}_API${Build.VERSION.SDK_INT}.png")
-            device.takeScreenshot(screenshotFile)
-            println("Screenshot saved: ${screenshotFile.absolutePath}")
+            device.executeShellCommand("mkdir -p $SCREENSHOT_DIR")
+            device.executeShellCommand("screencap -p $path")
+            println("Screenshot saved: $path")
         } catch (e: Exception) {
             println("Failed to save screenshot: ${e.message}")
         }
