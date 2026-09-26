@@ -1,1 +1,1 @@
-Improved audio recovery after interruptions and device changes, reduced memory use when loading large packs, and improved playback, MIDI and LED reliability. Fixed a crash when opening licenses.
+Fixed crashes when searching files to transfer and opening licenses. Improved audio recovery after interruptions and device changes, reduced memory use when loading large packs, and improved playback, MIDI and LED reliability.
