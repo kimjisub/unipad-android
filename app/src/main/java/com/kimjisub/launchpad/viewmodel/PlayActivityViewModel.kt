@@ -21,6 +21,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.ChainObserver
+import com.kimjisub.launchpad.unipack.runner.LedChangeQueue
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import kotlinx.coroutines.Deferred
@@ -63,6 +64,9 @@ class PlayActivityViewModel(
 		const val VOLUME_LEVELS = 7
 
 		const val LOCKED_ALPHA = 0.3f
+
+		// A few milliseconds of main-thread work per task, so touches get through a large LED backlog.
+		const val LED_CHANGES_PER_DRAIN = 1024
 	}
 
 	// Compose checkbox state holder
@@ -168,6 +172,53 @@ class PlayActivityViewModel(
 	var ledRunner: LedRunner? = null
 	var autoPlayRunner: AutoPlayRunner? = null
 	var soundRunner: SoundRunner? = null
+
+	// The runner hands each tick's changes over outside its lock. They are applied on the main thread in
+	// play order, every one of them, so the Launchpad still receives each LED command; the queue only
+	// limits how many main-thread tasks carry them.
+	private val ledChanges = LedChangeQueue {
+		// Not Main.immediate: a follow-up drain requested on main must wait behind pending input.
+		viewModelScope.launch(Dispatchers.Main) { applyLedChanges(LED_CHANGES_PER_DRAIN) }
+	}
+
+	internal val ledRunnerListener = object : LedRunner.Listener {
+		override fun onLedChanges(changes: List<LedRunner.LedChange>) = ledChanges.offer(changes)
+
+		// The rest run on the main thread, from applyLedChanges.
+		override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
+			channelManager.add(x, y, Channel.LED, color, velocity)
+			uiCallback?.setLedPad(x, y)
+		}
+
+		override fun onPadLedTurnOff(x: Int, y: Int) {
+			channelManager.remove(x, y, Channel.LED)
+			uiCallback?.setLedPad(x, y)
+		}
+
+		override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) {
+			channelManager.add(-1, c, Channel.LED, color, velocity)
+			uiCallback?.setLedChain(c)
+		}
+
+		override fun onChainLedTurnOff(c: Int) {
+			channelManager.remove(-1, c, Channel.LED)
+			uiCallback?.setLedChain(c)
+		}
+
+		override fun onChainChange(c: Int) {
+			chain.value = c
+		}
+	}
+
+	private fun applyLedChanges(max: Int = Int.MAX_VALUE) {
+		for (change in ledChanges.drain(max)) {
+			try {
+				change.dispatchTo(ledRunnerListener)
+			} catch (e: IndexOutOfBoundsException) {
+				Log.err("LED change out of range: $change", e)
+			}
+		}
+	}
 
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
 	// screen is in the background; the LED runner must not start until the screen is back.
@@ -318,34 +369,7 @@ class PlayActivityViewModel(
 
 	private fun initRunner() {
 		if (unipack.keyLedExist) {
-			ledRunner = LedRunner(
-				unipack = unipack,
-				chain = chain,
-				listener = object : LedRunner.Listener {
-					override fun onPadLedTurnOn(x: Int, y: Int, color: Int, velocity: Int) {
-						channelManager.add(x, y, Channel.LED, color, velocity)
-						uiCallback?.setLedPad(x, y)
-					}
-
-					override fun onPadLedTurnOff(x: Int, y: Int) {
-						channelManager.remove(x, y, Channel.LED)
-						uiCallback?.setLedPad(x, y)
-					}
-
-					override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) {
-						channelManager.add(-1, c, Channel.LED, color, velocity)
-						uiCallback?.setLedChain(c)
-					}
-
-					override fun onChainLedTurnOff(c: Int) {
-						channelManager.remove(-1, c, Channel.LED)
-						uiCallback?.setLedChain(c)
-					}
-
-					override fun onChainChange(c: Int) {
-						viewModelScope.launch { chain.value = c }
-					}
-				})
+			ledRunner = LedRunner(unipack = unipack, chain = chain, listener = ledRunnerListener)
 		}
 
 		initAutoPlayRunner()
@@ -583,6 +607,8 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		if (unipack.keyLedExist) {
 			val runner = ledRunner ?: return
+			// Changes the runner produced before this reset would otherwise light pads after it.
+			applyLedChanges()
 			try {
 				for (i in 0 until unipack.buttonX) {
 					for (j in 0 until unipack.buttonY) {

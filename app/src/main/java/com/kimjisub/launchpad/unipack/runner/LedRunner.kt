@@ -42,9 +42,42 @@ class LedRunner(
 		fun onChainLedTurnOff(c: Int)
 		/** A keyLED `c` event. Called on the runner thread; the listener decides where to apply it. */
 		fun onChainChange(c: Int)
+
+		/**
+		 * One tick's changes in play order, called on the runner thread after its lock is released so a
+		 * slow receiver never keeps eventOn/eventOff (the UI thread) waiting for the lock.
+		 */
+		fun onLedChanges(changes: List<LedChange>) {
+			for (change in changes) change.dispatchTo(this)
+		}
+	}
+
+	sealed interface LedChange {
+		fun dispatchTo(listener: Listener)
+
+		data class PadOn(val x: Int, val y: Int, val color: Int, val velocity: Int) : LedChange {
+			override fun dispatchTo(listener: Listener) = listener.onPadLedTurnOn(x, y, color, velocity)
+		}
+
+		data class PadOff(val x: Int, val y: Int) : LedChange {
+			override fun dispatchTo(listener: Listener) = listener.onPadLedTurnOff(x, y)
+		}
+
+		data class ChainLedOn(val c: Int, val color: Int, val velocity: Int) : LedChange {
+			override fun dispatchTo(listener: Listener) = listener.onChainLedTurnOn(c, color, velocity)
+		}
+
+		data class ChainLedOff(val c: Int) : LedChange {
+			override fun dispatchTo(listener: Listener) = listener.onChainLedTurnOff(c)
+		}
+
+		data class ChainChange(val c: Int) : LedChange {
+			override fun dispatchTo(listener: Listener) = listener.onChainChange(c)
+		}
 	}
 
 	private fun loop() {
+		val changes = ArrayList<LedChange>()
 		synchronized(this) {
 			val currTime = SystemClock.elapsedRealtime()
 			for (state in ledAnimationStates) {
@@ -91,12 +124,14 @@ class LedRunner(
 										val color = event.color
 										val velocity = event.velocity
 
+										// Recorded after the table write, which rejects a coordinate outside the grid:
+										// the change is applied later, outside the catch below.
 										if (x != -1) {
-											listener.onPadLedTurnOn(x, y, color, velocity)
 											btnLed[x][y] = Led(state.buttonX, state.buttonY, state.chainAtCreation)
+											changes.add(LedChange.PadOn(x, y, color, velocity))
 										} else {
-											listener.onChainLedTurnOn(y, color, velocity)
 											cirLed[y] = Led(state.buttonX, state.buttonY, state.chainAtCreation)
+											changes.add(LedChange.ChainLedOn(y, color, velocity))
 										}
 									}
 
@@ -106,12 +141,12 @@ class LedRunner(
 
 										if (x != -1) {
 											if (btnLed[x][y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-												listener.onPadLedTurnOff(x, y)
+												changes.add(LedChange.PadOff(x, y))
 												btnLed[x][y] = null
 											}
 										} else {
 											if (cirLed[y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-												listener.onChainLedTurnOff(y)
+												changes.add(LedChange.ChainLedOff(y))
 												cirLed[y] = null
 											}
 										}
@@ -124,7 +159,7 @@ class LedRunner(
 									is LedAnimation.LedEvent.Chain -> {
 										// Not chain.value here: ChainObserver runs its observers synchronously and
 										// they touch UI state, so the listener applies the change on main.
-										listener.onChainChange(event.chain)
+										changes.add(LedChange.ChainChange(event.chain))
 									}
 								}
 							} catch (ex: IndexOutOfBoundsException) {
@@ -137,14 +172,14 @@ class LedRunner(
 					for (x in 0 until unipack.buttonX) {
 						for (y in 0 until unipack.buttonY) {
 							if (btnLed[x][y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-								listener.onPadLedTurnOff(x, y)
+								changes.add(LedChange.PadOff(x, y))
 								btnLed[x][y] = null
 							}
 						}
 					}
 					for (y in cirLed.indices) {
 						if (cirLed[y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-							listener.onChainLedTurnOff(y)
+							changes.add(LedChange.ChainLedOff(y))
 							cirLed[y] = null
 						}
 					}
@@ -158,6 +193,7 @@ class LedRunner(
 			ledAnimationStatesAdd.clear()
 			ledAnimationStates.removeAll { it.remove }
 		}
+		if (changes.isNotEmpty()) listener.onLedChanges(changes)
 	}
 
 
@@ -295,5 +331,40 @@ class LedRunner(
 
 			ledAnimation = animation
 		}
+	}
+}
+
+/**
+ * Carries [LedRunner.LedChange]s from the runner thread to one consumer thread in order, with at most
+ * one drain scheduled at a time however many changes pile up. Posting a task per change let a pack
+ * with hundreds of thousands of changes in one tick bury the main thread's queue for seconds.
+ */
+class LedChangeQueue(private val scheduleDrain: () -> Unit) {
+	private val pending = ArrayDeque<LedRunner.LedChange>()
+	private var drainScheduled = false // guarded by pending
+
+	fun offer(changes: List<LedRunner.LedChange>) {
+		val schedule = synchronized(pending) {
+			pending.addAll(changes)
+			!drainScheduled.also { drainScheduled = true }
+		}
+		if (schedule) scheduleDrain()
+	}
+
+	/**
+	 * Removes up to [max] changes in the order they were offered. When some remain another drain is
+	 * scheduled, so the consumer thread can handle input between the portions of a large backlog.
+	 */
+	fun drain(max: Int = Int.MAX_VALUE): List<LedRunner.LedChange> {
+		val taken: List<LedRunner.LedChange>
+		val more: Boolean
+		synchronized(pending) {
+			val count = minOf(max, pending.size)
+			taken = ArrayList<LedRunner.LedChange>(count).apply { repeat(count) { add(pending.removeFirst()) } }
+			more = pending.isNotEmpty()
+			drainScheduled = more
+		}
+		if (more) scheduleDrain()
+		return taken
 	}
 }
