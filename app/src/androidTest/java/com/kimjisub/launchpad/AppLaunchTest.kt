@@ -56,28 +56,7 @@ class AppLaunchTest : BaseUITest() {
         // Handle permission dialogs
         handlePermissionDialogs()
 
-        // Wait for transition to the main screen
-        // Verify transition to MainActivity
-        var attempts = 0
-        var mainActivityFound = false
-        while (attempts < 15 && !mainActivityFound) {
-            Thread.sleep(1000)
-            val currentActivity = device.wait(
-                Until.hasObject(By.pkg(PACKAGE_NAME)),
-                1000L
-            )
-            if (currentActivity) {
-                mainActivityFound = true
-            }
-            attempts++
-        }
-
-        // Verify the app is running without crashes
-        val mainScreenVisible = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("Did not transition to the main screen", mainScreenVisible)
+        assertTrue("Did not transition to the main screen", waitForMainScreen())
 
         // Final screen screenshot
         takeScreenshot("main_screen")
@@ -85,20 +64,8 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testMainScreenElements() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
-        // Verify the main screen is displayed
-        val appRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("Main screen is not displayed", appRunning)
+        launchToMainScreen()
+        assertTrue("Test pack is not listed", device.hasObject(By.text(TestUniPack.TITLE)))
 
         // Take screenshot
         takeScreenshot("main_screen_elements")
@@ -114,14 +81,7 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testNavigationFlow() {
-        // Launch the app
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen
-        Thread.sleep(10000)
-
+        launchToMainScreen()
         takeScreenshot("navigation_main_screen")
 
         // Touch the bottom area of the screen (tabs/menu may be present)
@@ -187,72 +147,22 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testPlayActivityNavigation() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
-
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
+        launchToMainScreen()
         takeScreenshot("before_play_navigation")
 
-        // Click the center area of the main screen where the unipack list is displayed
-        // (attempt to click the first item if unipacks are present)
-        val displayWidth = device.displayWidth
-        val displayHeight = device.displayHeight
-
-        // Upper center of screen (expected position of the first list item)
-        val itemX = displayWidth / 2
-        val itemY = displayHeight / 3
-
-        device.click(itemX, itemY)
-        Thread.sleep(2000)
+        // Selecting a pack opens its detail panel; its Play flag starts PlayActivity
+        selectTestPack()
         takeScreenshot("after_list_item_click")
 
-        // Check if PlayActivity or detail panel appeared
-        // (unipacks may not exist, so just verify the app hasn't crashed)
-        val stillRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            3000L
-        )
-        assertTrue("App terminated after clicking list item", stillRunning)
+        openTestPackInPlay()
+        takeScreenshot("play_activity_opened")
 
-        // If the detail panel opened, attempt to click the play button
-        // The play button is typically in the bottom-right or inside the panel
-        // Multiple positions can be tried
+        // Back in PlayActivity opens the option panel instead of leaving
+        device.pressBack()
+        assertTrue("Back did not open the play option panel", waitUntil(5000L) { isPlayOptionsOpen() })
+        takeScreenshot("play_back_opens_options")
 
-        // Attempt 1: Bottom-right area (possible play button location)
-        val playButtonX1 = displayWidth * 3 / 4
-        val playButtonY1 = displayHeight * 2 / 3
-        device.click(playButtonX1, playButtonY1)
-        Thread.sleep(3000)
-
-        takeScreenshot("after_play_button_click_attempt1")
-
-        // Check if PlayActivity has started
-        val playActivityStarted = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-
-        if (playActivityStarted) {
-            println("Transitioned to PlayActivity or the app is still running")
-            takeScreenshot("play_activity_or_main")
-
-            // Navigate back to the main screen
-            device.pressBack()
-            Thread.sleep(2000)
-
-            val backToMain = device.wait(
-                Until.hasObject(By.pkg(PACKAGE_NAME)),
-                5000L
-            )
-            assertTrue("App terminated after pressing back", backToMain)
-
-            takeScreenshot("back_from_play_attempt")
-        } else {
-            println("PlayActivity did not start or no unipacks are available")
-        }
+        quitPlayToMain()
+        takeScreenshot("back_from_play")
     }
 }

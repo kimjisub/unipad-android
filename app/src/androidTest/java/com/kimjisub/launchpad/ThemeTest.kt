@@ -2,209 +2,101 @@ package com.kimjisub.launchpad
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiSelector
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.manager.PreferenceManager
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 /**
  * Theme Tests
- * Tests for theme navigation and selection
+ *
+ * Theme is opened from Settings' category rail. The theme screen is Compose: a list of themes on
+ * the left (the selected, not applied theme shows an Apply button) and an "add theme" entry.
  */
 @RunWith(AndroidJUnit4::class)
 class ThemeTest : BaseUITest() {
 
+    private val prefs by lazy { PreferenceManager(context) }
+
     @Test
     fun testThemeActivityNavigation() {
-        // Launch the app and navigate to the main screen
-        launchApp()
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
-        handlePermissionDialogs()
+        val originalTheme = prefs.selectedTheme
+        try {
+            launchToMainScreen()
+            takeScreenshot("theme_test_start")
 
-        // Wait for main screen to load
-        Thread.sleep(10000)
-
-        takeScreenshot("theme_test_start")
-
-        // Open the FAB menu
-        val displayWidth = device.displayWidth
-        val displayHeight = device.displayHeight
-        val fabX = displayWidth - 80
-        val fabY = displayHeight - 80
-        device.click(fabX, fabY)
-        Thread.sleep(2000)
-
-        // Click the settings button
-        val settingsFabY = fabY - 60
-        device.click(fabX, settingsFabY)
-        Thread.sleep(3000)
-
-        takeScreenshot("theme_settings_opened")
-
-        // Verify SettingsActivity launched
-        val settingsActivityRunning = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
-        )
-        assertTrue("Did not transition to the settings screen", settingsActivityRunning)
-
-        println("=== Finding THEME category in SettingsActivity ===")
-
-        // Attempt to click THEME category (left category area)
-        // SettingsActivity has a category list on the left and detail content on the right
-        val categoryX = displayWidth / 4
-
-        // Expected order: INFO, STORAGE, THEME
-        // Try multiple Y positions to find the THEME category
-        val categoryYPositions = listOf(
-            displayHeight / 3,     // Top
-            displayHeight / 2,     // Middle
-            displayHeight * 2 / 3  // Bottom
-        )
-
-        var themeClicked = false
-        for (categoryY in categoryYPositions) {
-            println("Attempting to click category area: X=$categoryX, Y=$categoryY")
-            device.click(categoryX, categoryY)
-            Thread.sleep(2000)
-
-            // Check if ThemeActivity started
-            val themeActivityRunning = device.wait(
-                Until.hasObject(By.pkg(PACKAGE_NAME)),
-                3000L
+            device.findObject(By.desc(str(R.string.setting))).click()
+            assertTrue(
+                "Did not transition to the settings screen",
+                device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
             )
+            takeScreenshot("theme_settings_opened")
 
-            if (themeActivityRunning) {
-                // Check for "apply" button to determine if we entered ThemeActivity
-                val applyButton = device.findObject(
-                    UiSelector()
-                        .resourceId("${PACKAGE_NAME}:id/apply")
-                )
-
-                if (applyButton.exists()) {
-                    println("Entered ThemeActivity")
-                    themeClicked = true
-                    takeScreenshot("theme_activity_opened")
-                    break
-                } else {
-                    println("Not ThemeActivity, navigating back and retrying")
-                    device.pressBack()
-                    Thread.sleep(1000)
-                }
-            }
-        }
-
-        if (!themeClicked) {
-            println("Could not enter ThemeActivity. Attempting direct THEME text search")
-
-            // Search for and click "THEME" or "theme" text
-            val themeText = device.findObject(
-                UiSelector()
-                    .textMatches("(?i).*theme.*|.*테마.*")
-                    .clickable(true)
+            device.findObject(By.text(str(R.string.settings_theme))).click()
+            assertTrue(
+                "Theme screen did not open",
+                device.wait(Until.hasObject(By.desc(str(R.string.theme_add_title))), 5000L)
             )
+            takeScreenshot("theme_activity_opened")
 
-            if (themeText.exists()) {
-                println("THEME text found, clicking")
-                themeText.click()
-                Thread.sleep(3000)
-                takeScreenshot("theme_activity_opened")
-            } else {
-                println("Could not find THEME category. Ending test")
-                device.pressBack()
-                Thread.sleep(2000)
-                takeScreenshot("theme_test_failed")
-                return
+            val rows = themeRows()
+            assertTrue("No themes listed", rows.isNotEmpty())
+            println("Themes listed: ${rows.size}")
+
+            // Selecting a theme that is not applied offers Apply; applying stores it
+            val candidate = rows.indices.firstOrNull { i ->
+                themeRows()[i].click()
+                device.wait(Until.hasObject(By.text(str(R.string.apply))), 1500L)
             }
-        }
-
-        println("=== ThemeActivity test start ===")
-
-        // Check for RecyclerView (carousel) in ThemeActivity
-        val themeList = device.findObject(
-            UiSelector()
-                .resourceId("${PACKAGE_NAME}:id/list")
-        )
-
-        if (themeList.exists()) {
-            println("Theme list (carousel) found")
-
-            // Test theme carousel horizontal scrolling
-            println("Theme carousel scroll test: left to right")
-            device.swipe(displayWidth * 3 / 4, displayHeight / 2, displayWidth / 4, displayHeight / 2, 20)
-            Thread.sleep(1500)
-            takeScreenshot("theme_scrolled_right")
-
-            println("Theme carousel scroll test: right to left")
-            device.swipe(displayWidth / 4, displayHeight / 2, displayWidth * 3 / 4, displayHeight / 2, 20)
-            Thread.sleep(1500)
-            takeScreenshot("theme_scrolled_left")
-
-            // Click center theme item (select)
-            println("Clicking center theme item")
-            val centerX = displayWidth / 2
-            val centerY = displayHeight / 2
-            device.click(centerX, centerY)
-            Thread.sleep(1000)
             takeScreenshot("theme_item_selected")
+            if (candidate != null) {
+                device.findObject(By.text(str(R.string.apply))).click()
+                assertTrue("Applying a theme did not store it", waitUntil { prefs.selectedTheme != originalTheme })
+                assertTrue(
+                    "Apply button did not disappear after applying",
+                    device.wait(Until.gone(By.text(str(R.string.apply))), 3000L)
+                )
+                takeScreenshot("theme_applied")
+            } else {
+                println("Only the applied theme is installed; Apply is not offered")
+                assertEquals("Theme changed without Apply", originalTheme, prefs.selectedTheme)
+            }
 
-            // Scroll to select a different theme
-            println("Scrolling to another theme")
-            device.swipe(displayWidth * 2 / 3, displayHeight / 2, displayWidth / 3, displayHeight / 2, 15)
-            Thread.sleep(1500)
-            takeScreenshot("theme_another_selected")
-
-            // Click center item once more
-            device.click(centerX, centerY)
-            Thread.sleep(1000)
-            takeScreenshot("theme_final_selection")
-
-        } else {
-            println("Theme list not found")
-            takeScreenshot("theme_list_not_found")
-        }
-
-        // Test Apply button click
-        println("=== Apply button click test ===")
-        val applyButton = device.findObject(
-            UiSelector()
-                .resourceId("${PACKAGE_NAME}:id/apply")
-        )
-
-        if (applyButton.exists()) {
-            println("Apply button found, clicking")
-            applyButton.click()
-            Thread.sleep(2000)
-            takeScreenshot("theme_applied")
-
-            // Verify return to SettingsActivity or MainActivity after Apply
-            val returnedToMain = device.wait(
-                Until.hasObject(By.pkg(PACKAGE_NAME)),
-                5000L
+            // The add-theme entry opens the import / create panel
+            device.findObject(By.desc(str(R.string.theme_add_title))).click()
+            assertTrue(
+                "Add theme panel did not open",
+                device.wait(Until.hasObject(By.text(str(R.string.theme_add_zip))), 3000L)
             )
-            assertTrue("App terminated after Apply", returnedToMain)
+            takeScreenshot("theme_add_panel")
 
-            println("Apply successful, returned to previous screen")
-            takeScreenshot("theme_after_apply")
-        } else {
-            println("Apply button not found. Exiting via back button")
             device.pressBack()
-            Thread.sleep(2000)
+            assertTrue(
+                "Did not return to settings from the theme screen",
+                device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+            )
+            device.pressBack()
+            assertTrue("Could not return to the main screen", waitForMainScreen())
+            takeScreenshot("theme_test_end")
+        } finally {
+            prefs.selectedTheme = originalTheme
         }
+    }
 
-        // Press back once more if on the settings screen
-        println("Returning to main screen")
-        device.pressBack()
-        Thread.sleep(2000)
-
-        val backToMain = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            5000L
+    /**
+     * Clickable theme rows. Each row carries a type badge (Built-in / ZIP); the add-theme entry has
+     * none. The list is only marked scrollable when it overflows, so rows are not found through it.
+     */
+    private fun themeRows(): List<UiObject2> {
+        val badge = Pattern.compile(
+            "${Pattern.quote(str(R.string.theme_type_builtin))}|${Pattern.quote(str(R.string.theme_type_zip))}"
         )
-        assertTrue("Could not return to the main screen", backToMain)
-
-        takeScreenshot("theme_test_end")
-        println("=== ThemeActivity test complete ===")
+        val selector = By.pkg(PACKAGE_NAME).clickable(true).hasChild(By.text(badge))
+        device.wait(Until.hasObject(selector), 3000L)
+        return device.findObjects(selector).sortedBy { it.visibleBounds.top }
     }
 }
