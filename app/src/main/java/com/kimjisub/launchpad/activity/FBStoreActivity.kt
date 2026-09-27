@@ -1,8 +1,10 @@
 package com.kimjisub.launchpad.activity
 
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -15,13 +17,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -103,6 +111,10 @@ class FBStoreActivity : BaseActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		// StoreScreen keeps itself clear of the system bars from the insets, so the window must be
+		// edge-to-edge on every device instead of relying on API 35 enforcing it. The store is always
+		// dark, so the navigation bar stays transparent over it instead of taking the light system scrim.
+		enableEdgeToEdge(navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
 
 		lifecycleScope.launch(Dispatchers.IO) {
 			val list = ws.getUnipacks()
@@ -306,16 +318,21 @@ private fun StoreScreen(
 	onYoutubeClick: () -> Unit,
 	onWebsiteClick: () -> Unit,
 ) {
+	// The window is edge-to-edge (see onCreate): the navigation bar sits over the bottom (gesture handle)
+	// or the side (3-button bar in landscape), and a display cutout can take a side as well.
+	val safeBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.background),
+			.background(MaterialTheme.colorScheme.background)
+			.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left panel (weight 2)
 		Box(
 			modifier = Modifier
 				.weight(2f)
 				.fillMaxHeight()
+				.windowInsetsPadding(safeBottom)
 				.padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
 		) {
 			Crossfade(
@@ -416,7 +433,11 @@ private fun StoreScreen(
 			} else {
 				LazyColumn(
 					modifier = Modifier.weight(1f),
-					contentPadding = PaddingValues(top = 8.dp, bottom = 6.dp),
+					// The list scrolls behind the bottom bar but its last row stops above it.
+					contentPadding = PaddingValues(
+						top = 8.dp,
+						bottom = 6.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+					),
 					verticalArrangement = Arrangement.spacedBy(8.dp),
 				) {
 					itemsIndexed(

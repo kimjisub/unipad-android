@@ -1,5 +1,9 @@
 package com.kimjisub.launchpad
 
+import android.graphics.Rect
+import android.os.Build
+import android.view.WindowInsets
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -8,6 +12,8 @@ import androidx.test.uiautomator.Until
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -20,6 +26,10 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class StoreTest : BaseUITest() {
+
+    private companion object {
+        const val MAX_SCROLLS = 60
+    }
 
     /**
      * Browse the store and open a pack's detail panel. The Download button is only checked for
@@ -77,6 +87,69 @@ class StoreTest : BaseUITest() {
         device.pressBack()
         assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("store_nav_end")
+    }
+
+    /**
+     * Scroll to the end of the store and check that the last row is clear of the navigation bar and
+     * display cutout (a gesture handle below it, or a 3-button bar beside it in landscape), then tap it.
+     */
+    @Test
+    fun testStoreLastRowClearOfSystemBars() {
+        assumeTrue("Window insets need API 30", Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+        launchToMainScreen()
+        openStore()
+
+        val list = waitForStoreList()
+        val safe = safeArea()
+        val lastRow = scrollToLastRow(list, safe)
+        assertNotNull("Store list has no items", lastRow)
+        takeScreenshot("store_list_end")
+
+        val row = lastRow!!.visibleBounds
+        assertTrue("Last row $row ends under the bottom system bar (safe area $safe)", row.bottom <= safe.bottom)
+        assertTrue("Last row $row runs under a side system bar (safe area $safe)", row.right <= safe.right && row.left >= safe.left)
+
+        lastRow.click()
+        assertTrue(
+            "Tapping the last row did not select it",
+            waitForAnyElementWithPolling(
+                listOf(By.pkg(PACKAGE_NAME).text(str(R.string.download)), By.pkg(PACKAGE_NAME).text(str(R.string.downloaded))),
+                5000L,
+            )
+        )
+        takeScreenshot("store_list_end_selected")
+    }
+
+    /**
+     * Scrolls until the lowest row stays put, since the list keeps reporting it can scroll near its end.
+     * The list reaches under the gesture handle, so swipes start above [safe] or the system takes them.
+     */
+    private fun scrollToLastRow(list: UiObject2, safe: Rect): UiObject2? {
+        val bounds = list.visibleBounds
+        list.setGestureMargins(0, 0, 0, (bounds.bottom - safe.bottom).coerceAtLeast(0) + bounds.height() / 10)
+        var previous: Rect? = null
+        repeat(MAX_SCROLLS) {
+            list.scroll(Direction.DOWN, 1f)
+            device.waitForIdle()
+            val last = list.children.filter { it.isClickable }.maxByOrNull { it.visibleBounds.bottom } ?: return null
+            if (last.visibleBounds == previous) return last
+            previous = last.visibleBounds
+        }
+        fail("Store list never reached its end")
+        return null
+    }
+
+    private fun safeArea(): Rect {
+        val metrics = context.getSystemService(WindowManager::class.java).maximumWindowMetrics
+        val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+            WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
+        )
+        return Rect(metrics.bounds).apply {
+            left += insets.left
+            top += insets.top
+            right -= insets.right
+            bottom -= insets.bottom
+        }
     }
 
     private fun openStore() {
