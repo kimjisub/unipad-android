@@ -695,7 +695,7 @@ class PlayActivity : BaseActivity() {
 		// Theme colours (colors.json option_window / option_window_checkbox), as iOS and web apply them.
 		val panelBg = theme?.optionWindow?.let { Color(it).copy(alpha = 0.94f) } ?: PlayPalette.panelBackground
 		val accentColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: PlayPalette.accent
-		val textColor = Color.White
+		val textColor = PlayPalette.panelContentOn(panelBg)
 		val sectionColor = textColor.copy(alpha = 0.65f)
 		var infoExpanded by remember { mutableStateOf(false) }
 
@@ -731,7 +731,7 @@ class PlayActivity : BaseActivity() {
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
-					.background(Color.White.copy(alpha = 0.06f), shape = RoundedCornerShape(12.dp))
+					.background(textColor.copy(alpha = 0.06f), shape = RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
@@ -813,7 +813,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(horizontal = 24.dp)
-				.background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+				.background(textColor.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
 				.padding(3.dp),
 			horizontalArrangement = Arrangement.spacedBy(2.dp),
 		) {
@@ -854,7 +854,7 @@ class PlayActivity : BaseActivity() {
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
 					modifier = Modifier.fillMaxWidth(),
 					color = accentColor,
-					trackColor = Color.White.copy(alpha = 0.1f),
+					trackColor = textColor.copy(alpha = 0.1f),
 				)
 			}
 		} else {
@@ -914,9 +914,9 @@ class PlayActivity : BaseActivity() {
 				colors = SwitchDefaults.colors(
 					checkedThumbColor = Color.White,
 					checkedTrackColor = accentColor,
-					uncheckedThumbColor = Color.White.copy(alpha = 0.7f),
-					uncheckedTrackColor = Color.White.copy(alpha = 0.1f),
-					uncheckedBorderColor = Color.White.copy(alpha = 0.2f),
+					uncheckedThumbColor = textColor.copy(alpha = 0.7f),
+					uncheckedTrackColor = textColor.copy(alpha = 0.1f),
+					uncheckedBorderColor = textColor.copy(alpha = 0.2f),
 				),
 			)
 		}
