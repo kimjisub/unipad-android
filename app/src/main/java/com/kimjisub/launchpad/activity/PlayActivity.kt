@@ -695,20 +695,25 @@ class PlayActivity : BaseActivity() {
 		// Theme colours (colors.json option_window / option_window_checkbox), as iOS and web apply them.
 		val panelBg = theme?.optionWindow?.let { Color(it).copy(alpha = 0.94f) } ?: PlayPalette.panelBackground
 		val accentColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: PlayPalette.accent
-		val textColor = PlayPalette.panelContentOn(panelBg)
+		// Fills and switch parts keep the plain content tint; only text is adjusted for contrast.
+		val tint = PlayPalette.panelContentOn(panelBg)
+		val panelText = remember(panelBg) { PlayPalette.optionPanelText(panelBg) }
+		val cardText = remember(panelBg) { PlayPalette.optionPanelText(panelBg, PlayPalette.INFO_CARD_FILL_ALPHA) }
+		val playModeText = remember(panelBg) { PlayPalette.optionPanelText(panelBg, PlayPalette.PLAY_MODE_FILL_ALPHA).primary }
+		val textColor = panelText.primary
+		val backdrops = remember(panelBg) { PlayPalette.optionPanelBackdrops(panelBg) }
 		// A skin may set only option_window, leaving the default accent or the Quit red lost on its panel.
-		val autoMappingColors = remember(panelBg, accentColor) {
-			val backdrops = PlayPalette.optionPanelBackdrops(panelBg)
+		val autoMappingColors = remember(backdrops, accentColor) {
 			AutoMappingColors(
 				label = PlayPalette.readableOn(accentColor, backdrops, PlayPalette.MIN_TEXT_CONTRAST),
 				arrow = PlayPalette.readableOn(accentColor.copy(alpha = 0.7f), backdrops, PlayPalette.MIN_GRAPHIC_CONTRAST),
 				progress = PlayPalette.readableOn(accentColor, backdrops, PlayPalette.MIN_GRAPHIC_CONTRAST),
 			)
 		}
-		val quitTint = remember(panelBg) {
-			PlayPalette.readableOn(PlayPalette.danger, PlayPalette.optionPanelBackdrops(panelBg), PlayPalette.MIN_GRAPHIC_CONTRAST)
+		val quitTint = remember(backdrops) {
+			PlayPalette.readableOn(PlayPalette.danger, backdrops, PlayPalette.MIN_GRAPHIC_CONTRAST)
 		}
-		val sectionColor = textColor.copy(alpha = 0.65f)
+		val sectionColor = panelText.secondary
 		var infoExpanded by remember { mutableStateOf(false) }
 
 		Column(
@@ -743,14 +748,14 @@ class PlayActivity : BaseActivity() {
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
-					.background(textColor.copy(alpha = 0.06f), shape = RoundedCornerShape(12.dp))
+					.background(tint.copy(alpha = PlayPalette.INFO_CARD_FILL_ALPHA), shape = RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
 				Row(verticalAlignment = Alignment.CenterVertically) {
 					Text(
 						text = vm.unipack.title.ifEmpty { "Untitled" },
-						color = textColor,
+						color = cardText.primary,
 						fontSize = 14.sp,
 						fontWeight = FontWeight.SemiBold,
 						maxLines = 1,
@@ -760,18 +765,18 @@ class PlayActivity : BaseActivity() {
 					Icon(
 						imageVector = if (infoExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
 						contentDescription = null,
-						tint = textColor.copy(alpha = 0.6f),
+						tint = cardText.primary.copy(alpha = 0.6f),
 						modifier = Modifier.size(18.dp),
 					)
 				}
 				if (infoExpanded) {
 					Spacer(modifier = Modifier.height(6.dp))
 					if (vm.unipack.producerName.isNotEmpty()) {
-						Text(vm.unipack.producerName, color = sectionColor, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+						Text(vm.unipack.producerName, color = cardText.secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
 					}
 					Text(
 						text = "${vm.unipack.buttonX}×${vm.unipack.buttonY}  ·  ${vm.unipack.chain} chain",
-						color = sectionColor,
+						color = cardText.secondary,
 						fontSize = 12.sp,
 					)
 				}
@@ -782,32 +787,32 @@ class PlayActivity : BaseActivity() {
 			// PLAY MODE — top of Performance (most frequently changed during a session)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
 				SectionTitle("Play Mode", sectionColor)
-				PlayModeSegmented(textColor)
+				PlayModeSegmented(playModeText, tint)
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
-					AutoMappingRow(autoMappingColors, textColor)
+					AutoMappingRow(autoMappingColors, textColor, tint)
 				}
 				Spacer(modifier = Modifier.height(16.dp))
 			}
 
 			SectionTitle("Performance", sectionColor)
-			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, accentColor)
-			OptionSwitch(vm.scbLed, string.led, textColor, accentColor)
+			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, tint, accentColor)
+			OptionSwitch(vm.scbLed, string.led, textColor, tint, accentColor)
 			// NOTE: AutoPlay transport controls intentionally removed here — the chrome column
 			// is now the single surface for Prev/Play/Next and progress while playing.
 
 			Spacer(modifier = Modifier.height(16.dp))
 
 			SectionTitle("Display", sectionColor)
-			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, accentColor)
-			OptionSwitch(vm.scbWatermark, string.watermark, textColor, accentColor)
-			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, accentColor)
+			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, tint, accentColor)
+			OptionSwitch(vm.scbWatermark, string.watermark, textColor, tint, accentColor)
+			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.height(16.dp))
 
 			SectionTitle("Tools", sectionColor)
-			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, accentColor, hasLongClick = true)
-			OptionSwitch(vm.scbRecord, string.record, textColor, accentColor)
+			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
+			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.weight(1f))
 			// Footer Quit removed — header icon is the single Quit entry point.
@@ -815,7 +820,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun PlayModeSegmented(textColor: Color) {
+	private fun PlayModeSegmented(textColor: Color, tint: Color) {
 		val modes = listOf(
 			Triple(PlayMode.AutoPlay, string.autoPlay, PlayPalette.modeAutoPlay),
 			Triple(PlayMode.GuidePlay, string.guidePlay, PlayPalette.modeGuidePlay),
@@ -825,7 +830,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(horizontal = 24.dp)
-				.background(textColor.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+				.background(tint.copy(alpha = PlayPalette.PLAY_MODE_FILL_ALPHA), RoundedCornerShape(10.dp))
 				.padding(3.dp),
 			horizontalArrangement = Arrangement.spacedBy(2.dp),
 		) {
@@ -856,7 +861,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun AutoMappingRow(colors: AutoMappingColors, textColor: Color) {
+	private fun AutoMappingRow(colors: AutoMappingColors, textColor: Color, tint: Color) {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
@@ -866,7 +871,7 @@ class PlayActivity : BaseActivity() {
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
 					modifier = Modifier.fillMaxWidth(),
 					color = colors.progress,
-					trackColor = textColor.copy(alpha = 0.1f),
+					trackColor = tint.copy(alpha = 0.1f),
 				)
 			}
 		} else {
@@ -896,7 +901,7 @@ class PlayActivity : BaseActivity() {
 
 	@OptIn(ExperimentalFoundationApi::class)
 	@Composable
-	private fun OptionSwitch(state: CheckBoxState, textResId: Int, textColor: Color, accentColor: Color, hasLongClick: Boolean = false) {
+	private fun OptionSwitch(state: CheckBoxState, textResId: Int, textColor: Color, tint: Color, accentColor: Color, hasLongClick: Boolean = false) {
 		if (!state.visible) return
 		val alpha = if (state.locked) LOCKED_ALPHA else 1f
 		Row(
@@ -926,9 +931,9 @@ class PlayActivity : BaseActivity() {
 				colors = SwitchDefaults.colors(
 					checkedThumbColor = Color.White,
 					checkedTrackColor = accentColor,
-					uncheckedThumbColor = textColor.copy(alpha = 0.7f),
-					uncheckedTrackColor = textColor.copy(alpha = 0.1f),
-					uncheckedBorderColor = textColor.copy(alpha = 0.2f),
+					uncheckedThumbColor = tint.copy(alpha = 0.7f),
+					uncheckedTrackColor = tint.copy(alpha = 0.1f),
+					uncheckedBorderColor = tint.copy(alpha = 0.2f),
 				),
 			)
 		}
