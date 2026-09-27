@@ -20,7 +20,7 @@ class UniPackCircularQueueTest {
 		override fun loadInfo(): UniPack = this
 		override fun loadDetail(): UniPack = this
 		override fun checkFile() {}
-		override fun delete() {}
+		override fun delete(): Boolean = true
 		override fun getPathString(): String = "/test"
 		override fun getByteSize(): Long = 0
 	}

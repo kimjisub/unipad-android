@@ -126,8 +126,9 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			criticalError = true
 	}
 
-	override fun delete() {
+	override fun delete(): Boolean {
 		FileManager.deleteDirectory(rootFolder)
+		return !rootFolder.exists()
 	}
 
 	override fun getPathString(): String {

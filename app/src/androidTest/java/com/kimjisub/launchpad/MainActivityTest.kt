@@ -4,11 +4,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.db.AppDatabase
+import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 /**
  * MainActivity Tests
@@ -22,6 +27,11 @@ import org.junit.runner.RunWith
 class MainActivityTest : BaseUITest() {
 
     private val prefs by lazy { PreferenceManager(context) }
+
+    companion object {
+        /** A saved row for a pack that is not the one being deleted. */
+        private const val OTHER_PACK_ID = "zz_ui_test_other_pack"
+    }
 
     /** Former FAB menu: every entry it offered is now a button on the main screen. */
     @Test
@@ -98,29 +108,104 @@ class MainActivityTest : BaseUITest() {
 
     @Test
     fun testUnipackDeletion() {
+        seedHistory(TestUniPack.FOLDER_NAME)
+        seedHistory(OTHER_PACK_ID)
+        try {
+            launchToMainScreen()
+            takeScreenshot("before_unipack_deletion")
+
+            confirmDeleteOfTestPack(accept = true)
+            takeScreenshot("after_deletion_confirm")
+
+            assertTrue("Test pack folder was not deleted", waitUntil(10000L) { !TestUniPack.exists(context) })
+            assertTrue(
+                "Deleted pack is still listed",
+                device.wait(Until.gone(By.textContains(TestUniPack.TITLE)), 10000L)
+            )
+            assertTrue("Saved row of the deleted pack remains", waitUntil(5000L) { history(TestUniPack.FOLDER_NAME) == null })
+            assertEquals("Another pack's history changed", 1L to true, history(OTHER_PACK_ID))
+            assertTrue("Main screen lost after deletion", waitForMainScreen(5000L))
+            takeScreenshot("after_unipack_deletion")
+
+            // Reinstall under the same folder name: the list reload recreates the row without the old history.
+            TestUniPack.install(context)
+            launchToMainScreen()
+            findTestPackRow()
+            assertTrue("Reinstalled pack has no row", waitUntil(5000L) { history(TestUniPack.FOLDER_NAME) != null })
+            assertEquals("Reinstalled pack kept the old history", 0L to false, history(TestUniPack.FOLDER_NAME))
+            takeScreenshot("after_unipack_reinstall")
+        } finally {
+            unipackDao.delete(OTHER_PACK_ID)
+        }
+    }
+
+    @Test
+    fun testUnipackDeletionCancel() {
+        seedHistory(TestUniPack.FOLDER_NAME)
         launchToMainScreen()
-        takeScreenshot("before_unipack_deletion")
 
+        confirmDeleteOfTestPack(accept = false)
+        takeScreenshot("after_deletion_cancel")
+
+        assertTrue(
+            "Delete dialog stayed open after cancel",
+            device.wait(Until.gone(By.text(str(R.string.doYouWantToDeleteUniPack))), 5000L)
+        )
+        assertTrue("Cancel deleted the pack files", TestUniPack.exists(context))
+        assertEquals("Cancel changed the pack's history", 1L to true, history(TestUniPack.FOLDER_NAME))
+        findTestPackRow()
+    }
+
+    /** A folder the app cannot empty: the error is shown and the history stays. */
+    @Test
+    fun testUnipackDeletionFailureKeepsHistory() {
+        val sounds = File(TestUniPack.folder(context), "sounds")
+        assumeTrue("Storage ignores permission bits here", sounds.setWritable(false, false) && !sounds.canWrite())
+        try {
+            seedHistory(TestUniPack.FOLDER_NAME)
+            launchToMainScreen()
+
+            confirmDeleteOfTestPack(accept = true)
+
+            assertTrue(
+                "Delete failure was not reported",
+                device.wait(Until.hasObject(By.text(str(R.string.errOccur))), 10000L)
+            )
+            takeScreenshot("after_deletion_failure")
+            assertTrue("Pack files are gone", TestUniPack.folder(context).exists())
+            assertEquals("History was dropped although the files remain", 1L to true, history(TestUniPack.FOLDER_NAME))
+            device.findObject(By.text(str(android.R.string.ok))).click()
+        } finally {
+            sounds.setWritable(true, false)
+        }
+    }
+
+    private val unipackDao by lazy { AppDatabase.getInstance(context).unipackDAO() }
+
+    /** One play and a bookmark, the history a reinstall must not bring back. */
+    private fun seedHistory(id: String) {
+        unipackDao.delete(id)
+        unipackDao.insert(Unipack.create(id))
+        unipackDao.addOpenCount(id)
+        unipackDao.toggleBookmark(id)
+    }
+
+    /** (openCount, bookmark) of the saved row, or null when there is none. */
+    private fun history(id: String): Pair<Long, Boolean>? =
+        AppDatabase.getInstance(context).openHelper.readableDatabase
+            .query("SELECT openCount, bookmark FROM Unipack WHERE id=?", arrayOf(id)).use {
+                if (it.moveToFirst()) it.getLong(0) to (it.getInt(1) == 1) else null
+            }
+
+    private fun confirmDeleteOfTestPack(accept: Boolean) {
         selectTestPack()
-        takeScreenshot("pack_panel_opened")
-
         device.findObject(By.desc(str(R.string.cd_delete))).click()
         assertTrue(
             "Delete confirmation dialog did not appear",
             device.wait(Until.hasObject(By.text(str(R.string.doYouWantToDeleteUniPack))), 5000L)
         )
-        takeScreenshot("after_delete_button_click")
-
-        device.findObject(By.text(str(R.string.accept))).click()
-        takeScreenshot("after_deletion_confirm")
-
-        assertTrue("Test pack folder was not deleted", waitUntil(10000L) { !TestUniPack.exists(context) })
-        assertTrue(
-            "Deleted pack is still listed",
-            device.wait(Until.gone(By.textContains(TestUniPack.TITLE)), 10000L)
-        )
-        assertTrue("Main screen lost after deletion", waitForMainScreen(5000L))
-        takeScreenshot("after_unipack_deletion")
+        takeScreenshot("delete_dialog")
+        device.findObject(By.text(str(if (accept) R.string.accept else R.string.cancel))).click()
     }
 
     @Test

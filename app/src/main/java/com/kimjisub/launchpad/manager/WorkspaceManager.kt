@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Environment
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -267,6 +268,32 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 			unipacks.toList()
 		}
+
+	enum class DeleteResult { DELETED, FILE_DELETE_FAILED, RECORD_DELETE_FAILED }
+
+	/**
+	 * Deletes the pack's files, then its saved row (bookmark, play count) so a reinstall starts fresh.
+	 * The row is keyed by folder name and shared with a same-named pack in another workspace;
+	 * it is kept while such a pack remains and removed with the last one.
+	 */
+	fun deleteUnipack(unipack: UniPack): DeleteResult {
+		if (!unipack.delete()) {
+			Log.err("deleteUnipack: files remain at ${unipack.getPathString()}")
+			return DeleteResult.FILE_DELETE_FAILED
+		}
+		if (hasUnipackFolder(unipack.id)) return DeleteResult.DELETED
+
+		val rowDeleted = try {
+			repo.delete(unipack.id)
+		} catch (e: RuntimeException) {
+			Log.err("deleteUnipack: row delete failed for ${unipack.id}", e)
+			false
+		}
+		return if (rowDeleted) DeleteResult.DELETED else DeleteResult.RECORD_DELETE_FAILED
+	}
+
+	private fun hasUnipackFolder(id: String): Boolean =
+		availableWorkspaces.any { File(it.file, id).isDirectory }
 
 	private fun canonicalOrAbsolute(file: File): String =
 		try {

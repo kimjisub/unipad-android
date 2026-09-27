@@ -71,7 +71,8 @@ abstract class UniPack {
 	abstract fun checkFile()
 
 
-	abstract fun delete()
+	// Returns true only when the pack's files are gone.
+	abstract fun delete(): Boolean
 
 	abstract fun getPathString(): String
 

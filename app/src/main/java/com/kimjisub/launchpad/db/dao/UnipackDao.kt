@@ -40,4 +40,9 @@ interface UnipackDao {
 
 	@Query("SELECT lastOpenedAt FROM Unipack WHERE id=:id")
 	fun lastOpenedAt(id: String): LiveData<Date>
+
+	// Delete
+
+	@Query("DELETE FROM Unipack WHERE id=:id")
+	fun delete(id: String): Int
 }

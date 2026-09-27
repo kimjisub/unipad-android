@@ -81,6 +81,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
+import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -116,6 +117,7 @@ class MainActivity : BaseActivity() {
 	private var importingState by mutableStateOf(false)
 	private var importResult by mutableStateOf<ImportResult?>(null)
 	private var deleteTargetItem by mutableStateOf<UniPackItem?>(null)
+	private var deleteFailed by mutableStateOf(false)
 
 	// ViewModels
 	private lateinit var totalPanelVM: MainTotalPanelViewModel
@@ -248,9 +250,10 @@ class MainActivity : BaseActivity() {
 								selectedItem = null
 								listRefreshing = true
 								lifecycleScope.launch(Dispatchers.IO) {
-									item.unipack.delete()
+									val result = ws.deleteUnipack(item.unipack)
 									withContext(Dispatchers.Main) {
 										listRefreshing = false
+										deleteFailed = result != WorkspaceManager.DeleteResult.DELETED
 										update()
 									}
 								}
@@ -261,6 +264,19 @@ class MainActivity : BaseActivity() {
 						dismissButton = {
 							TextButton(onClick = { deleteTargetItem = null }) {
 								Text(stringResource(string.cancel))
+							}
+						},
+					)
+				}
+
+				if (deleteFailed) {
+					androidx.compose.material3.AlertDialog(
+						onDismissRequest = { deleteFailed = false },
+						title = { Text(stringResource(string.error)) },
+						text = { Text(stringResource(string.errOccur)) },
+						confirmButton = {
+							TextButton(onClick = { deleteFailed = false }) {
+								Text(stringResource(android.R.string.ok))
 							}
 						},
 					)

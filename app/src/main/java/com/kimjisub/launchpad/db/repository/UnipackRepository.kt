@@ -39,4 +39,10 @@ class UnipackRepository(
 		unipackDao.addOpenCount(id)
 		unipackDao.setLastOpenedAt(id, Date())
 	}
+
+	// Returns true when no row is left for the id.
+	fun delete(id: String): Boolean {
+		unipackDao.delete(id)
+		return !unipackDao.exists(id)
+	}
 }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Environment
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.unipack.UniPackFolder
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -266,6 +267,96 @@ class WorkspaceManagerTest {
 		val manager = managerWithExternalDirs(createSdCardWithPack(), null)
 
 		assertEquals(listOf("Test"), runBlocking { manager.getUnipacks() }.map { it.unipack.title })
+	}
+
+	// === deleteUnipack: files first, then the saved row ===
+
+	private fun writePack(workspace: File, name: String = "pack"): File {
+		val pack = File(workspace, name).apply { mkdirs() }
+		File(pack, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
+		File(pack, "keySound").writeText("1 1 1 a.wav\n")
+		File(pack, "sounds").mkdirs()
+		File(pack, "sounds/a.wav").writeText("")
+		return pack
+	}
+
+	private fun appWorkspace() = File(tempDir, "app_external/UniPack")
+
+	@Test
+	fun deleteUnipack_removesFilesThenRow() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(appWorkspace())
+		every { mockRepo.delete("pack") } returns true
+
+		val result = manager.deleteUnipack(UniPackFolder(pack))
+
+		assertEquals(WorkspaceManager.DeleteResult.DELETED, result)
+		assertFalse(pack.exists())
+		verify(exactly = 1) { mockRepo.delete("pack") }
+	}
+
+	@Test
+	fun deleteUnipack_keepsRowWhenFilesRemain() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(appWorkspace())
+		val sounds = File(pack, "sounds")
+		sounds.setWritable(false)
+		try {
+			val result = manager.deleteUnipack(UniPackFolder(pack))
+
+			assertEquals(WorkspaceManager.DeleteResult.FILE_DELETE_FAILED, result)
+			assertTrue(pack.exists())
+			verify(exactly = 0) { mockRepo.delete(any()) }
+		} finally {
+			sounds.setWritable(true)
+		}
+	}
+
+	@Test
+	fun deleteUnipack_reportsFailureWhenRowRemains() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(appWorkspace())
+		every { mockRepo.delete("pack") } returns false
+
+		assertEquals(WorkspaceManager.DeleteResult.RECORD_DELETE_FAILED, manager.deleteUnipack(UniPackFolder(pack)))
+	}
+
+	@Test
+	fun deleteUnipack_reportsFailureWhenRowDeleteThrows() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(appWorkspace())
+		every { mockRepo.delete("pack") } throws IllegalStateException("database closed")
+
+		assertEquals(WorkspaceManager.DeleteResult.RECORD_DELETE_FAILED, manager.deleteUnipack(UniPackFolder(pack)))
+	}
+
+	@Test
+	fun deleteUnipack_leavesOtherPacksAlone() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(appWorkspace(), "pack")
+		val other = writePack(appWorkspace(), "other")
+		every { mockRepo.delete("pack") } returns true
+
+		manager.deleteUnipack(UniPackFolder(pack))
+
+		assertTrue(other.exists())
+		verify(exactly = 0) { mockRepo.delete("other") }
+	}
+
+	@Test
+	fun deleteUnipack_keepsSharedRowUntilLastSameNamedPackIsDeleted() {
+		val sdCardDir = File(tempDir, "sdcard").apply { mkdirs() }
+		val manager = managerWithExternalDirs(sdCardDir)
+		val appCopy = writePack(appWorkspace())
+		val sdCopy = writePack(sdCardDir)
+		every { mockRepo.delete("pack") } returns true
+
+		assertEquals(WorkspaceManager.DeleteResult.DELETED, manager.deleteUnipack(UniPackFolder(appCopy)))
+		assertTrue(sdCopy.exists())
+		verify(exactly = 0) { mockRepo.delete(any()) }
+
+		assertEquals(WorkspaceManager.DeleteResult.DELETED, manager.deleteUnipack(UniPackFolder(sdCopy)))
+		verify(exactly = 1) { mockRepo.delete("pack") }
 	}
 
 	@Test
