@@ -68,14 +68,14 @@ object PlayPalette {
 
 	/**
 	 * Keeps [color] when it already reaches [minRatio] on every one of [backgrounds]. Otherwise moves it
-	 * toward black or white, whichever the backgrounds contrast with more, only as far as needed. Only
-	 * lightness changes, so a skin's accent or the red Quit tint keeps its hue.
+	 * toward [towards], or else black or white, whichever the backgrounds contrast with more, only as far
+	 * as needed. Only lightness changes, so a skin's accent or the red Quit tint keeps its hue.
 	 */
-	fun readableOn(color: Color, backgrounds: List<Color>, minRatio: Float): Color {
+	fun readableOn(color: Color, backgrounds: List<Color>, minRatio: Float, towards: Color? = null): Color {
 		fun worstContrast(candidate: Color) = backgrounds.minOf { contrastRatio(candidate.compositeOver(it), it) }
 		if (worstContrast(color) >= minRatio) return color
 
-		val target = listOf(Color.Black, Color.White).maxBy(::worstContrast)
+		val target = towards ?: listOf(Color.Black, Color.White).maxBy(::worstContrast)
 		val drawn = color.compositeOver(backgrounds.first())
 		return (1..READABLE_STEPS)
 			.map { lerp(drawn, target, it.toFloat() / READABLE_STEPS) }
@@ -84,6 +84,33 @@ object PlayPalette {
 	}
 
 	private const val READABLE_STEPS = 50
+
+	data class OptionPanelText(val primary: Color, val secondary: Color)
+
+	const val SECONDARY_TEXT_ALPHA = 0.65f
+
+	const val INFO_CARD_FILL_ALPHA = 0.06f
+
+	const val PLAY_MODE_FILL_ALPHA = 0.08f
+
+	/**
+	 * Text colours for the option panel, or for a [fillAlpha] tint of the content colour laid on it.
+	 * Picking between the dark and the white content colour is not enough on mid greys (#808080 left
+	 * both below 4.5:1), so each is pulled towards black or white until it reads on every backdrop.
+	 * Text on a fill keeps the panel text's direction so one menu never mixes dark and light text.
+	 * Where no colour gets there (panels #767676–#7B7B7B, and the fills on greys around
+	 * #6A6A6A–#838383 such as #808080) the result is black or white.
+	 */
+	fun optionPanelText(panelBackground: Color, fillAlpha: Float = 0f): OptionPanelText {
+		val content = panelContentOn(panelBackground)
+		val panelBackdrops = optionPanelBackdrops(panelBackground)
+		val onPanel = readableOn(content, panelBackdrops, MIN_TEXT_CONTRAST)
+		val towards = if (onPanel.luminance() < 0.5f) Color.Black else Color.White
+		val backdrops = panelBackdrops.map { content.copy(alpha = fillAlpha).compositeOver(it) }
+		val primary = readableOn(onPanel, backdrops, MIN_TEXT_CONTRAST, towards)
+		val secondary = readableOn(primary.copy(alpha = SECONDARY_TEXT_ALPHA), backdrops, MIN_TEXT_CONTRAST, towards)
+		return OptionPanelText(primary, secondary)
+	}
 
 	// Play mode distinctive colors. Each mode owns a hue so the segmented control
 	// communicates mode identity without relying on text alone.
