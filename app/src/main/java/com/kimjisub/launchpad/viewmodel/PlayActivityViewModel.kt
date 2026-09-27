@@ -173,12 +173,13 @@ class PlayActivityViewModel(
 	var autoPlayRunner: AutoPlayRunner? = null
 	var soundRunner: SoundRunner? = null
 
-	// The runner hands each tick's changes over outside its lock. They are applied on the main thread in
-	// play order, every one of them, so the Launchpad still receives each LED command; the queue only
-	// limits how many main-thread tasks carry them.
+	// The runner hands each tick's changes over outside its lock. While playing they are applied on the
+	// main thread in play order, every one of them, so the Launchpad still receives each LED command; the
+	// queue only limits how many main-thread tasks carry them. Only ledInit() drops the ones still waiting,
+	// all but their last chain change.
 	private val ledChanges = LedChangeQueue {
 		// Not Main.immediate: a follow-up drain requested on main must wait behind pending input.
-		viewModelScope.launch(Dispatchers.Main) { applyLedChanges(LED_CHANGES_PER_DRAIN) }
+		viewModelScope.launch(Dispatchers.Main) { applyLedChanges() }
 	}
 
 	internal val ledRunnerListener = object : LedRunner.Listener {
@@ -210,14 +211,16 @@ class PlayActivityViewModel(
 		}
 	}
 
-	private fun applyLedChanges(max: Int = Int.MAX_VALUE) {
-		for (change in ledChanges.drain(max)) {
+	private fun applyLedChanges() {
+		val batch = ledChanges.drain(LED_CHANGES_PER_DRAIN)
+		for (change in batch.changes) {
 			try {
 				change.dispatchTo(ledRunnerListener)
 			} catch (e: IndexOutOfBoundsException) {
 				Log.err("LED change out of range: $change", e)
 			}
 		}
+		if (batch.reset) clearLeds()
 	}
 
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
@@ -602,31 +605,64 @@ class PlayActivityViewModel(
 
 	// LED
 
-	fun ledInit() {
-		log("ledInit")
+	/**
+	 * Turns every LED off now, for when LED output stops: the LED option is turned off or the screen is
+	 * left. Changes still waiting for the main thread are dropped rather than shown, so neither a large
+	 * backlog nor a tick delivered just before can light a pad after the reset. Only the chain they would
+	 * have left selected is kept.
+	 */
+	fun ledInit() = resetLeds(dropWaiting = true)
+
+	// Playback carries on around autoplay controls, so every change the runner produced before the reset
+	// is still applied, before it. While some are waiting the reset queues behind them, so a large
+	// backlog is applied a few changes per task instead of holding the main thread for all of it.
+	private fun ledInitInOrder() = resetLeds(dropWaiting = false)
+
+	private fun resetLeds(dropWaiting: Boolean) {
+		log("ledInit dropWaiting=$dropWaiting")
 		if (!isChannelManagerInitialized) return
 		if (unipack.keyLedExist) {
 			val runner = ledRunner ?: return
-			// Changes the runner produced before this reset would otherwise light pads after it.
-			applyLedChanges()
-			try {
-				for (i in 0 until unipack.buttonX) {
-					for (j in 0 until unipack.buttonY) {
-						if (runner.isEventExist(i, j))
-							runner.eventOffAll(i, j)
-						channelManager.remove(i, j, Channel.LED)
-						uiCallback?.setLedPad(i, j)
-					}
+			if (dropWaiting) {
+				val lastChainChange = runner.afterDelivery {
+					stopLoopingLeds(runner)
+					ledChanges.discard()
 				}
-				for (i in 0 until FUNCTION_KEY_COUNT) {
-					if (runner.isEventExist(-1, i))
-						runner.eventOffAll(-1, i)
-					channelManager.remove(-1, i, Channel.LED)
-					uiCallback?.setLedChain(i)
+				// The chain picks the sounds of the next press, so the one the dropped changes ended on still applies.
+				lastChainChange?.dispatchTo(ledRunnerListener)
+				clearLeds()
+			} else {
+				val resetNow = runner.afterDelivery {
+					stopLoopingLeds(runner)
+					ledChanges.requestReset()
 				}
-			} catch (e: IndexOutOfBoundsException) {
-				Log.err("ledInit failed", e)
+				if (resetNow) clearLeds()
 			}
+		}
+	}
+
+	private fun stopLoopingLeds(runner: LedRunner) {
+		for (i in 0 until unipack.buttonX)
+			for (j in 0 until unipack.buttonY)
+				if (runner.isEventExist(i, j)) runner.eventOffAll(i, j)
+		for (i in 0 until FUNCTION_KEY_COUNT)
+			if (runner.isEventExist(-1, i)) runner.eventOffAll(-1, i)
+	}
+
+	private fun clearLeds() {
+		try {
+			for (i in 0 until unipack.buttonX) {
+				for (j in 0 until unipack.buttonY) {
+					channelManager.remove(i, j, Channel.LED)
+					uiCallback?.setLedPad(i, j)
+				}
+			}
+			for (i in 0 until FUNCTION_KEY_COUNT) {
+				channelManager.remove(-1, i, Channel.LED)
+				uiCallback?.setLedChain(i)
+			}
+		} catch (e: IndexOutOfBoundsException) {
+			Log.err("ledInit failed", e)
 		}
 	}
 
@@ -650,7 +686,7 @@ class PlayActivityViewModel(
 			autoPlayRemoveGuide()
 			if (runner.active) runner.stop()
 			padInit()
-			ledInit()
+			ledInitInOrder()
 			isPracticeMode = false
 			isAutoPlayPlaying = false
 			scbAutoPlay.setCheckedSilently(false)
@@ -728,7 +764,7 @@ class PlayActivityViewModel(
 		runner.resetStepState()
 		autoPlayRemoveGuide()
 		padInit()
-		ledInit()
+		ledInitInOrder()
 		runner.playmode = true
 		isAutoPlayPlaying = true
 		if (unipack.keyLedExist) {
@@ -745,7 +781,7 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
 		padInit()
-		ledInit()
+		ledInitInOrder()
 		isAutoPlayPlaying = false
 		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
@@ -756,7 +792,7 @@ class PlayActivityViewModel(
 		log("autoPlayPrev")
 		val runner = autoPlayRunner ?: return
 		padInit()
-		ledInit()
+		ledInitInOrder()
 		autoPlayRemoveGuide()
 		runner.progressOffset(-40)
 	}
@@ -765,7 +801,7 @@ class PlayActivityViewModel(
 		log("autoPlayNext")
 		val runner = autoPlayRunner ?: return
 		padInit()
-		ledInit()
+		ledInitInOrder()
 		autoPlayRemoveGuide()
 		runner.progressOffset(40)
 	}

@@ -49,7 +49,7 @@ class LedRunnerDeliveryTest {
 		unmockkStatic(SystemClock::class)
 	}
 
-	private fun setUpRunner(animationFor: (x: Int, y: Int) -> LedAnimation?) {
+	private fun setUpRunner(loopDelay: Long = 3_600_000L, animationFor: (x: Int, y: Int) -> LedAnimation?) {
 		val unipack = mockk<UniPack>(relaxed = true)
 		every { unipack.buttonX } returns 8
 		every { unipack.buttonY } returns 8
@@ -60,7 +60,7 @@ class LedRunnerDeliveryTest {
 			override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) = record("con", -1, c)
 			override fun onChainLedTurnOff(c: Int) = record("coff", -1, c)
 			override fun onChainChange(c: Int) = record("chain", -1, c)
-		}, ChainObserver(), loopDelay = 3_600_000L)
+		}, ChainObserver(), loopDelay)
 		clock.set(1000)
 		runner.launch()
 		Thread.sleep(150)
@@ -250,5 +250,93 @@ class LedRunnerDeliveryTest {
 			events,
 		)
 		assertEquals(0L, callsUnderLock.get())
+	}
+
+	/** Starts a tick on another thread and holds its delivery open until the returned latch is released. */
+	private fun tickHeldInDelivery(t: Long): Pair<Thread, CountDownLatch> {
+		val deliveryStarted = CountDownLatch(1)
+		val releaseDelivery = CountDownLatch(1)
+		val firstChange = AtomicBoolean(true)
+		onDelivery = {
+			if (firstChange.getAndSet(false)) {
+				deliveryStarted.countDown()
+				releaseDelivery.await(2, TimeUnit.SECONDS)
+			}
+		}
+		val ledThread = Thread { tick(t) }.apply { start() }
+		assertTrue(deliveryStarted.await(2, TimeUnit.SECONDS))
+		return ledThread to releaseDelivery
+	}
+
+	@Test
+	fun stop_waitsForATickInDelivery_soNoChangeArrivesAfterIt() {
+		setUpRunner { _, _ -> allPadsFlash(loop = 1) }
+		runner.eventOn(0, 0)
+		tick(1000)
+		val (ledThread, releaseDelivery) = tickHeldInDelivery(1004)
+
+		val stopped = AtomicBoolean(false)
+		val deliveredAfterStop = AtomicLong()
+		onDelivery = { if (stopped.get()) deliveredAfterStop.incrementAndGet() }
+		val stopper = Thread { runner.stop(); stopped.set(true) }.apply { start() }
+		Thread.sleep(100)
+		val stoppedWhileDelivering = stopped.get()
+		releaseDelivery.countDown()
+		ledThread.join()
+		stopper.join()
+
+		assertFalse("stop() returned while a tick was still delivering", stoppedWhileDelivering)
+		assertEquals(0L, deliveredAfterStop.get())
+		assertEquals(128, events.size)
+	}
+
+	@Test
+	fun afterDelivery_runsOnlyOnceTheTickInDeliveryIsHandedOver() {
+		setUpRunner { _, _ -> allPadsFlash(loop = 1) }
+		runner.eventOn(0, 0)
+		tick(1000)
+		val (ledThread, releaseDelivery) = tickHeldInDelivery(1004)
+
+		val seen = AtomicLong(-1)
+		val fenced = Thread { runner.afterDelivery { seen.set(synchronized(events) { events.size }.toLong()) } }
+			.apply { start() }
+		Thread.sleep(100)
+		val ranWhileDelivering = seen.get() != -1L
+		onDelivery = {}
+		releaseDelivery.countDown()
+		ledThread.join()
+		fenced.join()
+
+		assertFalse(ranWhileDelivering)
+		assertEquals(128L, seen.get())
+	}
+
+	@Test
+	fun stopWhileTheLoopRuns_neverDeliversAfterStopReturns() {
+		setUpRunner(loopDelay = 1) { _, _ -> blink(on = 1, off = 1, loop = 0) }
+		runner.stop()
+		val stopped = AtomicBoolean(false)
+		val deliveredAfterStop = AtomicLong()
+		onDelivery = {
+			if (stopped.get()) deliveredAfterStop.incrementAndGet()
+			Thread.sleep(1)
+		}
+		repeat(30) { round ->
+			stopped.set(false)
+			clock.set(10_000L * (round + 1))
+			runner.launch()
+			runner.eventOn(0, 0)
+			val clockThread = Thread {
+				while (!stopped.get()) { clock.addAndGet(1); Thread.sleep(1) }
+			}.apply { start() }
+			Thread.sleep(15)
+			runner.stop()
+			stopped.set(true)
+			clockThread.join()
+			Thread.sleep(10)
+		}
+
+		assertEquals(0L, deliveredAfterStop.get())
+		assertTrue(events.isNotEmpty())
 	}
 }

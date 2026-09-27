@@ -4,6 +4,7 @@ import android.os.SystemClock
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.unipack.runner.AutoPlayRunner
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
@@ -21,11 +22,13 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
@@ -58,8 +61,11 @@ class PlayActivityViewModelLedTest {
 			maxQueued = maxOf(maxQueued, queue.size)
 		}
 
-		fun runAll() {
-			while (true) (queue.poll() ?: return).run()
+		fun runAll(afterEach: () -> Unit = {}) {
+			while (true) {
+				(queue.poll() ?: return).run()
+				afterEach()
+			}
 		}
 	}
 
@@ -113,14 +119,16 @@ class PlayActivityViewModelLedTest {
 		override fun onRequestRelayout() {}
 	}
 
-	private fun setUpRunner(animation: LedAnimation) {
+	private fun setUpRunner(animation: LedAnimation) = setUpRunner { _, _ -> animation }
+
+	private fun setUpRunner(loopDelay: Long = 3_600_000L, animationFor: (x: Int, y: Int) -> LedAnimation) {
 		val unipack = mockk<UniPack>(relaxed = true)
 		every { unipack.buttonX } returns 8
 		every { unipack.buttonY } returns 8
 		every { unipack.keyLedExist } returns true
-		every { unipack.ledGet(any(), any(), any()) } returns animation
+		every { unipack.ledGet(any(), any(), any()) } answers { animationFor(secondArg(), thirdArg()) }
 		vm.unipack = unipack
-		runner = LedRunner(unipack, vm.ledRunnerListener, vm.chain, loopDelay = 3_600_000L)
+		runner = LedRunner(unipack, vm.ledRunnerListener, vm.chain, loopDelay)
 		vm.ledRunner = runner
 		runner.launch()
 		Thread.sleep(150)
@@ -176,21 +184,6 @@ class PlayActivityViewModelLedTest {
 	}
 
 	@Test
-	fun ledInit_appliesWaitingChangesBeforeTheReset() {
-		setUpRunner(LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Delay(10_000), LedEvent.Off(1, 1)), 1, 0))
-		pressOnRunnerThread(0, 0)
-		tickOnRunnerThread(1004)
-		runner.stop()
-
-		vm.ledInit()
-		main.runAll()
-
-		assertEquals("1,1=4", sent.first())
-		assertEquals("1,1=0", sent.last { it.startsWith("1,1=") })
-		assertNull(vm.channelManager.get(1, 1))
-	}
-
-	@Test
 	fun chainEvent_isAppliedOnMainBetweenTheLedsAroundIt() {
 		setUpRunner(LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Chain(2), LedEvent.On(2, 2)), 1, 0))
 		var sentWhenChainChanged = -1
@@ -204,5 +197,372 @@ class PlayActivityViewModelLedTest {
 		assertEquals(2, vm.chain.value)
 		assertEquals(1, sentWhenChainChanged)
 		assertEquals(listOf("1,1=4", "2,2=4"), sent)
+	}
+
+	/** Every pad on at velocity 5, then every pad off, [loop] times in one tick. */
+	private fun allPadsFlash(loop: Int): LedAnimation {
+		val pass = ArrayList<LedEvent>()
+		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.On(x, y, velocity = 5)
+		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.Off(x, y)
+		return LedAnimation(pass, loop, 0)
+	}
+
+	private val flashPass = (0 until 8).flatMap { x -> (0 until 8).map { y -> "$x,$y=5" } } +
+		(0 until 8).flatMap { x -> (0 until 8).map { y -> "$x,$y=0" } }
+	private val resetSweep = (0 until 8).flatMap { x -> (0 until 8).map { y -> "$x,$y=0" } }
+
+	/** (0,0) flashes every pad [loop] times; (1,1) lights itself and holds; any other pad does nothing. */
+	private fun setUpBacklogRunner(loop: Int) = setUpRunner { x, y ->
+		when {
+			x == 0 && y == 0 -> allPadsFlash(loop)
+			x == 1 && y == 1 -> LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Delay(60_000), LedEvent.Off(1, 1)), 1, 0)
+			else -> LedAnimation(arrayListOf(LedEvent.On(x, y, velocity = 7), LedEvent.Delay(60_000)), 1, 0)
+		}
+	}
+
+	/** A press is picked up by one tick and starts playing on the next. */
+	private fun pressAndPlay(x: Int, y: Int) {
+		pressOnRunnerThread(x, y)
+		tickOnRunnerThread(clock.get() + 4)
+	}
+
+	private fun queueBacklog() = pressAndPlay(0, 0)
+
+	/** Runs every waiting main-thread task and returns the most commands any single one sent. */
+	private fun runMainTasks(): Int {
+		var before = sent.size
+		var most = 0
+		main.runAll {
+			most = maxOf(most, sent.size - before)
+			before = sent.size
+		}
+		return most
+	}
+
+	private fun assertEveryLedOff() {
+		for (x in 0 until 8) for (y in 0 until 8) assertNull("($x,$y)", vm.channelManager.get(x, y))
+	}
+
+	private fun assertOnlyTheResetWasSent(resets: Int = 1) {
+		assertEquals(List(resets) { resetSweep }.flatten(), sent)
+		assertEquals(0, callsOffMainOrUnderLock)
+		assertEveryLedOff()
+	}
+
+	// What PlayActivity.onStop does: the runner stops with the screen, then ledInit().
+	private fun leaveScreen() {
+		vm.screenVisible = false
+		vm.ledInit()
+	}
+
+	private fun enableLedOption() {
+		vm.scbLed.setCheckedSilently(true)
+		vm.screenVisible = true
+		vm.setupCheckBoxListeners()
+	}
+
+	@Test
+	fun ledInit_behindALargeBacklog_dropsItAndTurnsEveryLedOffAtOnce() {
+		setUpBacklogRunner(loop = 3000)
+		queueBacklog()
+		pressAndPlay(1, 1)
+		runner.stop()
+
+		vm.ledInit()
+		val sentByLedInit = sent.toList()
+		runMainTasks()
+
+		assertEquals(resetSweep, sentByLedInit)
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun ledInitWithNothingWaiting_resetsRightAway() {
+		setUpBacklogRunner(loop = 1)
+		pressAndPlay(1, 1)
+		main.runAll()
+		assertEquals(4, vm.channelManager.get(1, 1)?.code)
+		val postedBefore = main.posted
+		sent.clear()
+
+		vm.ledInit()
+
+		assertEquals(resetSweep, sent)
+		assertEquals(postedBefore, main.posted)
+		assertEveryLedOff()
+	}
+
+	@Test
+	fun ledInitTwice_behindABacklog_resetsTwiceAndSendsNothingElse() {
+		setUpBacklogRunner(loop = 30)
+		queueBacklog()
+		runner.stop()
+
+		vm.ledInit()
+		vm.ledInit()
+		runMainTasks()
+
+		assertOnlyTheResetWasSent(resets = 2)
+	}
+
+	@Test
+	fun turningTheLedOptionOff_dropsTheBacklog() {
+		setUpBacklogRunner(loop = 3000)
+		enableLedOption()
+		queueBacklog()
+		pressAndPlay(1, 1)
+
+		vm.scbLed.setChecked(false)
+		runMainTasks()
+
+		assertFalse(runner.active)
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun leavingTheScreen_dropsTheBacklogAndAResetAutoplayQueuedBehindIt() {
+		setUpBacklogRunner(loop = 3000)
+		vm.autoPlayRunner = mockk<AutoPlayRunner>(relaxed = true)
+		queueBacklog()
+		pressAndPlay(1, 1)
+
+		// Losing audio focus pauses autoplay first, which queues its reset behind the backlog.
+		vm.autoPlayPause()
+		assertTrue("backlog applied inside autoPlayPause()", sent.none { it.endsWith("=5") || it.endsWith("=4") })
+		sent.clear() // padInit() redraws every pad
+		leaveScreen()
+		runMainTasks()
+
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun tickStillComputingWhenTheScreenIsLeft_neverLightsAPadAfterTheReset() {
+		setUpBacklogRunner(loop = 30)
+		pressOnRunnerThread(0, 0)
+		pressOnRunnerThread(1, 1)
+		val computing = CountDownLatch(1)
+		val release = CountDownLatch(1)
+		every { SystemClock.elapsedRealtime() } answers {
+			if (Thread.currentThread().name == "tick") {
+				computing.countDown()
+				release.await()
+			}
+			clock.get()
+		}
+		clock.set(clock.get() + 4)
+		val tick = Thread({ loopMethod.invoke(runner) }, "tick").apply { start() }
+		computing.await()
+		Thread { Thread.sleep(100); release.countDown() }.start()
+
+		leaveScreen()
+		tick.join()
+		runMainTasks()
+
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun leavingTheScreenWhileTheLoopRuns_neverLightsAPadAfterTheReset() {
+		setUpRunner(loopDelay = 1L) { _, _ ->
+			LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Delay(1), LedEvent.Off(1, 1), LedEvent.On(2, 2)), 0, 0)
+		}
+		every { SystemClock.elapsedRealtime() } answers { clock.incrementAndGet() }
+		vm.scbLed.setCheckedSilently(true)
+		repeat(30) { round ->
+			vm.screenVisible = true
+			runner.eventOn(0, 0)
+			Thread.sleep(5)
+			main.runAll()
+			sent.clear()
+
+			leaveScreen()
+			Thread.sleep(5)
+			runMainTasks()
+
+			assertEquals("round $round", resetSweep, sent)
+			assertEveryLedOff()
+		}
+	}
+
+	@Test
+	fun pressRightAfterLeavingTheScreen_isShownAfterTheReset() {
+		setUpBacklogRunner(loop = 30)
+		queueBacklog()
+		leaveScreen()
+
+		runner.launch()
+		pressAndPlay(2, 2)
+		runMainTasks()
+
+		assertEquals(resetSweep + "2,2=7", sent)
+		assertEquals(7, vm.channelManager.get(2, 2)?.code)
+		for (x in 0 until 8) for (y in 0 until 8) if (x != 2 || y != 2) assertNull(vm.channelManager.get(x, y))
+	}
+
+	@Test
+	fun ledOptionOffAndOnAgain_showsTheNewPressOnly() {
+		setUpBacklogRunner(loop = 30)
+		enableLedOption()
+		queueBacklog()
+
+		vm.scbLed.setChecked(false)
+		vm.scbLed.setChecked(true)
+		assertTrue(runner.active)
+		pressAndPlay(2, 2)
+		runMainTasks()
+
+		assertEquals(resetSweep + "2,2=7", sent)
+		assertEquals(7, vm.channelManager.get(2, 2)?.code)
+	}
+
+	private fun pressEndlessBlink() {
+		pressAndPlay(3, 3)
+		main.runAll()
+		assertEquals(listOf("3,3=4"), sent)
+		sent.clear()
+	}
+
+	private fun playTicksAfterRelaunch() {
+		for (i in 1..10) tickOnRunnerThread(clock.get() + 50)
+		runMainTasks()
+	}
+
+	private fun assertTheOldBlinkNeverRelit() {
+		assertEquals(resetSweep, sent.take(64))
+		assertEquals(emptyList<String>(), sent.drop(64).filterNot { it.endsWith("=0") })
+		assertEquals(0, callsOffMainOrUnderLock)
+		assertEveryLedOff()
+	}
+
+	private fun setUpEndlessBlinkRunner() = setUpRunner { _, _ ->
+		LedAnimation(arrayListOf(LedEvent.On(3, 3), LedEvent.Delay(50), LedEvent.Off(3, 3), LedEvent.Delay(50)), 0, 0)
+	}
+
+	@Test
+	fun endlessLoopingLed_staysOffAfterLeavingAndComingBack() {
+		setUpEndlessBlinkRunner()
+		pressEndlessBlink()
+
+		leaveScreen()
+		runner.launch()
+		playTicksAfterRelaunch()
+
+		assertTheOldBlinkNeverRelit()
+	}
+
+	@Test
+	fun endlessLoopingLed_staysOffAfterLedOptionOffAndOn() {
+		setUpEndlessBlinkRunner()
+		enableLedOption()
+		pressEndlessBlink()
+
+		vm.scbLed.setChecked(false)
+		vm.scbLed.setChecked(true)
+		assertTrue(runner.active)
+		playTicksAfterRelaunch()
+
+		assertTheOldBlinkNeverRelit()
+	}
+
+	/**
+	 * (0,0) flashes every pad, moves to chain 1, flashes again and moves to chain 3, [loop] times in one
+	 * tick; any other pad flashes every pad 30 times without moving. Returns the chains selected, in order.
+	 */
+	private fun setUpChainBacklogRunner(loop: Int): MutableList<Int> {
+		val flash = allPadsFlash(1).ledEvents
+		val chainBacklog = LedAnimation(ArrayList(flash + LedEvent.Chain(1) + flash + LedEvent.Chain(3)), loop, 0)
+		setUpRunner { x, y -> if (x == 0 && y == 0) chainBacklog else allPadsFlash(30) }
+		val chainsSelected = mutableListOf<Int>()
+		vm.chain.addObserver { curr, _ -> chainsSelected += curr }
+		return chainsSelected
+	}
+
+	@Test
+	fun leavingTheScreen_dropsTheLightsButKeepsTheChainTheyEndOn() {
+		val chainsSelected = setUpChainBacklogRunner(loop = 3000)
+		queueBacklog()
+
+		leaveScreen()
+		runMainTasks()
+
+		assertEquals(listOf(3), chainsSelected)
+		assertEquals(3, vm.chain.value)
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun turningTheLedOptionOff_dropsTheLightsButKeepsTheChainTheyEndOn() {
+		val chainsSelected = setUpChainBacklogRunner(loop = 3000)
+		enableLedOption()
+		queueBacklog()
+
+		vm.scbLed.setChecked(false)
+		runMainTasks()
+
+		assertEquals(listOf(3), chainsSelected)
+		assertEquals(3, vm.chain.value)
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun ledInitWithNoChainChangeWaiting_leavesTheChainAlone() {
+		val chainsSelected = setUpChainBacklogRunner(loop = 1)
+		queueBacklog()
+		main.runAll()
+		chainsSelected.clear()
+		pressAndPlay(2, 2)
+		sent.clear()
+
+		leaveScreen()
+		runMainTasks()
+
+		assertEquals(emptyList<Int>(), chainsSelected)
+		assertEquals(3, vm.chain.value)
+		assertOnlyTheResetWasSent()
+	}
+
+	@Test
+	fun autoPlayControl_appliesEveryWaitingChainChangeInOrder() {
+		val chainsSelected = setUpChainBacklogRunner(loop = 30)
+		vm.autoPlayRunner = mockk<AutoPlayRunner>(relaxed = true)
+		queueBacklog()
+
+		vm.autoPlayPause()
+		runMainTasks()
+
+		assertEquals(List(30) { listOf(1, 3) }.flatten(), chainsSelected)
+		assertEquals(128 * 30, sent.count { it.endsWith("=5") })
+		assertEquals(resetSweep, sent.takeLast(64))
+		assertEveryLedOff()
+	}
+
+	@Test
+	fun autoPlayControls_resetBehindTheBacklog_andEndWithEveryLedOff() {
+		setUpBacklogRunner(loop = 30)
+		vm.autoPlayRunner = mockk<AutoPlayRunner>(relaxed = true)
+		val controls = listOf<Pair<String, () -> Unit>>(
+			"pause" to vm::autoPlayPause,
+			"resume" to vm::autoPlayResume,
+			"prev" to vm::autoPlayPrev,
+			"next" to vm::autoPlayNext,
+			"autoplay off" to {
+				vm.scbAutoPlay.setCheckedSilently(true)
+				vm.switchPlayMode(PlayMode.None)
+			},
+		)
+		for ((name, control) in controls) {
+			sent.clear()
+			queueBacklog()
+
+			control()
+			val backlogSentInline = sent.count { it.endsWith("=5") }
+			runMainTasks()
+
+			assertEquals(name, 0, backlogSentInline)
+			assertEquals(name, 128 * 30, sent.count { it.endsWith("=5") } * 2)
+			assertEquals(name, resetSweep, sent.takeLast(64))
+			assertEveryLedOff()
+		}
 	}
 }

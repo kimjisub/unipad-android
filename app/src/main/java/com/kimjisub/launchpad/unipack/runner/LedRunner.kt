@@ -29,6 +29,11 @@ class LedRunner(
 	private val ledAnimationStatesAdd: MutableList<LedAnimationState> = mutableListOf()
 
 	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+	// Held from a tick's first computation until the listener has its changes. It is separate from the
+	// runner lock so that eventOn/eventOff never wait for a delivery, while stop() and afterDelivery()
+	// can order themselves between whole ticks.
+	private val deliveryLock = Any()
 	private var job: Job? = null
 	private var pausedAt: Long? = null
 
@@ -76,7 +81,7 @@ class LedRunner(
 		}
 	}
 
-	private fun loop() {
+	private fun loop() = synchronized(deliveryLock) {
 		val changes = ArrayList<LedChange>()
 		synchronized(this) {
 			val currTime = SystemClock.elapsedRealtime()
@@ -214,7 +219,8 @@ class LedRunner(
 				Log.thread("[Led] 2. Start Coroutine")
 				while (isActive) {
 					val millis = measureTimeMillis {
-						loop()
+						// stop() cancels under the delivery lock, so no tick starts after it returns.
+						synchronized(deliveryLock) { if (isActive) loop() }
 					}
 					delay((loopDelay - millis).coerceAtLeast(0))
 				}
@@ -223,16 +229,22 @@ class LedRunner(
 		}
 	}
 
+	/** Waits for a tick in progress to deliver its changes; once this returns, none are delivered until [launch]. */
 	fun stop() {
 		Log.thread("[Led] 3. Request Stop")
-		val wasActive = active
-		job?.cancel()
-		job = null
-		synchronized(this) {
-			if (wasActive) pausedAt = SystemClock.elapsedRealtime()
-			ledAnimationStatesAdd.clear()
+		synchronized(deliveryLock) {
+			val wasActive = active
+			job?.cancel()
+			job = null
+			synchronized(this) {
+				if (wasActive) pausedAt = SystemClock.elapsedRealtime()
+				ledAnimationStatesAdd.clear()
+			}
 		}
 	}
+
+	/** Runs [block] between ticks: every change computed before it has reached the listener, and none after it has. */
+	fun <T> afterDelivery(block: () -> T): T = synchronized(deliveryLock) { block() }
 
 	// Functions
 
@@ -338,33 +350,73 @@ class LedRunner(
  * Carries [LedRunner.LedChange]s from the runner thread to one consumer thread in order, with at most
  * one drain scheduled at a time however many changes pile up. Posting a task per change let a pack
  * with hundreds of thousands of changes in one tick bury the main thread's queue for seconds.
+ *
+ * Resets requested between the changes are reported by the drain that takes the last change offered
+ * before them, so a large backlog ahead of a reset is still applied a few changes per task, and none of
+ * those changes lands after the reset.
  */
 class LedChangeQueue(private val scheduleDrain: () -> Unit) {
+	class Batch(val changes: List<LedRunner.LedChange>, val reset: Boolean)
+
 	private val pending = ArrayDeque<LedRunner.LedChange>()
-	private var drainScheduled = false // guarded by pending
+	// The rest are guarded by pending. Positions count every change ever offered.
+	private val resetPositions = ArrayDeque<Long>()
+	private var offered = 0L
+	private var taken = 0L
+	private var drainScheduled = false
 
 	fun offer(changes: List<LedRunner.LedChange>) {
 		val schedule = synchronized(pending) {
 			pending.addAll(changes)
+			offered += changes.size
 			!drainScheduled.also { drainScheduled = true }
 		}
 		if (schedule) scheduleDrain()
 	}
 
+	/** Returns true when nothing is waiting, so the caller resets right away; otherwise a later [drain] reports it. */
+	fun requestReset(): Boolean {
+		val schedule = synchronized(pending) {
+			if (pending.isEmpty() && resetPositions.isEmpty()) return true
+			resetPositions.addLast(offered)
+			!drainScheduled.also { drainScheduled = true }
+		}
+		if (schedule) scheduleDrain()
+		return false
+	}
+
 	/**
-	 * Removes up to [max] changes in the order they were offered. When some remain another drain is
-	 * scheduled, so the consumer thread can handle input between the portions of a large backlog.
+	 * Drops every waiting change and reset. A drain already scheduled still runs and finds nothing left.
+	 * Returns the last waiting chain change, since the chain is state the caller keeps rather than a light.
 	 */
-	fun drain(max: Int = Int.MAX_VALUE): List<LedRunner.LedChange> {
-		val taken: List<LedRunner.LedChange>
+	fun discard(): LedRunner.LedChange.ChainChange? = synchronized(pending) {
+		val lastChainChange = pending.lastOrNull { it is LedRunner.LedChange.ChainChange } as LedRunner.LedChange.ChainChange?
+		pending.clear()
+		resetPositions.clear()
+		taken = offered
+		lastChainChange
+	}
+
+	/**
+	 * Removes up to [max] changes in the order they were offered, stopping at the next reset. When some
+	 * remain another drain is scheduled, so the consumer thread can handle input between the portions of a
+	 * large backlog.
+	 */
+	fun drain(max: Int = Int.MAX_VALUE): Batch {
+		val changes: List<LedRunner.LedChange>
+		val reset: Boolean
 		val more: Boolean
 		synchronized(pending) {
-			val count = minOf(max, pending.size)
-			taken = ArrayList<LedRunner.LedChange>(count).apply { repeat(count) { add(pending.removeFirst()) } }
-			more = pending.isNotEmpty()
+			val beforeReset = resetPositions.firstOrNull()?.let { (it - taken).toInt() } ?: pending.size
+			val count = minOf(max, beforeReset)
+			changes = ArrayList<LedRunner.LedChange>(count).apply { repeat(count) { add(pending.removeFirst()) } }
+			taken += count
+			reset = resetPositions.firstOrNull() == taken
+			if (reset) resetPositions.removeFirst()
+			more = pending.isNotEmpty() || resetPositions.isNotEmpty()
 			drainScheduled = more
 		}
 		if (more) scheduleDrain()
-		return taken
+		return Batch(changes, reset)
 	}
 }
