@@ -601,7 +601,7 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
-					Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable { vm.toggleOptionWindow(false) })
+					Box(modifier = Modifier.fillMaxSize().background(PlayPalette.optionScrim).clickable { vm.toggleOptionWindow(false) })
 				}
 				AnimatedVisibility(
 					visible = vm.isOptionWindowVisible,
@@ -696,6 +696,18 @@ class PlayActivity : BaseActivity() {
 		val panelBg = theme?.optionWindow?.let { Color(it).copy(alpha = 0.94f) } ?: PlayPalette.panelBackground
 		val accentColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: PlayPalette.accent
 		val textColor = PlayPalette.panelContentOn(panelBg)
+		// A skin may set only option_window, leaving the default accent or the Quit red lost on its panel.
+		val autoMappingColors = remember(panelBg, accentColor) {
+			val backdrops = PlayPalette.optionPanelBackdrops(panelBg)
+			AutoMappingColors(
+				label = PlayPalette.readableOn(accentColor, backdrops, PlayPalette.MIN_TEXT_CONTRAST),
+				arrow = PlayPalette.readableOn(accentColor.copy(alpha = 0.7f), backdrops, PlayPalette.MIN_GRAPHIC_CONTRAST),
+				progress = PlayPalette.readableOn(accentColor, backdrops, PlayPalette.MIN_GRAPHIC_CONTRAST),
+			)
+		}
+		val quitTint = remember(panelBg) {
+			PlayPalette.readableOn(PlayPalette.danger, PlayPalette.optionPanelBackdrops(panelBg), PlayPalette.MIN_GRAPHIC_CONTRAST)
+		}
 		val sectionColor = textColor.copy(alpha = 0.65f)
 		var infoExpanded by remember { mutableStateOf(false) }
 
@@ -719,7 +731,7 @@ class PlayActivity : BaseActivity() {
 				Icon(
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
-					tint = PlayPalette.danger,
+					tint = quitTint,
 					modifier = Modifier.size(24.dp).clickable { finish() },
 				)
 			}
@@ -773,7 +785,7 @@ class PlayActivity : BaseActivity() {
 				PlayModeSegmented(textColor)
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
-					AutoMappingRow(accentColor, textColor)
+					AutoMappingRow(autoMappingColors, textColor)
 				}
 				Spacer(modifier = Modifier.height(16.dp))
 			}
@@ -844,7 +856,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun AutoMappingRow(accentColor: Color, textColor: Color) {
+	private fun AutoMappingRow(colors: AutoMappingColors, textColor: Color) {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
@@ -853,7 +865,7 @@ class PlayActivity : BaseActivity() {
 				androidx.compose.material3.LinearProgressIndicator(
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
 					modifier = Modifier.fillMaxWidth(),
-					color = accentColor,
+					color = colors.progress,
 					trackColor = textColor.copy(alpha = 0.1f),
 				)
 			}
@@ -865,8 +877,8 @@ class PlayActivity : BaseActivity() {
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				Text("Auto Mapping", color = accentColor, fontSize = 13.sp, modifier = Modifier.weight(1f))
-				Text("→", color = accentColor.copy(alpha = 0.7f), fontSize = 13.sp)
+				Text("Auto Mapping", color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
+				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
 	}
@@ -1270,3 +1282,6 @@ class PlayActivity : BaseActivity() {
 
 	// endregion
 }
+
+/** Auto Mapping row colours, each kept readable on the option panel. */
+private data class AutoMappingColors(val label: Color, val arrow: Color, val progress: Color)
