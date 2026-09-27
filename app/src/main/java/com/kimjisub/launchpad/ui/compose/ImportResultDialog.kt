@@ -26,9 +26,11 @@ import androidx.compose.ui.unit.sp
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.unipack.UniPack
+import java.io.File
 
 sealed class ImportResult {
-	data class Success(val unipack: UniPack) : ImportResult()
+	/** [folder] is the imported pack's own folder, so "Play now" opens this pack and no other. */
+	data class Success(val folder: File, val unipack: UniPack) : ImportResult()
 	data class Warning(val message: String) : ImportResult()
 	data class Error(val message: String) : ImportResult()
 }
@@ -53,14 +55,28 @@ fun ImportProgressDialog() {
 fun ImportResultDialog(
 	result: ImportResult,
 	onDismiss: () -> Unit,
+	onPlayNow: (ImportResult.Success) -> Unit,
 ) {
 	AlertDialog(
 		onDismissRequest = onDismiss,
 		confirmButton = {
-			TextButton(onClick = onDismiss) {
-				Text(stringResource(android.R.string.ok))
+			if (result is ImportResult.Success) {
+				TextButton(onClick = { onPlayNow(result) }) {
+					Text(stringResource(R.string.importPlayNow))
+				}
+			} else {
+				TextButton(onClick = onDismiss) {
+					Text(stringResource(android.R.string.ok))
+				}
 			}
 		},
+		dismissButton = if (result is ImportResult.Success) {
+			{
+				TextButton(onClick = onDismiss) {
+					Text(stringResource(android.R.string.ok))
+				}
+			}
+		} else null,
 		title = {
 			Text(
 				text = when (result) {
