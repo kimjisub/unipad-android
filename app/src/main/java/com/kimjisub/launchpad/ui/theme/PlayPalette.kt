@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 
 /**
@@ -47,6 +49,41 @@ object PlayPalette {
 		val lb = b.luminance()
 		return (maxOf(la, lb) + 0.05f) / (minOf(la, lb) + 0.05f)
 	}
+
+	/** WCAG AA contrast for body text. */
+	const val MIN_TEXT_CONTRAST = 4.5f
+
+	/** WCAG AA contrast for icons and marks that stand for a control. */
+	const val MIN_GRAPHIC_CONTRAST = 3f
+
+	/** Dims the play screen behind the open option panel. */
+	val optionScrim = Color.Black.copy(alpha = 0.5f)
+
+	/**
+	 * What the (slightly translucent) option panel can look like on screen: [panelBackground] over the
+	 * scrim, over the darkest and the lightest play screen a skin can put behind it.
+	 */
+	fun optionPanelBackdrops(panelBackground: Color): List<Color> =
+		listOf(Color.Black, Color.White).map { panelBackground.compositeOver(optionScrim.compositeOver(it)) }
+
+	/**
+	 * Keeps [color] when it already reaches [minRatio] on every one of [backgrounds]. Otherwise moves it
+	 * toward black or white, whichever the backgrounds contrast with more, only as far as needed. Only
+	 * lightness changes, so a skin's accent or the red Quit tint keeps its hue.
+	 */
+	fun readableOn(color: Color, backgrounds: List<Color>, minRatio: Float): Color {
+		fun worstContrast(candidate: Color) = backgrounds.minOf { contrastRatio(candidate.compositeOver(it), it) }
+		if (worstContrast(color) >= minRatio) return color
+
+		val target = listOf(Color.Black, Color.White).maxBy(::worstContrast)
+		val drawn = color.compositeOver(backgrounds.first())
+		return (1..READABLE_STEPS)
+			.map { lerp(drawn, target, it.toFloat() / READABLE_STEPS) }
+			.firstOrNull { worstContrast(it) >= minRatio }
+			?: target
+	}
+
+	private const val READABLE_STEPS = 50
 
 	// Play mode distinctive colors. Each mode owns a hue so the segmented control
 	// communicates mode identity without relying on text alone.
