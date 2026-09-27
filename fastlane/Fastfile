@@ -1,0 +1,135 @@
+# UniPad Android — Play Store deploy lanes.
+# Secrets (keystore, Play service-account JSON) are injected by the store-deploy skill's
+# op-bootstrap.sh at runtime; nothing sensitive lives in this file.
+#
+# Release signing itself is already wired in app/build.gradle via keystore.properties,
+# so a local `gradle bundleRelease` signs with the real upload key without extra config.
+
+default_platform(:android)
+
+BUILD_GRADLE = File.expand_path("../app/build.gradle", __dir__)
+
+# Reads the current versionCode from app/build.gradle.
+def current_version_code
+  File.read(BUILD_GRADLE).match(/versionCode\s*=\s*(\d+)/)[1].to_i
+end
+
+# Reads versionName from app/build.gradle. supply otherwise names the Play release after
+# whatever it finds first, which showed "4.1.3" for the 4.1.4 upload.
+def current_version_name
+  File.read(BUILD_GRADLE).match(/versionName\s*=\s*"([^"]+)"/)[1]
+end
+
+# Highest versionCode Play already knows about, across every track. The local
+# build.gradle can lag behind (a build made elsewhere, a manual upload), and Play
+# rejects an AAB whose versionCode is not strictly greater than the last upload.
+def highest_play_version_code
+  %w[internal alpha beta production].flat_map { |t|
+    begin
+      google_play_track_version_codes(track: t)
+    rescue StandardError
+      [] # track may not exist yet
+    end
+  }.map(&:to_i).max || 0
+end
+
+# Sets versionCode to one past whichever is higher: the local value or Play's.
+def bump_version_code!
+  contents = File.read(BUILD_GRADLE)
+  local = current_version_code
+  remote = highest_play_version_code
+  next_code = [local, remote].max + 1
+  File.write(BUILD_GRADLE, contents.sub(/versionCode\s*=\s*\d+/, "versionCode = #{next_code}"))
+  UI.success("versionCode -> #{next_code} (local was #{local}, Play had #{remote})")
+  next_code
+end
+
+platform :android do
+  desc "Build a signed release AAB without uploading (build/sign verification)."
+  lane :build_only do
+    gradle(task: "clean")
+    gradle(task: "bundle", build_type: "Release")
+    UI.success("AAB: #{lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]}")
+  end
+
+  desc "Build a signed AAB and upload to the given Play track. Pass track:internal|alpha|beta|production."
+  lane :deploy do |options|
+    track = options[:track] || "internal"
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+
+    bump_version_code! unless options[:no_bump]
+    gradle(task: "clean")
+    gradle(task: "bundle", build_type: "Release")
+
+    # rollout:0.1 stages a production release to 10% of users (status inProgress);
+    # omit it for the old behaviour (completed = everyone). Vitals showed the
+    # production build at 2.6-3.1% user-perceived crash rate, so stage first.
+    rollout = options[:rollout]&.to_s
+    status = if track == "production" then (rollout && rollout.to_f < 1.0 ? "inProgress" : "completed") else "draft" end
+    upload_to_play_store(
+      track: track,
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      # Without the R8 mapping, Play shows obfuscated frames ("Exception w30") and
+      # cannot group crashes properly. gradle exposes the path after bundleRelease.
+      mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
+      version_name: current_version_name,
+      release_status: status,
+      rollout: rollout,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+    UI.success("Uploaded versionCode #{current_version_code} to Play track '#{track}' (#{status}#{rollout ? ", rollout #{rollout}" : ""}).")
+  end
+
+  desc "Promote an already-uploaded build (e.g. from internal) into production as a staged release. Pass version_code:NNN and fraction:0.1 (1 = everyone)."
+  lane :promote do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    fraction = (options[:fraction] || "0.1").to_s
+    from = options[:from] || "internal"
+    # `rollout` below only adjusts a release that is already on production; a build that
+    # lives on internal has to be promoted first, which is a different supply call.
+    upload_to_play_store(
+      track: from,
+      track_promote_to: "production",
+      track_promote_release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
+      version_code: options[:version_code] || current_version_code,
+      version_name: options[:version_name] || current_version_name,
+      rollout: fraction,
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("promoted #{options[:version_code] || current_version_code} from #{from} to production at #{fraction}")
+  end
+
+  desc "Change the staged rollout fraction of the current production release. Pass fraction:0.5 (1 = complete) and version_code:NNN."
+  lane :rollout do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    fraction = options[:fraction].to_s
+    UI.user_error!("pass fraction:0.1..1") if fraction.empty?
+    upload_to_play_store(
+      track: "production",
+      version_code: options[:version_code] || current_version_code,
+      version_name: options[:version_name] || current_version_name,
+      rollout: fraction,
+      release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("production rollout -> #{fraction}")
+  end
+
+  desc "Halt the current staged production rollout (keeps the release, stops new users getting it)."
+  lane :halt do |options|
+    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+    upload_to_play_store(
+      track: "production",
+      version_code: options[:version_code] || current_version_code,
+      release_status: "halted",
+      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
+      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    )
+    UI.success("production rollout halted")
+  end
+end

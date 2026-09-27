@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -460,9 +459,6 @@ class PlayActivity : BaseActivity() {
 			if (vm.startReady) {
 				// Main play content
 				Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-					if (vm.optionViewVisible) {
-						SideCheckPanel(modifier = Modifier.align(Alignment.CenterStart))
-					}
 					// Custom layout that centers pads independently and positions chains relative to pads
 					Layout(
 						content = {
@@ -531,6 +527,14 @@ class PlayActivity : BaseActivity() {
 						}
 					}
 				}
+				// Floating transport bar
+				if (vm.autoPlayControlVisible && !vm.isOptionWindowVisible) {
+					FloatingTransportBar(
+						modifier = Modifier
+							.align(Alignment.BottomCenter)
+							.padding(bottom = 16.dp),
+					)
+				}
 				// Menu button (bottom-right)
 				if (!vm.isOptionWindowVisible) {
 					Icon(
@@ -569,109 +573,6 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-
-	@Composable
-	private fun SideCheckPanel(modifier: Modifier = Modifier) {
-		val cbColor = theme?.checkbox?.let { Color(it) } ?: colorResource(R.color.checkbox)
-		val panelBg = Color.Black.copy(alpha = 0.35f)
-		val panelShape = RoundedCornerShape(12.dp)
-
-		Column(
-			modifier = modifier.fillMaxHeight(),
-			verticalArrangement = Arrangement.SpaceBetween,
-		) {
-			// Top group: performance controls
-			Column(
-				modifier = Modifier
-					.background(panelBg, panelShape)
-					.padding(horizontal = 6.dp, vertical = 8.dp),
-				verticalArrangement = Arrangement.spacedBy(2.dp),
-			) {
-				PlayCheckBox(vm.scbFeedbackLight, string.feedbackLight, cbColor)
-				PlayCheckBox(vm.scbLed, string.led, cbColor)
-				if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
-					PlayModeSelector(cbColor)
-				}
-				if (vm.autoPlayControlVisible) AutoPlayTransportControls(cbColor)
-			}
-
-			// Bottom group: tools
-			Column(
-				modifier = Modifier
-					.background(panelBg, panelShape)
-					.padding(horizontal = 6.dp, vertical = 8.dp),
-				verticalArrangement = Arrangement.spacedBy(2.dp),
-			) {
-				PlayCheckBox(vm.scbTraceLog, string.traceLog, cbColor, hasLongClick = true)
-				PlayCheckBox(vm.scbRecord, string.record, cbColor)
-			}
-		}
-	}
-
-	@Composable
-	private fun PlayModeSelector(accentColor: Color) {
-		val currentMode = vm.playMode
-		Column(
-			modifier = Modifier.padding(top = 4.dp),
-			verticalArrangement = Arrangement.spacedBy(2.dp),
-		) {
-			PlayModeButton(
-				label = stringResource(string.autoPlay),
-				icon = Icons.Default.PlayArrow,
-				isActive = currentMode == PlayMode.AutoPlay,
-				accentColor = accentColor,
-				onClick = { vm.switchPlayMode(PlayMode.AutoPlay) },
-			)
-			PlayModeButton(
-				label = stringResource(string.guidePlay),
-				icon = Icons.Default.PlayArrow,
-				isActive = currentMode == PlayMode.GuidePlay,
-				accentColor = Color(0xFF4FC3F7),
-				onClick = { vm.switchPlayMode(PlayMode.GuidePlay) },
-			)
-			PlayModeButton(
-				label = stringResource(string.stepPractice),
-				icon = Icons.Default.PlayArrow,
-				isActive = currentMode == PlayMode.StepPractice,
-				accentColor = Color(0xFF66BB6A),
-				onClick = { vm.switchPlayMode(PlayMode.StepPractice) },
-			)
-		}
-	}
-
-	@Composable
-	private fun PlayModeButton(
-		label: String,
-		icon: androidx.compose.ui.graphics.vector.ImageVector,
-		isActive: Boolean,
-		accentColor: Color,
-		onClick: () -> Unit,
-	) {
-		val bgAlpha = if (isActive) 0.2f else 0.06f
-		val textColor = if (isActive) accentColor else Color.White.copy(alpha = 0.5f)
-
-		Row(
-			modifier = Modifier
-				.background(accentColor.copy(alpha = bgAlpha), RoundedCornerShape(8.dp))
-				.clickable(onClick = onClick)
-				.padding(horizontal = 8.dp, vertical = 5.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(4.dp),
-		) {
-			Icon(
-				imageVector = icon,
-				contentDescription = null,
-				tint = textColor,
-				modifier = Modifier.size(12.dp),
-			)
-			Text(
-				text = label,
-				color = textColor,
-				fontSize = 11.sp,
-				fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-			)
-		}
-	}
 
 	@Composable
 	private fun AutoPlayTransportControls(accentColor: Color) {
@@ -714,6 +615,47 @@ class PlayActivity : BaseActivity() {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(18.dp))
 				}
 			}
+		}
+	}
+
+	@Composable
+	private fun FloatingTransportBar(modifier: Modifier = Modifier) {
+		val accentColor = theme?.checkbox?.let { Color(it) } ?: colorResource(R.color.checkbox)
+		val progressFraction = if (vm.autoPlayProgressMax > 0) vm.autoPlayProgress.toFloat() / vm.autoPlayProgressMax else 0f
+
+		Row(
+			modifier = modifier
+				.background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(24.dp))
+				.padding(horizontal = 12.dp, vertical = 4.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.size(32.dp)) {
+				Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(20.dp))
+			}
+			IconButton(
+				onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
+				modifier = Modifier.size(36.dp),
+			) {
+				Icon(
+					imageVector = if (vm.isAutoPlayPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+					contentDescription = stringResource(if (vm.isAutoPlayPlaying) string.cd_autoplay_pause else string.cd_autoplay_play),
+					tint = Color.White,
+					modifier = Modifier.size(24.dp),
+				)
+			}
+			IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.size(32.dp)) {
+				Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(20.dp))
+			}
+			LinearProgressIndicator(
+				progress = { progressFraction },
+				modifier = Modifier
+					.width(100.dp)
+					.height(4.dp),
+				color = accentColor,
+				trackColor = Color.White.copy(alpha = 0.15f),
+				drawStopIndicator = {},
+			)
 		}
 	}
 
@@ -800,6 +742,10 @@ class PlayActivity : BaseActivity() {
 				OptionModeButton(string.autoPlay, PlayMode.AutoPlay, textColor, accentColor)
 				OptionModeButton(string.guidePlay, PlayMode.GuidePlay, textColor, Color(0xFF4FC3F7))
 				OptionModeButton(string.stepPractice, PlayMode.StepPractice, textColor, Color(0xFF66BB6A))
+			}
+			if (vm.autoPlayControlVisible) {
+				Spacer(modifier = Modifier.height(8.dp))
+				AutoPlayTransportControls(accentColor)
 			}
 
 			Spacer(modifier = Modifier.height(16.dp))
@@ -919,41 +865,6 @@ class PlayActivity : BaseActivity() {
 				contentDescription = stringResource(textResId),
 				tint = if (isActive) accentColor else textColor.copy(alpha = 0.5f),
 				modifier = Modifier.size(20.dp),
-			)
-		}
-	}
-
-	@OptIn(ExperimentalFoundationApi::class)
-	@Composable
-	private fun PlayCheckBox(state: CheckBoxState, textResId: Int, color: Color, hasLongClick: Boolean = false) {
-		if (!state.visible) return
-		val alpha = if (state.locked) LOCKED_ALPHA else 1f
-		val indicatorColor = if (state.checked) color else color.copy(alpha = 0.25f)
-		Row(
-			modifier = Modifier
-				.alpha(alpha)
-				.then(
-					if (!state.locked) {
-						if (hasLongClick && state.onLongClick != null)
-							Modifier.combinedClickable(onClick = { state.toggleChecked() }, onLongClick = state.onLongClick)
-						else
-							Modifier.clickable { state.toggleChecked() }
-					} else Modifier
-				)
-				.padding(horizontal = 2.dp, vertical = 4.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(6.dp),
-		) {
-			// Dot indicator instead of switch
-			Box(
-				modifier = Modifier
-					.size(8.dp)
-					.background(indicatorColor, RoundedCornerShape(50)),
-			)
-			Text(
-				text = stringResource(textResId),
-				color = if (state.checked) Color.White else Color.White.copy(alpha = 0.5f),
-				fontSize = 12.sp,
 			)
 		}
 	}
