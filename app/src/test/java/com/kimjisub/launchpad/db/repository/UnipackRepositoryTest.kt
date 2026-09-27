@@ -10,8 +10,10 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.Date
@@ -100,6 +102,21 @@ class UnipackRepositoryTest {
 
 		assertSame(liveData, result)
 		verify { dao.lastOpenedAt("test-id") }
+	}
+
+	@Test
+	fun delete_returnsTrueWhenRowIsGone() {
+		every { dao.exists("test-id") } returns false
+
+		assertTrue(repository.delete("test-id"))
+		verify { dao.delete("test-id") }
+	}
+
+	@Test
+	fun delete_returnsFalseWhenRowRemains() {
+		every { dao.exists("test-id") } returns true
+
+		assertFalse(repository.delete("test-id"))
 	}
 
 	@Test
