@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Вы хотите удалить этот проект?</string>
 	<string name="remapDone">Переназначение AutoPlay успешно завершено.</string>
 	<string name="remapFail">AutoPlay отсутствует</string>
-	<string name="importComplete">Анализ завершён!</string>
-	<string name="importFailed">Ошибка анализа…</string>
+	<string name="importComplete">Пак импортирован!</string>
+	<string name="importPlayNow">Играть</string>
+	<string name="importFailed">Ошибка импорта</string>
 	<string name="copied">Скопировано в буфер обмена.</string>
 	<string name="skinMemoryErr">Не удалось применить скин.\nПерезапустите приложение.</string>
 	<string name="skinErr">Не удалось применить скин.\nСбросить скин.</string>

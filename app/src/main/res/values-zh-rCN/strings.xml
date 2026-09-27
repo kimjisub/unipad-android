@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">您想删除此项目吗？</string>
 	<string name="remapDone">自动播放重映射成功完成。</string>
 	<string name="remapFail">没有自动播放</string>
-	<string name="importComplete">分析完成！</string>
-	<string name="importFailed">分析失败…</string>
+	<string name="importComplete">包已导入！</string>
+	<string name="importPlayNow">立即演奏</string>
+	<string name="importFailed">导入失败</string>
 	<string name="copied">已复制到剪贴板。</string>
 	<string name="skinMemoryErr">皮肤应用失败。\n重新启动应用程序。</string>
 	<string name="skinErr">皮肤应用失败。\n重置皮肤。</string>

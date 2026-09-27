@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
 	<string name="remapDone">AutoPlay yeniden eşlemesi başarıyla tamamlandı.</string>
 	<string name="remapFail">AutoPlay mevcut değil</string>
-	<string name="importComplete">Analiz tamamlandı!</string>
-	<string name="importFailed">Analiz başarısız…</string>
+	<string name="importComplete">Paket içe aktarıldı!</string>
+	<string name="importPlayNow">Şimdi çal</string>
+	<string name="importFailed">İçe aktarma başarısız</string>
 	<string name="copied">Panoya kopyalandı.</string>
 	<string name="skinMemoryErr">Tema uygulanamadı.\nUygulamayı yeniden başlatın.</string>
 	<string name="skinErr">Tema uygulanamadı.\nTemayı sıfırlayın.</string>

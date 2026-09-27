@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Deseja excluir este projeto?</string>
 	<string name="remapDone">O remapeamento do AutoPlay foi concluído com sucesso.</string>
 	<string name="remapFail">AutoPlay não existe</string>
-	<string name="importComplete">Análise concluída!</string>
-	<string name="importFailed">Falha ao analisar…</string>
+	<string name="importComplete">Pack importado!</string>
+	<string name="importPlayNow">Tocar agora</string>
+	<string name="importFailed">Falha ao importar</string>
 	<string name="copied">Copiado para a área de transferência.</string>
 	<string name="skinMemoryErr">Falha ao aplicar o skin.\nReiniciar app.</string>
 	<string name="skinErr">Falha ao aplicar o skin.\nRedefinir skin.</string>

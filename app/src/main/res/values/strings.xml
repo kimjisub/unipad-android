@@ -111,9 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Do you want to delete this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>
-	<string name="importComplete">Analysis complete!</string>
+	<string name="importComplete">Pack imported!</string>
 	<string name="importPlayNow">Play now</string>
-	<string name="importFailed">Failed to analyze…</string>
+	<string name="importFailed">Import failed</string>
 	<string name="copied">Copied to clipboard.</string>
 	<string name="no_app_for_link">No app on this device can open this link.</string>
 	<string name="skinMemoryErr">Failed to apply skin.\nRestart app.</string>

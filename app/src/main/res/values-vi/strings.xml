@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Bạn có muốn xóa dự án này không?</string>
 	<string name="remapDone">Ánh xạ lại AutoPlay đã hoàn tất thành công.</string>
 	<string name="remapFail">AutoPlay không tồn tại</string>
-	<string name="importComplete">Phân tích hoàn tất!</string>
-	<string name="importFailed">Phân tích thất bại…</string>
+	<string name="importComplete">Đã nhập pack!</string>
+	<string name="importPlayNow">Chơi ngay</string>
+	<string name="importFailed">Nhập thất bại</string>
 	<string name="copied">Đã sao chép vào clipboard.</string>
 	<string name="skinMemoryErr">Không thể áp dụng skin.\nKhởi động lại ứng dụng.</string>
 	<string name="skinErr">Không thể áp dụng skin.\nĐặt lại skin.</string>

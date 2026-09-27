@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">ဤပရောဂျက်ကို ဖျက်လိုပါသလား?</string>
 	<string name="remapDone">AutoPlay ပြန်လည်ချိတ်ဆက်ခြင်း အောင်မြင်စွာပြီးဆုံးပါပြီ။</string>
 	<string name="remapFail">AutoPlay မရှိပါ</string>
-	<string name="importComplete">ခွဲခြမ်းစိတ်ဖြာခြင်း ပြီးဆုံးပါပြီ!</string>
-	<string name="importFailed">ခွဲခြမ်းစိတ်ဖြာခြင်း မအောင်မြင်ပါ…</string>
+	<string name="importComplete">Pack ကို တင်သွင်းပြီးပါပြီ!</string>
+	<string name="importPlayNow">ယခု ဖွင့်ရန်</string>
+	<string name="importFailed">တင်သွင်းခြင်း မအောင်မြင်ပါ</string>
 	<string name="copied">ကလစ်ဘုတ်သို့ ကူးယူပြီး။</string>
 	<string name="skinMemoryErr">Skin အသုံးပြုခြင်း မအောင်မြင်ပါ။\nအက်ပ် ပြန်စတင်ပါ။</string>
 	<string name="skinErr">Skin အသုံးပြုခြင်း မအောင်မြင်ပါ။\nSkin ပြန်လည်သတ်မှတ်ပါ။</string>
