@@ -61,7 +61,7 @@ class PlayOptionPanelContrastTest {
     private fun panel(optionWindow: Long) = Color(optionWindow).copy(alpha = 0.94f)
 
     private fun worstContrast(color: Color, panel: Color): Float =
-        PlayPalette.optionPanelBackdrops(panel).minOf { PlayPalette.contrastRatio(color.compositeOver(it), it) }
+        PlayPalette.worstContrast(color, PlayPalette.optionPanelBackdrops(panel))
 
     private fun assertMarksReadable(panel: Color) {
         val backdrops = PlayPalette.optionPanelBackdrops(panel)
@@ -104,16 +104,10 @@ class PlayOptionPanelContrastTest {
     /** Black or white, whichever the panel's own text leans to; text on a fill keeps that direction. */
     private fun bestPossible(panel: Color, fillAlpha: Float): Float {
         val extreme = if (isDark(PlayPalette.optionPanelText(panel).primary)) Color.Black else Color.White
-        return worstContrast(extreme, fillBackdrops(panel, fillAlpha))
+        return PlayPalette.worstContrast(extreme, PlayPalette.optionPanelFillBackdrops(panel, fillAlpha))
     }
 
-    private fun fillBackdrops(panel: Color, fillAlpha: Float): List<Color> {
-        val fill = PlayPalette.panelContentOn(panel).copy(alpha = fillAlpha)
-        return PlayPalette.optionPanelBackdrops(panel).map { fill.compositeOver(it) }
-    }
-
-    private fun worstContrast(color: Color, backdrops: List<Color>): Float =
-        backdrops.minOf { PlayPalette.contrastRatio(color.compositeOver(it), it) }
+    private val cardFills = listOf(PlayPalette.INFO_CARD_FILL_ALPHA to "info card", PlayPalette.PLAY_MODE_FILL_ALPHA to "play mode")
 
     @Test
     fun readableSkinsKeepTheirTextColours() {
@@ -122,17 +116,46 @@ class PlayOptionPanelContrastTest {
                 val text = PlayPalette.optionPanelText(panel)
                 assertEquals("Primary text changed on $panel", content, text.primary)
                 assertEquals("Secondary text changed on $panel", content.copy(alpha = PlayPalette.SECONDARY_TEXT_ALPHA), text.secondary)
+                cardFills.forEach { (nominal, where) ->
+                    val fill = PlayPalette.optionPanelFill(panel, nominal)
+                    assertEquals("$where fill changed on $panel", nominal, fill.alpha)
+                    assertEquals("$where text changed on $panel", PlayPalette.optionPanelText(panel, nominal), fill.text)
+                }
             }
+    }
+
+    /**
+     * On #808080 the info card and Play Mode fills pulled their text to 4.48 and 4.37 on screen. The
+     * fills are thinned just enough that black text, in the panel text's direction, reaches 4.5:1.
+     */
+    @Test
+    fun midGreyCardFillsThinJustEnoughForBodyContrast() {
+        val panel = panel(0xFF808080)
+        cardFills.forEach { (nominal, where) ->
+            val fill = PlayPalette.optionPanelFill(panel, nominal)
+            val backdrops = PlayPalette.optionPanelFillBackdrops(panel, fill.alpha)
+            val oldPrimary = PlayPalette.worstContrast(PlayPalette.optionPanelText(panel, nominal).primary, PlayPalette.optionPanelFillBackdrops(panel, nominal))
+            val primary = PlayPalette.worstContrast(fill.text.primary, backdrops)
+            val secondary = PlayPalette.worstContrast(fill.text.secondary, backdrops)
+            println("[#808080] %s fill %.4f -> %.4f, primary %.2f -> %.2f, secondary %.2f".format(where, nominal, fill.alpha, oldPrimary, primary, secondary))
+            assertTrue("$where at its full fill is no longer below 4.5 on #808080 ($oldPrimary); revisit this test", oldPrimary < 4.5f)
+            assertTrue("$where fill ${fill.alpha} is not thinned on #808080", fill.alpha < nominal)
+            assertTrue("$where fill ${fill.alpha} vanished on #808080", fill.alpha > 0f)
+            assertTrue("$where fill ${fill.alpha} is thinner than needed", bestPossible(panel, fill.alpha + FILL_TOLERANCE) < 4.5f)
+            assertTrue("$where primary $primary on #808080", primary >= 4.5f)
+            assertTrue("$where secondary $secondary on #808080", secondary >= 4.5f)
+            assertTrue("$where text is not dark on #808080", isDark(fill.text.primary))
+        }
     }
 
     @Test
     fun midGreySkinTextReachesBodyContrast() {
         val panel = panel(0xFF808080)
         val backdrops = PlayPalette.optionPanelBackdrops(panel)
-        val oldPrimary = worstContrast(PlayPalette.panelContentOn(panel), backdrops)
+        val oldPrimary = PlayPalette.worstContrast(PlayPalette.panelContentOn(panel), backdrops)
         val text = PlayPalette.optionPanelText(panel)
-        val primary = worstContrast(text.primary, backdrops)
-        val secondary = worstContrast(text.secondary, backdrops)
+        val primary = PlayPalette.worstContrast(text.primary, backdrops)
+        val secondary = PlayPalette.worstContrast(text.secondary, backdrops)
         println("[#808080] primary %.2f -> %.2f, secondary %.2f".format(oldPrimary, primary, secondary))
         assertTrue("Plain dark/white pick is no longer below 4.5 on #808080 ($oldPrimary); revisit this test", oldPrimary < 4.5f)
         assertTrue("Primary text $primary on #808080", primary >= 4.5f)
@@ -140,22 +163,24 @@ class PlayOptionPanelContrastTest {
     }
 
     /**
-     * Without changing the background, text on the info card and Play Mode fills of greys around
-     * #6A6A6A–#838383 (#808080 among them), and any text on panels #767676–#7B7B7B, cannot reach 4.5:1
-     * over every backdrop. Those get black
-     * or white; this pins down exactly which panels fall short so the limit does not grow unnoticed.
+     * Text on the bare panels #767676–#7B7B7B cannot reach 4.5:1 over every backdrop; their cards keep
+     * the full fills, and text gets black or white. From #797979 up that text is black, which their light
+     * fill helps, so only the cards of #767676–#787878 fall short. Elsewhere the fills are thinned
+     * until card text reaches 4.5:1. This pins the bands down so they do not grow unnoticed.
      */
     @Test
     fun knownLimitsGetTheMostReadableColour() {
         val short = mutableListOf<String>()
         (0x60..0xA0).forEach { g ->
             val panel = panel(0xFF000000 or (g * 0x010101L))
-            listOf(0f to "panel", PlayPalette.INFO_CARD_FILL_ALPHA to "info card", PlayPalette.PLAY_MODE_FILL_ALPHA to "play mode").forEach { (fillAlpha, where) ->
-                val backdrops = fillBackdrops(panel, fillAlpha)
-                val text = PlayPalette.optionPanelText(panel, fillAlpha)
-                val best = bestPossible(panel, fillAlpha)
-                val primary = worstContrast(text.primary, backdrops)
-                val secondary = worstContrast(text.secondary, backdrops)
+            (listOf(0f to "panel") + cardFills).forEach { (nominal, where) ->
+                val fill = PlayPalette.optionPanelFill(panel, nominal)
+                assertTrue("#%02X %s fill %.4f is thicker than %.4f".format(g, where, fill.alpha, nominal), fill.alpha <= nominal)
+                val backdrops = PlayPalette.optionPanelFillBackdrops(panel, fill.alpha)
+                val text = fill.text
+                val best = bestPossible(panel, fill.alpha)
+                val primary = PlayPalette.worstContrast(text.primary, backdrops)
+                val secondary = PlayPalette.worstContrast(text.secondary, backdrops)
                 assertEquals(
                     "#%02X %s text leans the other way from the panel text".format(g, where),
                     isDark(PlayPalette.optionPanelText(panel).primary),
@@ -172,10 +197,11 @@ class PlayOptionPanelContrastTest {
             }
         }
         println("Known below 4.5 (best possible): ${short.joinToString()}")
-        val panelsShort = short.filter { " panel " in it }.map { it.substring(1, 3).toInt(16) }
-        assertEquals("Panels that cannot reach 4.5 changed", (0x76..0x7B).toList(), panelsShort)
-        assertTrue("#808080 info card is expected to fall short", short.any { it.startsWith("#80 info card") })
-        assertTrue("#808080 play mode is expected to fall short", short.any { it.startsWith("#80 play mode") })
+        fun shortGreys(where: String) = short.filter { " $where " in it }.map { it.substring(1, 3).toInt(16) }
+        assertEquals("Panels that cannot reach 4.5 changed", (0x76..0x7B).toList(), shortGreys("panel"))
+        cardFills.forEach { (_, where) ->
+            assertEquals("Panels whose $where cannot reach 4.5 changed", (0x76..0x78).toList(), shortGreys(where))
+        }
     }
 
     @Test
@@ -183,5 +209,10 @@ class PlayOptionPanelContrastTest {
         val yellow = Color(0xFFFFEB3B)
         val backdrops = PlayPalette.optionPanelBackdrops(panel(0xFF424242))
         assertEquals(yellow, PlayPalette.readableOn(yellow, backdrops, PlayPalette.MIN_TEXT_CONTRAST))
+    }
+
+    companion object {
+        /** Just over one thinning step of either fill; a fill this much thicker must fall short again. */
+        private const val FILL_TOLERANCE = 0.005f
     }
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -26,11 +25,12 @@ import java.io.File
  *
  * Every kind of plain text is measured too: title, section title, option label, pack info (title and
  * the secondary lines), Play Mode label and the Auto Mapping progress line. On #808080 the dark/white
- * pick alone gave 3.84. On the info card and Play Mode fills of #808080 and #787878 no colour in the
- * text's direction gives 4.5:1 over every backdrop; there the text must reach at least what its
- * colour guarantees over every backdrop, and the measured value is printed as a known limit. #787878
- * also sits in the band where the bare panel falls short over a white play screen; over the dark one
- * drawn here its panel text must still give 4.5:1.
+ * pick alone gave 3.84, and the info card and Play Mode fills held their text at 4.48 and 4.37; with
+ * those fills thinned every text there must reach 4.5:1. #787878 sits in the band where the bare
+ * panel falls short over a white play screen, so its fills stay full and no colour in the text's
+ * direction gives 4.5:1 on them; there the text must reach at least what its colour guarantees over
+ * every backdrop, and the measured value is printed as a known limit. Over the dark play screen drawn
+ * here its panel text must still give 4.5:1.
  */
 @RunWith(AndroidJUnit4::class)
 class PlayOptionPanelSkinContrastTest : BaseUITest() {
@@ -56,12 +56,12 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
     fun darkSkin() = checkPanel("dark", installSkin("#424242"))
 
     @Test
-    fun midGreySkin() = checkPanel("midgrey", installSkin("#808080"), fillLimits(0xFF808080))
+    fun midGreySkin() = checkPanel("midgrey", installSkin("#808080"))
 
     @Test
     fun knownLimitGreySkin() = checkPanel("limitgrey", installSkin("#787878"), fillLimits(0xFF787878))
 
-    /** On these panels the info card and Play Mode fills leave no colour in the text's direction at 4.5:1. */
+    /** On these panels even the full info card and Play Mode fills leave no colour in the text's direction at 4.5:1. */
     private fun fillLimits(optionWindow: Long) = mapOf(
         INFO_CARD_TITLE to guaranteed(optionWindow, PlayPalette.INFO_CARD_FILL_ALPHA) { it.primary },
         INFO_CARD_PRODUCER to guaranteed(optionWindow, PlayPalette.INFO_CARD_FILL_ALPHA) { it.secondary },
@@ -82,12 +82,10 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
     }
 
     /** Worst contrast of the chosen text colour over every backdrop PlayActivity may draw behind it. */
-    private fun guaranteed(optionWindow: Long, fillAlpha: Float, pick: (PlayPalette.OptionPanelText) -> Color): Float {
+    private fun guaranteed(optionWindow: Long, nominalFill: Float, pick: (PlayPalette.OptionPanelText) -> Color): Float {
         val panel = Color(optionWindow).copy(alpha = 0.94f)
-        val fill = PlayPalette.panelContentOn(panel).copy(alpha = fillAlpha)
-        val color = pick(PlayPalette.optionPanelText(panel, fillAlpha))
-        return PlayPalette.optionPanelBackdrops(panel).map { fill.compositeOver(it) }
-            .minOf { PlayPalette.contrastRatio(color.compositeOver(it), it) }
+        val fill = PlayPalette.optionPanelFill(panel, nominalFill)
+        return PlayPalette.worstContrast(pick(fill.text), PlayPalette.optionPanelFillBackdrops(panel, fill.alpha))
     }
 
     private fun checkPanel(name: String, themeId: String, knownLimits: Map<String, Float> = emptyMap()) {

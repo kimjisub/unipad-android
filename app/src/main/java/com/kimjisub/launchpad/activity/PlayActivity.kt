@@ -695,11 +695,12 @@ class PlayActivity : BaseActivity() {
 		// Theme colours (colors.json option_window / option_window_checkbox), as iOS and web apply them.
 		val panelBg = theme?.optionWindow?.let { Color(it).copy(alpha = 0.94f) } ?: PlayPalette.panelBackground
 		val accentColor = theme?.optionWindowCheckbox?.let { Color(it) } ?: PlayPalette.accent
-		// Fills and switch parts keep the plain content tint; only text is adjusted for contrast.
+		// Fills and switch parts keep the plain content tint; text is adjusted for contrast, and on mid greys the card fills are thinned.
 		val tint = PlayPalette.panelContentOn(panelBg)
 		val panelText = remember(panelBg) { PlayPalette.optionPanelText(panelBg) }
-		val cardText = remember(panelBg) { PlayPalette.optionPanelText(panelBg, PlayPalette.INFO_CARD_FILL_ALPHA) }
-		val playModeText = remember(panelBg) { PlayPalette.optionPanelText(panelBg, PlayPalette.PLAY_MODE_FILL_ALPHA).primary }
+		val cardFill = remember(panelBg) { PlayPalette.optionPanelFill(panelBg, PlayPalette.INFO_CARD_FILL_ALPHA) }
+		val cardText = cardFill.text
+		val playModeFill = remember(panelBg) { PlayPalette.optionPanelFill(panelBg, PlayPalette.PLAY_MODE_FILL_ALPHA) }
 		val textColor = panelText.primary
 		val backdrops = remember(panelBg) { PlayPalette.optionPanelBackdrops(panelBg) }
 		// A skin may set only option_window, leaving the default accent or the Quit red lost on its panel.
@@ -748,7 +749,7 @@ class PlayActivity : BaseActivity() {
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
-					.background(tint.copy(alpha = PlayPalette.INFO_CARD_FILL_ALPHA), shape = RoundedCornerShape(12.dp))
+					.background(tint.copy(alpha = cardFill.alpha), shape = RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
@@ -787,7 +788,7 @@ class PlayActivity : BaseActivity() {
 			// PLAY MODE — top of Performance (most frequently changed during a session)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
 				SectionTitle("Play Mode", sectionColor)
-				PlayModeSegmented(playModeText, tint)
+				PlayModeSegmented(playModeFill.text.primary, tint.copy(alpha = playModeFill.alpha))
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
 					AutoMappingRow(autoMappingColors, textColor, tint)
@@ -820,7 +821,7 @@ class PlayActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun PlayModeSegmented(textColor: Color, tint: Color) {
+	private fun PlayModeSegmented(textColor: Color, fillColor: Color) {
 		val modes = listOf(
 			Triple(PlayMode.AutoPlay, string.autoPlay, PlayPalette.modeAutoPlay),
 			Triple(PlayMode.GuidePlay, string.guidePlay, PlayPalette.modeGuidePlay),
@@ -830,7 +831,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(horizontal = 24.dp)
-				.background(tint.copy(alpha = PlayPalette.PLAY_MODE_FILL_ALPHA), RoundedCornerShape(10.dp))
+				.background(fillColor, RoundedCornerShape(10.dp))
 				.padding(3.dp),
 			horizontalArrangement = Arrangement.spacedBy(2.dp),
 		) {
