@@ -3,12 +3,21 @@ package com.kimjisub.launchpad
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import com.kimjisub.design.view.ChainView
+import com.kimjisub.design.view.PadView
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -64,6 +73,49 @@ class PlayActivityTest : BaseUITest() {
                 ?.toString()?.takeIf { it.isNotEmpty() }
         }
         return text
+    }
+
+    /** Play screen geometry read from the view tree: [padArea] of the helper only estimates the grid. */
+    private class PlayGeometry(val safe: Rect, val pads: Rect, val chains: List<Rect>)
+
+    /**
+     * Pad grid and chain buttons on screen, and the area not covered by system bars or the display
+     * cutout. Edge-to-edge windows (targetSdk 35+ on Android 15+) draw under both.
+     */
+    private fun playGeometry(): PlayGeometry {
+        var geometry: PlayGeometry? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(Stage.RESUMED).single()
+            val decor = activity.window.decorView
+            val insets = ViewCompat.getRootWindowInsets(decor)
+                ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val safe = screenBounds(decor).apply {
+                if (insets != null) {
+                    left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom
+                }
+            }
+            val shown = mutableListOf<View>()
+            fun collect(view: View) {
+                if (view.visibility != View.VISIBLE) return
+                shown += view
+                if (view is ViewGroup) for (i in 0 until view.childCount) collect(view.getChildAt(i))
+            }
+            collect(decor)
+            val pads = shown.filterIsInstance<PadView>().map(::screenBounds)
+                .reduceOrNull { acc, r -> Rect(acc).apply { union(r) } } ?: Rect()
+            geometry = PlayGeometry(safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
+        }
+        return geometry!!
+    }
+
+    private fun screenBounds(view: View): Rect {
+        val origin = IntArray(2).also { view.getLocationOnScreen(it) }
+        return Rect(origin[0], origin[1], origin[0] + view.width, origin[1] + view.height)
+    }
+
+    private fun assertInside(safe: Rect, name: String, bounds: Rect) {
+        assertTrue("$name $bounds reaches outside the safe area $safe", safe.contains(bounds))
     }
 
     private fun clearClipboard() {
@@ -600,6 +652,31 @@ class PlayActivityTest : BaseUITest() {
 
         quitPlayToMain()
         takeScreenshot("recording_clipboard_end")
+    }
+
+    @Test
+    fun testPlayScreenStaysClearOfSystemBarsAndCutout() {
+        enterPlay()
+        takeScreenshot("safe_area_play")
+        val geometry = playGeometry()
+        val safe = geometry.safe
+
+        assertTrue("Pads not found on the play screen", !geometry.pads.isEmpty)
+        assertInside(safe, "Pad grid", geometry.pads)
+        assertTrue("Chain buttons not found on the play screen", geometry.chains.isNotEmpty())
+        geometry.chains.forEachIndexed { i, chain -> assertInside(safe, "Chain button ${i + 1}", chain) }
+        val menu = device.findObject(By.desc(str(R.string.menu)))
+        assertNotNull("Menu button not found", menu)
+        assertInside(safe, "Menu button", menu!!.visibleBounds)
+
+        openPlayOptions()
+        takeScreenshot("safe_area_options")
+        val quit = device.findObject(By.desc(str(R.string.quit)))
+        assertNotNull("Quit not found in the play option panel", quit)
+        assertInside(safe, "Quit button", quit!!.visibleBounds)
+        closePlayOptions()
+
+        quitPlayToMain()
     }
 
     private fun openPlayOptionsWithBack() {

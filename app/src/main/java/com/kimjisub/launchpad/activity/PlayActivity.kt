@@ -46,13 +46,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -465,23 +470,7 @@ class PlayActivity : BaseActivity() {
 		val paddingPx = with(density) { 8.dp.toPx().toInt() }
 		val chromeStripPx = with(density) { 56.dp.roundToPx() }
 
-		Box(
-			modifier = Modifier
-				.fillMaxSize()
-				.let { mod ->
-					if (startReady) {
-						mod.onSizeChanged { size ->
-							if (!layoutRequested && size.width > 0 && size.height > 0) {
-								layoutRequested = true
-								Handler(Looper.getMainLooper()).post {
-									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
-									vm.initPlayback()
-								}
-							}
-						}
-					} else mod
-				}
-		) {
+		Box(modifier = Modifier.fillMaxSize()) {
 			// Background - always visible
 			Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 				theme?.playbg?.let { bg ->
@@ -507,8 +496,23 @@ class PlayActivity : BaseActivity() {
 			}
 
 			if (startReady) {
-				// Main play content
-				Box(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+				// Main play content, kept (and sized) inside the system bars and display cutout that
+				// edge-to-edge windows (targetSdk 35+) draw under; the background above still fills the screen.
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.windowInsetsPadding(WindowInsets.safeDrawing)
+						.onSizeChanged { size ->
+							if (!layoutRequested && size.width > 0 && size.height > 0) {
+								layoutRequested = true
+								Handler(Looper.getMainLooper()).post {
+									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
+									vm.initPlayback()
+								}
+							}
+						}
+						.padding(8.dp)
+				) {
 					// Custom layout that centers pads independently and positions chains relative to pads
 					Layout(
 						content = {
@@ -720,8 +724,9 @@ class PlayActivity : BaseActivity() {
 		Column(
 			modifier = Modifier
 				.fillMaxHeight()
-				.width(280.dp)
 				.background(panelBg)
+				.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical))
+				.width(280.dp)
 				.verticalScroll(rememberScrollState())
 				.padding(vertical = 24.dp),
 		) {
