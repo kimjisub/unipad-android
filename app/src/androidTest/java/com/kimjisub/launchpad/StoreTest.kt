@@ -16,6 +16,7 @@ import org.junit.Assert.fail
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 /**
  * Store Tests
@@ -150,6 +151,29 @@ class StoreTest : BaseUITest() {
             right -= insets.right
             bottom -= insets.bottom
         }
+    }
+
+    /**
+     * Notification permission is asked only when a store download starts, so neither launching
+     * the app nor browsing the store may bring up the system permission dialog.
+     */
+    @Test
+    fun testNoPermissionDialogBeforeDownload() {
+        launchApp()
+        assertTrue("Main screen did not appear without answering a dialog", waitForMainScreen())
+        assertNoPermissionDialog()
+
+        openStore()
+        waitForStoreList()
+        assertNoPermissionDialog()
+        takeScreenshot("store_without_permission_dialog")
+    }
+
+    private fun assertNoPermissionDialog() {
+        assertFalse(
+            "A system permission dialog is showing",
+            device.hasObject(By.pkg(Pattern.compile(".*permissioncontroller.*")))
+        )
     }
 
     private fun openStore() {
