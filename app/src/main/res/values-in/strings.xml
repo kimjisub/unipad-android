@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">in</string>
-	<string name="language">Indonesian</string>
+	<string name="language">Indonesia</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Lisensi Sumber Terbuka</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">Ketuk untuk menyalin</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">Apakah Anda ingin menghapus proyek ini?</string>
 	<string name="remapDone">Pemetaan ulang AutoPlay telah berhasil diselesaikan.</string>
 	<string name="remapFail">AutoPlay tidak ada</string>
-	<string name="importComplete">Analisis selesai!</string>
-	<string name="importFailed">Gagal menganalisis…</string>
+	<string name="importComplete">Pack berhasil diimpor!</string>
+	<string name="importPlayNow">Main sekarang</string>
+	<string name="importFailed">Gagal mengimpor</string>
 	<string name="copied">Disalin ke clipboard.</string>
 	<string name="skinMemoryErr">Gagal menerapkan skin.\nMulai ulang aplikasi.</string>
 	<string name="skinErr">Gagal menerapkan skin.\nReset skin.</string>

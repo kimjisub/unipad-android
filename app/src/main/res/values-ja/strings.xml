@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">ja</string>
-	<string name="language">Japanese</string>
+	<string name="language">日本語</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">オープンソースライセンス</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">タップしてコピー</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">このプロジェクトを削除しますか？</string>
 	<string name="remapDone">AutoPlayのリマッピングが正常に完了しました。</string>
 	<string name="remapFail">AutoPlayが存在しません</string>
-	<string name="importComplete">分析完了！</string>
-	<string name="importFailed">分析に失敗しました…</string>
+	<string name="importComplete">パックをインポートしました！</string>
+	<string name="importPlayNow">今すぐ演奏</string>
+	<string name="importFailed">インポートに失敗しました</string>
 	<string name="copied">クリップボードにコピーしました。</string>
 	<string name="skinMemoryErr">スキンの適用に失敗しました。\nアプリを再起動します。</string>
 	<string name="skinErr">スキンの適用に失敗しました。\nスキンをリセットします。</string>

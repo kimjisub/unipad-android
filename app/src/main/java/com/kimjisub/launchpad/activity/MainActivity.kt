@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,12 +24,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -58,6 +62,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -103,6 +108,7 @@ class MainActivity : BaseActivity() {
 
 	companion object {
 		private const val FLAG_ANIMATION_MS = 500
+		private const val GET_STARTED_URL = "https://unipad.io/docs/get-started"
 	}
 
 	// Compose state
@@ -236,6 +242,10 @@ class MainActivity : BaseActivity() {
 					ImportResultDialog(
 						result = result,
 						onDismiss = { importResult = null },
+						onPlayNow = { success ->
+							importResult = null
+							playUniPack(success.folder.path)
+						},
 					)
 				}
 
@@ -351,9 +361,11 @@ class MainActivity : BaseActivity() {
 		showSelectLPUI()
 	}
 
-	private fun pressPlay(item: UniPackItem) {
+	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
+
+	private fun playUniPack(path: String) {
 		start<PlayActivity> {
-			putExtra("path", item.unipack.getPathString())
+			putExtra("path", path)
 		}
 	}
 
@@ -399,7 +411,7 @@ class MainActivity : BaseActivity() {
 					importingState = false
 					when (unipack.errorDetail) {
 						null -> {
-							importResult = ImportResult.Success(unipack)
+							importResult = ImportResult.Success(folder, unipack)
 							update()
 						}
 
@@ -570,19 +582,25 @@ class MainActivity : BaseActivity() {
 						onRefresh = { update() },
 					) {
 						if (unipackList.isEmpty() && !listRefreshing) {
-							// Empty state
-							Column(
-								modifier = Modifier
-									.fillMaxSize()
-									.padding(horizontal = 16.dp),
-								horizontalAlignment = Alignment.CenterHorizontally,
-								verticalArrangement = Arrangement.Center,
-							) {
-								GuidingActions(
-									onStoreClick = onStoreClick,
-									onLoadUniPackClick = onLoadUniPackClick,
-									onRestoreClick = onRestoreClick,
-								)
+							// Empty state; scrolls so the guide stays reachable on short screens
+							BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+								Column(
+									modifier = Modifier
+										.verticalScroll(rememberScrollState())
+										.fillMaxWidth()
+										.heightIn(min = maxHeight)
+										.padding(horizontal = 16.dp, vertical = 16.dp),
+									horizontalAlignment = Alignment.CenterHorizontally,
+									verticalArrangement = Arrangement.Center,
+								) {
+									EmptyGuide(onGuideClick = { browse(GET_STARTED_URL) })
+									Spacer(Modifier.size(16.dp))
+									GuidingActions(
+										onStoreClick = onStoreClick,
+										onLoadUniPackClick = onLoadUniPackClick,
+										onRestoreClick = onRestoreClick,
+									)
+								}
 							}
 						} else {
 							val listState = rememberLazyListState()
@@ -731,6 +749,46 @@ class MainActivity : BaseActivity() {
 	}
 
 	@Composable
+	private fun EmptyGuide(onGuideClick: () -> Unit) {
+		val steps = listOf(
+			stringResource(
+				string.guide_empty_step_get,
+				stringResource(string.guide_download_new),
+				stringResource(string.guide_import_external),
+			),
+			stringResource(string.guide_empty_step_play, stringResource(string.unipack_play)),
+			stringResource(string.guide_empty_step_pads),
+		)
+
+		Column(modifier = Modifier.fillMaxWidth()) {
+			Text(
+				text = stringResource(string.guide_empty_title),
+				fontSize = 16.sp,
+				color = MaterialTheme.colorScheme.onBackground,
+			)
+			Spacer(Modifier.size(8.dp))
+			steps.forEachIndexed { index, step ->
+				Row(modifier = Modifier.padding(vertical = 2.dp)) {
+					Text(text = "${index + 1}.", fontSize = 12.sp, color = Gray1)
+					Spacer(Modifier.size(6.dp))
+					Text(text = step, fontSize = 12.sp, color = Gray1)
+				}
+			}
+			TextButton(
+				onClick = onGuideClick,
+				contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp),
+			) {
+				Text(
+					text = stringResource(string.guide_empty_link),
+					fontSize = 12.sp,
+					color = SkyBlue,
+					textDecoration = TextDecoration.Underline,
+				)
+			}
+		}
+	}
+
+	@Composable
 	private fun GuidingActions(
 		onStoreClick: () -> Unit,
 		onLoadUniPackClick: () -> Unit,
@@ -843,12 +901,12 @@ class MainActivity : BaseActivity() {
 				) {
 					Icon(
 						imageVector = Icons.Filled.PlayArrow,
-						contentDescription = "Play",
+						contentDescription = null,
 						tint = Color.White,
 						modifier = Modifier.size(24.dp),
 					)
 					Text(
-						text = "Play",
+						text = stringResource(string.unipack_play),
 						color = Color.White,
 						fontSize = 13.sp,
 					)

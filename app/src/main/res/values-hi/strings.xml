@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">hi</string>
-	<string name="language">Hindi</string>
+	<string name="language">हिन्दी</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">ओपन सोर्स लाइसेंस</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">कॉपी करने के लिए टैप करें</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
 	<string name="remapDone">AutoPlay रीमैपिंग सफलतापूर्वक पूर्ण हुई।</string>
 	<string name="remapFail">AutoPlay मौजूद नहीं है</string>
-	<string name="importComplete">विश्लेषण पूर्ण!</string>
-	<string name="importFailed">विश्लेषण विफल…</string>
+	<string name="importComplete">पैक आयात हो गया!</string>
+	<string name="importPlayNow">अभी बजाएँ</string>
+	<string name="importFailed">आयात विफल</string>
 	<string name="copied">क्लिपबोर्ड पर कॉपी हुआ।</string>
 	<string name="skinMemoryErr">स्किन लागू करने में विफल।\nऐप पुनः आरंभ करें।</string>
 	<string name="skinErr">स्किन लागू करने में विफल।\nस्किन रीसेट करें।</string>

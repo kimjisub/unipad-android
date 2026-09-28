@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">tr</string>
-	<string name="language">Turkish</string>
+	<string name="language">Türkçe</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Açık Kaynak Lisansı</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">Kopyalamak için dokunun</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
 	<string name="remapDone">AutoPlay yeniden eşlemesi başarıyla tamamlandı.</string>
 	<string name="remapFail">AutoPlay mevcut değil</string>
-	<string name="importComplete">Analiz tamamlandı!</string>
-	<string name="importFailed">Analiz başarısız…</string>
+	<string name="importComplete">Paket içe aktarıldı!</string>
+	<string name="importPlayNow">Şimdi çal</string>
+	<string name="importFailed">İçe aktarma başarısız</string>
 	<string name="copied">Panoya kopyalandı.</string>
 	<string name="skinMemoryErr">Tema uygulanamadı.\nUygulamayı yeniden başlatın.</string>
 	<string name="skinErr">Tema uygulanamadı.\nTemayı sıfırlayın.</string>

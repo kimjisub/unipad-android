@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">de</string>
-	<string name="language">German</string>
+	<string name="language">Deutsch</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Open-Source-Lizenz</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">Tippen zum Kopieren</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">Möchten Sie dieses Projekt löschen?</string>
 	<string name="remapDone">AutoPlay-Neuzuordnung wurde erfolgreich abgeschlossen.</string>
 	<string name="remapFail">AutoPlay existiert nicht</string>
-	<string name="importComplete">Analyse abgeschlossen!</string>
-	<string name="importFailed">Analyse fehlgeschlagen…</string>
+	<string name="importComplete">Pack importiert!</string>
+	<string name="importPlayNow">Jetzt spielen</string>
+	<string name="importFailed">Import fehlgeschlagen</string>
 	<string name="copied">In die Zwischenablage kopiert.</string>
 	<string name="skinMemoryErr">Skin konnte nicht angewendet werden.\nApp neu starten.</string>
 	<string name="skinErr">Skin konnte nicht angewendet werden.\nSkin zurücksetzen.</string>

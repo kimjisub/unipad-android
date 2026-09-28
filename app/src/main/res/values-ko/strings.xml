@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">ko</string>
-	<string name="language">Korean</string>
+	<string name="language">한국어</string>
 	<string name="translated_by">Translated by Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">오픈소스 라이선스</string>
 	<string name="FCMToken">FCM 토큰</string>
+	<string name="tap_to_copy">탭해서 복사</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -107,10 +108,17 @@
 	<string name="guide_download_new">새로운 팩 다운로드</string>
 	<string name="guide_import_external">다운로드한 팩 불러오기</string>
 	<string name="guide_restore_packs">사라진 팩 복구하기</string>
+	<string name="guide_empty_title">첫 유니팩을 연주해 보세요</string>
+	<string name="guide_empty_step_get">팩 구하기: 아래 %1$s로 스토어에서 받거나, 갖고 있는 .zip 파일을 %2$s로 가져오세요.</string>
+	<string name="guide_empty_step_play">목록에서 팩을 누른 뒤 %1$s을 누르세요.</string>
+	<string name="guide_empty_step_pads">런치패드가 없어도 화면의 패드를 눌러 연주할 수 있어요.</string>
+	<string name="guide_empty_link">시작 안내 보기</string>
+	<string name="unipack_play">재생</string>
 	<string name="doYouWantToDeleteUniPack">유니팩을 삭제하시겠습니까?</string>
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="importComplete">불러오기 성공!</string>
+	<string name="importPlayNow">지금 연주</string>
 	<string name="importFailed">불러오기 실패…</string>
 	<string name="copied">클립보드에 복사되었습니다.</string>
 	<string name="no_app_for_link">이 링크를 열 수 있는 앱이 없습니다.</string>

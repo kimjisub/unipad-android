@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">ru</string>
-	<string name="language">Russian</string>
+	<string name="language">Русский</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">Лицензия открытого кода</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">Нажмите для копирования</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->
@@ -111,8 +112,9 @@
 	<string name="doYouWantToDeleteUniPack">Вы хотите удалить этот проект?</string>
 	<string name="remapDone">Переназначение AutoPlay успешно завершено.</string>
 	<string name="remapFail">AutoPlay отсутствует</string>
-	<string name="importComplete">Анализ завершён!</string>
-	<string name="importFailed">Ошибка анализа…</string>
+	<string name="importComplete">Пак импортирован!</string>
+	<string name="importPlayNow">Играть</string>
+	<string name="importFailed">Ошибка импорта</string>
 	<string name="copied">Скопировано в буфер обмена.</string>
 	<string name="skinMemoryErr">Не удалось применить скин.\nПерезапустите приложение.</string>
 	<string name="skinErr">Не удалось применить скин.\nСбросить скин.</string>
