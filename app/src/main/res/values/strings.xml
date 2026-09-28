@@ -108,6 +108,12 @@
 	<string name="guide_download_new">Download new packs</string>
 	<string name="guide_import_external">Import downloaded packs</string>
 	<string name="guide_restore_packs">Recover missing packs</string>
+	<string name="guide_empty_title">Play your first UniPack</string>
+	<string name="guide_empty_step_get">Get a pack: tap %1$s to use the Store, or %2$s for a .zip you already have.</string>
+	<string name="guide_empty_step_play">Tap the pack in the list, then tap %1$s.</string>
+	<string name="guide_empty_step_pads">No Launchpad? Just tap the pads on screen.</string>
+	<string name="guide_empty_link">Getting started guide</string>
+	<string name="unipack_play">Play</string>
 	<string name="doYouWantToDeleteUniPack">Do you want to delete this project?</string>
 	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
 	<string name="remapFail">AutoPlay does not exist</string>

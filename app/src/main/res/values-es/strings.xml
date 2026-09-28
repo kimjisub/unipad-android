@@ -108,6 +108,12 @@
 	<string name="guide_download_new">Descargar nuevos packs</string>
 	<string name="guide_import_external">Importar packs descargados</string>
 	<string name="guide_restore_packs">Recuperar packs faltantes</string>
+	<string name="guide_empty_title">Toca tu primer UniPack</string>
+	<string name="guide_empty_step_get">Consigue un pack: toca %1$s para usar la Tienda, o %2$s para un .zip que ya tengas.</string>
+	<string name="guide_empty_step_play">Toca el pack en la lista y luego toca %1$s.</string>
+	<string name="guide_empty_step_pads">¿No tienes Launchpad? Solo toca los pads en la pantalla.</string>
+	<string name="guide_empty_link">Guía de inicio</string>
+	<string name="unipack_play">Reproducir</string>
 	<string name="doYouWantToDeleteUniPack">¿Deseas eliminar este proyecto?</string>
 	<string name="remapDone">El remapeo de AutoPlay se ha completado exitosamente.</string>
 	<string name="remapFail">AutoPlay no existe</string>
