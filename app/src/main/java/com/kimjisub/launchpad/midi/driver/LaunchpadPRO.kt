@@ -119,6 +119,12 @@ class LaunchpadPRO : DriverRef() {
 				circleCode[f][2].toByte(),
 				velocity.toByte()
 			)
+		// Launchpad Pro programmer's reference: the side LED is index 99 (63h), reachable only by the
+		// "light LED" SysEx.
+		else if (f == LOGO_FUNCTION_KEY)
+			sendSysExInOrder(
+				byteArrayOf(0xF0.toByte(), 0x00, 0x20, 0x29, 0x02, 0x10, 0x0A, 0x63, velocity.coerceIn(0, 127).toByte(), 0xF7.toByte())
+			)
 	}
 
 
@@ -126,7 +132,7 @@ class LaunchpadPRO : DriverRef() {
 		for (i in 0..7)
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
-		for (i in 0..31)
+		for (i in 0..LOGO_FUNCTION_KEY)
 			sendFunctionKeyLed(i, 0)
 	}
 }

@@ -102,7 +102,7 @@ class LaunchpadPROCFW : DriverRef() {
 			in 8..15 -> 100 + (f - 8)   // Right (T-B: 100-107)
 			in 16..23 -> 123 - (f - 16) // Bottom (R-L: 123-116)
 			in 24..31 -> 115 - (f - 24) // Left (B-T: 115-108)
-			32 -> 27                    // Top-right corner
+			LOGO_FUNCTION_KEY -> 27     // Top-right corner
 			else -> return
 		}
 		sendSignal(CIN_NOTE_ON, STATUS_NOTE_ON, note, velocity)
@@ -114,7 +114,7 @@ class LaunchpadPROCFW : DriverRef() {
 				sendPadLed(i, j, 0)
 			}
 		}
-		for (i in 0..32) {
+		for (i in 0..LOGO_FUNCTION_KEY) {
 			sendFunctionKeyLed(i, 0)
 		}
 	}

@@ -97,6 +97,7 @@ object MidiConnection {
 	private var ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + ioExceptionHandler)
 
 	private const val USB_MIDI_PACKET_SIZE = 4
+	private const val USB_BATCH_SIZE = 64
 	private const val USB_BULK_TIMEOUT_MS = 50
 
 	// ---------------------------------------------------------------------
@@ -142,17 +143,26 @@ object MidiConnection {
 		if (session.sendJob?.isActive == true) return
 		session.sendJob = ioScope.launch {
 			// Batch buffer: maxPacketSize (64) fits 16 MIDI packets
-			val batchBuffer = ByteArray(64)
+			val batchBuffer = ByteArray(USB_BATCH_SIZE)
+			var carried: ByteArray? = null
 
-			for (first in session.sendChannel) {
+			while (true) {
+				val first = carried ?: session.sendChannel.receiveCatching().getOrNull() ?: break
+				carried = null
 				try {
 					first.copyInto(batchBuffer, 0)
-					var offset = USB_MIDI_PACKET_SIZE
+					var offset = first.size
 
-					while (offset + USB_MIDI_PACKET_SIZE <= batchBuffer.size) {
+					// An element is one packet or a whole SysEx; one that does not fit opens the
+					// next transfer, so no other writer can land inside a SysEx.
+					while (offset < batchBuffer.size) {
 						val next = session.sendChannel.tryReceive().getOrNull() ?: break
+						if (offset + next.size > batchBuffer.size) {
+							carried = next
+							break
+						}
 						next.copyInto(batchBuffer, offset)
-						offset += USB_MIDI_PACKET_SIZE
+						offset += next.size
 					}
 
 					// Read both fields once: teardownSession() nulls them in sequence from
@@ -209,6 +219,12 @@ object MidiConnection {
 		return if (reflectedSwapSides) isPrimary else !isPrimary
 	}
 
+	// One queue element per transfer-sized piece, so a SysEx of up to 16 packets stays whole.
+	private fun enqueuePackets(session: DeviceSession, packets: ByteArray) {
+		for (start in packets.indices step USB_BATCH_SIZE)
+			session.sendChannel.trySend(packets.copyOfRange(start, minOf(start + USB_BATCH_SIZE, packets.size)))
+	}
+
 	// Builds a send listener scoped to a single session - it only ever delivers that
 	// session's own already-encoded output to that session's own USB/MIDI connection.
 	// Fan-out across multiple connected pads is handled one level up, by MultiplexDriver
@@ -227,6 +243,10 @@ object MidiConnection {
 				if (originSession.usbDeviceConnection != null) {
 					ioScope.launch { sendRawBuffer(originSession, messages, cableNumber) }
 				}
+			}
+
+			override fun onSendPackets(packets: ByteArray) {
+				if (originSession.usbDeviceConnection != null) enqueuePackets(originSession, packets)
 			}
 		}
 
@@ -464,6 +484,11 @@ object MidiConnection {
 						sendRawBuffer(ownerSession, messages, cableNumber)
 					}
 				}
+			}
+
+			override fun onSendPackets(packets: ByteArray) {
+				val ownerSession = sessions.values.firstOrNull { it.driver === _driver }
+				if (ownerSession?.usbDeviceConnection != null) enqueuePackets(ownerSession, packets)
 			}
 		}
 
@@ -885,7 +910,7 @@ object MidiConnection {
 		Log.midiDetail("MIDI API not available for port=$cableNumber, falling back to USB bulk transfer [${session.name}]")
 		try {
 			for ((index, msg) in messages.withIndex()) {
-				val encoded = encodeSysEx(msg, cableNumber)
+				val encoded = UsbMidiSysEx.encode(msg, cableNumber)
 				Log.midiDetail("TX SysEx (USB): ${msg.joinToString(" ") { "%02X".format(it) }} (cable=$cableNumber) [${session.name}]")
 
 				val conn = session.usbDeviceConnection
@@ -912,45 +937,6 @@ object MidiConnection {
 		} catch (e: RuntimeException) {
 			Log.err("sendRawBuffer failed", e)
 		}
-	}
-
-	private fun encodeSysEx(sysex: ByteArray, cableNumber: Int = 0): ByteArray {
-		val cablePrefix = (cableNumber shl 4).toByte()
-		val packets = mutableListOf<Byte>()
-		var i = 0
-		while (i < sysex.size) {
-			val remaining = sysex.size - i
-			if (remaining >= 3 && sysex[i + 2] != 0xF7.toByte()) {
-				// SysEx start or continue: CIN = 0x04
-				packets.add((cablePrefix + 0x04).toByte())
-				packets.add(sysex[i])
-				packets.add(sysex[i + 1])
-				packets.add(sysex[i + 2])
-				i += 3
-			} else if (remaining == 1) {
-				// SysEx end with 1 byte: CIN = 0x05
-				packets.add((cablePrefix + 0x05).toByte())
-				packets.add(sysex[i])
-				packets.add(0x00)
-				packets.add(0x00)
-				i += 1
-			} else if (remaining == 2) {
-				// SysEx end with 2 bytes: CIN = 0x06
-				packets.add((cablePrefix + 0x06).toByte())
-				packets.add(sysex[i])
-				packets.add(sysex[i + 1])
-				packets.add(0x00)
-				i += 2
-			} else {
-				// SysEx end with 3 bytes: CIN = 0x07
-				packets.add((cablePrefix + 0x07).toByte())
-				packets.add(sysex[i])
-				packets.add(sysex[i + 1])
-				packets.add(sysex[i + 2])
-				i += 3
-			}
-		}
-		return packets.toByteArray()
 	}
 
 	private fun startReceiveLoop(session: DeviceSession, conn: UsbDeviceConnection, endpointIn: UsbEndpoint) {

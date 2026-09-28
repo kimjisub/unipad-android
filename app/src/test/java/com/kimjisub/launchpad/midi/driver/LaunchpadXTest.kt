@@ -117,7 +117,8 @@ class LaunchpadXTest {
 
 	@Test
 	fun sendFunctionKeyLed_outOfRange_doesNotSend() {
-		driver.sendFunctionKeyLed(32, 60)
+		// 32 is the logo (LogoLedDriverTest); nothing lies past it.
+		driver.sendFunctionKeyLed(33, 60)
 		verify(exactly = 0) { sendListener.onSend(any(), any(), any(), any()) }
 	}
 }
