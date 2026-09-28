@@ -15,7 +15,6 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
@@ -27,10 +26,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.CoroutineContext
 
 /**
  * The LED runner's changes reach the screen and the Launchpad through the view model. The fake UI
@@ -41,35 +38,7 @@ import kotlin.coroutines.CoroutineContext
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelLedTest {
 
-	/** A main looper stand-in: tasks run only in [runAll], on the thread that calls it. */
-	private class FakeMain : MainCoroutineDispatcher() {
-		private val queue = ConcurrentLinkedQueue<Runnable>()
-		@Volatile var mainThread: Thread = Thread.currentThread()
-		var posted = 0
-		var maxQueued = 0
-
-		override val immediate: MainCoroutineDispatcher = object : MainCoroutineDispatcher() {
-			override val immediate: MainCoroutineDispatcher get() = this
-			override fun isDispatchNeeded(context: CoroutineContext) = Thread.currentThread() !== mainThread
-			override fun dispatch(context: CoroutineContext, block: Runnable) = this@FakeMain.dispatch(context, block)
-		}
-
-		@Synchronized
-		override fun dispatch(context: CoroutineContext, block: Runnable) {
-			posted++
-			queue.add(block)
-			maxQueued = maxOf(maxQueued, queue.size)
-		}
-
-		fun runAll(afterEach: () -> Unit = {}) {
-			while (true) {
-				(queue.poll() ?: return).run()
-				afterEach()
-			}
-		}
-	}
-
-	private val main = FakeMain()
+	private val main = FakeMainDispatcher()
 	private val clock = AtomicLong(1000)
 	private lateinit var vm: PlayActivityViewModel
 	private lateinit var runner: LedRunner
