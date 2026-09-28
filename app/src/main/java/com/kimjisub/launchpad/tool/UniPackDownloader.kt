@@ -79,10 +79,15 @@ class UniPackDownloader(
 
 	init {
 		scope.launch(Dispatchers.IO) {
-			val unipackFile = FileManager.makeNextPath(workspace, folderName, ".zip")
-			val folder = FileManager.makeNextPath(workspace, folderName, "/")
+			// Another download of the same name may run at the same time, so only paths claimed here
+			// are written to or deleted.
+			var claimedZip: File? = null
+			var claimedFolder: File? = null
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
+
+				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
+				claimedZip = unipackFile
 
 				val call = FileApi.service.download(url)
 				val response = call.execute()
@@ -154,6 +159,8 @@ class UniPackDownloader(
 
 				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
+				val folder = FileManager.claimNextFolder(workspace, folderName)
+				claimedFolder = folder
 				ZipFile(unipackFile).use { zip ->
 					zip.extractAll(folder.path)
 				}
@@ -164,7 +171,6 @@ class UniPackDownloader(
 				if (unipack.criticalError) {
 					val errorMsg = unipack.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
-					FileManager.deleteDirectory(folder)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
@@ -173,15 +179,15 @@ class UniPackDownloader(
 			} catch (e: CancellationException) {
 				// The hosting scope was cancelled (activity destroyed): remove the half-written
 				// folder, but do not report it as a failure and do not swallow the cancellation.
-				FileManager.deleteDirectory(folder)
-				FileManager.deleteDirectory(unipackFile)
+				claimedFolder?.let(FileManager::deleteDirectory)
+				claimedZip?.let(FileManager::deleteDirectory)
 				throw e
 			} catch (e: Exception) {
 				Log.err("Download failed", e)
 				withContext(Dispatchers.Main) { onException(e) }
-				FileManager.deleteDirectory(folder)
+				claimedFolder?.let(FileManager::deleteDirectory)
 			}
-			FileManager.deleteDirectory(unipackFile)
+			claimedZip?.let(FileManager::deleteDirectory)
 		}
 	}
 

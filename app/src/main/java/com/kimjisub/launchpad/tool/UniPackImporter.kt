@@ -28,7 +28,6 @@ class UniPackImporter(
 ) {
 	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
 	private val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
-	private val targetFolder: File = FileManager.makeNextPath(workspace, zipNameWithoutExt, "/")
 
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
@@ -57,10 +56,14 @@ class UniPackImporter(
 
 	init {
 		scope.launch(Dispatchers.IO) {
+			// A download or another import of the same name may run at the same time, so only the
+			// folder claimed here is written to or deleted.
+			var claimedFolder: File? = null
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
 
-				targetFolder.mkdir()
+				val targetFolder = FileManager.claimNextFolder(workspace, zipNameWithoutExt)
+				claimedFolder = targetFolder
 
 				val tempZip = File.createTempFile("unipack_import_", ".zip", context.cacheDir)
 				try {
@@ -81,7 +84,6 @@ class UniPackImporter(
 				if (unipack.criticalError) {
 					val errorMsg = unipack.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
-					FileManager.deleteDirectory(targetFolder)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
@@ -89,7 +91,7 @@ class UniPackImporter(
 			} catch (e: Exception) {
 				Log.err("Import failed", e)
 				withContext(Dispatchers.Main) { onException(e) }
-				FileManager.deleteDirectory(targetFolder)
+				claimedFolder?.let(FileManager::deleteDirectory)
 			}
 		}
 	}
