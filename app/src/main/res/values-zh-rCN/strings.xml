@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="languageCode">zh-cn</string>
-	<string name="language">Chinese (Simplified)</string>
+	<string name="language">简体中文</string>
 	<string name="translated_by">Translated by 203Null</string>
 
 	<string name="app_name">UniPad</string>
@@ -57,6 +57,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">开源许可</string>
 	<string name="FCMToken">FCM 令牌</string>
+	<string name="tap_to_copy">点击复制</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. 版权所有。</string>
 
 	<!--Community-->

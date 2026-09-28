@@ -586,7 +586,7 @@ private fun InfoContent(
 			CardDivider()
 			SettingsRow(
 				title = stringResource(R.string.FCMToken),
-				subtitle = "Tap to copy",
+				subtitle = stringResource(R.string.tap_to_copy),
 				onClick = onFcmTokenCopy,
 			)
 		}

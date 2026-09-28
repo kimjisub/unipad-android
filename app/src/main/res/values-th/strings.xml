@@ -1,6 +1,6 @@
 <resources>
 	<string name="languageCode">th</string>
-	<string name="language">Thai</string>
+	<string name="language">ไทย</string>
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
@@ -56,6 +56,7 @@
 	<string name="github">Github</string>
 	<string name="openSourceLicense">สัญญาอนุญาตโอเพนซอร์ส</string>
 	<string name="FCMToken">FCM Token</string>
+	<string name="tap_to_copy">แตะเพื่อคัดลอก</string>
 	<string name="copyright">ⓒ 2016–2026. UniPad. All rights reserved.</string>
 
 	<!--Community-->

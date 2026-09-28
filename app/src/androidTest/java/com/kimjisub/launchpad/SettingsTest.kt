@@ -3,11 +3,13 @@ package com.kimjisub.launchpad
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -129,6 +131,30 @@ class SettingsTest : BaseUITest() {
             takeScreenshot("settings_persistence_end")
         } finally {
             prefs.slideMode = original
+        }
+    }
+
+    /**
+     * The info rows are drawn from string resources in the device language, not English literals:
+     * the language row names the language in its own words and the push identifier hint is translated.
+     */
+    @Test
+    fun testInfoRowsFollowDeviceLanguage() {
+        launchToMainScreen()
+        openSettings()
+
+        val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+        assertNotNull("Settings content is not scrollable", content)
+        val hint = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.tap_to_copy))))
+        assertNotNull("Push identifier hint '${str(R.string.tap_to_copy)}' not found", hint)
+        assertNotNull(
+            "Language row '${str(R.string.language)}' not found",
+            device.findObject(By.text(str(R.string.language)))
+        )
+        takeScreenshot("settings_info_language_${context.resources.configuration.locales[0].language}")
+
+        if (context.resources.configuration.locales[0].language != "en") {
+            assertNull("Push identifier hint is still English", device.findObject(By.text("Tap to copy")))
         }
     }
 
