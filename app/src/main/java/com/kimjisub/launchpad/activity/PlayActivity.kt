@@ -115,6 +115,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
+import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.TraceLogText
@@ -1007,6 +1008,8 @@ class PlayActivity : BaseActivity() {
 			if (vm.isTraceLogSequenceInitialized) uiCallback.updateTraceLogOverlay() else vm.traceLogInit()
 			redrawAllLedUI()
 			vm.proLightMode(vm.scbProLightMode.isChecked())
+			// The logo is lit only in Pro light mode, and has no view to redraw with the round buttons.
+			setLedLaunchpadChain(DriverRef.LOGO_FUNCTION_KEY)
 			vm.uiLoaded = true
 			vm.refreshWatermark()
 			updateVolumeUI()
@@ -1169,6 +1172,7 @@ class PlayActivity : BaseActivity() {
 				setLedLaunchpad(x, y)
 		for (c in 0 until CIRCLE_ARRAY_SIZE)
 			setLedLaunchpadChain(c)
+		setLedLaunchpadChain(DriverRef.LOGO_FUNCTION_KEY)
 	}
 
 	// endregion

@@ -100,6 +100,9 @@ open class LaunchpadX : DriverRef() {
 				circleCode[f][2].toByte(),
 				velocity.toByte()
 			)
+		// Launchpad X and Mini [MK3] programmer's reference: the logo is CC 99.
+		else if (f == LOGO_FUNCTION_KEY)
+			sendSignal(27, -80, 99, velocity)
 	}
 
 
@@ -107,7 +110,7 @@ open class LaunchpadX : DriverRef() {
 		for (i in 0..7)
 			for (j in 0..7)
 				sendPadLed(i, j, 0)
-		for (i in 0..31)
+		for (i in 0..LOGO_FUNCTION_KEY)
 			sendFunctionKeyLed(i, 0)
 	}
 }

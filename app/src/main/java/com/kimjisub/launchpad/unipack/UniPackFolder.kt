@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.unipack
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
+import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.Sound
@@ -54,6 +55,27 @@ private fun bomAwareReader(input: InputStream): Reader {
 class UniPackFolder(val rootFolder: File) : UniPack() {
 	private companion object {
 		const val MAX_GRID_SIZE = 64
+		val ROUND_TOKENS = setOf("*", "mc")
+		const val LOGO_TOKEN = "l"
+		val AUTO_TOKENS = setOf("auto", "a")
+
+		/**
+		 * `mc 1`..`mc 32` as a round LED index. Anything else is dropped without a warning, as the drivers
+		 * dropped it before; index 32 would otherwise light the logo.
+		 */
+		fun roundLedIndex(token: String): Int? =
+			(token.toInt() - 1).takeIf { it in 0 until DriverRef.ROUND_BUTTON_COUNT }
+
+		/**
+		 * The colour tokens of a logo line, read as iOS reads them: `o l color`, `o l auto velocity`, and the
+		 * forms with a placeholder where other lines have y, `o l _ color` and `o l _ color|auto velocity`.
+		 */
+		fun logoColorTokens(split: Array<String>): List<String> = when (split.size) {
+			3 -> listOf(split[2])
+			4 -> if (split[2] in AUTO_TOKENS) listOf(split[2], split[3]) else listOf(split[3])
+			5 -> listOf(split[3], split[4])
+			else -> emptyList()
+		}
 	}
 
 	private var infoFile: File? = null
@@ -334,39 +356,43 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 								when (option) {
 									"on", "o" -> {
 										val xToken = split2[1]
-										if (xToken == "*" || xToken == "mc") {
+										val colorTokens: List<String>
+										if (xToken in ROUND_TOKENS) {
 											// Round/chain LED: o * {y} ... or o mc {y} ...
 											ledX = -1
-											ledY = split2[2].toInt() - 1
-										} else if (xToken == "l") {
-											// Logo LED: o l ... — not supported, skip
-											continue@loop
+											ledY = roundLedIndex(split2[2]) ?: continue@loop
+											colorTokens = split2.drop(3)
+										} else if (xToken == LOGO_TOKEN) {
+											ledX = -1
+											ledY = DriverRef.LOGO_FUNCTION_KEY
+											colorTokens = logoColorTokens(split2)
 										} else {
 											ledX = xToken.toInt() - 1
 											ledY = split2[2].toInt() - 1
+											colorTokens = split2.drop(3)
 										}
-										if (split2.size == 4) ledColor =
-											split2[3].toInt(16) + -0x1000000 else if (split2.size == 5) {
-											if (split2[3] == "auto" || split2[3] == "a") {
-												ledVelocity = split2[4].toInt()
-												ledColor = ARGB[ledVelocity].toInt()
-											} else {
-												ledVelocity = split2[4].toInt()
-												ledColor = split2[3].toInt(16) + -0x1000000
+										when (colorTokens.size) {
+											1 -> ledColor = colorTokens[0].toInt(16) + -0x1000000
+											2 -> {
+												ledVelocity = colorTokens[1].toInt()
+												ledColor = if (colorTokens[0] in AUTO_TOKENS) ARGB[ledVelocity].toInt()
+												else colorTokens[0].toInt(16) + -0x1000000
 											}
-										} else {
-											addErr("keyLed : [$fileName].[$s] format is incorrect")
-											continue@loop
+											else -> {
+												addErr("keyLed : [$fileName].[$s] format is incorrect")
+												continue@loop
+											}
 										}
 									}
 
 									"off", "f" -> {
 										val xToken = split2[1]
-										if (xToken == "*" || xToken == "mc") {
+										if (xToken in ROUND_TOKENS) {
 											ledX = -1
-											ledY = split2[2].toInt() - 1
-										} else if (xToken == "l") {
-											continue@loop
+											ledY = roundLedIndex(split2[2]) ?: continue@loop
+										} else if (xToken == LOGO_TOKEN) {
+											ledX = -1
+											ledY = DriverRef.LOGO_FUNCTION_KEY
 										} else {
 											ledX = xToken.toInt() - 1
 											ledY = split2[2].toInt() - 1
