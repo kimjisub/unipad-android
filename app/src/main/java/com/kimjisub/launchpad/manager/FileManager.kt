@@ -58,17 +58,35 @@ object FileManager {
 	}
 
 	fun makeNextPath(dir: File?, name: String, extension: String): File {
-		var ret: File
+		val newName = filterFilename(name)
+		var i = 1
+		while (numberedPath(dir, newName, extension, i).exists()) i++
+		return numberedPath(dir, newName, extension, i)
+	}
+
+	/**
+	 * Like [makeNextPath], but creates the empty folder in the same step that finds the free
+	 * name, so a request running at the same time can never be handed the same folder.
+	 */
+	fun claimNextFolder(dir: File, name: String): File = claimNextPath(dir, name, "") { it.mkdir() }
+
+	/** [claimNextFolder] for an empty file. */
+	fun claimNextFile(dir: File, name: String, extension: String): File =
+		claimNextPath(dir, name, extension) { it.createNewFile() }
+
+	private fun claimNextPath(dir: File, name: String, extension: String, create: (File) -> Boolean): File {
 		val newName = filterFilename(name)
 		var i = 1
 		while (true) {
-			ret =
-				if (i == 1) File(dir, newName + extension) else File(dir, "$newName ($i)$extension")
-			if (!ret.exists()) break
+			val candidate = numberedPath(dir, newName, extension, i)
+			if (create(candidate)) return candidate
+			if (!candidate.exists()) throw IOException("Could not create ${candidate.path}")
 			i++
 		}
-		return ret
 	}
+
+	private fun numberedPath(dir: File?, name: String, extension: String, index: Int): File =
+		if (index == 1) File(dir, name + extension) else File(dir, "$name ($index)$extension")
 
 	fun filterFilename(originalStr: String): String {
 		return originalStr.replace(FILENAME_FILTER_REGEX, "")
