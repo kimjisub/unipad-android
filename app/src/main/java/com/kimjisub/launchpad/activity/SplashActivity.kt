@@ -51,11 +51,6 @@ class SplashActivity : BaseActivity() {
 	private var showPermissionDialog by mutableStateOf(false)
 	private var permissionsDone = false
 
-	// Notifications are optional: whatever the answer, the app proceeds.
-	private val notificationPermissionLauncher = registerForActivityResult(
-		ActivityResultContracts.RequestPermission()
-	) { proceedToMain() }
-
 	// Permission request launcher
 	private val permissionLauncher = registerForActivityResult(
 		ActivityResultContracts.RequestMultiplePermissions()
@@ -106,13 +101,7 @@ class SplashActivity : BaseActivity() {
 		// Android 11+ (API 30+): No runtime storage permission needed
 		// App uses getExternalFilesDir() (no permission) + SAF for Documents access
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-				ContextCompat.checkSelfPermission(this, permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-			) {
-				notificationPermissionLauncher.launch(permission.POST_NOTIFICATIONS)
-			} else {
-				proceedToMain()
-			}
+			proceedToMain()
 			return
 		}
 

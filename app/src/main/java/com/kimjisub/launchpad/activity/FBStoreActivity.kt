@@ -1,10 +1,14 @@
 package com.kimjisub.launchpad.activity
 
+import android.Manifest.permission
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -54,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -108,6 +113,12 @@ class FBStoreActivity : BaseActivity() {
 	private val firebaseStoreCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
 	private val storeItems = mutableStateListOf<StoreItemState>()
 	private var downloadList: List<UniPackItem> = emptyList()
+	private var requestingNotificationPermission = false
+
+	// Downloads run whatever the answer; the permission only lets their progress notification show.
+	private val notificationPermissionLauncher = registerForActivityResult(
+		ActivityResultContracts.RequestPermission()
+	) { requestingNotificationPermission = false }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -288,6 +299,16 @@ class FBStoreActivity : BaseActivity() {
 			},
 			scope = lifecycleScope,
 		)
+		requestNotificationPermissionIfUnanswered()
+	}
+
+	private fun requestNotificationPermissionIfUnanswered() {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || requestingNotificationPermission) return
+		if (ContextCompat.checkSelfPermission(this, permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+		// Once denied, the system would still show the dialog one more time; skip it so a user who said no is not asked again.
+		if (shouldShowRequestPermissionRationale(permission.POST_NOTIFICATIONS)) return
+		requestingNotificationPermission = true
+		notificationPermissionLauncher.launch(permission.POST_NOTIFICATIONS)
 	}
 
 	override fun onDestroy() {
