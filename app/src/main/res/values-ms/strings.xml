@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Adakah anda mahu memadamkan projek ini?</string>
 	<string name="remapDone">Pemetaan semula AutoPlay telah berjaya diselesaikan.</string>
 	<string name="remapFail">AutoPlay tidak wujud</string>
-	<string name="importComplete">Analisis selesai!</string>
-	<string name="importFailed">Gagal menganalisis…</string>
+	<string name="importComplete">Pack berjaya diimport!</string>
+	<string name="importPlayNow">Main sekarang</string>
+	<string name="importFailed">Gagal mengimport</string>
 	<string name="copied">Disalin ke papan keratan.</string>
 	<string name="skinMemoryErr">Gagal menggunakan skin.\nMulakan semula aplikasi.</string>
 	<string name="skinErr">Gagal menggunakan skin.\nReset skin.</string>

@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">คุณต้องการลบโปรเจกต์นี้หรือไม่?</string>
 	<string name="remapDone">การแมปใหม่ AutoPlay เสร็จสมบูรณ์</string>
 	<string name="remapFail">ไม่มี AutoPlay</string>
-	<string name="importComplete">วิเคราะห์เสร็จสิ้น!</string>
-	<string name="importFailed">วิเคราะห์ล้มเหลว…</string>
+	<string name="importComplete">นำเข้าแพ็คแล้ว!</string>
+	<string name="importPlayNow">เล่นเลย</string>
+	<string name="importFailed">นำเข้าล้มเหลว</string>
 	<string name="copied">คัดลอกไปยังคลิปบอร์ดแล้ว</string>
 	<string name="skinMemoryErr">ไม่สามารถใช้สกินได้\nเริ่มแอปใหม่</string>
 	<string name="skinErr">ไม่สามารถใช้สกินได้\nรีเซ็ตสกิน</string>

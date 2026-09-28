@@ -242,6 +242,10 @@ class MainActivity : BaseActivity() {
 					ImportResultDialog(
 						result = result,
 						onDismiss = { importResult = null },
+						onPlayNow = { success ->
+							importResult = null
+							playUniPack(success.folder.path)
+						},
 					)
 				}
 
@@ -357,9 +361,11 @@ class MainActivity : BaseActivity() {
 		showSelectLPUI()
 	}
 
-	private fun pressPlay(item: UniPackItem) {
+	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
+
+	private fun playUniPack(path: String) {
 		start<PlayActivity> {
-			putExtra("path", item.unipack.getPathString())
+			putExtra("path", path)
 		}
 	}
 
@@ -405,7 +411,7 @@ class MainActivity : BaseActivity() {
 					importingState = false
 					when (unipack.errorDetail) {
 						null -> {
-							importResult = ImportResult.Success(unipack)
+							importResult = ImportResult.Success(folder, unipack)
 							update()
 						}
 

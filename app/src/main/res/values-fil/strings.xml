@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Gusto mo bang tanggalin ang project na ito?</string>
 	<string name="remapDone">Matagumpay na nakumpleto ang AutoPlay remapping.</string>
 	<string name="remapFail">Walang AutoPlay</string>
-	<string name="importComplete">Tapos na ang pagsusuri!</string>
-	<string name="importFailed">Nabigong magsuri…</string>
+	<string name="importComplete">Na-import ang pack!</string>
+	<string name="importPlayNow">Laruin ngayon</string>
+	<string name="importFailed">Nabigo ang pag-import</string>
 	<string name="copied">Kinopya sa clipboard.</string>
 	<string name="skinMemoryErr">Nabigong i-apply ang skin.\nI-restart ang app.</string>
 	<string name="skinErr">Nabigong i-apply ang skin.\nI-reset ang skin.</string>

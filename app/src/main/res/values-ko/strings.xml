@@ -117,6 +117,7 @@
 	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
 	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="importComplete">불러오기 성공!</string>
+	<string name="importPlayNow">지금 연주</string>
 	<string name="importFailed">불러오기 실패…</string>
 	<string name="copied">클립보드에 복사되었습니다.</string>
 	<string name="no_app_for_link">이 링크를 열 수 있는 앱이 없습니다.</string>

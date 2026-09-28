@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
 	<string name="remapDone">AutoPlay रीमैपिंग सफलतापूर्वक पूर्ण हुई।</string>
 	<string name="remapFail">AutoPlay मौजूद नहीं है</string>
-	<string name="importComplete">विश्लेषण पूर्ण!</string>
-	<string name="importFailed">विश्लेषण विफल…</string>
+	<string name="importComplete">पैक आयात हो गया!</string>
+	<string name="importPlayNow">अभी बजाएँ</string>
+	<string name="importFailed">आयात विफल</string>
 	<string name="copied">क्लिपबोर्ड पर कॉपी हुआ।</string>
 	<string name="skinMemoryErr">स्किन लागू करने में विफल।\nऐप पुनः आरंभ करें।</string>
 	<string name="skinErr">स्किन लागू करने में विफल।\nस्किन रीसेट करें।</string>

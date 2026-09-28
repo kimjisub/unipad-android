@@ -111,8 +111,9 @@
 	<string name="doYouWantToDeleteUniPack">Möchten Sie dieses Projekt löschen?</string>
 	<string name="remapDone">AutoPlay-Neuzuordnung wurde erfolgreich abgeschlossen.</string>
 	<string name="remapFail">AutoPlay existiert nicht</string>
-	<string name="importComplete">Analyse abgeschlossen!</string>
-	<string name="importFailed">Analyse fehlgeschlagen…</string>
+	<string name="importComplete">Pack importiert!</string>
+	<string name="importPlayNow">Jetzt spielen</string>
+	<string name="importFailed">Import fehlgeschlagen</string>
 	<string name="copied">In die Zwischenablage kopiert.</string>
 	<string name="skinMemoryErr">Skin konnte nicht angewendet werden.\nApp neu starten.</string>
 	<string name="skinErr">Skin konnte nicht angewendet werden.\nSkin zurücksetzen.</string>
