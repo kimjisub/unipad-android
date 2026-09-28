@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,6 +19,9 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.design.R as DesignR
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -543,6 +547,74 @@ class PlayActivityTest : BaseUITest() {
         assertStillPlaying("App left PlayActivity during TraceLog test")
         quitPlayToMain()
         takeScreenshot("tracelog_test_end")
+    }
+
+    /**
+     * With Settings > Play > "Show tap order numbers on pads" on, the numbers only appear once the
+     * play screen's Trace Log switch is on, which is what the setting's description tells the user.
+     * Pads are not in the accessibility tree, so the numbers are read from the pads' trace log views.
+     */
+    @Test
+    fun testTapOrderNumbersNeedTraceLogSwitch() {
+        val prefs = PreferenceManager(context)
+        val original = prefs.traceLogClassic
+        try {
+            prefs.traceLogClassic = true
+            enterPlay()
+
+            tapPad(2, 2)
+            SystemClock.sleep(1000)
+            assertEquals("Tap order numbers appeared while Trace Log was off", emptyMap<String, Rect>(), shownTapOrders())
+
+            openPlayOptions()
+            togglePlayOption(R.string.traceLog)
+            closePlayOptions()
+            listOf(2 to 2, 2 to 5, 3 to 3, 2 to 2).forEach { (x, y) -> tapPad(x, y) }
+            val expected = mapOf("1 4" to padBounds(2, 2), "2" to padBounds(2, 5), "3" to padBounds(3, 3))
+            waitUntil(5000L) { shownTapOrders().keys == expected.keys }
+            takeScreenshot("tap_order_numbers")
+
+            val shown = shownTapOrders()
+            assertEquals("Tap orders shown on the pads", expected.keys, shown.keys)
+            expected.forEach { (order, pad) ->
+                val at = shown.getValue(order)
+                assertTrue("Tap order \"$order\" is at $at, not on pad $pad", pad.contains(at.centerX(), at.centerY()))
+            }
+
+            openPlayOptions()
+            togglePlayOption(R.string.traceLog)
+            closePlayOptions()
+            quitPlayToMain()
+        } finally {
+            prefs.traceLogClassic = original
+        }
+    }
+
+    private fun padBounds(x: Int, y: Int): Rect {
+        val area = padArea()
+        val cell = area.width() / 8
+        return Rect(area.left + cell * y, area.top + cell * x, area.left + cell * (y + 1), area.top + cell * (x + 1))
+    }
+
+    /** Non-empty pad trace log texts on the resumed play screen, whitespace collapsed, with their screen bounds. */
+    private fun shownTapOrders(): Map<String, Rect> {
+        val shown = mutableMapOf<String, Rect>()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .firstOrNull() ?: return@runOnMainSync
+            fun collect(view: View) {
+                if (view is TextView && view.id == DesignR.id.traceLog && view.isShown) {
+                    val text = view.text.trim().split(Regex("\\s+")).joinToString(" ")
+                    if (text.isNotEmpty()) {
+                        val xy = IntArray(2).also(view::getLocationOnScreen)
+                        shown[text] = Rect(xy[0], xy[1], xy[0] + view.width, xy[1] + view.height)
+                    }
+                }
+                if (view is ViewGroup) for (i in 0 until view.childCount) collect(view.getChildAt(i))
+            }
+            collect(activity.window.decorView)
+        }
+        return shown
     }
 
     @Test
