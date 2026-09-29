@@ -84,6 +84,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import org.koin.android.ext.android.inject
 import splitties.activities.start
@@ -121,18 +122,11 @@ class SettingsActivity : AppCompatActivity() {
 					highlightBackup = highlightBackup,
 					onBackClick = { finish() },
 					onThemeClick = { start<ThemeActivity>() },
-					onGithubClick = {
-						startActivity(
-							Intent(
-								Intent.ACTION_VIEW,
-								"https://github.com/kimjisub/unipad-android".toUri()
-							)
-						)
-					},
+					onGithubClick = { browse("https://github.com/kimjisub/unipad-android") },
 					onOssLicenseClick = { start<OssLicensesMenuActivity>() },
 					onFcmTokenCopy = { copyFcmToken() },
 					onCommunityItemClick = { action, url ->
-						startActivity(Intent(action, url.toUri()))
+						browse(url, action)
 					},
 					onReconnectClick = { start<MidiSelectActivity>() },
 					onTransferClick = { sourcePath ->
