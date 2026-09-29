@@ -322,7 +322,7 @@ The project was fully modernized with the following changes:
 5. **Java target 1.8 → 21**: sourceCompatibility, targetCompatibility, and jvmTarget all set to 21 (JDK toolchain 21)
 6. **JCenter removed**: All repositories migrated to google(), mavenCentral(), and JitPack
 7. **JCenter library replacements**:
-   - `com.polyak:icon-switch:1.0.0` → `com.github.polyak01:IconSwitch:09d0124d07` (JitPack)
+   - `com.polyak:icon-switch:1.0.0` → Removed; `android.enableJetifier=true` was dropped at the same time
    - `com.azoft.carousellayoutmanager:carousel` → `com.mig35:carousellayoutmanager:1.4.6` (mavenCentral)
    - `gun0912.ted:tedpermission` → Removed, replaced with AndroidX Activity Result API
    - `cn.aigestudio.wheelpicker:WheelPicker` → Removed (unused)
@@ -339,7 +339,6 @@ The project was fully modernized with the following changes:
 
 ### Known Issues
 - **NullSafeMutableLiveData lint**: Disabled due to Kotlin 2.x incompatibility with lifecycle-lint
-- **Jetifier still required**: `android.enableJetifier=true` kept because IconSwitch library uses `android.support.*` bytecode
 - **OSS Licenses plugin**: `OssLicensesCleanUp` tasks disabled via workaround due to Gradle 9.x task dependency validation incompatibility
 
 ### ProGuard Configuration
