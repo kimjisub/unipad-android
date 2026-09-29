@@ -109,12 +109,7 @@ class LaunchpadMK3 : DriverRef() {
 
 	override fun sendFunctionKeyLed(f: Int, velocity: Int) {
 		if (f in 0..31)
-			sendSignal(
-				circleCode[f][0].toByte(),
-				circleCode[f][1].toByte(),
-				circleCode[f][2].toByte(),
-				velocity.toByte()
-			)
+			sendSignal(circleCode[f][0], circleCode[f][1], circleCode[f][2], velocity)
 		// Launchpad Pro [MK3] programmer's reference: the logo is CC 99.
 		else if (f == LOGO_FUNCTION_KEY)
 			sendSignal(11, -80, 99, velocity)
