@@ -158,6 +158,68 @@ class SettingsTest : BaseUITest() {
         }
     }
 
+    /**
+     * With no app on the device for a link (no browser, no mail app), the GitHub row and a community
+     * item report it and leave Settings open instead of crashing the app.
+     *
+     * The handlers are disabled for the test and enabled again after it. A crash kills this process
+     * before the finally block runs; enable them by hand then (`pm enable --user 0 <package>`).
+     */
+    @Test
+    fun testLinksWithoutHandlingAppKeepSettingsOpen() {
+        withoutHandlers(
+            "-a android.intent.action.VIEW -d https://github.com/kimjisub/unipad-android",
+            "-a android.intent.action.SENDTO -d mailto:0226unipad@gmail.com",
+        ) {
+            launchToMainScreen()
+            openSettings()
+
+            val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+            assertNotNull("Settings content is not scrollable", content)
+            val github = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.github))))
+            assertNotNull("GitHub row not found", github)
+            github!!.click()
+            takeScreenshot("settings_github_without_browser")
+            assertSettingsStillOpen("GitHub")
+
+            device.findObject(By.text(str(R.string.community))).click()
+            val list = device.wait(
+                Until.findObject(By.scrollable(true).hasDescendant(By.text(str(R.string.officialHomepage)))),
+                5000L
+            )
+            assertNotNull("Community list not found", list)
+            val email = list!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.email))))
+            assertNotNull("Community e-mail item not found", email)
+            email!!.click()
+            takeScreenshot("settings_email_without_mail_app")
+            assertSettingsStillOpen("community e-mail")
+        }
+    }
+
+    private fun assertSettingsStillOpen(link: String) {
+        device.waitForIdle()
+        Thread.sleep(1500L)
+        assertTrue(
+            "Settings did not stay open after tapping the $link link",
+            device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage)))
+        )
+    }
+
+    /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
+    private fun withoutHandlers(vararg queries: String, block: () -> Unit) {
+        val packages = queries.flatMap { query ->
+            device.executeShellCommand("cmd package query-activities --brief $query")
+                .lines()
+                .mapNotNull { Regex("""^\s+([\w.]+)/\S+$""").find(it)?.groupValues?.get(1) }
+        }.distinct()
+        try {
+            packages.forEach { device.executeShellCommand("pm disable-user --user 0 $it") }
+            block()
+        } finally {
+            packages.forEach { device.executeShellCommand("pm enable --user 0 $it") }
+        }
+    }
+
     private fun openSettings() {
         val settingsButton = device.wait(Until.findObject(By.desc(str(R.string.setting))), 5000L)
         assertNotNull("Could not find the Settings button", settingsButton)

@@ -8,8 +8,8 @@ import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.tool.Log
 
-fun android.content.Context.browse(link: String) {
-	val myIntent = Intent(Intent.ACTION_VIEW, link.toUri())
+fun android.content.Context.browse(link: String, action: String = Intent.ACTION_VIEW) {
+	val myIntent = Intent(action, link.toUri())
 	myIntent.addFlags(FLAG_ACTIVITY_NEW_TASK)
 	try {
 		startActivity(myIntent)
