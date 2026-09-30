@@ -6,7 +6,9 @@ import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
+import io.mockk.unmockkConstructor
 import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -14,6 +16,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -339,4 +342,72 @@ class LedRunnerDeliveryTest {
 		assertEquals(0L, deliveredAfterStop.get())
 		assertTrue(events.isNotEmpty())
 	}
+
+	/**
+	 * The UI thread walks the runner's animation list (eventOn/eventOff from a touch, isEventExist and
+	 * eventOffAll from ledInit) while a tick may add the animations started since the last one. 4.0.1
+	 * walked it without the runner lock and crashed with ConcurrentModificationException (Crashlytics
+	 * dff744e1, LedRunner.searchEvent from padTouch). [walk] pauses on its first animation while a tick
+	 * runs on the LED thread, so a walk the tick can overlap fails every time.
+	 */
+	private fun assertNoTickChangesTheListDuring(walk: () -> Unit) {
+		val walker = Thread.currentThread()
+		val armed = AtomicBoolean(false)
+		val errors = ConcurrentLinkedQueue<Throwable>()
+		var ledThread: Thread? = null
+		val pauseForATick = {
+			if (Thread.currentThread() === walker && armed.getAndSet(false)) {
+				ledThread = Thread {
+					try {
+						tick(clock.get())
+					} catch (e: Throwable) {
+						errors += e
+					}
+				}.apply { start(); join(200) }
+			}
+		}
+		mockkConstructor(LedRunner.LedAnimationState::class)
+		try {
+			every { anyConstructed<LedRunner.LedAnimationState>().equal(any(), any(), any()) } answers {
+				pauseForATick()
+				callOriginal()
+			}
+			every { anyConstructed<LedRunner.LedAnimationState>().buttonX } answers {
+				pauseForATick()
+				callOriginal()
+			}
+			setUpRunner { x, y -> LedAnimation(arrayListOf(LedEvent.On(x, y), LedEvent.Delay(1_000_000)), 0, 0) }
+			press(0, 0)
+			// Waits outside the list until the next tick adds it.
+			runner.eventOn(1, 1)
+
+			armed.set(true)
+			try {
+				walk()
+			} catch (e: Throwable) {
+				errors += e
+			}
+			ledThread?.join()
+		} finally {
+			unmockkConstructor(LedRunner.LedAnimationState::class)
+		}
+
+		assertFalse("the walk never reached an animation", armed.get())
+		assertEquals(emptyList<Throwable>(), errors.toList())
+	}
+
+	@Test
+	fun press_neverWalksTheAnimationListWhileATickChangesIt() = assertNoTickChangesTheListDuring { runner.eventOn(0, 0) }
+
+	@Test
+	fun release_neverWalksTheAnimationListWhileATickChangesIt() = assertNoTickChangesTheListDuring { runner.eventOff(0, 0) }
+
+	/** Asks for a pad with no animation, so the walk does not stop at the first match. */
+	@Test
+	fun isEventExist_neverWalksTheAnimationListWhileATickChangesIt() =
+		assertNoTickChangesTheListDuring { runner.isEventExist(7, 7) }
+
+	@Test
+	fun eventOffAll_neverWalksTheAnimationListWhileATickChangesIt() =
+		assertNoTickChangesTheListDuring { runner.eventOffAll(0, 0) }
 }
