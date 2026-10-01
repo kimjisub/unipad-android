@@ -13,6 +13,12 @@ EXPECTED = {
 }
 
 
+def internet_permissions(root: ET.Element) -> list[ET.Element]:
+    return [e for e in root
+            if e.tag in ('uses-permission', 'uses-permission-sdk-23')
+            and e.get(ANDROID + 'name') == 'android.permission.INTERNET']
+
+
 def check(debug: Path, release: Path, source: bool = False) -> None:
     root = ET.parse(debug).getroot()
     app = root.find('application')
@@ -21,8 +27,7 @@ def check(debug: Path, release: Path, source: bool = False) -> None:
                 for e in app.findall('meta-data')}
     for name, value in EXPECTED.items():
         assert metadata.get(name) == value, f'{name}: expected {value}'
-    internet = [e for e in root.findall('uses-permission')
-                if e.get(ANDROID + 'name') == 'android.permission.INTERNET']
+    internet = internet_permissions(root)
     if source:
         assert len(internet) == 1 and internet[0].get(TOOLS + 'node') == 'remove', 'missing INTERNET removal'
     else:
@@ -30,8 +35,7 @@ def check(debug: Path, release: Path, source: bool = False) -> None:
         assert root.get('package') == 'com.kimjisub.launchpad.dev', 'unexpected test package'
         assert not root.get(ANDROID + 'sharedUserId'), 'test package shares a UID'
     public = ET.parse(release).getroot()
-    assert any(e.get(ANDROID + 'name') == 'android.permission.INTERNET'
-               for e in public.findall('uses-permission')), 'public network permission changed'
+    assert internet_permissions(public), 'public network permission changed'
     assert not any(e.get(ANDROID + 'name') in EXPECTED
                    for e in public.findall('application/meta-data')), 'test controls leaked into public manifest'
 

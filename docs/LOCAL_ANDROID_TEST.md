@@ -90,6 +90,10 @@ verification. Do not count Store failures as production failures in this variant
 3. Run `tools/check-local-test-manifest.py <debug-xml> <release-xml>` separately
    against the merged debug XML and the decoded APK XML. The source-only check is
    `python3 tools/check-local-test-manifest.py app/src/debug/AndroidManifest.xml app/src/main/AndroidManifest.xml --source`.
+   The checker rejects INTERNET declared by either `uses-permission` or
+   `uses-permission-sdk-23` in test artifacts, and recognizes either form in the
+   public manifest. Run `python3 tools/test_check_local_test_manifest.py -v` to
+   check both rejection cases, public permission preservation, and source removal.
 4. Baseline must fail the safety check. Release must retain INTERNET with no
    deactivation keys. Inspect the manifest merger report if results differ.
 5. Confirm the protected exported copy contains only the documented invented
