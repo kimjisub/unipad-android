@@ -2666,6 +2666,7 @@
       "id": "KL-003",
       "area": "keyLed",
       "title": "file names one past each end of chain, x and y are ignored",
+      "question": "key-led.mdx says files with out-of-range coordinates in the file name are ignored; whether each ignored file records a warning is not stated. The same warning-evidence rule as KL-M07.",
       "basis": [
         {
           "type": "doc",
@@ -2673,7 +2674,7 @@
           "note": "Files with out-of-range coordinates in the file name are ignored"
         }
       ],
-      "expectation": "determined",
+      "expectation": "undetermined",
       "files": [
         {
           "path": "info",
@@ -2712,41 +2713,7 @@
           "text": "f 1 1"
         }
       ],
-      "fingerprint": "06e11f3778868dceaf6d6efdf6b3c65f21e1a5d1443466e834fe28fbb94267bc",
-      "expected": {
-        "loaded": true,
-        "info": {
-          "title": "Conformance",
-          "producerName": "UniPad Conformance",
-          "buttonX": 4,
-          "buttonY": 3,
-          "chain": 2,
-          "squareButton": true
-        },
-        "sounds": [
-          {
-            "c": 0,
-            "x": 3,
-            "y": 2,
-            "queue": [
-              {
-                "file": "c.wav",
-                "loop": 0,
-                "wormhole": -1
-              }
-            ]
-          }
-        ],
-        "keyLedExist": true,
-        "leds": [],
-        "autoPlay": null,
-        "errors": [
-          "keyLed:range",
-          "keyLed:range",
-          "keyLed:range",
-          "keyLed:range"
-        ]
-      }
+      "fingerprint": "06e11f3778868dceaf6d6efdf6b3c65f21e1a5d1443466e834fe28fbb94267bc"
     },
     {
       "layer": "parse",
@@ -7687,6 +7654,7 @@
       "id": "AP-004",
       "area": "autoPlay",
       "title": "coordinates and chains outside the pack are skipped",
+      "question": "auto-play.mdx says lines with out-of-range coordinates are skipped; whether each skipped line records a warning is not stated. The same warning-evidence rule as AP-M10.",
       "basis": [
         {
           "type": "doc",
@@ -7694,7 +7662,7 @@
           "note": "Lines with out-of-range coordinates are skipped"
         }
       ],
-      "expectation": "determined",
+      "expectation": "undetermined",
       "files": [
         {
           "path": "info",
@@ -7721,56 +7689,7 @@
           "text": "on 5 1\non 1 4\non 0 1\nchain 3\nchain 0\noff 5 5\ntouch 9 9"
         }
       ],
-      "fingerprint": "14d46481dcf2569e8f565b98020b1d2dd6cf69aaa81a73bdae78f80fbc0a14eb",
-      "expected": {
-        "loaded": true,
-        "info": {
-          "title": "Conformance",
-          "producerName": "UniPad Conformance",
-          "buttonX": 4,
-          "buttonY": 3,
-          "chain": 2,
-          "squareButton": true
-        },
-        "sounds": [
-          {
-            "c": 0,
-            "x": 0,
-            "y": 0,
-            "queue": [
-              {
-                "file": "a.wav",
-                "loop": 0,
-                "wormhole": -1
-              }
-            ]
-          },
-          {
-            "c": 1,
-            "x": 0,
-            "y": 0,
-            "queue": [
-              {
-                "file": "b.wav",
-                "loop": 0,
-                "wormhole": -1
-              }
-            ]
-          }
-        ],
-        "keyLedExist": false,
-        "leds": [],
-        "autoPlay": [],
-        "errors": [
-          "autoPlay:range",
-          "autoPlay:range",
-          "autoPlay:range",
-          "autoPlay:range",
-          "autoPlay:range",
-          "autoPlay:range",
-          "autoPlay:range"
-        ]
-      }
+      "fingerprint": "14d46481dcf2569e8f565b98020b1d2dd6cf69aaa81a73bdae78f80fbc0a14eb"
     },
     {
       "layer": "parse",
