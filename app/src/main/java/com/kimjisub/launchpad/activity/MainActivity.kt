@@ -517,6 +517,8 @@ class MainActivity : BaseActivity() {
 	}
 
 	private fun showSelectLPUI() {
+		// A folder refresh may finish after another screen takes over the launchpad.
+		if (controller !== midiController) return
 		val cursor = cursor()
 		if (cursor.hasPrev) driver.sendFunctionKeyLed(0, 63)
 		else driver.sendFunctionKeyLed(0, 5)
