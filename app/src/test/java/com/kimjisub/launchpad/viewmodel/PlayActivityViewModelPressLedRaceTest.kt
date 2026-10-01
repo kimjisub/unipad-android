@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.unipack.UniPack
@@ -96,7 +97,7 @@ class PlayActivityViewModelPressLedRaceTest {
 		every { unipack.soundTable } returns null
 		every { unipack.ledGet(any(), any(), any()) } answers { if (secondArg<Int>() == 0 && thirdArg<Int>() == 0) blink else null }
 
-		vm = PlayActivityViewModel(mockk<UnipackRepository>())
+		vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 		vm.unipack = unipack
 		vm.channelManager = ChannelManager(8, 8)
 		vm.uiCallback = FakeActivity()

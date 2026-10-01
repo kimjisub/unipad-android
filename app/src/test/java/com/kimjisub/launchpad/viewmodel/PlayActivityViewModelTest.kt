@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.media.AudioManager
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -18,7 +19,7 @@ class PlayActivityViewModelTest {
 
 	@Before
 	fun setUp() {
-		vm = PlayActivityViewModel(mockk<UnipackRepository>())
+		vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 	}
 
 	@Test
