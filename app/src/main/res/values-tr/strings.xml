@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Klasör</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">UniPacks Ara</string>
+	<string name="main_search_no_results">“%1$s” için sonuç bulunamadı</string>
+	<string name="main_search_clear">Aramayı temizle</string>
 	<string name="backup_title">Yedekleme</string>
 	<string name="restore_title">Geri Yükleme</string>
 

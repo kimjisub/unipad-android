@@ -276,6 +276,8 @@
 	<string name="transfer_format_folder">Folder</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Search UniPacks</string>
+	<string name="main_search_no_results">No results for “%1$s”</string>
+	<string name="main_search_clear">Clear search</string>
 	<string name="backup_title">Backup</string>
 	<string name="restore_title">Restore</string>
 

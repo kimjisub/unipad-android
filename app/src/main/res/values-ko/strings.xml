@@ -265,6 +265,8 @@
 	<string name="transfer_format_folder">폴더</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">유니팩 검색</string>
+	<string name="main_search_no_results">“%1$s” 검색 결과가 없습니다</string>
+	<string name="main_search_clear">검색어 지우기</string>
 	<string name="backup_title">백업</string>
 	<string name="restore_title">복구</string>
 
