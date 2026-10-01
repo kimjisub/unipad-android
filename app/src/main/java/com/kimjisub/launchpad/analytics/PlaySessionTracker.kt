@@ -2,7 +2,8 @@ package com.kimjisub.launchpad.analytics
 
 /**
  * One visit to the play screen: `pack_load` once it is read and its sounds are ready (or failed, or
- * the person left first), then `play_start` at the first sound and `play_end` on leaving. Every call
+ * the person left first), then `play_start` at the first accepted pad press (human or auto play) and `play_end` on leaving.
+ * `play_first_input` records the first human press independently, including after auto play. Every call
  * outside the expected order is ignored, so repeated callbacks, a screen that is rebuilt around the
  * same session, or auto play repeating cannot count twice, and leaving before the first sound sends
  * neither `play_start` nor `play_end`.
@@ -28,6 +29,7 @@ class PlaySessionTracker internal constructor(
 
 	private val lock = Any()
 	private var state: State = State.Idle
+	private var humanInputRecorded = false
 
 	fun loadStarted() = transition {
 		if (state is State.Idle) state = State.Loading(nanoTime())
@@ -58,10 +60,23 @@ class PlaySessionTracker internal constructor(
 		)
 	}
 
-	fun playTriggered(trigger: PlayTrigger) = transition {
-		if (state !is State.Loaded) return@transition null
-		state = State.Playing(nanoTime())
-		Event(UsageEvent.PLAY_START, mapOf(UsageParam.TRIGGER to trigger.value))
+	fun playTriggered(trigger: PlayTrigger) {
+		val events = synchronized(lock) {
+			if (state !is State.Loaded && state !is State.Playing) return
+			if (state is State.Playing && (trigger != PlayTrigger.PAD || humanInputRecorded)) return
+			buildList {
+				if (state is State.Loaded) {
+					state = State.Playing(nanoTime())
+					add(Event(UsageEvent.PLAY_START, mapOf(UsageParam.TRIGGER to trigger.value)))
+				}
+				if (trigger == PlayTrigger.PAD && !humanInputRecorded) {
+					humanInputRecorded = true
+					add(Event(UsageEvent.PLAY_FIRST_INPUT, mapOf(UsageParam.TRIGGER to trigger.value)))
+				}
+			}
+		}
+		// Both flags are settled under the same lock; reporting cannot block the MIDI state lock.
+		events.forEach { log(it.name, it.parameters) }
 	}
 
 	/** The person left the play screen for good. */

@@ -144,6 +144,26 @@ class PlayActivityViewModelUsageTest {
 	private fun loadSuccess() = sink.events.first { it.name == UsageEvent.PACK_LOAD }
 
 	@Test
+	fun aHumanPressAfterAutoPlayIsRecordedOnceWithoutAnotherPlayStart() {
+		val vm = newVm()
+		load(vm, createPack(autoPlay = LONG_AUTO_PLAY))
+		startPlayback(vm)
+		sink.awaitEvent(UsageEvent.PACK_LOAD)
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		runUntil { playStarts().isNotEmpty() }
+		assertEquals(emptyList<String>(), sink.named(UsageEvent.PLAY_FIRST_INPUT).map { it.name })
+		vm.switchPlayMode(PlayMode.None)
+		repeat(3) {
+			vm.padTouch(0, 0, true)
+			vm.padTouch(0, 0, false)
+		}
+		leave(vm)
+
+		assertEquals(1, sink.named(UsageEvent.PLAY_FIRST_INPUT).size)
+		assertEquals(listOf(mapOf(UsageParam.TRIGGER to "autoplay")), playStarts())
+	}
+
+	@Test
 	fun aPackIsNotCountedAsLoadedUntilItsSoundsAreReady() {
 		val vm = newVm()
 		load(vm, createPack())
@@ -170,13 +190,13 @@ class PlayActivityViewModelUsageTest {
 		vm.screenVisible = true
 		vm.padTouch(1, 1, true)
 		vm.padTouch(1, 1, false)
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT), names())
 		assertEquals(mapOf(UsageParam.TRIGGER to "pad"), sink.named(UsageEvent.PLAY_START).single().parameters)
 
 		leave(vm)
 		leave(vm)
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names())
 		assertEquals(mapOf(UsageParam.DURATION_BUCKET to "lt_1s"), sink.named(UsageEvent.PLAY_END).single().parameters)
 	}
 
@@ -229,7 +249,7 @@ class PlayActivityViewModelUsageTest {
 		vm.padTouch(0, 0, true)
 		leave(vm)
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names())
 	}
 
 	@Test
@@ -293,7 +313,7 @@ class PlayActivityViewModelUsageTest {
 
 		vm.padTouch(0, 0, true)
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT), names())
 	}
 
 	@Test
@@ -311,7 +331,7 @@ class PlayActivityViewModelUsageTest {
 		vm.padTouch(0, 0, true)
 		leave(vm)
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names())
 		assertEquals(listOf(mapOf(UsageParam.TRIGGER to "autoplay")), playStarts())
 	}
 
@@ -332,7 +352,7 @@ class PlayActivityViewModelUsageTest {
 			vm.padTouch(0, 0, true)
 			leave(vm)
 
-			assertEquals("$mode", listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), names().drop(recorded))
+			assertEquals("$mode", listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names().drop(recorded))
 			assertEquals("$mode", mapOf(UsageParam.TRIGGER to "pad"), playStarts().last())
 		}
 	}
@@ -427,7 +447,7 @@ class PlayActivityViewModelUsageTest {
 		}
 		leave(vm)
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), names())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names())
 		assertEquals(listOf(mapOf(UsageParam.TRIGGER to "pad")), playStarts())
 	}
 
@@ -453,7 +473,7 @@ class PlayActivityViewModelUsageTest {
 		leave(vm)
 
 		assertEquals("the pad's sound was played", 1, played.get())
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), reported.toList())
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), reported.toList())
 	}
 
 	private companion object {

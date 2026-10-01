@@ -53,6 +53,7 @@ class UsageEventRoutingTest {
 			firebaseSdk.logEvent(UsageEvent.PACK_IMPORT, any())
 			firebaseSdk.logEvent(UsageEvent.PACK_LOAD, any())
 			firebaseSdk.logEvent(UsageEvent.PLAY_START, any())
+			firebaseSdk.logEvent(UsageEvent.PLAY_FIRST_INPUT, any())
 			firebaseSdk.logEvent(UsageEvent.PLAY_END, any())
 		}
 	}

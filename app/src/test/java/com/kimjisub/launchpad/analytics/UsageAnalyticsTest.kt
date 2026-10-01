@@ -135,7 +135,7 @@ class UsageAnalyticsTest {
 		session.playTriggered(PlayTrigger.PAD)
 		session.ended()
 
-		assertEquals(listOf(UsageEvent.PACK_IMPORT, UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), calls)
+		assertEquals(listOf(UsageEvent.PACK_IMPORT, UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), calls)
 	}
 
 	@Test

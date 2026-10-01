@@ -20,6 +20,36 @@ class PlaySessionTrackerTest {
 	private fun playEnd(bucket: String) = sink.pack(UsageEvent.PLAY_END, UsageParam.DURATION_BUCKET to bucket)
 
 	@Test
+	fun simultaneousHumanInputsAreCountedOnceAfterAutoPlay() {
+		session.loadStarted()
+		session.loadSucceeded()
+		session.playTriggered(PlayTrigger.AUTOPLAY)
+		val threads = List(16) { Thread { session.playTriggered(PlayTrigger.PAD) } }
+		threads.forEach { it.start() }
+		threads.forEach { it.join() }
+		session.ended()
+
+		assertEquals(1, sink.named(UsageEvent.PLAY_FIRST_INPUT).size)
+		assertEquals(1, sink.named(UsageEvent.PLAY_START).size)
+		assertEquals(1, sink.named(UsageEvent.PLAY_END).size)
+	}
+
+	@Test
+	fun autoPlayBeforeAHumanPressStillRecordsTheFirstHumanInputOnce() {
+		session.loadStarted()
+		session.loadSucceeded()
+		session.playTriggered(PlayTrigger.AUTOPLAY)
+		assertTrue(sink.named(UsageEvent.PLAY_FIRST_INPUT).isEmpty())
+		repeat(3) { session.playTriggered(PlayTrigger.PAD) }
+		session.ended()
+		session.playTriggered(PlayTrigger.PAD)
+
+		assertEquals(1, sink.named(UsageEvent.PLAY_FIRST_INPUT).size)
+		assertEquals(mapOf(UsageParam.TRIGGER to "pad"), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters)
+		assertEquals(listOf("autoplay"), sink.named(UsageEvent.PLAY_START).map { it.parameters[UsageParam.TRIGGER] })
+	}
+
+	@Test
 	fun fullSessionSendsLoadStartAndEndOnce() {
 		session.loadStarted()
 		advanceSeconds(2.0)
@@ -32,6 +62,7 @@ class PlaySessionTrackerTest {
 			listOf(
 				packLoad(UsageParam.RESULT to "success", UsageParam.DURATION_BUCKET to "1s_3s"),
 				playStart("pad"),
+				sink.pack(UsageEvent.PLAY_FIRST_INPUT, UsageParam.TRIGGER to "pad"),
 				playEnd("30s_2m"),
 			),
 			sink.events,
@@ -51,7 +82,7 @@ class PlaySessionTrackerTest {
 		session.ended()
 		session.ended()
 
-		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_END), sink.events.map { it.name })
+		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), sink.events.map { it.name })
 		assertEquals(playStart("autoplay"), sink.events[1])
 	}
 

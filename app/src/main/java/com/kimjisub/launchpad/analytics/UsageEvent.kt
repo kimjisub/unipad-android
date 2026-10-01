@@ -11,11 +11,12 @@ import java.util.zip.ZipException
 import javax.net.ssl.SSLException
 import net.lingala.zip4j.exception.ZipException as Zip4jException
 
-/** Event names shared with the iOS app so both platforms aggregate under the same names. */
+/** Existing cross-platform events plus the Android first-human-input event. */
 object UsageEvent {
 	const val PACK_IMPORT = "pack_import"
 	const val PACK_LOAD = "pack_load"
 	const val PLAY_START = "play_start"
+	const val PLAY_FIRST_INPUT = "play_first_input"
 	const val PLAY_END = "play_end"
 }
 
