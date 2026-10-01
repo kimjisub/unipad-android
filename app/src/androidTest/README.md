@@ -20,6 +20,47 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 Reports: `app/build/reports/androidTests/connected/debug/index.html`,
 raw results: `app/build/outputs/androidTest-results/connected/debug/*/test-result.pb`.
 
+## Overlapping file imports (isolated device regression)
+
+`UniPackImportOverlapDeviceTest` runs the real importer and pack reader against two controlled
+Android input pipes. Both ZIPs have the same display name and different metadata and silent WAV
+files. A third pack already exists under that name. Both input requests must reach their gates
+before either receives bytes; the first import then finishes before the second input is released.
+The test checks separate output folders, every relative file path and SHA-256, the unchanged
+existing pack, parsed titles and sound counts, and temporary ZIP cleanup. Timestamps and operation
+ids appear in the instrumentation output. The main thread only constructs the importers and runs
+their normal callbacks; all waits have a 15-second limit and run off the main thread.
+
+This test requires API 29+ for `ContentResolver.wrap`. It uses a unique directory under the app's
+cache, redirects only its import cache and input resolver, removes that directory in `finally`,
+and cancels only notifications carrying its unique ZIP name. It never uses the library workspace,
+plays sound, launches an activity, or contacts a pack server. Failure and cancellation preservation
+remain covered separately by `UniPackInstallOverlapTest`; this device test covers two successes.
+
+Borrow an emulator through the maintenance harness first and use only the printed serial:
+
+```bash
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
+adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
+  -e class com.kimjisub.launchpad.UniPackImportOverlapDeviceTest \
+  com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Keep the device offline during this check so application startup cannot send test traffic.
+Restore its prior network state and return it through the harness afterward. Direct instrumentation
+avoids Gradle uninstalling existing app data. `adb` exits zero even for a JUnit failure: require
+`OK (1 test)` and status code `0` for the test, not just the shell exit code.
+
+For the before/after comparison, export parent `c7bb0af67578be3cea90ea812499a0f81aa336e3`
+of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate run-owned directory,
+copy this exact test there, build both APKs, and run the same command on the borrowed device.
+That source selects the output path in each constructor before creating the folder, so this
+schedule deterministically completes both imports into the same folder and fails the distinct
+folder assertion; the final hashes also show the second pack replacing the first. Record the
+exported source, test hash, APK hashes, raw output, and exit codes. Do not switch the working branch.
+
 ## How the tests find things
 
 - **Test pack.** `BaseUITest` writes `TestUniPack` ("UI Test Pack": 8x8, 2 chains, LED,
