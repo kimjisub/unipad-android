@@ -33,8 +33,12 @@ For the protected APK, pass the reviewed safety commit instead of the baseline:
 
 ```sh
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 tools/prepare-local-test-build.py <safety-commit> "$PAPERCLIP_RUN_SCRATCH_DIR/protected"
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && cd "$PAPERCLIP_RUN_SCRATCH_DIR/protected" && ./gradlew :app:assembleDebug :app:processReleaseMainManifest --console=plain
+. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && cd "$PAPERCLIP_RUN_SCRATCH_DIR/protected" && ./gradlew :app:assembleDebug :app:processReleaseMainManifest -x :app:processReleaseGoogleServices --console=plain
 ```
+
+The release manifest inspection skips only the release service-resource task: the
+fake configuration intentionally has no release-package client. This does not
+produce a release APK or change any build source.
 
 Each output is `app/build/outputs/apk/debug/app-debug.apk` in its separate copy.
 Both use package `com.kimjisub.launchpad.dev`, version `4.1.8` / `115`: neither a
@@ -76,6 +80,9 @@ verification. Do not count Store failures as production failures in this variant
 1. Record full source commit, build command/result, package/version, APK SHA-256,
    and standard debug certificate fingerprint (`apksigner verify --print-certs`).
 2. Decode the **actual APK** with the environment SDK's `apkanalyzer manifest print`.
+   If the loaded environment leaves `ANDROID_HOME` empty, set it to the parent of
+   the `platform-tools` directory of `command -v adb`, the same SDK the exporter
+   records in `local.properties`; do not point to a different SDK.
    Check all three literal values and the absence of INTERNET and shared user ID.
    Compare with the protected merged debug manifest and merged release manifest.
 3. Run `tools/check-local-test-manifest.py <debug-xml> <release-xml>` separately
