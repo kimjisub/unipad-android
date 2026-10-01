@@ -4,18 +4,19 @@ UI Automator tests that drive the debug build (`com.kimjisub.launchpad.dev`) on 
 
 ## How to run
 
-```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"   # macOS
-export ANDROID_HOME="$HOME/Library/Android/sdk"
+Before any app or instrumentation launch, follow the [local Android test build,
+artifact gate, and cleanup procedure](../../../docs/LOCAL_ANDROID_TEST.md).
+QA checks the exact APK first; the device tester uses only the serial printed by
+`devices.py up-android` and returns it with `devices.py down`. The debug variant
+now disables analytics/performance collection and automatic crash uploads before
+initialization, and removes INTERNET. Clean test data is still mandatory because
+Crashlytics preferences can override metadata and local reports can remain.
 
-# Whole suite on the connected emulator. Keep the APKs installed: AGP otherwise uninstalls the
-# app after the run, which deletes every pack on that device.
-./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
-
-# One class
-./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
-  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.PlayActivityTest
-```
+Run local UI classes only on that approved installation. A connected test task
+may reinstall APKs, so inspect both app and instrumentation artifacts before using
+it. Do not use `leaveApksInstalledAfterRun=true` as a final cleanup policy. Always
+stop, clear, and uninstall the owned test app before returning the device.
+`StoreTest` needs a separate authorized online test path and is not eligible here.
 
 Reports: `app/build/reports/androidTests/connected/debug/index.html`,
 raw results: `app/build/outputs/androidTest-results/connected/debug/*/test-result.pb`.
@@ -42,11 +43,14 @@ raw results: `app/build/outputs/androidTest-results/connected/debug/*/test-resul
 
 - The instrumentation runs inside the app process, so a test cannot kill the app and keep running.
   `testSettingsPersistence` leaves the app and relaunches it with a cleared task instead.
-- `StoreTest` needs network access (Firebase). It does not press Download: that would download a
-  real pack and count in the production download statistics.
+- `StoreTest` needs network access (Firebase) and cannot pass in this local-only debug
+  variant. Its historical no-Download rule alone did not isolate telemetry.
 - Real Launchpad (USB MIDI) behaviour cannot be checked on an emulator.
 
-## Baseline
+## Historical baseline (not isolation evidence)
+
+These old runs used airplane mode; this is not proof of safe telemetry isolation
+and is not permission to repeat that setup. Use the lifecycle above for new runs.
 
 Before measured 2026-09-26, after measured 2026-09-27, on the same emulator for both runs: AVD
 `unipad-pixel`, Android 15 (API 35), 2400x1080 landscape, **airplane mode on (no network)**, debug
