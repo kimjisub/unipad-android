@@ -5,6 +5,7 @@ Never run on an existing checkout: the destination must not exist.
 This prepares debug builds only; baseline exports are NOT safe to launch.
 """
 import argparse
+import copy
 import io
 import json
 from pathlib import Path
@@ -43,6 +44,11 @@ config = {
                 'api_key': [{'current_key': 'AIza' + '0' * 35}]}],
     'configuration_version': '1',
 }
+# Release client exists only to let Gradle inspect the merged release manifest.
+# It is equally invented; do not assemble or install a release build from this copy.
+release_client = copy.deepcopy(config['client'][0])
+release_client['client_info']['android_client_info']['package_name'] = 'com.kimjisub.launchpad'
+config['client'].append(release_client)
 (args.destination / 'app/google-services.json').write_text(json.dumps(config, indent=2) + '\n')
 (args.destination / 'LOCAL_TEST_INPUTS.txt').write_text(
     f'Source: {revision}\nExcluded: service/signing/local settings\n'

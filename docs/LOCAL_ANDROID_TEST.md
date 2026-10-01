@@ -24,7 +24,8 @@ and signing configuration stay unchanged.
 
 The submitted source tracks a service configuration, which is deliberately excluded.
 The exported copy instead gets invented, nonproduction `app/google-services.json`
-values for `com.kimjisub.launchpad.dev`, project `unipad-local-invalid`, and an
+values for `com.kimjisub.launchpad.dev` and a manifest-inspection-only
+`com.kimjisub.launchpad` client, project `unipad-local-invalid`, and an
 `.invalid` database/storage host. This is a fake build input, not a real service
 registration or proof of isolation. Do not build release APKs from this copy.
 `LOCAL_TEST_INPUTS.txt` identifies the exact source and generated inputs.
@@ -33,12 +34,12 @@ For the protected APK, pass the reviewed safety commit instead of the baseline:
 
 ```sh
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 tools/prepare-local-test-build.py <safety-commit> "$PAPERCLIP_RUN_SCRATCH_DIR/protected"
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && cd "$PAPERCLIP_RUN_SCRATCH_DIR/protected" && ./gradlew :app:assembleDebug :app:processReleaseMainManifest -x :app:processReleaseGoogleServices --console=plain
+. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && cd "$PAPERCLIP_RUN_SCRATCH_DIR/protected" && ./gradlew :app:assembleDebug :app:processReleaseMainManifest --console=plain
 ```
 
-The release manifest inspection skips only the release service-resource task: the
-fake configuration intentionally has no release-package client. This does not
-produce a release APK or change any build source.
+The second fake client allows the release service-resource prerequisite required
+by Gradle's manifest task. This does not produce a release APK or change build
+source; both client entries are invented and must never be used for a release.
 
 Each output is `app/build/outputs/apk/debug/app-debug.apk` in its separate copy.
 Both use package `com.kimjisub.launchpad.dev`, version `4.1.8` / `115`: neither a
