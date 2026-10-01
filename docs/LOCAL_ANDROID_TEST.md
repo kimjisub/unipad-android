@@ -80,10 +80,11 @@ verification. Do not count Store failures as production failures in this variant
 
 1. Record full source commit, build command/result, package/version, APK SHA-256,
    and standard debug certificate fingerprint (`apksigner verify --print-certs`).
-2. Decode the **actual APK** with the environment SDK's `apkanalyzer manifest print`.
-   If the loaded environment leaves `ANDROID_HOME` empty, set it to the parent of
-   the `platform-tools` directory of `command -v adb`, the same SDK the exporter
-   records in `local.properties`; do not point to a different SDK.
+2. Decode the **actual APK** with `cmdline-tools/latest/bin/apkanalyzer` inside
+   the SDK identified by the loaded environment's `adb`, the same SDK the exporter
+   records in `local.properties`. A Homebrew `apkanalyzer` can point elsewhere;
+   use the registered SDK tool. Derive the SDK from the parent of `platform-tools`,
+   never substitute a different SDK.
    Check all three literal values and the absence of INTERNET and shared user ID.
    Compare with the protected merged debug manifest and merged release manifest.
 3. Run `tools/check-local-test-manifest.py <debug-xml> <release-xml>` separately
@@ -163,7 +164,9 @@ must be reported independently by the device tester.
 
 The existing iOS harness uses `-UniPadFirebaseLocalOnly YES`; Android's current
 application has no equivalent startup argument, so an iOS flag must not be copied
-as Android evidence. Web uses its separate local/test analytics path, which this
-Android change does not configure or verify. Neither platform's earlier checks
+as Android evidence. Web's browser wrappers call `initFirebaseServices` and send
+page/error events only when its analytics instance exists. That initialization
+predicate and browser execution are outside this Android check; the wrappers alone
+do not prove Web isolation. This change does not configure Web analytics. Neither platform's earlier checks
 prove this APK safe. The parent's 20 synthetic packs / 60 comparison rows continue
 in the parent issue, not as a passed playback result of this preparation.
