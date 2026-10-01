@@ -5,6 +5,7 @@ import android.os.Build
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
@@ -156,8 +157,11 @@ class StoreTest : BaseUITest() {
     /**
      * Notification permission is asked only when a store download starts, so neither launching
      * the app nor browsing the store may bring up the system permission dialog.
+     * API 24–29 legitimately asks for storage permission at launch; this check targets the
+     * notification runtime permission introduced in API 33 and leaves it ungranted.
      */
     @Test
+    @SdkSuppress(minSdkVersion = 33)
     fun testNoPermissionDialogBeforeDownload() {
         launchApp()
         assertTrue("Main screen did not appear without answering a dialog", waitForMainScreen())
