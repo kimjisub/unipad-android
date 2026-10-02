@@ -287,3 +287,11 @@ dependencies {
 	api project(':design')
 }
 
+
+// Prepare installed debug/test code before Orchestrator starts a fresh process per test.
+// AGP's test engine performs this device compilation; APKs and release variants are unchanged.
+androidComponents {
+    onVariants(selector().withBuildType('debug')) { variant ->
+        variant.experimentalProperties.put('android.experimental.force-aot-compilation', true)
+    }
+}

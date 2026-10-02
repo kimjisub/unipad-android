@@ -83,7 +83,10 @@ abstract class BaseUITest {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         assertNotNull("Could not find launch intent for the app", intent)
-        context.startActivity(intent)
+        // startActivity() only queues the launch. Synchronize activity creation before looking
+        // for its accessibility nodes; otherwise emulator scheduling consumes the UI wait.
+        // Keep the caller's existing screen assertions and timeouts unchanged.
+        InstrumentationRegistry.getInstrumentation().startActivitySync(intent!!)
     }
 
     /**

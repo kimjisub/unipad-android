@@ -26,6 +26,15 @@ ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
 ```
 
+Debug variants request AGP's device code preparation before execution using
+`android.experimental.force-aot-compilation`. This retains a fresh Orchestrator process per
+test, the same APKs, all assertions, and normal release variant configuration. The offline
+API 35 run without preparation captured startup ANRs during instrumentation DEX loading and
+verification, before four tests entered their bodies. Android may use its debug-compatible
+verification filter rather than native optimization; the purpose is to finish code validation
+before starting the timed app process. This functional suite is not a cold-start benchmark.
+The property is also used by the [AndroidX benchmark plugin](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/benchmark/gradle-plugin/src/main/kotlin/androidx/benchmark/gradle/BenchmarkPlugin.kt).
+
 Repeat the exact complete-suite command three times. Each invocation must execute the connected
 tasks; reports must show zero failures and zero skips. In local verification, a comma-separated
 class selector executed only its first class; use one class/method per focused invocation and
@@ -52,6 +61,8 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 ## How controls and data are located
 
+- Launch helpers synchronize actual activity creation with `startActivitySync` before their
+  existing accessibility/screen assertions. Screen deadlines and expected states are unchanged.
 - `BaseUITest` writes `TestUniPack` before each test: an 8x8 pack with two chains, LED,
   AutoPlay and silent WAV files. No existing user pack is selected or deleted.
 - Main's pack row/detail use `main_pack_<folder>` / `main_detail_<folder>` semantics tags,
