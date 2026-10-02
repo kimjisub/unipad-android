@@ -54,9 +54,9 @@ network state and return the device when finished:
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
 ```
 
-An isolated checkout currently expects a local `keystore.properties` even for debug tasks. Use
-explicitly fake values for debug verification, never copy real signing credentials. No release
-signing or upload is required. This base commit has no `.github/workflows`; run debug assembly,
+Debug verification configures without `keystore.properties`; never copy real signing
+credentials. Release signing still requires a real local key and is outside this verification. Pull requests run `.github/workflows/unit-tests.yml`; use its fake Firebase fixture
+(`cp .github/fixtures/google-services.json app/google-services.json`) locally. Run debug assembly,
 all debug/release Kotlin compiles, `lint`, and both modules' available unit tests locally.
 
 ## How controls and data are located
