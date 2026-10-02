@@ -10,6 +10,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.PlayTrigger
+import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
@@ -24,6 +27,7 @@ import com.kimjisub.launchpad.unipack.runner.ChainObserver
 import com.kimjisub.launchpad.unipack.runner.LedChangeQueue
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -39,7 +43,8 @@ enum class PlayMode {
 
 class PlayActivityViewModel(
 	private val unipackRepo: UnipackRepository,
-	private val soundEngine: SoundRunner.Engine? = null,
+	usage: UsageAnalytics,
+	private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 ) : ViewModel() {
 
 	companion object {
@@ -255,14 +260,29 @@ class PlayActivityViewModel(
 	lateinit var traceLogSequence: Array<ArrayList<Pair<Int, Int>>>
 	val isTraceLogSequenceInitialized get() = ::traceLogSequence.isInitialized
 
+	private val playSession = usage.newPlaySession()
+
 	// This ViewModel outlives a recreated PlayActivity (e.g. a display size change). The pack, its
 	// runners and the open count belong to it and are set up once; the new activity only rebuilds views.
 	private var unipackLoad: Deferred<UniPack>? = null
 	private var stateInitialized = false
 	private var playbackInitialized = false
 
-	fun loadUnipackOnce(path: String): Deferred<UniPack> =
-		unipackLoad ?: viewModelScope.async(Dispatchers.IO) { loadUnipack(path) }.also { unipackLoad = it }
+	fun loadUnipackOnce(path: String): Deferred<UniPack> = unipackLoad ?: run {
+		playSession.loadStarted()
+		viewModelScope.async(Dispatchers.IO) { loadUnipackReportingFailure(path) }.also { unipackLoad = it }
+	}
+
+	private fun loadUnipackReportingFailure(path: String): UniPack {
+		try {
+			return loadUnipack(path)
+		} catch (e: CancellationException) {
+			throw e
+		} catch (e: Throwable) {
+			playSession.loadFailed(UsageErrorType.classify(e))
+			throw e
+		}
+	}
 
 	/** Load unipack from path with progress reporting. */
 	private fun loadUnipack(path: String): UniPack {
@@ -276,6 +296,7 @@ class PlayActivityViewModel(
 			loadingPhaseIndex = index + 1 // +1 because info is phase 0
 		}
 		unipack = pack
+		if (pack.criticalError) playSession.loadFailed(UsageErrorType.INVALID_PACK)
 		return pack
 	}
 
@@ -379,10 +400,10 @@ class PlayActivityViewModel(
 		initAutoPlayRunner()
 
 		soundRunner = SoundRunner(
-			engine = soundEngine ?: SoundRunner.OboeEngine,
 			unipack = unipack,
 			chain = chain,
 			scope = viewModelScope,
+			engine = soundEngine,
 			loadingListener = object : SoundRunner.LoadingListener {
 				override fun onStart(soundCount: Int) {
 					viewModelScope.launch {
@@ -401,12 +422,14 @@ class PlayActivityViewModel(
 				}
 
 				override fun onEnd() {
+					playSession.loadSucceeded()
 					viewModelScope.launch {
 						soundLoadingActive = false
 					}
 				}
 
 				override fun onException(throwable: Throwable) {
+					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
 						uiCallback?.showToast(string.outOfCPU)
@@ -452,7 +475,11 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	fun padTouch(x: Int, y: Int, upDown: Boolean) {
+	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
+	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
+
+	/** [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence. */
+	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -462,6 +489,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
+				playSession.playTriggered(pressedBy)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
@@ -875,11 +903,11 @@ class PlayActivityViewModel(
 				}
 
 				override fun onPadTouchOn(x: Int, y: Int) {
-					viewModelScope.launch { padTouch(x, y, true) }
+					viewModelScope.launch { padEvent(x, y, true, PlayTrigger.AUTOPLAY) }
 				}
 
 				override fun onPadTouchOff(x: Int, y: Int) {
-					viewModelScope.launch { padTouch(x, y, false) }
+					viewModelScope.launch { padEvent(x, y, false, PlayTrigger.AUTOPLAY) }
 				}
 
 				override fun onChainChange(c: Int) {
@@ -981,6 +1009,7 @@ class PlayActivityViewModel(
 
 	override fun onCleared() {
 		super.onCleared()
+		playSession.ended()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()
 		soundRunner?.destroy()
@@ -989,11 +1018,12 @@ class PlayActivityViewModel(
 
 	class Factory(
 		private val unipackRepo: UnipackRepository,
-		private val soundEngine: SoundRunner.Engine? = null,
+		private val usage: UsageAnalytics,
+		private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 	) : ViewModelProvider.Factory {
 		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			return PlayActivityViewModel(unipackRepo, soundEngine) as T
+			return PlayActivityViewModel(unipackRepo, usage, soundEngine) as T
 		}
 	}
 }

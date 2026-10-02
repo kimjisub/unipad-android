@@ -50,12 +50,14 @@ No baseline fixture is downloaded. Screenshots are saved in the target app's ext
 ## Existing coverage and the gaps this suite fills
 
 Existing coverage is an inventory, not a claim that the entire legacy suite passed in this change.
-Those tests continue to run separately; their maintenance is tracked in JIS-178.
+Those tests continue to run separately; their maintenance is tracked in JIS-178. The existing
+`UniPackImportOverlapDeviceTest` constructor call is adapted to the latest importer analytics
+argument using a no-op sink; its checks and shared helpers are unchanged.
 
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|
-| 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
-| 2. ZIP and shared-code import, result, opening pack | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest` check importer files/races | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeShowsFixtureBeforeDownloading`, `acceptedShareDownloadsFixtureShowsSuccessAndImportedPackOpens` | Automatic for actual document picker/import/result/play and share confirmation/download/result/play. Real share service remains separate. |
+| 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
+| 2. ZIP and shared-code import, result, opening pack | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeShowsFixtureBeforeDownloading`, `acceptedShareDownloadsFixtureShowsSuccessAndImportedPackOpens` | Automatic for actual document picker/import/result/play and share confirmation/download/result/play. Real share service remains separate. |
 | 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth` | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input and two simultaneous injected touchscreen pointers. Audible output/latency needs a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |

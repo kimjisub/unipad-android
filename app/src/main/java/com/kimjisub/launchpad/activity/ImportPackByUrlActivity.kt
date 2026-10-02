@@ -32,6 +32,9 @@ import com.kimjisub.launchpad.ui.theme.Background1
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.OverlayLight
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.FailureStage
+import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.api.unipad.UniPadApi.service
 import com.kimjisub.launchpad.api.unipad.vo.UnishareVO
 import com.kimjisub.launchpad.manager.FileManager
@@ -72,6 +75,9 @@ class ImportPackByUrlActivity : BaseActivity() {
 
 	private var identifyCode = ""
 
+	/** The whole attempt, from looking the code up to the download's end; the download reports into it too. */
+	private val importReport by lazy { usageAnalytics.packImport(PackImportSource.CODE) }
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
@@ -103,7 +109,10 @@ class ImportPackByUrlActivity : BaseActivity() {
 					service.getUnishare(requestCode)
 				}
 				if (response.isSuccessful) {
-					val unishare = response.body() ?: return@launch
+					val unishare = response.body() ?: run {
+						importReport.failed(UsageErrorType.SERVER)
+						return@launch
+					}
 					identifyCode = getString(string.import_pack_title_format, unishare.title, unishare._id)
 					log("title: ${unishare.title}")
 					log("producerName: ${unishare.producer}")
@@ -114,6 +123,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					infoText.value = getString(string.import_pack_confirm_source, UNISHARE_HOST)
 					pendingInstall.value = unishare
 				} else {
+					importReport.failed(UsageErrorType.fromHttpStatus(response.code()))
 					when (response.code()) {
 						404 -> {
 							log("404 Not Found")
@@ -123,12 +133,20 @@ class ImportPackByUrlActivity : BaseActivity() {
 					}
 				}
 			} catch (e: IOException) {
+				importReport.failed(e, FailureStage.NETWORK)
 				log("server error")
 				Log.err("Unishare API call failed", e)
 				titleText.value = getString(string.failed)
 				messageText.value = getString(string.server_error_format, e.message.orEmpty())
 			}
 		}
+	}
+
+	// Leaving before the question is answered, or while the download runs, ends the attempt. A finished
+	// attempt has already reported, and only the first report counts.
+	override fun onDestroy() {
+		if (code != null) importReport.cancelled()
+		super.onDestroy()
 	}
 
 	fun startInstall(unishare: UnishareVO) {
@@ -194,6 +212,7 @@ class ImportPackByUrlActivity : BaseActivity() {
 					messageText.value = throwable.message ?: ""
 				}
 			},
+			usage = importReport,
 			scope = lifecycleScope,
 		)
 	}

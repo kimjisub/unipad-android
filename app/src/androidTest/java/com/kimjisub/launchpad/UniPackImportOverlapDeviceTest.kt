@@ -17,6 +17,9 @@ import android.provider.OpenableColumns
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
+import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.analytics.UsageEventSink
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -79,7 +82,9 @@ class UniPackImportOverlapDeviceTest {
                 gates.indices.forEach { index ->
                     evidence(gates[index].id, "constructed")
                     UniPackImporter(context, Uri.parse("content://overlap/${gates[index].id}"),
-                        workspace, recorders[index], scopes[index])
+                        workspace, recorders[index],
+                        usage = UsageAnalytics(UsageEventSink { _, _ -> }).packImport(PackImportSource.FILE),
+                        scope = scopes[index])
                 }
             }
             gates.forEach { it.awaitInput() }

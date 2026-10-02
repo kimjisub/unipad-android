@@ -283,7 +283,7 @@ class PlayActivity : BaseActivity() {
 
 		vm = ViewModelProvider(
 			this,
-			PlayActivityViewModel.Factory(unipackRepo, getKoin().getOrNull<SoundRunner.Engine>())
+			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true

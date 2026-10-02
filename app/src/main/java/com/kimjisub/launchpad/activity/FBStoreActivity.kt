@@ -67,6 +67,7 @@ import com.google.firebase.database.ValueEventListener
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.Networks.FirebaseEvents
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
@@ -304,6 +305,7 @@ class FBStoreActivity : BaseActivity() {
 					item.downloading = false
 				}
 			},
+			usage = usageAnalytics.packImport(PackImportSource.STORE),
 			scope = lifecycleScope,
 		)
 		requestNotificationPermissionIfUnanswered()

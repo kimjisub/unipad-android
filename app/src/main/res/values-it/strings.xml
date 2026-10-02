@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Cartella</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Cerca UniPacks</string>
+	<string name="main_search_no_results">Nessun risultato per “%1$s”</string>
+	<string name="main_search_clear">Cancella ricerca</string>
 	<string name="backup_title">Backup</string>
 	<string name="restore_title">Ripristino</string>
 

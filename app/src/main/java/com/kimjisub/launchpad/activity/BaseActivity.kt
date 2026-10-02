@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
@@ -75,6 +76,7 @@ open class BaseActivity : AppCompatActivity() {
 	val p: PreferenceManager by inject()
 	val ws: WorkspaceManager by inject()
 	val unipackRepo: UnipackRepository by inject()
+	val usageAnalytics: UsageAnalytics by inject()
 	private val midiBannerController by lazy {
 		MidiBannerController(
 			activity = this,

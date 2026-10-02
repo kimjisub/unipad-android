@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.midi.driver.DriverRef
@@ -58,7 +59,7 @@ class PlayActivityViewModelLogoLedTest {
 
 			override fun onSendRaw(messages: List<ByteArray>, cableNumber: Int) {}
 		})
-		vm = PlayActivityViewModel(mockk<UnipackRepository>())
+		vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 		vm.channelManager = ChannelManager(8, 8)
 		vm.chain.range = 0 until 1
 		vm.uiCallback = FakeActivity()
