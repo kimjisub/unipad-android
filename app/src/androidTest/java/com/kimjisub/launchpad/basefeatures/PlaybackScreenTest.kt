@@ -22,6 +22,10 @@ abstract class PlaybackScreenTest {
         loadKoinModules(doubles)
     }
     @After fun tearDownPlayback() {
-        try { screen.close() } finally { unloadKoinModules(doubles) }
+        try {
+            if (this::screen.isInitialized) screen.close()
+        } finally {
+            if (this::doubles.isInitialized) unloadKoinModules(doubles)
+        }
     }
 }
