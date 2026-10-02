@@ -15,15 +15,20 @@ plugins {
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// Debug builds and unit tests must configure without a release signing key.
+if (keystorePropertiesFile.exists()) {
+	keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
 
 android {
 	signingConfigs {
 		release {
-			storeFile file(keystoreProperties['storeFile'])
-			storePassword keystoreProperties['storePassword']
-			keyAlias keystoreProperties['keyAlias']
-			keyPassword keystoreProperties['keyPassword']
+			if (keystorePropertiesFile.exists()) {
+				storeFile file(keystoreProperties['storeFile'])
+				storePassword keystoreProperties['storePassword']
+				keyAlias keystoreProperties['keyAlias']
+				keyPassword keystoreProperties['keyPassword']
+			}
 		}
 	}
 	ndkVersion = '29.0.14206865'
@@ -285,4 +290,3 @@ dependencies {
 	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
 	api project(':design')
 }
-

@@ -19,12 +19,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import java.util.Collections
 import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
 import kotlin.concurrent.thread
 
@@ -36,6 +41,9 @@ import kotlin.concurrent.thread
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelPressLedRaceTest {
+	// Include cleanup in the deadline: stop() also takes the runner's delivery lock.
+	@get:Rule
+	val timeout: Timeout = Timeout.seconds(180)
 
 	private companion object {
 		const val TRIALS = 3000
@@ -79,6 +87,8 @@ class PlayActivityViewModelPressLedRaceTest {
 
 	/** Pressing (0,0) blinks the pad under test once per tick; the pad itself has no animation. */
 	private fun setUp(loop: Int) {
+		// JUnit runs the timeout-bounded test and cleanup on their own thread.
+		main.mainThread = Thread.currentThread()
 		Dispatchers.setMain(main)
 		mockkStatic(SystemClock::class)
 		every { SystemClock.elapsedRealtime() } answers { clock.get() }
@@ -129,21 +139,32 @@ class PlayActivityViewModelPressLedRaceTest {
 			val pressing = AtomicBoolean(true)
 			// Ticks until the presses end, so the last tick and the last press overlap. The pause between
 			// ticks stands in for the runner's loop delay and lets presses take the runner's lock.
-			val ticks = thread {
-				barrier.await()
-				while (pressing.get()) {
-					clock.incrementAndGet()
-					loopMethod.invoke(runner)
-					LockSupport.parkNanos(TICK_PAUSE_NANOS)
+			val tickFailure = AtomicReference<Throwable>()
+			val ticks = thread(isDaemon = true, name = "press-led-ticks-$trial") {
+				try {
+					barrier.await(5, TimeUnit.SECONDS)
+					while (pressing.get()) {
+						clock.incrementAndGet()
+						loopMethod.invoke(runner)
+						LockSupport.parkNanos(TICK_PAUSE_NANOS)
+					}
+				} catch (failure: Throwable) {
+					tickFailure.set(failure)
 				}
 			}
-			barrier.await()
-			repeat(OPS_PER_TRIAL) { i ->
-				vm.padTouch(PAD, PAD, i % 2 == 0)
-				main.runAll()
+			try {
+				barrier.await(5, TimeUnit.SECONDS)
+				repeat(OPS_PER_TRIAL) { i ->
+					vm.padTouch(PAD, PAD, i % 2 == 0)
+					main.runAll()
+				}
+			} finally {
+				pressing.set(false)
+				ticks.join(5_000)
+				if (ticks.isAlive) ticks.interrupt()
 			}
-			pressing.set(false)
-			ticks.join()
+			assertFalse("LED tick worker did not stop in trial $trial", ticks.isAlive)
+			tickFailure.get()?.let { throw AssertionError("LED tick worker failed in trial $trial", it) }
 			main.runAll()
 
 			val state = vm.channelManager.get(PAD, PAD)?.code ?: 0
