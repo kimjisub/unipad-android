@@ -62,8 +62,8 @@ keyPassword=dummy
 # Run specific test class
 ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.AppLaunchTest
 
-# Run multiple test classes
-./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.AppLaunchTest,com.kimjisub.launchpad.MainActivityTest
+# Run one specific method; verify the report contains the intended checks
+./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.AppLaunchTest#testAppLaunch
 
 # Run all tests (unit + UI)
 ./gradlew testDebugUnitTest connectedDebugAndroidTest

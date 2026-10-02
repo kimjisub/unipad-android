@@ -350,10 +350,12 @@ abstract class BaseUITest {
     }
 
     /** The tagged panel must be fully visible, rather than merely starting its slide-in. */
-    protected fun isPlayOptionsOpen(): Boolean {
-        val panel = device.findObject(By.res("play_options")) ?: return false
-        // The node exists while the panel is still sliding in. Its full 280 dp width must be visible.
-        return panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+    protected fun isPlayOptionsOpen(): Boolean = try {
+        val panel = device.findObject(By.res("play_options"))
+        // The node exists while sliding in. Recomposition may also replace it during this query.
+        panel != null && panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+    } catch (_: StaleObjectException) {
+        false // The opening wait will refetch the current node; this is not a closing condition.
     }
 
     /** The play screen is shown: its Menu button, or its option panel when that is open. */

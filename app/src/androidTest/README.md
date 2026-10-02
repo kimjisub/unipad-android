@@ -27,7 +27,9 @@ ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 Repeat the exact complete-suite command three times. Each invocation must execute the connected
-tasks; reports must show zero failures and zero skips. Archive the XML and raw runner output
+tasks; reports must show zero failures and zero skips. In local verification, a comma-separated
+class selector executed only its first class; use one class/method per focused invocation and
+check the resulting names/counts. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
 between runs because the next invocation overwrites them. Gradle tasks marked `SKIPPED` are not
 skipped JUnit tests; use the test report totals. Do not add `@Ignore`, assumptions, class exclusion
 filters, or weaker assertions to make a failing screen test green.

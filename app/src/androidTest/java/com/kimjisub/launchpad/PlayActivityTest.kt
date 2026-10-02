@@ -55,7 +55,7 @@ class PlayActivityTest : BaseUITest() {
         openPlayOptions()
         assertTrue("Play mode '${str(labelRes)}' could not be tapped", clickFresh { playMode(labelRes) })
         val selectedAt = SystemClock.elapsedRealtime()
-        waitUntil { !isPlayOptionsOpen() }
+        assertTrue("Play mode selection did not close the options", device.wait(Until.gone(By.res("play_options")), 5000L))
         return selectedAt
     }
 
