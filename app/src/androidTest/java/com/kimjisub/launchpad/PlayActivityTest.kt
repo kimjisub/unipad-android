@@ -35,7 +35,7 @@ import org.junit.runner.RunWith
  * screen is Compose: options live in a side panel opened from the Menu button of the right
  * chrome column, AutoPlay is a "Play Mode" in that panel with its transport in the chrome
  * column, Back toggles the panel and Quit (in the panel) returns to the main screen.
- * Pads and chain buttons are plain views without ids, so they are tapped by grid position.
+ * Pads and chain buttons are plain views without ids; taps use their actual native bounds.
  */
 @RunWith(AndroidJUnit4::class)
 class PlayActivityTest : BaseUITest() {
@@ -53,7 +53,7 @@ class PlayActivityTest : BaseUITest() {
     /** Tap a Play Mode in the option panel; returns [SystemClock.elapsedRealtime] of the tap. */
     private fun selectPlayMode(labelRes: Int): Long {
         openPlayOptions()
-        assertTrue("Play mode '${str(labelRes)}' could not be tapped", clickFresh { playOption(labelRes) })
+        assertTrue("Play mode '${str(labelRes)}' could not be tapped", clickFresh { playMode(labelRes) })
         val selectedAt = SystemClock.elapsedRealtime()
         waitUntil { !isPlayOptionsOpen() }
         return selectedAt
@@ -79,7 +79,7 @@ class PlayActivityTest : BaseUITest() {
         return text
     }
 
-    /** Play screen geometry read from the view tree: [padArea] of the helper only estimates the grid. */
+    /** Play screen geometry read from the view tree: [padArea] of the helper reads the same actual native bounds. */
     private class PlayGeometry(val safe: Rect, val pads: Rect, val chains: List<Rect>)
 
     /**
@@ -407,7 +407,7 @@ class PlayActivityTest : BaseUITest() {
 
     /** Former FAB "Load UniPack": now the sort bar's Import icon, which opens the system file picker. */
     @Test
-    fun testLoadUniPackFABInteraction() {
+    fun testImportOpensPickerAndCancelReturnsToMain() {
         launchToMainScreen()
         takeScreenshot("before_load_unipack")
 
@@ -429,7 +429,7 @@ class PlayActivityTest : BaseUITest() {
 
     /** Former FAB "Reconnect Launchpad": now Settings > Device > Reconnect Launchpad. */
     @Test
-    fun testReconnectLaunchpadFABInteraction() {
+    fun testReconnectOpensDeviceSelectionFromSettings() {
         launchToMainScreen()
         takeScreenshot("before_reconnect_launchpad")
 

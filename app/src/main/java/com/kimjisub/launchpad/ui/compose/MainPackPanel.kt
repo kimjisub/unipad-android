@@ -40,7 +40,7 @@ fun formatDate(date: Date?): String =
 	if (date != null) dateFormat.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()) else "-"
 
 @Composable
-fun MainPackPanelScreen(vm: MainPackPanelViewModel) {
+fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifier) {
 	val unipackEnt by vm.unipackEnt.observeAsState()
 	val soundCount = vm.soundCount
 	val ledCount = vm.ledCount
@@ -48,7 +48,7 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel) {
 	val unipack = vm.unipack
 
 	Surface(
-		modifier = Modifier.fillMaxSize(),
+		modifier = modifier.fillMaxSize(),
 		shape = RoundedCornerShape(8.dp),
 		color = Color.White,
 	) {

@@ -1,76 +1,117 @@
 package com.kimjisub.launchpad
 
+import android.content.Intent
 import android.graphics.Rect
 import android.os.Build
-import android.view.WindowInsets
-import android.view.WindowManager
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.SdkSuppress
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
-import androidx.test.uiautomator.UiObject2
-import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.FBStoreActivity
+import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.network.FirebaseStoreCatalog
+import com.kimjisub.launchpad.network.StoreCatalog
+import com.kimjisub.launchpad.network.fb.StoreVO
+import org.junit.After
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Assume.assumeTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.loadKoinModules
+import org.koin.dsl.module
 import java.util.regex.Pattern
 
-/**
- * Store Tests
- * Tests for store browsing functionality
- *
- * The store is opened from the main sort bar's Store icon. Its list is loaded from Firebase, so
- * these tests need network access on the device.
- */
+/** Real activity, navigation and Compose list, with an activity-scoped, offline catalogue. */
 @RunWith(AndroidJUnit4::class)
 class StoreTest : BaseUITest() {
+    @get:Rule
+    val composeTestRule = createEmptyComposeRule()
 
-    private companion object {
-        const val MAX_SCROLLS = 60
+    private var previousStoreCount = 0L
+    private var catalogueInstalled = false
+    private var mainScenario: ActivityScenario<MainActivity>? = null
+
+    private val packs = List(30) { index ->
+        StoreVO(
+            code = "ui_store_$index",
+            title = "Store Test Pack $index",
+            producerName = "Store Test Producer $index",
+            isLED = index % 2 == 0,
+            isAutoPlay = index % 3 == 0,
+            downloadCount = index,
+            URL = "https://example.invalid/ui-store-$index.zip",
+        )
+    }
+    private val fixture = object : StoreCatalog {
+        override fun attach(listener: StoreCatalog.Listener) {
+            // Firebase inserts each new child at the head; reverse delivery gives an ordered list.
+            packs.asReversed().forEach { listener.onAdded(it, requireNotNull(it.code)) }
+            listener.onCount(packs.size.toLong())
+        }
+        override fun detach() {}
     }
 
-    /**
-     * Browse the store and open a pack's detail panel. The Download button is only checked for
-     * presence and not pressed: pressing it downloads a real pack and counts in the production
-     * download statistics.
-     */
+    @Before
+    fun installOfflineCatalogue() {
+        previousStoreCount = PreferenceManager(context).prevStoreCount
+        loadKoinModules(module { factory<StoreCatalog> { fixture } })
+        catalogueInstalled = true
+    }
+
+    @After
+    fun restoreCatalogue() {
+        if (!catalogueInstalled) return
+        // Dispose the activity before restoring the binding, also when an assertion failed.
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            listOf(Stage.RESUMED, Stage.STARTED, Stage.CREATED).forEach { stage ->
+                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(stage)
+                    .filterIsInstance<FBStoreActivity>().toList().forEach { it.finish() }
+            }
+        }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        mainScenario?.close()
+        loadKoinModules(module { factory<StoreCatalog> { FirebaseStoreCatalog() } })
+        PreferenceManager(context).prevStoreCount = previousStoreCount
+    }
+
+    /** Browse both ends, select a known pack, check its actual detail, close detail then store. */
     @Test
     fun testStoreUnipackBrowsing() {
-        launchToMainScreen()
-        takeScreenshot("store_browsing_start")
-
+        launchMain()
         openStore()
         takeScreenshot("store_opened")
 
-        val list = waitForStoreList()
-        list.scroll(Direction.DOWN, 0.5f)
+        composeTestRule.onNodeWithTag("store_list").performScrollToIndex(packs.lastIndex)
+        composeTestRule.onNodeWithTag(rowTag(packs.lastIndex)).assertIsDisplayed()
         takeScreenshot("store_scrolled_down")
-        list.scroll(Direction.UP, 0.5f)
-        takeScreenshot("store_scrolled_up")
-
-        val firstItem = waitForStoreList().children.firstOrNull { it.isClickable }
-        assertNotNull("Store list has no items", firstItem)
-        firstItem!!.click()
-        val downloadState = By.pkg(PACKAGE_NAME).text(str(R.string.download))
-        val downloadedState = By.pkg(PACKAGE_NAME).text(str(R.string.downloaded))
-        assertTrue(
-            "Store pack detail did not open",
-            waitForAnyElementWithPolling(listOf(downloadState, downloadedState), 5000L)
-        )
+        composeTestRule.onNodeWithTag("store_list").performScrollToIndex(0)
+        composeTestRule.onNodeWithTag(rowTag(0)).assertIsDisplayed().performClick()
+        assertDetailOf(0)
         takeScreenshot("store_item_clicked")
 
-        // First Back closes the detail, the second leaves the store
         device.pressBack()
-        assertTrue(
-            "Back did not close the store pack detail",
-            device.wait(Until.gone(downloadedState), 3000L) && device.wait(Until.gone(downloadState), 3000L)
-        )
-        assertTrue("Store closed on the first Back", waitForStoreScreen(2000L))
-
+        composeTestRule.waitUntil(5000L) {
+            composeTestRule.onAllNodesWithTag("store_detail").fetchSemanticsNodes().isEmpty()
+        }
+        composeTestRule.onNodeWithTag("store_list").assertIsDisplayed()
+        assertTrue("Store closed on the first Back", waitForStoreScreen())
         device.pressBack()
         assertTrue("Could not return to the main screen from store", waitForMainScreen())
         takeScreenshot("store_browsing_end")
@@ -78,121 +119,101 @@ class StoreTest : BaseUITest() {
 
     @Test
     fun testStoreActivityNavigation() {
-        // This test is a duplicate of the one in MainActivityTest, but included here for completeness
-        // Testing the same functionality but as part of StoreTest suite
-        launchToMainScreen()
-        takeScreenshot("store_nav_start")
-
+        launchMain()
         openStore()
-        takeScreenshot("store_nav_opened")
-
         device.pressBack()
         assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("store_nav_end")
     }
 
-    /**
-     * Scroll to the end of the store and check that the last row is clear of the navigation bar and
-     * display cutout (a gesture handle below it, or a 3-button bar beside it in landscape), then tap it.
-     */
+    /** The known final row must be fully outside system bars/cutouts, and open its own detail. */
     @Test
     fun testStoreLastRowClearOfSystemBars() {
-        assumeTrue("Window insets need API 30", Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-        launchToMainScreen()
+        launchMain()
         openStore()
-
-        val list = waitForStoreList()
+        composeTestRule.onNodeWithTag("store_list").performScrollToIndex(packs.lastIndex)
+        val last = composeTestRule.onNodeWithTag(rowTag(packs.lastIndex)).assertIsDisplayed()
+        val row = last.fetchSemanticsNode().boundsInWindow
         val safe = safeArea()
-        val lastRow = scrollToLastRow(list, safe)
-        assertNotNull("Store list has no items", lastRow)
+        assertTrue("Last row $row extends below the safe area $safe", row.bottom <= safe.bottom)
+        assertTrue("Last row $row extends behind a side bar/cutout $safe", row.left >= safe.left && row.right <= safe.right)
         takeScreenshot("store_list_end")
-
-        val row = lastRow!!.visibleBounds
-        assertTrue("Last row $row ends under the bottom system bar (safe area $safe)", row.bottom <= safe.bottom)
-        assertTrue("Last row $row runs under a side system bar (safe area $safe)", row.right <= safe.right && row.left >= safe.left)
-
-        lastRow.click()
-        assertTrue(
-            "Tapping the last row did not select it",
-            waitForAnyElementWithPolling(
-                listOf(By.pkg(PACKAGE_NAME).text(str(R.string.download)), By.pkg(PACKAGE_NAME).text(str(R.string.downloaded))),
-                5000L,
-            )
-        )
+        last.performClick()
+        assertDetailOf(packs.lastIndex)
         takeScreenshot("store_list_end_selected")
     }
 
-    /**
-     * Scrolls until the lowest row stays put, since the list keeps reporting it can scroll near its end.
-     * The list reaches under the gesture handle, so swipes start above [safe] or the system takes them.
-     */
-    private fun scrollToLastRow(list: UiObject2, safe: Rect): UiObject2? {
-        val bounds = list.visibleBounds
-        list.setGestureMargins(0, 0, 0, (bounds.bottom - safe.bottom).coerceAtLeast(0) + bounds.height() / 10)
-        var previous: Rect? = null
-        repeat(MAX_SCROLLS) {
-            list.scroll(Direction.DOWN, 1f)
-            device.waitForIdle()
-            val last = list.children.filter { it.isClickable }.maxByOrNull { it.visibleBounds.bottom } ?: return null
-            if (last.visibleBounds == previous) return last
-            previous = last.visibleBounds
-        }
-        fail("Store list never reached its end")
-        return null
-    }
-
-    private fun safeArea(): Rect {
-        val metrics = context.getSystemService(WindowManager::class.java).maximumWindowMetrics
-        val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
-            WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
-        )
-        return Rect(metrics.bounds).apply {
-            left += insets.left
-            top += insets.top
-            right -= insets.right
-            bottom -= insets.bottom
-        }
-    }
-
-    /**
-     * Notification permission is asked only when a store download starts, so neither launching
-     * the app nor browsing the store may bring up the system permission dialog.
-     * API 24–29 legitimately asks for storage permission at launch; this check targets the
-     * notification runtime permission introduced in API 33 and leaves it ungranted.
-     */
+    /** Browsing must never request notification permission or start a download. */
     @Test
-    @SdkSuppress(minSdkVersion = 33)
     fun testNoPermissionDialogBeforeDownload() {
-        launchApp()
-        assertTrue("Main screen did not appear without answering a dialog", waitForMainScreen())
+        launchMain()
+        assertTrue("Main screen did not appear without a notification dialog", waitForMainScreen())
         assertNoPermissionDialog()
-
         openStore()
-        waitForStoreList()
+        composeTestRule.onNodeWithTag(rowTag(0)).performClick()
+        assertDetailOf(0)
         assertNoPermissionDialog()
         takeScreenshot("store_without_permission_dialog")
     }
 
+    private fun assertDetailOf(index: Int) {
+        composeTestRule.onNodeWithTag("store_detail").assertIsDisplayed()
+        for (text in listOf(requireNotNull(packs[index].title), requireNotNull(packs[index].producerName), str(R.string.download))) {
+            composeTestRule.onNode(hasText(text) and hasAnyAncestor(hasTestTag("store_detail")), useUnmergedTree = true)
+                .assertIsDisplayed()
+        }
+    }
+
+    private fun safeArea(): Rect {
+        var safe: Rect? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<FBStoreActivity>().single()
+            val insets = requireNotNull(ViewCompat.getRootWindowInsets(activity.window.decorView))
+                .getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout())
+            val decor = activity.window.decorView
+            safe = Rect(0, 0, decor.width, decor.height).apply {
+                left += insets.left
+                top += insets.top
+                right -= insets.right
+                bottom -= insets.bottom
+            }
+        }
+        return requireNotNull(safe)
+    }
+
+    private fun rowTag(index: Int) = "store_pack_${packs[index].code}"
+
     private fun assertNoPermissionDialog() {
-        assertFalse(
-            "A system permission dialog is showing",
-            device.hasObject(By.pkg(Pattern.compile(".*permissioncontroller.*")))
-        )
+        assertFalse("A system permission dialog is showing", device.hasObject(By.pkg(Pattern.compile(".*permissioncontroller.*"))))
+    }
+
+    private fun waitForMainButton() {
+        // A registered Compose root can still be hidden during the activity/window transition.
+        composeTestRule.waitUntil(MAIN_TIMEOUT) {
+            try {
+                composeTestRule.onNodeWithContentDescription(str(R.string.store)).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+        composeTestRule.onNodeWithContentDescription(str(R.string.store)).assertIsDisplayed()
+    }
+
+    private fun launchMain() {
+        // Create the real activity after the rule is active, and await its resumed lifecycle.
+        mainScenario = ActivityScenario.launch(Intent(context, MainActivity::class.java))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) handlePermissionDialogs()
+        waitForMainButton()
     }
 
     private fun openStore() {
-        device.findObject(By.desc(str(R.string.store)))?.click()
-            ?: device.findObject(By.textContains(str(R.string.guide_download_new))).click()
+        composeTestRule.onNodeWithContentDescription(str(R.string.store)).performClick()
+        composeTestRule.waitUntil(10000L) {
+            composeTestRule.onAllNodesWithTag("store_list").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("store_list").assertIsDisplayed()
         assertTrue("Did not transition to the store screen", waitForStoreScreen())
-    }
-
-    private fun waitForStoreList(): UiObject2 {
-        val list = device.wait(Until.findObject(By.pkg(PACKAGE_NAME).scrollable(true)), 15000L)
-        assertFalse(
-            "Store could not reach the server (no network on the device?)",
-            list == null && device.hasObject(By.text(str(R.string.UnableToAccessServer)))
-        )
-        assertNotNull("Store list did not load", list)
-        return list!!
     }
 }

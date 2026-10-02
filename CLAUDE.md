@@ -84,15 +84,11 @@ Start-Process app/build/reports/androidTests/connected/index.html
 ```
 
 #### Test Structure
-UI tests are organized by feature area:
-- `BaseUITest.kt` - Common base class with setup and helpers
-- `AppLaunchTest.kt` - App launch and navigation tests (6 tests)
-- `MainActivityTest.kt` - Main screen functionality tests (4 tests)
-- `PlayActivityTest.kt` - Play activity feature tests (13 tests)
-- `SettingsTest.kt` - Settings tests (3 tests)
-- `StoreTest.kt` - Store tests (2 tests)
-- `ThemeTest.kt` - Theme tests (1 test)
-- `DiagnosticTest.kt` - Diagnostic tests (1 test)
+The complete instrumented suite currently contains 63 app tests and one design test.
+See [the instrumented test inventory](app/src/androidTest/README.md) for the current
+classes, individual scenarios, offline Store catalogue and complete-suite command.
+Run both `:app:connectedDebugAndroidTest` and `:design:connectedDebugAndroidTest`;
+verify discovery counts as well as zero failures and skips.
 
 #### Multi-API Level Testing
 

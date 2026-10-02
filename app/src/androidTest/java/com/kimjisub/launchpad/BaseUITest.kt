@@ -4,6 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Build
+import android.view.View
+import android.view.ViewGroup
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
+import com.kimjisub.design.view.ChainView
+import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.activity.PlayActivity
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -18,7 +25,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
-import java.util.regex.Pattern
+import org.junit.After
 
 /**
  * Base class for UI Automator tests
@@ -28,6 +35,7 @@ abstract class BaseUITest {
 
     protected lateinit var device: UiDevice
     protected lateinit var context: Context
+    private var originalIdleTimeout: Long? = null
 
     companion object {
         const val LAUNCH_TIMEOUT = 10000L
@@ -35,7 +43,6 @@ abstract class BaseUITest {
         const val MAIN_TIMEOUT = 20000L
         const val PLAY_TIMEOUT = 20000L
         private const val PLAY_FLAG_TAP_DP = 50
-        private val ANY_TEXT = Pattern.compile(".+")
         private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
     }
 
@@ -44,6 +51,10 @@ abstract class BaseUITest {
         // Initialize UiDevice instance
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         context = ApplicationProvider.getApplicationContext()
+        // Animated pads need not become globally idle. Helpers still wait for each observed state.
+        val configurator = Configurator.getInstance()
+        originalIdleTimeout = configurator.waitForIdleTimeout
+        configurator.waitForIdleTimeout = 500L
 
         // Press Home button to start from a clean state
         device.pressHome()
@@ -57,6 +68,11 @@ abstract class BaseUITest {
         )
 
         TestUniPack.install(context)
+    }
+
+    @After
+    fun restoreIdleTimeout() {
+        originalIdleTimeout?.let { Configurator.getInstance().waitForIdleTimeout = it }
     }
 
     /**
@@ -212,17 +228,15 @@ abstract class BaseUITest {
         device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.STP_count))), timeoutMs)
 
     /**
-     * The clickable list row of [TestUniPack], scrolled into view. The title also appears in the
-     * detail panel once the pack is selected; only the list copy sits inside a clickable row.
+     * The exact tagged list row of [TestUniPack], scrolled into view. A title also appears in the
+     * detail panel, so finding a clickable ancestor of title text was ambiguous.
      */
     protected fun findTestPackRow(): UiObject2 {
-        val selector = By.text(TestUniPack.TITLE)
-        fun listRow() = device.findObjects(selector).firstNotNullOfOrNull { clickableAncestorOrNull(it) }
-        var row: UiObject2? = null
-        waitUntil(5000L) { row = listRow(); row != null }
+        val selector = By.res("main_pack_${TestUniPack.FOLDER_NAME}")
+        var row = device.wait(Until.findObject(selector), 5000L)
         if (row == null) {
             device.findObject(By.scrollable(true))?.scrollUntil(Direction.DOWN, Until.findObject(selector))
-            row = listRow()
+            row = device.findObject(selector)
         }
         assertNotNull("Test pack '${TestUniPack.TITLE}' is not in the list", row)
         return row!!
@@ -242,17 +256,24 @@ abstract class BaseUITest {
 
     /** Tap the test pack's row so its detail panel opens and its Play flag slides out. */
     protected fun selectTestPack(): UiObject2 {
-        findTestPackRow().click()
-        assertTrue(
-            "Pack panel did not open for the test pack",
-            device.wait(Until.hasObject(By.desc(str(R.string.cd_delete))), 5000L)
-        )
+        findTestPackRow() // Scroll the exact row into view before attempting to select it.
+        val detail = By.res("main_detail_${TestUniPack.FOLDER_NAME}")
+        val opened = waitUntil(10000L) {
+            if (device.hasObject(detail)) true else {
+                // Main refresh can replace the list between lookup and tap. Refetch and retry
+                // only while our own detail is absent, so an already selected pack is not toggled off.
+                clickFresh { device.findObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")) }
+                false
+            }
+        }
+        assertTrue("Pack panel did not open for the test pack", opened)
+        assertTrue("Selected pack has no delete control", device.wait(Until.hasObject(By.desc(str(R.string.cd_delete))), 5000L))
         return findTestPackRow()
     }
 
     /** Select the test pack (unless already selected) and press its Play flag; returns once the play screen is ready. */
     protected fun openTestPackInPlay() {
-        val row = if (device.hasObject(By.desc(str(R.string.cd_delete)))) findTestPackRow() else selectTestPack()
+        val row = selectTestPack()
         Thread.sleep(700) // Play flag slide-in animation (FLAG_ANIMATION_MS = 500)
         val bounds = row.visibleBounds
         val flagCenterX = bounds.left + (PLAY_FLAG_TAP_DP * context.resources.displayMetrics.density).toInt()
@@ -267,7 +288,9 @@ abstract class BaseUITest {
     /** Tap Menu until the option panel is open; Menu fades back in after the panel closes. */
     protected fun openPlayOptions() {
         val opened = waitUntil(5000L) {
-            isPlayOptionsOpen() || run {
+            if (device.hasObject(By.res("play_options"))) {
+                isPlayOptionsOpen() // Wait for slide-in, without toggling Menu during the animation.
+            } else {
                 clickFresh { device.findObject(By.desc(str(R.string.menu))) }
                 false
             }
@@ -277,19 +300,23 @@ abstract class BaseUITest {
 
     protected fun closePlayOptions() {
         device.pressBack()
-        assertTrue("Play option panel did not close", waitUntil(5000L) { !isPlayOptionsOpen() })
+        assertTrue("Play option panel did not close", device.wait(Until.gone(By.res("play_options")), 5000L))
     }
 
     /** A switch row label in the play option panel; the panel scrolls, so search both ways. */
-    protected fun playOption(labelRes: Int): UiObject2 {
-        val selector = By.text(str(labelRes))
+    protected fun playOption(labelRes: Int): UiObject2 =
+        findPlayControl(labelRes, By.res("play_option_$labelRes").hasDescendant(By.checkable(true)))
+
+    /** Play modes are segmented buttons, not switch rows. */
+    protected fun playMode(labelRes: Int): UiObject2 = findPlayControl(labelRes, By.text(str(labelRes)))
+
+    private fun findPlayControl(labelRes: Int, selector: androidx.test.uiautomator.BySelector): UiObject2 {
         device.wait(Until.findObject(selector), 1000L)?.let { return it }
-        val panel = device.findObject(By.pkg(PACKAGE_NAME).scrollable(true))
         for (direction in listOf(Direction.DOWN, Direction.UP)) {
-            repeat(3) {
-                device.findObject(selector)?.let { return it }
-                panel?.scroll(direction, 0.8f)
-            }
+            // Reacquire the panel for each search: switches and scrolling recompose its nodes.
+            val found = device.findObject(By.res("play_options"))
+                ?.scrollUntil(direction, Until.findObject(selector))
+            if (found != null) return found
         }
         val row = device.findObject(selector)
         assertNotNull("Play option '${str(labelRes)}' not found", row)
@@ -322,8 +349,12 @@ abstract class BaseUITest {
         return false
     }
 
-    /** The play option panel is the only scrollable view on the play screen. */
-    protected fun isPlayOptionsOpen(): Boolean = device.hasObject(By.pkg(PACKAGE_NAME).scrollable(true))
+    /** The tagged panel must be fully visible, rather than merely starting its slide-in. */
+    protected fun isPlayOptionsOpen(): Boolean {
+        val panel = device.findObject(By.res("play_options")) ?: return false
+        // The node exists while the panel is still sliding in. Its full 280 dp width must be visible.
+        return panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+    }
 
     /** The play screen is shown: its Menu button, or its option panel when that is open. */
     protected fun isOnPlayScreen(): Boolean =
@@ -341,25 +372,33 @@ abstract class BaseUITest {
         assertTrue("Did not return to the main screen after quitting play", waitForMainScreen())
     }
 
-    /**
-     * Chain buttons of the play screen, top to bottom. They are the only unlabeled clickable
-     * views while the option panel is closed (Menu and the AutoPlay transport carry labels).
-     */
+    /** Actual native chain views on the resumed play activity, top to bottom. */
     protected fun chainButtons(): List<Rect> {
-        var chains: List<Rect> = emptyList()
-        waitUntil {
-            try {
-                chains = device.findObjects(By.pkg(PACKAGE_NAME).clickable(true))
-                    .filter { it.contentDescription.isNullOrEmpty() && it.findObject(By.desc(ANY_TEXT)) == null }
-                    .map { it.visibleBounds }
-                    .filter { it.width() < device.displayWidth / 4 }
-                    .sortedBy { it.top }
-                true
-            } catch (e: StaleObjectException) {
-                false // pads and chains redraw while LEDs animate
-            }
-        }
+        var chains = emptyList<Rect>()
+        assertTrue("Chain views did not lay out", waitUntil(5000L) {
+            chains = nativeViewBounds(ChainView::class.java).sortedBy { it.top }
+            chains.isNotEmpty()
+        })
         return chains
+    }
+
+    /** Read the actual visible native layout, without accessibility idle waits on each pad tap. */
+    private fun nativeViewBounds(type: Class<out View>): List<Rect> {
+        val bounds = mutableListOf<Rect>()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<PlayActivity>().singleOrNull() ?: return@runOnMainSync
+            fun collect(view: View) {
+                if (!view.isShown) return
+                if (type.isInstance(view) && view.width > 0 && view.height > 0) {
+                    val xy = IntArray(2).also(view::getLocationOnScreen)
+                    bounds += Rect(xy[0], xy[1], xy[0] + view.width, xy[1] + view.height)
+                }
+                if (view is ViewGroup) for (i in 0 until view.childCount) collect(view.getChildAt(i))
+            }
+            collect(activity.window.decorView)
+        }
+        return bounds
     }
 
     /**
@@ -380,23 +419,26 @@ abstract class BaseUITest {
             emptyList()
         }
 
-    /**
-     * Screen area of the 8x8 pad grid. The pads have no accessibility nodes; the grid is one chain
-     * button high per row and ends where the right chain column starts.
-     */
+    /** Screen area occupied by the actual 8x8 native pad grid. */
     protected fun padArea(): Rect {
-        val chains = chainButtons()
-        assertTrue("Chain buttons not found on the play screen", chains.isNotEmpty())
-        val first = chains.first()
-        val cell = first.height()
-        return Rect(first.left - cell * 8, first.top, first.left, first.top + cell * 8)
+        val pads = nativePadBounds()
+        return Rect(pads.first()).apply { pads.drop(1).forEach { union(it) } }
     }
 
-    /** Tap the pad at grid row [x], column [y] of the 8x8 test pack, both 0-based. */
+    private fun nativePadBounds(): List<Rect> {
+        var pads = emptyList<Rect>()
+        assertTrue("The 8x8 test pad grid did not lay out", waitUntil(5000L) {
+            pads = nativeViewBounds(PadView::class.java).sortedWith(compareBy<Rect> { it.top }.thenBy { it.left })
+            pads.size == 64
+        })
+        return pads
+    }
+
+    /** Tap the exact native pad at row [x], column [y] of the 8x8 test pack, both 0-based. */
     protected fun tapPad(x: Int, y: Int) {
-        val area = padArea()
-        val cell = area.width() / 8
-        device.click(area.left + cell * y + cell / 2, area.top + cell * x + cell / 2)
+        require(x in 0..7 && y in 0..7)
+        val pad = nativePadBounds()[x * 8 + y]
+        device.click(pad.centerX(), pad.centerY())
     }
 
     protected fun tapChain(index: Int) {
