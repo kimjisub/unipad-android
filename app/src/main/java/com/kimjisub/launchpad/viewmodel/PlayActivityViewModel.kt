@@ -39,6 +39,7 @@ enum class PlayMode {
 
 class PlayActivityViewModel(
 	private val unipackRepo: UnipackRepository,
+	private val soundEngine: SoundRunner.Engine? = null,
 ) : ViewModel() {
 
 	companion object {
@@ -378,6 +379,7 @@ class PlayActivityViewModel(
 		initAutoPlayRunner()
 
 		soundRunner = SoundRunner(
+			engine = soundEngine ?: SoundRunner.OboeEngine,
 			unipack = unipack,
 			chain = chain,
 			scope = viewModelScope,
@@ -987,10 +989,11 @@ class PlayActivityViewModel(
 
 	class Factory(
 		private val unipackRepo: UnipackRepository,
+		private val soundEngine: SoundRunner.Engine? = null,
 	) : ViewModelProvider.Factory {
 		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			return PlayActivityViewModel(unipackRepo) as T
+			return PlayActivityViewModel(unipackRepo, soundEngine) as T
 		}
 	}
 }

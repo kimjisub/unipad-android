@@ -116,6 +116,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.TraceLogText
@@ -138,6 +139,7 @@ import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import android.content.Intent
 import kotlin.math.roundToInt
+import org.koin.android.ext.android.getKoin
 
 class PlayActivity : BaseActivity() {
 
@@ -281,7 +283,7 @@ class PlayActivity : BaseActivity() {
 
 		vm = ViewModelProvider(
 			this,
-			PlayActivityViewModel.Factory(unipackRepo)
+			PlayActivityViewModel.Factory(unipackRepo, getKoin().getOrNull<SoundRunner.Engine>())
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true

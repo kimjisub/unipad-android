@@ -2,6 +2,9 @@
 
 UI Automator tests that drive the debug build (`com.kimjisub.launchpad.dev`) on an emulator.
 
+For the deterministic 14-test release subset, coverage inventory, and signed-candidate limitations,
+see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
+
 ## How to run
 
 ```bash

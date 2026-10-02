@@ -68,6 +68,7 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.network.Networks.FirebaseEvents
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.Log
@@ -89,6 +90,8 @@ import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.text.NumberFormat
+import org.koin.android.ext.android.getKoin
+import org.koin.core.qualifier.named
 
 class StoreItemState(
 	storeVO: StoreVO,
@@ -109,8 +112,12 @@ class FBStoreActivity : BaseActivity() {
 		private const val DOWNLOAD_BASE_URL = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy"
 	}
 
-	private val firebaseStore: FirebaseManager by lazy { FirebaseManager("store") }
-	private val firebaseStoreCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
+	private val firebaseStore: FirebaseEvents by lazy {
+		getKoin().getOrNull<FirebaseEvents>(named("store")) ?: FirebaseManager("store")
+	}
+	private val firebaseStoreCount: FirebaseEvents by lazy {
+		getKoin().getOrNull<FirebaseEvents>(named("storeCount")) ?: FirebaseManager("storeCount")
+	}
 	private val storeItems = mutableStateListOf<StoreItemState>()
 	private var downloadList: List<UniPackItem> = emptyList()
 	private var requestingNotificationPermission = false
