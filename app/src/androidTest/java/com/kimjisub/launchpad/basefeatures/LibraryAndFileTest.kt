@@ -64,7 +64,10 @@ class LibraryAndFileTest {
                 val roots = toolbar.findObject(By.clazz("android.widget.ImageButton"))
                     ?: throw AssertionError("Documents picker navigation button missing")
                 roots.click()
+                // Opening the drawer replaces its accessibility nodes during animation.
+                screen.device.waitForIdle()
                 screen.node(By.text("Downloads")).click()
+                screen.device.waitForIdle()
             }
             screen.node(By.text("basefeatures-file.zip")).click()
             screen.node(By.text(screen.text(R.string.importComplete)))
