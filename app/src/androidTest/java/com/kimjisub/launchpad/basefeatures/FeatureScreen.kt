@@ -14,6 +14,8 @@ import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -42,6 +44,21 @@ class FeatureScreen {
     fun text(id: Int) = context.getString(id)
     fun node(selector: BySelector): UiObject2 = device.wait(Until.findObject(selector), 10000)
         ?: run { capture("missing-node-${SystemClock.uptimeMillis()}"); throw AssertionError("Missing $selector") }
+    /** Locale changes recreate Settings; reacquire its scroll container for every gesture. */
+    fun scrollTo(selector: BySelector, direction: Direction): UiObject2 {
+        val deadline = SystemClock.elapsedRealtime() + 10000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            device.findObject(selector)?.let { return it }
+            try {
+                device.findObject(By.scrollable(true))?.scroll(direction, 0.8f)
+            } catch (_: StaleObjectException) {
+                // The screen was replaced during this gesture; the next iteration finds it again.
+            }
+            SystemClock.sleep(25)
+        }
+        capture("missing-scroll-node-${SystemClock.uptimeMillis()}")
+        throw AssertionError("Missing $selector after scrolling $direction")
+    }
     fun clickText(id: Int) = node(By.text(text(id))).click()
     fun clickDescription(id: Int) = node(By.desc(text(id))).click()
     fun await(message: String, check: () -> Boolean) {

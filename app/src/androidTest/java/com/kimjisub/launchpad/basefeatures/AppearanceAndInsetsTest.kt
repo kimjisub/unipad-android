@@ -30,15 +30,11 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         try {
             val settings = screen.launch(SettingsActivity::class.java)
             localeManager.applicationLocales = LocaleList(Locale.KOREAN)
-            assertNotNull("Korean language row missing", screen.node(By.scrollable(true)).scrollUntil(
-                androidx.test.uiautomator.Direction.DOWN,
-                androidx.test.uiautomator.Until.findObject(By.text("한국어"))))
+            assertNotNull("Korean language row missing", screen.scrollTo(By.text("한국어"), androidx.test.uiautomator.Direction.DOWN))
             assertEquals("ko", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.capture("settings-korean")
             localeManager.applicationLocales = LocaleList(Locale.ENGLISH)
-            assertNotNull("English language row missing", screen.node(By.scrollable(true)).scrollUntil(
-                androidx.test.uiautomator.Direction.UP,
-                androidx.test.uiautomator.Until.findObject(By.text("English"))))
+            assertNotNull("English language row missing", screen.scrollTo(By.text("English"), androidx.test.uiautomator.Direction.UP))
             screen.clickText(R.string.settings_theme)
             screen.node(By.desc(screen.text(R.string.theme_add_title)))
             val choices = ThemeTool.getThemePackList(screen.context)
