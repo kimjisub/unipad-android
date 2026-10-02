@@ -1,5 +1,9 @@
 package com.kimjisub.launchpad.di
 
+import com.kimjisub.launchpad.analytics.FirebaseUsageEventSink
+import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.analytics.UsageEventRouting
+import com.kimjisub.launchpad.analytics.UsageEventSink
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -22,5 +26,13 @@ val appModule = module {
 
 	single {
 		WorkspaceManager(get())
+	}
+
+	single<UsageEventSink> {
+		UsageEventRouting.sinkForThisBuild { FirebaseUsageEventSink(get()) }
+	}
+
+	single {
+		UsageAnalytics(get())
 	}
 }

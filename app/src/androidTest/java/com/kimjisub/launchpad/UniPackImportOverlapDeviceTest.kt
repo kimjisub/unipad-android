@@ -6,6 +6,9 @@ import android.content.ContentProvider
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.ContextWrapper
+import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.analytics.UsageEventSink
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
@@ -79,7 +82,9 @@ class UniPackImportOverlapDeviceTest {
                 gates.indices.forEach { index ->
                     evidence(gates[index].id, "constructed")
                     UniPackImporter(context, Uri.parse("content://overlap/${gates[index].id}"),
-                        workspace, recorders[index], scopes[index])
+                        workspace, recorders[index],
+                        usage = UsageAnalytics(UsageEventSink { _, _ -> }).packImport(PackImportSource.FILE),
+                        scope = scopes[index])
                 }
             }
             gates.forEach { it.awaitInput() }

@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">ဖိုင်တွဲ</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">UniPacks ရှာရန်</string>
+	<string name="main_search_no_results">“%1$s” အတွက် ရလဒ်မရှိပါ</string>
+	<string name="main_search_clear">ရှာဖွေမှုကို ရှင်းပါ</string>
 	<string name="backup_title">အရန်သိမ်းခြင်း</string>
 	<string name="restore_title">ပြန်လည်ရယူခြင်း</string>
 

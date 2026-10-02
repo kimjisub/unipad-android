@@ -285,7 +285,7 @@ class PlayActivity : BaseActivity() {
 
 		vm = ViewModelProvider(
 			this,
-			PlayActivityViewModel.Factory(unipackRepo)
+			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics)
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true

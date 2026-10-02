@@ -7,6 +7,9 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
+import com.kimjisub.launchpad.analytics.PackImportReport
+import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.unipack.UniPack
 import io.mockk.every
@@ -28,8 +31,12 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import okhttp3.Request
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.asResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
+import okio.Source
 import okio.Timeout
+import okio.buffer
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -38,10 +45,13 @@ import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -104,9 +114,19 @@ class PackInstallTestEnv {
 		root.deleteRecursively()
 	}
 
+	/** The device refuses to open the download's target file, as with a revoked storage permission. */
+	fun cannotOpenFilesForWriting() {
+		every { resolver.openFileDescriptor(any(), "w") } returns null
+	}
+
 	fun gate(url: String): Gate = gates.getOrPut(url) { Gate() }
 
-	fun download(url: String, listener: UniPackDownloader.Listener, name: String = PACK_NAME): CoroutineScope {
+	fun download(
+		url: String,
+		listener: UniPackDownloader.Listener,
+		name: String = PACK_NAME,
+		usage: PackImportReport = unrecorded(),
+	): CoroutineScope {
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackDownloader(
 			context = context,
@@ -115,14 +135,21 @@ class PackInstallTestEnv {
 			workspace = workspace,
 			folderName = name,
 			listener = listener,
+			usage = usage,
 			scope = scope,
 		)
 		return scope
 	}
 
-	fun import(zip: ByteArray, listener: UniPackImporter.OnEventListener, fileName: String = "$PACK_NAME.zip"): CoroutineScope {
+	fun import(
+		zip: ByteArray,
+		listener: UniPackImporter.OnEventListener,
+		fileName: String = "$PACK_NAME.zip",
+		usage: PackImportReport = unrecorded(),
+		openInput: () -> InputStream = { ByteArrayInputStream(zip) },
+	): CoroutineScope {
 		val uri = mockk<Uri>()
-		every { resolver.openInputStream(uri) } answers { ByteArrayInputStream(zip) }
+		every { resolver.openInputStream(uri) } answers { openInput() }
 		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } returns fileName }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
@@ -130,6 +157,7 @@ class PackInstallTestEnv {
 			uri = uri,
 			workspace = workspace,
 			onEventListener = listener,
+			usage = usage,
 			scope = scope,
 		)
 		return scope
@@ -151,8 +179,33 @@ class PackInstallTestEnv {
 			response.complete(Response.success(body.toResponseBody()))
 		}
 
-		fun fail() {
-			response.complete(Response.error(500, "down".toResponseBody()))
+		/** The response starts with [received], then the connection drops with [error] while the body is read. */
+		fun openThenBreak(received: ByteArray, error: IOException) {
+			val cutOff = object : Source {
+				private var sent = false
+
+				override fun read(sink: Buffer, byteCount: Long): Long {
+					if (sent) throw error
+					sent = true
+					sink.write(received)
+					return received.size.toLong()
+				}
+
+				override fun timeout() = Timeout.NONE
+				override fun close() {}
+			}
+			response.complete(Response.success(cutOff.buffer().asResponseBody(null, received.size + PROMISED_MORE_BYTES)))
+		}
+
+		fun fail() = failWithStatus(500)
+
+		fun failWithStatus(status: Int) {
+			response.complete(Response.error(status, "down".toResponseBody()))
+		}
+
+		/** The connection breaks before any response, as with no network. */
+		fun failWithException(error: IOException) {
+			response.completeExceptionally(error)
 		}
 
 		/** Returns once the request is waiting for its response. */
@@ -162,7 +215,11 @@ class PackInstallTestEnv {
 
 		fun execute(): Response<ResponseBody> {
 			entered.countDown()
-			return response.get(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+			try {
+				return response.get(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+			} catch (e: ExecutionException) {
+				throw e.cause ?: e
+			}
 		}
 	}
 
@@ -205,6 +262,10 @@ class PackInstallTestEnv {
 	companion object {
 		const val PACK_NAME = "pack"
 		private const val TIMEOUT_MS = 10_000L
+		private const val PROMISED_MORE_BYTES = 1_000L
+
+		/** For tests that do not look at usage events. */
+		fun unrecorded(): PackImportReport = UsageAnalytics { _, _ -> }.packImport(PackImportSource.FILE)
 
 		/** A minimal valid pack whose every file differs by [title]. */
 		fun packFiles(title: String): Map<String, ByteArray> = mapOf(
@@ -213,11 +274,22 @@ class PackInstallTestEnv {
 			"sounds/a.wav" to title.repeat(512).toByteArray(),
 		)
 
-		fun packZip(title: String): ByteArray {
+		/**
+		 * [topFolder] wraps the pack in one folder and [directoryEntries] lists every folder as an
+		 * entry ahead of the files; both together is how Finder zips a pack.
+		 */
+		fun packZip(title: String, topFolder: String? = null, directoryEntries: Boolean = false): ByteArray {
+			val files = packFiles(title).mapKeys { (name, _) -> topFolder?.let { "$it/$name" } ?: name }
+			val folders = if (directoryEntries) {
+				files.keys.flatMap { path -> path.split('/').dropLast(1).runningReduce { parent, child -> "$parent/$child" } }.distinct()
+			} else {
+				emptyList()
+			}
 			val bytes = ByteArrayOutputStream()
 			ZipOutputStream(bytes).use { zip ->
-				packFiles(title).forEach { (name, data) ->
-					zip.putNextEntry(ZipEntry(name))
+				folders.forEach { zip.putNextEntry(ZipEntry("$it/")); zip.closeEntry() }
+				files.forEach { (path, data) ->
+					zip.putNextEntry(ZipEntry(path))
 					zip.write(data)
 					zip.closeEntry()
 				}

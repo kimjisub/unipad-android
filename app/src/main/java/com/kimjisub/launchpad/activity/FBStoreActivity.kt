@@ -64,6 +64,7 @@ import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
@@ -271,6 +272,7 @@ class FBStoreActivity : BaseActivity() {
 					item.downloading = false
 				}
 			},
+			usage = usageAnalytics.packImport(PackImportSource.STORE),
 			scope = lifecycleScope,
 		)
 		requestNotificationPermissionIfUnanswered()

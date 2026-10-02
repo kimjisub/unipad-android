@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Folder</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Cari UniPacks</string>
+	<string name="main_search_no_results">Tidak ada hasil untuk “%1$s”</string>
+	<string name="main_search_clear">Hapus pencarian</string>
 	<string name="backup_title">Cadangan</string>
 	<string name="restore_title">Pulihkan</string>
 

@@ -266,6 +266,8 @@
 	<string name="transfer_format_folder">Carpeta</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Buscar UniPacks</string>
+	<string name="main_search_no_results">No hay resultados para «%1$s»</string>
+	<string name="main_search_clear">Borrar búsqueda</string>
 	<string name="backup_title">Respaldo</string>
 	<string name="restore_title">Restaurar</string>
 

@@ -7,6 +7,8 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.analytics.FailureStage
+import com.kimjisub.launchpad.analytics.PackImportReport
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
@@ -31,6 +33,7 @@ class UniPackDownloader(
 	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
+	private val usage: PackImportReport,
 	scope: CoroutineScope,
 ) {
 	companion object {
@@ -83,19 +86,23 @@ class UniPackDownloader(
 			// are written to or deleted.
 			var claimedZip: File? = null
 			var claimedFolder: File? = null
+			// What the download was doing when it failed: the same I/O error is a broken connection while
+			// the response is read and a storage problem while the file is written.
+			var stage = FailureStage.FILE
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
 				claimedZip = unipackFile
 
+				stage = FailureStage.NETWORK
 				val call = FileApi.service.download(url)
 				val response = call.execute()
 				val responseBody = response.body()
-				?: throw IOException("Empty response body (HTTP ${response.code()})")
+				?: throw HttpStatusException(response.code(), "Empty response body (HTTP ${response.code()})")
 				if (!response.isSuccessful) {
 					responseBody.close()
-					throw IOException("HTTP ${response.code()}")
+					throw HttpStatusException(response.code(), "HTTP ${response.code()}")
 				}
 				val contentLength = responseBody.contentLength()
 				// -1 (chunked) or 0 with no pre-known size gave Infinity% below
@@ -110,6 +117,7 @@ class UniPackDownloader(
 
 				// responseBody.use: a failed openFileDescriptor used to skip the whole block silently
 				// and leak the HTTP body; now it throws and the body is always closed.
+				stage = FailureStage.FILE
 				responseBody.use { body ->
 					val pfd = contentResolver.openFileDescriptor(unipackFile.toUri(), "w")
 						?: throw IOException("Could not open ${unipackFile.path} for writing")
@@ -122,7 +130,9 @@ class UniPackDownloader(
 								var prevPercent = -1
 								var prevMillis = SystemClock.elapsedRealtime()
 								while (true) {
-									n = inputStream.read(buf)
+									stage = FailureStage.NETWORK
+								n = inputStream.read(buf)
+								stage = FailureStage.FILE
 									if (n == -1)
 										break
 
@@ -174,16 +184,26 @@ class UniPackDownloader(
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
-				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+				// Whether the pack stays is settled on the main thread, where the hosting screen
+				// closes. A screen already gone never runs this block and the download is discarded
+				// below; a pack that was announced is released from cleanup and counted, so closing
+				// the screen right after cannot delete a pack recorded as imported.
+				withContext(Dispatchers.Main) {
+					onInstallComplete(folder, unipack)
+					claimedFolder = null
+					usage.succeeded()
+				}
 
 			} catch (e: CancellationException) {
-				// The hosting scope was cancelled (activity destroyed): remove the half-written
-				// folder, but do not report it as a failure and do not swallow the cancellation.
+				// The hosting scope was cancelled (activity destroyed): remove what was not announced
+				// yet, but do not report it as a failure and do not swallow the cancellation.
+				usage.cancelled()
 				claimedFolder?.let(FileManager::deleteDirectory)
 				claimedZip?.let(FileManager::deleteDirectory)
 				throw e
 			} catch (e: Exception) {
 				Log.err("Download failed", e)
+				usage.failed(e, stage)
 				withContext(Dispatchers.Main) { onException(e) }
 				claimedFolder?.let(FileManager::deleteDirectory)
 			}
@@ -267,4 +287,7 @@ class UniPackDownloader(
 	}
 
 	class UniPackCriticalErrorException(message: String) : Exception(message)
+
+	/** The server answered, but not with the pack. Keeps the status so usage analytics can tell a missing pack from a server error. */
+	class HttpStatusException(val status: Int, message: String) : IOException(message)
 }
