@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.util.Collections
@@ -150,6 +151,43 @@ class MidiConnectionLifecycleTest {
 
 		verify(timeout = TIMEOUT_MS) { connection.close() }
 		verify(timeout = TIMEOUT_MS) { observer.onDisconnected() }
+		assertNoCrash()
+	}
+
+	/** Mini MK2 input through the actual USB receive loop, rather than calling a driver directly. */
+	@Test
+	fun receive_miniChord_keepsEveryPressAndReleaseAcrossBatchedPackets() {
+		every { midiManager.devices } returns emptyArray()
+		val events = Collections.synchronizedList(mutableListOf<String>())
+		val controller = mockk<MidiController>(relaxed = true)
+		every { controller.onPadTouch(any(), any(), any(), any()) } answers {
+			events.add("${firstArg<Int>()},${secondArg<Int>()},${thirdArg<Boolean>()}")
+		}
+		MidiConnection.controller = controller
+		val (device, connection) = launchpad(deviceId = 1)
+		every { device.productId } returns 0x0036
+		val packets = listOf(
+			byteArrayOf(9, 0x90.toByte(), 0, 127, 9, 0x90.toByte(), 17, 127, 9, 0x90.toByte(), 119, 127),
+			// A clock packet between release events must not drop either neighbouring event.
+			byteArrayOf(9, 0x90.toByte(), 17, 0, 15, 0xF8.toByte(), 0, 0, 9, 0x90.toByte(), 0, 0, 9, 0x90.toByte(), 119, 0),
+		)
+		var nextPacket = 0
+		every { connection.bulkTransfer(match { it.direction == UsbConstants.USB_DIR_IN }, any(), any<Int>(), any<Int>()) } answers {
+			if (nextPacket < packets.size) {
+				val packet = packets[nextPacket++]
+				packet.copyInto(secondArg<ByteArray>())
+				packet.size
+			} else -1
+		}
+
+		attach(device)
+
+		verify(timeout = TIMEOUT_MS) { controller.onPadTouch(7, 7, false, 0) }
+		assertEquals(
+			listOf("0,0,true", "1,1,true", "7,7,true", "1,1,false", "0,0,false", "7,7,false"),
+			synchronized(events) { events.toList() },
+		)
+		verify(timeout = TIMEOUT_MS) { connection.close() }
 		assertNoCrash()
 	}
 
