@@ -61,8 +61,11 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 ## How controls and data are located
 
-- Launch helpers synchronize actual activity creation with `startActivitySync` before their
-  existing accessibility/screen assertions. Screen deadlines and expected states are unchanged.
+- Launch helpers await the requested activity's completed `onCreate` lifecycle event before
+  existing accessibility/screen assertions. They retain the former `startActivitySync` launch
+  bound (45 seconds) without waiting for global queue idleness; screen deadlines are unchanged.
+- Store transition waits treat a temporarily absent Compose root as an empty pending result,
+  then still require the exact store list and its displayed state within the same deadline.
 - `BaseUITest` writes `TestUniPack` before each test: an 8x8 pack with two chains, LED,
   AutoPlay and silent WAV files. No existing user pack is selected or deleted.
 - Main's pack row/detail use `main_pack_<folder>` / `main_detail_<folder>` semantics tags,

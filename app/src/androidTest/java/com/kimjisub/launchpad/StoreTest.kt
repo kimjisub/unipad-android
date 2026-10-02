@@ -211,7 +211,10 @@ class StoreTest : BaseUITest() {
     private fun openStore() {
         composeTestRule.onNodeWithContentDescription(str(R.string.store)).performClick()
         composeTestRule.waitUntil(10000L) {
-            composeTestRule.onAllNodesWithTag("store_list").fetchSemanticsNodes().isNotEmpty()
+            // Main's root is removed before Store registers its root. An empty set here is
+            // a pending transition; require the real list and its visibility below as before.
+            composeTestRule.onAllNodesWithTag("store_list")
+                .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
         }
         composeTestRule.onNodeWithTag("store_list").assertIsDisplayed()
         assertTrue("Did not transition to the store screen", waitForStoreScreen())

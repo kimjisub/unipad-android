@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.design.view.ChainView
@@ -26,6 +27,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.After
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Base class for UI Automator tests
@@ -83,10 +86,24 @@ abstract class BaseUITest {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         assertNotNull("Could not find launch intent for the app", intent)
-        // startActivity() only queues the launch. Synchronize activity creation before looking
-        // for its accessibility nodes; otherwise emulator scheduling consumes the UI wait.
-        // Keep the caller's existing screen assertions and timeouts unchanged.
-        InstrumentationRegistry.getInstrumentation().startActivitySync(intent!!)
+        // Await the requested activity's completed onCreate, rather than global queue idleness.
+        // Splash can move to Main before startActivitySync's idle callback gets its turn.
+        // Retain that API's 45-second launch bound and each caller's screen assertions/timeouts.
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        val created = CountDownLatch(1)
+        val callback = ActivityLifecycleCallback { activity, stage ->
+            if (stage == Stage.CREATED && activity.javaClass.name == intent!!.component!!.className) {
+                created.countDown()
+            }
+        }
+        instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
+        try {
+            context.startActivity(intent!!)
+            assertTrue("Requested launch activity did not finish creation", created.await(45, TimeUnit.SECONDS))
+        } finally {
+            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
+        }
     }
 
     /**
