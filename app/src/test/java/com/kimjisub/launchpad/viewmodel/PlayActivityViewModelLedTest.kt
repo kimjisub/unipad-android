@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.unipack.UniPack
@@ -54,7 +55,7 @@ class PlayActivityViewModelLedTest {
 		Dispatchers.setMain(main)
 		mockkStatic(SystemClock::class)
 		every { SystemClock.elapsedRealtime() } answers { clock.get() }
-		vm = PlayActivityViewModel(mockk<UnipackRepository>())
+		vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 		vm.channelManager = ChannelManager(8, 8)
 		vm.chain.range = 0 until 4
 		vm.uiCallback = FakeActivity()

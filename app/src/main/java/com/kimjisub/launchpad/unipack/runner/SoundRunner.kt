@@ -57,7 +57,7 @@ class SoundRunner(
 		fun stopAllVoices()
 	}
 
-	private object OboeEngine : Engine {
+	internal object OboeEngine : Engine {
 		override fun start() = OboeAudioEngine.start()
 		override fun stop() = OboeAudioEngine.stop()
 		override fun decode(file: File) = OboeAudioEngine.decodeOnly(file)

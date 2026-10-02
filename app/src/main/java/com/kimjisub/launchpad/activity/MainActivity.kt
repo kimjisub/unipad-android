@@ -76,6 +76,7 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
@@ -428,6 +429,7 @@ class MainActivity : BaseActivity() {
 					importResult = ImportResult.Error(throwable.toString())
 				}
 			},
+			usage = usageAnalytics.packImport(PackImportSource.FILE),
 			scope = lifecycleScope,
 		)
 	}

@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
+import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import io.mockk.every
@@ -67,7 +68,7 @@ class PlayActivityViewModelLoadTest {
 
 	@Test
 	fun loadUnipackOnce_readsThePackFilesOffTheMainThread() {
-		val vm = PlayActivityViewModel(mockk<UnipackRepository>())
+		val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 
 		val pack = runBlocking { withTimeout(5_000) { vm.loadUnipackOnce(createPack().path).await() } }
 
