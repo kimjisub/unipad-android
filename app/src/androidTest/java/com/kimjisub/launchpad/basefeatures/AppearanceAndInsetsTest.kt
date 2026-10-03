@@ -28,14 +28,31 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         val localeManager = screen.context.getSystemService(android.app.LocaleManager::class.java)
         val oldLocales = localeManager.applicationLocales
         try {
-            val settings = screen.launch(SettingsActivity::class.java)
+            var settings = screen.launch(SettingsActivity::class.java)
             localeManager.applicationLocales = LocaleList(Locale.KOREAN)
             assertNotNull("Korean language row missing", screen.scrollTo(By.text("한국어"), androidx.test.uiautomator.Direction.DOWN))
             assertEquals("ko", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.capture("settings-korean")
             localeManager.applicationLocales = LocaleList(Locale.ENGLISH)
-            // Locale recreation can reset the settings list to the top; the language row is below.
+            screen.await("English locale did not reach Settings") {
+                screen.onMain { screen.resumed().resources.configuration.locales[0].language == "en" }
+            }
+            // Locale handling may retain scroll state. Reopen without saved state to exercise
+            // the language row below the top of a newly created Settings screen deterministically.
+            val previousSettings = screen.resumed()
+            settings.close()
+            settings = screen.launch(SettingsActivity::class.java)
+            val reopenedSettings = screen.resumed()
+            assertNotSame("Settings did not create a new screen", previousSettings, reopenedSettings)
+            assertTrue("Previous Settings was not destroyed", screen.onMain { previousSettings.isDestroyed })
+            val topRow = screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+            assertNotNull("Settings scroll container missing", screen.device.findObject(By.scrollable(true)))
+            assertFalse("Language row must start below the fresh viewport", screen.device.hasObject(By.text("English")))
+            screen.capture("settings-english-fresh-top")
+            android.util.Log.i("LanguageRowRegression", "fresh_settings=true locale=en top_row=${topRow.text} language_visible=false")
             assertNotNull("English language row missing", screen.scrollTo(By.text("English"), androidx.test.uiautomator.Direction.DOWN))
+            android.util.Log.i("LanguageRowRegression", "language_row_found=true direction=DOWN")
+            screen.capture("settings-english-language-row")
             assertEquals("en", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.clickText(R.string.settings_theme)
             screen.node(By.desc(screen.text(R.string.theme_add_title)))
