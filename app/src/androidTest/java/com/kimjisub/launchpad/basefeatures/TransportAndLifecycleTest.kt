@@ -82,7 +82,14 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         assertEquals(audio.loaded.getValue("silence2.wav"), audio.plays.last())
         val original = screen.resumed()
         val silenceCount = audio.silences.get()
-        assertTrue(screen.device.pressHome())
+        // pressHome() waits only 1 second for an accessibility event, even if Home succeeded.
+        // Require actual key injection and the launcher/lifecycle result under the existing deadline.
+        val launcher = screen.device.launcherPackageName
+        assertNotNull("Default launcher missing", launcher)
+        assertTrue("Home key injection failed", screen.device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
+        screen.await("Home did not hide play and show the launcher") {
+            screen.onMain { !vm.screenVisible } && screen.device.currentPackageName == launcher
+        }
         screen.await("Leaving play did not silence voices") { audio.silences.get() > silenceCount }
         screen.context.getSystemService(android.app.ActivityManager::class.java).appTasks
             .single { it.taskInfo?.taskId == original.taskId }.moveToFront()
