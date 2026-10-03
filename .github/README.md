@@ -17,13 +17,13 @@ No release signing key is needed.
 
 The UI job uses API 35, Google APIs, x86_64 and KVM. It runs
 `:app:connectedDebugAndroidTest :design:connectedDebugAndroidTest` without test
-filters, including any future base-feature tests once merged. Tests use their
+filters, including the merged base-feature tests. Tests use their
 own local fixtures; live services and physical MIDI/audio hardware are outside
 this check's coverage. The local harness uses its allocated API 35 ARM device;
 the Gradle command is the same, but host CPU and GPU differ.
 
 For local UniPad maintenance runs, start and stop the device only through
-`python3 $HARNESS/devices.py up-android 35` and `python3 $HARNESS/devices.py down`.
+`python3 $HARNESS/devices.py up-android --fresh` and `python3 $HARNESS/devices.py down`.
 Set `ANDROID_SERIAL` to the returned id. Record its current Wi-Fi/mobile data
 state, disable both with `adb -s "$ANDROID_SERIAL" shell svc wifi disable` and
 `adb -s "$ANDROID_SERIAL" shell svc data disable`, and restore that state before
