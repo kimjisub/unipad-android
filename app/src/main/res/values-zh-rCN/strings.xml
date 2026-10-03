@@ -23,7 +23,6 @@
 	<string name="loading_phase_audio">加载音频中…</string>
 	<string name="download">下载</string>
 	<string name="downloadWaiting">等待下载</string>
-	<string name="downloading">下载中</string>
 	<string name="downloaded">已下载</string>
 	<string name="success">成功</string>
 	<string name="failed">失败</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
 	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>
-	<string name="unipackNotFound">找不到 UniPack。</string>
 	<string name="clickToAddUniPack">点击以添加 UniPacks。</string>
 	<string name="guide_download_new">下载新包</string>
 	<string name="guide_import_external">导入已下载的包</string>
@@ -268,10 +266,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">服务器错误\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 	<string name="option_indicator_format">%s ●</string>
 

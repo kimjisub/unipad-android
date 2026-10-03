@@ -37,18 +37,18 @@ class UsageAnalyticsTest {
 
 	@Test
 	fun onlyTheFirstOutcomeOfOneImportIsSent() {
-		val report = sink.analytics.packImport(PackImportSource.CODE)
+		val report = sink.analytics.packImport(PackImportSource.STORE)
 		report.succeeded()
 		report.cancelled()
 		report.failed(UsageErrorType.NETWORK)
 		report.failed(IOException("late"))
 		report.succeeded()
-		assertEquals(listOf(importEvent("code", "success")), sink.events)
+		assertEquals(listOf(importEvent("store", "success")), sink.events)
 
-		val other = sink.analytics.packImport(PackImportSource.CODE)
+		val other = sink.analytics.packImport(PackImportSource.STORE)
 		other.cancelled()
 		other.failed(IOException("after cancel"))
-		assertEquals(importEvent("code", "cancelled"), sink.events.last())
+		assertEquals(importEvent("store", "cancelled"), sink.events.last())
 		assertEquals(2, sink.events.size)
 	}
 
@@ -109,7 +109,7 @@ class UsageAnalyticsTest {
 		PlayTrigger.entries.mapTo(values) { it.value }
 		UsageErrorType.entries.mapTo(values) { it.value }
 
-		sink.analytics.packImport(PackImportSource.CODE).failed(UsageErrorType.NOT_FOUND)
+		sink.analytics.packImport(PackImportSource.STORE).failed(UsageErrorType.NOT_FOUND)
 		val session = sink.analytics.newPlaySession()
 		session.loadStarted(); session.loadSucceeded(); session.playTriggered(PlayTrigger.PAD); session.ended()
 

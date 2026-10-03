@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">オーディオを読み込み中…</string>
 	<string name="download">ダウンロード</string>
 	<string name="downloadWaiting">ダウンロード待機中</string>
-	<string name="downloading">ダウンロード中</string>
 	<string name="downloaded">ダウンロード済み</string>
 	<string name="success">成功</string>
 	<string name="failed">失敗</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
-	<string name="unipackNotFound">UniPackが見つかりません。</string>
 	<string name="clickToAddUniPack">クリックしてUniPackを追加してください。</string>
 	<string name="guide_download_new">新しいパックをダウンロード</string>
 	<string name="guide_import_external">ダウンロードしたパックをインポート</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">サーバーエラー\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Loading audio…</string>
 	<string name="download">Download</string>
 	<string name="downloadWaiting">Download Waiting</string>
-	<string name="downloading">Downloading</string>
 	<string name="downloaded">Downloaded</string>
 	<string name="success">Success</string>
 	<string name="failed">Failed</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">UniPack not found.</string>
 	<string name="clickToAddUniPack">Click to add UniPacks.</string>
 	<string name="guide_download_new">Download new packs</string>
 	<string name="guide_import_external">Import downloaded packs</string>
@@ -310,11 +308,5 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">server error\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
-	<string name="import_pack_confirm">Install this pack?</string>
-	<string name="import_pack_confirm_source">from %s</string>
 </resources>

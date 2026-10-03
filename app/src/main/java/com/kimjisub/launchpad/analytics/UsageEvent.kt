@@ -41,7 +41,6 @@ enum class UsageResult(val value: String) {
 enum class PackImportSource(val value: String) {
 	FILE("file"),
 	STORE("store"),
-	CODE("code"),
 }
 
 /**
@@ -57,7 +56,7 @@ enum class PlayTrigger(val value: String) {
 
 /** Which step of a pack import an error came from; the same I/O error means different things in each. */
 enum class FailureStage {
-	/** Looking up a share code or downloading a pack. */
+	/** Downloading a pack. */
 	NETWORK,
 
 	/** Reading, writing or unpacking files on the device. */

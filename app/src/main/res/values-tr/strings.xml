@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Ses yükleniyor…</string>
 	<string name="download">İndir</string>
 	<string name="downloadWaiting">İndirme Bekleniyor</string>
-	<string name="downloading">İndiriliyor</string>
 	<string name="downloaded">İndirildi</string>
 	<string name="success">Başarılı</string>
 	<string name="failed">Başarısız</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
 	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>
-	<string name="unipackNotFound">UniPack bulunamadı.</string>
 	<string name="clickToAddUniPack">UniPack eklemek için tıklayın.</string>
 	<string name="guide_download_new">Yeni paketler indir</string>
 	<string name="guide_import_external">İndirilen paketleri içe aktar</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">sunucu hatası\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
