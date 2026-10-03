@@ -19,6 +19,11 @@ fi
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+# Match the merged debug-test preparation before the target process starts.
+# Direct am instrument bypasses Gradle's force-aot-compilation setup.
+for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test; do
+  "$adb_bin" -s "$serial" shell cmd package compile -f -m speed "$package"
+done
 output="$(mktemp "${PAPERCLIP_RUN_SCRATCH_DIR:-${TMPDIR:-/tmp}}/basefeatures.XXXXXX")"
 trap 'rm -f "$output"' EXIT
 "$adb_bin" -s "$serial" shell am instrument -w -r \

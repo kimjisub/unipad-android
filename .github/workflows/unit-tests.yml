@@ -1,0 +1,50 @@
+name: Android unit tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-unit-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+        with:
+          cache-read-only: true
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865' 'cmake;3.22.1'
+      - name: Use test-only Firebase configuration
+        run: cp .github/fixtures/google-services.json app/google-services.json
+      - name: Run all app and design unit tests
+        timeout-minutes: 12
+        run: ./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-unit-test-results
+          path: |
+            app/build/test-results/testDebugUnitTest/
+            app/build/reports/tests/testDebugUnitTest/
+            design/build/test-results/testDebugUnitTest/
+            design/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: warn
+          retention-days: 7

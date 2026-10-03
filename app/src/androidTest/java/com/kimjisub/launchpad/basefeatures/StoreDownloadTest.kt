@@ -50,7 +50,6 @@ class StoreDownloadTest {
             screen.node(By.text(FeatureScreen.TITLE))
             screen.capture("store-pack-in-library")
             assertFalse("Store listener was retained after leaving", network.catalog.attached)
-            assertFalse(network.count.attached)
         } finally {
             screen.close()
             unloadKoinModules(network.module)

@@ -1,0 +1,36 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "unipad-unit-tests",
+    "storage_bucket": "unipad-unit-tests.invalid"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.kimjisub.launchpad.dev"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSy000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.kimjisub.launchpad"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSy000000000000000000000000000000000"
+        }
+      ]
+    }
+  ],
+  "configuration_version": "1"
+}

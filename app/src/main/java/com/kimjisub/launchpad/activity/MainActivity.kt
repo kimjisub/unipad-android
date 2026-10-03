@@ -61,6 +61,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -567,7 +571,7 @@ class MainActivity : BaseActivity() {
 
 	// Compose UI
 
-	@OptIn(ExperimentalMaterial3Api::class)
+	@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 	@Composable
 	private fun MainScreen(
 		onSettingsClick: () -> Unit,
@@ -587,7 +591,8 @@ class MainActivity : BaseActivity() {
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
-				.background(MaterialTheme.colorScheme.background),
+				.background(MaterialTheme.colorScheme.background)
+				.semantics { testTagsAsResourceId = true },
 		) {
 			// Main two-panel layout
 			Row(modifier = Modifier.fillMaxSize()) {
@@ -622,7 +627,7 @@ class MainActivity : BaseActivity() {
 								showDeleteConfirmation(item)
 							}
 
-							MainPackPanelScreen(vm = packVM)
+							MainPackPanelScreen(vm = packVM, modifier = Modifier.testTag("main_detail_${item.unipack.id}"))
 						}
 					}
 				}
@@ -1063,6 +1068,7 @@ class MainActivity : BaseActivity() {
 				}
 			},
 			onClick = onItemClick,
+			modifier = Modifier.testTag("main_pack_${item.unipack.id}"),
 		)
 	}
 
