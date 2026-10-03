@@ -1125,6 +1125,36 @@ object MidiConnection {
 		target.setOnSendSignalListener(sendListener)
 	}
 
+	/** A non-USB transport can exercise the same driver/controller and connection notifications.
+	 * Call on the main thread, after initConnection. It owns its listener until closed. USB sessions
+	 * are never replaced; normal launches never call this entry point.
+	 */
+	internal fun attachTransport(
+		name: String,
+		deviceDriver: DriverRef,
+		output: DriverRef.OnSendSignalListener,
+	): AutoCloseable {
+		check(sessions.isEmpty() && connectedDevice == null) { "A device is already connected" }
+		val previous = driver
+		driver = deviceDriver
+		setDriverListener(deviceDriver, sendListener = output)
+		deviceDriver.initialize()
+		publishConnectedDevice(name)
+		deviceDriver.onConnected()
+		listener?.onConnectedListener()
+		connectedDevice?.let { connectionObserver?.onConnected(it) }
+		return AutoCloseable {
+			if (driver === deviceDriver) {
+				driver = previous
+				connectedDevice = null
+				connectionObserver?.onDisconnected()
+			}
+			deviceDriver.setOnGetSignalListener(null)
+			deviceDriver.setOnSendSignalListener(null)
+			deviceDriver.setOnCycleListener(null)
+		}
+	}
+
 	// Read-only snapshot of every currently connected pad, for UI that wants to let the
 	// person pick a model per physical device (rather than only ever targeting the primary).
 	data class SessionSummary(
