@@ -70,3 +70,6 @@ inspection-results/
 fastlane/.secrets/
 fastlane/report.xml
 fastlane/README.md
+
+# CI diagnostic output
+.ci-results/
