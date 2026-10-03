@@ -19,6 +19,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -76,7 +81,9 @@ class MidiSelectActivity : BaseActivity() {
 		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
 		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
 		connectedSessions.value = MidiConnection.connectedSessions
-		selectedSessionId.value = connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
+		selectedSessionId.value = savedInstanceState?.takeIf { it.containsKey("selectedSessionId") }
+			?.getInt("selectedSessionId")?.takeIf { id -> connectedSessions.value.any { it.sessionId == id } }
+			?: connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
 			?: connectedSessions.value.firstOrNull()?.sessionId
 
 		updateSelectedIndexForTarget()
@@ -123,6 +130,27 @@ class MidiSelectActivity : BaseActivity() {
 				)
 			}
 		}
+	}
+
+	override fun onSaveInstanceState(outState: Bundle) {
+		selectedSessionId.value?.let { outState.putInt("selectedSessionId", it) }
+		super.onSaveInstanceState(outState)
+	}
+
+	override fun onResume() {
+		super.onResume()
+		// Read the existing state on return from a browser or the background. Never connect
+		// or apply a driver just to refresh the help or restore its selected target.
+		isConnected.value = MidiConnection.connectedDevice != null
+		connectedSessions.value = MidiConnection.connectedSessions
+		if (connectedSessions.value.none { it.sessionId == selectedSessionId.value }) {
+			selectedSessionId.value = connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
+				?: connectedSessions.value.firstOrNull()?.sessionId
+		}
+		dualPadModeEnabled.value = MidiConnection.dualPadModeEnabled
+		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
+		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
+		updateSelectedIndexForTarget()
 	}
 
 	// Recomputes which model is highlighted in the grid based on whichever device is
@@ -179,6 +207,21 @@ private fun MidiSelectScreen(
 	onReflectedSwapSidesChange: (Boolean) -> Unit,
 	onClose: () -> Unit,
 ) {
+	var helpOpen by rememberSaveable { mutableStateOf(false) }
+	// Screen-only intent, separate from the driver (which can also be chosen by USB detection).
+	// Retain each target's explicit choice without adding a stored preference or a command.
+	var explicitChoices by rememberSaveable(
+		stateSaver = listSaver<List<String>, String>(save = { it }, restore = { it.toList() }),
+	) { mutableStateOf<List<String>>(emptyList()) }
+	val targetKey = "${selectedSessionId}:"
+	val explicitlySelected = "$targetKey$selectedIndex" in explicitChoices
+	if (helpOpen) {
+		MidiConnectionHelpDialog(
+			modelNameResId = midiDevices[selectedIndex].nameResId,
+			explicitlySelected = explicitlySelected,
+			onClose = { helpOpen = false },
+		)
+	}
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
@@ -189,159 +232,174 @@ private fun MidiSelectScreen(
 			modifier = Modifier
 				.weight(0.35f)
 				.fillMaxHeight()
-				.padding(20.dp),
+				.padding(12.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			Text(
-				text = if (isConnected)
-					stringResource(R.string.launchpadConnecting)
-				else
-					stringResource(R.string.midiDevicesNotDetected),
-				color = if (isConnected)
-					MaterialTheme.colorScheme.onBackground
-				else
-					MaterialTheme.colorScheme.error,
-				style = MaterialTheme.typography.titleSmall,
-			)
+			Column(
+				modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+				horizontalAlignment = Alignment.CenterHorizontally,
+			) {
 
-			// With two pads connected, picking a model below needs to know which
-			// physical device it applies to - pick that here first.
-			if (connectedSessions.size > 1) {
+				Text(
+					text = if (isConnected)
+						stringResource(R.string.launchpadConnecting)
+					else
+						stringResource(R.string.midiDevicesNotDetected),
+					color = if (isConnected)
+						MaterialTheme.colorScheme.onBackground
+					else
+						MaterialTheme.colorScheme.error,
+					style = MaterialTheme.typography.titleSmall,
+				)
+
+				// With two pads connected, picking a model below needs to know which
+				// physical device it applies to - pick that here first.
+				if (connectedSessions.size > 1) {
+					Spacer(modifier = Modifier.height(12.dp))
+					Row(
+						modifier = Modifier.fillMaxWidth(),
+						horizontalArrangement = Arrangement.spacedBy(8.dp),
+					) {
+						connectedSessions.forEach { session ->
+							val isSelected = session.sessionId == selectedSessionId
+							Text(
+								text = if (session.isPrimary) "1: ${session.deviceName}" else "2: ${session.deviceName}",
+								color = if (isSelected)
+									MaterialTheme.colorScheme.primary
+								else
+									MaterialTheme.colorScheme.onSurfaceVariant,
+								style = MaterialTheme.typography.labelMedium,
+								modifier = Modifier
+									.clip(RoundedCornerShape(8.dp))
+									.background(
+										if (isSelected)
+											MaterialTheme.colorScheme.surface
+										else
+											Color.Transparent
+									)
+									.border(
+										1.dp,
+										if (isSelected)
+											MaterialTheme.colorScheme.primary
+										else
+											MaterialTheme.colorScheme.surfaceVariant,
+										RoundedCornerShape(8.dp),
+									)
+									.clickable { onSessionTargetSelect(session.sessionId) }
+									.padding(horizontal = 10.dp, vertical = 6.dp),
+							)
+						}
+					}
+				}
+
 				Spacer(modifier = Modifier.height(12.dp))
-				Row(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalArrangement = Arrangement.spacedBy(8.dp),
-				) {
-					connectedSessions.forEach { session ->
-						val isSelected = session.sessionId == selectedSessionId
+
+				Crossfade(
+					targetState = selectedIndex,
+					label = "devicePreview",
+				) { index ->
+					val device = midiDevices[index]
+					Column(
+						horizontalAlignment = Alignment.CenterHorizontally,
+					) {
+						Image(
+							painter = painterResource(device.iconResId),
+							contentDescription = stringResource(device.nameResId),
+							modifier = Modifier.size(120.dp),
+						)
+						Spacer(modifier = Modifier.height(8.dp))
 						Text(
-							text = if (session.isPrimary) "1: ${session.deviceName}" else "2: ${session.deviceName}",
-							color = if (isSelected)
-								MaterialTheme.colorScheme.primary
-							else
-								MaterialTheme.colorScheme.onSurfaceVariant,
-							style = MaterialTheme.typography.labelMedium,
-							modifier = Modifier
-								.clip(RoundedCornerShape(8.dp))
-								.background(
-									if (isSelected)
-										MaterialTheme.colorScheme.surface
-									else
-										Color.Transparent
-								)
-								.border(
-									1.dp,
-									if (isSelected)
-										MaterialTheme.colorScheme.primary
-									else
-										MaterialTheme.colorScheme.surfaceVariant,
-									RoundedCornerShape(8.dp),
-								)
-								.clickable { onSessionTargetSelect(session.sessionId) }
-								.padding(horizontal = 10.dp, vertical = 6.dp),
+							text = stringResource(device.nameResId),
+							color = MaterialTheme.colorScheme.onBackground,
+							style = MaterialTheme.typography.titleMedium,
+							textAlign = TextAlign.Center,
 						)
 					}
 				}
-			}
 
-			Spacer(modifier = Modifier.height(12.dp))
+				Spacer(modifier = Modifier.height(16.dp))
 
-			Crossfade(
-				targetState = selectedIndex,
-				label = "devicePreview",
-			) { index ->
-				val device = midiDevices[index]
-				Column(
-					horizontalAlignment = Alignment.CenterHorizontally,
+				HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+				Spacer(modifier = Modifier.height(16.dp))
+
+				// Dual pad mode - pick this BEFORE plugging in a second Launchpad.
+				// Off: only the first device found connects (original single-pad behavior).
+				// On: a second device connecting is accepted as a mirrored session.
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically,
 				) {
-					Image(
-						painter = painterResource(device.iconResId),
-						contentDescription = stringResource(device.nameResId),
-						modifier = Modifier.size(120.dp),
-					)
-					Spacer(modifier = Modifier.height(8.dp))
 					Text(
-						text = stringResource(device.nameResId),
+						text = stringResource(R.string.midi_dual_pad_mode),
+						modifier = Modifier.weight(1f),
 						color = MaterialTheme.colorScheme.onBackground,
-						style = MaterialTheme.typography.titleMedium,
-						textAlign = TextAlign.Center,
+						style = MaterialTheme.typography.bodyMedium,
+					)
+					Switch(
+						checked = dualPadModeEnabled,
+						onCheckedChange = onDualPadModeChange,
 					)
 				}
+
+				Spacer(modifier = Modifier.height(8.dp))
+
+				// Only meaningful once a second pad is connected via Dual Pad Mode - flips
+				// the second pad's grid left-right instead of duplicating it.
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically,
+				) {
+					Text(
+						text = stringResource(R.string.midi_reflected),
+						modifier = Modifier.weight(1f),
+						color = if (dualPadModeEnabled)
+							MaterialTheme.colorScheme.onBackground
+						else
+							MaterialTheme.colorScheme.onSurfaceVariant,
+						style = MaterialTheme.typography.bodyMedium,
+					)
+					Switch(
+						checked = reflectedModeEnabled,
+						onCheckedChange = onReflectedModeChange,
+						enabled = dualPadModeEnabled,
+					)
+				}
+
+				// "Primary" (the unflipped side) is whichever pad connected first, which
+				// may not match physical left/right - use this to correct it if the
+				// mirror feels backwards.
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically,
+				) {
+					Text(
+						text = stringResource(R.string.midi_swap_sides),
+						modifier = Modifier.weight(1f),
+						color = if (dualPadModeEnabled && reflectedModeEnabled)
+							MaterialTheme.colorScheme.onBackground
+						else
+							MaterialTheme.colorScheme.onSurfaceVariant,
+						style = MaterialTheme.typography.bodyMedium,
+					)
+					Switch(
+						checked = reflectedSwapSides,
+						onCheckedChange = onReflectedSwapSidesChange,
+						enabled = dualPadModeEnabled && reflectedModeEnabled,
+					)
+				}
+
 			}
-
-			Spacer(modifier = Modifier.height(16.dp))
-
-			HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-			Spacer(modifier = Modifier.height(16.dp))
-
-			// Dual pad mode - pick this BEFORE plugging in a second Launchpad.
-			// Off: only the first device found connects (original single-pad behavior).
-			// On: a second device connecting is accepted as a mirrored session.
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.SpaceBetween,
-				verticalAlignment = Alignment.CenterVertically,
-			) {
-				Text(
-					text = "Dual Pad Mode",
-					color = MaterialTheme.colorScheme.onBackground,
-					style = MaterialTheme.typography.bodyMedium,
-				)
-				Switch(
-					checked = dualPadModeEnabled,
-					onCheckedChange = onDualPadModeChange,
-				)
-			}
-
 			Spacer(modifier = Modifier.height(8.dp))
-
-			// Only meaningful once a second pad is connected via Dual Pad Mode - flips
-			// the second pad's grid left-right instead of duplicating it.
-			Row(
+			Button(
+				onClick = { helpOpen = true },
 				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.SpaceBetween,
-				verticalAlignment = Alignment.CenterVertically,
 			) {
-				Text(
-					text = "Reflected",
-					color = if (dualPadModeEnabled)
-						MaterialTheme.colorScheme.onBackground
-					else
-						MaterialTheme.colorScheme.onSurfaceVariant,
-					style = MaterialTheme.typography.bodyMedium,
-				)
-				Switch(
-					checked = reflectedModeEnabled,
-					onCheckedChange = onReflectedModeChange,
-					enabled = dualPadModeEnabled,
-				)
+				Text(text = stringResource(R.string.midi_help_title), textAlign = TextAlign.Center)
 			}
-
-			// "Primary" (the unflipped side) is whichever pad connected first, which
-			// may not match physical left/right - use this to correct it if the
-			// mirror feels backwards.
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.SpaceBetween,
-				verticalAlignment = Alignment.CenterVertically,
-			) {
-				Text(
-					text = "Swap Sides",
-					color = if (dualPadModeEnabled && reflectedModeEnabled)
-						MaterialTheme.colorScheme.onBackground
-					else
-						MaterialTheme.colorScheme.onSurfaceVariant,
-					style = MaterialTheme.typography.bodyMedium,
-				)
-				Switch(
-					checked = reflectedSwapSides,
-					onCheckedChange = onReflectedSwapSidesChange,
-					enabled = dualPadModeEnabled && reflectedModeEnabled,
-				)
-			}
-
-			Spacer(modifier = Modifier.weight(1f))
 
 			Button(
 				onClick = { onClose() },
@@ -366,7 +424,10 @@ private fun MidiSelectScreen(
 				DeviceCard(
 					device = device,
 					isSelected = index == selectedIndex,
-					onClick = { onDeviceSelect(index) },
+					onClick = {
+						explicitChoices = explicitChoices.filterNot { it.startsWith(targetKey) } + "$targetKey$index"
+						onDeviceSelect(index)
+					},
 				)
 			}
 		}
