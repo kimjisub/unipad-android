@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Загрузка аудио…</string>
 	<string name="download">Скачать</string>
 	<string name="downloadWaiting">Ожидание загрузки</string>
-	<string name="downloading">Скачивание</string>
 	<string name="downloaded">Загружено</string>
 	<string name="success">Успешно</string>
 	<string name="failed">Ошибка</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
 	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>
-	<string name="unipackNotFound">UniPack не найден.</string>
 	<string name="clickToAddUniPack">Нажмите, чтобы добавить UniPack.</string>
 	<string name="guide_download_new">Скачать новые паки</string>
 	<string name="guide_import_external">Импортировать скачанные паки</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">ошибка сервера\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

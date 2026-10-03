@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Nilo-load ang audio…</string>
 	<string name="download">I-download</string>
 	<string name="downloadWaiting">Naghihintay ng Download</string>
-	<string name="downloading">Nagda-download</string>
 	<string name="downloaded">Na-download na</string>
 	<string name="success">Tagumpay</string>
 	<string name="failed">Nabigo</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
 	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Hindi nahanap ang UniPack.</string>
 	<string name="clickToAddUniPack">Mag-click para magdagdag ng mga UniPack.</string>
 	<string name="guide_download_new">Mag-download ng bagong packs</string>
 	<string name="guide_import_external">I-import ang na-download na packs</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">error sa server\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

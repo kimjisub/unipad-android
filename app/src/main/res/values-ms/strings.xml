@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Memuatkan audio…</string>
 	<string name="download">Muat Turun</string>
 	<string name="downloadWaiting">Menunggu Muat Turun</string>
-	<string name="downloading">Memuat Turun</string>
 	<string name="downloaded">Dimuat Turun</string>
 	<string name="success">Berjaya</string>
 	<string name="failed">Gagal</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>
-	<string name="unipackNotFound">UniPack tidak dijumpai.</string>
 	<string name="clickToAddUniPack">Klik untuk menambah UniPack.</string>
 	<string name="guide_download_new">Muat turun pack baru</string>
 	<string name="guide_import_external">Import pack yang dimuat turun</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">ralat pelayan\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

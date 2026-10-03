@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">กำลังโหลดเสียง…</string>
 	<string name="download">ดาวน์โหลด</string>
 	<string name="downloadWaiting">รอดาวน์โหลด</string>
-	<string name="downloading">กำลังดาวน์โหลด</string>
 	<string name="downloaded">ดาวน์โหลดแล้ว</string>
 	<string name="success">สำเร็จ</string>
 	<string name="failed">ล้มเหลว</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
 	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>
-	<string name="unipackNotFound">ไม่พบ UniPack</string>
 	<string name="clickToAddUniPack">คลิกเพื่อเพิ่ม UniPack</string>
 	<string name="guide_download_new">ดาวน์โหลดแพ็คใหม่</string>
 	<string name="guide_import_external">นำเข้าแพ็คที่ดาวน์โหลด</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">ข้อผิดพลาดเซิร์ฟเวอร์\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

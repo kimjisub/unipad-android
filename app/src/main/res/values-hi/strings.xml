@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">ऑडियो लोड हो रहा है…</string>
 	<string name="download">डाउनलोड</string>
 	<string name="downloadWaiting">डाउनलोड प्रतीक्षा</string>
-	<string name="downloading">डाउनलोड हो रहा है</string>
 	<string name="downloaded">डाउनलोड हुआ</string>
 	<string name="success">सफल</string>
 	<string name="failed">विफल</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
-	<string name="unipackNotFound">UniPack नहीं मिला।</string>
 	<string name="clickToAddUniPack">UniPack जोड़ने के लिए क्लिक करें।</string>
 	<string name="guide_download_new">नए पैक डाउनलोड करें</string>
 	<string name="guide_import_external">डाउनलोड किए पैक आयात करें</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">सर्वर त्रुटि\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

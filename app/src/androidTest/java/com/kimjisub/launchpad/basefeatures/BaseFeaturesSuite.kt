@@ -7,7 +7,7 @@ import org.junit.runners.Suite
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
     LibraryAndFileTest::class,
-    ShareImportTest::class,
+    RetiredShareLinkTest::class,
     TouchPlaybackTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,

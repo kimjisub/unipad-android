@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">အော်ဒီယို ဖွင့်နေသည်…</string>
 	<string name="download">ဒေါင်းလုဒ်</string>
 	<string name="downloadWaiting">ဒေါင်းလုဒ်စောင့်နေသည်</string>
-	<string name="downloading">ဒေါင်းလုဒ်ဆွဲနေသည်</string>
 	<string name="downloaded">ဒေါင်းလုဒ်ပြီး</string>
 	<string name="success">အောင်မြင်သည်</string>
 	<string name="failed">မအောင်မြင်ပါ</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
 	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>
-	<string name="unipackNotFound">UniPack မတွေ့ပါ။</string>
 	<string name="clickToAddUniPack">UniPack ထည့်ရန် နှိပ်ပါ။</string>
 	<string name="guide_download_new">pack အသစ်များ ဒေါင်းလုဒ်လုပ်ရန်</string>
 	<string name="guide_import_external">ဒေါင်းလုဒ်လုပ်ထားသော pack များ တင်သွင်းရန်</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">ဆာဗာအမှား\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

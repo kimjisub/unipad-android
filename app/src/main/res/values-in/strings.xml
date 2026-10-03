@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Memuat audio…</string>
 	<string name="download">Unduh</string>
 	<string name="downloadWaiting">Menunggu Unduhan</string>
-	<string name="downloading">Mengunduh</string>
 	<string name="downloaded">Terunduh</string>
 	<string name="success">Berhasil</string>
 	<string name="failed">Gagal</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Akses penyimpanan eksternal diperlukan untuk menyimpan file proyek.\nDapatkan izin untuk hak ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke penyimpanan eksternal.\nSilakan aktifkan izin di [Pengaturan] > [Izin]</string>
-	<string name="unipackNotFound">UniPack tidak ditemukan.</string>
 	<string name="clickToAddUniPack">Klik untuk menambahkan UniPack.</string>
 	<string name="guide_download_new">Unduh pack baru</string>
 	<string name="guide_import_external">Impor pack yang diunduh</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">kesalahan server\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
