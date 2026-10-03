@@ -69,7 +69,10 @@ class LibraryAndFileTest {
                 screen.node(By.text("Downloads")).click()
                 screen.device.waitForIdle()
             }
-            screen.node(By.text("basefeatures-file.zip")).click()
+            // Select explicitly: a delayed injected tap can become a long press and leave
+            // DocumentsUI in selection mode without returning the document to the app.
+            screen.node(By.text("basefeatures-file.zip")).longClick()
+            screen.node(By.text("Select")).click()
             screen.node(By.text(screen.text(R.string.importComplete)))
             screen.node(By.text(FeatureScreen.TITLE))
             screen.capture("file-import-result")
