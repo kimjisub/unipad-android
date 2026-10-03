@@ -34,7 +34,9 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             assertEquals("ko", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.capture("settings-korean")
             localeManager.applicationLocales = LocaleList(Locale.ENGLISH)
-            assertNotNull("English language row missing", screen.scrollTo(By.text("English"), androidx.test.uiautomator.Direction.UP))
+            // Locale recreation can reset the settings list to the top; the language row is below.
+            assertNotNull("English language row missing", screen.scrollTo(By.text("English"), androidx.test.uiautomator.Direction.DOWN))
+            assertEquals("en", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.clickText(R.string.settings_theme)
             screen.node(By.desc(screen.text(R.string.theme_add_title)))
             val choices = ThemeTool.getThemePackList(screen.context)
