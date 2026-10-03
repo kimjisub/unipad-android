@@ -121,7 +121,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
-| `StoreTest.testNoPermissionDialogBeforeDownload` | Main/Store/detail browsing never asks for notification permission. |
+| `StoreTest.testNoPermissionDialogBeforeDownload` | Real launcher starts Splash, then Main/Store/detail browsing without permission handling. Notification permission is denied before startup and remains denied after browsing on API 33+. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
 | `PlayActivityTest.testPlayActivityRecording` | Recording setting toggles and play input remains available. |

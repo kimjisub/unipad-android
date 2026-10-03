@@ -1,8 +1,11 @@
 package com.kimjisub.launchpad
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -18,16 +21,19 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.activity.FBStoreActivity
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.FirebaseStoreCatalog
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -36,6 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
 
 /** Real activity, navigation and Compose list, with an activity-scoped, offline catalogue. */
@@ -143,16 +150,17 @@ class StoreTest : BaseUITest() {
         takeScreenshot("store_list_end_selected")
     }
 
-    /** Browsing must never request notification permission or start a download. */
+    /** Actual app startup and browsing must not request notification permission or download. */
     @Test
     fun testNoPermissionDialogBeforeDownload() {
-        launchMain()
+        launchThroughSplashWithoutPermissionDialog()
         assertTrue("Main screen did not appear without a notification dialog", waitForMainScreen())
         assertNoPermissionDialog()
         openStore()
         composeTestRule.onNodeWithTag(rowTag(0)).performClick()
         assertDetailOf(0)
         assertNoPermissionDialog()
+        assertNotificationPermissionDenied()
         takeScreenshot("store_without_permission_dialog")
     }
 
@@ -183,6 +191,46 @@ class StoreTest : BaseUITest() {
     }
 
     private fun rowTag(index: Int) = "store_pack_${packs[index].code}"
+
+    private fun assertNotificationPermissionDenied() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            assertEquals(
+                "Notification permission must remain denied during startup and browsing",
+                PackageManager.PERMISSION_DENIED,
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS),
+            )
+        }
+    }
+
+    private fun launchThroughSplashWithoutPermissionDialog() {
+        assertNotificationPermissionDenied()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        val createdActivities = CopyOnWriteArrayList<Class<*>>()
+        val callback = ActivityLifecycleCallback { activity, stage ->
+            if (activity is SplashActivity || activity is MainActivity) {
+                Log.i("StoreStartupPermissionTest", "$stage:${activity.javaClass.simpleName}")
+                if (stage == Stage.CREATED) createdActivities.add(activity.javaClass)
+            }
+        }
+        instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
+        try {
+            // No permission handling here: an unexpected dialog must block/fail the test.
+            launchApp()
+            assertNoPermissionDialog()
+            assertTrue("Main screen did not appear without a notification dialog", waitForMainScreen())
+            waitForMainButton()
+            assertEquals(
+                "The permission check must cover Splash followed by Main",
+                listOf(SplashActivity::class.java, MainActivity::class.java),
+                createdActivities.toList(),
+            )
+            assertNoPermissionDialog()
+            assertNotificationPermissionDenied()
+        } finally {
+            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
+        }
+    }
 
     private fun assertNoPermissionDialog() {
         assertFalse("A system permission dialog is showing", device.hasObject(By.pkg(Pattern.compile(".*permissioncontroller.*"))))
