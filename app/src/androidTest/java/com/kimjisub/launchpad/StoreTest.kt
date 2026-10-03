@@ -202,7 +202,25 @@ class StoreTest : BaseUITest() {
         }
     }
 
+    private fun prepareLegacyStoragePermissions() {
+        // Splash requires only these storage permissions on API 24-29. Prepare them
+        // before starting the launcher; never grant notification permission or dismiss dialogs.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+            for (permission in listOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                automation.grantRuntimePermission(context.packageName, permission)
+                assertEquals(
+                    "Required legacy storage permission was not prepared: $permission",
+                    PackageManager.PERMISSION_GRANTED,
+                    context.checkSelfPermission(permission),
+                )
+                Log.i("StoreStartupPermissionTest", "Legacy storage permission prepared: $permission")
+            }
+        }
+    }
+
     private fun launchThroughSplashWithoutPermissionDialog() {
+        prepareLegacyStoragePermissions()
         assertNotificationPermissionDenied()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val monitor = ActivityLifecycleMonitorRegistry.getInstance()
