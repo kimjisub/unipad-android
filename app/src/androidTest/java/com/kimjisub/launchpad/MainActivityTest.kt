@@ -10,7 +10,6 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -35,7 +34,7 @@ class MainActivityTest : BaseUITest() {
 
     /** Former FAB menu: every entry it offered is now a button on the main screen. */
     @Test
-    fun testFloatingActionMenuInteraction() {
+    fun testMainNavigationButtonsAndSettingsReturn() {
         launchToMainScreen()
         takeScreenshot("fab_menu_before")
 
@@ -160,8 +159,8 @@ class MainActivityTest : BaseUITest() {
     @Test
     fun testUnipackDeletionFailureKeepsHistory() {
         val sounds = File(TestUniPack.folder(context), "sounds")
-        assumeTrue("Storage ignores permission bits here", sounds.setWritable(false, false) && !sounds.canWrite())
         try {
+            assertTrue("Failure fixture must make the sounds folder read-only", sounds.setWritable(false, false) && !sounds.canWrite())
             seedHistory(TestUniPack.FOLDER_NAME)
             launchToMainScreen()
 

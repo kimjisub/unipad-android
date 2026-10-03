@@ -45,5 +45,13 @@ dependencies {
 	implementation 'androidx.core:core-ktx:1.19.0'
 	implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
 	androidTestImplementation 'androidx.test:runner:1.7.0'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+	androidTestImplementation 'junit:junit:4.13.2'
+}
+
+// Prepare installed debug/test code before Orchestrator starts a fresh process per test.
+// AGP's test engine performs this device compilation; APKs and release variants are unchanged.
+androidComponents {
+    onVariants(selector().withBuildType('debug')) { variant ->
+        variant.experimentalProperties.put('android.experimental.force-aot-compilation', true)
+    }
 }

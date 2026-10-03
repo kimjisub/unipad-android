@@ -12,7 +12,24 @@
           "package_name": "com.kimjisub.launchpad.dev"
         }
       },
-      "api_key": [{ "current_key": "test-only-not-a-valid-api-key" }]
+      "api_key": [
+        {
+          "current_key": "AIzaSy000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "com.kimjisub.launchpad"
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSy000000000000000000000000000000000"
+        }
+      ]
     }
   ],
   "configuration_version": "1"

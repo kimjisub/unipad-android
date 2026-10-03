@@ -1,7 +1,7 @@
 # Pull request unit tests
 
 `unit-tests.yml` runs every app and design debug unit test on each pull request.
-It has read-only repository access, uses a deliberately invalid Firebase fixture,
+It has read-only repository access, uses a deliberately fake Firebase fixture,
 and needs no release keystore or GitHub secrets. Test reports are retained for
 seven days, including on failure. It does not build a signed release, upload an
 app, run device tests, or change required branch checks.
@@ -24,3 +24,10 @@ Release signing remains required: without `keystore.properties`, debug tests
 can configure, but the release signing configuration has no key and release
 signing validation fails. Existing release keys are loaded only when that local
 file exists; CI never creates one.
+
+The fixture supports both debug and release package names for local compilation.
+Its API key has the SDK-required shape and an all-zero suffix; it grants no
+access to a real Firebase project. A malformed unit-only key previously threw
+in Firebase Installations when the real app was launched for UI tests. Keeping
+a syntactically valid fake lets offline device tests exercise app startup with
+the normal SDK initialization. No SDK collection or crash detection is disabled.
