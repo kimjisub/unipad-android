@@ -84,7 +84,11 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         val silenceCount = audio.silences.get()
         // pressHome() waits only 1 second for an accessibility event, even if Home succeeded.
         // Require actual key injection and the launcher/lifecycle result under the existing deadline.
-        val launcher = screen.device.launcherPackageName
+        // Resolve through the device shell: target package visibility can hide the real launcher
+        // and make UiDevice.launcherPackageName return Settings' fallback home activity.
+        val launcher = screen.device.executeShellCommand(
+            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
+        ).lineSequence().map(String::trim).lastOrNull { it.contains('/') }?.substringBefore('/')
         assertNotNull("Default launcher missing", launcher)
         assertTrue("Home key injection failed", screen.device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
         screen.await("Home did not hide play and show the launcher") {
