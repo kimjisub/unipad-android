@@ -52,9 +52,10 @@ fun StorePackPanelContent(
 	onDownloadClick: () -> Unit,
 	onYoutubeClick: () -> Unit,
 	onWebsiteClick: () -> Unit,
+	modifier: Modifier = Modifier,
 ) {
 	Surface(
-		modifier = Modifier.fillMaxSize(),
+		modifier = modifier.fillMaxSize(),
 		shape = RoundedCornerShape(8.dp),
 		color = Color.White,
 	) {
