@@ -307,4 +307,25 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="import_pack_confirm">이 팩을 설치할까요?</string>
 	<string name="import_pack_confirm_source">%s 에서</string>
+
+	<!-- Connection and light help -->
+	<string name="midi_help_title">연결·불빛 도움말</string>
+	<string name="midi_help_selected_model">선택한 기종: %1$s</string>
+	<string name="midi_help_common">기종 선택은 실제 장치를 확인한 결과가 아니에요. 불빛이 꺼졌다는 사실만으로 연결 성공이나 실패를 판단할 수 없어요.</string>
+	<string name="midi_help_not_listed_title">장치가 안 보여요</string>
+	<string name="midi_help_not_listed_body">케이블과 연결 상태를 확인해 주세요. 실제 장치 이름과 선택한 기종 이름을 비교해 주세요.</string>
+	<string name="midi_help_android">Android의 USB 앱 선택과 UniPad 안의 기종 선택은 서로 다른 단계예요.</string>
+	<string name="midi_help_no_lights_title">연결됐는데 불빛이 없어요</string>
+	<string name="midi_help_no_lights_body">앱 화면의 패드와 소리가 반응하는지, 팩에 불빛 데이터가 있는지 확인해 주세요. 이미 가진 팩으로 확인할 수 있어요.</string>
+	<string name="midi_help_crash_title">앱이 종료돼요</string>
+	<string name="midi_help_crash_body">장치 연결을 풀고 앱 버전, 휴대폰이나 컴퓨터 모델, 운영체제, 종료된 단계를 기록해 주세요. 같은 종료를 반복할 필요는 없어요.</string>
+	<string name="midi_help_mini">프로그래머 모드에서는 처음에 불빛이 꺼질 수 있어요. 불빛이 있는 팩으로 확인해 주세요.</string>
+	<string name="midi_help_pro">Launchpad Pro와 Launchpad Pro MK3는 서로 다른 기종이에요.</string>
+	<string name="midi_help_other">목록에 같은 이름이 없으면 다른 기종을 대신 고르지 마세요. 이 안내는 새 기종의 호환을 보장하지 않아요.</string>
+	<string name="midi_help_manufacturer">제조사 설명 보기</string>
+	<string name="midi_help_link_failed">제조사 설명을 열 수 없어요. 이 도움말은 계속 읽을 수 있어요.</string>
+	<string name="midi_help_close">도움말 닫기</string>
+	<string name="midi_dual_pad_mode">두 장치 사용</string>
+	<string name="midi_reflected">둘째 장치 좌우 반전</string>
+	<string name="midi_swap_sides">좌우 바꾸기</string>
 </resources>

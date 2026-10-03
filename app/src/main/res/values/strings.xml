@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 	<string name="languageCode">en</string>
 	<string name="language">English</string>
 	<string name="translated_by">Translated by Kimjisub</string>
@@ -317,4 +317,25 @@
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 	<string name="import_pack_confirm">Install this pack?</string>
 	<string name="import_pack_confirm_source">from %s</string>
+
+	<!-- Approved English/Korean copy; other locales intentionally use the English fallback. -->
+	<string name="midi_help_title" tools:ignore="MissingTranslation">Connection and light help</string>
+	<string name="midi_help_selected_model" tools:ignore="MissingTranslation">Selected model: %1$s</string>
+	<string name="midi_help_common" tools:ignore="MissingTranslation">The selected model does not confirm the actual device. Lights being off alone do not tell you whether the connection succeeded or failed.</string>
+	<string name="midi_help_not_listed_title" tools:ignore="MissingTranslation">My device is not listed</string>
+	<string name="midi_help_not_listed_body" tools:ignore="MissingTranslation">Check the cable and connection. Compare the name on your device with the selected model.</string>
+	<string name="midi_help_android" tools:ignore="MissingTranslation">Choosing an app in Android\'s USB prompt is separate from choosing a model in UniPad.</string>
+	<string name="midi_help_no_lights_title" tools:ignore="MissingTranslation">Connected, but no lights</string>
+	<string name="midi_help_no_lights_body" tools:ignore="MissingTranslation">Check whether the on-screen pads and sound respond, and whether the pack contains light data. You can use a pack you already have.</string>
+	<string name="midi_help_crash_title" tools:ignore="MissingTranslation">The app closes unexpectedly</string>
+	<string name="midi_help_crash_body" tools:ignore="MissingTranslation">Disconnect the device and note the app version, phone or computer model, operating system, and the step where it closed. You do not need to repeat the crash.</string>
+	<string name="midi_help_mini" tools:ignore="MissingTranslation">In Programmer mode, the lights may initially be off. Check with a pack that includes lights.</string>
+	<string name="midi_help_pro" tools:ignore="MissingTranslation">Launchpad Pro and Launchpad Pro MK3 are different models.</string>
+	<string name="midi_help_other" tools:ignore="MissingTranslation">If the same model is not listed, do not choose a different model as a substitute. This guide does not confirm compatibility with new models.</string>
+	<string name="midi_help_manufacturer" tools:ignore="MissingTranslation">Read the manufacturer\'s guide</string>
+	<string name="midi_help_link_failed" tools:ignore="MissingTranslation">Could not open the manufacturer\'s guide. You can continue reading this help.</string>
+	<string name="midi_help_close" tools:ignore="MissingTranslation">Close help</string>
+	<string name="midi_dual_pad_mode" tools:ignore="MissingTranslation">Dual Pad Mode</string>
+	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
+	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
 </resources>
