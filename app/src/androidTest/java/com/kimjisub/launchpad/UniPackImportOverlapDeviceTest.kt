@@ -6,9 +6,6 @@ import android.content.ContentProvider
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.ContextWrapper
-import com.kimjisub.launchpad.analytics.PackImportSource
-import com.kimjisub.launchpad.analytics.UsageAnalytics
-import com.kimjisub.launchpad.analytics.UsageEventSink
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
@@ -20,9 +17,6 @@ import android.provider.OpenableColumns
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kimjisub.launchpad.analytics.PackImportSource
-import com.kimjisub.launchpad.analytics.UsageAnalytics
-import com.kimjisub.launchpad.analytics.UsageEventSink
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
