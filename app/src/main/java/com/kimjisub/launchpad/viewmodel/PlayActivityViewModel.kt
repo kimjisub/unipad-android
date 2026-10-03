@@ -1019,10 +1019,11 @@ class PlayActivityViewModel(
 	class Factory(
 		private val unipackRepo: UnipackRepository,
 		private val usage: UsageAnalytics,
+		private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
 	) : ViewModelProvider.Factory {
 		@Suppress("UNCHECKED_CAST")
 		override fun <T : ViewModel> create(modelClass: Class<T>): T {
-			return PlayActivityViewModel(unipackRepo, usage) as T
+			return PlayActivityViewModel(unipackRepo, usage, soundEngine) as T
 		}
 	}
 }
