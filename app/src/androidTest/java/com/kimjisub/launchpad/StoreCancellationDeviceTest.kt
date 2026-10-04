@@ -112,7 +112,7 @@ class StoreCancellationDeviceTest {
             row!!.click()
             device.wait(Until.findObject(By.text(context.getString(R.string.download))), 10000)!!.click()
             if (android.os.Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_allow_button")), 10000)!!.click()
+                device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_deny_button")), 10000)!!.click()
             }
             val partial = File(workspace, "$id.zip")
             await("partial chunk not written") { partial.length() == 4096L }
