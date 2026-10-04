@@ -110,8 +110,14 @@ class StoreCancellationDeviceTest {
             val row = device.wait(Until.findObject(By.text("Cancellation fixture")), 10000)
             assertNotNull("fixture not shown", row)
             row!!.click()
+            var notificationDialogExpected = false
+            screen.onActivity { activity ->
+                notificationDialogExpected = android.os.Build.VERSION.SDK_INT >= 33 &&
+                    context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
+                    !activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
             device.wait(Until.findObject(By.text(context.getString(R.string.download))), 10000)!!.click()
-            if (android.os.Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            if (notificationDialogExpected) {
                 device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_deny_button")), 10000)!!.click()
             }
             val partial = File(workspace, "$id.zip")
