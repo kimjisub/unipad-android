@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,15 +61,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.network.Networks.FirebaseManager
+import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.UniPackDownloader
@@ -87,6 +85,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
+import org.koin.android.ext.android.inject
 import java.io.File
 import java.text.NumberFormat
 
@@ -109,8 +108,7 @@ class FBStoreActivity : BaseActivity() {
 		private const val DOWNLOAD_BASE_URL = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy"
 	}
 
-	private val firebaseStore: FirebaseManager by lazy { FirebaseManager("store") }
-	private val firebaseStoreCount: FirebaseManager by lazy { FirebaseManager("storeCount") }
+	private val catalog: StoreCatalog by inject()
 	private val storeItems = mutableStateListOf<StoreItemState>()
 	private var downloadList: List<UniPackItem> = emptyList()
 	private var requestingNotificationPermission = false
@@ -185,46 +183,23 @@ class FBStoreActivity : BaseActivity() {
 			}
 		}
 
-		firebaseStore.setEventListener(object : ChildEventListener {
-			override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-				try {
-					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java) ?: return
-					val isDownloaded = downloadList.any { it.unipack.id == d.code }
-					val key = dataSnapshot.key ?: d.code ?: return
-					if (storeItems.any { it.key == key }) return
-					storeItems.add(0, StoreItemState(d, isDownloaded, key))
-				} catch (e: RuntimeException) {
-					Log.err("onChildAdded failed", e)
-				}
+		catalog.attach(object : StoreCatalog.Listener {
+			override fun onAdded(pack: StoreVO, key: String) {
+				val isDownloaded = downloadList.any { it.unipack.id == pack.code }
+				if (storeItems.any { it.key == key }) return
+				storeItems.add(0, StoreItemState(pack, isDownloaded, key))
 			}
 
-			override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
-				try {
-					val d: StoreVO = dataSnapshot.getValue(StoreVO::class.java) ?: return
-					val code = d.code ?: return
-					val item = storeItems.firstOrNull { it.storeVO.code == code } ?: return
-					item.storeVO = d
-				} catch (e: RuntimeException) {
-					Log.err("onChildChanged failed", e)
-				}
+			override fun onChanged(pack: StoreVO) {
+				val code = pack.code ?: return
+				val item = storeItems.firstOrNull { it.storeVO.code == code } ?: return
+				item.storeVO = pack
 			}
 
-			override fun onChildRemoved(dataSnapshot: DataSnapshot) {}
-			override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {}
-			override fun onCancelled(databaseError: DatabaseError) {}
+			override fun onCount(count: Long) {
+				p.prevStoreCount = count
+			}
 		})
-
-		firebaseStoreCount.setEventListener(object : ValueEventListener {
-			override fun onDataChange(dataSnapshot: DataSnapshot) {
-				val data: Long = dataSnapshot.getValue(Long::class.java) ?: return
-				p.prevStoreCount = data
-			}
-
-			override fun onCancelled(databaseError: DatabaseError) {}
-		})
-
-		firebaseStore.attachEventListener(true)
-		firebaseStoreCount.attachEventListener(true)
 	}
 
 	private fun togglePlay(target: StoreItemState?) {
@@ -297,6 +272,7 @@ class FBStoreActivity : BaseActivity() {
 					item.downloading = false
 				}
 			},
+			usage = usageAnalytics.packImport(PackImportSource.STORE),
 			scope = lifecycleScope,
 		)
 		requestNotificationPermissionIfUnanswered()
@@ -312,8 +288,7 @@ class FBStoreActivity : BaseActivity() {
 	}
 
 	override fun onDestroy() {
-		firebaseStore.attachEventListener(false)
-		firebaseStoreCount.attachEventListener(false)
+		catalog.detach()
 		super.onDestroy()
 	}
 }
@@ -377,6 +352,7 @@ private fun StoreScreen(
 							onDownloadClick = { onDownloadClick(item) },
 							onYoutubeClick = onYoutubeClick,
 							onWebsiteClick = onWebsiteClick,
+							modifier = Modifier.testTag("store_detail"),
 						)
 					}
 				} else {
@@ -453,7 +429,7 @@ private fun StoreScreen(
 				}
 			} else {
 				LazyColumn(
-					modifier = Modifier.weight(1f),
+					modifier = Modifier.weight(1f).testTag("store_list"),
 					// The list scrolls behind the bottom bar but its last row stops above it.
 					contentPadding = PaddingValues(
 						top = 8.dp,
@@ -520,5 +496,6 @@ private fun StorePackListItem(
 			}
 		},
 		onClick = onItemClick,
+		modifier = Modifier.testTag("store_pack_${item.key}"),
 	)
 }

@@ -59,6 +59,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		const val LOGO_TOKEN = "l"
 		val AUTO_TOKENS = setOf("auto", "a")
 
+		fun rgbColor(token: String): Int {
+			// Longer tokens can parse as Int but carry into the alpha byte.
+			if (token.length > 6) throw NumberFormatException("RGB color exceeds six characters")
+			return token.toInt(16) + -0x1000000
+		}
+
 		/**
 		 * `mc 1`..`mc 32` as a round LED index. Anything else is dropped without a warning, as the drivers
 		 * dropped it before; index 32 would otherwise light the logo.
@@ -372,11 +378,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 											colorTokens = split2.drop(3)
 										}
 										when (colorTokens.size) {
-											1 -> ledColor = colorTokens[0].toInt(16) + -0x1000000
+											1 -> ledColor = rgbColor(colorTokens[0])
 											2 -> {
 												ledVelocity = colorTokens[1].toInt()
 												ledColor = if (colorTokens[0] in AUTO_TOKENS) ARGB[ledVelocity].toInt()
-												else colorTokens[0].toInt(16) + -0x1000000
+												else rgbColor(colorTokens[0])
 											}
 											else -> {
 												addErr("keyLed : [$fileName].[$s] format is incorrect")

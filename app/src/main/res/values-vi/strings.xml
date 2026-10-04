@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Thư mục</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Tìm UniPacks</string>
+	<string name="main_search_no_results">Không có kết quả cho “%1$s”</string>
+	<string name="main_search_clear">Xóa tìm kiếm</string>
 	<string name="backup_title">Sao lưu</string>
 	<string name="restore_title">Khôi phục</string>
 

@@ -2,6 +2,7 @@ package com.kimjisub.launchpad
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -54,8 +55,17 @@ class ThemeTest : BaseUITest() {
             }
             takeScreenshot("theme_item_selected")
             if (candidate != null) {
-                device.findObject(By.text(str(R.string.apply))).click()
-                assertTrue("Applying a theme did not store it", waitUntil { prefs.selectedTheme != originalTheme })
+                // Theme previews recompose while Apply is visible. Refetch a replaced node,
+                // and keep the original stored-theme assertion and its existing deadline.
+                assertTrue("Applying a theme did not store it", waitUntil {
+                    if (prefs.selectedTheme != originalTheme) return@waitUntil true
+                    try {
+                        device.findObject(By.text(str(R.string.apply)))?.click()
+                        prefs.selectedTheme != originalTheme
+                    } catch (_: StaleObjectException) {
+                        false
+                    }
+                })
                 assertTrue(
                     "Apply button did not disappear after applying",
                     device.wait(Until.gone(By.text(str(R.string.apply))), 3000L)

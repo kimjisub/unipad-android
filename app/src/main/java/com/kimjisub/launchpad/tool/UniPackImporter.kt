@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.analytics.PackImportReport
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
@@ -24,6 +25,7 @@ class UniPackImporter(
 	private var uri: Uri,
 	workspace: File,
 	private var onEventListener: OnEventListener,
+	private val usage: PackImportReport,
 	scope: CoroutineScope,
 ) {
 	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
@@ -87,9 +89,11 @@ class UniPackImporter(
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
+				usage.succeeded()
 				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack) }
 			} catch (e: Exception) {
 				Log.err("Import failed", e)
+				usage.failed(e)
 				withContext(Dispatchers.Main) { onException(e) }
 				claimedFolder?.let(FileManager::deleteDirectory)
 			}

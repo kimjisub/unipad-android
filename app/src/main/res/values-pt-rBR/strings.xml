@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Pasta</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Buscar UniPacks</string>
+	<string name="main_search_no_results">Nenhum resultado para “%1$s”</string>
+	<string name="main_search_clear">Limpar pesquisa</string>
 	<string name="backup_title">Backup</string>
 	<string name="restore_title">Restaurar</string>
 

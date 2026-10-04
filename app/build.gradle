@@ -15,15 +15,20 @@ plugins {
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// Debug builds and unit tests must configure without a release signing key.
+if (keystorePropertiesFile.exists()) {
+	keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
 
 android {
 	signingConfigs {
 		release {
-			storeFile file(keystoreProperties['storeFile'])
-			storePassword keystoreProperties['storePassword']
-			keyAlias keystoreProperties['keyAlias']
-			keyPassword keystoreProperties['keyPassword']
+			if (keystorePropertiesFile.exists()) {
+				storeFile file(keystoreProperties['storeFile'])
+				storePassword keystoreProperties['storePassword']
+				keyAlias keystoreProperties['keyAlias']
+				keyPassword keystoreProperties['keyPassword']
+			}
 		}
 	}
 	ndkVersion = '29.0.14206865'
@@ -241,10 +246,11 @@ dependencies {
 	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
 	androidTestImplementation "androidx.room:room-testing:$room_version"
 	androidTestImplementation 'androidx.test:runner:1.7.0'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 	androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
 	androidTestImplementation 'androidx.test.ext:junit:1.3.0'
 	androidTestImplementation 'androidx.test:rules:1.7.0'
+	androidTestImplementation platform('androidx.compose:compose-bom:2026.08.00')
+	androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
 	androidTestUtil 'androidx.test:orchestrator:1.6.1'
 	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
@@ -286,3 +292,11 @@ dependencies {
 	api project(':design')
 }
 
+
+// Prepare installed debug/test code before Orchestrator starts a fresh process per test.
+// AGP's test engine performs this device compilation; APKs and release variants are unchanged.
+androidComponents {
+    onVariants(selector().withBuildType('debug')) { variant ->
+        variant.experimentalProperties.put('android.experimental.force-aot-compilation', true)
+    }
+}

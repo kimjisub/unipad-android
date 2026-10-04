@@ -261,6 +261,8 @@
 	<string name="transfer_format_folder">文件夹</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">搜索 UniPacks</string>
+	<string name="main_search_no_results">没有找到“%1$s”的结果</string>
+	<string name="main_search_clear">清除搜索</string>
 	<string name="backup_title">备份</string>
 	<string name="restore_title">恢复</string>
 

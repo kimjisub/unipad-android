@@ -12,6 +12,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.rules.TestRule
+import org.junit.runners.model.Statement
 
 /**
  * Builds databases from the exported schemas in app/schemas and opens them the way the app does.
@@ -20,11 +22,19 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AppDatabaseMigrationTest {
 
-	private val instrumentation = InstrumentationRegistry.getInstrumentation()
-	private val context = instrumentation.targetContext
+	private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
+	private lateinit var helper: MigrationTestHelper
 
+	// Collection must not access a live device context when the runner instantiates the test.
 	@get:Rule
-	val helper = MigrationTestHelper(instrumentation, AppDatabase::class.java)
+	val migrationRule = TestRule { statement, description ->
+		object : Statement() {
+			override fun evaluate() {
+				helper = MigrationTestHelper(InstrumentationRegistry.getInstrumentation(), AppDatabase::class.java)
+				helper.apply(statement, description).evaluate()
+			}
+		}
+	}
 
 	@After
 	fun tearDown() {

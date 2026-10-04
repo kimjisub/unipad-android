@@ -74,6 +74,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -116,6 +120,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.TraceLogText
@@ -138,6 +143,7 @@ import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import android.content.Intent
 import kotlin.math.roundToInt
+import org.koin.android.ext.android.getKoin
 
 class PlayActivity : BaseActivity() {
 
@@ -281,7 +287,7 @@ class PlayActivity : BaseActivity() {
 
 		vm = ViewModelProvider(
 			this,
-			PlayActivityViewModel.Factory(unipackRepo)
+			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true
@@ -695,6 +701,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	@OptIn(ExperimentalComposeUiApi::class)
 	@Composable
 	private fun OptionPanel() {
 		// Theme colours (colors.json option_window / option_window_checkbox), as iOS and web apply them.
@@ -729,6 +736,8 @@ class PlayActivity : BaseActivity() {
 				.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End + WindowInsetsSides.Vertical))
 				.width(280.dp)
 				.verticalScroll(rememberScrollState())
+				.testTag("play_options")
+				.semantics { testTagsAsResourceId = true }
 				.padding(vertical = 24.dp),
 		) {
 			// Header: title + single Quit icon (single source of truth)
@@ -912,7 +921,7 @@ class PlayActivity : BaseActivity() {
 		if (!state.visible) return
 		val alpha = if (state.locked) LOCKED_ALPHA else 1f
 		Row(
-			modifier = Modifier
+			modifier = Modifier.testTag("play_option_$textResId")
 				.fillMaxWidth()
 				.alpha(alpha)
 				.then(

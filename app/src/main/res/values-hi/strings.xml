@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">फ़ोल्डर</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">UniPacks खोजें</string>
+	<string name="main_search_no_results">“%1$s” के लिए कोई परिणाम नहीं</string>
+	<string name="main_search_clear">खोज साफ़ करें</string>
 	<string name="backup_title">बैकअप</string>
 	<string name="restore_title">पुनर्स्थापित</string>
 

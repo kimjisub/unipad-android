@@ -31,12 +31,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -48,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -58,7 +61,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -76,18 +86,22 @@ import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
+import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import com.kimjisub.launchpad.tool.ListCursor
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.theme.Gray1
@@ -114,7 +128,7 @@ class MainActivity : BaseActivity() {
 	// Compose state
 	private val unipackList = mutableStateListOf<UniPackItem>()
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
-	private var lastPlayIndex by mutableIntStateOf(-1)
+	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
@@ -124,6 +138,15 @@ class MainActivity : BaseActivity() {
 	private var importResult by mutableStateOf<ImportResult?>(null)
 	private var deleteTargetItem by mutableStateOf<UniPackItem?>(null)
 	private var deleteFailed by mutableStateOf(false)
+	private var searchOpen by mutableStateOf(false)
+	private var searchQuery by mutableStateOf("")
+
+	// Filters the already-loaded list; typing never re-reads the pack folders.
+	private val visibleList: List<UniPackItem> by derivedStateOf {
+		PackSearch.filter(unipackList.toList(), searchQuery) {
+			listOf(it.unipack.title, it.unipack.producerName)
+		}
+	}
 
 	// ViewModels
 	private lateinit var totalPanelVM: MainTotalPanelViewModel
@@ -328,8 +351,9 @@ class MainActivity : BaseActivity() {
 
 				if (selectedPath != null) {
 					selectedItem = unipackList.firstOrNull { it.unipack.getPathString() == selectedPath }
-					if (selectedItem == null) lastPlayIndex = -1
+					if (selectedItem == null) lastPlayPath = null
 				}
+				if (unipackList.isEmpty()) closeSearch() else dropSelectionOutsideResults()
 
 				scrollToTopTrigger++
 				listRefreshing = false
@@ -345,18 +369,19 @@ class MainActivity : BaseActivity() {
 			return
 		}
 
-		val index = unipackList.indexOfFirst { it.unipack.getPathString() == target.unipack.getPathString() }
+		val path = target.unipack.getPathString()
+		val index = visibleList.indexOfFirst { it.unipack.getPathString() == path }
 		if (index == -1) return
 
-		if (selectedItem?.unipack?.getPathString() == target.unipack.getPathString()) {
+		if (selectedItem?.unipack?.getPathString() == path) {
 			selectedItem = null
 		} else {
-			lastPlayIndex = index
+			lastPlayPath = path
 			selectedItem = target
 			if (scrollToCenter) {
-							scrollToCenterIndex = index
-							scrollToCenterTrigger++
-						}
+				scrollToCenterIndex = index
+				scrollToCenterTrigger++
+			}
 		}
 		showSelectLPUI()
 	}
@@ -379,20 +404,48 @@ class MainActivity : BaseActivity() {
 
 	// MIDI navigation
 
-	private fun haveNow(): Boolean = lastPlayIndex in 0..unipackList.lastIndex
-	private fun haveNext(): Boolean = lastPlayIndex < unipackList.lastIndex
-	private fun havePrev(): Boolean = lastPlayIndex > 0
+	// Moves only within the search results, so the launchpad never picks a pack the list hides.
+	private fun cursor() = ListCursor(visibleList.map { it.unipack.getPathString() }, lastPlayPath)
+
+	private fun visibleItem(path: String?): UniPackItem? =
+		path?.let { visibleList.firstOrNull { item -> item.unipack.getPathString() == it } }
 
 	private fun next() {
-		if (haveNext()) togglePlay(unipackList[lastPlayIndex + 1], scrollToCenter = true)
+		visibleItem(cursor().next())?.let { togglePlay(it, scrollToCenter = true) }
 	}
 
 	private fun prev() {
-		if (havePrev()) togglePlay(unipackList[lastPlayIndex - 1], scrollToCenter = true)
+		visibleItem(cursor().prev())?.let { togglePlay(it, scrollToCenter = true) }
 	}
 
 	private fun currentClick() {
-		if (haveNow()) pressPlay(unipackList[lastPlayIndex])
+		visibleItem(cursor().current())?.let { pressPlay(it) }
+	}
+
+	// Search
+
+	private fun updateSearchQuery(query: String) {
+		searchQuery = query
+		scrollToTopTrigger++
+		dropSelectionOutsideResults()
+	}
+
+	private fun toggleSearch() {
+		if (searchOpen) closeSearch() else searchOpen = true
+	}
+
+	private fun closeSearch() {
+		searchOpen = false
+		if (searchQuery.isNotEmpty()) updateSearchQuery("")
+	}
+
+	private fun dropSelectionOutsideResults() {
+		val path = selectedItem?.unipack?.getPathString()
+		if (path != null && visibleItem(path) == null) {
+			selectedItem = null
+			lastPlayPath = null
+		}
+		showSelectLPUI()
 	}
 
 	// UniPack import
@@ -428,6 +481,7 @@ class MainActivity : BaseActivity() {
 					importResult = ImportResult.Error(throwable.toString())
 				}
 			},
+			usage = usageAnalytics.packImport(PackImportSource.FILE),
 			scope = lifecycleScope,
 		)
 	}
@@ -469,11 +523,14 @@ class MainActivity : BaseActivity() {
 	}
 
 	private fun showSelectLPUI() {
-		if (havePrev()) driver.sendFunctionKeyLed(0, 63)
+		// A folder refresh may finish after another screen takes over the launchpad.
+		if (controller !== midiController) return
+		val cursor = cursor()
+		if (cursor.hasPrev) driver.sendFunctionKeyLed(0, 63)
 		else driver.sendFunctionKeyLed(0, 5)
-		if (haveNow()) driver.sendFunctionKeyLed(2, 61)
+		if (cursor.hasCurrent) driver.sendFunctionKeyLed(2, 61)
 		else driver.sendFunctionKeyLed(2, 0)
-		if (haveNext()) driver.sendFunctionKeyLed(1, 63)
+		if (cursor.hasNext) driver.sendFunctionKeyLed(1, 63)
 		else driver.sendFunctionKeyLed(1, 5)
 	}
 
@@ -514,7 +571,7 @@ class MainActivity : BaseActivity() {
 
 	// Compose UI
 
-	@OptIn(ExperimentalMaterial3Api::class)
+	@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 	@Composable
 	private fun MainScreen(
 		onSettingsClick: () -> Unit,
@@ -524,6 +581,9 @@ class MainActivity : BaseActivity() {
 		onItemClick: (UniPackItem) -> Unit,
 		onPlayClick: (UniPackItem) -> Unit,
 	) {
+		BackHandler(enabled = searchOpen) {
+			closeSearch()
+		}
 		BackHandler(enabled = selectedItem != null) {
 			deselect()
 		}
@@ -531,7 +591,8 @@ class MainActivity : BaseActivity() {
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
-				.background(MaterialTheme.colorScheme.background),
+				.background(MaterialTheme.colorScheme.background)
+				.semantics { testTagsAsResourceId = true },
 		) {
 			// Main two-panel layout
 			Row(modifier = Modifier.fillMaxSize()) {
@@ -566,7 +627,7 @@ class MainActivity : BaseActivity() {
 								showDeleteConfirmation(item)
 							}
 
-							MainPackPanelScreen(vm = packVM)
+							MainPackPanelScreen(vm = packVM, modifier = Modifier.testTag("main_detail_${item.unipack.id}"))
 						}
 					}
 				}
@@ -620,19 +681,30 @@ class MainActivity : BaseActivity() {
 								if (unipackList.isNotEmpty()) {
 									SortBar(
 										vm = totalPanelVM,
+										searchOpen = searchOpen,
+										onSearchClick = { toggleSearch() },
 										onStoreClick = onStoreClick,
 										onLoadUniPackClick = onLoadUniPackClick,
 									)
+									if (searchOpen) {
+										MainSearchField()
+									}
 								}
 
-								LazyColumn(
+								if (visibleList.isEmpty() && unipackList.isNotEmpty()) {
+									NoSearchResults(
+										query = searchQuery,
+										onClearClick = { updateSearchQuery("") },
+										modifier = Modifier.weight(1f),
+									)
+								} else LazyColumn(
 									state = listState,
 									contentPadding = PaddingValues(top = 4.dp, bottom = 6.dp),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
 								) {
 									items(
-										unipackList,
+										visibleList,
 										key = { it.unipack.getPathString() },
 									) { item ->
 										val isSelected =
@@ -669,6 +741,8 @@ class MainActivity : BaseActivity() {
 	@Composable
 	private fun SortBar(
 		vm: MainTotalPanelViewModel,
+		searchOpen: Boolean,
+		onSearchClick: () -> Unit,
 		onStoreClick: () -> Unit,
 		onLoadUniPackClick: () -> Unit,
 	) {
@@ -729,6 +803,22 @@ class MainActivity : BaseActivity() {
 
 			Spacer(Modifier.weight(1f))
 
+			IconButton(
+				onClick = onSearchClick,
+				modifier = Modifier
+					.size(36.dp)
+					.background(
+						if (searchOpen) SkyBlue.copy(alpha = 0.15f) else Color.Transparent,
+						CircleShape,
+					),
+			) {
+				Icon(
+					imageVector = Icons.Filled.Search,
+					contentDescription = stringResource(string.transfer_search),
+					modifier = Modifier.size(20.dp),
+					tint = if (searchOpen) SkyBlue else Gray1,
+				)
+			}
 			IconButton(onClick = onStoreClick, modifier = Modifier.size(36.dp)) {
 				Icon(
 					painter = painterResource(R.drawable.baseline_shopping_basket_white_24),
@@ -744,6 +834,71 @@ class MainActivity : BaseActivity() {
 					modifier = Modifier.size(20.dp),
 					tint = Gray1,
 				)
+			}
+		}
+	}
+
+	@Composable
+	private fun MainSearchField() {
+		val focusRequester = remember { FocusRequester() }
+		val keyboard = LocalSoftwareKeyboardController.current
+		SearchField(
+			query = searchQuery,
+			onQueryChange = { updateSearchQuery(it) },
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
+				.focusRequester(focusRequester),
+		)
+		LaunchedEffect(Unit) {
+			focusRequester.requestFocus()
+			keyboard?.show()
+		}
+	}
+
+	@Composable
+	private fun NoSearchResults(
+		query: String,
+		onClearClick: () -> Unit,
+		modifier: Modifier = Modifier,
+	) {
+		BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+			Column(
+				modifier = Modifier
+					.verticalScroll(rememberScrollState())
+					.fillMaxWidth()
+					.heightIn(min = maxHeight)
+					.padding(16.dp),
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.Center,
+			) {
+				Icon(
+					imageVector = Icons.Filled.Search,
+					contentDescription = null,
+					modifier = Modifier.size(40.dp),
+					tint = Gray1,
+				)
+				Spacer(Modifier.size(12.dp))
+				Text(
+					text = stringResource(string.main_search_no_results, query.trim()),
+					fontSize = 14.sp,
+					color = Gray1,
+					textAlign = TextAlign.Center,
+				)
+				Spacer(Modifier.size(12.dp))
+				TextButton(
+					onClick = onClearClick,
+					modifier = Modifier.background(
+						MaterialTheme.colorScheme.surfaceContainerHighest,
+						RoundedCornerShape(8.dp),
+					),
+				) {
+					Text(
+						text = stringResource(string.main_search_clear),
+						fontSize = 13.sp,
+						color = MaterialTheme.colorScheme.onBackground,
+					)
+				}
 			}
 		}
 	}
@@ -913,6 +1068,7 @@ class MainActivity : BaseActivity() {
 				}
 			},
 			onClick = onItemClick,
+			modifier = Modifier.testTag("main_pack_${item.unipack.id}"),
 		)
 	}
 

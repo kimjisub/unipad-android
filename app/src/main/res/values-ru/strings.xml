@@ -260,6 +260,8 @@
 	<string name="transfer_format_folder">Папка</string>
 	<string name="transfer_format_zip">ZIP</string>
 	<string name="transfer_search">Поиск UniPacks</string>
+	<string name="main_search_no_results">По запросу «%1$s» ничего не найдено</string>
+	<string name="main_search_clear">Очистить поиск</string>
 	<string name="backup_title">Резервная копия</string>
 	<string name="restore_title">Восстановление</string>
 

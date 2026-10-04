@@ -1,0 +1,22 @@
+name: Set up Android checks
+description: Install the pinned toolchain and use service-free test configuration
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+      with:
+        distribution: temurin
+        java-version: '21'
+    - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+      with:
+        cache-read-only: true
+    - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      with:
+        packages: platform-tools
+        log-accepted-android-sdk-licenses: false
+    - name: Install Android SDK packages
+      shell: bash
+      run: sdkmanager --sdk_root="$ANDROID_HOME" 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865' 'cmake;3.22.1'
+    - name: Use test-only Firebase configuration
+      shell: bash
+      run: cp .github/fixtures/google-services.json app/google-services.json
