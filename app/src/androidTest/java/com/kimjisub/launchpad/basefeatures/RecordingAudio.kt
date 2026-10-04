@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Decodes the real fixture WAVs, records the actual runner requests, and never opens a speaker. */
 class RecordingAudio : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
+    val loops = CopyOnWriteArrayList<Int>()
+    val stoppedVoices = CopyOnWriteArrayList<Int>()
     val loaded = ConcurrentHashMap<String, Int>()
     val silences = AtomicInteger()
     val stops = AtomicInteger()
@@ -26,9 +28,10 @@ class RecordingAudio : SoundRunner.Engine {
     override fun unloadSound(soundId: Int) = Unit
     override fun unloadAll() = Unit
     override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
+        loops += loop
         plays += soundId
         return plays.size
     }
-    override fun stopVoice(stopKey: Int) = Unit
+    override fun stopVoice(stopKey: Int) { stoppedVoices += stopKey }
     override fun stopAllVoices() { silences.incrementAndGet() }
 }

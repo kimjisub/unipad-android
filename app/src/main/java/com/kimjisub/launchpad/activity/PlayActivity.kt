@@ -1067,7 +1067,7 @@ class PlayActivity : BaseActivity() {
 				view.setOnTouchListener { _, event ->
 					when (event?.action) {
 						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
-						MotionEvent.ACTION_UP -> vm.padTouch(x, y, false)
+						MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> vm.padTouch(x, y, false)
 					}
 					false
 				}

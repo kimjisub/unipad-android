@@ -62,12 +62,47 @@ sink; this branch retains that file unchanged.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP and shared-code import, result, opening pack | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeShowsFixtureBeforeDownloading`, `acceptedShareDownloadsFixtureShowsSuccessAndImportedPackOpens` | Automatic for actual document picker/import/result/play and share confirmation/download/result/play. Real share service remains separate. |
-| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth` | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input and two simultaneous injected touchscreen pointers. Audible output/latency needs a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth` | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, two simultaneous injected touchscreen pointers, per-pad/all-pointer cancellation, repeated cancellation and re-press, finite-sample release rules and slide-mode cancellation. Audible output/latency needs a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
 | 7. Language, skin, rotation, bars/cutout | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. Run with a cutout profile for cutout coverage; gesture/three-button modes and other form factors need repeated device configurations. |
 | 8. Background/lock/return while playing | `AudioFocusPolicyTest` covers focus policy; transfer lifecycle test covers a different screen | `playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain` | Partial: Home, screen off/on, silence on leave, same activity/viewmodel/process/chain and a new sound request after returning. OS process eviction/OEM lock/power policies need hardware/long-duration checks. |
+
+## Touch cancellation regression (base feature 3)
+
+`twoSimultaneousFingersPlayBothPadsAndReleaseBoth` retains its simultaneous-pointer
+press/release check and then runs three isolated scenarios, each with a fresh synthetic pack:
+
+- `cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain`: dispatches DOWN/CANCEL/UP
+  to each real pad's `touchSpace` view. A single cancelled pad loses its pressed light and
+  looping keyLED execution and requests stopping its infinite voice. With two pad views held,
+  cancelling one preserves the other. Repeated CANCEL and a following UP do not stop the
+  other voice; a fresh press works. Finite samples continue on either UP or CANCEL.
+- `wholeTouchStreamCancellationReleasesBothPads`: injects two touchscreen pointers through
+  `UiAutomation` and cancels their whole stream. Both pressed lights, keyLED executions and
+  infinite voices must release, with one stop request for each voice.
+- `slideTouchCancellationStillReleasesBothPads`: dispatches two pointers and CANCEL through
+  the actual slide overlay and verifies both infinite voices stop, with no extra stop from
+  a repeated CANCEL or following UP.
+
+These are synthetic events delivered to real screen input paths, not physical-finger checks.
+`RecordingAudio.loops` records the requested repeat count; `stoppedVoices` records stop keys
+(including empty key 0 on initial press). The `TouchCancellation` log tag prints the scenarios
+and request snapshots. This is request evidence only, not proof of audible playback or silence.
+Screenshots wait for the actual pad LED drawable to clear and two display frames to draw.
+Captured PNGs include `single-pad-cancel`, `one-of-two-pads-cancel`, `whole-cancel-before`
+and `whole-cancel-after`. Capture the same inputs on the base production code before applying
+the fix; on the base, the pressed light/keyLED remains and no active voice stop is requested.
+
+Run the existing test entry, or run the full 14-test BaseFeaturesSuite as above:
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.TouchPlaybackTest#twoSimultaneousFingersPlayBothPadsAndReleaseBoth \
+  --no-daemon --console=plain
+adb -s "$ANDROID_SERIAL" logcat -d -s TouchCancellation:I '*:S'
+```
 
 ## Fixture and isolation
 
