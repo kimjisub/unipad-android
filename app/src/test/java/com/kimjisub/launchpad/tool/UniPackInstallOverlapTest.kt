@@ -1,5 +1,8 @@
 package com.kimjisub.launchpad.tool
 
+import com.kimjisub.launchpad.analytics.PackImportReport
+import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.analytics.UsageParam
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.PACK_NAME
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.contentHashes
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.expectedHashes
@@ -13,9 +16,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * Two installs of the same name that overlap (leaving the store and opening it again, a code
@@ -101,6 +106,81 @@ class UniPackInstallOverlapTest {
 		assertEquals(expectedHashes("Reopened"), contentHashes(folder))
 		assertEquals(expectedHashes("Existing"), contentHashes(File(env.workspace, PACK_NAME)))
 		assertEquals(listOf(PACK_NAME, folder.name).sorted(), env.workspaceContents())
+	}
+
+	@Test
+	fun cancellationThenReadErrorCleansOnlyItsZipAndAllowsRetry() {
+		writePack(File(env.workspace, PACK_NAME), "Existing")
+		val left = Recorder()
+		val results = java.util.concurrent.CopyOnWriteArrayList<String>()
+		val report = PackImportReport(PackImportSource.STORE) { _, params -> results += params.getValue(UsageParam.RESULT) }
+		val leftScope = env.download(FIRST_URL, left, usage = report)
+		val (reading, fail) = env.gate(FIRST_URL).openBlockedBody(ByteArray(1024) { 7 }, false)
+		try {
+			assertTrue(reading.await(10, TimeUnit.SECONDS))
+			val partial = env.workspace.listFiles()!!.single { it.extension == "zip" }
+			assertEquals(1024L, partial.length())
+			val imported = Recorder()
+			env.finish(env.import(packZip("Imported"), imported))
+			val other = installed(imported)
+			leftScope.cancel()
+			fail.countDown() // The read fails after cancellation, rather than returning a response.
+			env.finish(leftScope)
+			assertNull(left.error)
+			assertEquals(listOf("cancelled"), results.toList())
+			assertNull(left.installedFolder)
+			assertTrue("cancelled partial ZIP must be removed", !partial.exists())
+			assertEquals(expectedHashes("Existing"), contentHashes(File(env.workspace, PACK_NAME)))
+			assertEquals(expectedHashes("Imported"), contentHashes(other))
+			val retry = Recorder()
+			val retryScope = env.download(SECOND_URL, retry)
+			env.gate(SECOND_URL).open(packZip("Retried"))
+			env.finish(retryScope)
+			val retried = installed(retry)
+			assertEquals(expectedHashes("Retried"), contentHashes(retried))
+			assertEquals(listOf(PACK_NAME, other.name, retried.name).sorted(), env.workspaceContents())
+		} finally {
+			fail.countDown()
+			leftScope.cancel()
+			env.finish(leftScope)
+		}
+	}
+
+	@Test
+	fun cancellationStopsWaitingForResponseAndRemovesItsClaimedZip() {
+		val left = Recorder()
+		val scope = env.download(FIRST_URL, left)
+		env.gate(FIRST_URL).awaitRequest()
+		try {
+			scope.cancel()
+			assertTrue(env.gate(FIRST_URL).cancelled.await(1, TimeUnit.SECONDS))
+			env.finish(scope)
+			assertNull(left.error)
+			assertEquals(emptyList<String>(), env.workspaceContents())
+		} finally {
+			env.gate(FIRST_URL).fail()
+			scope.cancel()
+			env.finish(scope)
+		}
+	}
+
+	@Test
+	fun cancellationStopsBlockedReadWithoutWaitingForNetworkTimeout() {
+		val left = Recorder()
+		val scope = env.download(FIRST_URL, left)
+		val (reading, fail) = env.gate(FIRST_URL).openBlockedBody(ByteArray(1024), true)
+		try {
+			assertTrue(reading.await(10, TimeUnit.SECONDS))
+			scope.cancel()
+			assertTrue("cancel must reach the HTTP call immediately", env.gate(FIRST_URL).cancelled.await(1, TimeUnit.SECONDS))
+			env.finish(scope)
+			assertNull(left.error)
+			assertEquals(emptyList<String>(), env.workspaceContents())
+		} finally {
+			fail.countDown()
+			scope.cancel()
+			env.finish(scope)
+		}
 	}
 
 	@Test
