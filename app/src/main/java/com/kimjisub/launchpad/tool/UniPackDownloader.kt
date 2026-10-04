@@ -16,6 +16,10 @@ import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
@@ -83,6 +87,7 @@ class UniPackDownloader(
 			// are written to or deleted.
 			var claimedZip: File? = null
 			var claimedFolder: File? = null
+			var cancellationWatcher: Job? = null
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
@@ -90,6 +95,14 @@ class UniPackDownloader(
 				claimedZip = unipackFile
 
 				val call = FileApi.service.download(url)
+				// Close the socket on the cancelling thread while execute/read blocks this IO thread.
+				cancellationWatcher = launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+					try {
+						awaitCancellation()
+					} finally {
+						call.cancel()
+					}
+				}
 				val response = call.execute()
 				val responseBody = response.body()
 				?: throw IOException("Empty response body (HTTP ${response.code()})")
@@ -97,20 +110,20 @@ class UniPackDownloader(
 					responseBody.close()
 					throw IOException("HTTP ${response.code()}")
 				}
-				val contentLength = responseBody.contentLength()
-				// -1 (chunked) or 0 with no pre-known size gave Infinity% below
-				val fileSize = contentLength.coerceAtLeast(preKnownFileSize).coerceAtLeast(0L)
-				withContext(Dispatchers.Main) {
-					onGetFileSize(
-						fileSize,
-						contentLength,
-						preKnownFileSize
-					)
-				}
-
-				// responseBody.use: a failed openFileDescriptor used to skip the whole block silently
-				// and leak the HTTP body; now it throws and the body is always closed.
 				responseBody.use { body ->
+					ensureActive()
+					val contentLength = responseBody.contentLength()
+					// -1 (chunked) or 0 with no pre-known size gave Infinity% below
+					val fileSize = contentLength.coerceAtLeast(preKnownFileSize).coerceAtLeast(0L)
+					withContext(Dispatchers.Main) {
+						onGetFileSize(
+							fileSize,
+							contentLength,
+							preKnownFileSize
+						)
+					}
+
+					// Always close the HTTP body, including failed callbacks or file opens.
 					val pfd = contentResolver.openFileDescriptor(unipackFile.toUri(), "w")
 						?: throw IOException("Could not open ${unipackFile.path} for writing")
 					pfd.use {
@@ -122,7 +135,9 @@ class UniPackDownloader(
 								var prevPercent = -1
 								var prevMillis = SystemClock.elapsedRealtime()
 								while (true) {
+									ensureActive()
 									n = inputStream.read(buf)
+									ensureActive()
 									if (n == -1)
 										break
 
@@ -175,19 +190,23 @@ class UniPackDownloader(
 				}
 
 				withContext(Dispatchers.Main) { onInstallComplete(folder, unipack) }
+				// The announced pack belongs to the caller now.
+				claimedFolder = null
 
 			} catch (e: CancellationException) {
-				// The hosting scope was cancelled (activity destroyed): remove the half-written
-				// folder, but do not report it as a failure and do not swallow the cancellation.
-				claimedFolder?.let(FileManager::deleteDirectory)
-				claimedZip?.let(FileManager::deleteDirectory)
+				// Do not report cancellation to a screen that has already gone.
 				throw e
 			} catch (e: Exception) {
+				// A cancelled socket read can throw IOException instead of CancellationException.
+				ensureActive()
 				Log.err("Download failed", e)
 				withContext(Dispatchers.Main) { onException(e) }
+			} finally {
+				cancellationWatcher?.cancel()
+				// Non-suspending cleanup cannot be skipped by cancellation or a failing listener.
 				claimedFolder?.let(FileManager::deleteDirectory)
+				claimedZip?.let(FileManager::deleteDirectory)
 			}
-			claimedZip?.let(FileManager::deleteDirectory)
 		}
 	}
 

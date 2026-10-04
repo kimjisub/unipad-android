@@ -29,6 +29,10 @@ import kotlinx.coroutines.withTimeout
 import okhttp3.Request
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
+import okio.Source
+import okio.buffer
+import okhttp3.ResponseBody.Companion.asResponseBody
 import okio.Timeout
 import retrofit2.Call
 import retrofit2.Callback
@@ -38,6 +42,7 @@ import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.concurrent.CompletableFuture
@@ -146,6 +151,38 @@ class PackInstallTestEnv {
 	class Gate {
 		private val entered = CountDownLatch(1)
 		private val response = CompletableFuture<Response<ResponseBody>>()
+		val cancelled = CountDownLatch(1)
+		private var cancelRead: (() -> Unit)? = null
+
+		fun cancel() {
+			cancelled.countDown()
+			response.completeExceptionally(IOException("request cancelled"))
+			cancelRead?.invoke()
+		}
+
+		/** Supplies one chunk, then blocks until the test or cancellation breaks the read. */
+		fun openBlockedBody(received: ByteArray, cancelBreaksRead: Boolean): Pair<CountDownLatch, CountDownLatch> {
+			val reading = CountDownLatch(1)
+			val fail = CountDownLatch(1)
+			if (cancelBreaksRead) cancelRead = { fail.countDown() }
+			val source = object : Source {
+				private var sent = false
+				override fun read(sink: Buffer, byteCount: Long): Long {
+					if (!sent) {
+						sent = true
+						sink.write(received)
+						return received.size.toLong()
+					}
+					reading.countDown()
+					check(fail.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)) { "read was not stopped" }
+					throw IOException("connection broke after cancellation")
+				}
+				override fun timeout() = Timeout.NONE
+				override fun close() {}
+			}
+			response.complete(Response.success(source.buffer().asResponseBody(null, received.size + PROMISED_MORE_BYTES)))
+			return reading to fail
+		}
 
 		fun open(body: ByteArray) {
 			response.complete(Response.success(body.toResponseBody()))
@@ -170,8 +207,8 @@ class PackInstallTestEnv {
 		override fun execute(): Response<ResponseBody> = gate.execute()
 		override fun enqueue(callback: Callback<ResponseBody>) = throw UnsupportedOperationException()
 		override fun isExecuted() = false
-		override fun cancel() {}
-		override fun isCanceled() = false
+		override fun cancel() = gate.cancel()
+		override fun isCanceled() = gate.cancelled.count == 0L
 		override fun clone(): Call<ResponseBody> = this
 		override fun request(): Request = Request.Builder().url("https://test.invalid/").build()
 		override fun timeout(): Timeout = Timeout.NONE
@@ -205,6 +242,7 @@ class PackInstallTestEnv {
 	companion object {
 		const val PACK_NAME = "pack"
 		private const val TIMEOUT_MS = 10_000L
+		private const val PROMISED_MORE_BYTES = 1024L
 
 		/** A minimal valid pack whose every file differs by [title]. */
 		fun packFiles(title: String): Map<String, ByteArray> = mapOf(
