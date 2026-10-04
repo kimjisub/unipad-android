@@ -4,6 +4,12 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -32,6 +38,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.GlobalContext
@@ -59,6 +66,9 @@ import java.util.zip.ZipOutputStream
 /** Real store lifecycle, filesystem and OkHttp socket; only the catalogue and server are local. */
 @RunWith(AndroidJUnit4::class)
 class StoreCancellationDeviceTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     @Test fun leavingStoreStopsReadCleansPartialAndPreservesOtherPacks() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
@@ -107,9 +117,22 @@ class StoreCancellationDeviceTest {
         try {
             main = ActivityScenario.launch(Intent(context, MainActivity::class.java))
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
-            val row = device.wait(Until.findObject(By.text("Cancellation fixture")), 10000)
-            assertNotNull("fixture not shown", row)
-            row!!.click()
+            fun selectFixture() {
+                // The landscape window can still rotate after the permission prompt closes.
+                // Use the real clickable row, synchronized with Compose, rather than cached
+                // screen coordinates from its non-clickable title.
+                compose.waitUntil(10000) {
+                    compose.onAllNodesWithTag("store_pack_$id")
+                        .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
+                }
+                compose.onNodeWithTag("store_pack_$id").assertIsDisplayed().performClick()
+                compose.waitUntil(10000) {
+                    compose.onAllNodesWithTag("store_detail")
+                        .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
+                }
+                compose.onNodeWithTag("store_detail").assertIsDisplayed()
+            }
+            selectFixture()
             fun startDownloadWithoutChangingNotificationPermission() {
                 var notificationDialogExpected = false
                 screen!!.onActivity { activity ->
@@ -117,7 +140,7 @@ class StoreCancellationDeviceTest {
                         context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
                         !activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
-                device.wait(Until.findObject(By.text(context.getString(R.string.download))), 10000)!!.click()
+                compose.onNodeWithText(context.getString(R.string.download)).assertIsDisplayed().performClick()
                 if (notificationDialogExpected) {
                     assertNotNull(device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_deny_button")), 10000))
                     // Dismiss without choosing allow/deny, so subsequent tests retain their
@@ -159,7 +182,7 @@ class StoreCancellationDeviceTest {
             assertEquals(otherBefore, hashes(otherFolder))
             // The local server supplies a complete ZIP on the next request from the real screen.
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
-            device.wait(Until.findObject(By.text("Cancellation fixture")), 10000)!!.click()
+            selectFixture()
             startDownloadWithoutChangingNotificationPermission()
             assertNotNull(device.wait(Until.findObject(By.text(context.getString(R.string.downloaded))), 10000))
             val retried = File(workspace, id)
