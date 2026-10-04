@@ -5,10 +5,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -140,7 +142,8 @@ class StoreCancellationDeviceTest {
                         context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
                         !activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
-                compose.onNodeWithText(context.getString(R.string.download)).assertIsDisplayed().performClick()
+                compose.onNode(hasText(context.getString(R.string.download)) and
+                    hasAnyAncestor(hasTestTag("store_detail"))).assertIsDisplayed().performClick()
                 if (notificationDialogExpected) {
                     assertNotNull(device.wait(Until.findObject(By.res("com.android.permissioncontroller", "permission_deny_button")), 10000))
                     // Dismiss without choosing allow/deny, so subsequent tests retain their
@@ -184,7 +187,13 @@ class StoreCancellationDeviceTest {
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
             selectFixture()
             startDownloadWithoutChangingNotificationPermission()
-            assertNotNull(device.wait(Until.findObject(By.text(context.getString(R.string.downloaded))), 10000))
+            val downloaded = hasText(context.getString(R.string.downloaded)) and
+                hasAnyAncestor(hasTestTag("store_detail"))
+            compose.waitUntil(10000) {
+                compose.onAllNodes(downloaded)
+                    .fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
+            }
+            compose.onNode(downloaded).assertIsDisplayed()
             val retried = File(workspace, id)
             assertEquals("Retried", UniPackFolder(retried).load().title)
             assertEquals(hashesFrom(files("Retried")), hashes(retried))
@@ -193,6 +202,9 @@ class StoreCancellationDeviceTest {
             assertFalse(partial.exists())
             capture("retried")
             evidence("PASS retried=${hashes(retried)} other=${hashes(otherFolder)} existing=${hashes(existing)}")
+        } catch (error: Throwable) {
+            capture("failed")
+            throw error
         } finally {
             evidence("final-files=" + workspace.listFiles().orEmpty().filter { it.name.startsWith(id) }.map { "${it.name}:${it.length()}" })
             server.breakRead.countDown()
