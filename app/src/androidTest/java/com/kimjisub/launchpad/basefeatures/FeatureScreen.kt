@@ -14,11 +14,12 @@ import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Condition
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
-import androidx.test.uiautomator.Until
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestUniPack
@@ -42,15 +43,29 @@ class FeatureScreen {
     private val scenarios = mutableListOf<ActivityScenario<out Activity>>()
 
     fun text(id: Int) = context.getString(id)
-    fun node(selector: BySelector): UiObject2 = device.wait(Until.findObject(selector), 10000)
+    /** Animated play controls never become idle; readiness is checked by the caller's condition. */
+    private fun <T> withResponsiveInput(block: () -> T): T {
+        val configurator = Configurator.getInstance()
+        val previous = configurator.waitForIdleTimeout
+        configurator.waitForIdleTimeout = minOf(previous, 500L)
+        return try { block() } finally { configurator.waitForIdleTimeout = previous }
+    }
+    /** A window/locale transition can leave UiAutomation's previous tree cached during transitions. */
+    private fun freshNode(selector: BySelector): UiObject2? = withResponsiveInput {
+        if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
+        device.findObject(selector)
+    }
+    fun node(selector: BySelector): UiObject2 = device.wait(
+        Condition<UiDevice, UiObject2?> { freshNode(selector) }, 10000
+    )
         ?: run { capture("missing-node-${SystemClock.uptimeMillis()}"); throw AssertionError("Missing $selector") }
     /** Locale changes recreate Settings; reacquire its scroll container for every gesture. */
     fun scrollTo(selector: BySelector, direction: Direction): UiObject2 {
         val deadline = SystemClock.elapsedRealtime() + 10000
         while (SystemClock.elapsedRealtime() < deadline) {
-            device.findObject(selector)?.let { return it }
+            freshNode(selector)?.let { return it }
             try {
-                device.findObject(By.scrollable(true))?.scroll(direction, 0.8f)
+                freshNode(By.pkg(context.packageName).scrollable(true))?.scroll(direction, 0.8f)
             } catch (_: StaleObjectException) {
                 // The screen was replaced during this gesture; the next iteration finds it again.
             }
@@ -59,8 +74,39 @@ class FeatureScreen {
         capture("missing-scroll-node-${SystemClock.uptimeMillis()}")
         throw AssertionError("Missing $selector after scrolling $direction")
     }
-    fun clickText(id: Int) = node(By.text(text(id))).click()
-    fun clickDescription(id: Int) = node(By.desc(text(id))).click()
+    /** Reacquire only if the window replaced the node before input was injected. */
+    fun click(selector: BySelector) = withResponsiveInput {
+        val deadline = SystemClock.elapsedRealtime() + 10000
+        do {
+            try {
+                freshNode(selector)?.let { it.click(); return@withResponsiveInput }
+            } catch (_: StaleObjectException) {
+                // No click was injected; retry against the current window, inside the same budget.
+            }
+            SystemClock.sleep(25)
+        } while (SystemClock.elapsedRealtime() < deadline)
+        capture("missing-click-node-${SystemClock.uptimeMillis()}")
+        throw AssertionError("Could not click $selector")
+    }
+    fun clickText(id: Int) = click(By.text(text(id)))
+    fun clickDescription(id: Int) = click(By.desc(text(id)))
+    fun awaitActivity(type: Class<out Activity>, language: String? = null) {
+        await("${type.simpleName} window did not become ready (language=$language)") {
+            val laidOut = onMain {
+                val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(Stage.RESUMED).singleOrNull()
+                val decor = activity?.window?.decorView
+                type.isInstance(activity) && decor != null &&
+                    decor.isShown && decor.isLaidOut && decor.width > 0 && decor.height > 0 &&
+                    (language == null || activity.resources.configuration.locales[0].language == language)
+            }
+            // An app dialog can own focus while the underlying activity remains resumed.
+            laidOut && (onMain { resumed().window.decorView.hasWindowFocus() } ||
+                instrumentation.uiAutomation.windows.any { window ->
+                    window.isFocused && window.root?.packageName == context.packageName
+                })
+        }
+    }
     fun await(message: String, check: () -> Boolean) = await({ message }, check)
     /** [message] is built only on failure, after the last check, so it can report the final state. */
     fun await(message: () -> String, check: () -> Boolean) {
@@ -70,7 +116,10 @@ class FeatureScreen {
             SystemClock.sleep(25)
         }
         val passed = check()
-        assertTrue(message(), passed)
+        if (!passed) {
+            capture("missing-ready-${SystemClock.uptimeMillis()}")
+            throw AssertionError(message())
+        }
     }
     fun <T> onMain(block: () -> T): T {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) return block()
@@ -86,6 +135,7 @@ class FeatureScreen {
     fun <T : Activity> launch(type: Class<T>, configure: Intent.() -> Unit = {}): ActivityScenario<T> {
         val scenario = ActivityScenario.launch<T>(Intent(context, type).apply(configure))
         scenarios += scenario
+        awaitActivity(type)
         return scenario
     }
     fun openPlay(folder: File = pack()) {
@@ -134,6 +184,18 @@ class FeatureScreen {
     fun capture(name: String) {
         val folder = File(context.getExternalFilesDir(null), "basefeatures-captures").apply { mkdirs() }
         assertTrue("Screenshot was not saved", device.takeScreenshot(File(folder, "$name.png")))
+        if (name.startsWith("missing-")) {
+            File(folder, "$name-state.txt").writeText(onMain {
+                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .joinToString("\n") { activity ->
+                        val decor = activity.window.decorView
+                        "${activity.javaClass.name} locale=${activity.resources.configuration.locales} " +
+                            "focus=${decor.hasWindowFocus()} shown=${decor.isShown} " +
+                            "laidOut=${decor.isLaidOut} size=${decor.width}x${decor.height}"
+                    }
+            })
+            device.dumpWindowHierarchy(File(folder, "$name.xml"))
+        }
     }
     fun pack() = File(workspace, PACK_ID)
     fun install(): File {

@@ -51,6 +51,29 @@ full optimization. Archive `dumpsys package dexopt` with the run output.
 No baseline fixture is downloaded. Screenshots are saved in the target app's external files under
 `basefeatures-captures/`; pull that directory using the same serial before returning the device.
 
+## Screen transition synchronization
+
+`FeatureScreen` retains the 10-second node, scroll and state deadlines. On API 34+,
+queries clear `UiAutomation`'s accessibility cache before reading the current window;
+locale recreation, rotation and DocumentsUI replacement can otherwise leave a previous
+window or null child nodes in the cached tree. Click helpers reacquire only on a stale
+node, within the same deadline. Query and click operations temporarily cap UI Automator's
+implicit idle wait at 500 ms, as the legacy helper does: playing animation can continue
+producing accessibility events and replace a node during the default 10-second idle wait.
+The explicit 10-second checks and their expected controls remain unchanged; the previous
+idle setting is restored after each operation. Launches wait for the resumed activity
+to be laid out and for its window or an app-owned dialog to have focus before querying
+controls. A missing-node capture also saves the hierarchy and
+resumed activity's locale, layout size and focus state.
+
+The language/skin check waits for the initial Settings window to be laid out and focused,
+and for the requested locale to reach a ready Settings window before scrolling. It still
+checks Korean and English text, fresh-screen scroll position, the requested skin preference after the Apply handler runs and
+rendered pad pixels. The ZIP check always opens the real picker drawer, selects Downloads
+inside that drawer and confirms the Downloads toolbar before selecting the ZIP. It still
+checks the result text, pack title, Play now action and imported pack id; a result dialog
+owns focus, so MainActivity focus is not a prerequisite for inspecting that dialog.
+
 ## Existing coverage and the gaps this suite fills
 
 Existing coverage is an inventory, not a claim that the entire legacy suite passed in this change.
