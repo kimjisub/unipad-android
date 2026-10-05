@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -295,7 +296,11 @@ class PlayActivity : BaseActivity() {
 		vm.enable = true
 		reportScreenLayout()
 		addOnConfigurationChangedListener { reportScreenLayout(configuration = it) }
-		addOnMultiWindowModeChangedListener { reportScreenLayout(multiWindow = it.isInMultiWindowMode) }
+		addOnMultiWindowModeChangedListener {
+			// Before API 26 the callback has no new configuration; the configuration change that follows corrects the size.
+			val configuration = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) it.newConfig else resources.configuration
+			reportScreenLayout(configuration, it.isInMultiWindowMode)
+		}
 
 		val path = intent.getStringExtra("path") ?: run {
 			finish()

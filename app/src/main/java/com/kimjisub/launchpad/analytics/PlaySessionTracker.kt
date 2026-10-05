@@ -11,7 +11,7 @@ package com.kimjisub.launchpad.analytics
  * Going to the background and coming back stays in the same session; only leaving the screen for
  * good ends it, so the `play_end` duration includes time spent in the background.
  *
- * `play_start` also carries the [ScreenLayout] last reported by [screenLayoutChanged], when there is one.
+ * `play_start` also carries the last known [ScreenLayout] from [screenLayoutChanged], when there is one.
  *
  * Durations come from [nanoTime], which must be monotonic.
  */
@@ -34,8 +34,11 @@ class PlaySessionTracker internal constructor(
 	private var humanInputRecorded = false
 	private var screenLayout: ScreenLayout? = null
 
-	/** The play screen's window was laid out anew: created, rotated, resized or moved in or out of multi-window. */
-	fun screenLayoutChanged(layout: ScreenLayout?) = synchronized(lock) { screenLayout = layout }
+	/**
+	 * The play screen's window was laid out anew: created, rotated, resized or moved in or out of
+	 * multi-window. A null layout (a moment of undefined size) keeps the one known before.
+	 */
+	fun screenLayoutChanged(layout: ScreenLayout?) = synchronized(lock) { if (layout != null) screenLayout = layout }
 
 	fun loadStarted() = transition {
 		if (state is State.Idle) state = State.Loading(nanoTime())

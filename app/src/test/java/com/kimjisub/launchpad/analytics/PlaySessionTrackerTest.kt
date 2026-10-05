@@ -193,8 +193,27 @@ class PlaySessionTrackerTest {
 	}
 
 	@Test
-	fun playStartWithoutAKnownLayoutCarriesOnlyItsTrigger() {
+	fun aMomentOfUndefinedSizeKeepsTheLayoutKnownBefore() {
 		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		session.screenLayoutChanged(ScreenLayout.of(0, 0, false))
+		session.loadStarted()
+		session.loadSucceeded()
+		session.playTriggered(PlayTrigger.AUTOPLAY)
+
+		assertEquals(
+			sink.pack(
+				UsageEvent.PLAY_START,
+				UsageParam.TRIGGER to "autoplay",
+				UsageParam.ORIENTATION to "landscape",
+				UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
+				UsageParam.WINDOW_MODE to "full_screen",
+			),
+			sink.named(UsageEvent.PLAY_START).single(),
+		)
+	}
+
+	@Test
+	fun playStartWithoutAKnownLayoutCarriesOnlyItsTrigger() {
 		session.screenLayoutChanged(null)
 		session.loadStarted()
 		session.loadSucceeded()
