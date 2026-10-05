@@ -7,7 +7,6 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
-import io.mockk.clearMocks
 import io.mockk.clearStaticMockk
 import io.mockk.every
 import io.mockk.mockk
@@ -20,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
@@ -41,7 +41,8 @@ import kotlin.concurrent.thread
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelPressLedRaceTest {
-	// Include cleanup in the deadline: stop() also takes the runner's delivery lock.
+	// Only a deadlock should reach this: JUnit abandons a timed-out test on a thread that keeps running and
+	// later resets Dispatchers.Main under the next test. Slowness is caught first by TRIALS_DEADLINE_SECONDS.
 	@get:Rule
 	val timeout: Timeout = Timeout.seconds(180)
 
@@ -51,6 +52,29 @@ class PlayActivityViewModelPressLedRaceTest {
 		const val PAD = 3
 		const val LED_VELOCITY = 45
 		const val TICK_PAUSE_NANOS = 20_000L
+		const val TRIALS_DEADLINE_SECONDS = 120L
+	}
+
+	/** A pack whose only animation is the blink on (0,0); a MockK pack spends most of each press in reflection. */
+	private class BlinkPack(blink: LedAnimation) : UniPack() {
+		override val id = "press-led-race"
+		override val keyLedExist = true
+
+		init {
+			buttonX = 8
+			buttonY = 8
+			chain = 1
+			ledAnimationTable = Array(1) { Array(8) { arrayOfNulls<ArrayDeque<LedAnimation>>(8) } }
+				.also { it[0][0][0] = ArrayDeque(listOf(blink)) }
+		}
+
+		override fun lastModified() = 0L
+		override fun loadInfo() = this
+		override fun loadDetail() = this
+		override fun checkFile() {}
+		override fun delete() = false
+		override fun getPathString() = ""
+		override fun getByteSize() = 0L
 	}
 
 	private val main = FakeMainDispatcher()
@@ -97,14 +121,7 @@ class PlayActivityViewModelPressLedRaceTest {
 			loop,
 			0,
 		)
-		unipack = mockk<UniPack>(relaxed = true)
-		every { unipack.buttonX } returns 8
-		every { unipack.buttonY } returns 8
-		every { unipack.chain } returns 1
-		every { unipack.keyLedExist } returns true
-		every { unipack.autoPlayExist } returns false
-		every { unipack.soundTable } returns null
-		every { unipack.ledGet(any(), any(), any()) } answers { if (secondArg<Int>() == 0 && thirdArg<Int>() == 0) blink else null }
+		unipack = BlinkPack(blink)
 
 		vm = PlayActivityViewModel(mockk<UnipackRepository>())
 		vm.unipack = unipack
@@ -129,9 +146,11 @@ class PlayActivityViewModelPressLedRaceTest {
 	private fun pressWhileTheSamePadBlinks(): Int {
 		var mismatches = 0
 		var firstMismatch: String? = null
+		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TRIALS_DEADLINE_SECONDS)
 		repeat(TRIALS) { trial ->
+			// Fails on this thread, after the trial's worker has stopped, so tearDown runs before the next test.
+			assertTrue("only $trial of $TRIALS trials ran in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
 			// MockK keeps every call it answers; without this the trials run out of heap.
-			clearMocks(unipack, answers = false, recordedCalls = true, childMocks = false, verificationMarks = false, exclusionRules = false)
 			clearStaticMockk(SystemClock::class, answers = false, recordedCalls = true, childMocks = false)
 			sentToPad.clear()
 			runner.eventOn(0, 0)
