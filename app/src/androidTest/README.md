@@ -145,8 +145,9 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 The expected number of tests is the count of `@Test` annotations in each module's
 `src/androidTest`; print it with `python3 scripts/check_connected_results.py --expected-only app design`.
 A green report with fewer discovered tests is insufficient: Gradle can finish successfully when
-the app APK failed to install and no app test ran. `bash scripts/ci-connected-tests.sh` (used by
-CI) clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
+the app APK failed to install and no app test ran. GitHub CI does not run the UI suite; run
+`ANDROID_SERIAL=<device> bash scripts/ci-connected-tests.sh` on a local emulator before pushing.
+It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
 number with no failure, error or skip and Gradle printed no install failure. It records the counts
 and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlapDeviceTest` is
 filtered by `@SdkSuppress`, so that script expects an API 29+ device.
