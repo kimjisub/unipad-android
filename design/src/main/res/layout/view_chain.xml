@@ -24,7 +24,8 @@
 		android:id="@+id/touchSpace"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
+		android:background="@drawable/focus_ring"
 		android:clickable="true"
-		android:focusable="true" />
+		android:focusable="false" />
 
 </RelativeLayout>
