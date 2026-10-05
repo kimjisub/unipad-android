@@ -27,8 +27,14 @@ object UsageParam {
 	const val ERROR_TYPE = "error_type"
 	const val DURATION_BUCKET = "duration_bucket"
 	const val TRIGGER = "trigger"
+	const val ORIENTATION = "orientation"
+	const val SCREEN_SHORT_SIDE = "screen_short_side"
+	const val WINDOW_MODE = "window_mode"
 
-	val allowed: Set<String> = setOf(RESULT, IMPORT_SOURCE, ERROR_TYPE, DURATION_BUCKET, TRIGGER)
+	val allowed: Set<String> = setOf(
+		RESULT, IMPORT_SOURCE, ERROR_TYPE, DURATION_BUCKET, TRIGGER,
+		ORIENTATION, SCREEN_SHORT_SIDE, WINDOW_MODE,
+	)
 }
 
 enum class UsageResult(val value: String) {
