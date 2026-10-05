@@ -9,8 +9,8 @@ class PlayLayoutTest {
 
 	private val strip = 56
 
-	private fun square(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0) =
-		PlayLayout.buttonSize(width, height, rows, columns, square = true, chainRows = chainRows, sideStrip = strip)
+	private fun square(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0, margin: Int = strip) =
+		PlayLayout.buttonSize(PlayLayout.Area(width, height, margin), rows, columns, square = true, chainRows = chainRows)
 
 	/** Pads, chain columns and menu strip side by side; returns the grid's left edge. */
 	private fun assertCentredAndClear(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0) {
@@ -47,10 +47,28 @@ class PlayLayoutTest {
 
 	@Test
 	fun nonSquarePads_useRowsAndColumnsOfTheirOwnAxis() {
-		val size = PlayLayout.buttonSize(900, 400, rows = 8, columns = 10, square = false, chainRows = 0, sideStrip = strip)
+		val size = PlayLayout.buttonSize(PlayLayout.Area(900, 400, strip), rows = 8, columns = 10, square = false, chainRows = 0)
 		assertEquals((900 - 2 * strip) / 10, size.x)
 		assertEquals(400 / 8, size.y)
 		assertCentredAndClear(900, 400, rows = 8, columns = 10)
+	}
+
+	@Test
+	fun sideMargin_isTheWiderOfTheCutoutAndTheMenuStripWithWhatIsBesideIt() {
+		assertEquals(strip, PlayLayout.sideMargin(insetLeft = 0, insetRight = 0, menuStrip = strip))
+		// Camera on the left: the strip on the right already needs more.
+		assertEquals(strip, PlayLayout.sideMargin(insetLeft = 52, insetRight = 0, menuStrip = strip))
+		assertEquals(80, PlayLayout.sideMargin(insetLeft = 80, insetRight = 0, menuStrip = strip))
+		// Camera or a 3-button bar on the right: the strip sits inside it.
+		assertEquals(52 + strip, PlayLayout.sideMargin(insetLeft = 0, insetRight = 52, menuStrip = strip))
+	}
+
+	@Test
+	fun cutoutOnTheLeft_doesNotShrinkA16x9Phone() {
+		// 731 x 411 dp landscape minus the 8 dp padding: the strip alone sets the margin.
+		val margin = PlayLayout.sideMargin(insetLeft = 52, insetRight = 0, menuStrip = strip)
+		assertEquals(395 / 8, square(715, 395, margin = margin).min)
+		assertCentredAndClear(715, 395)
 	}
 
 	@Test
