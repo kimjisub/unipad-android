@@ -26,6 +26,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.abs
 
 /**
  * PlayActivity Tests
@@ -80,7 +81,7 @@ class PlayActivityTest : BaseUITest() {
     }
 
     /** Play screen geometry read from the view tree: [padArea] of the helper reads the same actual native bounds. */
-    private class PlayGeometry(val safe: Rect, val pads: Rect, val chains: List<Rect>)
+    private data class PlayGeometry(val window: Rect, val safe: Rect, val pads: Rect, val chains: List<Rect>)
 
     /**
      * Pad grid and chain buttons on screen, and the area not covered by system bars or the display
@@ -94,7 +95,8 @@ class PlayActivityTest : BaseUITest() {
             val decor = activity.window.decorView
             val insets = ViewCompat.getRootWindowInsets(decor)
                 ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            val safe = screenBounds(decor).apply {
+            val window = screenBounds(decor)
+            val safe = Rect(window).apply {
                 if (insets != null) {
                     left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom
                 }
@@ -108,7 +110,7 @@ class PlayActivityTest : BaseUITest() {
             collect(decor)
             val pads = shown.filterIsInstance<PadView>().map(::screenBounds)
                 .reduceOrNull { acc, r -> Rect(acc).apply { union(r) } } ?: Rect()
-            geometry = PlayGeometry(safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
+            geometry = PlayGeometry(window, safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
         }
         return geometry!!
     }
@@ -751,8 +753,77 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    /**
+     * The display is resized under the open play screen, as rotation and split screen resize its
+     * window without recreating it: a Redmi 13 sized 20:9 panel with a punch-hole camera, a 16:9
+     * phone, the 800 x 637 dp lower half of a split tablet, and 16:9 again after it.
+     */
+    @Test
+    fun testPadGridStaysCentredWhenTheWindowChanges() {
+        val holeWasOn = device.executeShellCommand("cmd overlay list").lines()
+            .any { it.startsWith("[x]") && it.endsWith(HOLE_CUTOUT) }
+        enterPlay()
+        try {
+            assertPlayLayout("initial")
+            device.executeShellCommand("cmd overlay enable $HOLE_CUTOUT")
+            for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
+                device.executeShellCommand("wm size $size")
+                assertPlayLayout(name)
+            }
+        } finally {
+            device.executeShellCommand("wm size reset")
+            if (!holeWasOn) device.executeShellCommand("cmd overlay disable $HOLE_CUTOUT")
+        }
+        assertPlayLayout("restored")
+        quitPlayToMain()
+    }
+
+    /** Geometry once the resized window has been laid out: the same reading twice in a row. */
+    private fun settledGeometry(): PlayGeometry {
+        var last: PlayGeometry? = null
+        var settled: PlayGeometry? = null
+        waitUntil(10000L) {
+            val now = playGeometry()
+            if (now == last && !now.pads.isEmpty) settled = now
+            last = now
+            settled != null
+        }
+        assertNotNull("Play screen layout never settled", settled)
+        return settled!!
+    }
+
+    private fun assertPlayLayout(name: String) {
+        Thread.sleep(500)
+        val geometry = settledGeometry()
+        takeScreenshot("pad_grid_$name")
+        val density = context.resources.displayMetrics.density
+        val label = "$name ${geometry.window.width()}x${geometry.window.height()}"
+
+        val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / density
+        assertTrue("$label: pad grid is ${offCentreDp}dp off the window's centre line", offCentreDp <= CENTRE_TOLERANCE_DP)
+        assertInside(geometry.safe, "$label: pad grid", geometry.pads)
+        assertTrue("$label: chain buttons not found", geometry.chains.isNotEmpty())
+        geometry.chains.forEachIndexed { i, chain ->
+            assertInside(geometry.safe, "$label: chain button ${i + 1}", chain)
+            assertTrue("$label: chain button ${i + 1} $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
+        }
+        val menu = device.findObject(By.desc(str(R.string.menu)))?.visibleBounds
+        assertNotNull("$label: menu button not found", menu)
+        assertInside(geometry.safe, "$label: menu button", menu!!)
+        val padsAndChains = geometry.chains + geometry.pads
+        padsAndChains.forEach { assertTrue("$label: menu $menu covers $it", !Rect.intersects(menu, it)) }
+        val logo = device.findObject(By.res("play_logo"))?.visibleBounds
+        assertNotNull("$label: logo not shown", logo)
+        (padsAndChains + menu).forEach { assertTrue("$label: logo $logo is covered by $it", !Rect.intersects(logo!!, it)) }
+    }
+
     private fun openPlayOptionsWithBack() {
         device.pressBack()
         assertTrue("Back did not open the play option panel", waitUntil { isPlayOptionsOpen() })
+    }
+
+    private companion object {
+        const val HOLE_CUTOUT = "com.android.internal.display.cutout.emulation.hole"
+        const val CENTRE_TOLERANCE_DP = 1f
     }
 }
