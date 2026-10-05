@@ -9,7 +9,8 @@ import org.junit.Assert.assertTrue
 /**
  * One multi-finger touchscreen gesture injected through UiAutomation, so it reaches the app
  * through the same window dispatch as a real screen: ACTION_DOWN / POINTER_DOWN / MOVE /
- * POINTER_UP / UP. Pointer ids are reused lowest-first, as touchscreen drivers do.
+ * POINTER_UP / UP. Pointer ids are reused lowest-first and kept in id order, as touchscreen
+ * drivers do.
  */
 class Fingers(private val screen: FeatureScreen) {
     private class Finger(val id: Int, var x: Float, var y: Float)
@@ -20,8 +21,9 @@ class Fingers(private val screen: FeatureScreen) {
     /** Puts a new finger down and returns its pointer id. */
     fun down(at: Point): Int {
         val id = generateSequence(0) { it + 1 }.first { id -> fingers.none { it.id == id } }
-        fingers += Finger(id, at.x.toFloat(), at.y.toFloat())
-        inject(if (fingers.size == 1) MotionEvent.ACTION_DOWN else pointerAction(MotionEvent.ACTION_POINTER_DOWN, fingers.lastIndex))
+        val index = fingers.indexOfFirst { it.id > id }.takeIf { it >= 0 } ?: fingers.size
+        fingers.add(index, Finger(id, at.x.toFloat(), at.y.toFloat()))
+        inject(if (fingers.size == 1) MotionEvent.ACTION_DOWN else pointerAction(MotionEvent.ACTION_POINTER_DOWN, index))
         return id
     }
 

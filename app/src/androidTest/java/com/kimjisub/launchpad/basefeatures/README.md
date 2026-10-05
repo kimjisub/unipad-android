@@ -91,7 +91,9 @@ input modes: Slide Mode off (the first-install default; each pad takes its own t
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 A palm that touches the margin *before* any pad currently stops every pad from playing until all
 fingers lift; that case is tracked as a product fault and its test joins the suite with the fix.
-Input cancelled by the system (G) and lifting after a chain change (H) are tracked separately.
+Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
+down (for example when the app leaves the screen), and H, lifting a finger after the chain
+changed. Their fixes are being made separately and their tests join the suite with them.
 Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## Fixture and isolation

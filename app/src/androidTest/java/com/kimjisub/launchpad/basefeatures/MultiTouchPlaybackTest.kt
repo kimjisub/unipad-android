@@ -3,8 +3,8 @@ package com.kimjisub.launchpad.basefeatures
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.SystemClock
-import android.view.View
-import android.view.WindowInsets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.design.view.SlideTouchOverlayView
@@ -53,7 +53,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
         assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
         val overlay = screen.onMain {
-            screen.views(screen.resumed().window.decorView).any { it is SlideTouchOverlayView && it.visibility == View.VISIBLE }
+            screen.views(screen.resumed().window.decorView).any { it is SlideTouchOverlayView }
         }
         assertEquals("Slide Mode layer visibility must match the mode under test", slideMode, overlay)
         fingers = Fingers(screen)
@@ -61,18 +61,21 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
 
     protected fun center(cell: Cell): Point = screen.padBounds()[cell.x * GRID + cell.y].let { Point(it.centerX(), it.centerY()) }
 
-    private fun pressed(cell: Cell) = screen.vm().channelManager.get(cell.x, cell.y)?.channel == Channel.PRESSED
-
-    protected fun awaitLights(message: String, lit: Set<Cell>) = screen.await("$message (expected lit: $lit, lit: ${litCells()})") {
-        screen.onMain { (0 until GRID).all { x -> (0 until GRID).all { y -> pressed(Cell(x, y)) == Cell(x, y) in lit } } }
+    protected fun awaitLights(message: String, lit: Set<Cell>) {
+        var last = emptySet<Cell>()
+        screen.await({ "$message (expected lit: $lit, lit: $last)" }) { litCells().also { last = it } == lit }
     }
 
-    private fun litCells() = screen.onMain {
-        (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }.filter(::pressed)
+    private fun litCells(): Set<Cell> = screen.onMain {
+        val channels = screen.vm().channelManager
+        (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }
+            .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }
+            .toSet()
     }
 
-    protected fun awaitPlays(message: String, count: Int) = screen.await("$message (expected $count, got ${audio.plays.size})") {
-        audio.plays.size == count
+    protected fun awaitPlays(message: String, count: Int) {
+        var last = 0
+        screen.await({ "$message (expected $count, got $last)" }) { audio.plays.size.also { last = it } == count }
     }
 
     /** For checks that something did NOT happen: lets queued input and runner work finish first. */
@@ -85,7 +88,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     protected fun assertStill(message: String, plays: Int, lit: Set<Cell>) {
         settle()
         assertEquals("$message: sound requests", plays, audio.plays.size)
-        assertEquals("$message: pressed lights", lit, litCells().toSet())
+        assertEquals("$message: pressed lights", lit, litCells())
     }
 
     /** B: a five-finger chord plays every pad and lights each one. */
@@ -171,16 +174,20 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         val views = screen.views(root)
         val buttons = views.filter { it is PadView || it is ChainView }.map(screen::bounds)
         val pads = views.filterIsInstance<PadView>().map(screen::bounds)
-        val grid = Rect(buttons.first()).apply { buttons.forEach { union(it) } }
+        val grid = union(buttons)
         val margin = (MARGIN_DP * screen.context.resources.displayMetrics.density).toInt()
-        val gestures = root.rootWindowInsets.getInsets(WindowInsets.Type.systemGestures() or WindowInsets.Type.displayCutout())
-        val from = gestures.left + margin
+        // Insets are relative to the window; pad bounds are on screen coordinates.
+        val gestures = ViewCompat.getRootWindowInsets(root)!!
+            .getInsets(WindowInsetsCompat.Type.systemGestures() or WindowInsetsCompat.Type.displayCutout())
+        val from = screen.bounds(root).left + gestures.left + margin
         val to = grid.left - margin
         assertTrue("No screen margin beside the pads on this device (from $from to $to)", from < to)
-        val point = Point((from + to) / 2, Rect(pads.first()).apply { pads.forEach { union(it) } }.centerY())
+        val point = Point((from + to) / 2, union(pads).centerY())
         assertTrue("Edge point $point lands on a pad or chain", buttons.none { it.contains(point.x, point.y) })
         point
     }
+
+    private fun union(rects: List<Rect>) = Rect(rects.first()).apply { rects.forEach { union(it) } }
 
     private companion object {
         const val GRID = 8
