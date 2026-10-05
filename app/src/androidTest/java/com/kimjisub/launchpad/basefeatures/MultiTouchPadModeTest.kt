@@ -5,9 +5,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Slide Mode off (first-install default): each pad takes its own touches, so a finger stays bound
- * to the pad it first pressed and dragging plays nothing new. Two simultaneous fingers (A) are
- * covered in this mode by [TouchPlaybackTest.twoSimultaneousFingersPlayBothPadsAndReleaseBoth].
+ * Slide Mode off (first-install default): a finger stays bound to the pad it first pressed and
+ * dragging plays nothing new. Two simultaneous fingers (A) are covered in this mode by
+ * [TouchPlaybackTest.twoSimultaneousFingersPlayBothPadsAndReleaseBoth].
  */
 @RunWith(AndroidJUnit4::class)
 class MultiTouchPadModeTest : MultiTouchPlaybackTest(slideMode = false) {
