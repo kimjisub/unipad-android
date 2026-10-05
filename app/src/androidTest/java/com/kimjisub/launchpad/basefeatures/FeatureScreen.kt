@@ -21,6 +21,7 @@ import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.ActivityReadiness
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestUniPack
 import com.kimjisub.launchpad.activity.PlayActivity
@@ -91,22 +92,9 @@ class FeatureScreen {
     fun clickText(id: Int) = click(By.text(text(id)))
     fun clickDescription(id: Int) = click(By.desc(text(id)))
     fun awaitActivity(type: Class<out Activity>, language: String? = null) {
-        await("${type.simpleName} window did not become ready (language=$language)") {
-            val laidOut = onMain {
-                val activity = ActivityLifecycleMonitorRegistry.getInstance()
-                    .getActivitiesInStage(Stage.RESUMED).singleOrNull()
-                val decor = activity?.window?.decorView
-                type.isInstance(activity) && decor != null &&
-                    decor.isShown && decor.isLaidOut && decor.width > 0 && decor.height > 0 &&
-                    (language == null || activity.resources.configuration.locales[0].language == language)
-            }
-            // An app dialog can own focus while the underlying activity remains resumed.
-            laidOut && (onMain { resumed().window.decorView.hasWindowFocus() } ||
-                instrumentation.uiAutomation.windows.any { window ->
-                    window.isFocused && window.root?.packageName == context.packageName
-                })
-        }
+        ActivityReadiness.await(context, device, 10000, type, language)
     }
+
     fun await(message: String, check: () -> Boolean) = await({ message }, check)
     /** [message] is built only on failure, after the last check, so it can report the final state. */
     fun await(message: () -> String, check: () -> Boolean) {
@@ -185,16 +173,7 @@ class FeatureScreen {
         val folder = File(context.getExternalFilesDir(null), "basefeatures-captures").apply { mkdirs() }
         assertTrue("Screenshot was not saved", device.takeScreenshot(File(folder, "$name.png")))
         if (name.startsWith("missing-")) {
-            File(folder, "$name-state.txt").writeText(onMain {
-                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-                    .joinToString("\n") { activity ->
-                        val decor = activity.window.decorView
-                        "${activity.javaClass.name} locale=${activity.resources.configuration.locales} " +
-                            "focus=${decor.hasWindowFocus()} shown=${decor.isShown} " +
-                            "laidOut=${decor.isLaidOut} size=${decor.width}x${decor.height}"
-                    }
-            })
-            device.dumpWindowHierarchy(File(folder, "$name.xml"))
+            ActivityReadiness.captureState(context, device, folder, name)
         }
     }
     fun pack() = File(workspace, PACK_ID)

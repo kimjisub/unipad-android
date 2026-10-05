@@ -61,9 +61,11 @@ node, within the same deadline. Query and click operations temporarily cap UI Au
 implicit idle wait at 500 ms, as the legacy helper does: playing animation can continue
 producing accessibility events and replace a node during the default 10-second idle wait.
 The explicit 10-second checks and their expected controls remain unchanged; the previous
-idle setting is restored after each operation. Launches wait for the resumed activity
-to be laid out and for its window or an app-owned dialog to have focus before querying
-controls. A missing-node capture also saves the hierarchy and
+idle setting is restored after each operation. `ActivityReadiness`, shared with legacy
+launcher tests, waits within the feature tests' existing 10-second budget for the resumed
+activity to be laid out and for its window or an app-owned dialog to have focus before
+querying controls. Legacy launches share creation and readiness within their existing
+45-second budget, before their unchanged package/main-screen checks. A missing-node capture also saves the hierarchy and
 resumed activity's locale, layout size and focus state.
 
 The language/skin check waits for the initial Settings window to be laid out and focused,

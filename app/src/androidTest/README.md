@@ -76,8 +76,11 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
   bound (45 seconds) without waiting for global queue idleness.
 - Every launch to Main (`launchToMainActivity`, used by `launchToMainScreen`, `AppLaunchTest`,
   the Settings relaunch and the Store startup check) waits up to 45 seconds for `MainActivity` to
-  resume, then 20 seconds for its window and 20 seconds for its content. Splash finishes before
+  resume, then 20 seconds for its window and 20 seconds for its content. The window wait uses
+  `ActivityReadiness` to require a laid-out, focused main activity or an app-owned focused dialog. Splash finishes before
   Main starts, so a window wait right after launch would end in that gap on a slow device.
+- Readiness failures save the screenshot, resumed activity state, focused windows and hierarchy
+  under the app's external `activity-readiness-captures/` directory.
 - Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
   system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
 - `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system
