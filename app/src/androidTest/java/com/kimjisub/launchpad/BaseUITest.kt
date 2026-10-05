@@ -373,9 +373,19 @@ abstract class BaseUITest {
     protected fun isPlayOptionsOpen(): Boolean = try {
         val panel = device.findObject(By.res("play_options"))
         // The node exists while sliding in. Recomposition may also replace it during this query.
-        panel != null && panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+        panel != null && panel.visibleBounds.width() >= openPanelMinWidthPx()
     } catch (_: StaleObjectException) {
         false // The opening wait will refetch the current node; this is not a closing condition.
+    }
+
+    /**
+     * The panel is 280dp wide. Where no system bar pads its end (a tablet's bar is at the bottom),
+     * its visible bounds can end one pixel short of the screen edge (2559 of 2560 at 240dpi), so
+     * allow 1dp under its width; only the very end of the slide-in comes that close.
+     */
+    private fun openPanelMinWidthPx(): Int {
+        val density = context.resources.displayMetrics.density
+        return ((280 - 1) * density).toInt()
     }
 
     /** The play screen is shown: its Menu button, or its option panel when that is open. */
