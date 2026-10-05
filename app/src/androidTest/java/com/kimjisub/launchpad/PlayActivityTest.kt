@@ -756,25 +756,28 @@ class PlayActivityTest : BaseUITest() {
     /**
      * The display is resized under the open play screen, as rotation and split screen resize its
      * window without recreating it: a Redmi 13 sized 20:9 panel with a punch-hole camera, a 16:9
-     * phone, the 800 x 637 dp lower half of a split tablet, and 16:9 again after it.
+     * phone, the 800 x 637 dp lower half of a split tablet, and 16:9 again after it. Every size is
+     * checked before the test fails, so one run shows each layout that is off.
      */
     @Test
     fun testPadGridStaysCentredWhenTheWindowChanges() {
         val holeWasOn = device.executeShellCommand("cmd overlay list").lines()
             .any { it.startsWith("[x]") && it.endsWith(HOLE_CUTOUT) }
+        val problems = mutableListOf<String>()
         enterPlay()
         try {
-            assertPlayLayout("initial")
+            problems += playLayoutProblems("initial")
             device.executeShellCommand("cmd overlay enable $HOLE_CUTOUT")
             for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
                 device.executeShellCommand("wm size $size")
-                assertPlayLayout(name)
+                problems += playLayoutProblems(name)
             }
         } finally {
             device.executeShellCommand("wm size reset")
             if (!holeWasOn) device.executeShellCommand("cmd overlay disable $HOLE_CUTOUT")
         }
-        assertPlayLayout("restored")
+        problems += playLayoutProblems("restored")
+        assertTrue(problems.joinToString("\n"), problems.isEmpty())
         quitPlayToMain()
     }
 
@@ -792,29 +795,37 @@ class PlayActivityTest : BaseUITest() {
         return settled!!
     }
 
-    private fun assertPlayLayout(name: String) {
+    /**
+     * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
+     * anything outside the safe area, or chains, menu, pads and logo covering each other.
+     */
+    private fun playLayoutProblems(name: String): List<String> {
         Thread.sleep(500)
         val geometry = settledGeometry()
         takeScreenshot("pad_grid_$name")
-        val density = context.resources.displayMetrics.density
-        val label = "$name ${geometry.window.width()}x${geometry.window.height()}"
+        val problems = mutableListOf<String>()
+        fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
+        fun checkInside(what: String, bounds: Rect) = check(geometry.safe.contains(bounds)) { "$what $bounds reaches outside the safe area ${geometry.safe}" }
 
-        val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / density
-        assertTrue("$label: pad grid is ${offCentreDp}dp off the window's centre line", offCentreDp <= CENTRE_TOLERANCE_DP)
-        assertInside(geometry.safe, "$label: pad grid", geometry.pads)
-        assertTrue("$label: chain buttons not found", geometry.chains.isNotEmpty())
+        val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / context.resources.displayMetrics.density
+        check(offCentreDp <= CENTRE_TOLERANCE_DP) { "pad grid is ${offCentreDp}dp off the window's centre line" }
+        checkInside("pad grid", geometry.pads)
+        check(geometry.chains.isNotEmpty()) { "chain buttons not found" }
         geometry.chains.forEachIndexed { i, chain ->
-            assertInside(geometry.safe, "$label: chain button ${i + 1}", chain)
-            assertTrue("$label: chain button ${i + 1} $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
+            checkInside("chain button ${i + 1}", chain)
+            check(!Rect.intersects(chain, geometry.pads)) { "chain button ${i + 1} $chain covers the pads ${geometry.pads}" }
         }
-        val menu = device.findObject(By.desc(str(R.string.menu)))?.visibleBounds
-        assertNotNull("$label: menu button not found", menu)
-        assertInside(geometry.safe, "$label: menu button", menu!!)
         val padsAndChains = geometry.chains + geometry.pads
-        padsAndChains.forEach { assertTrue("$label: menu $menu covers $it", !Rect.intersects(menu, it)) }
+        val menu = device.findObject(By.desc(str(R.string.menu)))?.visibleBounds
+        check(menu != null) { "menu button not found" }
+        menu?.let { m ->
+            checkInside("menu button", m)
+            padsAndChains.forEach { check(!Rect.intersects(m, it)) { "menu $m covers $it" } }
+        }
         val logo = device.findObject(By.res("play_logo"))?.visibleBounds
-        assertNotNull("$label: logo not shown", logo)
-        (padsAndChains + menu).forEach { assertTrue("$label: logo $logo is covered by $it", !Rect.intersects(logo!!, it)) }
+        check(logo != null) { "logo not found" }
+        logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
+        return problems
     }
 
     private fun openPlayOptionsWithBack() {
