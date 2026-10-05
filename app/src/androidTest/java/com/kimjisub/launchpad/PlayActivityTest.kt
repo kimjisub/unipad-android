@@ -797,13 +797,17 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
-    /** Geometry once the resized window has been laid out: the same reading twice in a row. */
-    private fun settledGeometry(): PlayGeometry {
+    /**
+     * Geometry once the resized window has been laid out: the same reading twice in a row, and a
+     * landscape window when [landscape] (right after a rotation the window can still be upright).
+     */
+    private fun settledGeometry(landscape: Boolean): PlayGeometry {
         var last: PlayGeometry? = null
         var settled: PlayGeometry? = null
         waitUntil(10000L) {
             val now = playGeometry()
-            if (now == last && !now.pads.isEmpty) settled = now
+            val shaped = !landscape || now.window.width() > now.window.height()
+            if (now == last && shaped && !now.pads.isEmpty) settled = now
             last = now
             settled != null
         }
@@ -832,9 +836,9 @@ class PlayActivityTest : BaseUITest() {
      * anything outside the safe area, or chains, menu, pads and logo covering each other.
      */
     private fun playLayoutProblems(name: String, rotation: Int? = null): List<String> {
+        if (rotation != null) waitUntil(10000L) { device.displayRotation == rotation }
         Thread.sleep(500)
-        val geometry = settledGeometry()
-        takeScreenshot("pad_grid_$name")
+        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
         val problems = mutableListOf<String>()
         fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
         if (rotation != null) check(device.displayRotation == rotation) { "display rotation is ${device.displayRotation}, not $rotation" }
@@ -858,6 +862,8 @@ class PlayActivityTest : BaseUITest() {
         val logo = settledBounds(By.res("play_logo"), geometry.window)
         check(logo != null) { "logo not found" }
         logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
+        // Taken last: the display can still be drawing the rotation when the view tree has settled.
+        takeScreenshot("pad_grid_$name")
         return problems
     }
 
