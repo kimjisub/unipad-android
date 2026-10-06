@@ -62,12 +62,39 @@ sink; this branch retains that file unchanged.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP and shared-code import, result, opening pack | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeShowsFixtureBeforeDownloading`, `acceptedShareDownloadsFixtureShowsSuccessAndImportedPackOpens` | Automatic for actual document picker/import/result/play and share confirmation/download/result/play. Real share service remains separate. |
-| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth` | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input and two simultaneous injected touchscreen pointers. Audible output/latency needs a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input and injected multi-finger touchscreen gestures in both pad input modes. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
 | 7. Language, skin, rotation, bars/cutout | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. Run with a cutout profile for cutout coverage; gesture/three-button modes and other form factors need repeated device configurations. |
 | 8. Background/lock/return while playing | `AudioFocusPolicyTest` covers focus policy; transfer lifecycle test covers a different screen | `playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain` | Partial: Home, screen off/on, silence on leave, same activity/viewmodel/process/chain and a new sound request after returning. OS process eviction/OEM lock/power policies need hardware/long-duration checks. |
+
+## Several fingers on the play screen
+
+`Fingers` injects one multi-finger touchscreen gesture through `UiAutomation.injectInputEvent`
+(`ACTION_DOWN`, `ACTION_POINTER_DOWN`, `ACTION_MOVE`, `ACTION_POINTER_UP`, `ACTION_UP`), so the app
+receives it through the normal window dispatch. Results are the runner's sound requests
+(`RecordingAudio.plays`) and the `PRESSED` light channel of every pad. Each case runs in both pad
+input modes: Slide Mode off (the first-install default; each pad takes its own touches) and on
+(`SlideTouchOverlayView`). The test sets the preference and restores it afterwards.
+
+| Case | Slide Mode off: `MultiTouchPadModeTest` | Slide Mode on: `MultiTouchSlideModeTest` |
+|---|---|---|
+| A. Two pads at once | `TouchPlaybackTest.twoSimultaneousFingersPlayBothPadsAndReleaseBoth` | `twoSimultaneousFingersPlayBothPadsAndReleaseBoth` |
+| B. Five-finger chord | `fiveSimultaneousFingersPlayAndLightEveryPad` | same |
+| C. Hold one pad, tap another three times | `heldPadStaysLitWhileAnotherPadIsTappedRepeatedly` | same |
+| D. Drag onto the neighbour | `dragOntoNeighbourKeepsFirstPadAndPlaysNothingNew` (by design) | `dragOntoNeighbourMovesPressAndPlaysNewPad` |
+| E. Two fingers dragged together | `twoFingersDraggedTogetherEachKeepTheirFirstPad` | `twoFingersDraggedTogetherEachMoveTheirOwnPad` |
+| F. Lift one of two fingers | `liftingOneOfTwoFingersReleasesOnlyItsPad` | same |
+| I. Palm on the margin beside the grid while a pad is held | `palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying` | same |
+
+The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
+A palm that touches the margin *before* any pad currently stops every pad from playing until all
+fingers lift; that case is tracked as a product fault and its test joins the suite with the fix.
+Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
+down (for example when the app leaves the screen), and H, lifting a finger after the chain
+changed. Their fixes are being made separately and their tests join the suite with them.
+Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## Fixture and isolation
 
