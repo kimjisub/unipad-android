@@ -69,7 +69,8 @@ class FeatureScreen {
             if (check()) return
             SystemClock.sleep(25)
         }
-        assertTrue(message(), check())
+        val passed = check()
+        assertTrue(message(), passed)
     }
     fun <T> onMain(block: () -> T): T {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) return block()

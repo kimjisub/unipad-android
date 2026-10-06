@@ -14,13 +14,14 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Test
 
 /**
  * Several fingers on the play screen, injected as real touchscreen events, judged by the sound
  * requests the runner made and the PRESSED light channel. Runs once per pad input mode: pads
  * taking their own touches (Slide Mode off, the first-install default) and the Slide Mode layer.
- * Cases shared by both modes live here; drags differ by design and live in each subclass.
+ * Cases shared by both modes live here; drags differ by design and live in each subclass. Each
+ * subclass declares every test itself, so the `@Test` count in the sources matches the tests the
+ * runner discovers (scripts/check_connected_results.py).
  */
 abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : PlaybackScreenTest() {
     protected data class Cell(val x: Int, val y: Int)
@@ -92,7 +93,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     }
 
     /** B: a five-finger chord plays every pad and lights each one. */
-    @Test fun fiveSimultaneousFingersPlayAndLightEveryPad() {
+    protected fun fiveFingerChord() {
         start()
         val cells = listOf(Cell(2, 1), Cell(2, 3), Cell(3, 5), Cell(5, 2), Cell(6, 6))
         val ids = cells.map { fingers.down(center(it)) }
@@ -105,7 +106,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     }
 
     /** C: one finger holds a pad while another taps a second pad three times. */
-    @Test fun heldPadStaysLitWhileAnotherPadIsTappedRepeatedly() {
+    protected fun holdAndTap() {
         start()
         val held = Cell(3, 3)
         val tapped = Cell(3, 5)
@@ -125,7 +126,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     }
 
     /** F: of two held pads, lifting the first finger releases only its pad. */
-    @Test fun liftingOneOfTwoFingersReleasesOnlyItsPad() {
+    protected fun liftOneOfTwo() {
         start()
         val first = Cell(2, 2)
         val second = Cell(5, 5)
@@ -142,7 +143,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     }
 
     /** I: a palm landing on the screen margin while a pad is held plays nothing and blocks no pad. */
-    @Test fun palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying() {
+    protected fun palmOnEdgeWhilePlaying() {
         start()
         val held = Cell(2, 2)
         val holder = fingers.down(center(held))
@@ -174,20 +175,20 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         val views = screen.views(root)
         val buttons = views.filter { it is PadView || it is ChainView }.map(screen::bounds)
         val pads = views.filterIsInstance<PadView>().map(screen::bounds)
-        val grid = union(buttons)
+        val grid = boundingBox(buttons)
         val margin = (MARGIN_DP * screen.context.resources.displayMetrics.density).toInt()
         // Insets are relative to the window; pad bounds are on screen coordinates.
-        val gestures = ViewCompat.getRootWindowInsets(root)!!
+        val gestures = checkNotNull(ViewCompat.getRootWindowInsets(root)) { "Play window has no insets yet" }
             .getInsets(WindowInsetsCompat.Type.systemGestures() or WindowInsetsCompat.Type.displayCutout())
         val from = screen.bounds(root).left + gestures.left + margin
         val to = grid.left - margin
         assertTrue("No screen margin beside the pads on this device (from $from to $to)", from < to)
-        val point = Point((from + to) / 2, union(pads).centerY())
+        val point = Point((from + to) / 2, boundingBox(pads).centerY())
         assertTrue("Edge point $point lands on a pad or chain", buttons.none { it.contains(point.x, point.y) })
         point
     }
 
-    private fun union(rects: List<Rect>) = Rect(rects.first()).apply { rects.forEach { union(it) } }
+    private fun boundingBox(rects: List<Rect>) = Rect(rects.first()).apply { rects.forEach { union(it) } }
 
     private companion object {
         const val GRID = 8

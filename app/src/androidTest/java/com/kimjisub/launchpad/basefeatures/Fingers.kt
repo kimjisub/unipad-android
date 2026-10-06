@@ -15,15 +15,16 @@ import org.junit.Assert.assertTrue
 class Fingers(private val screen: FeatureScreen) {
     private class Finger(val id: Int, var x: Float, var y: Float)
 
-    private val downAt = SystemClock.uptimeMillis()
+    private var downAt = 0L
     private val fingers = mutableListOf<Finger>()
 
     /** Puts a new finger down and returns its pointer id. */
     fun down(at: Point): Int {
+        // The lowest free id has exactly `id` lower ids in use, so it also is its index.
         val id = generateSequence(0) { it + 1 }.first { id -> fingers.none { it.id == id } }
-        val index = fingers.indexOfFirst { it.id > id }.takeIf { it >= 0 } ?: fingers.size
-        fingers.add(index, Finger(id, at.x.toFloat(), at.y.toFloat()))
-        inject(if (fingers.size == 1) MotionEvent.ACTION_DOWN else pointerAction(MotionEvent.ACTION_POINTER_DOWN, index))
+        fingers.add(id, Finger(id, at.x.toFloat(), at.y.toFloat()))
+        if (fingers.size == 1) downAt = SystemClock.uptimeMillis()
+        inject(if (fingers.size == 1) MotionEvent.ACTION_DOWN else pointerAction(MotionEvent.ACTION_POINTER_DOWN, id))
         return id
     }
 

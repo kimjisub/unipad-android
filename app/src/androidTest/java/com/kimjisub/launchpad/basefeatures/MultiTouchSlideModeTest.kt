@@ -55,4 +55,12 @@ class MultiTouchSlideModeTest : MultiTouchPlaybackTest(slideMode = true) {
         awaitLights("Second pad stayed lit after release", emptySet())
         assertStill("After both fingers lifted", 4, emptySet())
     }
+
+    @Test fun fiveSimultaneousFingersPlayAndLightEveryPad() = fiveFingerChord()
+
+    @Test fun heldPadStaysLitWhileAnotherPadIsTappedRepeatedly() = holdAndTap()
+
+    @Test fun liftingOneOfTwoFingersReleasesOnlyItsPad() = liftOneOfTwo()
+
+    @Test fun palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying() = palmOnEdgeWhilePlaying()
 }
