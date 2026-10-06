@@ -11,11 +11,13 @@ class DensityOnlyDrawableGuardTest {
 
 	private val modules = listOf(File("."), File("../design"))
 
+	/** Only these source sets reach the release bundle; debug and test resources never ship. */
+	private val shippedSourceSets = listOf("main", "release")
+
 	private fun resourceFolders(): List<File> = modules.flatMap { module ->
 		val src = File(module, "src")
 		assertTrue("Missing source root ${src.canonicalPath}", src.isDirectory)
-		src.listFiles { dir -> dir.isDirectory }!!
-			.map { sourceSet -> File(sourceSet, "res") }
+		shippedSourceSets.map { sourceSet -> File(src, "$sourceSet/res") }
 			.filter { it.isDirectory }
 			.flatMap { res -> res.listFiles { dir -> dir.isDirectory }!!.toList() }
 	}
@@ -51,11 +53,34 @@ class DensityOnlyDrawableGuardTest {
 	@Test
 	fun acceptsDensityCopiesBackedByABaseFolder() {
 		val folders = listOf(
-			"drawable-hdpi" to listOf("vector_icon.png", "nodpi_icon.png", "anydpi_icon.png", "night_icon.png"),
+			"drawable-hdpi" to listOf("vector_icon.png", "nodpi_icon.png", "anydpi_icon.png", "v24_icon.png"),
 			"drawable" to listOf("vector_icon.xml"),
 			"drawable-nodpi" to listOf("nodpi_icon.png"),
 			"drawable-anydpi-v24" to listOf("anydpi_icon.xml"),
+			"drawable-v24" to listOf("v24_icon.xml"),
+		)
+		assertEquals(emptyList<String>(), DensityOnlyDrawableScanner.scan(folders))
+	}
+
+	@Test
+	fun flagsDensityCopiesBackedOnlyByAConfigurationFolder() {
+		val folders = listOf(
+			"drawable-hdpi" to listOf("night_icon.png", "land_icon.png", "tablet_icon.png"),
 			"drawable-night-v26" to listOf("night_icon.xml"),
+			"drawable-land" to listOf("land_icon.xml"),
+			"drawable-sw600dp" to listOf("tablet_icon.xml"),
+		)
+		assertEquals(
+			listOf("land_icon", "night_icon", "tablet_icon"),
+			DensityOnlyDrawableScanner.scan(folders),
+		)
+	}
+
+	@Test
+	fun ignoresHiddenFiles() {
+		val folders = listOf(
+			"drawable-hdpi" to listOf(".DS_Store", ".gitkeep", "icon.png"),
+			"drawable" to listOf("icon.xml"),
 		)
 		assertEquals(emptyList<String>(), DensityOnlyDrawableScanner.scan(folders))
 	}
