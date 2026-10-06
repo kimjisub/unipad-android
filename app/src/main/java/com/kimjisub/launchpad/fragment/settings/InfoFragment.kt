@@ -19,6 +19,7 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.adapter.DialogListAdapter
 import com.kimjisub.launchpad.adapter.DialogListItem
 import com.kimjisub.launchpad.manager.putClipboard
+import com.kimjisub.launchpad.tool.PrimaryButtonWindowCallback
 import splitties.activities.start
 import com.google.android.material.snackbar.Snackbar
 
@@ -154,7 +155,7 @@ class InfoFragment : PreferenceFragmentCompat() {
 			val builder = AlertDialog.Builder(context)
 			builder.setTitle(getString(R.string.community))
 			builder.setView(listView)
-			builder.show()
+			builder.show().window?.let(PrimaryButtonWindowCallback::install)
 			false
 		}
 

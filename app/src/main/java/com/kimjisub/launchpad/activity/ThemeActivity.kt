@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -81,6 +80,7 @@ import com.kimjisub.launchpad.adapter.ThemeType
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.theme.Orange
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -223,7 +223,7 @@ private fun ThemeScreen(
 
 	// Delete confirmation dialog
 	deleteTarget?.let { theme ->
-		AlertDialog(
+		AppAlertDialog(
 			onDismissRequest = { deleteTarget = null },
 			title = { Text(stringResource(R.string.theme_delete_title)) },
 			text = { Text(stringResource(R.string.theme_delete_confirm, theme.name)) },

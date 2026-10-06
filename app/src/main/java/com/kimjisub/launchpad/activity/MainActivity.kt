@@ -87,6 +87,7 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
@@ -274,7 +275,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				deleteTargetItem?.let { item ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteTargetItem = null },
 						title = { Text(stringResource(string.warning)) },
 						text = { Text(stringResource(string.doYouWantToDeleteUniPack)) },
@@ -304,7 +305,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				if (deleteFailed) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteFailed = false },
 						title = { Text(stringResource(string.error)) },
 						text = { Text(stringResource(string.errOccur)) },

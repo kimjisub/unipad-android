@@ -39,7 +39,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Icon
@@ -61,6 +60,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -645,7 +645,7 @@ private fun CommunityDialog(
 	onDismiss: () -> Unit,
 	onItemClick: (action: String, url: String) -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,
@@ -1024,7 +1024,7 @@ private fun BackupGuideDialog(
 	onDismiss: () -> Unit,
 	onContinue: () -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,
@@ -1086,7 +1086,7 @@ private fun RecoveryDialog(
 	onRestore: () -> Unit,
 	onDismiss: () -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,
