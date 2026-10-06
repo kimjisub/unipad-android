@@ -93,6 +93,7 @@ import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
@@ -767,6 +768,7 @@ class MainActivity : BaseActivity() {
 							MaterialTheme.colorScheme.surfaceContainerHighest,
 							RoundedCornerShape(6.dp),
 						)
+						.focusRing(RoundedCornerShape(6.dp))
 						.clickable { expanded = true }
 						.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
 						.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
@@ -782,6 +784,7 @@ class MainActivity : BaseActivity() {
 						tint = Gray1,
 						modifier = Modifier
 							.size(18.dp)
+							.focusRing(CircleShape)
 							.clickable { vm.updateSortOrder(!sortOrder) },
 					)
 				}
@@ -806,6 +809,7 @@ class MainActivity : BaseActivity() {
 			IconButton(
 				onClick = onSearchClick,
 				modifier = Modifier
+					.focusRing(CircleShape)
 					.size(36.dp)
 					.background(
 						if (searchOpen) SkyBlue.copy(alpha = 0.15f) else Color.Transparent,
@@ -819,7 +823,7 @@ class MainActivity : BaseActivity() {
 					tint = if (searchOpen) SkyBlue else Gray1,
 				)
 			}
-			IconButton(onClick = onStoreClick, modifier = Modifier.size(36.dp)) {
+			IconButton(onClick = onStoreClick, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					painter = painterResource(R.drawable.baseline_shopping_basket_white_24),
 					contentDescription = stringResource(string.store),
@@ -827,7 +831,7 @@ class MainActivity : BaseActivity() {
 					tint = Gray1,
 				)
 			}
-			IconButton(onClick = onLoadUniPackClick, modifier = Modifier.size(36.dp)) {
+			IconButton(onClick = onLoadUniPackClick, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					painter = painterResource(R.drawable.baseline_folder_open_white_24),
 					contentDescription = stringResource(string.import_unipack),
@@ -994,6 +998,7 @@ class MainActivity : BaseActivity() {
 					MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
 					RoundedCornerShape(8.dp),
 				)
+				.focusRing()
 				.clickable(onClick = onClick)
 				.padding(horizontal = 10.dp, vertical = 10.dp),
 		) {
