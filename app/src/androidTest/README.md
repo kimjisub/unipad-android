@@ -142,8 +142,15 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
-There are 63 app tests and one design test in the sources. Check every report against this
-inventory; a green report with fewer discovered tests is insufficient. Verify discovery counts as well as failures; the Gradle runner must report all source tests.
+The expected number of tests is the count of `@Test` annotations in each module's
+`src/androidTest`; print it with `python3 scripts/check_connected_results.py --expected-only app design`.
+A green report with fewer discovered tests is insufficient: Gradle can finish successfully when
+the app APK failed to install and no app test ran. GitHub CI does not run the UI suite; run
+`ANDROID_SERIAL=<device> bash scripts/ci-connected-tests.sh` on a local emulator before pushing.
+It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
+number with no failure, error or skip and Gradle printed no install failure. It records the counts
+and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlapDeviceTest` is
+filtered by `@SdkSuppress`, so that script expects an API 29+ device.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
 The issue records the old-to-new mapping so earlier failure reports remain traceable.
