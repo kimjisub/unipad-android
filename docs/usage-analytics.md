@@ -6,11 +6,11 @@ Recovered implementation: commit `64a5ffc1`, copied byte for byte from all 31 ch
 
 - `pack_import`: one outcome per attempt, with source and a fixed result/error category.
 - `pack_load`: one result per play-screen visit. Success waits until sound loading finishes; failure and leaving during loading remain separate outcomes.
-- `play_start`: one first accepted pad press per visit, with `trigger=pad` or `trigger=autoplay`. Existing meaning and duration origin remain unchanged.
+- `play_start`: one first accepted pad press per visit, with `trigger=pad` or `trigger=autoplay`. Existing meaning and duration origin remain unchanged. It also carries the play screen's window at that moment, in buckets only (JIS-454): `orientation` (`landscape`/`portrait`; a square window is portrait, as on Android), `screen_short_side` (`lt_600dp`/`600dp_839dp`/`840dp_plus`, the window's shorter side at the window size class bounds) and `window_mode` (`full_screen`/`multi_window`, split screen or a free-form window). PlayActivity reports the window on creation, on every configuration change and on entering or leaving multi-window; a moment of undefined size keeps the window known before, and until one is known the three keys are left out. They count how many people play a landscape-locked screen in portrait or a smaller window on Android 16+ large screens, which ignore the lock.
 - `play_first_input`: one first human pad press per ready visit, with only `trigger=pad`. It is independent of `play_start`, so auto play cannot consume the human-input record. Screen and MIDI presses use the same human path. Step practice and guide presses count; choosing a mode, releases, invalid coordinates, inputs before readiness, and callbacks after leaving do not.
 - `play_end`: one exit after playback started, with an elapsed-time bucket. Background/foreground changes and activity reconstruction retain the same ViewModel and visit.
 
-No new identifier or parameter is introduced. Filenames, pack titles, creators, search terms, URLs, coordinates, raw errors, and exact durations are not event parameters. The first-input event proves an accepted input, not audible sound or physical LED output.
+No identifier is introduced; the only parameters added since are the three window buckets of `play_start`, never an exact size or device model. Filenames, pack titles, creators, search terms, URLs, coordinates, raw errors, and exact durations are not event parameters. The first-input event proves an accepted input, not audible sound or physical LED output.
 
 ## Changes beyond the recovered implementation
 

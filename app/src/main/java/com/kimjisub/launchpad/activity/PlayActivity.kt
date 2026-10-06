@@ -1,11 +1,13 @@
 package com.kimjisub.launchpad.activity
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -108,6 +110,7 @@ import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.audio.AudioFocusController
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -291,6 +294,13 @@ class PlayActivity : BaseActivity() {
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true
+		reportScreenLayout()
+		addOnConfigurationChangedListener { reportScreenLayout(configuration = it) }
+		addOnMultiWindowModeChangedListener {
+			// Before API 26 the callback has no new configuration; the configuration change that follows corrects the size.
+			val configuration = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) it.newConfig else resources.configuration
+			reportScreenLayout(configuration, it.isInMultiWindowMode)
+		}
 
 		val path = intent.getStringExtra("path") ?: run {
 			finish()
@@ -1254,6 +1264,11 @@ class PlayActivity : BaseActivity() {
 	// endregion
 
 	// region Lifecycle
+
+	private fun reportScreenLayout(
+		configuration: Configuration = resources.configuration,
+		multiWindow: Boolean = isInMultiWindowMode,
+	) = vm.screenLayoutChanged(ScreenLayout.of(configuration.screenWidthDp, configuration.screenHeightDp, multiWindow))
 
 	override fun onResume() {
 		super.onResume()
