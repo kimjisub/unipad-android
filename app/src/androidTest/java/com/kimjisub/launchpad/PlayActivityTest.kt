@@ -796,13 +796,13 @@ class PlayActivityTest : BaseUITest() {
             device.executeShellCommand("wm set-ignore-orientation-request true")
             for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
                 device.executeShellCommand("wm size $size")
-                device.setOrientationLeft()
+                rotateTo(Surface.ROTATION_90)
                 problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
-                device.setOrientationRight()
+                rotateTo(Surface.ROTATION_270)
                 problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
             }
             device.executeShellCommand("wm size 1600x2560")
-            device.setOrientationNatural()
+            rotateTo(Surface.ROTATION_0)
             problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
         } finally {
             device.executeShellCommand("wm size reset")
@@ -812,6 +812,18 @@ class PlayActivityTest : BaseUITest() {
         }
         problems += playLayoutProblems("${prefix}restored")
         return problems
+    }
+
+    /** Freezes the display at [rotation], asking again when a request made right after a resize is dropped. */
+    private fun rotateTo(rotation: Int) {
+        repeat(3) {
+            when (rotation) {
+                Surface.ROTATION_90 -> device.setOrientationLeft()
+                Surface.ROTATION_270 -> device.setOrientationRight()
+                else -> device.setOrientationNatural()
+            }
+            if (waitUntil(5000L) { device.displayRotation == rotation }) return
+        }
     }
 
     /**
