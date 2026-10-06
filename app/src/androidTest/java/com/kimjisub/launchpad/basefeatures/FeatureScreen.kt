@@ -61,13 +61,16 @@ class FeatureScreen {
     }
     fun clickText(id: Int) = node(By.text(text(id))).click()
     fun clickDescription(id: Int) = node(By.desc(text(id))).click()
-    fun await(message: String, check: () -> Boolean) {
+    fun await(message: String, check: () -> Boolean) = await({ message }, check)
+    /** [message] is built only on failure, after the last check, so it can report the final state. */
+    fun await(message: () -> String, check: () -> Boolean) {
         val deadline = SystemClock.elapsedRealtime() + 10000
         while (SystemClock.elapsedRealtime() < deadline) {
             if (check()) return
             SystemClock.sleep(25)
         }
-        assertTrue(message, check())
+        val passed = check()
+        assertTrue(message(), passed)
     }
     fun <T> onMain(block: () -> T): T {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) return block()

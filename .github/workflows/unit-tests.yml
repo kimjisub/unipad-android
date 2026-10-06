@@ -22,6 +22,11 @@ jobs:
       - name: Run all app and design unit tests
         timeout-minutes: 12
         run: ./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain
+      # The UI suite runs on the Mac before push; its pass/fail verdict script is checked here with fake adb and Gradle.
+      - name: Check the UI test runner verdict
+        if: ${{ !cancelled() }}
+        timeout-minutes: 3
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

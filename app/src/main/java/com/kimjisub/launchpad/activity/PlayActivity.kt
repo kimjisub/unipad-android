@@ -61,6 +61,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +71,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,6 +83,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
@@ -127,6 +130,7 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.TraceLogText
+import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -486,6 +490,8 @@ class PlayActivity : BaseActivity() {
 		val density = LocalDensity.current
 		val paddingPx = with(density) { 8.dp.toPx().toInt() }
 		val chromeStripPx = with(density) { 56.dp.roundToPx() }
+		// The open menu covers the chain buttons, so Tab must not reach them behind it.
+		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
 		Box(modifier = Modifier.fillMaxSize()) {
 			// Background - always visible
@@ -622,7 +628,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
-					Box(modifier = Modifier.fillMaxSize().background(PlayPalette.optionScrim).clickable { vm.toggleOptionWindow(false) })
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(PlayPalette.optionScrim)
+							.focusProperties { canFocus = false }
+							.clickable { vm.toggleOptionWindow(false) }
+					)
 				}
 				AnimatedVisibility(
 					visible = vm.isOptionWindowVisible,
@@ -660,7 +672,7 @@ class PlayActivity : BaseActivity() {
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.size(36.dp)) {
+			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					imageVector = Icons.Default.Menu,
 					contentDescription = stringResource(string.menu),
@@ -676,12 +688,12 @@ class PlayActivity : BaseActivity() {
 						.height(2.dp)
 						.background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(1.dp)),
 				)
-				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				IconButton(
 					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
-					modifier = Modifier.size(40.dp),
+					modifier = Modifier.focusRing(CircleShape).size(40.dp),
 				) {
 					Icon(
 						imageVector = if (vm.isAutoPlayPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -690,7 +702,7 @@ class PlayActivity : BaseActivity() {
 						modifier = Modifier.size(26.dp),
 					)
 				}
-				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				Box(
@@ -763,7 +775,7 @@ class PlayActivity : BaseActivity() {
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
 					tint = quitTint,
-					modifier = Modifier.size(24.dp).clickable { finish() },
+					modifier = Modifier.focusRing(CircleShape, outset = 6.dp).clickable { finish() }.size(24.dp),
 				)
 			}
 
@@ -775,6 +787,7 @@ class PlayActivity : BaseActivity() {
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
 					.background(tint.copy(alpha = cardFill.alpha), shape = RoundedCornerShape(12.dp))
+					.focusRing(RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
@@ -866,6 +879,7 @@ class PlayActivity : BaseActivity() {
 					modifier = Modifier
 						.weight(1f)
 						.background(if (active) color else Color.Transparent, RoundedCornerShape(8.dp))
+						.focusRing()
 						.clickable {
 							vm.switchPlayMode(mode)
 							vm.toggleOptionWindow(false)
@@ -904,6 +918,7 @@ class PlayActivity : BaseActivity() {
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
+					.focusRing()
 					.clickable { vm.autoMapping() }
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
@@ -934,6 +949,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier.testTag("play_option_$textResId")
 				.fillMaxWidth()
 				.alpha(alpha)
+				.focusRing()
 				.then(
 					if (!state.locked) {
 						if (hasLongClick && state.onLongClick != null)
@@ -954,6 +970,7 @@ class PlayActivity : BaseActivity() {
 			Switch(
 				checked = state.checked,
 				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
+				modifier = Modifier.focusProperties { canFocus = false },
 				colors = SwitchDefaults.colors(
 					checkedThumbColor = Color.White,
 					checkedTrackColor = accentColor,
@@ -1102,6 +1119,12 @@ class PlayActivity : BaseActivity() {
 				padViews[x + 1][y + 1]?.setPhantomRotation(180f)
 			}
 		}
+	}
+
+	private fun setChainsFocusable(focusable: Boolean) {
+		val mode = if (focusable) ViewGroup.FOCUS_AFTER_DESCENDANTS else ViewGroup.FOCUS_BLOCK_DESCENDANTS
+		listOf(chainsTopContainer, chainsRightContainer, chainsBottomContainer, chainsLeftContainer)
+			.forEach { it?.descendantFocusability = mode }
 	}
 
 	private fun setupChains(buttonSizeMin: Int) {

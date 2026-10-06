@@ -84,7 +84,8 @@ Start-Process app/build/reports/androidTests/connected/index.html
 ```
 
 #### Test Structure
-The complete instrumented suite currently contains 63 app tests and one design test.
+The expected instrumented test count is the number of `@Test` annotations in each module's
+`src/androidTest` (`python3 scripts/check_connected_results.py --expected-only app design`).
 See [the instrumented test inventory](app/src/androidTest/README.md) for the current
 classes, individual scenarios, offline Store catalogue and complete-suite command.
 Run both `:app:connectedDebugAndroidTest` and `:design:connectedDebugAndroidTest`;

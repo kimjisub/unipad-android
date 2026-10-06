@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -114,6 +115,7 @@ fun MainTotalPanelScreen(
 					fontSize = 11.sp,
 					modifier = Modifier
 						.align(Alignment.BottomStart)
+						.focusRing()
 						.clickable { onUpdateClick() }
 						.padding(12.dp),
 				)
@@ -124,7 +126,8 @@ fun MainTotalPanelScreen(
 				onClick = onSettingsClick,
 				modifier = Modifier
 					.align(Alignment.BottomEnd)
-					.padding(8.dp),
+					.padding(8.dp)
+					.focusRing(CircleShape),
 			) {
 				Icon(
 					painter = painterResource(R.drawable.baseline_settings_white_24),
