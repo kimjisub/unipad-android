@@ -76,17 +76,9 @@ class MidiSelectActivity : BaseActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		isConnected.value = MidiConnection.connectedDevice != null
-		dualPadModeEnabled.value = MidiConnection.dualPadModeEnabled
-		reflectedModeEnabled.value = MidiConnection.reflectedModeEnabled
-		reflectedSwapSides.value = MidiConnection.reflectedSwapSides
-		connectedSessions.value = MidiConnection.connectedSessions
 		selectedSessionId.value = savedInstanceState?.takeIf { it.containsKey("selectedSessionId") }
-			?.getInt("selectedSessionId")?.takeIf { id -> connectedSessions.value.any { it.sessionId == id } }
-			?: connectedSessions.value.firstOrNull { it.isPrimary }?.sessionId
-			?: connectedSessions.value.firstOrNull()?.sessionId
-
-		updateSelectedIndexForTarget()
+			?.getInt("selectedSessionId")
+		readConnectionState()
 
 		setContent {
 			UniPadTheme {
@@ -110,6 +102,7 @@ class MidiSelectActivity : BaseActivity() {
 							// More than one pad connected - target the specific device
 							// picked above, never disturbing the other connected pad.
 							MidiConnection.setDriverForSession(targetSessionId, driver)
+							connectedSessions.value = MidiConnection.connectedSessions
 						} else {
 							MidiConnection.driver = driver
 						}
@@ -139,8 +132,12 @@ class MidiSelectActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		// Read the existing state on return from a browser or the background. Never connect
-		// or apply a driver just to refresh the help or restore its selected target.
+		readConnectionState()
+	}
+
+	// Mirrors MidiConnection into the screen state without connecting or applying a driver.
+	// Keeps the targeted pad while it stays connected, otherwise targets the primary pad.
+	private fun readConnectionState() {
 		isConnected.value = MidiConnection.connectedDevice != null
 		connectedSessions.value = MidiConnection.connectedSessions
 		if (connectedSessions.value.none { it.sessionId == selectedSessionId.value }) {
@@ -153,22 +150,22 @@ class MidiSelectActivity : BaseActivity() {
 		updateSelectedIndexForTarget()
 	}
 
-	// Recomputes which model is highlighted in the grid based on whichever device is
-	// currently targeted (or MidiConnection.driver directly, for the single-pad / no
-	// target case).
 	private fun updateSelectedIndexForTarget() {
-		val targetClass = selectedSessionId.value
-			?.let { id -> connectedSessions.value.firstOrNull { it.sessionId == id } }
-			?.driverClass
-			?: MidiConnection.driver::class
-
-		for ((i, device) in midiDevices.withIndex()) {
-			if (device.driverClass == targetClass) {
-				selectedIndex.intValue = i
-				return
-			}
-		}
+		midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
+			?.let { selectedIndex.intValue = it }
 	}
+}
+
+// The model highlighted for the targeted pad, or for MidiConnection.driver when no pad is
+// targeted (single pad or none connected). Null when the driver is not in the model list.
+internal fun midiModelIndexForTarget(
+	sessions: List<MidiConnection.SessionSummary>,
+	targetSessionId: Int?,
+	fallbackDriverClass: KClass<out DriverRef>,
+): Int? {
+	val targetClass = sessions.firstOrNull { it.sessionId == targetSessionId }?.driverClass
+		?: fallbackDriverClass
+	return midiDevices.indexOfFirst { it.driverClass == targetClass }.takeIf { it >= 0 }
 }
 
 private data class MidiDeviceData(
