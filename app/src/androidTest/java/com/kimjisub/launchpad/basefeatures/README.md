@@ -57,7 +57,7 @@ Existing coverage is an inventory, not a claim that the entire legacy suite pass
 Those tests continue to run separately; their maintenance is covered by the complete run in
 [the instrumented test inventory](../../../../../README.md). The merged
 `UniPackImportOverlapDeviceTest` already supplies the importer analytics argument using a no-op
-sink; this branch retains that file unchanged.
+sink; this suite does not change that file.
 
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|

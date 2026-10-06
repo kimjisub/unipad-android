@@ -153,7 +153,8 @@ and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlap
 filtered by `@SdkSuppress`, so that script expects an API 29+ device.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
-The renames are in #130, so earlier failure reports remain traceable through its diff.
+The renames are in [#130](https://github.com/kimjisub/unipad-android/pull/130), so earlier failure
+reports remain traceable through its diff.
 Some smoke checks only prove that the app stays on its screen; stronger basic-function scenarios
 live in the [base feature suite](java/com/kimjisub/launchpad/basefeatures/README.md). They are not
 claimed here as audio or hardware proof.
@@ -175,10 +176,10 @@ pack events, count forwarding and detaching both subscriptions.
 
 ## Verification history
 
-The September 26–27 record predates this work: 36 tests, 13 failures before the first FAB migration,
-then 35 passes and one Store browsing failure on offline API 35. By `f093afba`, that migration was
-already in main. #130 reran the complete suite before changing it, preserved every existing
-screen scenario, and recorded the new baseline and three final runs.
+The September 26–27 record predates [#130](https://github.com/kimjisub/unipad-android/pull/130): 36 tests,
+13 failures before the first FAB migration, then 35 passes and one Store browsing failure on
+offline API 35. By `f093afba`, that migration was already in main. #130 preserved every existing
+screen scenario and records three complete runs of its final commit.
 
 Historical ignored Import/Reconnect tests had been reported as failures by the connected test
 engine. They are now ordinary tests of the actual Import and Settings controls. No test is ignored.
