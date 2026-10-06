@@ -97,6 +97,10 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -130,6 +134,7 @@ import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
+import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.TraceLogText
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.ui.theme.PlayPalette
@@ -173,12 +178,6 @@ class PlayActivity : BaseActivity() {
 	private var chainsBottomContainer: LinearLayout? = null
 	private var chainsLeftContainer: LinearLayout? = null
 
-	// UI - Layout dimensions (for relayout)
-	private var lastScreenWidth = 0
-	private var lastScreenHeight = 0
-	private var lastPaddingWidth = 0
-	private var lastPaddingHeight = 0
-
 	// UI - Pad/chain views
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
@@ -186,9 +185,11 @@ class PlayActivity : BaseActivity() {
 	// Pad touches of both input modes; internal so tests can check which mode is applied.
 	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
-	// though the retained ViewModel says the UI was loaded, and two onSizeChanged calls before
-	// the posted runnable ran used to queue initLayout twice.
-	private var layoutRequested = false
+	// though the retained ViewModel says the UI was loaded. The window can be resized, or turned
+	// to put the cutout on the other side, without recreating the activity, which rebuilds the
+	// pads for the new area; one posted layout serves every area requested before it runs.
+	private var layoutArea: PlayLayout.Area? = null
+	private var layoutPosted = false
 
 	// Classic trace log (numbers on pads): what is drawn right now, so one new tap only touches one pad.
 	private var classicTraceShown = false
@@ -283,10 +284,10 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun onRequestRelayout() {
-			if (lastScreenWidth > 0 && lastScreenHeight > 0) {
+			layoutArea?.let { area ->
 				vm.uiLoaded = false
 				vm.traceLogInit()
-				initLayout(lastScreenWidth, lastScreenHeight, lastPaddingWidth, lastPaddingHeight)
+				initLayout(area)
 			}
 		}
 	}
@@ -490,8 +491,22 @@ class PlayActivity : BaseActivity() {
 	@Composable
 	private fun PlayScreen() {
 		val density = LocalDensity.current
-		val paddingPx = with(density) { 8.dp.toPx().toInt() }
-		val chromeStripPx = with(density) { 56.dp.roundToPx() }
+		val paddingPx = with(density) { PLAY_AREA_PADDING.toPx().toInt() }
+		val chromeStripPx = with(density) { CHROME_STRIP.roundToPx() }
+		// The play area spans the window's width so the pads centre on its centre line; the cutout
+		// and a 3-button bar, which take one side only, are kept clear through the side margin.
+		val safeDrawing = WindowInsets.safeDrawing
+		val layoutDirection = LocalLayoutDirection.current
+		val rightInsetPx = safeDrawing.getRight(density, layoutDirection)
+		val sideMarginPx = PlayLayout.sideMargin(safeDrawing.getLeft(density, layoutDirection), rightInsetPx, chromeStripPx)
+		val topInsetPx = safeDrawing.getTop(density)
+		var playAreaSize by remember { mutableStateOf(IntSize.Zero) }
+		LaunchedEffect(playAreaSize, sideMarginPx) {
+			requestPlayLayout(PlayLayout.Area(playAreaSize.width - 2 * paddingPx, playAreaSize.height - 2 * paddingPx, sideMarginPx))
+		}
+		val logoBitmap = theme?.customLogo?.takeIf { vm.optionViewVisible }?.let { logo ->
+			remember(logo) { logo.toBitmap().asImageBitmap() }
+		}
 		// The open menu covers the chain buttons, so Tab must not reach them behind it.
 		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
@@ -508,35 +523,17 @@ class PlayActivity : BaseActivity() {
 					)
 				}
 			}
-			// "Hide UI" (optionViewVisible) was written by the view model and read nowhere: the
-			// switch only changed launchpad LEDs. It hides the logo and the chrome column, as web does.
-			if (vm.optionViewVisible) theme?.customLogo?.let { logo ->
-				val bitmap = remember(logo) { logo.toBitmap().asImageBitmap() }
-				Image(
-					bitmap = bitmap,
-					contentDescription = null,
-					contentScale = ContentScale.Fit,
-					modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).width(90.dp)
-				)
-			}
 
 			if (startReady) {
-				// Main play content, kept (and sized) inside the system bars and display cutout that
-				// edge-to-edge windows (targetSdk 35+) draw under; the background above still fills the screen.
+				// Main play content, kept clear of the system bars and display cutout that edge-to-edge
+				// windows (targetSdk 35+) draw under: by padding top and bottom, and by the side margin
+				// at the left and right. The background above still fills the screen.
 				Box(
 					modifier = Modifier
 						.fillMaxSize()
-						.windowInsetsPadding(WindowInsets.safeDrawing)
-						.onSizeChanged { size ->
-							if (!layoutRequested && size.width > 0 && size.height > 0) {
-								layoutRequested = true
-								Handler(Looper.getMainLooper()).post {
-									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
-									vm.initPlayback()
-								}
-							}
-						}
-						.padding(8.dp)
+						.windowInsetsPadding(safeDrawing.only(WindowInsetsSides.Vertical))
+						.onSizeChanged { playAreaSize = it }
+						.padding(PLAY_AREA_PADDING)
 				) {
 					// Custom layout that centers pads independently and positions chains relative to pads
 					Layout(
@@ -587,6 +584,18 @@ class PlayActivity : BaseActivity() {
 							} else {
 								Spacer(modifier = Modifier.size(0.dp))
 							}
+							// "Hide UI" (optionViewVisible) was written by the view model and read nowhere: the
+							// switch only changed launchpad LEDs. It hides the logo and the chrome column, as web does.
+							if (logoBitmap != null) {
+								Image(
+									bitmap = logoBitmap,
+									contentDescription = null,
+									contentScale = ContentScale.Fit,
+									modifier = Modifier.testTag("play_logo").semantics { testTagsAsResourceId = true },
+								)
+							} else {
+								Spacer(modifier = Modifier.size(0.dp))
+							}
 						},
 						modifier = Modifier.fillMaxSize()
 					) { measurables, constraints ->
@@ -600,20 +609,44 @@ class PlayActivity : BaseActivity() {
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
 						val chromePlaceable = measurables[6].measure(unconstrained)
+						val padX = PlayLayout.padLeft(constraints.maxWidth, padPlaceable.width)
+						val padY = (constraints.maxHeight - padPlaceable.height) / 2
+						val leftPos = IntOffset(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
+						val rightPos = IntOffset(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
+						val topPos = IntOffset(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
+						val bottomPos = IntOffset(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
+						// Chrome column on the right, inside the right inset, vertically centered on pads
+						val chromePos = IntOffset(
+							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
+							(padY + (padPlaceable.height - chromePlaceable.height) / 2).coerceAtLeast(0),
+						)
+						// The logo keeps its place in the window's top-right corner, outside this padded
+						// area, and gives up width only where chains or the menu would cover it.
+						val logoRight = constraints.maxWidth + paddingPx - LOGO_INSET.roundToPx()
+						val logoTop = LOGO_INSET.roundToPx() - topInsetPx - paddingPx
+						val logoPlaceable = logoBitmap?.let { bitmap ->
+							val aspect = bitmap.width.toFloat() / bitmap.height
+							val obstacles = listOf(
+								IntRect(IntOffset(padX, padY), IntSize(padPlaceable.width, padPlaceable.height)),
+								IntRect(leftPos, IntSize(leftPlaceable.width, leftPlaceable.height)),
+								IntRect(rightPos, IntSize(rightPlaceable.width, rightPlaceable.height)),
+								IntRect(topPos, IntSize(topPlaceable.width, topPlaceable.height)),
+								IntRect(bottomPos, IntSize(bottomPlaceable.width, bottomPlaceable.height)),
+								IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
+							).filter { it.width > 0 && it.height > 0 }
+							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
+							if (width < LOGO_MIN_WIDTH.roundToPx()) null
+							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
+						}
 						layout(constraints.maxWidth, constraints.maxHeight) {
-							// Pads centered in the area excluding the right chrome strip
-							val padX = ((constraints.maxWidth - chromeStripPx) - padPlaceable.width) / 2
-							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
-							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
-							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
-							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
-							bottomPlaceable.place(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
-							// Chrome column on the right, vertically centered on pads
-							val chromeX = constraints.maxWidth - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2
-							val chromeY = padY + (padPlaceable.height - chromePlaceable.height) / 2
-							chromePlaceable.place(chromeX, chromeY.coerceAtLeast(0))
+							leftPlaceable.place(leftPos)
+							rightPlaceable.place(rightPos)
+							topPlaceable.place(topPos)
+							bottomPlaceable.place(bottomPos)
+							chromePlaceable.place(chromePos)
+							logoPlaceable?.place(logoRight - logoPlaceable.width, logoTop)
 						}
 					}
 				}
@@ -1021,30 +1054,31 @@ class PlayActivity : BaseActivity() {
 
 	// region Layout initialization
 
-	private fun initLayout(screenWidth: Int, screenHeight: Int, paddingWidth: Int, paddingHeight: Int) {
-		lastScreenWidth = screenWidth
-		lastScreenHeight = screenHeight
-		lastPaddingWidth = paddingWidth
-		lastPaddingHeight = paddingHeight
+	/** Lays the pads out for [area] once the current frame is done, unless that area is already laid out. */
+	private fun requestPlayLayout(area: PlayLayout.Area) {
+		if (area.width <= 0 || area.height <= 0 || area == layoutArea) return
+		layoutArea = area
+		if (layoutPosted) return
+		layoutPosted = true
+		Handler(Looper.getMainLooper()).post {
+			layoutPosted = false
+			initLayout(layoutArea ?: return@post)
+			vm.initPlayback()
+		}
+	}
+
+	private fun initLayout(area: PlayLayout.Area) {
 		try {
 			log("[05] Set Button Layout (squareButton = ${vm.unipack.squareButton})")
 			vm.setupCheckBoxVisibility()
 
-			val buttonSizeX: Int
-			val buttonSizeY: Int
-			// Reserve right-side chrome strip (Menu + AutoPlay transport + vertical progress)
-			val chromeStripPx = (56 * resources.displayMetrics.density).toInt()
-			if (vm.unipack.squareButton) {
-				val chainColumns = 2
-				val chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0
-				val availW = (paddingWidth - chromeStripPx).coerceAtLeast(0)
-				val s = (availW / (vm.unipack.buttonX + chainColumns)).coerceAtMost(paddingHeight / (vm.unipack.buttonY + chainRows))
-				buttonSizeX = s; buttonSizeY = s
-			} else {
-				buttonSizeX = (screenWidth - chromeStripPx).coerceAtLeast(0) / vm.unipack.buttonY
-				buttonSizeY = screenHeight / vm.unipack.buttonX
-			}
-			val buttonSizeMin = buttonSizeX.coerceAtMost(buttonSizeY)
+			val buttonSize = PlayLayout.buttonSize(
+				area = area,
+				rows = vm.unipack.buttonX,
+				columns = vm.unipack.buttonY,
+				square = vm.unipack.squareButton,
+				chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0,
+			)
 
 			vm.setupCheckBoxListeners()
 			padsContainer?.removeAllViews()
@@ -1052,8 +1086,8 @@ class PlayActivity : BaseActivity() {
 			chainsRightContainer?.removeAllViews()
 			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
-			setupPads(buttonSizeX, buttonSizeY)
-			setupChains(buttonSizeMin)
+			setupPads(buttonSize.x, buttonSize.y)
+			setupChains(buttonSize.chain)
 			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
 			padTouch.slide = p.slideMode
 			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
@@ -1136,11 +1170,11 @@ class PlayActivity : BaseActivity() {
 			.forEach { it?.descendantFocusability = mode }
 	}
 
-	private fun setupChains(buttonSizeMin: Int) {
+	private fun setupChains(chainSize: Int) {
 		for (i in 0 until CIRCLE_ARRAY_SIZE) {
 			val c = i - CHAIN_INDEX_OFFSET
 			val view = ChainView(this)
-			view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
+			view.layoutParams = RelativeLayout.LayoutParams(chainSize, chainSize)
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
@@ -1353,6 +1387,14 @@ class PlayActivity : BaseActivity() {
 
 	// endregion
 }
+
+private val PLAY_AREA_PADDING = 8.dp
+// Right-hand column for Menu, the AutoPlay transport and its vertical progress.
+private val CHROME_STRIP = 56.dp
+private val LOGO_WIDTH = 90.dp
+private val LOGO_INSET = 16.dp
+private val LOGO_MARGIN = 4.dp
+private val LOGO_MIN_WIDTH = 24.dp
 
 /** Auto Mapping row colours, each kept readable on the option panel. */
 private data class AutoMappingColors(val label: Color, val arrow: Color, val progress: Color)
