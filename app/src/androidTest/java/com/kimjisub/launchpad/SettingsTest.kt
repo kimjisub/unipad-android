@@ -1,11 +1,16 @@
 package com.kimjisub.launchpad
 
+import android.app.Activity
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -194,6 +199,47 @@ class SettingsTest : BaseUITest() {
             takeScreenshot("settings_email_without_mail_app")
             assertSettingsStillOpen("community e-mail")
         }
+    }
+
+    /**
+     * The license row opens the library's current license screen (the older one is deprecated), and
+     * that screen reads the bundled license list instead of failing. A debug build bundles a
+     * single "Debug License Info" entry; a release build bundles the full list.
+     */
+    @Test
+    fun testOpenSourceLicenseRowOpensLicenseList() {
+        launchToMainScreen()
+        openSettings()
+
+        val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+        assertNotNull("Settings content is not scrollable", content)
+        val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.openSourceLicense))))
+        assertNotNull("Open source license row not found", row)
+        row!!.click()
+
+        assertTrue(
+            "The license screen did not open",
+            waitUntil(5000L) { resumedActivity() is OssLicensesMenuActivity }
+        )
+        assertTrue(
+            "The license list was not shown",
+            device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text("Debug License Info")), 5000L)
+        )
+        takeScreenshot("settings_open_source_licenses")
+
+        device.pressBack()
+        assertTrue(
+            "Did not return to settings from the license screen",
+            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+        )
+    }
+
+    private fun resumedActivity(): Activity? {
+        var activity: Activity? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).firstOrNull()
+        }
+        return activity
     }
 
     private fun assertSettingsStillOpen(link: String) {

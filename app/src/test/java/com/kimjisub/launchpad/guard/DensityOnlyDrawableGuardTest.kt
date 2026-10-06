@@ -27,7 +27,7 @@ class DensityOnlyDrawableGuardTest {
 		val folders = resourceFolders()
 		assertTrue(
 			"Scanner did not reach app/src/main/res/drawable; resource roots moved?",
-			folders.any { it.name == "drawable" && it.parentFile.parentFile.name == "main" },
+			folders.any { it.name == "drawable" && it.parentFile?.parentFile?.name == "main" },
 		)
 		val found = DensityOnlyDrawableScanner.scan(
 			folders.map { folder -> folder.name to folder.list()!!.toList() },
