@@ -16,10 +16,8 @@ object PlayLayout {
 	/** The area pads are laid out in, keeping [sideMargin] free at both its left and right edges. */
 	data class Area(val width: Int, val height: Int, val sideMargin: Int)
 
-	/** Pad size; chain buttons are [min] square. */
-	data class ButtonSize(val x: Int, val y: Int) {
-		val min: Int get() = min(x, y)
-	}
+	/** Pad size [x] by [y]; chain buttons are [chain] square. */
+	data class ButtonSize(val x: Int, val y: Int, val chain: Int)
 
 	/**
 	 * The margin kept free on both sides of a centred grid: the wider of what the left edge needs
@@ -29,17 +27,17 @@ object PlayLayout {
 	fun sideMargin(insetLeft: Int, insetRight: Int, menuStrip: Int): Int = max(insetLeft, insetRight + menuStrip)
 
 	/**
-	 * Pad size for [area].
+	 * Pad size for [area]. The grid leaves a chain column on each side and [chainRows] above and
+	 * below it; chains are as large as the largest square pad that fits.
 	 *
 	 * @param rows pads from top to bottom (UniPack `buttonX`); [columns] from left to right (`buttonY`).
-	 * @param square square pads leave a chain column on each side of the grid and [chainRows] above
-	 *   and below it; stretched pads fill the area between the margins.
+	 * @param square square pads take the chain size; stretched pads fill what the chains leave.
 	 */
 	fun buttonSize(area: Area, rows: Int, columns: Int, square: Boolean, chainRows: Int): ButtonSize {
-		val gridWidth = (area.width - 2 * area.sideMargin).coerceAtLeast(0)
-		if (!square) return ButtonSize(gridWidth / columns, area.height / rows)
-		val size = min(gridWidth / (columns + CHAIN_COLUMNS), area.height / (rows + chainRows))
-		return ButtonSize(size, size)
+		val width = (area.width - 2 * area.sideMargin).coerceAtLeast(0)
+		val chain = min(width / (columns + CHAIN_COLUMNS), area.height / (rows + chainRows))
+		if (square) return ButtonSize(chain, chain, chain)
+		return ButtonSize((width - CHAIN_COLUMNS * chain) / columns, (area.height - chainRows * chain) / rows, chain)
 	}
 
 	/** Left edge of a [gridWidth] wide grid centred in an area [width] wide. */

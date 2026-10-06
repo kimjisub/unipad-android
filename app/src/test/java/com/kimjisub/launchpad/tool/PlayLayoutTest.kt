@@ -12,15 +12,17 @@ class PlayLayoutTest {
 	private fun square(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0, margin: Int = strip) =
 		PlayLayout.buttonSize(PlayLayout.Area(width, height, margin), rows, columns, square = true, chainRows = chainRows)
 
-	/** Pads, chain columns and menu strip side by side; returns the grid's left edge. */
-	private fun assertCentredAndClear(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0) {
-		val size = square(width, height, rows, columns, chainRows).min
-		val gridWidth = size * columns
+	/** Pads, chain columns and menu strip side by side, the grid on the window's centre line. */
+	private fun assertCentredAndClear(width: Int, height: Int, rows: Int = 8, columns: Int = 8, chainRows: Int = 0, square: Boolean = true) {
+		val size = PlayLayout.buttonSize(PlayLayout.Area(width, height, strip), rows, columns, square, chainRows)
+		val gridWidth = size.x * columns
 		val left = PlayLayout.padLeft(width, gridWidth)
-		assertTrue("grid off centre in $width x $height", kotlin.math.abs((left + gridWidth / 2.0) - width / 2.0) <= 1)
-		assertTrue("left chain column off screen in $width x $height", left - size >= 0)
-		assertTrue("right chain column under the menu in $width x $height", left + gridWidth + size <= width - strip)
-		assertTrue("grid taller than $width x $height", size * (rows + chainRows) <= height)
+		val shape = "$width x $height (square = $square, chain rows = $chainRows)"
+		assertTrue("grid off centre in $shape", kotlin.math.abs((left + gridWidth / 2.0) - width / 2.0) <= 1)
+		assertTrue("chains larger than a pad in $shape", size.chain <= minOf(size.x, size.y))
+		assertTrue("left chain column off screen in $shape", left - size.chain >= 0)
+		assertTrue("right chain column under the menu in $shape", left + gridWidth + size.chain <= width - strip)
+		assertTrue("grid taller than $shape", size.y * rows + size.chain * chainRows <= height)
 	}
 
 	@Test
@@ -36,21 +38,32 @@ class PlayLayoutTest {
 	fun portraitAndSplitWindows_shrinkThePadsInsteadOfMovingThem() {
 		for ((w, h) in listOf(376 to 878, 784 to 621, 584 to 1264)) assertCentredAndClear(w, h)
 		// 800 x 637 dp split window minus the 8 dp padding: width, not height, limits the pads.
-		assertEquals((784 - 2 * strip) / 10, square(784, 621).min)
+		assertEquals((784 - 2 * strip) / 10, square(784, 621).chain)
 	}
 
 	@Test
 	fun landscapeSquarePads_keepTheirHeightLimitedSize() {
-		assertEquals(376 / 8, square(878, 376).min)
-		assertEquals(344 / 8, square(624, 344).min)
+		assertEquals(376 / 8, square(878, 376).chain)
+		assertEquals(344 / 8, square(624, 344).chain)
 	}
 
 	@Test
-	fun nonSquarePads_useRowsAndColumnsOfTheirOwnAxis() {
+	fun stretchedPads_fillTheAreaLeftBesideTheChainColumns() {
+		// 8 x 10 pack: chains match the 50 px tall pads, the pads widen to the space between them.
 		val size = PlayLayout.buttonSize(PlayLayout.Area(900, 400, strip), rows = 8, columns = 10, square = false, chainRows = 0)
-		assertEquals((900 - 2 * strip) / 10, size.x)
 		assertEquals(400 / 8, size.y)
-		assertCentredAndClear(900, 400, rows = 8, columns = 10)
+		assertEquals(400 / 8, size.chain)
+		assertEquals((900 - 2 * strip - 2 * size.chain) / 10, size.x)
+	}
+
+	@Test
+	fun stretchedPads_keepTheChainsClearOfTheMenu() {
+		// 2400 x 1080 px phone with the camera on the right (QA's device check) and the usual shapes.
+		for ((w, h) in listOf(2316 to 1038, 878 to 376, 624 to 344, 1264 to 784, 376 to 878, 784 to 621)) {
+			assertCentredAndClear(w, h, square = false)
+			assertCentredAndClear(w, h, square = false, chainRows = 2)
+			assertCentredAndClear(w, h, rows = 8, columns = 10, square = false)
+		}
 	}
 
 	@Test
@@ -67,7 +80,7 @@ class PlayLayoutTest {
 	fun cutoutOnTheLeft_doesNotShrinkA16x9Phone() {
 		// 731 x 411 dp landscape minus the 8 dp padding: the strip alone sets the margin.
 		val margin = PlayLayout.sideMargin(insetLeft = 52, insetRight = 0, menuStrip = strip)
-		assertEquals(395 / 8, square(715, 395, margin = margin).min)
+		assertEquals(395 / 8, square(715, 395, margin = margin).chain)
 		assertCentredAndClear(715, 395)
 	}
 

@@ -9,8 +9,9 @@ import java.nio.ByteOrder
  * A small UniPack written straight into the app's default workspace so UI tests always have a
  * pack to select, play and delete, whatever the emulator already holds.
  *
- * 8x8 square buttons, two chains, LED and autoPlay present (so every play option is shown),
- * and every sound is silence so a run never plays audio through the host speaker.
+ * 8x8 square buttons (stretched with `squareButton = false`), two chains, LED and autoPlay present
+ * (so every play option is shown), and every sound is silence so a run never plays audio through
+ * the host speaker.
  */
 object TestUniPack {
     const val FOLDER_NAME = "zz_ui_test_pack"
@@ -23,14 +24,14 @@ object TestUniPack {
 
     fun exists(context: Context): Boolean = File(folder(context), "info").isFile
 
-    fun install(context: Context): File {
+    fun install(context: Context, squareButton: Boolean = true): File {
         val root = folder(context)
         root.deleteRecursively()
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=8\nbuttonY=8\nchain=$CHAINS\nsquareButton=true\n"
+            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=8\nbuttonY=8\nchain=$CHAINS\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 

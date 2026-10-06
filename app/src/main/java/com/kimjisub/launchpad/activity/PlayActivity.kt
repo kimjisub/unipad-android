@@ -1041,7 +1041,7 @@ class PlayActivity : BaseActivity() {
 			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
 			setupPads(buttonSize.x, buttonSize.y)
-			setupChains(buttonSize.min)
+			setupChains(buttonSize.chain)
 			slideTouchOverlayView?.apply {
 				setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
 				listener = { x, y, down -> vm.padTouch(x, y, down) }
@@ -1102,7 +1102,7 @@ class PlayActivity : BaseActivity() {
 				view.setOnTouchListener { _, event ->
 					when (event?.action) {
 						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
-						MotionEvent.ACTION_UP -> vm.padTouch(x, y, false)
+						MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> vm.padTouch(x, y, false)
 					}
 					false
 				}
@@ -1129,11 +1129,11 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun setupChains(buttonSizeMin: Int) {
+	private fun setupChains(chainSize: Int) {
 		for (i in 0 until CIRCLE_ARRAY_SIZE) {
 			val c = i - CHAIN_INDEX_OFFSET
 			val view = ChainView(this)
-			view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
+			view.layoutParams = RelativeLayout.LayoutParams(chainSize, chainSize)
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view

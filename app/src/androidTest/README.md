@@ -139,6 +139,8 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityUIVisibilityFeatures` | Hide UI hides/restores Menu; Back still reaches options; watermark switches restore. |
 | `PlayActivityTest.testPlayActivityRecordingClipboard` | Stopping recording copies chain and touch commands to the clipboard. |
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
+| `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
+| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
