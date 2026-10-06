@@ -1,16 +1,16 @@
 package com.kimjisub.launchpad.activity
 
-import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -59,6 +59,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -80,10 +81,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutModifier
@@ -107,12 +112,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
-import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.audio.AudioFocusController
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -130,6 +136,7 @@ import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
 import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.TraceLogText
+import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -175,7 +182,8 @@ class PlayActivity : BaseActivity() {
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
-	private var slideTouchOverlayView: SlideTouchOverlayView? = null
+	// Pad touches of both input modes; internal so tests can check which mode is applied.
+	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
 	// though the retained ViewModel says the UI was loaded. The window can be resized, or turned
 	// to put the cutout on the other side, without recreating the activity, which rebuilds the
@@ -293,6 +301,13 @@ class PlayActivity : BaseActivity() {
 		)[PlayActivityViewModel::class.java]
 		vm.uiCallback = uiCallback
 		vm.enable = true
+		reportScreenLayout()
+		addOnConfigurationChangedListener { reportScreenLayout(configuration = it) }
+		addOnMultiWindowModeChangedListener {
+			// Before API 26 the callback has no new configuration; the configuration change that follows corrects the size.
+			val configuration = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) it.newConfig else resources.configuration
+			reportScreenLayout(configuration, it.isInMultiWindowMode)
+		}
 
 		val path = intent.getStringExtra("path") ?: run {
 			finish()
@@ -492,8 +507,10 @@ class PlayActivity : BaseActivity() {
 		val logoBitmap = theme?.customLogo?.takeIf { vm.optionViewVisible }?.let { logo ->
 			remember(logo) { logo.toBitmap().asImageBitmap() }
 		}
+		// The open menu covers the chain buttons, so Tab must not reach them behind it.
+		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
-		Box(modifier = Modifier.fillMaxSize()) {
+		Box(modifier = Modifier.fillMaxSize().acceptEveryTouch()) {
 			// Background - always visible
 			Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 				theme?.playbg?.let { bg ->
@@ -540,7 +557,7 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { padsContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().padTouchInput()
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
@@ -559,14 +576,6 @@ class PlayActivity : BaseActivity() {
 							AndroidView(
 								factory = { ctx -> TraceLogOverlayView(ctx).also { overlay ->
 									traceLogOverlayView = overlay
-								} },
-								modifier = Modifier.wrapContentSize()
-							)
-							// Slide Mode layer: GONE unless the setting is on, so pads keep their own touches
-							AndroidView(
-								factory = { ctx -> SlideTouchOverlayView(ctx).also { overlay ->
-									overlay.visibility = View.GONE
-									slideTouchOverlayView = overlay
 								} },
 								modifier = Modifier.wrapContentSize()
 							)
@@ -599,10 +608,7 @@ class PlayActivity : BaseActivity() {
 						val overlayPlaceable = measurables[5].measure(
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
-						val slidePlaceable = measurables[6].measure(
-							Constraints.fixed(padPlaceable.width, padPlaceable.height)
-						)
-						val chromePlaceable = measurables[7].measure(unconstrained)
+						val chromePlaceable = measurables[6].measure(unconstrained)
 						val padX = PlayLayout.padLeft(constraints.maxWidth, padPlaceable.width)
 						val padY = (constraints.maxHeight - padPlaceable.height) / 2
 						val leftPos = IntOffset(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
@@ -630,12 +636,11 @@ class PlayActivity : BaseActivity() {
 							).filter { it.width > 0 && it.height > 0 }
 							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
 							if (width < LOGO_MIN_WIDTH.roundToPx()) null
-							else measurables[8].measure(Constraints.fixed(width, (width / aspect).toInt()))
+							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
 						}
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
-							slidePlaceable.place(padX, padY)
 							leftPlaceable.place(leftPos)
 							rightPlaceable.place(rightPos)
 							topPlaceable.place(topPos)
@@ -646,7 +651,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
-					Box(modifier = Modifier.fillMaxSize().background(PlayPalette.optionScrim).clickable { vm.toggleOptionWindow(false) })
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(PlayPalette.optionScrim)
+							.focusProperties { canFocus = false }
+							.clickable { vm.toggleOptionWindow(false) }
+					)
 				}
 				AnimatedVisibility(
 					visible = vm.isOptionWindowVisible,
@@ -670,6 +681,36 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/**
+	 * Keeps a gesture whose first finger lands on empty screen (a palm on the margin) with this
+	 * window: when nothing takes the first finger, the window drops the rest of the gesture and
+	 * later fingers on pads never arrive.
+	 */
+	private fun Modifier.acceptEveryTouch() = pointerInput(Unit) {
+		awaitPointerEventScope { while (true) awaitPointerEvent() }
+	}
+
+	/**
+	 * Pad input for both modes, per pointer, taken in Compose. The embedded pad views are handed
+	 * the whole screen's touch event, and an Android view group ignores a finger that joins a
+	 * gesture whose first finger landed outside it (a palm on the margin silenced every pad).
+	 */
+	private fun Modifier.padTouchInput() = pointerInput(Unit) {
+		awaitPointerEventScope {
+			while (true) {
+				for (change in awaitPointerEvent().changes) {
+					val id = change.id.value
+					val (px, py) = change.position
+					when {
+						change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
+						change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+						change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+					}
+				}
+			}
+		}
+	}
+
 
 	@Composable
 	private fun ChromeColumn() {
@@ -684,7 +725,7 @@ class PlayActivity : BaseActivity() {
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.size(36.dp)) {
+			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					imageVector = Icons.Default.Menu,
 					contentDescription = stringResource(string.menu),
@@ -700,12 +741,12 @@ class PlayActivity : BaseActivity() {
 						.height(2.dp)
 						.background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(1.dp)),
 				)
-				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				IconButton(
 					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
-					modifier = Modifier.size(40.dp),
+					modifier = Modifier.focusRing(CircleShape).size(40.dp),
 				) {
 					Icon(
 						imageVector = if (vm.isAutoPlayPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -714,7 +755,7 @@ class PlayActivity : BaseActivity() {
 						modifier = Modifier.size(26.dp),
 					)
 				}
-				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				Box(
@@ -787,7 +828,7 @@ class PlayActivity : BaseActivity() {
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
 					tint = quitTint,
-					modifier = Modifier.size(24.dp).clickable { finish() },
+					modifier = Modifier.focusRing(CircleShape, outset = 6.dp).clickable { finish() }.size(24.dp),
 				)
 			}
 
@@ -799,6 +840,7 @@ class PlayActivity : BaseActivity() {
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
 					.background(tint.copy(alpha = cardFill.alpha), shape = RoundedCornerShape(12.dp))
+					.focusRing(RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
@@ -890,6 +932,7 @@ class PlayActivity : BaseActivity() {
 					modifier = Modifier
 						.weight(1f)
 						.background(if (active) color else Color.Transparent, RoundedCornerShape(8.dp))
+						.focusRing()
 						.clickable {
 							vm.switchPlayMode(mode)
 							vm.toggleOptionWindow(false)
@@ -928,6 +971,7 @@ class PlayActivity : BaseActivity() {
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
+					.focusRing()
 					.clickable { vm.autoMapping() }
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
@@ -958,6 +1002,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier.testTag("play_option_$textResId")
 				.fillMaxWidth()
 				.alpha(alpha)
+				.focusRing()
 				.then(
 					if (!state.locked) {
 						if (hasLongClick && state.onLongClick != null)
@@ -978,6 +1023,7 @@ class PlayActivity : BaseActivity() {
 			Switch(
 				checked = state.checked,
 				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
+				modifier = Modifier.focusProperties { canFocus = false },
 				colors = SwitchDefaults.colors(
 					checkedThumbColor = Color.White,
 					checkedTrackColor = accentColor,
@@ -1042,11 +1088,8 @@ class PlayActivity : BaseActivity() {
 			chainsLeftContainer?.removeAllViews()
 			setupPads(buttonSize.x, buttonSize.y)
 			setupChains(buttonSize.chain)
-			slideTouchOverlayView?.apply {
-				setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
-				listener = { x, y, down -> vm.padTouch(x, y, down) }
-				visibility = if (p.slideMode) View.VISIBLE else View.GONE
-			}
+			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
+			padTouch.slide = p.slideMode
 			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
 			// A recreated activity keeps the retained trace log and redraws LEDs lit before it was rebuilt.
 			if (vm.isTraceLogSequenceInitialized) uiCallback.updateTraceLogOverlay() else vm.traceLogInit()
@@ -1089,7 +1132,6 @@ class PlayActivity : BaseActivity() {
 		classicTraceCount = 0
 	}
 
-	@SuppressLint("ClickableViewAccessibility")
 	private fun setupPads(buttonSizeX: Int, buttonSizeY: Int) {
 		for (x in 0 until vm.unipack.buttonX) {
 			val row = LinearLayout(this)
@@ -1099,13 +1141,6 @@ class PlayActivity : BaseActivity() {
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
 				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
-				view.setOnTouchListener { _, event ->
-					when (event?.action) {
-						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
-						MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> vm.padTouch(x, y, false)
-					}
-					false
-				}
 				padViews[x][y] = view
 				row.addView(view)
 			}
@@ -1127,6 +1162,12 @@ class PlayActivity : BaseActivity() {
 				padViews[x + 1][y + 1]?.setPhantomRotation(180f)
 			}
 		}
+	}
+
+	private fun setChainsFocusable(focusable: Boolean) {
+		val mode = if (focusable) ViewGroup.FOCUS_AFTER_DESCENDANTS else ViewGroup.FOCUS_BLOCK_DESCENDANTS
+		listOf(chainsTopContainer, chainsRightContainer, chainsBottomContainer, chainsLeftContainer)
+			.forEach { it?.descendantFocusability = mode }
 	}
 
 	private fun setupChains(chainSize: Int) {
@@ -1290,6 +1331,11 @@ class PlayActivity : BaseActivity() {
 
 	// region Lifecycle
 
+	private fun reportScreenLayout(
+		configuration: Configuration = resources.configuration,
+		multiWindow: Boolean = isInMultiWindowMode,
+	) = vm.screenLayoutChanged(ScreenLayout.of(configuration.screenWidthDp, configuration.screenHeightDp, multiWindow))
+
 	override fun onResume() {
 		super.onResume()
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
@@ -1302,7 +1348,7 @@ class PlayActivity : BaseActivity() {
 			redrawAllLaunchpadLeds()
 		}
 		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
-		slideTouchOverlayView?.let { if (vm.uiLoaded) it.visibility = if (p.slideMode) View.VISIBLE else View.GONE }
+		padTouch.slide = p.slideMode
 	}
 
 	override fun onPause() {

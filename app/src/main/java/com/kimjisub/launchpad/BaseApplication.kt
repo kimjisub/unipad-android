@@ -2,6 +2,8 @@ package com.kimjisub.launchpad
 
 import android.app.Application
 import android.content.Context
+import android.os.Build
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
@@ -20,11 +22,13 @@ class BaseApplication : Application() {
 		private const val DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS = 60L
 		private const val PREF_NAME = "data"
 		private const val KEY_SELECTED_THEME = "SelectedTheme"
+		private const val CRASH_KEY_INSTALL_SPLITS = "install_splits"
 	}
 
 	override fun onCreate() {
 		super.onCreate()
 
+		recordInstallSplits()
 		setupNotification()
 		setupLogger()
 		setupRemoteConfig()
@@ -34,6 +38,19 @@ class BaseApplication : Application() {
 			androidContext(applicationContext)
 			modules(appModule)
 		}
+	}
+
+	/**
+	 * Records which Play split APKs are installed, so a resource crash can be matched to an
+	 * install that lacks a split (e.g. base APK only, without the screen-density split).
+	 * Before API 26 only the split file names (`split_config.xxhdpi.apk`) are available.
+	 */
+	private fun recordInstallSplits() {
+		val names = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) applicationInfo.splitNames
+		else applicationInfo.splitSourceDirs?.map { File(it).name }?.toTypedArray()
+		val splits = names?.joinToString(",") ?: "none"
+		FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SPLITS, splits)
+		Log.log("Install splits: $splits")
 	}
 
 	private fun setupNotification() {
