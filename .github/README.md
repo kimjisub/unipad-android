@@ -8,8 +8,8 @@ Every pull request runs these stable checks on Ubuntu 24.04:
 | `Android debug build` | `./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain` | 25 minutes |
 | `Android lint` | `./gradlew lintDebug --no-daemon --console=plain` | 25 minutes |
 
-The UI suite (`bash scripts/ci-connected-tests.sh`) is not a hosted check; it
-runs on the maintenance Mac before every push, as described below.
+The UI suite (`bash scripts/ci-connected-tests.sh`) is not a hosted check; run it
+locally before every push, as described below.
 
 Setup uses Java 21 and the SDK/NDK/CMake versions in
 `actions/setup-android/action.yml`. Copy `.github/fixtures/google-services.json`
@@ -21,15 +21,14 @@ The UI job uses API 35, Google APIs, x86_64 and KVM. It runs
 `:app:connectedDebugAndroidTest :design:connectedDebugAndroidTest` without test
 filters, including the merged base-feature tests. Tests use their
 own local fixtures; live services and physical MIDI/audio hardware are outside
-this check's coverage. The local harness uses its allocated API 35 ARM device;
-the Gradle command is the same, but host CPU and GPU differ.
+this check's coverage. A local run on an API 35 ARM emulator uses the same Gradle
+command, but host CPU and GPU differ.
 
-For local UniPad maintenance runs, start and stop the device only through
-`python3 $HARNESS/devices.py up-android --fresh` and `python3 $HARNESS/devices.py down`.
-Set `ANDROID_SERIAL` to the returned id. Record its current Wi-Fi/mobile data
+For local runs, start a freshly wiped API 35 emulator that nothing else is using
+and set `ANDROID_SERIAL` to its serial from `adb devices`. Record its current Wi-Fi/mobile data
 state, disable both with `adb -s "$ANDROID_SERIAL" shell svc wifi disable` and
 `adb -s "$ANDROID_SERIAL" shell svc data disable`, and restore that state before
-returning the device. Hosted runners disable both before testing, then dispose
+stopping the emulator. Hosted runners disable both before testing, then dispose
 of their emulator. The script
 never chooses or starts another device. Hosted GitHub runners instead use the
 pinned [Android Emulator Runner action](https://github.com/ReactiveCircus/android-emulator-runner)
@@ -62,7 +61,7 @@ The worker is always asked to stop, including if a press or drain fails.
 
 On the current baseline, the reported hang did not reproduce: the two unchanged
 race tests passed in 26.6 seconds and the full suite finished in 80 seconds on
-the maintenance Mac. These results do not establish the cause of the earlier
+an Apple silicon Mac. These results do not establish the cause of the earlier
 interruption. The deadlines make a future stalled run fail instead of waiting
 indefinitely; the workflow also caps the test step at 12 minutes and the job at
 20 minutes. The repetition counts are not reduced and no tests are excluded.

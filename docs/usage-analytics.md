@@ -1,6 +1,6 @@
 # Pack import and play usage tracking
 
-Recovered implementation: commit `64a5ffc1`, copied byte for byte from all 31 changed/new files in an earlier verified working copy. Both copies started at `20207d89`; there was no base-code divergence. The independent report dated 2026-09-30 12:40 UTC passed the archive write-target classification, 511 app tests, four design tests, and debug/release Kotlin compilation. That historical result does not verify the new first-input change or a device/server run.
+Introduced in [#120](https://github.com/kimjisub/unipad-android/pull/120), which restored an earlier implementation unchanged and added the first-input correction described below. Its earlier implementation had passed the archive write-target classification, 511 app tests, four design tests, and debug/release Kotlin compilation; that earlier result does not verify the first-input change or a device/server run.
 
 ## Events and privacy
 
@@ -12,7 +12,7 @@ Recovered implementation: commit `64a5ffc1`, copied byte for byte from all 31 ch
 
 No identifier is introduced; the only parameters added since are the three window buckets of `play_start`, never an exact size or device model. Filenames, pack titles, creators, search terms, URLs, coordinates, raw errors, and exact durations are not event parameters. The first-input event proves an accepted input, not audible sound or physical LED output.
 
-## Changes beyond the recovered implementation
+## Changes beyond the restored implementation
 
 Only the tracker/event vocabulary and four analytics/play-usage test files change. The tracker independently remembers whether human input has been recorded, settles both flags under its existing lock, and reports outside that lock. Duplicate presses return before constructing events. The import classification and original activity/runner call sites are preserved.
 
@@ -20,7 +20,7 @@ Regression checks reproduce auto play followed by human input at both the tracke
 
 ## Delivery and remaining checks
 
-Debug events stay in local logs by default. Release events use the existing Firebase sink; a mocked SDK call or a `usage-firebase` line is not proof of server receipt. Device review must check import, human-first, auto-only, auto-then-human, step/guide input, reconstruction, and exit using the harness device lease. Keep device/log evidence separate from server-received evidence.
+Debug events stay in local logs by default. Release events use the existing Firebase sink; a mocked SDK call or a `usage-firebase` line is not proof of server receipt. Device review must check import, human-first, auto-only, auto-then-human, step/guide input, reconstruction, and exit on a test device used by nothing else. Keep device/log evidence separate from server-received evidence.
 
 The first-input correction does not establish a completed-visit conversion rate: received data, visit matching, test exclusion, and the reporting period still need independent confirmation. No real-use zero is inferred from missing Android event rows. Inclusion in a production release and a read-only aggregation of the received events are separate follow-ups.
 
