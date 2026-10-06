@@ -38,10 +38,12 @@
 		android:textSize="10sp"
 		tools:ignore="SmallSp" />
 
+	<!-- 64 pads are skipped by Tab so the play screen's chain and menu buttons are a few presses away. -->
 	<View
 		android:id="@+id/touchSpace"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:clickable="true"
-		android:focusable="false" />
+		android:focusable="false"
+		tools:ignore="KeyboardInaccessibleWidget" />
 </RelativeLayout>

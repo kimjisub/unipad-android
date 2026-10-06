@@ -775,7 +775,7 @@ class PlayActivity : BaseActivity() {
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
 					tint = quitTint,
-					modifier = Modifier.focusRing(CircleShape).clickable { finish() }.padding(6.dp).size(24.dp),
+					modifier = Modifier.focusRing(CircleShape, outset = 6.dp).clickable { finish() }.size(24.dp),
 				)
 			}
 
