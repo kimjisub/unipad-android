@@ -7,24 +7,26 @@ and native pad/chain views. Store tests supply a controlled catalogue to the rea
 For the deterministic 29-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
-## Run on a borrowed API 35 emulator
+## Run on an API 35 emulator
 
-Use JDK 21 and the Android SDK. For Paperclip runs on the maintenance Mac, load the machine
-environment before every shell command and borrow a device through the harness:
+Use JDK 21 and the Android SDK. Start an API 35 emulator that nothing else is using and find its
+serial:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" up-android
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-35-avd> -no-snapshot-load &
+adb wait-for-device
+adb devices
 ```
 
-Use only the printed serial as `ANDROID_SERIAL`. Run from this repository. Keep the APKs
+Use that serial as `ANDROID_SERIAL` so no other connected device is touched. Run from this repository. Keep the APKs
 installed after the check: uninstalling deletes every pack in the debug app's storage.
 
 ```bash
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --console=plain
 
 # A focused check; the final verification must still run both complete suites.
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
 ```
@@ -48,13 +50,13 @@ filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-`BaseUITest` screenshots: `/data/local/tmp/unipad_tests` on the borrowed device; pull them with
-`adb -s <printed-serial> pull`. Keep the emulator offline so app startup cannot send test traffic;
+`BaseUITest` screenshots: `/data/local/tmp/unipad_tests` on the emulator; pull them with
+`adb -s <serial> pull`. Keep the emulator offline so app startup cannot send test traffic;
 the catalogue fixture does not disable other application network clients. Restore the original
-network state and return the device when finished:
+network state and stop the emulator when finished:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
+adb -s <serial> emu kill
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -213,7 +215,7 @@ and cancels only notifications carrying its unique ZIP name. It never uses the l
 plays sound, launches an activity, or contacts a pack server. Failure and cancellation preservation
 remain covered separately by `UniPackInstallOverlapTest`; this device test covers two successes.
 
-Borrow an emulator through the maintenance harness first and use only the printed serial:
+Start an emulator that nothing else is using and set `ANDROID_SERIAL` to its serial:
 
 ```bash
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
@@ -225,13 +227,13 @@ adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
 ```
 
 Keep the device offline during this check so application startup cannot send test traffic.
-Restore its prior network state and return it through the harness afterward. Direct instrumentation
+Restore its prior network state afterward. Direct instrumentation
 avoids Gradle uninstalling existing app data. `adb` exits zero even for a JUnit failure: require
 `OK (1 test)` and status code `0` for the test, not just the shell exit code.
 
 For the before/after comparison, export parent `c7bb0af67578be3cea90ea812499a0f81aa336e3`
-of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate run-owned directory,
-copy this exact test there, build both APKs, and run the same command on the borrowed device.
+of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate temporary directory,
+copy this exact test there, build both APKs, and run the same command on the same emulator.
 That source selects the output path in each constructor before creating the folder, so this
 schedule deterministically completes both imports into the same folder and fails the distinct
 folder assertion; the final hashes also show the second pack replacing the first. Record the

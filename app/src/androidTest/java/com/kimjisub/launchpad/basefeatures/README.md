@@ -11,13 +11,13 @@ Use a dedicated, disposable app installation on API 33 or newer with the system 
 English and no screen-lock PIN. The suite refuses an installation containing non-fixture packs.
 It only removes its named fixture folders/rows; it does not clear the whole database or app data.
 
-On the maintenance machine, borrow and return the device through the harness:
+Start a freshly wiped emulator that nothing else is using, then turn its network off:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh
-python3 "$HARNESS/devices.py" up-android --fresh
-# Set this to the serial printed above; never use another worker's device.
-export ANDROID_SERIAL='<printed serial>'
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-33-or-newer-avd> -wipe-data -no-snapshot-load &
+adb wait-for-device
+# Set this to the emulator's serial from `adb devices`; never touch another device.
+export ANDROID_SERIAL='<serial>'
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode enable
 adb -s "$ANDROID_SERIAL" shell svc wifi disable
 adb -s "$ANDROID_SERIAL" shell svc data disable
@@ -31,10 +31,10 @@ for run in 1 2 3; do ./scripts/run-base-features.sh "$ANDROID_SERIAL" || break; 
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode disable
 adb -s "$ANDROID_SERIAL" shell svc wifi enable
 adb -s "$ANDROID_SERIAL" shell svc data enable
-python3 "$HARNESS/devices.py" down
+adb -s "$ANDROID_SERIAL" emu kill
 ```
 
-For Gradle/Orchestrator on an exclusively borrowed device:
+For Gradle/Orchestrator, with only this emulator connected (Gradle uses every connected device):
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest \
@@ -132,7 +132,7 @@ or re-signing it for this suite would change the artifact being verified.
 
 QA should run this suite on a debug build of the **same source commit**, record the commit and APK
 hashes, then separately install the exact signed candidate APK/splits from the approved build on a
-borrowed device. Drive the eight features with external UI automation/manual checks and attach
+test device. Drive the eight features with external UI automation/manual checks and attach
 candidate hashes, captures and results. The signed-candidate check must include startup, local ZIP
 import/playback, skin/rotation, Home/lock/return and real audible output. Real server/USB checks
 are separate and explicitly reported when hardware/network is unavailable. Do not replace the
@@ -151,6 +151,6 @@ requests or replace production repositories in an unchanged candidate.
   or conditional pass hides this limitation.
 - OEM process eviction, long locks, low-memory conditions, tablets and cutouts: run separate candidate
   checks on those devices/configurations. The rotation test asserts only insets actually present on
-  the borrowed device; a rectangular emulator cannot prove behavior around a notch.
+  the device under test; a rectangular emulator cannot prove behavior around a notch.
 - Live share/store servers: run read-only catalog/share metadata availability checks separately and
   use an explicitly designated synthetic download if end-to-end server verification is needed.
