@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -55,7 +54,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.FileManager
@@ -80,7 +78,7 @@ sealed class ImportResult {
 
 @Composable
 fun ImportProgressDialog() {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = {},
 		confirmButton = {},
 		title = { Text(stringResource(R.string.importing)) },
@@ -111,7 +109,7 @@ fun ImportResultDialog(
 	onDismiss: () -> Unit,
 	onPlayNow: (ImportResult.Success) -> Unit,
 ) {
-	Dialog(
+	AppDialog(
 		onDismissRequest = onDismiss,
 		properties = DialogProperties(usePlatformDefaultWidth = false),
 	) {
