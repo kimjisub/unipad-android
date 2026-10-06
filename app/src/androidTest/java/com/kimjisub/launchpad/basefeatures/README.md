@@ -54,9 +54,10 @@ No baseline fixture is downloaded. Screenshots are saved in the target app's ext
 ## Existing coverage and the gaps this suite fills
 
 Existing coverage is an inventory, not a claim that the entire legacy suite passed in this change.
-Those tests continue to run separately; their maintenance is tracked in JIS-178. The merged
+Those tests continue to run separately; their maintenance is covered by the complete run in
+[the instrumented test inventory](../../../../../README.md). The merged
 `UniPackImportOverlapDeviceTest` already supplies the importer analytics argument using a no-op
-sink; this branch retains that file unchanged.
+sink; this suite does not change that file.
 
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|
