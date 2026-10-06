@@ -166,6 +166,24 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         assertStill("After lifting every finger", 3, emptySet())
     }
 
+    /** I: a palm already resting on the screen margin beside the grid plays nothing and blocks no pad. */
+    protected fun palmOnEdgeBeforePlaying() {
+        start()
+        val edge = edgeBesidePads()
+        val palm = fingers.down(edge)
+        assertStill("Touching the edge beside the pads", 0, emptySet())
+        val cell = Cell(4, 4)
+        repeat(2) { tap ->
+            val finger = fingers.down(center(cell))
+            awaitPlays("Pad tap ${tap + 1} did not play while the edge at $edge was held", tap + 1)
+            awaitLights("Pad tap ${tap + 1} did not light while the edge was held", setOf(cell))
+            fingers.up(finger)
+            awaitLights("Pad tap ${tap + 1} stayed lit after release", emptySet())
+        }
+        fingers.up(palm)
+        assertStill("After lifting the edge touch", 2, emptySet())
+    }
+
     /**
      * A point on the left margin between the system back-gesture zone and the leftmost pad or
      * chain button, vertically level with the grid: where a palm rests when holding a tablet.

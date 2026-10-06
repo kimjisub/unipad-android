@@ -50,4 +50,6 @@ class MultiTouchPadModeTest : MultiTouchPlaybackTest(slideMode = false) {
     @Test fun liftingOneOfTwoFingersReleasesOnlyItsPad() = liftOneOfTwo()
 
     @Test fun palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying() = palmOnEdgeWhilePlaying()
+
+    @Test fun palmRestingOnEdgeBeforePlayingPlaysNothingAndPadsStillPlay() = palmOnEdgeBeforePlaying()
 }
