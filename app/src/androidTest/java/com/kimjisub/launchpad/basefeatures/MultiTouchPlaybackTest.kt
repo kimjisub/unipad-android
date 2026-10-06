@@ -7,7 +7,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
-import com.kimjisub.design.view.SlideTouchOverlayView
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.After
@@ -17,8 +17,8 @@ import org.junit.Before
 
 /**
  * Several fingers on the play screen, injected as real touchscreen events, judged by the sound
- * requests the runner made and the PRESSED light channel. Runs once per pad input mode: pads
- * taking their own touches (Slide Mode off, the first-install default) and the Slide Mode layer.
+ * requests the runner made and the PRESSED light channel. Runs once per pad input mode: a finger
+ * bound to the pad it first pressed (Slide Mode off, the first-install default) and Slide Mode.
  * Cases shared by both modes live here; drags differ by design and live in each subclass. Each
  * subclass declares every test itself, so the `@Test` count in the sources matches the tests the
  * runner discovers (scripts/check_connected_results.py).
@@ -53,10 +53,8 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.openPlay()
         screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
         assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
-        val overlay = screen.onMain {
-            screen.views(screen.resumed().window.decorView).any { it is SlideTouchOverlayView }
-        }
-        assertEquals("Slide Mode layer visibility must match the mode under test", slideMode, overlay)
+        val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
+        assertEquals("Slide Mode applied on the play screen must match the mode under test", slideMode, applied)
         fingers = Fingers(screen)
     }
 
@@ -164,6 +162,24 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         fingers.up(holder)
         awaitLights("Held pad stayed lit after release", emptySet())
         assertStill("After lifting every finger", 3, emptySet())
+    }
+
+    /** I: a palm already resting on the screen margin beside the grid plays nothing and blocks no pad. */
+    protected fun palmOnEdgeBeforePlaying() {
+        start()
+        val edge = edgeBesidePads()
+        val palm = fingers.down(edge)
+        assertStill("Touching the edge beside the pads", 0, emptySet())
+        val cell = Cell(4, 4)
+        repeat(2) { tap ->
+            val finger = fingers.down(center(cell))
+            awaitPlays("Pad tap ${tap + 1} did not play while the edge at $edge was held", tap + 1)
+            awaitLights("Pad tap ${tap + 1} did not light while the edge was held", setOf(cell))
+            fingers.up(finger)
+            awaitLights("Pad tap ${tap + 1} stayed lit after release", emptySet())
+        }
+        fingers.up(palm)
+        assertStill("After lifting the edge touch", 2, emptySet())
     }
 
     /**

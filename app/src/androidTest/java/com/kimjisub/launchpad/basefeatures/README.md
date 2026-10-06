@@ -75,8 +75,8 @@ sink; this branch retains that file unchanged.
 (`ACTION_DOWN`, `ACTION_POINTER_DOWN`, `ACTION_MOVE`, `ACTION_POINTER_UP`, `ACTION_UP`), so the app
 receives it through the normal window dispatch. Results are the runner's sound requests
 (`RecordingAudio.plays`) and the `PRESSED` light channel of every pad. Each case runs in both pad
-input modes: Slide Mode off (the first-install default; each pad takes its own touches) and on
-(`SlideTouchOverlayView`). The test sets the preference and restores it afterwards.
+input modes: Slide Mode off (the first-install default; a finger stays on the pad it first pressed)
+and on (dragging moves the press). The test sets the preference and restores it afterwards.
 
 | Case | Slide Mode off: `MultiTouchPadModeTest` | Slide Mode on: `MultiTouchSlideModeTest` |
 |---|---|---|
@@ -87,10 +87,9 @@ input modes: Slide Mode off (the first-install default; each pad takes its own t
 | E. Two fingers dragged together | `twoFingersDraggedTogetherEachKeepTheirFirstPad` | `twoFingersDraggedTogetherEachMoveTheirOwnPad` |
 | F. Lift one of two fingers | `liftingOneOfTwoFingersReleasesOnlyItsPad` | same |
 | I. Palm on the margin beside the grid while a pad is held | `palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying` | same |
+| I. Palm resting on the margin before any pad is touched | `palmRestingOnEdgeBeforePlayingPlaysNothingAndPadsStillPlay` | same |
 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
-A palm that touches the margin *before* any pad currently stops every pad from playing until all
-fingers lift; that case is tracked as a product fault and its test joins the suite with the fix.
 Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
 down (for example when the app leaves the screen), and H, lifting a finger after the chain
 changed. Their fixes are being made separately and their tests join the suite with them.

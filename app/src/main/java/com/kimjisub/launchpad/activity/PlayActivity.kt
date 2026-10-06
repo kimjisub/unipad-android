@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.activity
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
@@ -12,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -88,6 +86,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutModifier
@@ -107,9 +108,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
-import com.kimjisub.design.view.SlideTouchOverlayView
 import com.kimjisub.design.view.TraceLogOverlayView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
@@ -182,7 +183,8 @@ class PlayActivity : BaseActivity() {
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
-	private var slideTouchOverlayView: SlideTouchOverlayView? = null
+	// Pad touches of both input modes; internal so tests can check which mode is applied.
+	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
 	// though the retained ViewModel says the UI was loaded, and two onSizeChanged calls before
 	// the posted runnable ran used to queue initLayout twice.
@@ -493,7 +495,7 @@ class PlayActivity : BaseActivity() {
 		// The open menu covers the chain buttons, so Tab must not reach them behind it.
 		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
-		Box(modifier = Modifier.fillMaxSize()) {
+		Box(modifier = Modifier.fillMaxSize().acceptEveryTouch()) {
 			// Background - always visible
 			Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 				theme?.playbg?.let { bg ->
@@ -558,7 +560,7 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { padsContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().padTouchInput()
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
@@ -580,14 +582,6 @@ class PlayActivity : BaseActivity() {
 								} },
 								modifier = Modifier.wrapContentSize()
 							)
-							// Slide Mode layer: GONE unless the setting is on, so pads keep their own touches
-							AndroidView(
-								factory = { ctx -> SlideTouchOverlayView(ctx).also { overlay ->
-									overlay.visibility = View.GONE
-									slideTouchOverlayView = overlay
-								} },
-								modifier = Modifier.wrapContentSize()
-							)
 							if (!vm.isOptionWindowVisible && vm.optionViewVisible) {
 								ChromeColumn()
 							} else {
@@ -605,17 +599,13 @@ class PlayActivity : BaseActivity() {
 						val overlayPlaceable = measurables[5].measure(
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
-						val slidePlaceable = measurables[6].measure(
-							Constraints.fixed(padPlaceable.width, padPlaceable.height)
-						)
-						val chromePlaceable = measurables[7].measure(unconstrained)
+						val chromePlaceable = measurables[6].measure(unconstrained)
 						layout(constraints.maxWidth, constraints.maxHeight) {
 							// Pads centered in the area excluding the right chrome strip
 							val padX = ((constraints.maxWidth - chromeStripPx) - padPlaceable.width) / 2
 							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
-							slidePlaceable.place(padX, padY)
 							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
 							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
 							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
@@ -653,6 +643,36 @@ class PlayActivity : BaseActivity() {
 					contentAlignment = Alignment.Center,
 				) {
 					LoadingContent()
+				}
+			}
+		}
+	}
+
+	/**
+	 * Keeps a gesture whose first finger lands on empty screen (a palm on the margin) with this
+	 * window: when nothing takes the first finger, the window drops the rest of the gesture and
+	 * later fingers on pads never arrive.
+	 */
+	private fun Modifier.acceptEveryTouch() = pointerInput(Unit) {
+		awaitPointerEventScope { while (true) awaitPointerEvent() }
+	}
+
+	/**
+	 * Pad input for both modes, per pointer, taken in Compose. The embedded pad views are handed
+	 * the whole screen's touch event, and an Android view group ignores a finger that joins a
+	 * gesture whose first finger landed outside it (a palm on the margin silenced every pad).
+	 */
+	private fun Modifier.padTouchInput() = pointerInput(Unit) {
+		awaitPointerEventScope {
+			while (true) {
+				for (change in awaitPointerEvent().changes) {
+					val id = change.id.value
+					val (px, py) = change.position
+					when {
+						change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
+						change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+						change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+					}
 				}
 			}
 		}
@@ -1034,11 +1054,8 @@ class PlayActivity : BaseActivity() {
 			chainsLeftContainer?.removeAllViews()
 			setupPads(buttonSizeX, buttonSizeY)
 			setupChains(buttonSizeMin)
-			slideTouchOverlayView?.apply {
-				setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
-				listener = { x, y, down -> vm.padTouch(x, y, down) }
-				visibility = if (p.slideMode) View.VISIBLE else View.GONE
-			}
+			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
+			padTouch.slide = p.slideMode
 			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
 			// A recreated activity keeps the retained trace log and redraws LEDs lit before it was rebuilt.
 			if (vm.isTraceLogSequenceInitialized) uiCallback.updateTraceLogOverlay() else vm.traceLogInit()
@@ -1081,7 +1098,6 @@ class PlayActivity : BaseActivity() {
 		classicTraceCount = 0
 	}
 
-	@SuppressLint("ClickableViewAccessibility")
 	private fun setupPads(buttonSizeX: Int, buttonSizeY: Int) {
 		for (x in 0 until vm.unipack.buttonX) {
 			val row = LinearLayout(this)
@@ -1091,13 +1107,6 @@ class PlayActivity : BaseActivity() {
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
 				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
-				view.setOnTouchListener { _, event ->
-					when (event?.action) {
-						MotionEvent.ACTION_DOWN -> vm.padTouch(x, y, true)
-						MotionEvent.ACTION_UP -> vm.padTouch(x, y, false)
-					}
-					false
-				}
 				padViews[x][y] = view
 				row.addView(view)
 			}
@@ -1305,7 +1314,7 @@ class PlayActivity : BaseActivity() {
 			redrawAllLaunchpadLeds()
 		}
 		// The setting may have changed in SettingsActivity while this activity sat in the back stack.
-		slideTouchOverlayView?.let { if (vm.uiLoaded) it.visibility = if (p.slideMode) View.VISIBLE else View.GONE }
+		padTouch.slide = p.slideMode
 	}
 
 	override fun onPause() {
