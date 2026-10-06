@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import android.os.StrictMode
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -18,6 +19,10 @@ import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.GlobalContext.startKoin
@@ -32,9 +37,12 @@ class BaseApplication : Application() {
 		private const val CRASH_KEY_INSTALL_SPLITS = "install_splits"
 	}
 
+	private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
 	override fun onCreate() {
 		super.onCreate()
 
+		setupStrictMode()
 		recordInstallSplits()
 		setupNotification()
 		setupLogger()
@@ -78,6 +86,20 @@ class BaseApplication : Application() {
 		Log.log("Install splits: $splits")
 	}
 
+	// Debug builds log file access on the main thread (`adb logcat -s StrictMode`), where a slow
+	// storage turns it into a frozen screen or an ANR. Logging only: platform and library reads
+	// are reported too, so stopping the app would break every test run.
+	private fun setupStrictMode() {
+		if (!BuildConfig.DEBUG) return
+		StrictMode.setThreadPolicy(
+			StrictMode.ThreadPolicy.Builder()
+				.detectDiskReads()
+				.detectDiskWrites()
+				.penaltyLog()
+				.build()
+		)
+	}
+
 	private fun setupNotification() {
 		// minSdk 29+ always supports notification channels (introduced in API 26)
 		NotificationManager.createChannel(this)
@@ -105,7 +127,8 @@ class BaseApplication : Application() {
 
 	private fun setupBundledThemes() {
 		migrateBundledThemePreference()
-		cleanupLegacyExtractedThemes()
+		// Deleting whole theme folders on the first launch after an update froze startup (ANR).
+		ioScope.launch { cleanupLegacyExtractedThemes() }
 	}
 
 	private fun migrateBundledThemePreference() {

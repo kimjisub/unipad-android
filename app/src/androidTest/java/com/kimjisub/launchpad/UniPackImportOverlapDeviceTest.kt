@@ -82,7 +82,7 @@ class UniPackImportOverlapDeviceTest {
                 gates.indices.forEach { index ->
                     evidence(gates[index].id, "constructed")
                     UniPackImporter(context, Uri.parse("content://overlap/${gates[index].id}"),
-                        workspace, recorders[index],
+                        { workspace }, recorders[index],
                         usage = UsageAnalytics(UsageEventSink { _, _ -> }).packImport(PackImportSource.FILE),
                         scope = scopes[index])
                 }

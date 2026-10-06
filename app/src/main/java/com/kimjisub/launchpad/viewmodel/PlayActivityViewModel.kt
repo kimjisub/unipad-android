@@ -33,7 +33,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 enum class PlayMode {
 	None,
@@ -1003,10 +1005,18 @@ class PlayActivityViewModel(
 			}
 
 			override fun onDone() {
-				autoMappingActive = false
-				folder.reloadAutoPlay()
-				initAutoPlayRunner()
-				log("AutoMapping complete")
+				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
+				viewModelScope.launch {
+					try {
+						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
+					} catch (e: IOException) {
+						onException(e)
+						return@launch
+					}
+					autoMappingActive = false
+					initAutoPlayRunner()
+					log("AutoMapping complete")
+				}
 			}
 
 			override fun onException(throwable: Throwable) {

@@ -460,7 +460,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	private fun autoPlay() {
 		val autoPlayFile = autoPlayFile ?: return
 		val autoPlay = AutoPlay(ArrayList())
-		autoPlayTable = autoPlay
+		// Published only once read: reloadAutoPlay runs off the main thread, and an autoplay runner
+		// started meanwhile must not iterate a list that is still being filled.
+		try {
+			readAutoPlay(autoPlayFile, autoPlay)
+		} finally {
+			autoPlayTable = autoPlay
+		}
+	}
+
+	private fun readAutoPlay(autoPlayFile: File, autoPlay: AutoPlay) {
 		val map = Array(buttonX) { IntArray(buttonY) }
 		var currChain = 0
 		val inputStream = try {

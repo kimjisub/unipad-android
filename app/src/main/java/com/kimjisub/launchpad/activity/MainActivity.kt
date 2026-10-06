@@ -328,6 +328,9 @@ class MainActivity : BaseActivity() {
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
+			// Before the scan, so packs moved out of the old "Unipad" folder appear in this refresh.
+			ws.migrateOldAppStorageFolder()
+			withContext(Dispatchers.Main) { totalPanelVM.update() }
 			val newList = ws.getUnipacks()
 
 			val comparator: Comparator<UniPackItem> = currentSort?.let { sort ->
@@ -360,8 +363,6 @@ class MainActivity : BaseActivity() {
 				listRefreshing = false
 			}
 		}
-
-		totalPanelVM.update()
 	}
 
 	private fun togglePlay(target: UniPackItem?, scrollToCenter: Boolean = false) {
@@ -455,7 +456,7 @@ class MainActivity : BaseActivity() {
 		UniPackImporter(
 			context = applicationContext,
 			uri = unipackUri,
-			workspace = ws.downloadWorkspace.file,
+			workspace = { ws.downloadWorkspace.file },
 			onEventListener = object : UniPackImporter.OnEventListener {
 				override fun onImportStart() {
 					importingState = true
@@ -552,7 +553,6 @@ class MainActivity : BaseActivity() {
 
 	override fun onResume() {
 		super.onResume()
-		ws.migrateOldAppStorageFolder()
 		checkThings()
 		controller = midiController
 		fbStoreCount.attachEventListener(true)

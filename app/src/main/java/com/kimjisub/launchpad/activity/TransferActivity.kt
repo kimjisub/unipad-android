@@ -187,41 +187,9 @@ class TransferActivity : AppCompatActivity() {
 				else -> TransferMode.COPY
 			}
 
-			val workspaces = workspaceManager.availableWorkspaces.toList()
+			val workspaces = loadWorkspaces()
 			val backupSafUri = prefManager.backupSafUri
-
-			// Build targets
-			val targets = mutableListOf<TransferTarget>()
-			workspaces.forEach { ws ->
-				targets.add(
-					TransferTarget(
-						id = "ws:${ws.file.path}",
-						name = ws.name,
-						description = getWorkspaceDescription(ws),
-						file = ws.file,
-					)
-				)
-			}
-
-			if (backupSafUri != null) {
-				targets.add(
-					TransferTarget(
-						id = "backup",
-						name = getString(R.string.workspace_backup_documents),
-						description = getString(R.string.backup_backup_description),
-						safUri = backupSafUri,
-					)
-				)
-			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-				targets.add(
-					TransferTarget(
-						id = "backup",
-						name = getString(R.string.workspace_backup_documents),
-						description = getString(R.string.backup_backup_description),
-						needsSaf = true,
-					)
-				)
-			}
+			val targets = buildAllTargets(workspaces)
 
 			// Determine source and items
 			when {
@@ -324,7 +292,7 @@ class TransferActivity : AppCompatActivity() {
 				// Target is fixed (e.g. backup mode) - keep existing targets
 				current.targets
 			} else {
-				buildAllTargets().filter { it.id != sourceId }
+				buildAllTargets(loadWorkspaces()).filter { it.id != sourceId }
 			}
 			screenState = current.copy(
 				sourceName = sourceTarget.name,
@@ -335,9 +303,13 @@ class TransferActivity : AppCompatActivity() {
 		}
 	}
 
-	private fun buildAllTargets(): List<TransferTarget> {
+	// Listing workspaces creates folders, which froze the screen on a slow card.
+	private suspend fun loadWorkspaces(): List<WorkspaceManager.Workspace> =
+		withContext(Dispatchers.IO) { workspaceManager.availableWorkspaces.toList() }
+
+	private fun buildAllTargets(workspaces: List<WorkspaceManager.Workspace>): List<TransferTarget> {
 		val targets = mutableListOf<TransferTarget>()
-		workspaceManager.availableWorkspaces.forEach { ws ->
+		workspaces.forEach { ws ->
 			targets.add(
 				TransferTarget(
 					id = "ws:${ws.file.path}",

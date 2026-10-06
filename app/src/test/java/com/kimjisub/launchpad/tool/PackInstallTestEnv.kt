@@ -49,6 +49,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.security.MessageDigest
+import java.util.Collections
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
@@ -71,6 +72,13 @@ class PackInstallTestEnv {
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
 	private val mainExecutor = Executors.newFixedThreadPool(4)
+
+	/** Names of the threads that resolved the target workspace, one per request. */
+	val workspaceResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
+	private val resolveWorkspace: () -> File = {
+		workspaceResolvedOn += Thread.currentThread().name
+		workspace
+	}
 	private val openStreams = mutableListOf<Closeable>()
 	private val gates = ConcurrentHashMap<String, Gate>()
 	private val context: Context = mockk(relaxed = true)
@@ -132,7 +140,7 @@ class PackInstallTestEnv {
 			context = context,
 			title = name,
 			url = url,
-			workspace = workspace,
+			workspace = resolveWorkspace,
 			folderName = name,
 			listener = listener,
 			usage = usage,
@@ -155,7 +163,7 @@ class PackInstallTestEnv {
 		UniPackImporter(
 			context = context,
 			uri = uri,
-			workspace = workspace,
+			workspace = resolveWorkspace,
 			onEventListener = listener,
 			usage = usage,
 			scope = scope,

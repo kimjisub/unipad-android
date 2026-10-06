@@ -248,6 +248,20 @@ class WorkspaceManagerTest {
 		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
 	}
 
+	// The total panel calls this from the main thread; listing workspaces there created folders on it.
+	@Test
+	fun getAvailableWorkspacesSize_listsWorkspacesOffTheCallingThread() {
+		val manager = managerWithExternalDirs()
+		val caller = Thread.currentThread()
+		val listedOn = mutableListOf<Thread>()
+		every { FileManager.makeNomedia(any()) } answers { listedOn += Thread.currentThread() }
+
+		runBlocking { manager.getAvailableWorkspacesSize() }
+
+		assertTrue(listedOn.isNotEmpty())
+		assertTrue(listedOn.none { it === caller })
+	}
+
 	@Test
 	fun getUnipacks_emptyStorage() {
 		val manager = managerWithExternalDirs()

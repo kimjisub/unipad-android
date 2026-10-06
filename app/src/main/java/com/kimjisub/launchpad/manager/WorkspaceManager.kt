@@ -10,7 +10,6 @@ import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -35,7 +34,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		val file: File,
 	)
 
-	// All available workspaces
+	// All available workspaces. Creates folders and .nomedia files: call off the main thread.
 	val availableWorkspaces: Array<Workspace>
 		get() {
 			val uniPackWorkspaces = mutableListOf<Workspace>()
@@ -120,7 +119,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		}
 
 	suspend fun getAvailableWorkspacesSize() =
-		coroutineScope {
+		withContext(Dispatchers.IO) {
 			val works = availableWorkspaces.map {
 				async { FileManager.getFolderSize(it.file) }
 			}
