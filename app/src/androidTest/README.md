@@ -153,9 +153,10 @@ and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlap
 filtered by `@SdkSuppress`, so that script expects an API 29+ device.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
-The issue records the old-to-new mapping so earlier failure reports remain traceable.
+The renames are in #130, so earlier failure reports remain traceable through its diff.
 Some smoke checks only prove that the app stays on its screen; stronger basic-function scenarios
-are being added separately under JIS-179. They are not claimed here as audio or hardware proof.
+live in the [base feature suite](java/com/kimjisub/launchpad/basefeatures/README.md). They are not
+claimed here as audio or hardware proof.
 
 ## Other instrumented checks (included in the complete run)
 
@@ -176,8 +177,8 @@ pack events, count forwarding and detaching both subscriptions.
 
 The September 26–27 record predates this work: 36 tests, 13 failures before the first FAB migration,
 then 35 passes and one Store browsing failure on offline API 35. By `f093afba`, that migration was
-already in main. JIS-178 reruns the complete current suite before changing it, preserves every
-existing screen scenario, and records the new baseline and three final runs on the issue.
+already in main. #130 reran the complete suite before changing it, preserved every existing
+screen scenario, and recorded the new baseline and three final runs.
 
 Historical ignored Import/Reconnect tests had been reported as failures by the connected test
 engine. They are now ordinary tests of the actual Import and Settings controls. No test is ignored.
