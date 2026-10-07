@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">ဗားရှင်းအသစ်တွေ့ရှိသည်။</string>
-	<string name="update_available">အပ်ဒိတ်ရနိုင်ပါသည်</string>
 
 	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
 	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>

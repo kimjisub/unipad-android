@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Phát hiện phiên bản mới.</string>
-	<string name="update_available">Có bản cập nhật</string>
 
 	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
 	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>

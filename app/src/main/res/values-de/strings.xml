@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Neue Version erkannt.</string>
-	<string name="update_available">Aktualisierung verfügbar</string>
 
 	<string name="permissionRequire">Zugriff auf externen Speicher wird zum Speichern von Projektdateien benötigt.\nErteilen Sie die Berechtigung.</string>
 	<string name="permissionDenied">Die App benötigt Zugriff auf den externen Speicher.\nBitte aktivieren Sie die Berechtigungen unter [Einstellungen] > [Berechtigungen]</string>

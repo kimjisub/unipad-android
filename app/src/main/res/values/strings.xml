@@ -99,7 +99,26 @@
 
 	<!--Version-->
 	<string name="newVersionFound">New version detected.</string>
-	<string name="update_available">Update available</string>
+	<string name="update_check">Check for updates</string>
+	<string name="update_offer_title">A new version is available</string>
+	<string name="update_offer_body">Get it now or later. Choose when to install it after you finish playing.</string>
+	<string name="update_download">Get new version</string>
+	<string name="update_later">Later</string>
+	<string name="update_downloading_title">Getting the new version</string>
+	<string name="update_ready_title">The new version is ready</string>
+	<string name="update_ready_body">Installing restarts the app. You will come back to the pack list.</string>
+	<string name="update_install">Install and restart</string>
+	<string name="update_none">No update is available right now.</string>
+	<string name="update_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+	<string name="update_check_again">Check again</string>
+	<string name="update_close">Close</string>
+	<string name="update_failed">The update couldn\'t finish. You can try again later.</string>
+	<string name="update_retry">Try again</string>
+	<string name="update_check_in_store">Check in store</string>
+	<string name="update_unsupported">On this device, please check for updates in the store.</string>
+	<string name="update_store_notice">Checking in Google Play. Updating the app may close UniPad.</string>
+	<string name="update_store_open">Open store</string>
+	<string name="update_store_unavailable">Couldn\'t open the store. Please check again later.</string>
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>

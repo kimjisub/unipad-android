@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">พบเวอร์ชันใหม่</string>
-	<string name="update_available">มีอัปเดตใหม่</string>
 
 	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
 	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>

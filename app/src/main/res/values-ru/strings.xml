@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Обнаружена новая версия.</string>
-	<string name="update_available">Доступно обновление</string>
 
 	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
 	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>

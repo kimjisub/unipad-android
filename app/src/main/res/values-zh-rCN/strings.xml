@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">检测到新版本。</string>
-	<string name="update_available">有可用更新</string>
 
 	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
 	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>

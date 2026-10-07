@@ -99,7 +99,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">नया संस्करण पाया गया।</string>
-	<string name="update_available">अपडेट उपलब्ध</string>
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>

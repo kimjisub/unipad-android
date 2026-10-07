@@ -5,7 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -50,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -80,13 +84,15 @@ import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.gson.Gson
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.analytics.PackImportSource
+import com.kimjisub.launchpad.ui.compose.AppUpdateActions
+import com.kimjisub.launchpad.ui.compose.AppUpdateCard
+import com.kimjisub.launchpad.ui.compose.AppUpdateDialog
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
@@ -99,12 +105,19 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.network.Networks.FirebaseManager
+import com.kimjisub.launchpad.manager.AppUpdatePrompter
+import com.kimjisub.launchpad.manager.AppUpdateSchedule
+import com.kimjisub.launchpad.manager.AppUpdateSource
+import com.kimjisub.launchpad.manager.OtherScreens
+import com.kimjisub.launchpad.manager.PlayAppUpdateSource
+import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.ListCursor
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.openPlayStorePage
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.Red
 import com.kimjisub.launchpad.ui.theme.SkyBlue
@@ -124,6 +137,13 @@ class MainActivity : BaseActivity() {
 	companion object {
 		private const val FLAG_ANIMATION_MS = 500
 		private const val GET_STARTED_URL = "https://unipad.io/docs/get-started"
+
+		/** The released app. The test build has its own id, no store page and no in-app update. */
+		private const val STORE_APP_ID = "com.kimjisub.launchpad"
+
+		/** Device tests put Play's fake update manager here before the list opens. */
+		@VisibleForTesting
+		var appUpdateSourceForTest: ((ActivityResultLauncher<IntentSenderRequest>) -> AppUpdateSource)? = null
 	}
 
 	// Compose state
@@ -141,6 +161,9 @@ class MainActivity : BaseActivity() {
 	private var deleteFailed by mutableStateOf(false)
 	private var searchOpen by mutableStateOf(false)
 	private var searchQuery by mutableStateOf("")
+	private var resumed by mutableStateOf(false)
+	private var otherScreens: OtherScreens? = null
+	private var appUpdate: AppUpdatePrompter? = null
 
 	// Filters the already-loaded list; typing never re-reads the pack folders.
 	private val visibleList: List<UniPackItem> by derivedStateOf {
@@ -231,6 +254,20 @@ class MainActivity : BaseActivity() {
 			uri?.let { importUniPack(it) }
 		}
 
+		otherScreens = OtherScreens.install(application, MainActivity::class.java)
+		val updateConsent = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+			appUpdate?.onConsentResult(it.resultCode)
+		}
+		appUpdate = createAppUpdateSource(updateConsent)?.let { source ->
+			AppUpdatePrompter(
+				source = source,
+				schedule = AppUpdateSchedule(PreferenceAppUpdateStore(applicationContext)),
+				scope = lifecycleScope,
+				isSafe = { listInFront() && appUpdate?.state?.value?.dialog == null },
+				openStore = { openPlayStorePage(STORE_APP_ID) },
+			)
+		}
+
 		setContent {
 			UniPadTheme {
 				MainScreen(
@@ -271,6 +308,11 @@ class MainActivity : BaseActivity() {
 							playUniPack(success.folder.path)
 						},
 					)
+				}
+
+				appUpdate?.let { prompter ->
+					val dialog = prompter.state.collectAsState().value.dialog
+					if (dialog != null) AppUpdateDialog(dialog, appUpdateActions(prompter))
 				}
 
 				deleteTargetItem?.let { item ->
@@ -317,8 +359,6 @@ class MainActivity : BaseActivity() {
 				}
 			}
 		}
-
-		checkThings()
 	}
 
 	// List management
@@ -487,34 +527,36 @@ class MainActivity : BaseActivity() {
 		)
 	}
 
-	// Version check
+	// New version notice
 
-	private fun checkThings() {
-		versionCheck()
+	private fun createAppUpdateSource(consent: ActivityResultLauncher<IntentSenderRequest>): AppUpdateSource? {
+		appUpdateSourceForTest?.let { return it(consent) }
+		if (BuildConfig.APPLICATION_ID != STORE_APP_ID) return null
+		return PlayAppUpdateSource(AppUpdateManagerFactory.create(applicationContext), consent)
 	}
 
-	private fun versionCheck() {
-		try {
-			val thisVersion = BuildConfig.VERSION_NAME
-			if (thisVersion.contains('b')) return
+	/** What the person sees is the bare pack list: nothing selected, searched, imported or asked. */
+	private fun listIdle(): Boolean =
+		selectedItem == null && !searchOpen && !importingState &&
+			importResult == null && deleteTargetItem == null && !deleteFailed
 
-			val remoteConfig = FirebaseRemoteConfig.getInstance()
-			val versionListString = remoteConfig.getString("android_version")
-			val versionList =
-				Gson().fromJson(versionListString, Array<String>::class.java).toList()
+	/** The list is in front and nothing else of the app (play screen, file work) is alive. */
+	private fun listInFront(): Boolean =
+		listIdle() && resumed && !listRefreshing && otherScreens?.anyAlive != true
 
-			Log.test("versionList $versionList")
-			val latestVersion = versionList.contains(thisVersion)
-			Log.test("thisVersion $thisVersion")
-			Log.test("latestVersion $latestVersion")
-
-			if (!latestVersion) {
-				totalPanelVM.updateAvailable = true
-			}
-		} catch (e: RuntimeException) {
-			Log.test("versionCheck error $e")
-		}
-	}
+	private fun appUpdateActions(prompter: AppUpdatePrompter) = AppUpdateActions(
+		download = prompter::download,
+		later = prompter::later,
+		install = prompter::install,
+		retry = prompter::retry,
+		askStore = prompter::askStore,
+		openStore = prompter::openStore,
+		checkAgain = {
+			prompter.dismissDialog()
+			prompter.checkByHand()
+		},
+		dismissDialog = prompter::dismissDialog,
+	)
 
 	// Launchpad LED controller
 
@@ -553,7 +595,7 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		ws.migrateOldAppStorageFolder()
-		checkThings()
+		resumed = true
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		update()
@@ -561,12 +603,14 @@ class MainActivity : BaseActivity() {
 
 	override fun onPause() {
 		super.onPause()
+		resumed = false
 		removeController(midiController)
 		fbStoreCount.attachEventListener(false)
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
+		appUpdate?.close()
 		removeController(midiController)
 	}
 
@@ -589,6 +633,12 @@ class MainActivity : BaseActivity() {
 			deselect()
 		}
 
+		val updateState = appUpdate?.state?.collectAsState()?.value
+		val updateSafe = listInFront() && updateState?.dialog == null
+		LaunchedEffect(updateSafe) {
+			if (updateSafe) appUpdate?.onListReady()
+		}
+
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -609,10 +659,16 @@ class MainActivity : BaseActivity() {
 						label = "panel",
 					) { item ->
 						if (item == null) {
+							val prompter = appUpdate
+							val card = updateState?.card?.takeIf { listIdle() }
 							MainTotalPanelScreen(
 								vm = totalPanelVM,
 								onSettingsClick = onSettingsClick,
-								onUpdateClick = { browse("https://play.google.com/store/apps/details?id=$packageName") },
+								updateNotice = if (prompter != null && card != null) {
+									{ AppUpdateCard(card, enabled = updateSafe, actions = appUpdateActions(prompter)) }
+								} else null,
+								onCheckUpdateClick = prompter?.let { it::checkByHand },
+								checkingUpdate = updateState?.checking == true,
 							)
 						} else {
 							val packVM = remember(item.unipack.getPathString()) {
