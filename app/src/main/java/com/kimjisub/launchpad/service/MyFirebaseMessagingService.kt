@@ -18,7 +18,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 		}
 	}
 
-	@Deprecated("Token registration is deprecated in firebase-messaging 25.1; the app still registers by token until it moves to installation-ID registration.")
+	// Token registration is deprecated in firebase-messaging 25.1; the app still registers by token
+	// until it moves to installation-ID registration.
+	@Suppress("OVERRIDE_DEPRECATION")
 	override fun onNewToken(token: String) {
 		Log.fbmsg("Refreshed token: $token")
 	}

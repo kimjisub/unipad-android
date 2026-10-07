@@ -85,9 +85,7 @@ import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
-import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
-import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import org.koin.android.ext.android.inject
 import splitties.activities.start
 import com.google.android.material.snackbar.Snackbar
@@ -125,7 +123,7 @@ class SettingsActivity : AppCompatActivity() {
 					onBackClick = { finish() },
 					onThemeClick = { start<ThemeActivity>() },
 					onGithubClick = { browse("https://github.com/kimjisub/unipad-android") },
-					onOssLicenseClick = { openOssLicenses() },
+					onOssLicenseClick = { start<OssLicensesMenuActivity>() },
 					onFcmTokenCopy = { copyFcmToken() },
 					onCommunityItemClick = { action, url ->
 						browse(url, action)
@@ -169,18 +167,13 @@ class SettingsActivity : AppCompatActivity() {
 		return "$appName $versionName ($versionCode)"
 	}
 
-	private fun openOssLicenses() {
-		// The license screen follows the system light/dark setting unless told otherwise; UniPad is always dark.
-		OssLicensesMenuActivity.setTheme(UniPadColorScheme, UniPadColorScheme, UniPadTypography)
-		start<OssLicensesMenuActivity>()
-	}
-
-	// Token registration is deprecated in firebase-messaging 25.1 in favour of installation-ID
-	// registration, which turns tokens off for every install; that move is a separate change.
-	@Suppress("DEPRECATION")
 	private fun copyFcmToken() {
 		try {
-			FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+			// Token registration is deprecated in firebase-messaging 25.1 in favour of installation-ID
+			// registration, which turns tokens off for every install; that move is a separate change.
+			@Suppress("DEPRECATION")
+			val token = FirebaseMessaging.getInstance().token
+			token.addOnCompleteListener { task ->
 				// task.result throws when the token fetch failed (Crashlytics 2f4ba056:
 				// IOException TOO_MANY_REGISTRATIONS on 4.1.4), so check first.
 				if (task.isSuccessful) {

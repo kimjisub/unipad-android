@@ -6,9 +6,8 @@ import io.mockk.MockKStubScope
 import io.mockk.every
 
 /**
- * Stubs the device list MidiConnection reads. A JVM unit test sees Build.VERSION.SDK_INT = 0, so
- * MidiConnection takes its API 24-32 path, where getDevices() is the only listing Android offers;
- * its replacement getDevicesForTransport() exists only from API 33.
+ * Stubs the device list MidiConnection reads. MidiConnection lists devices with the deprecated
+ * getDevices() on every API level, so the tests stub that same call.
  */
 @Suppress("DEPRECATION")
 internal fun MidiManager.stubDeviceList(): MockKStubScope<Array<MidiDeviceInfo>, Array<MidiDeviceInfo>> =
