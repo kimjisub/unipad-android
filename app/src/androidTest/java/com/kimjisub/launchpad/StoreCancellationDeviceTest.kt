@@ -78,7 +78,7 @@ class StoreCancellationDeviceTest {
         val configurator = Configurator.getInstance()
         val oldIdle = configurator.waitForIdleTimeout
         configurator.waitForIdleTimeout = 0
-        val id = "jis294-${UUID.randomUUID()}"
+        val id = "store-cancel-${UUID.randomUUID()}"
         val workspace = File(context.getExternalFilesDir(null), "UniPack").apply { mkdirs() }
         val existing = File(workspace, "$id-existing").apply { mkdirs() }
         files("Existing").forEach { (path, bytes) -> File(existing, path).apply { parentFile!!.mkdirs(); writeBytes(bytes) } }
@@ -284,10 +284,10 @@ class StoreCancellationDeviceTest {
     }
     private fun capture(name: String) {
         val prefix = InstrumentationRegistry.getArguments().getString("capturePrefix", "fixed")
-        val folder = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "jis294-captures/$prefix").apply { mkdirs() }
+        val folder = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "store-cancel-captures/$prefix").apply { mkdirs() }
         assertTrue(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).takeScreenshot(File(folder, "$name.png")))
     }
-    private fun evidence(text: String) = InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\njis294 $text\n") })
+    private fun evidence(text: String) = InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\nstore-cancel $text\n") })
     private fun files(title: String): Map<String, ByteArray> = mapOf(
         "info" to "title=$title\nproducerName=Device test\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray(),
         "keySound" to "1 1 1 silence.wav\n".toByteArray(),
