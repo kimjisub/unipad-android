@@ -9,6 +9,7 @@ import org.junit.runners.Suite
     LibraryAndFileTest::class,
     ShareImportTest::class,
     TouchPlaybackTest::class,
+    PadEdgeTouchTest::class,
     MultiTouchPadModeTest::class,
     MultiTouchSlideModeTest::class,
     MouseInputTest::class,
