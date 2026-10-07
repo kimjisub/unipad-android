@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.view.children
+import androidx.core.view.isVisible
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -82,6 +84,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
@@ -550,7 +553,7 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsLeftContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsLeftContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
@@ -564,14 +567,14 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsRightContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsRightContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
 									orientation = LinearLayout.HORIZONTAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsBottomContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsBottomContainer }
 							)
 							AndroidView(
 								factory = { ctx -> TraceLogOverlayView(ctx).also { overlay ->
@@ -711,6 +714,32 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/**
+	 * Chain buttons for every pointer, taken in Compose like the pads. Compose stops handing an
+	 * embedded view the press that follows a mouse hover across the screen, so the buttons' own
+	 * clicks never came with a mouse. A chain is selected when the pointer that pressed it is
+	 * released over it, as a tap; a cancelled gesture selects nothing.
+	 */
+	private fun Modifier.chainTouchInput(container: () -> ViewGroup?) = pointerInput(Unit) {
+		awaitPointerEventScope {
+			val pressed = HashMap<Long, ChainView>()
+			while (true) {
+				for (change in awaitPointerEvent().changes) {
+					val id = change.id.value
+					if (change.changedToDownIgnoreConsumed()) {
+						container()?.chainAt(change.position)?.let { pressed[id] = it }
+					} else if (change.changedToUpIgnoreConsumed()) {
+						val chain = pressed.remove(id) ?: continue
+						if (!change.isConsumed && container()?.chainAt(change.position) === chain) chain.click()
+					}
+				}
+			}
+		}
+	}
+
+	private fun ViewGroup.chainAt(position: Offset): ChainView? = children.filterIsInstance<ChainView>().firstOrNull { chain ->
+		chain.isVisible && position.x >= chain.left && position.x < chain.right && position.y >= chain.top && position.y < chain.bottom
+	}
 
 	@Composable
 	private fun ChromeColumn() {

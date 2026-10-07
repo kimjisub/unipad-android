@@ -47,14 +47,15 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     /**
      * Opens the pack with the press light on. A pack with keyLED starts with it off; the option is
      * set on the screen's state rather than through the options panel, whose open/close by Back is
-     * not what these tests check.
+     * not what these tests check. [slide] overrides the class's pad input mode for one test.
      */
-    protected fun start() {
+    protected fun start(slide: Boolean = slideMode) {
+        prefs.slideMode = slide
         screen.openPlay()
         screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
         assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
         val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
-        assertEquals("Slide Mode applied on the play screen must match the mode under test", slideMode, applied)
+        assertEquals("Slide Mode applied on the play screen must match the mode under test", slide, applied)
         fingers = Fingers(screen)
     }
 
