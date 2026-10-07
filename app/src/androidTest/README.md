@@ -120,6 +120,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
+| `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
