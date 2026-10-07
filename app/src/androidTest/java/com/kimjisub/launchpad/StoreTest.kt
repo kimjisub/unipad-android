@@ -222,8 +222,6 @@ class StoreTest : BaseUITest() {
     private fun launchThroughSplashWithoutPermissionDialog() {
         prepareLegacyStoragePermissions()
         assertNotificationPermissionDenied()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
         val createdActivities = CopyOnWriteArrayList<Class<*>>()
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (activity is SplashActivity || activity is MainActivity) {
@@ -231,8 +229,7 @@ class StoreTest : BaseUITest() {
                 if (stage == Stage.CREATED) createdActivities.add(activity.javaClass)
             }
         }
-        instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
-        try {
+        withLifecycleCallback(callback) {
             // No permission handling here: an unexpected dialog must block/fail the test.
             launchApp()
             assertNoPermissionDialog()
@@ -245,8 +242,6 @@ class StoreTest : BaseUITest() {
             )
             assertNoPermissionDialog()
             assertNotificationPermissionDenied()
-        } finally {
-            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
         }
     }
 

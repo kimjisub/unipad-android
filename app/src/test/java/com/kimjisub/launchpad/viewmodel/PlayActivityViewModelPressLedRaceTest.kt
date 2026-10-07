@@ -56,7 +56,7 @@ class PlayActivityViewModelPressLedRaceTest {
 		const val TRIALS_DEADLINE_SECONDS = 120L
 	}
 
-	/** A pack whose only animation is the blink on (0,0); a MockK pack spends most of each press in reflection. */
+	/** A plain pack whose only animation is the blink on (0,0), so each press costs what it costs in the app. */
 	private class BlinkPack(blink: LedAnimation) : UniPack() {
 		override val id = "press-led-race"
 		override val keyLedExist = true
