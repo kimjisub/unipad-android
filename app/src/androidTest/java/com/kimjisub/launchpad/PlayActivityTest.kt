@@ -26,6 +26,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.design.R as DesignR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -784,6 +785,69 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    @Test
+    fun testBoundsOutsideTheResizedWindowNeverCountAsSettled() {
+        val window = Rect(0, 0, 1080, 2400)
+        val stale = Rect(2278, 480, 2336, 538)
+        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 400L) { stale }
+        assertNull("An out-of-window menu must fail the layout check", bounds)
+    }
+
+    @Test
+    fun testBoundsWaitForTwoMatchingReadingsInsideTheResizedWindow() {
+        val window = Rect(0, 0, 1080, 2400)
+        val stale = Rect(2278, 480, 2336, 538)
+        val current = Rect(980, 480, 1038, 538)
+        val readings = listOf(stale, stale, null, current, current).iterator()
+        var count = 0
+        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 10000L) {
+            count++
+            if (readings.hasNext()) readings.next() else current
+        }
+        assertEquals(current, bounds)
+        assertEquals("Stale or single readings must not end the wait", 5, count)
+    }
+
+    @Test
+    fun testSettledMenuOutsideTheSafeAreaStillFails() {
+        val window = Rect(0, 0, 1080, 2400)
+        val safe = Rect(0, 136, 1080, 2337)
+        val outside = Rect(980, 50, 1038, 108)
+        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 1000L) { outside }
+        assertNotNull(bounds)
+        val failure = runCatching { assertInside(safe, "menu button", bounds!!) }.exceptionOrNull()
+        assertTrue("A settled menu under a system bar must fail", failure is AssertionError)
+        assertTrue(failure?.message.orEmpty().contains("reaches outside the safe area"))
+    }
+
+    @Test
+    fun testMenuOutsideTheWindowIsReportedAsALayoutFailure() {
+        enterPlay()
+        val geometry = settledGeometry(landscape = false)
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        var content: View? = null
+        var originalTranslation = 0f
+        instrumentation.runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(Stage.RESUMED).single()
+            content = activity.findViewById(android.R.id.content)
+            originalTranslation = content!!.translationX
+            // Move the real menu (and its parent) only after the play screen has opened.
+            content.translationX = geometry.window.width() * 2f
+        }
+        try {
+            val problems = playLayoutProblems("offscreen_menu")
+            assertTrue(
+                "A menu outside the window must be reported: $problems",
+                problems.any { it.contains("menu button bounds did not settle") }
+            )
+        } finally {
+            instrumentation.runOnMainSync { content!!.translationX = originalTranslation }
+        }
+        assertNotNull("Menu did not return after restoring its parent", settledBounds(By.desc(str(R.string.menu)), geometry.window))
+        quitPlayToMain()
+    }
+
     /**
      * A 4 x 3 pack with 24 chains (the most a pack can have): eight chains a side are much taller
      * than four pads, and used to run off the screen. Every chain must show inside the safe area,
@@ -908,18 +972,27 @@ class PlayActivityTest : BaseUITest() {
 
     /**
      * Bounds of a Compose node once accessibility reports the resized window: right after a resize
-     * it can still give the previous layout's place, outside the new window.
+     * it can still give the previous layout's place, outside the new window. A timeout is a
+     * failed observation, never permission to use the last (possibly stale) reading.
      */
-    private fun settledBounds(selector: BySelector, window: Rect): Rect? {
+    private fun settledBounds(
+        selector: BySelector,
+        window: Rect,
+        timeoutMs: Long = 10000L,
+        readBounds: () -> Rect? = {
+            try { device.findObject(selector)?.visibleBounds } catch (_: StaleObjectException) { null }
+        },
+    ): Rect? {
         var last: Rect? = null
         var settled: Rect? = null
-        waitUntil(5000L) {
-            val now = try { device.findObject(selector)?.visibleBounds } catch (_: StaleObjectException) { null }
-            if (now != null && now == last && window.contains(now)) settled = now
+        waitUntil(timeoutMs) {
+            val now = readBounds()
+            if (now != null && !now.isEmpty && now == last && window.contains(now)) settled = now
             last = now
             settled != null
         }
-        return settled ?: last
+        if (settled == null) println("Bounds did not settle for $selector inside $window within $timeoutMs ms; last: $last")
+        return settled
     }
 
     /**
@@ -945,13 +1018,13 @@ class PlayActivityTest : BaseUITest() {
         }
         val padsAndChains = geometry.chains + geometry.pads
         val menu = settledBounds(By.desc(str(R.string.menu)), geometry.window)
-        check(menu != null) { "menu button not found" }
+        check(menu != null) { "menu button bounds did not settle inside ${geometry.window}" }
         menu?.let { m ->
             checkInside("menu button", m)
             padsAndChains.forEach { check(!Rect.intersects(m, it)) { "menu $m covers $it" } }
         }
         val logo = settledBounds(By.res("play_logo"), geometry.window)
-        check(logo != null) { "logo not found" }
+        check(logo != null) { "logo bounds did not settle inside ${geometry.window}" }
         logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
         // Taken last: the display can still be drawing the rotation when the view tree has settled.
         takeScreenshot("pad_grid_$name")
