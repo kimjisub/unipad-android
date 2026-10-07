@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Nuova versione rilevata.</string>
-	<string name="update_available">Aggiornamento disponibile</string>
 
 	<string name="permissionRequire">È necessario l\'accesso alla memoria esterna per salvare i file del progetto.\nConcedi l\'autorizzazione.</string>
 	<string name="permissionDenied">L\'app richiede l\'accesso alla memoria esterna.\nAttiva le autorizzazioni in [Impostazioni] > [Autorizzazioni]</string>

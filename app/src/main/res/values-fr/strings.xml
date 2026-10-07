@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Nouvelle version détectée.</string>
-	<string name="update_available">Mise à jour disponible</string>
 
 	<string name="permissionRequire">L\'accès au stockage externe est nécessaire pour sauvegarder les fichiers du projet.\nAccordez cette autorisation.</string>
 	<string name="permissionDenied">L\'application nécessite l\'accès au stockage externe.\nVeuillez activer les autorisations dans [Paramètres] > [Autorisations]</string>

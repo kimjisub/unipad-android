@@ -289,6 +289,8 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
 	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
+	// Lets the pack list fetch a newer Play build in the background and install it when asked
+	implementation 'com.google.android.play:app-update:2.1.0'
 	api project(':design')
 }
 

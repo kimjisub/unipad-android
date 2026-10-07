@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Versi baru terdeteksi.</string>
-	<string name="update_available">Pembaruan tersedia</string>
 
 	<string name="permissionRequire">Akses penyimpanan eksternal diperlukan untuk menyimpan file proyek.\nDapatkan izin untuk hak ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke penyimpanan eksternal.\nSilakan aktifkan izin di [Pengaturan] > [Izin]</string>

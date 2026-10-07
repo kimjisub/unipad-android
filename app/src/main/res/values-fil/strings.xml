@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">May nakitang bagong bersyon.</string>
-	<string name="update_available">May available na update</string>
 
 	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
 	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>

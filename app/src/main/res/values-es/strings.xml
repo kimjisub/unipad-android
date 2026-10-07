@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Se detectó una nueva versión.</string>
-	<string name="update_available">Actualización disponible</string>
 
 	<string name="permissionRequire">Se requiere acceso al almacenamiento externo para guardar archivos del proyecto.\nObtener permiso para este privilegio.</string>
 	<string name="permissionDenied">La app requiere acceso al almacenamiento externo.\nPor favor active los permisos en [Configuración] > [Permisos]</string>

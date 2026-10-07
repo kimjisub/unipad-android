@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Versi baharu dikesan.</string>
-	<string name="update_available">Kemas kini tersedia</string>
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>

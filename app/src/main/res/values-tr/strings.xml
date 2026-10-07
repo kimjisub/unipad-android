@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">Yeni sürüm tespit edildi.</string>
-	<string name="update_available">Güncelleme mevcut</string>
 
 	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
 	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>

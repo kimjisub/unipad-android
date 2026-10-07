@@ -100,7 +100,6 @@
 
 	<!--Version-->
 	<string name="newVersionFound">新しいバージョンが見つかりました。</string>
-	<string name="update_available">アップデートがあります</string>
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
