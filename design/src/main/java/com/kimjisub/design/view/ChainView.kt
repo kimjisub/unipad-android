@@ -17,8 +17,10 @@ class ChainView
 		ViewChainBinding.inflate(LayoutInflater.from(context), this, true)
 
 
+	// Only chains that switch something are reached by Tab; the top row is LED-only.
 	override fun setOnClickListener(listener: OnClickListener?) {
 		b.touchSpace.setOnClickListener(listener)
+		b.touchSpace.isFocusable = listener != null
 	}
 
 	override fun setOnTouchListener(listener: OnTouchListener) {

@@ -70,3 +70,9 @@ inspection-results/
 fastlane/.secrets/
 fastlane/report.xml
 fastlane/README.md
+
+# CI diagnostic output
+.ci-results/
+
+# Python bytecode from running scripts/tests
+__pycache__/

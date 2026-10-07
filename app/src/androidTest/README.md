@@ -4,7 +4,7 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
-For the deterministic 14-test release subset, coverage inventory, and signed-candidate limitations,
+For the deterministic 29-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on a borrowed API 35 emulator
@@ -139,16 +139,27 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityUIVisibilityFeatures` | Hide UI hides/restores Menu; Back still reaches options; watermark switches restore. |
 | `PlayActivityTest.testPlayActivityRecordingClipboard` | Stopping recording copies chain and touch commands to the clipboard. |
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
+| `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
+| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
-There are 63 app tests and one design test in the sources. Check every report against this
-inventory; a green report with fewer discovered tests is insufficient. Verify discovery counts as well as failures; the Gradle runner must report all source tests.
+The expected number of tests is the count of `@Test` annotations in each module's
+`src/androidTest`; print it with `python3 scripts/check_connected_results.py --expected-only app design`.
+A green report with fewer discovered tests is insufficient: Gradle can finish successfully when
+the app APK failed to install and no app test ran. GitHub CI does not run the UI suite; run
+`ANDROID_SERIAL=<device> bash scripts/ci-connected-tests.sh` on a local emulator before pushing.
+It clears earlier results, then fails unless each module's JUnit XML lists exactly the expected
+number with no failure, error or skip and Gradle printed no install failure. It records the counts
+and reasons in `.ci-results/ui-status.txt`. On API 24–28 `UniPackImportOverlapDeviceTest` is
+filtered by `@SdkSuppress`, so that script expects an API 29+ device.
 
 The former FAB method names now describe Import, reconnect and the Main navigation buttons.
-The issue records the old-to-new mapping so earlier failure reports remain traceable.
+The renames are in [#130](https://github.com/kimjisub/unipad-android/pull/130), so earlier failure
+reports remain traceable through its diff.
 Some smoke checks only prove that the app stays on its screen; stronger basic-function scenarios
-are being added separately under JIS-179. They are not claimed here as audio or hardware proof.
+live in the [base feature suite](java/com/kimjisub/launchpad/basefeatures/README.md). They are not
+claimed here as audio or hardware proof.
 
 ## Other instrumented checks (included in the complete run)
 
@@ -167,10 +178,10 @@ pack events, count forwarding and detaching both subscriptions.
 
 ## Verification history
 
-The September 26–27 record predates this work: 36 tests, 13 failures before the first FAB migration,
-then 35 passes and one Store browsing failure on offline API 35. By `f093afba`, that migration was
-already in main. JIS-178 reruns the complete current suite before changing it, preserves every
-existing screen scenario, and records the new baseline and three final runs on the issue.
+The September 26–27 record predates [#130](https://github.com/kimjisub/unipad-android/pull/130): 36 tests,
+13 failures before the first FAB migration, then 35 passes and one Store browsing failure on
+offline API 35. By `f093afba`, that migration was already in main. #130 preserved every existing
+screen scenario and records three complete runs of its final commit.
 
 Historical ignored Import/Reconnect tests had been reported as failures by the connected test
 engine. They are now ordinary tests of the actual Import and Settings controls. No test is ignored.

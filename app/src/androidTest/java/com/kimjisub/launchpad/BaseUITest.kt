@@ -22,6 +22,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.util.regex.Pattern
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -46,6 +47,9 @@ abstract class BaseUITest {
         const val MAIN_TIMEOUT = 20000L
         const val PLAY_TIMEOUT = 20000L
         private const val PLAY_FLAG_TAP_DP = 50
+        private const val SNACKBAR_TIMEOUT = 5000L
+        // The resource package differs between build types, so match the id alone.
+        private val SNACKBAR_TEXT = Pattern.compile(".*:id/snackbar_text")
         private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
     }
 
@@ -343,8 +347,13 @@ abstract class BaseUITest {
         return row!!
     }
 
-    /** Toggle a play option and return its new checked state. */
+    /**
+     * Toggle a play option and return its new checked state.
+     * A message bar (e.g. "Copied" after stopping a recording) covers the bottom rows of the panel
+     * and takes the tap, so wait for it to leave first.
+     */
     protected fun togglePlayOption(labelRes: Int): Boolean {
+        device.wait(Until.gone(By.res(SNACKBAR_TEXT)), SNACKBAR_TIMEOUT)
         val before = isPlayOptionChecked(labelRes)
         assertTrue("Play option '${str(labelRes)}' could not be tapped", clickFresh { playOption(labelRes) })
         assertTrue(

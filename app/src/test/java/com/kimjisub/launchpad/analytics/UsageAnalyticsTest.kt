@@ -108,16 +108,26 @@ class UsageAnalyticsTest {
 		PackImportSource.entries.mapTo(values) { it.value }
 		PlayTrigger.entries.mapTo(values) { it.value }
 		UsageErrorType.entries.mapTo(values) { it.value }
+		ScreenOrientation.entries.mapTo(values) { it.value }
+		ScreenShortSide.entries.mapTo(values) { it.value }
+		WindowMode.entries.mapTo(values) { it.value }
 
 		sink.analytics.packImport(PackImportSource.STORE).failed(UsageErrorType.NOT_FOUND)
 		val session = sink.analytics.newPlaySession()
+		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, true))
 		session.loadStarted(); session.loadSucceeded(); session.playTriggered(PlayTrigger.PAD); session.ended()
 
 		for (event in sink.events) {
 			assertTrue("$event", event.parameters.keys.all { it in UsageParam.allowed })
 			event.parameters.filterKeys { it != UsageParam.DURATION_BUCKET }.values.forEach { assertTrue("$it in $event", it in values) }
 		}
-		assertEquals(setOf("result", "import_source", "error_type", "duration_bucket", "trigger"), UsageParam.allowed)
+		assertEquals(
+			setOf(
+				"result", "import_source", "error_type", "duration_bucket", "trigger",
+				"orientation", "screen_short_side", "window_mode",
+			),
+			UsageParam.allowed,
+		)
 	}
 
 	@Test

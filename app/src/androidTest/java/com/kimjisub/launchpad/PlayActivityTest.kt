@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -16,6 +17,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.Until
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
@@ -26,6 +29,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.abs
 
 /**
  * PlayActivity Tests
@@ -80,7 +84,7 @@ class PlayActivityTest : BaseUITest() {
     }
 
     /** Play screen geometry read from the view tree: [padArea] of the helper reads the same actual native bounds. */
-    private class PlayGeometry(val safe: Rect, val pads: Rect, val chains: List<Rect>)
+    private data class PlayGeometry(val window: Rect, val safe: Rect, val pads: Rect, val chains: List<Rect>)
 
     /**
      * Pad grid and chain buttons on screen, and the area not covered by system bars or the display
@@ -94,7 +98,8 @@ class PlayActivityTest : BaseUITest() {
             val decor = activity.window.decorView
             val insets = ViewCompat.getRootWindowInsets(decor)
                 ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            val safe = screenBounds(decor).apply {
+            val window = screenBounds(decor)
+            val safe = Rect(window).apply {
                 if (insets != null) {
                     left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom
                 }
@@ -108,7 +113,7 @@ class PlayActivityTest : BaseUITest() {
             collect(decor)
             val pads = shown.filterIsInstance<PadView>().map(::screenBounds)
                 .reduceOrNull { acc, r -> Rect(acc).apply { union(r) } } ?: Rect()
-            geometry = PlayGeometry(safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
+            geometry = PlayGeometry(window, safe, pads, shown.filterIsInstance<ChainView>().map(::screenBounds))
         }
         return geometry!!
     }
@@ -751,8 +756,153 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    /**
+     * The display is resized under the open play screen, as rotation and split screen resize its
+     * window without recreating it: a Redmi 13 sized 20:9 panel with a punch-hole camera, a 16:9
+     * phone, the 800 x 637 dp lower half of a split tablet, and 16:9 again after it, each in both
+     * landscape rotations (the camera on either side), then a 610 x 975 dp tablet held upright,
+     * which letterboxes the landscape play screen to 4:3.
+     * The play screen follows the sensor, so the display ignores its orientation request while
+     * rotations are forced. Every one is checked before the test fails, so one run shows each
+     * layout that is off.
+     */
+    @Test
+    fun testPadGridStaysCentredWhenTheWindowChanges() {
+        enterPlay()
+        val problems = playLayoutProblemsAcrossWindows()
+        assertTrue(problems.joinToString("\n"), problems.isEmpty())
+        quitPlayToMain()
+    }
+
+    /** As [testPadGridStaysCentredWhenTheWindowChanges] for a pack whose pads stretch to fill the screen. */
+    @Test
+    fun testStretchedPadsStayCentredWhenTheWindowChanges() {
+        TestUniPack.install(context, squareButton = false)
+        enterPlay()
+        val problems = playLayoutProblemsAcrossWindows("stretched_")
+        assertTrue(problems.joinToString("\n"), problems.isEmpty())
+        quitPlayToMain()
+    }
+
+    /** Layout problems in every window of the resize sequence; screenshots are named with [prefix]. */
+    private fun playLayoutProblemsAcrossWindows(prefix: String = ""): List<String> {
+        val holeWasOn = device.executeShellCommand("cmd overlay list").lines()
+            .any { it.startsWith("[x]") && it.endsWith(HOLE_CUTOUT) }
+        val ignoredOrientation = device.executeShellCommand("wm get-ignore-orientation-request").contains("true")
+        val problems = mutableListOf<String>()
+        try {
+            problems += playLayoutProblems("${prefix}initial")
+            device.executeShellCommand("cmd overlay enable $HOLE_CUTOUT")
+            device.executeShellCommand("wm set-ignore-orientation-request true")
+            for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
+                device.executeShellCommand("wm size $size")
+                rotateTo(Surface.ROTATION_90)
+                problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
+                rotateTo(Surface.ROTATION_270)
+                problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
+            }
+            device.executeShellCommand("wm size 1600x2560")
+            rotateTo(Surface.ROTATION_0)
+            problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
+        } finally {
+            device.executeShellCommand("wm size reset")
+            if (!holeWasOn) device.executeShellCommand("cmd overlay disable $HOLE_CUTOUT")
+            device.unfreezeRotation()
+            device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
+        }
+        problems += playLayoutProblems("${prefix}restored")
+        return problems
+    }
+
+    /** Freezes the display at [rotation], asking again when a request made right after a resize is dropped. */
+    private fun rotateTo(rotation: Int) {
+        repeat(3) {
+            when (rotation) {
+                Surface.ROTATION_90 -> device.setOrientationLeft()
+                Surface.ROTATION_270 -> device.setOrientationRight()
+                else -> device.setOrientationNatural()
+            }
+            if (waitUntil(5000L) { device.displayRotation == rotation }) return
+        }
+    }
+
+    /**
+     * Geometry once the resized window has been laid out: the same reading twice in a row, and a
+     * landscape window when [landscape] (right after a rotation the window can still be upright).
+     */
+    private fun settledGeometry(landscape: Boolean): PlayGeometry {
+        var last: PlayGeometry? = null
+        var settled: PlayGeometry? = null
+        waitUntil(10000L) {
+            val now = playGeometry()
+            val shaped = !landscape || now.window.width() > now.window.height()
+            if (now == last && shaped && !now.pads.isEmpty) settled = now
+            last = now
+            settled != null
+        }
+        assertNotNull("Play screen layout never settled", settled)
+        return settled!!
+    }
+
+    /**
+     * Bounds of a Compose node once accessibility reports the resized window: right after a resize
+     * it can still give the previous layout's place, outside the new window.
+     */
+    private fun settledBounds(selector: BySelector, window: Rect): Rect? {
+        var last: Rect? = null
+        var settled: Rect? = null
+        waitUntil(5000L) {
+            val now = try { device.findObject(selector)?.visibleBounds } catch (_: StaleObjectException) { null }
+            if (now != null && now == last && window.contains(now)) settled = now
+            last = now
+            settled != null
+        }
+        return settled ?: last
+    }
+
+    /**
+     * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
+     * anything outside the safe area, or chains, menu, pads and logo covering each other.
+     */
+    private fun playLayoutProblems(name: String, rotation: Int? = null): List<String> {
+        if (rotation != null) waitUntil(10000L) { device.displayRotation == rotation }
+        Thread.sleep(500)
+        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
+        val problems = mutableListOf<String>()
+        fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
+        if (rotation != null) check(device.displayRotation == rotation) { "display rotation is ${device.displayRotation}, not $rotation" }
+        fun checkInside(what: String, bounds: Rect) = check(geometry.safe.contains(bounds)) { "$what $bounds reaches outside the safe area ${geometry.safe}" }
+
+        val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / context.resources.displayMetrics.density
+        check(offCentreDp <= CENTRE_TOLERANCE_DP) { "pad grid is ${offCentreDp}dp off the window's centre line" }
+        checkInside("pad grid", geometry.pads)
+        check(geometry.chains.isNotEmpty()) { "chain buttons not found" }
+        geometry.chains.forEachIndexed { i, chain ->
+            checkInside("chain button ${i + 1}", chain)
+            check(!Rect.intersects(chain, geometry.pads)) { "chain button ${i + 1} $chain covers the pads ${geometry.pads}" }
+        }
+        val padsAndChains = geometry.chains + geometry.pads
+        val menu = settledBounds(By.desc(str(R.string.menu)), geometry.window)
+        check(menu != null) { "menu button not found" }
+        menu?.let { m ->
+            checkInside("menu button", m)
+            padsAndChains.forEach { check(!Rect.intersects(m, it)) { "menu $m covers $it" } }
+        }
+        val logo = settledBounds(By.res("play_logo"), geometry.window)
+        check(logo != null) { "logo not found" }
+        logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
+        // Taken last: the display can still be drawing the rotation when the view tree has settled.
+        takeScreenshot("pad_grid_$name")
+        return problems
+    }
+
     private fun openPlayOptionsWithBack() {
         device.pressBack()
         assertTrue("Back did not open the play option panel", waitUntil { isPlayOptionsOpen() })
+    }
+
+    private companion object {
+        const val HOLE_CUTOUT = "com.android.internal.display.cutout.emulation.hole"
+        const val CENTRE_TOLERANCE_DP = 1f
     }
 }
