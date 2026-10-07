@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
@@ -12,6 +13,8 @@ import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
+import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
@@ -37,6 +40,7 @@ class BaseApplication : Application() {
 		setupLogger()
 		setupRemoteConfig()
 		setupBundledThemes()
+		setupOssLicensesTheme()
 
 		startKoin {
 			androidContext(applicationContext)
@@ -88,6 +92,15 @@ class BaseApplication : Application() {
 			.build()
 		Logger.addLogAdapter(AndroidLogAdapter(formatStrategy))
 		Logger.d("Logger Ready")
+	}
+
+	/**
+	 * The license screen follows the system light/dark setting unless told otherwise; UniPad is
+	 * always dark. Set here rather than when the screen is opened, because a process restored
+	 * onto the license screen never passes through the screen that opened it.
+	 */
+	private fun setupOssLicensesTheme() {
+		OssLicensesMenuActivity.setTheme(UniPadColorScheme, UniPadColorScheme, UniPadTypography)
 	}
 
 	private fun setupBundledThemes() {

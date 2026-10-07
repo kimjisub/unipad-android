@@ -192,7 +192,7 @@ class UsageErrorClassificationTest {
 		ServerSocket(0).use { server ->
 			val serving = thread(isDaemon = true) {
 				server.accept().use { socket ->
-					socket.getInputStream().bufferedReader().let { reader -> while (reader.readLine()?.isNotEmpty() == true) Unit }
+					socket.getInputStream().bufferedReader().let { reader -> while (reader.readLine()?.isNotEmpty() == true) continue }
 					socket.getOutputStream().apply {
 						write("HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\nabc".toByteArray())
 						flush()

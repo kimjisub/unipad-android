@@ -77,7 +77,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -169,7 +169,11 @@ class SettingsActivity : AppCompatActivity() {
 
 	private fun copyFcmToken() {
 		try {
-			FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+			// Token registration is deprecated in firebase-messaging 25.1 in favour of installation-ID
+			// registration, which turns tokens off for every install; that move is a separate change.
+			@Suppress("DEPRECATION")
+			val token = FirebaseMessaging.getInstance().token
+			token.addOnCompleteListener { task ->
 				// task.result throws when the token fetch failed (Crashlytics 2f4ba056:
 				// IOException TOO_MANY_REGISTRATIONS on 4.1.4), so check first.
 				if (task.isSuccessful) {

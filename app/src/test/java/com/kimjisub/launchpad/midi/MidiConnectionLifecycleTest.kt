@@ -78,7 +78,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_midiServiceEnumerationNpe_fallsBackToUsbClaim() {
-		every { midiManager.devices } throws NullPointerException("MidiManager.getDevices")
+		midiManager.stubDeviceList() throws NullPointerException("MidiManager.getDevices")
 		val (device, connection) = launchpad(deviceId = 1)
 
 		attach(device)
@@ -89,7 +89,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_midiServiceOpenDeviceNpe_fallsBackToUsbClaim() {
-		every { midiManager.devices } returns arrayOf(midiDeviceInfo())
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo())
 		every { midiManager.openDevice(any(), any(), any()) } throws NullPointerException("MidiManager.openDevice")
 		val (device, connection) = launchpad(deviceId = 1)
 
@@ -102,7 +102,7 @@ class MidiConnectionLifecycleTest {
 	@Test
 	fun init_openDeviceCallbackAfterDeviceReplaced_releasesMidiDeviceWithoutOpeningPorts() {
 		val info = midiDeviceInfo()
-		every { midiManager.devices } returns arrayOf(info)
+		midiManager.stubDeviceList() returns arrayOf(info)
 		val callback = slot<MidiManager.OnDeviceOpenedListener>()
 		every { midiManager.openDevice(info, capture(callback), any()) } returns Unit
 		val (first, firstConnection) = launchpad(deviceId = 1)
@@ -126,7 +126,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun receive_controllerThrowsOnAttach_tearsDownWithoutCrash() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val controller = mockk<MidiController>(relaxed = true)
 		every { controller.onAttach() } throws IllegalStateException("controller not ready")
 		MidiConnection.controller = controller
@@ -140,7 +140,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun receive_connectionReleasedMidTransfer_tearsDownWithoutCrash() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val observer = mockk<MidiConnection.ConnectionObserver>(relaxed = true)
 		MidiConnection.connectionObserver = observer
 		val (device, connection) = launchpad(deviceId = 1)
@@ -157,7 +157,7 @@ class MidiConnectionLifecycleTest {
 	/** Mini MK2 input through the actual USB receive loop, rather than calling a driver directly. */
 	@Test
 	fun receive_miniChord_keepsEveryPressAndReleaseAcrossBatchedPackets() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val events = Collections.synchronizedList(mutableListOf<String>())
 		val controller = mockk<MidiController>(relaxed = true)
 		every { controller.onPadTouch(any(), any(), any(), any()) } answers {

@@ -131,11 +131,9 @@
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
 		<activity
-			android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-			android:theme="@style/SettingTheme" />
-		<activity
-			android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-			android:theme="@style/SettingTheme" />
+			android:name="com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity"
+			android:theme="@style/SettingTheme"
+			tools:replace="android:theme" />
 
 		<service
 			android:name=".service.MyFirebaseMessagingService"
