@@ -11,7 +11,7 @@ import java.nio.ByteOrder
  *
  * 8x8 square buttons (stretched with `squareButton = false`), two chains, LED and autoPlay present
  * (so every play option is shown), and every sound is silence so a run never plays audio through
- * the host speaker.
+ * the host speaker. [install] can give it another pad grid and chain count.
  */
 object TestUniPack {
     const val FOLDER_NAME = "zz_ui_test_pack"
@@ -24,26 +24,27 @@ object TestUniPack {
 
     fun exists(context: Context): Boolean = File(folder(context), "info").isFile
 
-    fun install(context: Context, squareButton: Boolean = true): File {
+    /** [rows] is the pack's `buttonX`, [columns] its `buttonY`; [chains] must be 2 or more for its autoPlay. */
+    fun install(context: Context, squareButton: Boolean = true, rows: Int = 8, columns: Int = 8, chains: Int = CHAINS): File {
         val root = folder(context)
         root.deleteRecursively()
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=8\nbuttonY=8\nchain=$CHAINS\nsquareButton=$squareButton\n"
+            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 
         val keySound = StringBuilder()
-        for (c in 1..CHAINS) for (x in 1..8) for (y in 1..8) {
+        for (c in 1..chains) for (x in 1..rows) for (y in 1..columns) {
             keySound.append("$c $x $y silence.wav\n")
         }
         File(root, "keySound").writeText(keySound.toString())
 
         File(root, "keyLED/1 1 1 1").writeText("o 1 1 a 5\nd 100\nf 1 1\n")
 
-        File(root, "autoPlay").writeText(autoPlayScript())
+        File(root, "autoPlay").writeText(autoPlayScript(rows, columns))
         return root
     }
 
@@ -51,12 +52,12 @@ object TestUniPack {
         folder(context).deleteRecursively()
     }
 
-    /** About 60 s of presses across both chains, long enough for transport checks. */
-    private fun autoPlayScript(): String = buildString {
+    /** About 60 s of presses across chains 1 and 2, long enough for transport checks. */
+    private fun autoPlayScript(rows: Int, columns: Int): String = buildString {
         for (step in 0 until AUTO_PLAY_STEPS) {
             if (step == AUTO_PLAY_STEPS / 2) append("c 2\n")
-            val x = step % 8 + 1
-            val y = step / 8 % 8 + 1
+            val x = step % rows + 1
+            val y = step / rows % columns + 1
             append("o $x $y\nd $AUTO_PLAY_DELAY_MS\nf $x $y\nd $AUTO_PLAY_DELAY_MS\n")
         }
     }

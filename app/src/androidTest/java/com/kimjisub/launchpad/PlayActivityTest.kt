@@ -784,6 +784,68 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    /**
+     * A 4 x 3 pack with 24 chains (the most a pack can have): eight chains a side are much taller
+     * than four pads, and used to run off the screen. Every chain must show inside the safe area,
+     * clear of the pads, and be selectable, in normal and in Pro light mode.
+     */
+    @Test
+    fun testEveryChainOfASmallPackWithManyChainsCanBeSelected() {
+        TestUniPack.install(context, rows = 4, columns = 3, chains = 24)
+        enterPlay()
+        selectChainsOnEverySide("normal", visibleChains = 24)
+        openPlayOptions()
+        togglePlayOption(R.string.proLightMode)
+        closePlayOptions()
+        // Pro light mode also shows the eight function keys above the pads.
+        selectChainsOnEverySide("pro", visibleChains = 32)
+        quitPlayToMain()
+    }
+
+    /**
+     * Checks the chain buttons are on screen and records selecting chains 24, 5 and 18 (top left,
+     * right and bottom), each followed by a press of the first pad.
+     */
+    private fun selectChainsOnEverySide(name: String, visibleChains: Int) {
+        val geometry = settledGeometry(landscape = false)
+        takeScreenshot("many_chains_$name")
+        assertEquals("chain buttons shown in $name mode", visibleChains, geometry.chains.size)
+        geometry.chains.forEach { chain ->
+            assertInside(geometry.safe, "chain button", chain)
+            assertTrue("chain button $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
+            geometry.chains.filter { it != chain }.forEach { assertTrue("chain buttons $chain and $it meet", !Rect.intersects(chain, it)) }
+        }
+        // Chains 1-8 run down the right, 9-16 right to left below and 17-24 up the left. The pads
+        // are taller than wide, so the side columns stay level with them and the rows may not.
+        val beside = geometry.chains.filter { it.top < geometry.pads.bottom && it.bottom > geometry.pads.top }
+        val right = beside.filter { it.left >= geometry.pads.right }.sortedBy { it.top }
+        val bottom = geometry.chains.filter { it.top >= geometry.pads.bottom }.sortedByDescending { it.left }
+        val left = beside.filter { it.right <= geometry.pads.left }.sortedByDescending { it.top }
+        val chainButtons = right + bottom + left
+        assertEquals("chains 1-24 beside and below the pads in $name mode", 24, chainButtons.size)
+
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        closePlayOptions()
+        val firstPad = Rect(geometry.pads.left, geometry.pads.top, geometry.pads.left + geometry.pads.width() / 3, geometry.pads.top + geometry.pads.height() / 4)
+        for (chain in listOf(24, 5, 18)) {
+            val button = chainButtons[chain - 1]
+            device.click(button.centerX(), button.centerY())
+            Thread.sleep(300)
+            takeScreenshot("many_chains_${name}_chain_$chain")
+            device.click(firstPad.centerX(), firstPad.centerY())
+        }
+        clearClipboard()
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        assertTrue("Recording was not copied to the clipboard", waitUntil { clipboardText() != null })
+        val log = clipboardText().orEmpty().lines()
+        val selected = log.filter { it.startsWith("chain ") }
+        assertEquals("chains selected in $name mode: $log", listOf("chain 24", "chain 5", "chain 18"), selected)
+        assertEquals("first pad presses in $name mode: $log", 3, log.count { it == "t 1 1" })
+        closePlayOptions()
+    }
+
     /** Layout problems in every window of the resize sequence; screenshots are named with [prefix]. */
     private fun playLayoutProblemsAcrossWindows(prefix: String = ""): List<String> {
         val holeWasOn = device.executeShellCommand("cmd overlay list").lines()
