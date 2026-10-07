@@ -1,0 +1,8 @@
+UniPad es un nuevo tipo de juego de ritmo basado en el Launchpad: presiona los botones para tocar canciones.
+
+Funciones principales
+- Disfruta de mucho contenido con más de 40 canciones base.
+- Crea tus propios archivos de proyecto (UniPack) y tócalos en la app.
+- Incluye Reproducción Automática y funciones que te ayudan a practicar.
+- Personaliza el aspecto de UniPad con temas.
+- Conecta tu Launchpad y equipos MIDI a la app.
