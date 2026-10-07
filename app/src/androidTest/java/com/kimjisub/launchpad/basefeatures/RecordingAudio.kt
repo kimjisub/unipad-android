@@ -15,6 +15,9 @@ class RecordingAudio : SoundRunner.Engine {
     val stops = AtomicInteger()
     val starts = AtomicInteger()
     private val nextId = AtomicInteger()
+    private val loops = mutableListOf<Int>()
+    private val stoppedVoices = mutableSetOf<Int>()
+    private var silencedThrough = 0
     private val decodedFiles = ConcurrentHashMap<OboeAudioEngine.DecodedAudio, String>()
     override fun start(): Boolean {
         starts.incrementAndGet()
@@ -29,10 +32,20 @@ class RecordingAudio : SoundRunner.Engine {
     }
     override fun unloadSound(soundId: Int) = Unit
     override fun unloadAll() = Unit
-    override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
+    /** The stop key of a voice is its 1-based position in [plays]. */
+    @Synchronized override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
         plays += soundId
+        loops += loop
         return plays.size
     }
-    override fun stopVoice(stopKey: Int) = Unit
-    override fun stopAllVoices() { silences.incrementAndGet() }
+    @Synchronized override fun stopVoice(stopKey: Int) { stoppedVoices += stopKey }
+    @Synchronized override fun stopAllVoices() {
+        silencedThrough = plays.size
+        silences.incrementAndGet()
+    }
+
+    /** Sound IDs of the infinite loops (`loop == -1`) started and not stopped since. */
+    @Synchronized fun ringingLoops(): List<Int> = loops.indices
+        .filter { loops[it] == -1 && it + 1 > silencedThrough && it + 1 !in stoppedVoices }
+        .map { plays[it] }
 }
