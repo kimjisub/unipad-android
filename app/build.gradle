@@ -78,7 +78,11 @@ android {
 			proguardFile 'proguard-retrofit2.pro'
 		}
 		debug {
-			manifestPlaceholders = [appName: "@string/app_name_test"]
+			// -PanalyticsServerCheck builds a debug app whose analytics reach Firebase (see UsageEventRouting).
+			manifestPlaceholders = [
+				appName: "@string/app_name_test",
+				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true'
+			]
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
 			debuggable = true
