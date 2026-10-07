@@ -50,7 +50,12 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-android
       - name: Build every debug module and compile both Kotlin variants
-        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :app:processReleaseManifest :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+      - name: Check debug builds send no Firebase reports and release builds are unchanged
+        run: >-
+          python3 scripts/check_debug_telemetry_manifest.py
+          app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+          app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 
   lint:
     name: Android lint

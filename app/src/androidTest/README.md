@@ -4,6 +4,13 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+The debug app sends no Firebase analytics, performance data or crash reports from its first
+launch (`app/src/debug/AndroidManifest.xml`); it keeps network access, which
+`StoreCancellationDeviceTest` needs for its local download server. A crash collection value saved
+earlier through the Crashlytics API overrides the manifest, so start from a fresh install or cleared
+app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
+`apkanalyzer manifest print` for an APK; pull requests run it on both build types.
+
 For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
