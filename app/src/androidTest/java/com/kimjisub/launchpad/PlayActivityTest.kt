@@ -936,7 +936,8 @@ class PlayActivityTest : BaseUITest() {
             device.unfreezeRotation()
             device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
         }
-        problems += playLayoutProblems("${prefix}restored")
+        // Resetting size, cutout and sensor orientation queues several separate layouts.
+        problems += playLayoutProblems("${prefix}restored", layoutTimeoutMs = 30000L)
         return problems
     }
 
@@ -956,17 +957,17 @@ class PlayActivityTest : BaseUITest() {
      * Geometry once the resized window has been laid out: the same reading twice in a row, and a
      * landscape window when [landscape] (right after a rotation the window can still be upright).
      */
-    private fun settledGeometry(landscape: Boolean): PlayGeometry {
+    private fun settledGeometry(landscape: Boolean, timeoutMs: Long = 10000L): PlayGeometry {
         var last: PlayGeometry? = null
         var settled: PlayGeometry? = null
-        waitUntil(10000L) {
+        waitUntil(timeoutMs) {
             val now = playGeometry()
             val shaped = !landscape || now.window.width() > now.window.height()
             if (now == last && shaped && !now.pads.isEmpty) settled = now
             last = now
             settled != null
         }
-        assertNotNull("Play screen layout never settled", settled)
+        assertNotNull("Play screen layout never settled within $timeoutMs ms; last: $last", settled)
         return settled!!
     }
 
@@ -999,10 +1000,10 @@ class PlayActivityTest : BaseUITest() {
      * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
      * anything outside the safe area, or chains, menu, pads and logo covering each other.
      */
-    private fun playLayoutProblems(name: String, rotation: Int? = null): List<String> {
+    private fun playLayoutProblems(name: String, rotation: Int? = null, layoutTimeoutMs: Long = 10000L): List<String> {
         if (rotation != null) waitUntil(10000L) { device.displayRotation == rotation }
         Thread.sleep(500)
-        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
+        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270, timeoutMs = layoutTimeoutMs)
         val problems = mutableListOf<String>()
         fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
         if (rotation != null) check(device.displayRotation == rotation) { "display rotation is ${device.displayRotation}, not $rotation" }
