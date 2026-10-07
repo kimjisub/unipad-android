@@ -18,7 +18,7 @@ runs:
         log-accepted-android-sdk-licenses: false
     - name: Install Android SDK packages
       shell: bash
-      run: android --no-metrics --sdk="$ANDROID_HOME" sdk install platform-tools platforms/android-37.0 build-tools/36.0.0 ndk/29.0.14206865 cmake/3.22.1
+      run: bash scripts/install-android-sdk.sh
     - name: Use test-only Firebase configuration
       shell: bash
       run: cp .github/fixtures/google-services.json app/google-services.json
