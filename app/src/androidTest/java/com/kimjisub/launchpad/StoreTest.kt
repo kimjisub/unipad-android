@@ -231,7 +231,7 @@ class StoreTest : BaseUITest() {
         }
         withLifecycleCallback(callback) {
             // No permission handling here: an unexpected dialog must block/fail the test.
-            launchApp()
+            launchToMainActivity(answerStoragePermission = false)
             assertNoPermissionDialog()
             assertTrue("Main screen did not appear without a notification dialog", waitForMainScreen())
             waitForMainButton()

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Build
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import androidx.test.runner.lifecycle.ActivityLifecycleCallback
@@ -41,6 +42,7 @@ abstract class BaseUITest {
     protected lateinit var device: UiDevice
     protected lateinit var context: Context
     private var originalIdleTimeout: Long? = null
+    private var anrDialogWatcher: AnrDialogWatcher? = null
 
     companion object {
         const val LAUNCH_TIMEOUT = 10000L
@@ -65,6 +67,7 @@ abstract class BaseUITest {
         val configurator = Configurator.getInstance()
         originalIdleTimeout = configurator.waitForIdleTimeout
         configurator.waitForIdleTimeout = 500L
+        anrDialogWatcher = AnrDialogWatcher()
 
         // Press Home button to start from a clean state
         device.pressHome()
@@ -82,6 +85,7 @@ abstract class BaseUITest {
 
     @After
     fun restoreIdleTimeout() {
+        anrDialogWatcher?.close()
         originalIdleTimeout?.let { Configurator.getInstance().waitForIdleTimeout = it }
     }
 
@@ -220,19 +224,20 @@ abstract class BaseUITest {
      * Launch the app and wait until MainActivity has resumed and its window is shown.
      * Splash finishes itself before starting MainActivity, so the app briefly has no window: waiting for
      * a window straight after launch ends early on a busy device that is slow to start MainActivity.
-     * Below Android 11 Splash first asks for storage access, which is granted while waiting.
+     * Below Android 11 Splash first asks for storage access, which is granted while waiting unless
+     * [answerStoragePermission] is false (a test that must see no permission dialog at all).
      */
-    protected fun launchToMainActivity() {
+    protected fun launchToMainActivity(answerStoragePermission: Boolean = true) {
         val mainResumed = CountDownLatch(1)
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (stage == Stage.RESUMED && activity is MainActivity) mainResumed.countDown()
         }
         withLifecycleCallback(callback) {
             launchApp()
-            val deadline = System.currentTimeMillis() + ACTIVITY_START_TIMEOUT
+            val deadline = SystemClock.uptimeMillis() + ACTIVITY_START_TIMEOUT
             while (!mainResumed.await(500, TimeUnit.MILLISECONDS)) {
-                assertTrue("Main screen activity did not resume", System.currentTimeMillis() < deadline)
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) handlePermissionDialog()
+                assertTrue("Main screen activity did not resume", SystemClock.uptimeMillis() < deadline)
+                if (answerStoragePermission && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) handlePermissionDialog()
             }
         }
         assertTrue("App did not start", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), MAIN_TIMEOUT))
@@ -294,7 +299,7 @@ abstract class BaseUITest {
     protected fun selectTestPack(): UiObject2 {
         findTestPackRow() // Scroll the exact row into view before attempting to select it.
         val detail = By.res("main_detail_${TestUniPack.FOLDER_NAME}")
-        val opened = waitUntil(10000L) {
+        val opened = waitUntil(MAIN_TIMEOUT) {
             if (device.hasObject(detail)) true else {
                 // Main refresh can replace the list between lookup and tap. Refetch and retry
                 // only while our own detail is absent, so an already selected pack is not toggled off.
