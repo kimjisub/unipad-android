@@ -183,6 +183,47 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         assertStill("After lifting the edge touch", 2, emptySet())
     }
 
+    /** J: a palm resting on the margin beside the grid does not stop the chain buttons. */
+    protected fun palmOnEdgeThenChain() {
+        start()
+        val palm = fingers.down(edgeBesidePads())
+        assertStill("Touching the edge beside the pads", 0, emptySet())
+        switchChainsWithAnotherFinger("while the edge was held")
+        fingers.up(palm)
+        assertStill("After lifting the edge touch", 0, emptySet())
+    }
+
+    /** K: a finger holding a pad does not stop the chain buttons. */
+    protected fun padHeldThenChain() {
+        start()
+        val holder = fingers.down(center(Cell(2, 2)))
+        awaitPlays("Held pad did not play", 1)
+        switchChainsWithAnotherFinger("while a pad was held")
+        fingers.up(holder)
+        assertStill("After lifting the held pad", 1, emptySet())
+    }
+
+    /** Taps the second chain button, then the first, each with a new finger, requesting no sound. */
+    private fun switchChainsWithAnotherFinger(context: String) {
+        val plays = audio.plays.size
+        assertEquals("Play must start on the first chain", 0, screen.onMain { screen.vm().chain.value })
+        for (chain in listOf(1, 0)) {
+            val finger = fingers.down(chainButton(chain))
+            fingers.up(finger)
+            screen.await("Chain button ${chain + 1} did not switch chain $context") { screen.onMain { screen.vm().chain.value == chain } }
+        }
+        assertEquals("Chain buttons requested a sound $context", plays, audio.plays.size)
+    }
+
+    /** Centre of the chain button that selects [chain], in screen coordinates. */
+    protected fun chainButton(chain: Int): Point {
+        val chains = screen.onMain {
+            screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().filter { it.width > 0 }.map(screen::bounds)
+        }
+        assertTrue("Chain button ${chain + 1} must be on screen", chain < chains.size)
+        return Point(chains[chain].centerX(), chains[chain].centerY())
+    }
+
     /**
      * A point on the left margin between the system back-gesture zone and the leftmost pad or
      * chain button, vertically level with the grid: where a palm rests when holding a tablet.

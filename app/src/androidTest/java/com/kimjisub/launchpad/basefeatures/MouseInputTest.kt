@@ -1,12 +1,9 @@
 package com.kimjisub.launchpad.basefeatures
 
-import android.graphics.Point
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.kimjisub.design.view.ChainView
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -87,12 +84,8 @@ class MouseInputTest : MultiTouchPlaybackTest(slideMode = false) {
     /** The pointer comes from the pads, as it does when switching chain mid-performance. */
     @Test fun leftClickOnChainButtonSwitchesChain() {
         startWithMouse()
-        val chains = screen.onMain {
-            screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().filter { it.width > 0 }.map(screen::bounds)
-        }
-        assertTrue("Both chains must be on screen", chains.size >= 2)
         assertEquals("Play must start on the first chain", 0, screen.onMain { screen.vm().chain.value })
-        val second = Point(chains[1].centerX(), chains[1].centerY())
+        val second = chainButton(1)
         mouse.hover(center(Cell(1, 7)))
         mouse.hover(second, steps = 8)
         mouse.press(second)
