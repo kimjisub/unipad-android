@@ -79,6 +79,8 @@ class StoreCancellationDeviceTest {
         val oldIdle = configurator.waitForIdleTimeout
         configurator.waitForIdleTimeout = 0
         val id = "store-cancel-${UUID.randomUUID()}"
+        val notificationPermission = android.Manifest.permission.POST_NOTIFICATIONS
+        val checkNotificationPermission = android.os.Build.VERSION.SDK_INT >= 33
         val workspace = File(context.getExternalFilesDir(null), "UniPack").apply { mkdirs() }
         val existing = File(workspace, "$id-existing").apply { mkdirs() }
         files("Existing").forEach { (path, bytes) -> File(existing, path).apply { parentFile!!.mkdirs(); writeBytes(bytes) } }
@@ -117,6 +119,20 @@ class StoreCancellationDeviceTest {
         var screen: ActivityScenario<FBStoreActivity>? = null
         loadKoinModules(override)
         try {
+            if (checkNotificationPermission) {
+                instrumentation.uiAutomation.adoptShellPermissionIdentity(notificationPermission)
+            }
+            val notifications = context.getSystemService(NotificationManager::class.java)
+            fun progressNotifications() = notifications.activeNotifications.filter {
+                it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) == "Cancellation fixture"
+            }
+            fun captureNotifications(name: String) {
+                assertTrue(device.openNotification())
+                assertTrue("notification panel did not open", device.wait(
+                    Until.hasObject(By.res("com.android.systemui", "notification_stack_scroller")), 10000))
+                capture(name)
+                device.pressBack()
+            }
             main = ActivityScenario.launch(Intent(context, MainActivity::class.java))
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
             fun selectFixture() {
@@ -161,7 +177,11 @@ class StoreCancellationDeviceTest {
             startDownloadWithoutChangingNotificationPermission()
             val partial = File(workspace, "$id.zip")
             await("partial chunk not written") { partial.length() == 4096L }
+            await("download progress notification missing") {
+                progressNotifications().any { it.isOngoing }
+            }
             capture("downloading")
+            captureNotifications("notifications-downloading")
             evidence("partial-before=${partial.length()} existing=$before")
             val other = Recorder()
             UniPackDownloader(context, "$id-other", "${server.url}other", workspace, "$id-other", listener = other,
@@ -179,6 +199,11 @@ class StoreCancellationDeviceTest {
             server.breakRead.countDown() // EOF/IO error after the screen has cancelled its scope.
             capture("after-cancel")
             await("cancelled ZIP remained after read error") { !partial.exists() }
+            captureNotifications("notifications-after-cancel")
+            await("cancelled progress notification remained") { progressNotifications().isEmpty() }
+            assertTrue("another download's completed notification was removed", notifications.activeNotifications.any {
+                it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) == "$id-other" && !it.isOngoing
+            })
             evidence("cleanup-ms=${SystemClock.elapsedRealtime() - start} partial-after=${partial.exists()} cancelled=${cancelled.count}")
             assertTrue("cancellation did not reach the real HTTP call", cancelledPromptly)
             assertEquals(before, hashes(existing))
@@ -200,6 +225,7 @@ class StoreCancellationDeviceTest {
             assertEquals(before, hashes(existing))
             assertEquals(otherBefore, hashes(otherFolder))
             assertFalse(partial.exists())
+            await("completed notification missing") { progressNotifications().any { !it.isOngoing } }
             capture("retried")
             evidence("PASS retried=${hashes(retried)} other=${hashes(otherFolder)} existing=${hashes(existing)}")
         } catch (error: Throwable) {
@@ -223,6 +249,9 @@ class StoreCancellationDeviceTest {
             context.getSystemService(NotificationManager::class.java).activeNotifications.filter {
                 it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) in listOf("Cancellation fixture", "$id-other")
             }.forEach { context.getSystemService(NotificationManager::class.java).cancel(it.tag, it.id) }
+            if (checkNotificationPermission) {
+                instrumentation.uiAutomation.dropShellPermissionIdentity()
+            }
         }
     }
 

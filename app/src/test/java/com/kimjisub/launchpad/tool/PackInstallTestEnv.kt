@@ -73,14 +73,19 @@ class PackInstallTestEnv {
 	private val mainExecutor = Executors.newFixedThreadPool(4)
 	private val openStreams = mutableListOf<Closeable>()
 	private val gates = ConcurrentHashMap<String, Gate>()
+	val notifications = ConcurrentHashMap<Int, android.app.Notification>()
 	private val context: Context = mockk(relaxed = true)
 	private val resolver: ContentResolver = mockk(relaxed = true)
 
 	fun setUp() {
 		Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
 
-		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns
-			mockk<android.app.NotificationManager>(relaxed = true)
+		val manager = mockk<android.app.NotificationManager>(relaxed = true)
+		every { manager.notify(any<Int>(), any<android.app.Notification>()) } answers {
+			notifications[firstArg()] = secondArg()
+		}
+		every { manager.cancel(any<Int>()) } answers { notifications.remove(firstArg()) }
+		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns manager
 		every { context.contentResolver } returns resolver
 		every { context.cacheDir } returns cache
 		mockkStatic(PendingIntent::class)
