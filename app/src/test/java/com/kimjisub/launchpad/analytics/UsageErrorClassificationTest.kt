@@ -212,12 +212,12 @@ class UsageErrorClassificationTest {
 
 	@Test
 	fun theStageReachesTheReportedEvent() {
-		sink.analytics.packImport(PackImportSource.CODE).failed(ProtocolException("unexpected end of stream"), FailureStage.NETWORK)
+		sink.analytics.packImport(PackImportSource.STORE).failed(ProtocolException("unexpected end of stream"), FailureStage.NETWORK)
 		sink.analytics.packImport(PackImportSource.FILE).failed(ProtocolException("unexpected end of stream"))
 
 		assertEquals(
 			listOf(
-				sink.pack(UsageEvent.PACK_IMPORT, UsageParam.RESULT to "failure", UsageParam.IMPORT_SOURCE to "code", UsageParam.ERROR_TYPE to "network"),
+				sink.pack(UsageEvent.PACK_IMPORT, UsageParam.RESULT to "failure", UsageParam.IMPORT_SOURCE to "store", UsageParam.ERROR_TYPE to "network"),
 				sink.pack(UsageEvent.PACK_IMPORT, UsageParam.RESULT to "failure", UsageParam.IMPORT_SOURCE to "file", UsageParam.ERROR_TYPE to "file_access"),
 			),
 			sink.events,

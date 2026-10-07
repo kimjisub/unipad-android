@@ -185,8 +185,9 @@ class FeatureScreen {
     companion object {
         const val PACK_ID = "basefeatures-pack"
         const val TITLE = "Base Features Synthetic Pack"
-        const val SHARE_ID = "Base Features Synthetic Pack #basefeatures-share"
         const val STORE_ID = "basefeatures-store"
-        val IDS = setOf(PACK_ID, SHARE_ID, STORE_ID, TestUniPack.FOLDER_NAME, "basefeatures-file")
+        // Earlier versions of this suite installed a pack here; a device they stopped on still has it.
+        private const val OLD_SHARE_ID = "Base Features Synthetic Pack #basefeatures-share"
+        val IDS = setOf(PACK_ID, STORE_ID, OLD_SHARE_ID, TestUniPack.FOLDER_NAME, "basefeatures-file")
     }
 }

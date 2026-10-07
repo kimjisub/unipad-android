@@ -62,7 +62,7 @@ sink; this suite does not change that file.
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
-| 2. ZIP and shared-code import, result, opening pack | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeShowsFixtureBeforeDownloading`, `acceptedShareDownloadsFixtureShowsSuccessAndImportedPackOpens` | Automatic for actual document picker/import/result/play and share confirmation/download/result/play. Real share service remains separate. |
+| 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play and absence of the retired share link/screen. |
 | 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
@@ -119,7 +119,7 @@ Every owned folder and its saved row are removed after a test. The temporary Dow
 also removed. Preference/locale changes and injected modules are restored in `finally`.
 
 `FakeNetwork` injects Retrofit services backed by an OkHttp application interceptor: it returns
-JSON and ZIP bytes for exact allowed URLs and fails on an unexpected URL. The fake catalogue
+ZIP bytes for the exact store fixture URL and fails on an unexpected URL. The fake catalogue
 implements the merged `StoreCatalog` subscription, with the same activity attachment/detachment
 contract as production. It needs no Firebase snapshots or SDK-private constructors. Keep the device offline before app launch because
 application initialization still initializes Firebase/remote configuration/analytics.
@@ -165,5 +165,5 @@ requests or replace production repositories in an unchanged candidate.
 - OEM process eviction, long locks, low-memory conditions, tablets and cutouts: run separate candidate
   checks on those devices/configurations. The rotation test asserts only insets actually present on
   the borrowed device; a rectangular emulator cannot prove behavior around a notch.
-- Live share/store servers: run read-only catalog/share metadata availability checks separately and
+- Live store servers: run read-only catalog availability checks separately and
   use an explicitly designated synthetic download if end-to-end server verification is needed.

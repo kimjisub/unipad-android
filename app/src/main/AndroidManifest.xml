@@ -99,23 +99,6 @@
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
-		<activity
-			android:name=".activity.ImportPackByUrlActivity"
-			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-			android:exported="true"
-			android:launchMode="singleInstance"
-			android:theme="@style/PopupTheme">
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-
-				<data
-					android:host="unipack"
-					android:scheme="unipad" />
-			</intent-filter>
-		</activity>
 
 		<activity
 			android:name=".activity.SettingsActivity"

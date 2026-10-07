@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Đang tải audio…</string>
 	<string name="download">Tải xuống</string>
 	<string name="downloadWaiting">Chờ Tải xuống</string>
-	<string name="downloading">Đang tải xuống</string>
 	<string name="downloaded">Đã tải xuống</string>
 	<string name="success">Thành công</string>
 	<string name="failed">Thất bại</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
 	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>
-	<string name="unipackNotFound">Không tìm thấy UniPack.</string>
 	<string name="clickToAddUniPack">Nhấn để thêm UniPack.</string>
 	<string name="guide_download_new">Tải pack mới</string>
 	<string name="guide_import_external">Nhập pack đã tải</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">lỗi máy chủ\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

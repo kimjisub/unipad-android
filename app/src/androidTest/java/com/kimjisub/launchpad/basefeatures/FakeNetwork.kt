@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.basefeatures
 
 import com.kimjisub.launchpad.api.BaseApiService
 import com.kimjisub.launchpad.api.file.FileApi
-import com.kimjisub.launchpad.api.unipad.UniPadApi
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
 import okhttp3.Interceptor
@@ -25,21 +24,16 @@ class FakeNetwork(zip: ByteArray) {
         val url = request.url.toString()
         requests += url
         val path = request.url.encodedPath
-        val body = when {
-            url == "https://api.unipad.io/unishare/BASEFEATURES" ->
-                """{"_id":"basefeatures-share","title":"${FeatureScreen.TITLE}","producer":"Synthetic"}"""
-                    .toResponseBody("application/json".toMediaType())
-            url == "https://api.unipad.io/unishare/basefeatures-share/download" || url == "https://fixture.invalid/store.zip" ->
-                zip.toResponseBody("application/zip".toMediaType())
+        val body = when (url) {
+            "https://fixture.invalid/store.zip" -> zip.toResponseBody("application/zip".toMediaType())
             else -> throw AssertionError("Unexpected network request: $url ($path)")
         }
         Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200).message("Fixture").body(body).build()
     }).build()
-    private val retrofit = Retrofit.Builder().baseUrl("https://api.unipad.io/").client(client)
+    private val retrofit = Retrofit.Builder().baseUrl("https://fixture.invalid/").client(client)
         .addConverterFactory(GsonConverterFactory.create(BaseApiService.gson)).build()
     val module = module {
         single<FileApi.FileService> { retrofit.create(FileApi.FileService::class.java) }
-        single<UniPadApi.UniPadApiService> { retrofit.create(UniPadApi.UniPadApiService::class.java) }
         single<StoreCatalog> { catalog }
     }
 

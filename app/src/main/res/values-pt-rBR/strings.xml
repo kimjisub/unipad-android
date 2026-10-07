@@ -22,7 +22,6 @@
 	<string name="loading_phase_audio">Carregando áudio…</string>
 	<string name="download">Baixar</string>
 	<string name="downloadWaiting">Aguardando Download</string>
-	<string name="downloading">Baixando</string>
 	<string name="downloaded">Baixado</string>
 	<string name="success">Sucesso</string>
 	<string name="failed">Falhou</string>
@@ -104,7 +103,6 @@
 
 	<string name="permissionRequire">É necessário acesso ao armazenamento externo para salvar arquivos do projeto.\nObtenha permissão para este privilégio.</string>
 	<string name="permissionDenied">O app requer acesso ao armazenamento externo.\nPor favor ative as permissões em [Configurações] > [Permissões]</string>
-	<string name="unipackNotFound">UniPack não encontrado.</string>
 	<string name="clickToAddUniPack">Clique para adicionar UniPacks.</string>
 	<string name="guide_download_new">Baixar novos packs</string>
 	<string name="guide_import_external">Importar packs baixados</string>
@@ -267,10 +265,6 @@
 
 	<!--Format-->
 	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">erro do servidor\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

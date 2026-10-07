@@ -168,11 +168,11 @@ class PackImportUsageTest {
 	@Test
 	fun missingPackIsANotFoundFailure() {
 		val recorder = Recorder()
-		val scope = env.download(URL, recorder, usage = usage(PackImportSource.CODE))
+		val scope = env.download(URL, recorder, usage = usage(PackImportSource.STORE))
 		env.gate(URL).failWithStatus(404)
 		env.finish(scope)
 
-		assertEquals(listOf(importEvent("code", "failure", "not_found")), sink.events)
+		assertEquals(listOf(importEvent("store", "failure", "not_found")), sink.events)
 		assertEquals("Empty response body (HTTP 404)", recorder.error?.message)
 	}
 
@@ -308,7 +308,7 @@ class PackImportUsageTest {
 
 	@Test
 	fun aCancelAfterTheInstallAddsNoSecondResult() {
-		val usage = usage(PackImportSource.CODE)
+		val usage = usage(PackImportSource.STORE)
 		val recorder = Recorder()
 		val scope = env.download(URL, recorder, usage = usage)
 		env.gate(URL).open(packZip("Faded"))
@@ -317,19 +317,19 @@ class PackImportUsageTest {
 		usage.cancelled()
 		scope.cancel()
 
-		assertEquals(listOf(importEvent("code", "success")), sink.events)
+		assertEquals(listOf(importEvent("store", "success")), sink.events)
 	}
 
 	@Test
-	fun sharedReportOfOneCodeImportCountsOnceWhenTheScreenAndTheDownloaderBothReport() {
-		val usage = usage(PackImportSource.CODE)
+	fun sharedReportOfOneStoreDownloadCountsOnceWhenTheScreenAndTheDownloaderBothReport() {
+		val usage = usage(PackImportSource.STORE)
 		val recorder = Recorder()
 		val scope = env.download(URL, recorder, usage = usage)
 		env.gate(URL).fail()
 		env.finish(scope)
 		usage.cancelled() // the screen closing afterwards
 
-		assertEquals(listOf(importEvent("code", "failure", "server")), sink.events)
+		assertEquals(listOf(importEvent("store", "failure", "server")), sink.events)
 	}
 
 	/** Analytics that cannot start, as when Firebase fails to initialise, must not cost the person the pack. */
