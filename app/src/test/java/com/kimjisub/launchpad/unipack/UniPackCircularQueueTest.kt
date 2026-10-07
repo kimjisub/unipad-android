@@ -168,6 +168,32 @@ class UniPackCircularQueueTest {
 		assertEquals(s0, unipack.soundGet(0, 1, 0))
 	}
 
+	@Test
+	fun soundGet_withNum_whileAnotherThreadPushes_neverSeesAHalfRotatedQueue() {
+		val table = buildSoundTable(2, 2, 2)
+		val s0 = makeSound(0)
+		table[0][1][0] = ArrayDeque(listOf(s0))
+		unipack.soundTable = table
+
+		// Pad presses rotate the queue on the main thread while an autoPlay read-back indexes it.
+		val stop = java.util.concurrent.atomic.AtomicBoolean(false)
+		val pusher = Thread {
+			while (!stop.get()) unipack.soundPush(0, 1, 0)
+		}
+		val failures = java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+		pusher.setUncaughtExceptionHandler { _, e -> failures.set(e) }
+		pusher.start()
+		try {
+			repeat(2_000_000) { i ->
+				assertSame(s0, unipack.soundGet(0, 1, 0, i))
+			}
+		} finally {
+			stop.set(true)
+			pusher.join()
+		}
+		assertNull(failures.get())
+	}
+
 	// ===== ledGet tests =====
 
 	@Test

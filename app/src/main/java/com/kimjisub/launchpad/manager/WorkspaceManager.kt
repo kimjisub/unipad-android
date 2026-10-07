@@ -143,14 +143,13 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	// Workspace used for downloads
 	val downloadWorkspace: Workspace
-		get() {
-			val downloadPath = preferenceManager.downloadStoragePath
-			if (downloadPath != null) {
-				val match = availableWorkspaces.firstOrNull { it.file.path == downloadPath }
-				if (match != null) return match
-			}
-			return availableWorkspaces[0]
-		}
+		get() = downloadWorkspaceIn(availableWorkspaces.toList())
+
+	/** The chosen download target among [workspaces], read now; touches no files. */
+	fun downloadWorkspaceIn(workspaces: List<Workspace>): Workspace {
+		val downloadPath = preferenceManager.downloadStoragePath
+		return workspaces.firstOrNull { it.file.path == downloadPath } ?: workspaces[0]
+	}
 
 	// -- Old "Unipad" → new "UniPack" folder migration --
 

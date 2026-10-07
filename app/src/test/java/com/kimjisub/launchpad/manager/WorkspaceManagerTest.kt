@@ -108,6 +108,32 @@ class WorkspaceManagerTest {
 		assertNotEquals(ws1, ws2)
 	}
 
+	// === downloadWorkspaceIn tests ===
+
+	@Test
+	fun downloadWorkspaceIn_readsTheChoiceAtCallTimeWithoutListingStorage() {
+		val first = WorkspaceManager.Workspace("A", File(tempDir, "a"))
+		val second = WorkspaceManager.Workspace("B", File(tempDir, "b"))
+		val manager = WorkspaceManager(mockContext)
+
+		// The settings screen lists storage off the main thread and picks the target afterwards,
+		// so the target must come from the stored choice, not from a fresh listing.
+		every { mockSharedPrefs.getString(any(), any()) } returns second.file.path
+
+		assertEquals(second, manager.downloadWorkspaceIn(listOf(first, second)))
+		verify(exactly = 0) { mockContext.getExternalFilesDir(any()) }
+		verify(exactly = 0) { mockContext.getExternalFilesDirs(any()) }
+	}
+
+	@Test
+	fun downloadWorkspaceIn_fallsBackToTheFirstWhenTheChoiceIsGone() {
+		val first = WorkspaceManager.Workspace("A", File(tempDir, "a"))
+		val second = WorkspaceManager.Workspace("B", File(tempDir, "b"))
+		every { mockSharedPrefs.getString(any(), any()) } returns File(tempDir, "removed-card").path
+
+		assertEquals(first, WorkspaceManager(mockContext).downloadWorkspaceIn(listOf(first, second)))
+	}
+
 	// === availableWorkspaces tests ===
 
 	@Test

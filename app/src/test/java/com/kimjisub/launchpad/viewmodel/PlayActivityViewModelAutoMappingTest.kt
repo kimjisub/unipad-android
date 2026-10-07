@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
+import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -7,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -83,5 +85,31 @@ class PlayActivityViewModelAutoMappingTest {
 		assertFalse(vm.autoMappingActive)
 		// Rewritten as "d, t 1 1, d, t 1 2": each touch reads back as an on and an off.
 		assertEquals(6, pack.autoPlayTable?.elements?.size)
+	}
+
+	@Test
+	fun autoMapping_reportsAnyReadBackFailureInsteadOfCrashing() {
+		every { anyConstructed<UniPackFolder>().reloadAutoPlay() } answers {
+			reloadThread = Thread.currentThread()
+			throw IllegalStateException("read back failed")
+		}
+		val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
+		val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
+		vm.uiCallback = ui
+		runBlocking { withTimeout(5_000) { vm.loadUnipackOnce(createPack().path).await() } }
+
+		vm.autoMapping()
+		val deadline = System.currentTimeMillis() + 5_000
+		while (System.currentTimeMillis() < deadline) {
+			main.runAll()
+			if (reloadThread != null && !vm.autoMappingActive) break
+			Thread.sleep(5)
+		}
+		main.runAll()
+
+		assertNotNull(reloadThread)
+
+		assertFalse(vm.autoMappingActive)
+		verify { ui.showToast(string.failed) }
 	}
 }

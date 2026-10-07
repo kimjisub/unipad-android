@@ -728,17 +728,16 @@ private fun StorageContent(
 	}
 
 	// Listing workspaces creates folders and counting packs reads every entry; on a slow card,
-	// doing either while drawing froze the screen.
+	// doing either while drawing froze the screen. The download target is read only once the
+	// listing is back, so a choice made while counting is not overwritten.
 	LaunchedEffect(refreshKey) {
-		withContext(Dispatchers.IO) {
+		val (list, counts) = withContext(Dispatchers.IO) {
 			val list = workspaceManager.availableWorkspaces.toList()
-			val counts = list.associate { it.file.path to workspaceManager.getUnipackCount(it) }
-			Triple(list, counts, workspaceManager.downloadWorkspace.file.path)
-		}.let { (list, counts, path) ->
-			workspaces = list
-			unipackCounts = counts
-			downloadPath = path
+			list to list.associate { it.file.path to workspaceManager.getUnipackCount(it) }
 		}
+		workspaces = list
+		unipackCounts = counts
+		downloadPath = workspaceManager.downloadWorkspaceIn(list).file.path
 	}
 
 	Box(modifier = Modifier.fillMaxSize()) {

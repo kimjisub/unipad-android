@@ -35,7 +35,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 
 enum class PlayMode {
 	None,
@@ -1009,13 +1008,14 @@ class PlayActivityViewModel(
 				viewModelScope.launch {
 					try {
 						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
-					} catch (e: IOException) {
+						autoMappingActive = false
+						initAutoPlayRunner()
+						log("AutoMapping complete")
+					} catch (e: CancellationException) {
+						throw e
+					} catch (e: Exception) {
 						onException(e)
-						return@launch
 					}
-					autoMappingActive = false
-					initAutoPlayRunner()
-					log("AutoMapping complete")
 				}
 			}
 
