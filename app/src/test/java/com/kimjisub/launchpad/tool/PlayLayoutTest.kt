@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.tool
 
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -82,6 +84,95 @@ class PlayLayoutTest {
 		val margin = PlayLayout.sideMargin(insetLeft = 52, insetRight = 0, menuStrip = strip)
 		assertEquals(395 / 8, square(715, 395, margin = margin).chain)
 		assertCentredAndClear(715, 395)
+	}
+
+	private val shapes = listOf(878 to 376, 624 to 344, 1264 to 784, 376 to 878, 784 to 621, 2316 to 1038, 715 to 395)
+
+	/** Grid and chain strips as the play screen places them, with the strips that show a button. */
+	private class Laid(val pads: IntRect, val strips: List<IntRect>, val size: PlayLayout.ButtonSize)
+
+	private fun lay(width: Int, height: Int, rows: Int, columns: Int, chains: Int, pro: Boolean, square: Boolean): Laid {
+		val size = PlayLayout.buttonSize(PlayLayout.Area(width, height, strip), rows, columns, square, PlayLayout.chainRows(pro, chains))
+		val across = IntSize(PlayLayout.CHAINS_PER_SIDE * size.chain, size.chain)
+		val down = IntSize(size.chain, PlayLayout.CHAINS_PER_SIDE * size.chain)
+		val grid = IntSize(columns * size.x, rows * size.y)
+		val at = PlayLayout.place(width, height, grid, top = across, right = down, bottom = across, left = down)
+		// Normal mode shows chains 1-8 on the right, 9-16 below and 17-24 on the left; Pro light mode all four sides.
+		val shown = listOf(
+			IntRect(at.top, across) to pro,
+			IntRect(at.right, down) to (pro || chains > 1),
+			IntRect(at.bottom, across) to (pro || chains > 8),
+			IntRect(at.left, down) to (pro || chains > 16),
+		)
+		return Laid(IntRect(at.pads, grid), shown.filter { it.second }.map { it.first }, size)
+	}
+
+	@Test
+	fun everyChainButton_staysInTheAreaWhateverThePadCount() {
+		val problems = mutableListOf<String>()
+		for ((w, h) in shapes) for (rows in 1..8) for (columns in 1..8) for (chains in listOf(1, 8, 9, 16, 17, 24))
+			for (pro in listOf(false, true)) for (square in listOf(true, false)) {
+				val laid = lay(w, h, rows, columns, chains, pro, square)
+				val shape = "$w x $h, $rows x $columns pads, $chains chains, pro = $pro, square = $square"
+				val area = IntRect(strip, 0, w - strip, h)
+				if (laid.size.chain <= 0) problems += "$shape: no chain size"
+				if (laid.size.chain > minOf(laid.size.x, laid.size.y)) problems += "$shape: chains larger than a pad"
+				for (s in laid.strips + laid.pads) {
+					val inside = s.left >= area.left && s.top >= area.top && s.right <= area.right && s.bottom <= area.bottom
+					if (!inside) problems += "$shape: $s outside $area"
+				}
+				val all = laid.strips + laid.pads
+				for (i in all.indices) for (j in i + 1 until all.size) if (all[i].overlaps(all[j])) problems += "$shape: ${all[i]} meets ${all[j]}"
+			}
+		assertTrue("${problems.size} layouts break:\n" + problems.take(20).joinToString("\n"), problems.isEmpty())
+	}
+
+	@Test
+	fun fewPadsManyChains_keepThePadsAndShrinkOnlyTheChains() {
+		// 4 x 3 pack with 24 chains (INF-002) on a 20:9 phone: eight chains fill the height, the pads stay larger.
+		val laid = lay(878, 376, rows = 4, columns = 3, chains = 24, pro = false, square = true)
+		assertEquals(75, laid.size.x)
+		assertEquals(37, laid.size.chain)
+		assertTrue(PlayLayout.CHAINS_PER_SIDE * laid.size.chain <= 376)
+	}
+
+	@Test
+	fun eightByEightPacks_keepTheirSizeAndPlace() {
+		for ((w, h) in shapes) for (pro in listOf(false, true)) for (square in listOf(true, false)) for (columns in listOf(8, 10)) {
+			val chainRows = if (pro) 2 else 0
+			val width = w - 2 * strip
+			// The sizes and corners this screen had before small packs were laid out differently.
+			val chain = minOf(width / (columns + 2), h / (8 + chainRows))
+			val expected = if (square) PlayLayout.ButtonSize(chain, chain, chain)
+			else PlayLayout.ButtonSize((width - 2 * chain) / columns, (h - chainRows * chain) / 8, chain)
+			val shape = "$w x $h, 8 x $columns pads, pro = $pro, square = $square"
+			val size = PlayLayout.buttonSize(PlayLayout.Area(w, h, strip), 8, columns, square, PlayLayout.chainRows(pro, chains = 8))
+			assertEquals(shape, expected, size)
+
+			val grid = IntSize(columns * size.x, 8 * size.y)
+			val across = IntSize(8 * size.chain, size.chain)
+			val down = IntSize(size.chain, 8 * size.chain)
+			val padX = PlayLayout.padLeft(w, grid.width)
+			val padY = (h - grid.height) / 2
+			assertEquals(
+				shape,
+				PlayLayout.Placement(
+					pads = IntOffset(padX, padY),
+					top = IntOffset(padX + (grid.width - across.width) / 2, padY - across.height),
+					right = IntOffset(padX + grid.width, padY + (grid.height - down.height) / 2),
+					bottom = IntOffset(padX + (grid.width - across.width) / 2, padY + grid.height),
+					left = IntOffset(padX - down.width, padY + (grid.height - down.height) / 2),
+				),
+				PlayLayout.place(w, h, grid, across, down, across, down),
+			)
+		}
+	}
+
+	@Test
+	fun chainRows_makeRoomBelowOnceChainsReachTheBottomStrip() {
+		assertEquals(0, PlayLayout.chainRows(proLightMode = false, chains = 8))
+		assertEquals(2, PlayLayout.chainRows(proLightMode = false, chains = 9))
+		assertEquals(2, PlayLayout.chainRows(proLightMode = true, chains = 1))
 	}
 
 	@Test
