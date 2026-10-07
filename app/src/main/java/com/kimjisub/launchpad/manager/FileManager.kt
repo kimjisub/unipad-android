@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.manager
 
 import android.content.Context
-import android.media.MediaPlayer
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.tool.Log
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +15,6 @@ import java.util.Locale
 object FileManager {
 	private const val COPY_BUFFER_SIZE = 4096
 	private const val BYTES_PER_MB = 1024 * 1024
-	private const val DEFAULT_DURATION_MS = 10000
 	private const val MAX_UNWRAP_DEPTH = 8
 	private val FILENAME_FILTER_REGEX = "[|\\\\?*<\":>/]+".toRegex()
 
@@ -176,19 +174,6 @@ object FileManager {
 				childFileList.sumOf { getFolderSize(it) }
 			}
 			else -> 0L
-		}
-	}
-
-	fun wavDuration(mplayer: MediaPlayer, url: String?): Int {
-		return try {
-			mplayer.reset()
-			mplayer.setDataSource(url)
-			mplayer.prepare()
-			mplayer.duration
-		} catch (e: IOException) {
-			Log.err("wavDuration failed", e)
-			mplayer.reset()
-			DEFAULT_DURATION_MS
 		}
 	}
 

@@ -46,6 +46,7 @@ class PlayActivityViewModel(
 	private val unipackRepo: UnipackRepository,
 	usage: UsageAnalytics,
 	private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
+	private val autoMapper: (UniPackFolder) -> UniPackAutoMapper = ::UniPackAutoMapper,
 ) : ViewModel() {
 
 	companion object {
@@ -988,34 +989,32 @@ class PlayActivityViewModel(
 		scbAutoPlay.setCheckedSilently(false)
 		autoPlayControlVisible = false
 
-		UniPackAutoMapper(folder, object : UniPackAutoMapper.Listener {
-			override fun onStart() {
-				autoMappingActive = true
-				autoMappingProgress = 0
-			}
+		autoMappingActive = true
+		autoMappingProgress = 0
+		// Leaving the play screen cancels it; left before the writing starts, the pack's autoPlay stays as it was.
+		viewModelScope.launch {
+			try {
+				autoMapper(folder).run(object : UniPackAutoMapper.Listener {
+					override fun onGetWorkSize(size: Int) {
+						autoMappingMax = size
+					}
 
-			override fun onGetWorkSize(size: Int) {
-				autoMappingMax = size
-			}
-
-			override fun onProgress(progress: Int) {
-				autoMappingProgress = progress
-			}
-
-			override fun onDone() {
-				autoMappingActive = false
+					override fun onProgress(progress: Int) {
+						autoMappingProgress = progress
+					}
+				})
 				folder.reloadAutoPlay()
 				initAutoPlayRunner()
 				log("AutoMapping complete")
-			}
-
-			override fun onException(throwable: Throwable) {
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				Log.err("AutoMapping failed", e)
+				uiCallback?.showToast(string.failed)
+			} finally {
 				autoMappingActive = false
-				Log.err("AutoMapping failed", throwable)
-				// iOS tells the user; here the bar just disappeared.
-				viewModelScope.launch { uiCallback?.showToast(string.failed) }
 			}
-		})
+		}
 	}
 
 	override fun onCleared() {
