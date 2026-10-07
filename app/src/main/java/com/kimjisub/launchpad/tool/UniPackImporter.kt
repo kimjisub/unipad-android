@@ -11,6 +11,7 @@ import com.kimjisub.launchpad.analytics.PackImportReport
 import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
@@ -59,13 +60,15 @@ class UniPackImporter(
 	init {
 		scope.launch(Dispatchers.IO) {
 			// A download or another import of the same name may run at the same time, so only the
-			// folder claimed here is written to or deleted.
+			// folders created here are written to or deleted. The pack is unpacked and checked in
+			// its own staging folder and appears in the list only once complete.
+			var staged: File? = null
 			var claimedFolder: File? = null
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
 
-				val targetFolder = FileManager.claimNextFolder(workspace, zipNameWithoutExt)
-				claimedFolder = targetFolder
+				val stagedFolder = PackStaging.create(workspace)
+				staged = stagedFolder
 
 				val tempZip = File.createTempFile("unipack_import_", ".zip", context.cacheDir)
 				try {
@@ -75,19 +78,23 @@ class UniPackImporter(
 						}
 					}
 					ZipFile(tempZip).use { zip ->
-						zip.extractAll(targetFolder.path)
+						zip.extractAll(stagedFolder.path)
 					}
 				} finally {
 					tempZip.delete()
 				}
-				FileManager.removeDoubleFolder(targetFolder.path)
+				FileManager.removeDoubleFolder(stagedFolder.path)
 
-				val unipack = UniPackFolder(targetFolder).load()
-				if (unipack.criticalError) {
-					val errorMsg = unipack.errorDetail ?: "Unknown error"
+				val checked = UniPackFolder(stagedFolder).load()
+				if (checked.criticalError) {
+					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
+
+				val targetFolder = FileManager.moveToNextFolder(stagedFolder, workspace, zipNameWithoutExt)
+				claimedFolder = targetFolder
+				val unipack = UniPackFolder(targetFolder).load()
 
 				usage.succeeded()
 				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack) }
@@ -96,6 +103,8 @@ class UniPackImporter(
 				usage.failed(e)
 				withContext(Dispatchers.Main) { onException(e) }
 				claimedFolder?.let(FileManager::deleteDirectory)
+			} finally {
+				staged?.let(PackStaging::discard)
 			}
 		}
 	}

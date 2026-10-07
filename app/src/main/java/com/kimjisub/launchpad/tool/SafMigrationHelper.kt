@@ -3,10 +3,12 @@ package com.kimjisub.launchpad.tool
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.PackStaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
 import java.io.File
+import java.io.IOException
 
 /**
  * Moves or copies packs between the app folder and a SAF tree.
@@ -14,8 +16,10 @@ import java.io.File
  * Two rules the transfer methods follow, both learned from lost packs:
  * - a name collision is a *skip*: nothing was written, so the source is never deleted, even in
  *   move mode (it used to be, and a stale copy at the destination was all that survived);
- * - a copy that throws half-way removes the partial destination before the error is recorded,
- *   otherwise the next attempt sees "exists" and skips the pack forever.
+ * - a partial copy must never sit under the pack's name, otherwise the next attempt sees "exists"
+ *   and skips the pack forever. Into the app's storage a pack is copied in the target's staging
+ *   folder ([PackStaging]) and renamed into place once complete, which also holds when the app is
+ *   killed half-way; into a backup folder a copy that throws removes its partial destination.
  */
 class SafMigrationHelper(
 	private val context: Context,
@@ -59,12 +63,7 @@ class SafMigrationHelper(
 				if (dest.exists()) {
 					skipped++
 				} else {
-					try {
-						FileManager.copyDocumentTreeToFile(context, folder, dest)
-					} catch (e: Exception) {
-						FileManager.deleteDirectory(dest)
-						throw e
-					}
+					copyThroughStaging(targetDir, dest) { FileManager.copyDocumentTreeToFile(context, folder, it) }
 					transferred++
 					if (deleteSource) folder.delete()
 				}
@@ -212,12 +211,7 @@ class SafMigrationHelper(
 						context.contentResolver.openInputStream(doc.uri)?.use { input ->
 							tempZip.outputStream().use { input.copyTo(it) }
 						} ?: throw java.io.IOException("openInputStream returned null")
-						try {
-							ZipFile(tempZip).extractAll(dest.absolutePath)
-						} catch (e: Exception) {
-							FileManager.deleteDirectory(dest)
-							throw e
-						}
+						copyThroughStaging(targetDir, dest) { ZipFile(tempZip).extractAll(it.absolutePath) }
 						transferred++
 						if (deleteSource) doc.delete()
 					} finally {
@@ -257,12 +251,7 @@ class SafMigrationHelper(
 				if (dest.exists()) {
 					skipped++
 				} else {
-					try {
-						FileManager.copyDirectory(folder, dest)
-					} catch (e: Exception) {
-						FileManager.deleteDirectory(dest)
-						throw e
-					}
+					copyThroughStaging(targetDir, dest) { FileManager.copyDirectory(folder, it) }
 					transferred++
 					if (deleteSource) folder.deleteRecursively()
 				}
@@ -274,5 +263,16 @@ class SafMigrationHelper(
 		}
 
 		TransferResult(sourceFiles.size, transferred, skipped, failed, errors)
+	}
+
+	/** Lets [copy] fill a staging folder on [targetDir]'s storage, then renames it to [dest]. */
+	private inline fun copyThroughStaging(targetDir: File, dest: File, copy: (File) -> Unit) {
+		val staged = PackStaging.create(targetDir)
+		try {
+			copy(staged)
+			if (!staged.renameTo(dest)) throw IOException("Could not move the copy to ${dest.path}")
+		} finally {
+			PackStaging.discard(staged)
+		}
 	}
 }
