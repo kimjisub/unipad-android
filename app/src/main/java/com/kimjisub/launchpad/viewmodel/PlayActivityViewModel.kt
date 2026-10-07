@@ -231,12 +231,18 @@ class PlayActivityViewModel(
 	}
 
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
-	// screen is in the background; the LED runner must not start until the screen is back.
+	// screen is in the background; the LED runner must not start until the screen is back. The audio
+	// stream is open only while the screen is visible, including beside another app in split screen.
 	var screenVisible = false
 		set(value) {
 			field = value
 			syncLedRunner()
+			syncSoundStream()
 		}
+
+	private fun syncSoundStream() {
+		if (screenVisible) soundRunner?.resumeStream() else soundRunner?.pauseStream()
+	}
 
 	private fun syncLedRunner() {
 		if (screenVisible && scbLed.isChecked()) ledRunner?.launch() else ledRunner?.stop()
@@ -441,6 +447,7 @@ class PlayActivityViewModel(
 					}
 				}
 			})
+		syncSoundStream()
 
 		chain.addObserver { curr: Int, _: Int ->
 			try {
