@@ -17,15 +17,7 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testAppLaunch() {
-        // Launch the app
-        launchApp()
-
-        // Wait until the app starts
-        val appStarted = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            LAUNCH_TIMEOUT
-        )
-        assertTrue("App did not start", appStarted)
+        launchToMainActivity()
 
         // Handle permission dialogs
         handlePermissionDialogs()
@@ -43,15 +35,8 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testSplashScreenTransition() {
-        // Launch the app
-        launchApp()
-
-        // Wait for the splash screen
-        val splashVisible = device.wait(
-            Until.hasObject(By.pkg(PACKAGE_NAME)),
-            LAUNCH_TIMEOUT
-        )
-        assertTrue("Splash screen did not appear", splashVisible)
+        // launchApp inside asserts that Splash, the launcher activity, was created
+        launchToMainActivity()
 
         // Handle permission dialogs
         handlePermissionDialogs()
@@ -113,11 +98,7 @@ class AppLaunchTest : BaseUITest() {
 
     @Test
     fun testPermissionHandling() {
-        // Launch the app
-        launchApp()
-
-        // Wait until the app starts
-        device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT)
+        launchToMainActivity()
 
         // Handle permissions based on Android version
         when {
