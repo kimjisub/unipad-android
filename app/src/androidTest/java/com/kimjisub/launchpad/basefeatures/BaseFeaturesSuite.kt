@@ -11,6 +11,7 @@ import org.junit.runners.Suite
     TouchPlaybackTest::class,
     MultiTouchPadModeTest::class,
     MultiTouchSlideModeTest::class,
+    MouseInputTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
     StoreDownloadTest::class,
