@@ -372,10 +372,7 @@ class TransferActivity : AppCompatActivity() {
 
 	private fun scanWorkspaceItems(dir: File): List<TransferItem> {
 		if (!dir.exists() || !dir.canRead()) return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?.map { TransferItem(name = it.name, file = it) }
-			?: emptyList()
+		return WorkspaceManager.packFolders(dir).map { TransferItem(name = it.name, file = it) }
 	}
 
 	private fun scanBackupItems(safUri: String): List<TransferItem> {

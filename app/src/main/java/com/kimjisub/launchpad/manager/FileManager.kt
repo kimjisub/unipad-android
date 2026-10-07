@@ -20,25 +20,22 @@ object FileManager {
 	private const val MAX_UNWRAP_DEPTH = 8
 	private val FILENAME_FILTER_REGEX = "[|\\\\?*<\":>/]+".toRegex()
 
+	/** Throws [IOException] when a file cannot be moved up, so the pack is not kept with it missing. */
 	fun removeDoubleFolder(path: String) {
-		try {
-			val rootFolder = File(path)
-			if (!rootFolder.isDirectory) return
+		val rootFolder = File(path)
+		if (!rootFolder.isDirectory) return
 
-			// Repeats like iOS (Pack/Pack/Pack/info used to stay broken here), and Finder's
-			// __MACOSX sibling does not count as content (every Mac-zipped pack was rejected).
-			repeat(MAX_UNWRAP_DEPTH) {
-				val children = rootFolder.listFiles() ?: return
-				val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
-				if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
-					children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
-					moveDirectory(nonHidden[0], rootFolder)
-				} else {
-					return
-				}
+		// Repeats like iOS (Pack/Pack/Pack/info used to stay broken here), and Finder's
+		// __MACOSX sibling does not count as content (every Mac-zipped pack was rejected).
+		repeat(MAX_UNWRAP_DEPTH) {
+			val children = rootFolder.listFiles() ?: return
+			val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
+			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
+				children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
+				moveDirectory(nonHidden[0], rootFolder)
+			} else {
+				return
 			}
-		} catch (e: IOException) {
-			Log.err("removeDoubleFolder failed", e)
 		}
 	}
 
@@ -65,14 +62,20 @@ object FileManager {
 	}
 
 	/**
-	 * Like [makeNextPath], but creates the empty folder in the same step that finds the free
-	 * name, so a request running at the same time can never be handed the same folder.
+	 * Like [makeNextPath], but creates the empty file in the same step that finds the free
+	 * name, so a request running at the same time can never be handed the same file.
 	 */
-	fun claimNextFolder(dir: File, name: String): File = claimNextPath(dir, name, "") { it.mkdir() }
-
-	/** [claimNextFolder] for an empty file. */
 	fun claimNextFile(dir: File, name: String, extension: String): File =
 		claimNextPath(dir, name, extension) { it.createNewFile() }
+
+	/**
+	 * Renames the finished folder [staged] to the first free name in [dir], numbered as
+	 * [makeNextPath] does. The rename puts the whole pack in place at once and fails on a name
+	 * taken in the meantime, so two installs of the same name never share a folder; a name that is
+	 * taken, even by an empty folder, is left alone.
+	 */
+	fun moveToNextFolder(staged: File, dir: File, name: String): File =
+		claimNextPath(dir, name, "") { !it.exists() && staged.renameTo(it) }
 
 	private fun claimNextPath(dir: File, name: String, extension: String, create: (File) -> Boolean): File {
 		val newName = filterFilename(name)
@@ -92,37 +95,34 @@ object FileManager {
 		return originalStr.replace(FILENAME_FILTER_REGEX, "")
 	}
 
+	/**
+	 * Copies [sourceDir] into [targetDir] and deletes it. A file that cannot be copied throws
+	 * [IOException] and [sourceDir] is kept; the copy used to be skipped and the source deleted, so
+	 * the file was lost while the import reported success.
+	 */
 	fun moveDirectory(sourceDir: File, targetDir: File) {
-		try {
-			if (!targetDir.isDirectory) targetDir.mkdir()
-			val sourceList = sourceDir.listFiles() ?: return
-			for (source in sourceList) {
-				val target = File(targetDir, source.name)
-				if (source.isDirectory) {
-					target.mkdir()
-					moveDirectory(source, target)
-				} else {
-					try {
-						FileInputStream(source).use { fis ->
-							FileOutputStream(target).use { fos ->
-								val b = ByteArray(COPY_BUFFER_SIZE)
-								var cnt = 0
-								while (fis.read(b).also { cnt = it } != -1) {
-									fos.write(b, 0, cnt)
-								}
-							}
+		if (!targetDir.isDirectory) targetDir.mkdir()
+		val sourceList = sourceDir.listFiles() ?: throw IOException("Could not list ${sourceDir.path}")
+		for (source in sourceList) {
+			val target = File(targetDir, source.name)
+			if (source.isDirectory) {
+				target.mkdir()
+				moveDirectory(source, target)
+			} else {
+				FileInputStream(source).use { fis ->
+					FileOutputStream(target).use { fos ->
+						val b = ByteArray(COPY_BUFFER_SIZE)
+						var cnt = 0
+						while (fis.read(b).also { cnt = it } != -1) {
+							fos.write(b, 0, cnt)
 						}
-					} catch (e: IOException) {
-						Log.err("moveDirectory: copy failed", e)
 					}
 				}
-				target.setLastModified(source.lastModified())
 			}
-			targetDir.setLastModified(sourceDir.lastModified())
-			deleteDirectory(sourceDir)
-		} catch (e: IOException) {
-			Log.err("moveDirectory failed", e)
+			target.setLastModified(source.lastModified())
 		}
+		targetDir.setLastModified(sourceDir.lastModified())
+		deleteDirectory(sourceDir)
 	}
 
 	fun deleteDirectory(file: File) {

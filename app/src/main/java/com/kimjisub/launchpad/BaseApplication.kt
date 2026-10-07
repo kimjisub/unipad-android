@@ -9,13 +9,17 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackStaging
+import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.GlobalContext.startKoin
 import java.io.File
+import kotlin.concurrent.thread
 
 class BaseApplication : Application() {
 	companion object {
@@ -37,6 +41,23 @@ class BaseApplication : Application() {
 		startKoin {
 			androidContext(applicationContext)
 			modules(appModule)
+		}
+		clearPackStagingLeftovers()
+	}
+
+	/**
+	 * Removes what an install or a move was building when the app was last killed. Runs once per
+	 * process, before any screen can start a new one; see [PackStaging].
+	 */
+	private fun clearPackStagingLeftovers() {
+		try {
+			val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
+			val leftovers = workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
+			if (leftovers.isEmpty()) return
+			Log.log("Clearing ${leftovers.size} unfinished pack folders")
+			thread(name = "PackStagingCleanup") { leftovers.forEach(FileManager::deleteDirectory) }
+		} catch (e: Exception) {
+			Log.err("Pack staging cleanup failed", e)
 		}
 	}
 
