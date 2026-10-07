@@ -3823,85 +3823,7 @@
         "autoPlay": null,
         "errors": []
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        -1,
-                        32,
-                        "fffafafa",
-                        3
-                      ],
-                      [
-                        "on",
-                        -1,
-                        -1,
-                        "fffafafa",
-                        3
-                      ],
-                      [
-                        "off",
-                        -1,
-                        32
-                      ],
-                      [
-                        "off",
-                        -1,
-                        -1
-                      ],
-                      [
-                        "on",
-                        -1,
-                        31,
-                        "fffafafa",
-                        3
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS keeps `o mc 33`, `o * 0`, `f mc 33`, `f mc 0` (round LED index = number - 1 with no range check); index 32 reaches the logo and -1 an LED that does not exist. Android and web drop them (UniPackFolder.swift, round LED branches)."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -4132,72 +4054,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [
-              "keyLed:format",
-              "keyLed:format",
-              "keyLed:format"
-            ],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        -1,
-                        32,
-                        "ffef5350",
-                        5
-                      ],
-                      [
-                        "on",
-                        -1,
-                        32,
-                        "ffef5350",
-                        5
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS ignores tokens after the fifth on a logo line, so `o l 0 a 5 9` is accepted; Android and web report a format error (UniPackFolder.swift logo branch, `split2.count >= 5`)."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -4648,66 +4505,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ffff0000",
-                        4
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ]
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "The web parser reads the x column of on/off lines with parseInt, so `o 1b 1 FF0000` lights pad (0,0); Android and iOS reject the line (parser.ts, `ledX = parseInt(xToken, 10) - 1`)."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5158,66 +4956,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ffff0000",
-                        4
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS falls back to the colour alone when the velocity does not parse, so `o 1 1 FF0000 x` lights with velocity 4 and no error (UniPackFolder.swift colour resolution)."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5308,66 +5047,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ffff0000",
-                        5
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS ignores tokens after the fifth on an on line, so `o 1 1 FF0000 5 6` lights with velocity 5 and no error; the docs allow 4 or 5 tokens."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5819,66 +5499,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ff00000a",
-                        200
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS reads `a` as the hex colour 0xA when the auto velocity is out of range, so `o 1 1 a 200` lights ff00000a with velocity 200; Android and web report a format error."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5969,66 +5590,7 @@
           "keyLed:format"
         ]
       },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "autoPlay": null,
-            "errors": [],
-            "info": {
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "producerName": "UniPad Conformance",
-              "squareButton": true,
-              "title": "Conformance"
-            },
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ff00000a",
-                        -1
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ],
-                    "loop": 1
-                  }
-                ],
-                "x": 0,
-                "y": 0
-              }
-            ],
-            "loaded": true,
-            "sounds": [
-              {
-                "c": 0,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ],
-                "x": 3,
-                "y": 2
-              }
-            ]
-          },
-          "note": "iOS reads `a` as the hex colour 0xA when the auto velocity is out of range, so `o 1 1 a -1` lights ff00000a with velocity -1; Android and web report a format error."
-        }
-      }
+      "known": {}
     },
     {
       "layer": "parse",
