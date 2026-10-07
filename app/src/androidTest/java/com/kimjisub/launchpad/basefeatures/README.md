@@ -129,11 +129,14 @@ quotes it in failure messages.
 | `heldPadStopsWhenWindowShrinks` | display shrunk to two thirds with `wm size`, then restored |
 | `heldPadStopsWhenWindowGrowsBack` | shrunk display returned with `wm size reset`; the window must match its original bounds and no override may remain |
 
-The pads must be laid out again. Then the held pad is either released at the change or kept until
-the finger lifts; lit and looping must agree, and no other pad may play. After the lift nothing is
-lit or looping, and the first tap in the new layout plays and lights the pad under it. The play
-screen releases held pads when it lays the grid out again (`PadTouchTracker.setGrid`); on the API
-35 and 37 emulators the system did not cancel the touch for any of the four changes.
+The pads must be laid out again. If the system cancels the touch at the change (one `ACTION_CANCEL`
+for the held finger), the held pad must already be dark and silent at that moment; the test sends
+nothing more for that finger, since Android refuses input for a gesture it ended. Without a cancel,
+the held pad is either released at the change or kept until the finger lifts; lit and looping must
+agree, and no other pad may play. After the lift nothing is lit or looping, and the first tap in the
+new layout plays and lights the pad under it. The play screen releases held pads when it lays the
+grid out again (`PadTouchTracker.setGrid`); on the API 35 and 37 emulators the system did not cancel
+the touch for any of the four changes.
 
 `MixedPointerInputTest` holds a pad with one pointer while the other presses and lifts from a
 second pad, then the first lifts: mouse first and finger first, each with Slide Mode off and on.

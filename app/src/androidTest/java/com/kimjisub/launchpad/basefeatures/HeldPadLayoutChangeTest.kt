@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Point
 import android.graphics.Rect
 import android.util.Log
+import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -67,17 +68,24 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
 
         change()
         settle()
-        val lit = litCells()
-        val looping = loopingCells().toSet()
-        val path = if (lit.isEmpty()) "released at the change" else "kept until the finger lifts"
-        Log.i(ReceivedInput.TAG, "$context with a pad held: $path; system cancelled the touch: ${received.cancelled()}")
-        assertTrue("After $context the pad must be either still held or fully released (lit: $lit, looping: $looping)\n$received",
-            lit == looping && (lit.isEmpty() || lit == setOf(held)))
-        assertHeldStill("After $context, with the finger still down", listOf(held), lit)
-
-        // A gesture the system already cancelled has no finger left to lift.
-        if (received.events.drop(receivedBefore).any { it.action == android.view.MotionEvent.ACTION_CANCEL }) fingers.cancelRemaining()
-        else fingers.up(finger)
+        val cancels = received.events.drop(receivedBefore).filter { it.action == MotionEvent.ACTION_CANCEL }
+        if (cancels.isNotEmpty()) {
+            Log.i(ReceivedInput.TAG, "$context with a pad held: system cancelled the touch")
+            assertEquals("Only the held finger's touch may be cancelled, once, at $context\n$received",
+                listOf(MotionEvent.TOOL_TYPE_FINGER), cancels.map { it.actor.toolType })
+            // The cancel is the end of the touch: the pad must already be dark and silent.
+            assertHeldStill("After the system cancelled the touch at $context", listOf(held), emptySet())
+            fingers.forgetCancelled()
+        } else {
+            val lit = litCells()
+            val looping = loopingCells().toSet()
+            Log.i(ReceivedInput.TAG, "$context with a pad held, no cancel: " +
+                if (lit.isEmpty()) "released at the change" else "kept until the finger lifts")
+            assertTrue("After $context the pad must be either still held or fully released (lit: $lit, looping: $looping)\n$received",
+                lit == looping && (lit.isEmpty() || lit == setOf(held)))
+            assertHeldStill("After $context, with the finger still down", listOf(held), lit)
+            fingers.up(finger)
+        }
         awaitHeld("Held pad still lit or looping after the finger lifted, following $context", emptySet())
         assertHeldStill("After lifting the finger held through $context", listOf(held), emptySet())
 

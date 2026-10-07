@@ -46,8 +46,6 @@ class ReceivedInput(private val screen: FeatureScreen) {
 
     fun detach() = screen.onMain { window.callback = original }
 
-    fun cancelled() = events.any { it.action == MotionEvent.ACTION_CANCEL }
-
     override fun toString() = events.joinToString("\n", prefix = "Received input:\n")
 
     private fun record(event: MotionEvent) {
