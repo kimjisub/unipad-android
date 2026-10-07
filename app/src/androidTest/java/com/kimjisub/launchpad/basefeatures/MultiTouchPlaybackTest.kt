@@ -66,7 +66,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.await({ "$message (expected lit: $lit, lit: $last)" }) { litCells().also { last = it } == lit }
     }
 
-    private fun litCells(): Set<Cell> = screen.onMain {
+    protected fun litCells(): Set<Cell> = screen.onMain {
         val channels = screen.vm().channelManager
         (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }
             .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }
