@@ -15,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -142,22 +143,44 @@ class AppUpdateNoticeTest : BaseUITest() {
 
 	@Test
 	fun failedInstallKeepsTheAppAndOffersRetryAndStore() {
-		onMain { play.setUpdateAvailable(NEWER_BUILD) }
-		launchToMainScreen()
-		acceptDownload()
-		onMain {
-			play.downloadStarts()
-			play.downloadCompletes()
-		}
-		assertTrue(waitForText(R.string.update_ready_title))
-		click(R.string.update_install)
-		assertTrue(waitUntil { onMain { play.isInstallSplashScreenVisible } })
-		onMain { play.installFails() }
-		assertTrue("failure card did not appear", waitForText(R.string.update_failed))
+		reachInstallFailure()
 		assertNotNull(findText(R.string.update_retry))
 		assertNotNull(findText(R.string.update_check_in_store))
 		takeScreenshot("update_failed")
 		assertTrue("the pack is still listed", device.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")))
+	}
+
+	@Test
+	fun storeOpensInABrowserWithoutPlay() {
+		assumeTrue("needs a device without the Play Store app", storeApps().none { it == PLAY_STORE_PACKAGE })
+		val browsers = storeApps()
+		assumeTrue("needs a browser", browsers.isNotEmpty())
+		reachInstallFailure()
+
+		openStoreFromFailure()
+		assertTrue(
+			"the store page did not open in a browser",
+			device.wait(Until.hasObject(By.pkg(browsers.first())), 10000L),
+		)
+		launchToMainScreen()
+	}
+
+	@Test
+	fun storeWithNeitherPlayNorBrowserSaysSoAndKeepsTheApp() {
+		val apps = storeApps()
+		try {
+			apps.forEach { device.executeShellCommand("pm disable-user --user 0 $it") }
+			assertTrue("a store or browser is still installed", storeApps().isEmpty())
+			reachInstallFailure()
+
+			openStoreFromFailure()
+			assertTrue("no message that the store could not open", waitForText(R.string.update_store_unavailable))
+			takeScreenshot("update_store_unavailable")
+			click(R.string.update_close)
+			assertTrue("the pack is still listed", device.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")))
+		} finally {
+			apps.forEach { device.executeShellCommand("pm enable --user 0 $it") }
+		}
 	}
 
 	@Test
@@ -189,6 +212,35 @@ class AppUpdateNoticeTest : BaseUITest() {
 		device.click(bounds.left + (50 * context.resources.displayMetrics.density).toInt(), bounds.centerY())
 		assertTrue("Play screen did not open", waitForPlayScreen())
 	}
+
+	private fun reachInstallFailure() {
+		onMain { play.setUpdateAvailable(NEWER_BUILD) }
+		launchToMainScreen()
+		acceptDownload()
+		onMain {
+			play.downloadStarts()
+			play.downloadCompletes()
+		}
+		assertTrue(waitForText(R.string.update_ready_title))
+		click(R.string.update_install)
+		assertTrue(waitUntil { onMain { play.isInstallSplashScreenVisible } })
+		onMain { play.installFails() }
+		assertTrue("failure card did not appear", waitForText(R.string.update_failed))
+	}
+
+	private fun openStoreFromFailure() {
+		click(R.string.update_check_in_store)
+		assertTrue("store notice did not appear", waitForText(R.string.update_store_notice))
+		click(R.string.update_store_open)
+	}
+
+	/** Packages that can open the app's Play page: the Play Store app and any browser. */
+	private fun storeApps(): List<String> =
+		device.executeShellCommand("cmd package query-activities --brief -a android.intent.action.VIEW -d $STORE_PAGE")
+			.lines()
+			.map { it.trim().substringBefore('/') }
+			.filter { it.contains('.') && !it.contains(' ') }
+			.distinct()
 
 	private fun acceptDownload() {
 		assertTrue(waitForText(R.string.update_offer_title))
@@ -222,5 +274,7 @@ class AppUpdateNoticeTest : BaseUITest() {
 
 	private companion object {
 		const val NEWER_BUILD = 10_000
+		const val PLAY_STORE_PACKAGE = "com.android.vending"
+		const val STORE_PAGE = "https://play.google.com/store/apps/details?id=com.kimjisub.launchpad"
 	}
 }
