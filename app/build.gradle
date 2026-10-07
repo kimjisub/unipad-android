@@ -118,6 +118,10 @@ android {
 		unitTests {
 			includeAndroidResources = true
 			returnDefaultValues = true
+			all {
+				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
+				jvmArgs '-Xshare:off'
+			}
 		}
 		animationsDisabled = true
 		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
