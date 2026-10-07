@@ -46,7 +46,8 @@ abstract class BaseUITest {
         const val PACKAGE_NAME = "com.kimjisub.launchpad.dev" // debug build
         const val MAIN_TIMEOUT = 20000L
         const val PLAY_TIMEOUT = 20000L
-        const val MAIN_RESUME_TIMEOUT = 45000L
+        const val ACTIVITY_START_TIMEOUT = 45000L
+        const val FILE_PICKER_TIMEOUT = 15000L
         private const val PLAY_FLAG_TAP_DP = 50
         private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
     }
@@ -90,7 +91,7 @@ abstract class BaseUITest {
         assertNotNull("Could not find launch intent for the app", intent)
         // Await the requested activity's completed onCreate, rather than global queue idleness.
         // Splash can move to Main before startActivitySync's idle callback gets its turn.
-        // Retain that API's 45-second launch bound and each caller's screen assertions/timeouts.
+        // Retain that API's launch bound and each caller's screen assertions/timeouts.
         val created = CountDownLatch(1)
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (stage == Stage.CREATED && activity.javaClass.name == intent!!.component!!.className) {
@@ -99,11 +100,11 @@ abstract class BaseUITest {
         }
         withLifecycleCallback(callback) {
             context.startActivity(intent!!)
-            assertTrue("Requested launch activity did not finish creation", created.await(45, TimeUnit.SECONDS))
+            assertTrue("Requested launch activity did not finish creation", created.await(ACTIVITY_START_TIMEOUT, TimeUnit.MILLISECONDS))
         }
     }
 
-    private fun withLifecycleCallback(callback: ActivityLifecycleCallback, action: () -> Unit) {
+    protected fun withLifecycleCallback(callback: ActivityLifecycleCallback, action: () -> Unit) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val monitor = ActivityLifecycleMonitorRegistry.getInstance()
         instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
@@ -131,39 +132,21 @@ abstract class BaseUITest {
      * @return true if dialog was found and handled, false otherwise
      */
     protected fun handlePermissionDialog(vararg _keywords: String): Boolean {
-        // Find "Allow" button (supporting multiple languages)
-        val allowButtons = listOf(
-            "허용", "Allow", "ALLOW",
-            "앱 사용 중에만 허용", "While using the app",
-            "이번만 허용", "Only this time"
-        )
+        // Allow buttons are matched by id or by their exact label: a partial label match such as
+        // "Allow" also hits "Don't allow" / "허용 안함" and would deny the permission.
+        val allowSelectors = listOf(UiSelector().resourceIdMatches(".*:id/permission_allow.*")) +
+            listOf(
+                "허용", "Allow", "ALLOW",
+                "앱 사용 중에만 허용", "While using the app", "WHILE USING THE APP",
+                "이번만 허용", "Only this time", "ONLY THIS TIME"
+            ).map { UiSelector().text(it) }
 
-        for (buttonText in allowButtons) {
+        for (selector in allowSelectors) {
             try {
-                // Find button by text
-                val allowButton = device.findObject(
-                    UiSelector()
-                        .textMatches(".*${buttonText}.*")
-                        .clickable(true)
-                )
-
+                val allowButton = device.findObject(selector.clickable(true))
                 if (allowButton.exists()) {
-                    println("Permission dialog found: $buttonText")
+                    println("Permission dialog found: $selector")
                     allowButton.click()
-                    Thread.sleep(500)
-                    return true
-                }
-
-                // Also try by resource ID
-                val allowButtonById = device.findObject(
-                    UiSelector()
-                        .resourceIdMatches(".*permission_allow.*")
-                        .clickable(true)
-                )
-
-                if (allowButtonById.exists()) {
-                    println("Permission dialog found (by ID)")
-                    allowButtonById.click()
                     Thread.sleep(500)
                     return true
                 }
@@ -230,28 +213,34 @@ abstract class BaseUITest {
     protected fun str(resId: Int): String = context.getString(resId)
 
     /**
-     * Launch the app and wait until MainActivity's Compose screen is shown.
-     * The main screen has no view ids since the Compose rewrite, so it is recognised by the
-     * store / settings content descriptions and the guide chip text.
-     *
-     * Splash finishes itself before starting MainActivity, so for a moment the app has no window, and on a
-     * loaded emulator MainActivity resumed 10-20 seconds after Splash was created. Wait for it to resume,
-     * answering the storage prompt Splash shows on Android 10, before looking for its window.
+     * Launch the app and wait until MainActivity has resumed and its window is shown.
+     * Splash finishes itself before starting MainActivity, so the app briefly has no window: waiting for
+     * a window straight after launch ends early on a busy device that is slow to start MainActivity.
+     * Below Android 11 Splash first asks for storage access, which is granted while waiting.
      */
-    protected fun launchToMainScreen() {
+    protected fun launchToMainActivity() {
         val mainResumed = CountDownLatch(1)
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (stage == Stage.RESUMED && activity is MainActivity) mainResumed.countDown()
         }
         withLifecycleCallback(callback) {
             launchApp()
-            val deadline = System.currentTimeMillis() + MAIN_RESUME_TIMEOUT
+            val deadline = System.currentTimeMillis() + ACTIVITY_START_TIMEOUT
             while (!mainResumed.await(500, TimeUnit.MILLISECONDS)) {
                 assertTrue("Main screen activity did not resume", System.currentTimeMillis() < deadline)
-                handlePermissionDialog()
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) handlePermissionDialog()
             }
         }
         assertTrue("App did not start", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), MAIN_TIMEOUT))
+    }
+
+    /**
+     * Launch the app and wait until MainActivity's Compose screen is shown.
+     * The main screen has no view ids since the Compose rewrite, so it is recognised by the
+     * store / settings content descriptions and the guide chip text.
+     */
+    protected fun launchToMainScreen() {
+        launchToMainActivity()
         handlePermissionDialogs()
         assertTrue("Main screen did not appear", waitForMainScreen())
     }
