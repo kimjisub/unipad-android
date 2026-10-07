@@ -991,7 +991,7 @@ class PlayActivityViewModel(
 
 		autoMappingActive = true
 		autoMappingProgress = 0
-		// Leaving the play screen cancels it, which leaves the pack's autoPlay as it was.
+		// Leaving the play screen cancels it; left before the writing starts, the pack's autoPlay stays as it was.
 		viewModelScope.launch {
 			try {
 				autoMapper(folder).run(object : UniPackAutoMapper.Listener {

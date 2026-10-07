@@ -15,24 +15,32 @@ import java.util.Locale
 class AutoPlayFileReplacer(
 	private val now: () -> Date = ::Date,
 	private val write: (File, String) -> Unit = ::writeToDisk,
+	private val copy: (File, File) -> Unit = { from, to -> from.copyTo(to) },
 ) {
 	fun replace(autoPlayFile: File, content: String) {
 		val folder = autoPlayFile.absoluteFile.parentFile
 			?: throw IOException("${autoPlayFile.path} has no folder")
 		val temp = File(folder, autoPlayFile.name + TEMP_SUFFIX)
-		val backup = File(folder, BACKUP_PREFIX + SimpleDateFormat(BACKUP_TIME_FORMAT, Locale.US).format(now()))
-		var backupMade = false
+		// The name is free, so a backup found here after a failure is this run's own, possibly partial.
+		val backup = freeBackupFile(folder)
 		try {
 			write(temp, content)
-			autoPlayFile.copyTo(backup)
-			backupMade = true
+			copy(autoPlayFile, backup)
 			// rename(2) swaps the file in one step, replacing the old one.
 			if (!temp.renameTo(autoPlayFile)) throw IOException("Could not replace ${autoPlayFile.path}")
 		} catch (e: Exception) {
 			temp.delete()
-			if (backupMade) backup.delete()
+			backup.delete()
 			throw e
 		}
+	}
+
+	/** `autoPlay_<time>`, or `autoPlay_<time>-2`, `-3`… when mappings finish within the same second. */
+	private fun freeBackupFile(folder: File): File {
+		val base = BACKUP_PREFIX + SimpleDateFormat(BACKUP_TIME_FORMAT, Locale.US).format(now())
+		return generateSequence(1) { it + 1 }
+			.map { File(folder, if (it == 1) base else "$base-$it") }
+			.first { !it.exists() }
 	}
 
 	companion object {
