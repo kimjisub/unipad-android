@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.activity
 
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection.SessionSummary
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
@@ -32,5 +33,11 @@ class MidiModelIndexForTargetTest {
 
 	@Test fun driverOutsideTheModelListHighlightsNothing() {
 		assertNull(midiModelIndexForTarget(emptyList(), null, Noting::class))
+	}
+
+	@Test fun helpNamesTheTargetedModelOrNoneWhenItIsUnknown() {
+		assertEquals(R.string.midi_lp_mini_mk3, midiHelpModelNameResId(5))
+		assertEquals(android.R.string.unknownName, midiHelpModelNameResId(null))
+		assertEquals(R.string.midi_help_other, midiHelpModelNote(midiHelpModelNameResId(null), true))
 	}
 }

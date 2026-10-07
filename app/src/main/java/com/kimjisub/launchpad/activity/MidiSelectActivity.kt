@@ -67,6 +67,7 @@ class MidiSelectActivity : BaseActivity() {
 
 	private val isConnected = mutableStateOf(false)
 	private val selectedIndex = mutableIntStateOf(0)
+	private val targetModelIndex = mutableStateOf<Int?>(null)
 	private val dualPadModeEnabled = mutableStateOf(false)
 	private val reflectedModeEnabled = mutableStateOf(false)
 	private val reflectedSwapSides = mutableStateOf(false)
@@ -85,6 +86,7 @@ class MidiSelectActivity : BaseActivity() {
 				MidiSelectScreen(
 					isConnected = isConnected.value,
 					selectedIndex = selectedIndex.intValue,
+					targetModelIndex = targetModelIndex.value,
 					dualPadModeEnabled = dualPadModeEnabled.value,
 					reflectedModeEnabled = reflectedModeEnabled.value,
 					reflectedSwapSides = reflectedSwapSides.value,
@@ -96,6 +98,7 @@ class MidiSelectActivity : BaseActivity() {
 					},
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
+						targetModelIndex.value = index
 						val driver = midiDevices[index].createDriver()
 						val targetSessionId = selectedSessionId.value
 						if (targetSessionId != null && connectedSessions.value.size > 1) {
@@ -151,8 +154,9 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	private fun updateSelectedIndexForTarget() {
-		midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
-			?.let { selectedIndex.intValue = it }
+		targetModelIndex.value =
+			midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
+		targetModelIndex.value?.let { selectedIndex.intValue = it }
 	}
 }
 
@@ -167,6 +171,11 @@ internal fun midiModelIndexForTarget(
 		?: fallbackDriverClass
 	return midiDevices.indexOfFirst { it.driverClass == targetClass }.takeIf { it >= 0 }
 }
+
+// The help names the targeted pad's model; a driver outside the list (no pad yet) is unknown,
+// even though the grid keeps its last highlight.
+internal fun midiHelpModelNameResId(targetModelIndex: Int?): Int =
+	targetModelIndex?.let { midiDevices[it].nameResId } ?: android.R.string.unknownName
 
 private data class MidiDeviceData(
 	val iconResId: Int,
@@ -192,6 +201,7 @@ private val midiDevices = listOf(
 private fun MidiSelectScreen(
 	isConnected: Boolean,
 	selectedIndex: Int,
+	targetModelIndex: Int?,
 	dualPadModeEnabled: Boolean,
 	reflectedModeEnabled: Boolean,
 	reflectedSwapSides: Boolean,
@@ -211,10 +221,10 @@ private fun MidiSelectScreen(
 		stateSaver = listSaver<List<String>, String>(save = { it }, restore = { it.toList() }),
 	) { mutableStateOf<List<String>>(emptyList()) }
 	val targetKey = "${selectedSessionId}:"
-	val explicitlySelected = "$targetKey$selectedIndex" in explicitChoices
+	val explicitlySelected = "$targetKey$targetModelIndex" in explicitChoices
 	if (helpOpen) {
 		MidiConnectionHelpDialog(
-			modelNameResId = midiDevices[selectedIndex].nameResId,
+			modelNameResId = midiHelpModelNameResId(targetModelIndex),
 			explicitlySelected = explicitlySelected,
 			onClose = { helpOpen = false },
 		)

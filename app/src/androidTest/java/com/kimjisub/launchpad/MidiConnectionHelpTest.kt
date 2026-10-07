@@ -25,6 +25,7 @@ import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
+import com.kimjisub.launchpad.midi.driver.Noting
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -139,6 +140,19 @@ class MidiConnectionHelpTest {
             device.pressBack()
             compose.onNodeWithText(str(R.string.midi_help_close)).assertDoesNotExist()
             button(R.string.midi_help_title).assertIsDisplayed()
+        } finally { compose.runOnIdle { MidiConnection.driver = original } }
+    }
+
+    @Test fun helpNamesNoModelWhenTheDriverIsNotInTheList() {
+        val original = MidiConnection.driver
+        try {
+            compose.runOnIdle { MidiConnection.driver = Noting() }
+            compose.activityRule.scenario.recreate()
+            button(R.string.midi_help_title).performClick()
+            val unknown = compose.activity.getString(R.string.midi_help_selected_model, str(android.R.string.unknownName))
+            compose.onNodeWithText(unknown).assertIsDisplayed()
+            compose.onNodeWithText(str(R.string.midi_help_other)).performScrollTo().assertIsDisplayed()
+            capture("unknown-model")
         } finally { compose.runOnIdle { MidiConnection.driver = original } }
     }
 
