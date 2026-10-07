@@ -10,6 +10,7 @@ import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -24,6 +25,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /** The auto mapping button on the play screen: the user hears of a failure, and leaving stops it. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelAutoMappingTest {
 
 	@get:Rule
