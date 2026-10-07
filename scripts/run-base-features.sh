@@ -30,7 +30,7 @@ trap 'rm -f "$output"' EXIT
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer.
-if ! grep -Eq '^OK \(35 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
+if ! grep -Eq '^OK \(39 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
   exit 1
 fi

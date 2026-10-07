@@ -65,4 +65,8 @@ class MultiTouchSlideModeTest : MultiTouchPlaybackTest(slideMode = true) {
     @Test fun palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying() = palmOnEdgeWhilePlaying()
 
     @Test fun palmRestingOnEdgeBeforePlayingPlaysNothingAndPadsStillPlay() = palmOnEdgeBeforePlaying()
+
+    @Test fun chainButtonSwitchesChainWhilePalmRestsOnEdge() = palmOnEdgeThenChain()
+
+    @Test fun chainButtonSwitchesChainWhilePadIsHeld() = padHeldThenChain()
 }

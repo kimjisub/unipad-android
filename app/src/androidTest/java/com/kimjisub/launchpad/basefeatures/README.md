@@ -89,8 +89,11 @@ and on (dragging moves the press). The test sets the preference and restores it 
 | F. Lift one of two fingers | `liftingOneOfTwoFingersReleasesOnlyItsPad` | same |
 | I. Palm on the margin beside the grid while a pad is held | `palmTouchingEdgeWhilePlayingPlaysNothingAndPadsKeepPlaying` | same |
 | I. Palm resting on the margin before any pad is touched | `palmRestingOnEdgeBeforePlayingPlaysNothingAndPadsStillPlay` | same |
+| J. Palm resting on the margin, another finger taps the chain buttons | `chainButtonSwitchesChainWhilePalmRestsOnEdge` | same |
+| K. A pad held, another finger taps the chain buttons | `chainButtonSwitchesChainWhilePadIsHeld` | same |
 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
+In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
 Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
 down (for example when the app leaves the screen), and H, lifting a finger after the chain
 changed. Their fixes are being made separately and their tests join the suite with them.
