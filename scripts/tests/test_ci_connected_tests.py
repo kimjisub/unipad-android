@@ -7,6 +7,7 @@ import unittest
 
 RUNNER = Path(__file__).resolve().parents[1] / "ci-connected-tests.sh"
 COMMAND = ":app:connectedDebugAndroidTest :design:connectedDebugAndroidTest --no-daemon --console=plain"
+TEST_PACKAGES = ("com.kimjisub.launchpad.dev", "com.kimjisub.launchpad.dev.test", "com.kimjisub.design.test")
 
 
 class ConnectedTestRunnerTest(unittest.TestCase):
@@ -37,7 +38,8 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertRegex((root / ".ci-results/ui-status.txt").read_text(),
                          rf"exit_code={exit_code}\nelapsed_seconds=\d+\n")
         self.assertEqual((root / "adb-calls.txt").read_text().splitlines(),
-                         ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime"])
+                         [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
+                         + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime"])
 
     def test_success_runs_full_suite_on_allocated_device(self):
         root, result = self.run_runner()
