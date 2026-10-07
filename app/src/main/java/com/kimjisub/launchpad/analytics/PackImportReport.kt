@@ -4,10 +4,10 @@ import kotlinx.coroutines.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The outcome of one pack import attempt (a picked file, a store download or a share code). The
- * importer, the downloader and the screen that started them may all learn the ending; only the first
- * report is sent, so a success followed by a cancelled scope, or a cancel followed by a failure, is
- * not counted twice.
+ * The outcome of one pack import attempt (a picked file or a store download). The importer, the
+ * downloader and the screen that started them may all learn the ending; only the first report is
+ * sent, so a success followed by a cancelled scope, or a cancel followed by a failure, is not
+ * counted twice.
  */
 class PackImportReport internal constructor(
 	private val source: PackImportSource,
