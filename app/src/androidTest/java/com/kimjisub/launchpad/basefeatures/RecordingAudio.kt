@@ -13,9 +13,13 @@ class RecordingAudio : SoundRunner.Engine {
     val loaded = ConcurrentHashMap<String, Int>()
     val silences = AtomicInteger()
     val stops = AtomicInteger()
+    val starts = AtomicInteger()
     private val nextId = AtomicInteger()
     private val decodedFiles = ConcurrentHashMap<OboeAudioEngine.DecodedAudio, String>()
-    override fun start() = true
+    override fun start(): Boolean {
+        starts.incrementAndGet()
+        return true
+    }
     override fun stop() { stops.incrementAndGet() }
     override fun decode(file: File): OboeAudioEngine.DecodedAudio? = OboeAudioEngine.decodeOnly(file)?.also {
         decodedFiles[it] = file.name

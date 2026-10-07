@@ -1368,7 +1368,7 @@ class PlayActivity : BaseActivity() {
 	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
 	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
 	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
-	// asks for it again. The LED runner stops until onStart.
+	// asks for it again. The LED runner and the audio stream stop until onStart; loaded sounds stay.
 	override fun onStop() {
 		super.onStop()
 		audioFocus.abandon()
