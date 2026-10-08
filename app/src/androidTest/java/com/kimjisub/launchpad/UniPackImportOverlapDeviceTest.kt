@@ -112,6 +112,8 @@ class UniPackImportOverlapDeviceTest {
             assertEquals(gates[1].expected, hashes(second))
             assertEquals(listOf(name, first.name, second.name).sorted(), workspace.list()!!.sorted())
             assertTrue("temporary ZIPs cleaned", cache.list()!!.isEmpty())
+            assertEquals(2, provider.nameQueriesOnMain.size)
+            assertFalse("File names were queried on the main thread", provider.nameQueriesOnMain.contains(true))
             listOf(first to "First", second to "Second", existing to "Existing").forEach { (folder, title) ->
                 val pack = UniPackFolder(folder).load().loadDetail()
                 assertFalse(pack.errorDetail, pack.criticalError)
@@ -146,7 +148,7 @@ class UniPackImportOverlapDeviceTest {
         @Volatile var folder: File? = null
         @Volatile var error: Throwable? = null
         override fun onImportStart() { evidence(id, "started on main=${Looper.myLooper() == Looper.getMainLooper()}") }
-        override fun onImportComplete(folder: File, unipack: UniPack) {
+        override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
             this.folder = folder
             evidence(id, "completed folder=${folder.name} title=${unipack.title}")
             done.countDown()
@@ -182,12 +184,14 @@ class UniPackImportOverlapDeviceTest {
     }
 
     private inner class InputProvider(val displayName: String, val gates: List<InputGate>) : ContentProvider() {
+        val nameQueriesOnMain = java.util.concurrent.CopyOnWriteArrayList<Boolean>()
         private val writers = Executors.newFixedThreadPool(2)
         override fun onCreate() = true
         override fun getType(uri: Uri) = "application/zip"
         override fun query(uri: Uri, projection: Array<out String>?, selection: String?,
                            selectionArgs: Array<out String>?, sortOrder: String?): Cursor =
             MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)).apply {
+                nameQueriesOnMain += Looper.myLooper() == Looper.getMainLooper()
                 addRow(arrayOf<Any>(displayName, gates.first { it.id == uri.lastPathSegment }.bytes.size))
             }
         override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {

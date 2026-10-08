@@ -28,7 +28,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.GlobalContext.startKoin
 import java.io.File
-import kotlin.concurrent.thread
 
 class BaseApplication : Application() {
 	companion object {
@@ -60,18 +59,31 @@ class BaseApplication : Application() {
 
 	/**
 	 * Removes what an install or a move was building when the app was last killed. Runs once per
-	 * process, before any screen can start a new one; see [PackStaging].
+	 * process on IO; new installs and moves await only the rename through [PackStaging.create].
 	 */
 	private fun clearPackStagingLeftovers() {
-		try {
-			val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
-			val leftovers = workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
-			if (leftovers.isEmpty()) return
-			Log.log("Clearing ${leftovers.size} unfinished pack folders")
-			thread(name = "PackStagingCleanup") { leftovers.forEach(FileManager::deleteDirectory) }
-		} catch (e: Exception) {
-			Log.err("Pack staging cleanup failed", e)
-		}
+		PackStaging.startCleanup(
+			scope = ioScope,
+			setAside = {
+				try {
+					val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
+					workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
+				} catch (e: Exception) {
+					Log.err("Pack staging cleanup failed", e)
+					emptyList()
+				}
+			},
+			deleteLeftovers = { leftovers ->
+				try {
+					if (leftovers.isNotEmpty()) {
+						Log.log("Clearing ${leftovers.size} unfinished pack folders")
+						leftovers.forEach(FileManager::deleteDirectory)
+					}
+				} catch (e: Exception) {
+					Log.err("Pack staging deletion failed", e)
+				}
+			},
+		)
 	}
 
 	/**

@@ -212,8 +212,8 @@ class UniPackInstallOverlapTest {
 				env.finish(downloadScope)
 			}
 
-			override fun onImportComplete(folder: File, unipack: UniPack) =
-				imported.onImportComplete(folder, unipack)
+			override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) =
+				imported.onImportComplete(folder, unipack, byteSize)
 
 			override fun onException(throwable: Throwable) = imported.onException(throwable)
 		}

@@ -462,20 +462,14 @@ class MainActivity : BaseActivity() {
 					importingState = true
 				}
 
-				override fun onImportComplete(folder: File, unipack: UniPack) {
+				override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
 					importingState = false
-					when (unipack.errorDetail) {
-						null -> {
-							importResult = ImportResult.Success(folder, unipack)
-							update()
-						}
-
-						else -> {
-							importResult = ImportResult.Warning(unipack.errorDetail.orEmpty())
-							// The pack was kept; without this it only appeared on the next resume.
-							update()
-						}
+					importResult = when (unipack.errorDetail) {
+						null -> ImportResult.Success(folder, unipack, byteSize)
+						else -> ImportResult.Warning(unipack.errorDetail.orEmpty())
 					}
+					// Warning packs are kept too and must appear without another resume.
+					update()
 				}
 
 				override fun onException(throwable: Throwable) {

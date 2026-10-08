@@ -30,8 +30,7 @@ class UniPackImporter(
 	private val usage: PackImportReport,
 	scope: CoroutineScope,
 ) {
-	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
-	private val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
+	private var fileName: String? = null
 
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
@@ -66,6 +65,8 @@ class UniPackImporter(
 			var staged: File? = null
 			var claimedFolder: File? = null
 			try {
+				fileName = DocumentFile.fromSingleUri(context, uri)?.name
+				val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
 				withContext(Dispatchers.Main) { onImportStart() }
 
 				val targetWorkspace = workspace()
@@ -98,8 +99,10 @@ class UniPackImporter(
 				claimedFolder = targetFolder
 				val unipack = UniPackFolder(targetFolder).load()
 
+				val byteSize = if (unipack.errorDetail == null) unipack.getByteSize() else 0L
+
 				usage.succeeded()
-				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack) }
+				withContext(Dispatchers.Main) { onImportComplete(targetFolder, unipack, byteSize) }
 			} catch (e: Exception) {
 				Log.err("Import failed", e)
 				usage.failed(e)
@@ -123,7 +126,7 @@ class UniPackImporter(
 		onEventListener.onImportStart()
 	}
 
-	private fun onImportComplete(folder: File, unipack: UniPack) {
+	private fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
 		notificationBuilder.apply {
 			setContentTitle(fileName)
 			setContentText(context.getString(R.string.success))
@@ -132,7 +135,7 @@ class UniPackImporter(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		onEventListener.onImportComplete(folder, unipack)
+		onEventListener.onImportComplete(folder, unipack, byteSize)
 	}
 
 	private fun onException(throwable: Throwable) {
@@ -150,7 +153,7 @@ class UniPackImporter(
 	interface OnEventListener {
 		fun onImportStart()
 
-		fun onImportComplete(folder: File, unipack: UniPack)
+		fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long)
 
 		fun onException(throwable: Throwable)
 	}

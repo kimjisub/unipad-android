@@ -9,6 +9,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.manager.PackStaging
+import kotlinx.coroutines.runBlocking
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
 import org.junit.After
@@ -41,6 +43,22 @@ class MainThreadFileAccessTest : BaseUITest() {
             StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.LAX)
         }
         cleanup.forEach { it.deleteRecursively() }
+    }
+
+    @Test
+    fun startupCleanupListsWorkspacesOffTheMainThread() {
+        val workspace = File(context.cacheDir, "startup-strictmode-test").apply { mkdirs() }
+        cleanup += workspace
+        watchMainThread()
+        // Repeat only the startup cleanup entry point, without restarting Koin or Firebase.
+        val method = BaseApplication::class.java.getDeclaredMethod("clearPackStagingLeftovers")
+            .apply { isAccessible = true }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            method.invoke(context.applicationContext)
+        }
+        // New imports must wait for cleanup; this also drains it before checking the listener.
+        runBlocking { PackStaging.create(workspace) }
+        assertNoWatchedViolations()
     }
 
     @Test
@@ -133,6 +151,7 @@ class MainThreadFileAccessTest : BaseUITest() {
                 StrictMode.ThreadPolicy.Builder()
                     .detectDiskReads()
                     .detectDiskWrites()
+                    .penaltyLog()
                     .penaltyListener(executor) { record(it) }
                     .build()
             )
@@ -162,6 +181,7 @@ class MainThreadFileAccessTest : BaseUITest() {
 
         val WATCHED = listOf(
             "com.kimjisub.launchpad.manager.WorkspaceManager.",
+            "com.kimjisub.launchpad.manager.PackStaging.",
             "com.kimjisub.launchpad.tool.ZipThemeImporter.delete",
             "com.kimjisub.launchpad.unipack.UniPackFolder.reloadAutoPlay",
         )
