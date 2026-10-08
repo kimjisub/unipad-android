@@ -227,7 +227,7 @@ dependencies {
 
 	implementation 'androidx.appcompat:appcompat:1.8.0'
 	implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
-	implementation 'androidx.core:core-ktx:1.19.0'
+	implementation 'androidx.core:core-ktx:1.19.1'
 	implementation 'androidx.preference:preference-ktx:1.2.1'
 	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0'
 	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
@@ -297,7 +297,7 @@ dependencies {
 	implementation 'net.lingala.zip4j:zip4j:2.11.6'
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
-	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
+	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.2'
 	api project(':design')
 }
 
