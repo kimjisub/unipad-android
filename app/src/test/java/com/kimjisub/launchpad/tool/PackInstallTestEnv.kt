@@ -71,7 +71,7 @@ class PackInstallTestEnv {
 	private val cache = File(root, "cache").apply { mkdirs() }
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
-	private val mainExecutor = Executors.newFixedThreadPool(4)
+	private val mainExecutor = Executors.newFixedThreadPool(4) { Thread(it, "pack-test-main") }
 
 	/** Names of the threads that resolved the target workspace, one per request. */
 	val fileNameResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
@@ -291,7 +291,7 @@ class PackInstallTestEnv {
 			installedFolder = folder
 		}
 
-		override fun onImportComplete(folder: File, unipack: UniPack) {
+		override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
 			installedFolder = folder
 		}
 

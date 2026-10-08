@@ -148,7 +148,7 @@ class UniPackImportOverlapDeviceTest {
         @Volatile var folder: File? = null
         @Volatile var error: Throwable? = null
         override fun onImportStart() { evidence(id, "started on main=${Looper.myLooper() == Looper.getMainLooper()}") }
-        override fun onImportComplete(folder: File, unipack: UniPack) {
+        override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
             this.folder = folder
             evidence(id, "completed folder=${folder.name} title=${unipack.title}")
             done.countDown()

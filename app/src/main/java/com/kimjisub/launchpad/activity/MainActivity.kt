@@ -462,19 +462,14 @@ class MainActivity : BaseActivity() {
 					importingState = true
 				}
 
-				override fun onImportComplete(folder: File, unipack: UniPack) {
-					lifecycleScope.launch {
-						val result = withContext(Dispatchers.IO) {
-							when (unipack.errorDetail) {
-								null -> ImportResult.Success(folder, unipack, unipack.getByteSize())
-								else -> ImportResult.Warning(unipack.errorDetail.orEmpty())
-							}
-						}
-						importingState = false
-						importResult = result
-						// Warning packs are kept too and must appear without another resume.
-						update()
+				override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
+					importingState = false
+					importResult = when (unipack.errorDetail) {
+						null -> ImportResult.Success(folder, unipack, byteSize)
+						else -> ImportResult.Warning(unipack.errorDetail.orEmpty())
 					}
+					// Warning packs are kept too and must appear without another resume.
+					update()
 				}
 
 				override fun onException(throwable: Throwable) {

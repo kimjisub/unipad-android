@@ -27,8 +27,16 @@ object PackStaging {
 	@Volatile private var startupCleanup: Job? = null
 
 	/** Register cleanup before it can start, and before any screen can start an install or move. */
-	fun startCleanup(scope: CoroutineScope, cleanup: () -> Unit): Job {
-		val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) { cleanup() }
+	fun startCleanup(
+		scope: CoroutineScope,
+		setAside: () -> List<File>,
+		deleteLeftovers: (List<File>) -> Unit,
+	): Job {
+		val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+			val leftovers = setAside()
+			// A sibling job: installs await only the rename, never slow recursive deletion.
+			scope.launch(Dispatchers.IO) { deleteLeftovers(leftovers) }
+		}
 		startupCleanup = job
 		job.start()
 		return job
@@ -37,7 +45,7 @@ object PackStaging {
 	/** The staging folder, or leftovers set aside from it: never a pack. */
 	fun isStagingFolder(file: File): Boolean = file.name.startsWith(DIR_NAME)
 
-	/** A new folder for one install or move, after startup cleanup has finished (even if it failed). */
+	/** A new folder for one install or move, after startup leftovers have been set aside (even if it failed). */
 	suspend fun create(workspace: File): File {
 		startupCleanup?.join()
 		val root = File(workspace, DIR_NAME)
@@ -59,7 +67,7 @@ object PackStaging {
 	/**
 	 * Renames what a killed run left in [workspace]'s staging folder out of the way and returns it
 	 * for deletion. The caller runs this on the startup cleanup worker before new installs or moves
-	 * can create their staging folders, and deletes the returned folders on that same worker.
+	 * can create their staging folders, and deletes the returned folders separately without blocking new installs.
 	 */
 	fun setAsideLeftovers(workspace: File): List<File> {
 		val root = File(workspace, DIR_NAME)

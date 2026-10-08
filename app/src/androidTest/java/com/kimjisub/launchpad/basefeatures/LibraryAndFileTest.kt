@@ -70,7 +70,8 @@ class LibraryAndFileTest {
                     .penaltyLog()
                     .penaltyListener(listener) { violation ->
                         if (violation.stackTrace.any {
-                            it.className.startsWith("com.kimjisub.launchpad.ui.compose.ImportResultDialogKt") ||
+                            it.className.startsWith("com.kimjisub.launchpad.activity.MainActivity") ||
+                                it.className.startsWith("com.kimjisub.launchpad.ui.compose.ImportResultDialogKt") ||
                                 it.className.startsWith("com.kimjisub.launchpad.tool.UniPackImporter")
                         }) violations += violation.toString()
                     }.build())
@@ -98,8 +99,6 @@ class LibraryAndFileTest {
                 screen.node(By.text(FeatureScreen.TITLE))
                 screen.node(By.desc("${screen.text(R.string.fileSize)} 0.01 MB"))
                 screen.capture("file-import-result")
-                screen.device.executeShellCommand("mkdir -p /data/local/tmp/unipad_tests")
-                screen.device.executeShellCommand("screencap -p /data/local/tmp/unipad_tests/file-import-result.png")
                 screen.clickText(R.string.importPlayNow)
                 screen.await("Imported pack did not load", screen::ready)
                 assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })

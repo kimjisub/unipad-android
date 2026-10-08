@@ -58,21 +58,31 @@ class BaseApplication : Application() {
 
 	/**
 	 * Removes what an install or a move was building when the app was last killed. Runs once per
-	 * process on IO; new installs and moves await it through [PackStaging.create].
+	 * process on IO; new installs and moves await only the rename through [PackStaging.create].
 	 */
 	private fun clearPackStagingLeftovers() {
-		PackStaging.startCleanup(ioScope) {
-			try {
-				val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
-				val leftovers = workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
-				if (leftovers.isNotEmpty()) {
-					Log.log("Clearing ${leftovers.size} unfinished pack folders")
-					leftovers.forEach(FileManager::deleteDirectory)
+		PackStaging.startCleanup(
+			scope = ioScope,
+			setAside = {
+				try {
+					val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
+					workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
+				} catch (e: Exception) {
+					Log.err("Pack staging cleanup failed", e)
+					emptyList()
 				}
-			} catch (e: Exception) {
-				Log.err("Pack staging cleanup failed", e)
-			}
-		}
+			},
+			deleteLeftovers = { leftovers ->
+				try {
+					if (leftovers.isNotEmpty()) {
+						Log.log("Clearing ${leftovers.size} unfinished pack folders")
+						leftovers.forEach(FileManager::deleteDirectory)
+					}
+				} catch (e: Exception) {
+					Log.err("Pack staging deletion failed", e)
+				}
+			},
+		)
 	}
 
 	/**
