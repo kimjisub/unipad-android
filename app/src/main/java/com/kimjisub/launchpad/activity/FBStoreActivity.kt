@@ -222,7 +222,7 @@ class FBStoreActivity : BaseActivity() {
 			title = item.storeVO.title ?: "",
 			// iOS/web prefer the entry's own URL and only fall back to the legacy Cloud Function.
 			url = item.storeVO.URL?.takeIf { it.startsWith("http") } ?: "$DOWNLOAD_BASE_URL?code=${android.net.Uri.encode(itemCode)}",
-			workspace = ws.downloadWorkspace.file,
+			workspace = { ws.downloadWorkspace.file },
 			folderName = item.storeVO.code ?: "",
 			listener = object : UniPackDownloader.Listener {
 				override fun onInstallStart() {}

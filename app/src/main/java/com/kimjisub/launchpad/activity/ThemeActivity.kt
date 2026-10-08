@@ -133,11 +133,14 @@ class ThemeActivity : BaseActivity() {
 				},
 				onDelete = { themeItem ->
 					val folderName = themeItem.id.removePrefix("zip://")
-					if (ZipThemeImporter.delete(this, folderName)) {
-						if (p.selectedTheme == themeItem.id) {
-							p.selectedTheme = packageName
+					scope.launch {
+						val deleted = withContext(Dispatchers.IO) { ZipThemeImporter.delete(this@ThemeActivity, folderName) }
+						if (deleted) {
+							if (p.selectedTheme == themeItem.id) {
+								p.selectedTheme = packageName
+							}
+							reloadThemes()
 						}
-						scope.launch { reloadThemes() }
 					}
 				},
 			)

@@ -24,7 +24,8 @@ import java.io.File
 class UniPackImporter(
 	private var context: Context,
 	private var uri: Uri,
-	workspace: File,
+	/** Resolved on the import's IO thread: listing workspaces creates folders. */
+	workspace: () -> File,
 	private var onEventListener: OnEventListener,
 	private val usage: PackImportReport,
 	scope: CoroutineScope,
@@ -67,7 +68,8 @@ class UniPackImporter(
 			try {
 				withContext(Dispatchers.Main) { onImportStart() }
 
-				val stagedFolder = PackStaging.create(workspace)
+				val targetWorkspace = workspace()
+				val stagedFolder = PackStaging.create(targetWorkspace)
 				staged = stagedFolder
 
 				val tempZip = File.createTempFile("unipack_import_", ".zip", context.cacheDir)
@@ -92,7 +94,7 @@ class UniPackImporter(
 					throw UniPackCriticalErrorException(errorMsg)
 				}
 
-				val targetFolder = FileManager.moveToNextFolder(stagedFolder, workspace, zipNameWithoutExt)
+				val targetFolder = FileManager.moveToNextFolder(stagedFolder, targetWorkspace, zipNameWithoutExt)
 				claimedFolder = targetFolder
 				val unipack = UniPackFolder(targetFolder).load()
 

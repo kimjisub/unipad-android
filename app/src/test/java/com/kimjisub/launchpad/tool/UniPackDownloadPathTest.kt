@@ -70,6 +70,23 @@ class UniPackDownloadPathTest {
 		assertEquals(listOf("pack", "pack (2)"), env.workspaceContents())
 	}
 
+	// Listing workspaces creates folders; resolved by the screen that started the install, it ran
+	// on the main thread.
+	@Test
+	fun downloadAndImportResolveTheWorkspaceOnTheirIoThread() {
+		val zip = packZip("Self-authored fixture")
+		serve(200, zip)
+
+		env.finish(env.download(baseUrl + "pack.zip", Recorder()))
+		env.finish(env.import(zip, Recorder()))
+
+		assertEquals(2, env.workspaceResolvedOn.size)
+		assertTrue(
+			env.workspaceResolvedOn.toString(),
+			env.workspaceResolvedOn.all { it.startsWith("DefaultDispatcher-worker") },
+		)
+	}
+
 	@Test
 	fun serverErrorReportsFailureAndRemovesTemporaryArchive() {
 		serve(503, "Service unavailable".toByteArray())

@@ -88,11 +88,13 @@ abstract class UniPack {
 	}
 
 	// Circular Queue
+	// Each cell is locked while used: the play screen rotates it on every press while an
+	// autoPlay read-back may index it from a background thread.
 
 	fun soundGet(c: Int, x: Int, y: Int): Sound? {
 		return try {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return null
-			sounds[0]
+			synchronized(sounds) { sounds[0] }
 		} catch (e: IndexOutOfBoundsException) {
 			err("soundGet ($c, $x, $y)")
 			null
@@ -102,7 +104,9 @@ abstract class UniPack {
 	fun soundGet(c: Int, x: Int, y: Int, num: Int): Sound? {
 		return try {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return null
-			sounds[num % sounds.size]
+			synchronized(sounds) {
+				if (sounds.isEmpty()) null else sounds[num % sounds.size]
+			}
 		} catch (e: IndexOutOfBoundsException) {
 			err("soundGet ($c, $x, $y)")
 			null
@@ -112,8 +116,10 @@ abstract class UniPack {
 	fun soundPush(c: Int, x: Int, y: Int) {
 		try {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
-			val item = sounds.removeFirst()
-			sounds.addLast(item)
+			synchronized(sounds) {
+				val item = sounds.removeFirst()
+				sounds.addLast(item)
+			}
 		} catch (e: IndexOutOfBoundsException) {
 			err("soundPush ($c, $x, $y)")
 		}
@@ -122,16 +128,18 @@ abstract class UniPack {
 	fun soundPush(c: Int, x: Int, y: Int, num: Int) {
 		try {
 			val sounds = soundTable?.get(c)?.get(x)?.get(y) ?: return
-			if (sounds.isEmpty()) return
-			val targetNum = num % sounds.size
-			// Bounded like iOS/web: a queue without the target num used to spin forever.
-			if (sounds[0].num != targetNum)
-				repeat(sounds.size) {
-					val item = sounds.removeFirst()
-					sounds.addLast(item)
-					if (sounds[0].num == targetNum)
-						return
-				}
+			synchronized(sounds) {
+				if (sounds.isEmpty()) return
+				val targetNum = num % sounds.size
+				// Bounded like iOS/web: a queue without the target num used to spin forever.
+				if (sounds[0].num != targetNum)
+					repeat(sounds.size) {
+						val item = sounds.removeFirst()
+						sounds.addLast(item)
+						if (sounds[0].num == targetNum)
+							return
+					}
+			}
 		} catch (e: IndexOutOfBoundsException) {
 			err("soundPush ($c, $x, $y, $num)")
 		} catch (e: ArithmeticException) {

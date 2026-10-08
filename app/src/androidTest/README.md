@@ -179,6 +179,7 @@ claimed here as audio or hardware proof.
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `MainThreadFileAccessTest` | `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
 
 `StoreCatalogTest` is a JVM unit test for the extracted feed: original key fallback, added/changed
