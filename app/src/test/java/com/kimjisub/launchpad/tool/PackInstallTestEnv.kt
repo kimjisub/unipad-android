@@ -74,6 +74,7 @@ class PackInstallTestEnv {
 	private val mainExecutor = Executors.newFixedThreadPool(4)
 
 	/** Names of the threads that resolved the target workspace, one per request. */
+	val fileNameResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
 	val workspaceResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
 	private val resolveWorkspace: () -> File = {
 		workspaceResolvedOn += Thread.currentThread().name
@@ -158,7 +159,7 @@ class PackInstallTestEnv {
 	): CoroutineScope {
 		val uri = mockk<Uri>()
 		every { resolver.openInputStream(uri) } answers { openInput() }
-		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } returns fileName }
+		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } answers { fileNameResolvedOn += Thread.currentThread().name; fileName } }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
 			context = context,

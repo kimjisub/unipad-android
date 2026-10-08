@@ -1,5 +1,9 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.os.StrictMode
+import androidx.test.platform.app.InstrumentationRegistry
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 import android.content.ContentValues
 import android.provider.MediaStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -55,32 +59,58 @@ class LibraryAndFileTest {
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)!!
         try {
             resolver.openOutputStream(uri)!!.use { it.write(bytes) }
-            screen.launch(MainActivity::class.java)
-            screen.clickText(R.string.guide_import_external)
-            // These are system picker labels; the dedicated emulator's system language is English.
-            val file = screen.device.wait(Until.findObject(By.text("basefeatures-file.zip")), 3000)
-            if (file == null) {
-                val toolbar = screen.node(By.res("com.google.android.documentsui", "toolbar"))
-                val roots = toolbar.findObject(By.clazz("android.widget.ImageButton"))
-                    ?: throw AssertionError("Documents picker navigation button missing")
-                roots.click()
-                // Opening the drawer replaces its accessibility nodes during animation.
-                screen.device.waitForIdle()
-                screen.node(By.text("Downloads")).click()
-                screen.device.waitForIdle()
+            val violations = CopyOnWriteArrayList<String>()
+            val listener = Executors.newSingleThreadExecutor()
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            var previousPolicy: StrictMode.ThreadPolicy? = null
+            instrumentation.runOnMainSync {
+                previousPolicy = StrictMode.getThreadPolicy()
+                StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads().detectDiskWrites()
+                    .penaltyLog()
+                    .penaltyListener(listener) { violation ->
+                        if (violation.stackTrace.any {
+                            it.className.startsWith("com.kimjisub.launchpad.ui.compose.ImportResultDialogKt") ||
+                                it.className.startsWith("com.kimjisub.launchpad.tool.UniPackImporter")
+                        }) violations += violation.toString()
+                    }.build())
             }
-            // Select explicitly: a delayed injected tap can become a long press and leave
-            // DocumentsUI in selection mode without returning the document to the app.
-            screen.node(By.text("basefeatures-file.zip")).longClick()
-            screen.node(By.text("Select")).click()
-            screen.node(By.text(screen.text(R.string.importComplete)))
-            screen.node(By.text(FeatureScreen.TITLE))
-            screen.capture("file-import-result")
-            screen.clickText(R.string.importPlayNow)
-            screen.await("Imported pack did not load", screen::ready)
-            assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })
-            assertEquals("basefeatures-file", screen.onMain { screen.vm().unipack.id })
-            screen.capture("file-import-play")
+            try {
+                screen.launch(MainActivity::class.java)
+                screen.clickText(R.string.guide_import_external)
+                // These are system picker labels; the dedicated emulator's system language is English.
+                val file = screen.device.wait(Until.findObject(By.text("basefeatures-file.zip")), 3000)
+                if (file == null) {
+                    val toolbar = screen.node(By.res("com.google.android.documentsui", "toolbar"))
+                    val roots = toolbar.findObject(By.clazz("android.widget.ImageButton"))
+                        ?: throw AssertionError("Documents picker navigation button missing")
+                    roots.click()
+                    // Opening the drawer replaces its accessibility nodes during animation.
+                    screen.device.waitForIdle()
+                    screen.node(By.text("Downloads")).click()
+                    screen.device.waitForIdle()
+                }
+                // Select explicitly: a delayed injected tap can become a long press and leave
+                // DocumentsUI in selection mode without returning the document to the app.
+                screen.node(By.text("basefeatures-file.zip")).longClick()
+                screen.node(By.text("Select")).click()
+                screen.node(By.text(screen.text(R.string.importComplete)))
+                screen.node(By.text(FeatureScreen.TITLE))
+                screen.node(By.desc("${screen.text(R.string.fileSize)} 0.01 MB"))
+                screen.capture("file-import-result")
+                screen.device.executeShellCommand("mkdir -p /data/local/tmp/unipad_tests")
+                screen.device.executeShellCommand("screencap -p /data/local/tmp/unipad_tests/file-import-result.png")
+                screen.clickText(R.string.importPlayNow)
+                screen.await("Imported pack did not load", screen::ready)
+                assertEquals(FeatureScreen.TITLE, screen.onMain { screen.vm().unipack.title })
+                assertEquals("basefeatures-file", screen.onMain { screen.vm().unipack.id })
+                screen.capture("file-import-play")
+                listener.submit {}.get(10, java.util.concurrent.TimeUnit.SECONDS)
+                assertEquals("Import accessed files on the main thread", emptyList<String>(), violations.toList())
+            } finally {
+                instrumentation.runOnMainSync { StrictMode.setThreadPolicy(previousPolicy!!) }
+                listener.shutdownNow()
+            }
         } finally {
             resolver.delete(uri, null, null)
         }

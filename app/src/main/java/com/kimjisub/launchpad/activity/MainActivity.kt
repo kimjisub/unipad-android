@@ -463,18 +463,17 @@ class MainActivity : BaseActivity() {
 				}
 
 				override fun onImportComplete(folder: File, unipack: UniPack) {
-					importingState = false
-					when (unipack.errorDetail) {
-						null -> {
-							importResult = ImportResult.Success(folder, unipack)
-							update()
+					lifecycleScope.launch {
+						val result = withContext(Dispatchers.IO) {
+							when (unipack.errorDetail) {
+								null -> ImportResult.Success(folder, unipack, unipack.getByteSize())
+								else -> ImportResult.Warning(unipack.errorDetail.orEmpty())
+							}
 						}
-
-						else -> {
-							importResult = ImportResult.Warning(unipack.errorDetail.orEmpty())
-							// The pack was kept; without this it only appeared on the next resume.
-							update()
-						}
+						importingState = false
+						importResult = result
+						// Warning packs are kept too and must appear without another resume.
+						update()
 					}
 				}
 

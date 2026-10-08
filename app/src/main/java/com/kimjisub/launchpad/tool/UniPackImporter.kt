@@ -30,8 +30,7 @@ class UniPackImporter(
 	private val usage: PackImportReport,
 	scope: CoroutineScope,
 ) {
-	private val fileName = DocumentFile.fromSingleUri(context, uri)?.name
-	private val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
+	private var fileName: String? = null
 
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
@@ -66,6 +65,8 @@ class UniPackImporter(
 			var staged: File? = null
 			var claimedFolder: File? = null
 			try {
+				fileName = DocumentFile.fromSingleUri(context, uri)?.name
+				val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
 				withContext(Dispatchers.Main) { onImportStart() }
 
 				val targetWorkspace = workspace()

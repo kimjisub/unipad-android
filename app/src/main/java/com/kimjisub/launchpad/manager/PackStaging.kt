@@ -1,5 +1,10 @@
 package com.kimjisub.launchpad.manager
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.util.UUID
@@ -19,11 +24,22 @@ object PackStaging {
 	private const val LEFTOVER_PREFIX = "$DIR_NAME-leftover-"
 	private const val CREATE_ATTEMPTS = 3
 
+	@Volatile private var startupCleanup: Job? = null
+
+	/** Register cleanup before it can start, and before any screen can start an install or move. */
+	fun startCleanup(scope: CoroutineScope, cleanup: () -> Unit): Job {
+		val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) { cleanup() }
+		startupCleanup = job
+		job.start()
+		return job
+	}
+
 	/** The staging folder, or leftovers set aside from it: never a pack. */
 	fun isStagingFolder(file: File): Boolean = file.name.startsWith(DIR_NAME)
 
-	/** A new, empty folder on [workspace]'s storage for one install or move. */
-	fun create(workspace: File): File {
+	/** A new folder for one install or move, after startup cleanup has finished (even if it failed). */
+	suspend fun create(workspace: File): File {
+		startupCleanup?.join()
 		val root = File(workspace, DIR_NAME)
 		repeat(CREATE_ATTEMPTS) {
 			// Another job's discard() can remove the then-empty root between these two calls.
@@ -42,8 +58,8 @@ object PackStaging {
 
 	/**
 	 * Renames what a killed run left in [workspace]'s staging folder out of the way and returns it
-	 * for deletion. The rename is quick, so it runs on start before anything can stage again; the
-	 * deletion, which can take long for a large pack, is left to the caller.
+	 * for deletion. The caller runs this on the startup cleanup worker before new installs or moves
+	 * can create their staging folders, and deletes the returned folders on that same worker.
 	 */
 	fun setAsideLeftovers(workspace: File): List<File> {
 		val root = File(workspace, DIR_NAME)
