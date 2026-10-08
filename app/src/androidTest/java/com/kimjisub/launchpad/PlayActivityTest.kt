@@ -1000,8 +1000,14 @@ class PlayActivityTest : BaseUITest() {
      * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
      * anything outside the safe area, or chains, menu, pads and logo covering each other.
      */
-    private fun playLayoutProblems(name: String, rotation: Int? = null, layoutTimeoutMs: Long = 10000L): List<String> {
-        if (rotation != null) waitUntil(10000L) { device.displayRotation == rotation }
+    private fun playLayoutProblems(
+        name: String,
+        rotation: Int? = null,
+        layoutTimeoutMs: Long = 10000L,
+        attemptsRemaining: Int = 3,
+    ): List<String> {
+        // A resize can override a rotation that was briefly reported as complete.
+        if (rotation != null) rotateTo(rotation)
         Thread.sleep(500)
         val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270, timeoutMs = layoutTimeoutMs)
         val problems = mutableListOf<String>()
@@ -1027,6 +1033,16 @@ class PlayActivityTest : BaseUITest() {
         val logo = settledBounds(By.res("play_logo"), geometry.window)
         check(logo != null) { "logo bounds did not settle inside ${geometry.window}" }
         logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
+        // Native geometry and accessibility are read separately. If another layout landed
+        // between them, repeat the whole observation instead of comparing different windows.
+        val latest = playGeometry()
+        val rotationMatches = rotation == null || device.displayRotation == rotation
+        if (latest != geometry || !rotationMatches) {
+            if (attemptsRemaining > 1) {
+                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1)
+            }
+            check(false) { "layout or rotation kept changing while reading controls; last: $latest, rotation: ${device.displayRotation}" }
+        }
         // Taken last: the display can still be drawing the rotation when the view tree has settled.
         takeScreenshot("pad_grid_$name")
         return problems
