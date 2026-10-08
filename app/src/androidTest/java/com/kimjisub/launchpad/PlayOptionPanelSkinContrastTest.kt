@@ -151,7 +151,8 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         items.map { (label, selector, min) ->
             val node = device.wait(Until.findObject(selector), 3000L)
             assertNotNull("[$name] $label not found in the option panel", node)
-            val area = Rect(node!!.visibleBounds).apply { intersect(0, 0, shot.width, shot.height) }
+            val area = Rect(node!!.visibleBounds)
+            assertTrue("[$name] $label is outside the screenshot", area.intersect(0, 0, shot.width, shot.height))
             val pixels = IntArray(area.width() * area.height())
             shot.getPixels(pixels, 0, area.width(), area.left, area.top, area.width(), area.height())
             val background = Color(pixels.toList().groupingBy { it }.eachCount().maxBy { it.value }.key)

@@ -27,7 +27,6 @@
 	<string name="failed">မအောင်မြင်ပါ</string>
 	<string name="delete">ဖျက်မည်</string>
 	<string name="edit">ပြင်ဆင်</string>
-	<string name="update">အပ်ဒိတ်</string>
 	<string name="ignore">လျစ်လျူရှု</string>
 	<string name="apply">အသုံးပြု</string>
 	<string name="restart">ပြန်စတင်</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">အလိုအလျောက်ဖွင့်</string>
-	<string name="practiceMode">လေ့ကျင့်ခန်း</string>
 	<string name="guidePlay">လမ်းညွှန်</string>
 	<string name="stepPractice">အဆင့်</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Pro Light မုဒ်</string>
 
 	<!--Version-->
-	<string name="newVersionFound">ဗားရှင်းအသစ်တွေ့ရှိသည်။</string>
 	<string name="update_available">အပ်ဒိတ်ရနိုင်ပါသည်</string>
 
 	<string name="permissionRequire">ပရောဂျက်ဖိုင်များသိမ်းဆည်းရန် ပြင်ပသိုလှောင်ခန်းခွင့်ပြုချက်လိုအပ်သည်။\nခွင့်ပြုချက်ပေးပါ။</string>
 	<string name="permissionDenied">အက်ပ်သည် ပြင်ပသိုလှောင်ခန်းအသုံးပြုခွင့်လိုအပ်သည်။\n[ဆက်တင်] > [ခွင့်ပြုချက်] တွင် ဖွင့်ပေးပါ</string>
-	<string name="clickToAddUniPack">UniPack ထည့်ရန် နှိပ်ပါ။</string>
 	<string name="guide_download_new">pack အသစ်များ ဒေါင်းလုဒ်လုပ်ရန်</string>
 	<string name="guide_import_external">ဒေါင်းလုဒ်လုပ်ထားသော pack များ တင်သွင်းရန်</string>
 	<string name="guide_restore_packs">ပျောက်ဆုံးနေသော pack များ ပြန်လည်ရယူရန်</string>
 	<string name="doYouWantToDeleteUniPack">ဤပရောဂျက်ကို ဖျက်လိုပါသလား?</string>
-	<string name="remapDone">AutoPlay ပြန်လည်ချိတ်ဆက်ခြင်း အောင်မြင်စွာပြီးဆုံးပါပြီ။</string>
-	<string name="remapFail">AutoPlay မရှိပါ</string>
 	<string name="importComplete">Pack ကို တင်သွင်းပြီးပါပြီ!</string>
 	<string name="importPlayNow">ယခု ဖွင့်ရန်</string>
 	<string name="importFailed">တင်သွင်းခြင်း မအောင်မြင်ပါ</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Launchpad ချိတ်ဆက်နေသည်…</string>
 	<string name="midiDevicesNotDetected">MIDI စက်ပစ္စည်းများ မတွေ့ပါ</string>
 	<string name="midi_open_panel">ဖွင့်</string>
-	<string name="midi_connected_banner">MIDI ချိတ်ဆက်ပြီး: %1$s</string>
 	<string name="midi_disconnected">ချိတ်ဆက်မှုပြတ်</string>
-	<string name="signal_SpeedFirst">အမြန်နှုန်းဦးစားပေး</string>
-	<string name="signal_avoidAfterimage">ပုံရိပ်ကျန်ခြင်း ရှောင်ကြဉ်</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Pack ဒေါင်းလုဒ်ဆွဲနေစဉ် ထွက်၍မရပါ</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">အပြင်အဆင်</string>
-	<string name="themeDownload">အပြင်အဆင် ဒေါင်းလုဒ်</string>
 	<string name="requireRestart">အက်ပ် ပြန်စတင်ရန် လိုအပ်သည်။</string>
 	<string name="doYouWantToRestartApp">အက်ပ် ပြန်စတင်လိုပါသလား?</string>
 
-	<string name="theme_import">အပြင်အဆင် ထည့်သွင်း</string>
 	<string name="theme_import_success">အပြင်အဆင် အောင်မြင်စွာ ထည့်သွင်းပြီး။</string>
 	<string name="theme_import_failed">အပြင်အဆင် ထည့်သွင်းခြင်း မအောင်မြင်ပါ။</string>
 	<string name="theme_import_invalid">မမှန်ကန်သော အပြင်အဆင်ဖိုင်။</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">အချက်အလက်</string>
 	<string name="settings_storage">သိုလှောင်ခန်း</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d ခု ရွေးထား</string>
 	<string name="transfer_start">စတင်</string>
 	<string name="transfer_copying">ကူးယူနေသည်: %s</string>
-	<string name="transfer_moving">ရွှေ့နေသည်: %s</string>
 	<string name="transfer_result_transferred">လွှဲပြောင်းပြီး</string>
 	<string name="transfer_result_skipped">ကျော်လိုက်သည် (ရှိပြီးသား)</string>
 	<string name="transfer_result_failed">မအောင်မြင်ပါ</string>
 	<string name="transfer_done">ပြီးဆုံး</string>
 	<string name="transfer_no_items">UniPack မရွေးရသေးပါ</string>
-	<string name="transfer_select_target">ဦးတည်ရာ ရွေးပါ</string>
 	<string name="transfer_select_source">ရင်းမြစ် ရွေးပါ</string>
 	<string name="transfer_format_label">ဖော်မက်</string>
 	<string name="transfer_format_folder">ဖိုင်တွဲ</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">ပြန်လည်ရယူခြင်း</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

@@ -27,7 +27,6 @@
 	<string name="failed">失敗</string>
 	<string name="delete">削除</string>
 	<string name="edit">編集</string>
-	<string name="update">更新</string>
 	<string name="ignore">無視</string>
 	<string name="apply">適用</string>
 	<string name="restart">再起動</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">自動再生</string>
-	<string name="practiceMode">練習</string>
 	<string name="guidePlay">ガイド</string>
 	<string name="stepPractice">ステップ</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Proライトモード</string>
 
 	<!--Version-->
-	<string name="newVersionFound">新しいバージョンが見つかりました。</string>
 	<string name="update_available">アップデートがあります</string>
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
-	<string name="clickToAddUniPack">クリックしてUniPackを追加してください。</string>
 	<string name="guide_download_new">新しいパックをダウンロード</string>
 	<string name="guide_import_external">ダウンロードしたパックをインポート</string>
 	<string name="guide_restore_packs">消えたパックを復元</string>
 	<string name="doYouWantToDeleteUniPack">このプロジェクトを削除しますか？</string>
-	<string name="remapDone">AutoPlayのリマッピングが正常に完了しました。</string>
-	<string name="remapFail">AutoPlayが存在しません</string>
 	<string name="importComplete">パックをインポートしました！</string>
 	<string name="importPlayNow">今すぐ演奏</string>
 	<string name="importFailed">インポートに失敗しました</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Launchpadに接続中…</string>
 	<string name="midiDevicesNotDetected">MIDIデバイスが検出されません</string>
 	<string name="midi_open_panel">開く</string>
-	<string name="midi_connected_banner">MIDI接続: %1$s</string>
 	<string name="midi_disconnected">切断済み</string>
-	<string name="signal_SpeedFirst">速度優先</string>
-	<string name="signal_avoidAfterimage">残像を防止</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">パックのダウンロード中は終了できません</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">テーマ</string>
-	<string name="themeDownload">テーマをダウンロード</string>
 	<string name="requireRestart">アプリの再起動が必要です。</string>
 	<string name="doYouWantToRestartApp">アプリを再起動しますか？</string>
 
-	<string name="theme_import">テーマをインポート</string>
 	<string name="theme_import_success">テーマのインポートに成功しました。</string>
 	<string name="theme_import_failed">テーマのインポートに失敗しました。</string>
 	<string name="theme_import_invalid">無効なテーマファイルです。</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">情報</string>
 	<string name="settings_storage">ストレージ</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d件選択中</string>
 	<string name="transfer_start">開始</string>
 	<string name="transfer_copying">コピー中: %s</string>
-	<string name="transfer_moving">移動中: %s</string>
 	<string name="transfer_result_transferred">転送済み</string>
 	<string name="transfer_result_skipped">スキップ（既に存在）</string>
 	<string name="transfer_result_failed">失敗</string>
 	<string name="transfer_done">完了</string>
 	<string name="transfer_no_items">UniPackが選択されていません</string>
-	<string name="transfer_select_target">転送先を選択してください</string>
 	<string name="transfer_select_source">転送元を選択してください</string>
 	<string name="transfer_format_label">フォーマット</string>
 	<string name="transfer_format_folder">フォルダ</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">復元</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

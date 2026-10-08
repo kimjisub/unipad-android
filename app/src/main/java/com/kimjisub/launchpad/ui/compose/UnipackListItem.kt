@@ -59,6 +59,7 @@ fun UnipackListItem(
 	subtitle: String,
 	hasLed: Boolean,
 	hasAutoPlay: Boolean,
+	modifier: Modifier = Modifier,
 	indicatorFontSize: TextUnit = 9.sp,
 	indicatorOnColor: Color = Green,
 	indicatorOffColor: Color = Pink,
@@ -70,7 +71,6 @@ fun UnipackListItem(
 	onFlagClick: () -> Unit = {},
 	flagContent: @Composable () -> Unit = {},
 	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
 ) {
 	Box(
 		modifier = modifier

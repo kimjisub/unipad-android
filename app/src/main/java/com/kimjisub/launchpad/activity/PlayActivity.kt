@@ -94,10 +94,6 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.LayoutModifier
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -1061,15 +1057,6 @@ class PlayActivity : BaseActivity() {
 					uncheckedBorderColor = tint.copy(alpha = 0.2f),
 				),
 			)
-		}
-	}
-
-	private fun scaleLayoutModifier(scale: Float): Modifier = object : LayoutModifier {
-		override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
-			val placeable = measurable.measure(constraints)
-			return layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
-				placeable.place(0, 0)
-			}
 		}
 	}
 

@@ -27,7 +27,6 @@
 	<string name="failed">Falhou</string>
 	<string name="delete">Excluir</string>
 	<string name="edit">Editar</string>
-	<string name="update">Atualizar</string>
 	<string name="ignore">Ignorar</string>
 	<string name="apply">Aplicar</string>
 	<string name="restart">Reiniciar</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Reprodução Automática</string>
-	<string name="practiceMode">Prática</string>
 	<string name="guidePlay">Guia</string>
 	<string name="stepPractice">Passo</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Modo Pro Light</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Nova versão detectada.</string>
 	<string name="update_available">Atualização disponível</string>
 
 	<string name="permissionRequire">É necessário acesso ao armazenamento externo para salvar arquivos do projeto.\nObtenha permissão para este privilégio.</string>
 	<string name="permissionDenied">O app requer acesso ao armazenamento externo.\nPor favor ative as permissões em [Configurações] > [Permissões]</string>
-	<string name="clickToAddUniPack">Clique para adicionar UniPacks.</string>
 	<string name="guide_download_new">Baixar novos packs</string>
 	<string name="guide_import_external">Importar packs baixados</string>
 	<string name="guide_restore_packs">Recuperar packs perdidos</string>
 	<string name="doYouWantToDeleteUniPack">Deseja excluir este projeto?</string>
-	<string name="remapDone">O remapeamento do AutoPlay foi concluído com sucesso.</string>
-	<string name="remapFail">AutoPlay não existe</string>
 	<string name="importComplete">Pack importado!</string>
 	<string name="importPlayNow">Tocar agora</string>
 	<string name="importFailed">Falha ao importar</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Conectando launchpad…</string>
 	<string name="midiDevicesNotDetected">Dispositivos MIDI Não Detectados</string>
 	<string name="midi_open_panel">Abrir</string>
-	<string name="midi_connected_banner">MIDI conectado: %1$s</string>
 	<string name="midi_disconnected">Desconectado</string>
-	<string name="signal_SpeedFirst">Velocidade primeiro</string>
-	<string name="signal_avoidAfterimage">Evitar imagem residual</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Não é possível sair durante o download do pack</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">Tema</string>
-	<string name="themeDownload">Baixar Temas</string>
 	<string name="requireRestart">Requer reiniciar o app.</string>
 	<string name="doYouWantToRestartApp">Deseja reiniciar o app?</string>
 
-	<string name="theme_import">Importar Tema</string>
 	<string name="theme_import_success">Tema importado com sucesso.</string>
 	<string name="theme_import_failed">Falha ao importar tema.</string>
 	<string name="theme_import_invalid">Arquivo de tema inválido.</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Informações</string>
 	<string name="settings_storage">Armazenamento</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d selecionados</string>
 	<string name="transfer_start">Iniciar</string>
 	<string name="transfer_copying">Copiando: %s</string>
-	<string name="transfer_moving">Movendo: %s</string>
 	<string name="transfer_result_transferred">Transferido</string>
 	<string name="transfer_result_skipped">Ignorado (já existe)</string>
 	<string name="transfer_result_failed">Falhou</string>
 	<string name="transfer_done">Concluído</string>
 	<string name="transfer_no_items">Nenhum UniPack selecionado</string>
-	<string name="transfer_select_target">Selecione um destino</string>
 	<string name="transfer_select_source">Selecione uma origem</string>
 	<string name="transfer_format_label">Formato</string>
 	<string name="transfer_format_folder">Pasta</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">Restaurar</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

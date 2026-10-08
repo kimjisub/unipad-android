@@ -110,11 +110,15 @@ android {
 	}
 	namespace = 'com.kimjisub.launchpad'
 
-	// Disable lint check that crashes with Kotlin 2.x (known bug in lifecycle-lint)
 	lint {
+		// NullSafeMutableLiveData crashes with Kotlin 2.x (known bug in lifecycle-lint)
 		disable += ['NullSafeMutableLiveData', 'IconXmlAndPng', 'QueryAllPackagesPermission']
+		// "A newer version is available" checks change result as releases come out, not as the code changes
+		disable += ['AndroidGradlePluginVersion', 'GradleDependency', 'NewerVersionAvailable']
 		// Community-translated strings arrive after features ship; missing ones fall back to English (#57)
-		warning += ['MissingTranslation']
+		informational += ['MissingTranslation']
+		warningsAsErrors = true
+		lintConfig = file('lint.xml')
 	}
 
 	// Test reporting configuration

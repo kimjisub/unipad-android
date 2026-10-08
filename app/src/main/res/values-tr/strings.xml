@@ -27,7 +27,6 @@
 	<string name="failed">Başarısız</string>
 	<string name="delete">Sil</string>
 	<string name="edit">Düzenle</string>
-	<string name="update">Güncelle</string>
 	<string name="ignore">Yoksay</string>
 	<string name="apply">Uygula</string>
 	<string name="restart">Yeniden Başlat</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Otomatik Oynatma</string>
-	<string name="practiceMode">Alıştırma</string>
 	<string name="guidePlay">Rehber</string>
 	<string name="stepPractice">Adım</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Pro Işık Modu</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Yeni sürüm tespit edildi.</string>
 	<string name="update_available">Güncelleme mevcut</string>
 
 	<string name="permissionRequire">Proje dosyalarını kaydetmek için harici depolama erişimi gereklidir.\nBu izni verin.</string>
 	<string name="permissionDenied">Uygulama harici depolama erişimi gerektiriyor.\nLütfen [Ayarlar] > [İzinler] bölümünden izinleri açın</string>
-	<string name="clickToAddUniPack">UniPack eklemek için tıklayın.</string>
 	<string name="guide_download_new">Yeni paketler indir</string>
 	<string name="guide_import_external">İndirilen paketleri içe aktar</string>
 	<string name="guide_restore_packs">Kayıp paketleri kurtar</string>
 	<string name="doYouWantToDeleteUniPack">Bu projeyi silmek istiyor musunuz?</string>
-	<string name="remapDone">AutoPlay yeniden eşlemesi başarıyla tamamlandı.</string>
-	<string name="remapFail">AutoPlay mevcut değil</string>
 	<string name="importComplete">Paket içe aktarıldı!</string>
 	<string name="importPlayNow">Şimdi çal</string>
 	<string name="importFailed">İçe aktarma başarısız</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Launchpad bağlanıyor…</string>
 	<string name="midiDevicesNotDetected">MIDI Cihazları Algılanmadı</string>
 	<string name="midi_open_panel">Aç</string>
-	<string name="midi_connected_banner">MIDI bağlandı: %1$s</string>
 	<string name="midi_disconnected">Bağlantı kesildi</string>
-	<string name="signal_SpeedFirst">Önce hız</string>
-	<string name="signal_avoidAfterimage">Gölge görüntüden kaçın</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Pak indirilirken çıkılamaz</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">Tema</string>
-	<string name="themeDownload">Tema İndir</string>
 	<string name="requireRestart">Uygulama yeniden başlatılmalı.</string>
 	<string name="doYouWantToRestartApp">Uygulamayı yeniden başlatmak istiyor musunuz?</string>
 
-	<string name="theme_import">Tema İçe Aktar</string>
 	<string name="theme_import_success">Tema başarıyla içe aktarıldı.</string>
 	<string name="theme_import_failed">Tema içe aktarılamadı.</string>
 	<string name="theme_import_invalid">Geçersiz tema dosyası.</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Bilgi</string>
 	<string name="settings_storage">Depolama</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d seçili</string>
 	<string name="transfer_start">Başlat</string>
 	<string name="transfer_copying">Kopyalanıyor: %s</string>
-	<string name="transfer_moving">Taşınıyor: %s</string>
 	<string name="transfer_result_transferred">Aktarıldı</string>
 	<string name="transfer_result_skipped">Atlandı (zaten mevcut)</string>
 	<string name="transfer_result_failed">Başarısız</string>
 	<string name="transfer_done">Tamamlandı</string>
 	<string name="transfer_no_items">UniPack seçilmedi</string>
-	<string name="transfer_select_target">Hedef seçin</string>
 	<string name="transfer_select_source">Kaynak seçin</string>
 	<string name="transfer_format_label">Biçim</string>
 	<string name="transfer_format_folder">Klasör</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">Geri Yükleme</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
