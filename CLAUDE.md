@@ -313,7 +313,7 @@ GUIDE (autoplay hints) > PRESSED (user touch) > LED (animation) > CHAIN (selecte
 The project was fully modernized with the following changes:
 
 1. **Gradle 8.0 → 9.7.1** (2026-09: 9.3.1 → 9.7.1)
-2. **AGP 8.2.2 → 9.4.0**: Built-in Kotlin support; compileSdk/targetSdk 37, minSdk 24, NDK 29.0.14206865 (2026-09)
+2. **AGP 8.2.2 → 9.4.1**: Built-in Kotlin support; compileSdk/targetSdk 37, minSdk 24, NDK 29.0.14206865 (2026-09)
 3. **Kotlin 1.9.0-Beta → 2.4.10**: Unified Kotlin version; `kotlin-android` plugin removed (AGP 9.0 built-in)
 4. **KSP 2.1.21-2.0.1 → 2.3.11**: New standalone versioning (no longer tied to Kotlin version)
 5. **Java target 1.8 → 21**: sourceCompatibility, targetCompatibility, and jvmTarget all set to 21 (JDK toolchain 21)
@@ -348,7 +348,7 @@ Release builds use multiple ProGuard configs:
 ### Dependencies
 - **Kotlin 2.4.10** with coroutines 1.11.0 and serialization 1.11.0
 - **KSP 2.3.11**: Annotation processing for Room (standalone versioning)
-- **AndroidX**: AppCompat 1.8.0, ConstraintLayout 2.2.2, Core-KTX 1.19.0, Lifecycle 2.11.0, Activity-Compose 1.13.0, Room 2.8.4
+- **AndroidX**: AppCompat 1.8.0, ConstraintLayout 2.2.2, Core-KTX 1.19.1, Lifecycle 2.11.0, Activity-Compose 1.13.0, Room 2.8.5
 - **Koin 4.2.2**: Dependency injection
 - **Firebase BOM 34.18.0**: Firestore, Realtime Database, Messaging, Analytics, Crashlytics, Performance, Remote Config
 - **Compose BOM 2026.08.00**: Material3, UI, Runtime
@@ -356,7 +356,7 @@ Release builds use multiple ProGuard configs:
 - **Material 1.14.0**: Material Design components
 - **Splitties 3.0.0**: Android utilities
 - **zip4j 2.11.6**: UniPack archive handling
-- **Oboe 1.10.0**: low-latency audio (`app/src/main/cpp`), play-services-oss-licenses 17.5.1 (needs minSdk 24)
+- **Oboe 1.10.0**: low-latency audio (`app/src/main/cpp`), play-services-oss-licenses 17.5.2 (needs minSdk 24)
 
 ### Key Files
 - `app/build.gradle`: Build configuration, requires `keystore.properties` for release

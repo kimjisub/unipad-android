@@ -34,10 +34,12 @@ private val TextSecondary = Color(0xFF8A96A8)
 private val Accent = Color(0xFF4283E6)
 private val DividerColor = Color(0xFF2A3648)
 
-// Built on BasicTextField rather than Material3 OutlinedTextField: play-services-oss-licenses
-// 17.5.1 resolves material3 to 1.5.0-alpha17, whose text field styles do not match
-// compose-foundation 1.12.0: release builds crash with "LayoutNode should be attached to an
-// owner" and debug builds with AbstractMethodError while the field attaches.
+// Built on BasicTextField rather than Material3 OutlinedTextField. play-services-oss-licenses
+// 17.5.1 once resolved material3 to 1.5.0-alpha17, whose text field styles do not match
+// compose-foundation 1.12.0: release builds crashed with "LayoutNode should be attached to an
+// owner" and debug builds with AbstractMethodError while the field attached. 17.5.2 resolves
+// the stable 1.4.0 again, but any dependency that lifts material3 to such a prerelease brings
+// the crash back.
 @Composable
 fun SearchField(
 	query: String,
