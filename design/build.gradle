@@ -21,6 +21,11 @@ android {
 			minifyEnabled = false
 		}
 	}
+	lint {
+		disable += ['AndroidGradlePluginVersion', 'GradleDependency', 'NewerVersionAvailable']
+		warningsAsErrors = true
+	}
+
 	buildFeatures {
 		viewBinding = true
 	}

@@ -27,7 +27,6 @@
 	<string name="failed">Fehlgeschlagen</string>
 	<string name="delete">Löschen</string>
 	<string name="edit">Bearbeiten</string>
-	<string name="update">Aktualisieren</string>
 	<string name="ignore">Ignorieren</string>
 	<string name="apply">Anwenden</string>
 	<string name="restart">Neustart</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Automatische Wiedergabe</string>
-	<string name="practiceMode">Übung</string>
 	<string name="guidePlay">Anleitung</string>
 	<string name="stepPractice">Schritt</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Pro-Licht-Modus</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Neue Version erkannt.</string>
 	<string name="update_available">Aktualisierung verfügbar</string>
 
 	<string name="permissionRequire">Zugriff auf externen Speicher wird zum Speichern von Projektdateien benötigt.\nErteilen Sie die Berechtigung.</string>
 	<string name="permissionDenied">Die App benötigt Zugriff auf den externen Speicher.\nBitte aktivieren Sie die Berechtigungen unter [Einstellungen] > [Berechtigungen]</string>
-	<string name="clickToAddUniPack">Klicken Sie, um UniPacks hinzuzufügen.</string>
 	<string name="guide_download_new">Neue Packs herunterladen</string>
 	<string name="guide_import_external">Heruntergeladene Packs importieren</string>
 	<string name="guide_restore_packs">Fehlende Packs wiederherstellen</string>
 	<string name="doYouWantToDeleteUniPack">Möchten Sie dieses Projekt löschen?</string>
-	<string name="remapDone">AutoPlay-Neuzuordnung wurde erfolgreich abgeschlossen.</string>
-	<string name="remapFail">AutoPlay existiert nicht</string>
 	<string name="importComplete">Pack importiert!</string>
 	<string name="importPlayNow">Jetzt spielen</string>
 	<string name="importFailed">Import fehlgeschlagen</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Launchpad wird verbunden…</string>
 	<string name="midiDevicesNotDetected">Keine MIDI-Geräte erkannt</string>
 	<string name="midi_open_panel">Öffnen</string>
-	<string name="midi_connected_banner">MIDI verbunden: %1$s</string>
 	<string name="midi_disconnected">Getrennt</string>
-	<string name="signal_SpeedFirst">Geschwindigkeit zuerst</string>
-	<string name="signal_avoidAfterimage">Nachbild vermeiden</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Kann während des Downloads nicht beendet werden</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">Design</string>
-	<string name="themeDownload">Designs herunterladen</string>
 	<string name="requireRestart">App-Neustart erforderlich.</string>
 	<string name="doYouWantToRestartApp">Möchten Sie die App neu starten?</string>
 
-	<string name="theme_import">Design importieren</string>
 	<string name="theme_import_success">Design erfolgreich importiert.</string>
 	<string name="theme_import_failed">Design-Import fehlgeschlagen.</string>
 	<string name="theme_import_invalid">Ungültige Designdatei.</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Informationen</string>
 	<string name="settings_storage">Speicher</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d ausgewählt</string>
 	<string name="transfer_start">Starten</string>
 	<string name="transfer_copying">Kopiere: %s</string>
-	<string name="transfer_moving">Verschiebe: %s</string>
 	<string name="transfer_result_transferred">Übertragen</string>
 	<string name="transfer_result_skipped">Übersprungen (bereits vorhanden)</string>
 	<string name="transfer_result_failed">Fehlgeschlagen</string>
 	<string name="transfer_done">Fertig</string>
 	<string name="transfer_no_items">Keine UniPacks ausgewählt</string>
-	<string name="transfer_select_target">Ziel auswählen</string>
 	<string name="transfer_select_source">Quelle auswählen</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Ordner</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">Wiederherstellung</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

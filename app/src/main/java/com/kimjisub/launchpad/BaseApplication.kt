@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.StrictMode
+import androidx.core.content.edit
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
@@ -141,7 +142,7 @@ class BaseApplication : Application() {
 
 			for (name in bundledNames) {
 				if (selectedTheme == "zip://$name") {
-					pref.edit().putString(KEY_SELECTED_THEME, "asset://$name").apply()
+					pref.edit { putString(KEY_SELECTED_THEME, "asset://$name") }
 					Log.log("Migrated theme preference: zip://$name → asset://$name")
 					break
 				}

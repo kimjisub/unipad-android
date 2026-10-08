@@ -2,10 +2,10 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
 import com.kimjisub.launchpad.R
 import kotlinx.serialization.json.Json
 
@@ -87,7 +87,7 @@ class AssetThemeResources(
 			val inputStream = context.assets.open("$assetPath/$name.png")
 			val bitmap = BitmapFactory.decodeStream(inputStream)
 			inputStream.close()
-			if (bitmap != null) BitmapDrawable(context.resources, bitmap) else null
+			if (bitmap != null) bitmap.toDrawable(context.resources) else null
 		} catch (_: Exception) {
 			null
 		}
@@ -104,7 +104,7 @@ class AssetThemeResources(
 	private fun parseColor(hex: String?): Int? {
 		if (hex == null) return null
 		return try {
-			Color.parseColor(hex)
+			hex.toColorInt()
 		} catch (_: IllegalArgumentException) {
 			null
 		}

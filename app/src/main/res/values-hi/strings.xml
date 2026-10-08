@@ -27,7 +27,6 @@
 	<string name="failed">विफल</string>
 	<string name="delete">हटाएं</string>
 	<string name="edit">संपादित करें</string>
-	<string name="update">अपडेट</string>
 	<string name="ignore">अनदेखा करें</string>
 	<string name="apply">लागू करें</string>
 	<string name="restart">पुनः आरंभ</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">ऑटोप्ले</string>
-	<string name="practiceMode">अभ्यास</string>
 	<string name="guidePlay">गाइड</string>
 	<string name="stepPractice">चरण</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">प्रो लाइट मोड</string>
 
 	<!--Version-->
-	<string name="newVersionFound">नया संस्करण पाया गया।</string>
 	<string name="update_available">अपडेट उपलब्ध</string>
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
-	<string name="clickToAddUniPack">UniPack जोड़ने के लिए क्लिक करें।</string>
 	<string name="guide_download_new">नए पैक डाउनलोड करें</string>
 	<string name="guide_import_external">डाउनलोड किए पैक आयात करें</string>
 	<string name="guide_restore_packs">गायब पैक पुनर्प्राप्त करें</string>
 	<string name="doYouWantToDeleteUniPack">क्या आप इस प्रोजेक्ट को हटाना चाहते हैं?</string>
-	<string name="remapDone">AutoPlay रीमैपिंग सफलतापूर्वक पूर्ण हुई।</string>
-	<string name="remapFail">AutoPlay मौजूद नहीं है</string>
 	<string name="importComplete">पैक आयात हो गया!</string>
 	<string name="importPlayNow">अभी बजाएँ</string>
 	<string name="importFailed">आयात विफल</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Launchpad कनेक्ट हो रहा है…</string>
 	<string name="midiDevicesNotDetected">MIDI डिवाइस नहीं मिले</string>
 	<string name="midi_open_panel">खोलें</string>
-	<string name="midi_connected_banner">MIDI कनेक्ट हुआ: %1$s</string>
 	<string name="midi_disconnected">डिस्कनेक्ट</string>
-	<string name="signal_SpeedFirst">गति पहले</string>
-	<string name="signal_avoidAfterimage">अवशिष्ट छवि से बचें</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">पैक डाउनलोड के दौरान बाहर नहीं निकल सकते</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">थीम</string>
-	<string name="themeDownload">थीम डाउनलोड करें</string>
 	<string name="requireRestart">ऐप पुनः आरंभ आवश्यक है।</string>
 	<string name="doYouWantToRestartApp">क्या आप ऐप पुनः आरंभ करना चाहते हैं?</string>
 
-	<string name="theme_import">थीम आयात करें</string>
 	<string name="theme_import_success">थीम सफलतापूर्वक आयात हुई।</string>
 	<string name="theme_import_failed">थीम आयात विफल।</string>
 	<string name="theme_import_invalid">अमान्य थीम फ़ाइल।</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">जानकारी</string>
 	<string name="settings_storage">स्टोरेज</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d चयनित</string>
 	<string name="transfer_start">शुरू</string>
 	<string name="transfer_copying">कॉपी हो रहा है: %s</string>
-	<string name="transfer_moving">स्थानांतरित हो रहा है: %s</string>
 	<string name="transfer_result_transferred">स्थानांतरित</string>
 	<string name="transfer_result_skipped">छोड़ा गया (पहले से मौजूद)</string>
 	<string name="transfer_result_failed">विफल</string>
 	<string name="transfer_done">पूर्ण</string>
 	<string name="transfer_no_items">कोई UniPack चयनित नहीं</string>
-	<string name="transfer_select_target">गंतव्य चुनें</string>
 	<string name="transfer_select_source">स्रोत चुनें</string>
 	<string name="transfer_format_label">फ़ॉर्मेट</string>
 	<string name="transfer_format_folder">फ़ोल्डर</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">पुनर्स्थापित</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

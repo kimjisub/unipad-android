@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 	<string name="languageCode">en</string>
 	<string name="language">English</string>
 	<string name="translated_by">Translated by Kimjisub</string>
@@ -27,7 +27,6 @@
 	<string name="failed">Failed</string>
 	<string name="delete">Delete</string>
 	<string name="edit">Edit</string>
-	<string name="update">Update</string>
 	<string name="ignore">Ignore</string>
 	<string name="apply">Apply</string>
 	<string name="restart">Restart</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="practiceMode">Practice</string>
 	<string name="guidePlay">Guide</string>
 	<string name="stepPractice">Step</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,12 +96,10 @@
 	<string name="proLightMode">Pro Light Mode</string>
 
 	<!--Version-->
-	<string name="newVersionFound">New version detected.</string>
 	<string name="update_available">Update available</string>
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="clickToAddUniPack">Click to add UniPacks.</string>
 	<string name="guide_download_new">Download new packs</string>
 	<string name="guide_import_external">Import downloaded packs</string>
 	<string name="guide_restore_packs">Recover missing packs</string>
@@ -114,8 +110,6 @@
 	<string name="guide_empty_link">Getting started guide</string>
 	<string name="unipack_play">Play</string>
 	<string name="doYouWantToDeleteUniPack">Do you want to delete this project?</string>
-	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
-	<string name="remapFail">AutoPlay does not exist</string>
 	<string name="importComplete">Pack imported!</string>
 	<string name="importPlayNow">Play now</string>
 	<string name="importFailed">Import failed</string>
@@ -131,10 +125,7 @@
 	<string name="launchpadConnecting">Connecting launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
 	<string name="midi_open_panel">Open</string>
-	<string name="midi_connected_banner">MIDI connected: %1$s</string>
 	<string name="midi_disconnected">Disconnected</string>
-	<string name="signal_SpeedFirst">Speed first</string>
-	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 	<string name="midi_lp_s" translatable="false">Launchpad S</string>
 	<string name="midi_lp_mk2" translatable="false">Launchpad MK2</string>
 	<string name="midi_lp_pro" translatable="false">Launchpad PRO</string>
@@ -152,11 +143,9 @@
 
 	<!--Theme-->
 	<string name="theme">Theme</string>
-	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
 	<string name="doYouWantToRestartApp">Do you want to restart the app?</string>
 
-	<string name="theme_import">Import Theme</string>
 	<string name="theme_import_success">Theme imported successfully.</string>
 	<string name="theme_import_failed">Failed to import theme.</string>
 	<string name="theme_import_invalid">Invalid theme file.</string>
@@ -173,7 +162,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_device">Device</string>
 	<string name="settings_play">Play</string>
@@ -259,16 +247,15 @@
 	<string name="transfer_mode_move">Move</string>
 	<string name="transfer_select_all">Select All</string>
 	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
+	<!-- "1 selected" and "5 selected" read the same in English -->
+	<string name="transfer_selected_count" tools:ignore="PluralsCandidate">%d selected</string>
 	<string name="transfer_start">Start</string>
 	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
 	<string name="transfer_result_transferred">Transferred</string>
 	<string name="transfer_result_skipped">Skipped (already exist)</string>
 	<string name="transfer_result_failed">Failed</string>
 	<string name="transfer_done">Done</string>
 	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Folder</string>
@@ -307,6 +294,5 @@
 	<string name="backup_recovery_later">Later</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 </resources>

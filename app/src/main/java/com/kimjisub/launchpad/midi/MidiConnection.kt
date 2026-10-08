@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import androidx.core.content.edit
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
@@ -335,7 +336,7 @@ object MidiConnection {
 		set(value) {
 			dualPadModeEnabledFallback = value
 			appContext?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-				?.edit()?.putBoolean(KEY_DUAL_PAD_MODE, value)?.apply()
+				?.edit { putBoolean(KEY_DUAL_PAD_MODE, value) }
 		}
 
 	// `driver` represents the PRIMARY (first-connected) device's driver. PlayActivity /

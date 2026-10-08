@@ -1029,7 +1029,6 @@ class PlayActivityViewModel(
 	}
 
 	override fun onCleared() {
-		super.onCleared()
 		playSession.ended()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()
