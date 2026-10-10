@@ -1,14 +1,16 @@
 package com.kimjisub.launchpad.guard
 
 /**
- * Finds uses of the Material3 text-field containers that crash on this app's dependency set.
+ * Finds uses of the Material3 text-field containers that crashed on an earlier dependency set.
  *
- * play-services-oss-licenses 17.5.1 lifts material3 from the BOM's 1.4.0 to 1.5.0-alpha17,
+ * play-services-oss-licenses 17.5.1 lifted material3 from the BOM's 1.4.0 to 1.5.0-alpha17,
  * which was built against compose-foundation 1.11.0-beta02 while the app runs 1.12.0. The
  * alpha's TextFieldDefaults/OutlinedTextFieldDefaults.Container style lambdas only implement
  * the old `applyStyle` signature, so composing any API below throws while the field attaches
  * (ClassCastException in R8 release builds, AbstractMethodError in debug). This is what closed
  * Settings → Storage → Transfer in 4.1.6/4.1.7 before its search box moved to BasicTextField.
+ * play-services-oss-licenses 17.5.2 resolves the stable 1.4.0 again; the scan stays as a guard
+ * for when a dependency lifts material3 to a prerelease built against an older foundation.
  *
  * The scan only reports direct references to the names listed in [BANNED_FUNCTIONS] and
  * [BANNED_MEMBERS]; it does not follow call paths. Only the TextField/OutlinedTextField crash
