@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Kabul Et</string>
@@ -205,7 +204,6 @@
 	<string name="workspace_documents_android10">Belgeler (Android 10)</string>
 	<string name="workspace_app_storage">Uygulama Deposu (Önerilen)</string>
 	<string name="workspace_internal_storage">Dahili Depolama</string>
-	<string name="workspace_internal_sd_card">Dahili SD Kart</string>
 	<string name="workspace_external_sd_card_format">Harici SD Kart %d</string>
 	<string name="workspace_unipack_count">%d UniPack</string>
 

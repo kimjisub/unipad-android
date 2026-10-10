@@ -5,7 +5,6 @@
 	<string name="translated_by">Translated by 203Null</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">接受</string>
@@ -206,7 +205,6 @@
 	<string name="workspace_documents_android10">文档 (Android 10)</string>
 	<string name="workspace_app_storage">应用存储 (推荐)</string>
 	<string name="workspace_internal_storage">内部存储</string>
-	<string name="workspace_internal_sd_card">内置 SD 卡</string>
 	<string name="workspace_external_sd_card_format">外置 SD 卡 %d</string>
 	<string name="workspace_unipack_count">%d 个 UniPack</string>
 
