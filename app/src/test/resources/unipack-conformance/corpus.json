@@ -1,7 +1,7 @@
 {
   "schema": "unipad-conformance/1",
   "generatedBy": "meta/unipack-conformance/build-corpus.mjs",
-  "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence). No pack, song or third-party audio is included.",
+  "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence), and one of them encoded as MP3. No pack, song or third-party audio is included.",
   "assets": {
     "tone-440": {
       "generator": "10 ms sine, 440 Hz, 8 kHz mono u8 PCM WAV",
@@ -20,6 +20,12 @@
       "bytes": 124,
       "sha256": "48f9b734687b6c7b57cbcba2b5e799706c85c770d181de055b728abb2c9ca7e6",
       "base64": "UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=="
+    },
+    "tone-440-mp3": {
+      "generator": "tone-440 (sha256 c92bf9a21f15a6d98067e19814d8c12724b8eeae3b5fda492b82391e32b11f0d) encoded by LAME 3.100: lame --silent --resample 44.1 -b 64 --cbr --noreplaygain; MPEG-1 Layer III, 44.1 kHz mono, stored bytes",
+      "bytes": 625,
+      "sha256": "3feed8a87e71a319e76ffb515dff4aed66185fc93028634a89e717b80c5fd013",
+      "base64": "//tQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA//////////////////////////////////////////////////////////////////8AAAA5TEFNRTMuMTAwAaUAAAAAAAAAABRAJAUHIgAAQAAAAnGfY49jAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UMQAAAm4Q0R1lIABfI8pgzmAAQACnKDhfN1s1TULwQccFh6cHpYbxQQWkOXLLxpFqDsTcuHwwKAoCAICgUIGJzRo0bYfqBA4sEBgIAgCYPg+D4PghwH4Y/3f/p/y5/hjpMOkAw7zi3BjGxGLRgYMKJuAllzjlgSL9mZDmYlFgGCxbJaFURBsHBxpLDVmLDmaKARhsecp5013QCDBcQkJ2qGMv62ixIy64gDAZbVDyah6mxxht+8Jf6YqqzfxrpoUEBzps+ZNw1mxpGU1ZPn/+1LEBwPJ+HkkHYeACAAANIAAAAS0WjFM8ZOSS/KwQFAYxAIRJSRApgVQ4mk/SCj0nVO9VqtVqtQ1Q3TpomiqWotwhQhypN4eouTk2p1DVbdhQ1WxcDZMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg=="
     }
   },
   "palette": {
@@ -10561,6 +10567,830 @@
               0
             ]
           ],
+          []
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "RP-001",
+      "area": "realPack",
+      "title": "an 8 x 8 pack maps sounds, lights and autoPlay to its first and last pad",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "Example: buttonX=8, buttonY=8"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "x 1 ~ buttonX, y 1 ~ buttonY"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "x 1 ~ buttonX, y 1 ~ buttonY; loop default 1"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/auto-play.mdx",
+          "note": "Commands: on, off, delay"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=8\nbuttonY=8\nchain=1\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n1 8 8 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 1 1 FF0000"
+        },
+        {
+          "path": "keyLed/1 8 8",
+          "text": "o 8 8 00FF00"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\non 8 8\ndelay 10\noff 8 8"
+        }
+      ],
+      "fingerprint": "17d2dab94c187f5b1624796ee7385fd393d72f00a44845e006ab778df218417e",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 8,
+          "buttonY": 8,
+          "chain": 1,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 7,
+            "y": 7,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ffff0000",
+                    4
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 7,
+            "y": 7,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    7,
+                    7,
+                    "ff00ff00",
+                    4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            "on",
+            7,
+            7,
+            0,
+            0
+          ],
+          [
+            "delay",
+            10
+          ],
+          [
+            "off",
+            7,
+            7,
+            0
+          ]
+        ],
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "RP-002",
+      "area": "realPack",
+      "title": "two keyLED files for one pad whose names have a fifth part",
+      "question": "key-led.mdx names a file \"chain x y [loop]\" and gives a fifth part no meaning, yet packs made by other tools name several files for one pad this way. Whether such a file is read, and in which order the two queue, is not stated (KL-004 states the order only for names that are mappings).",
+      "expectation": "undetermined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 a",
+          "text": "o 1 1 FF0000"
+        },
+        {
+          "path": "keyLed/1 1 1 1 b",
+          "text": "o 1 1 00FF00"
+        }
+      ],
+      "fingerprint": "f9923fb8e94a4440ff0ab5dfa5909382f8e16a31cd1860c5b0d5c293272a6a71"
+    },
+    {
+      "layer": "parse",
+      "id": "RP-003",
+      "area": "realPack",
+      "title": "an MP3 sound keeps its file, coordinate, loop and wormhole",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "Supported Formats: MP3 Supported"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "chain x y soundFile [loop] [wormhole]; Loop Values"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 2 3 a.mp3 2 2"
+        },
+        {
+          "path": "sounds/a.mp3",
+          "asset": "tone-440-mp3"
+        }
+      ],
+      "fingerprint": "f483154ce965161b9ea950f41b0463a2a413bc7565633286940cc4a73d8ded49",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 1,
+            "y": 2,
+            "queue": [
+              {
+                "file": "a.mp3",
+                "loop": 1,
+                "wormhole": 1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "RP-004",
+      "area": "realPack",
+      "title": "squareButton=false on a 4 x 3 pack",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "Properties table: squareButton boolean, default false"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=false"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "977dff0954c42b2b83e3d8094280013af30647eee61faaa160bcd2fed0643c21",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": false
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "id": "RUN-RP-001",
+      "layer": "run",
+      "area": "realPack",
+      "title": "on an 8 x 8 pack the last pad plays its sound and lights",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 7,
+          "y": 7
+        },
+        {
+          "do": "advance",
+          "ms": 50
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 7,
+          "y": 7
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 200
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "x 1 ~ buttonX, y 1 ~ buttonY"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "x 1 ~ buttonX, y 1 ~ buttonY; Full Example: on, delay, off"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=8\nbuttonY=8\nchain=1\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 8 8 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "keyLed/1 8 8",
+          "text": "o 8 8 FF0000\nd 100\nf 8 8"
+        }
+      ],
+      "fingerprint": "a5770f77f69c9956c15872d21a29783285d2f2da03b68b67e74d07930acba40b",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              7,
+              7,
+              "a.wav",
+              0
+            ],
+            [
+              "ledOn",
+              7,
+              7,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              7,
+              7
+            ]
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "id": "RUN-RP-002",
+      "layer": "run",
+      "area": "realPack",
+      "title": "pressing a pad mapped to an MP3 starts that sound",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "Supported Formats: MP3 Supported"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "chain x y soundFile"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.mp3"
+        },
+        {
+          "path": "sounds/a.mp3",
+          "asset": "tone-440-mp3"
+        }
+      ],
+      "fingerprint": "20550b3bec058700efdacb69afaa7dd8f1ca2b2d2ef924f9fcc384cdb89e4893",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.mp3",
+              0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-RP-003",
+      "layer": "run",
+      "area": "realPack",
+      "title": "autoPlay pressing a pad whose light repeats twice",
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 240
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 400
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "loop: repeat count; \"1 2 3 2\" repeats 2 times"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/auto-play.mdx",
+          "note": "Events are executed sequentially from top to bottom; delay waits in milliseconds"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "unobserved": {
+        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
+      },
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "keyLed/1 1 1 2",
+          "text": "o 1 1 FF0000\nd 40\nf 1 1\nd 40"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\ndelay 300\noff 1 1"
+        }
+      ],
+      "fingerprint": "46191990335699dba1f46911c6b42b81dbbf4f5bbc896b992bd4be033b027799",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              "autoOff",
+              0,
+              0
+            ]
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "id": "RUN-RP-004",
+      "layer": "run",
+      "area": "realPack",
+      "title": "autoPlay releasing a pad whose light loops endlessly, then leaving the screen",
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 90
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 75
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "stop"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 400
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "loop 0 = infinite loop"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/auto-play.mdx",
+          "note": "Events are executed sequentially from top to bottom; delay waits in milliseconds"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io LedRunner.test.ts \"turns a looping animation off on release and stays dark\", unipad-android LedRunnerToggleTest",
+          "note": "an endless animation ends when the pad is released (RUN-L-003)"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad-android 3e5a2fd6 (#101), ce6af172 (#86), unipad.io 8019666 (#32), AutoPlayRunner.stop",
+          "note": "after leaving the screen no light and no press follows (RUN-L-006, RUN-A-002)"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "unobserved": {
+        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
+      },
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 80\nf 1 1\nd 80"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\ndelay 200\noff 1 1"
+        }
+      ],
+      "fingerprint": "d4a39a6089df5125b596d374872153d7625524b38caac2eefe4a40de056c2fcb",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "autoOff",
+              0,
+              0
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ],
+          [],
           []
         ]
       }
