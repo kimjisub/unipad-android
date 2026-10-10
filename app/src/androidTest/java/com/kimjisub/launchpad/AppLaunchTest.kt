@@ -1,6 +1,14 @@
 package com.kimjisub.launchpad
 
+import android.Manifest
 import android.os.Build
+import android.util.Log
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
+import com.kimjisub.launchpad.activity.SplashActivity
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
@@ -60,6 +68,36 @@ class AppLaunchTest : BaseUITest() {
 
         // Final screen screenshot
         takeScreenshot("main_screen")
+    }
+
+    @Test
+    fun testSplashFooterStaysAboveNavigationBar() {
+        // Prepare only the storage permissions required before Android 11 so no dialog covers the footer.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+            for (permission in listOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                automation.grantRuntimePermission(context.packageName, permission)
+            }
+        }
+        launchApp()
+        val footer = device.wait(Until.findObject(By.text(context.getString(R.string.copyright))), 1500L)
+        assertTrue("Splash copyright did not appear before the transition", footer != null)
+        val bounds = footer!!.visibleBounds
+        var safeBottom = 0
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val splash = ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(Stage.RESUMED).filterIsInstance<SplashActivity>().single()
+            val decor = splash.window.decorView
+            val location = IntArray(2)
+            decor.getLocationOnScreen(location)
+            val insets = checkNotNull(ViewCompat.getRootWindowInsets(decor))
+                .getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout())
+            safeBottom = location[1] + decor.height - insets.bottom
+            Log.i("SplashFooterInsets", "copyright=$bounds safeBottom=$safeBottom navigationBottom=${insets.bottom}")
+        }
+        takeScreenshot("splash_footer_insets")
+        assertTrue("Copyright $bounds overlaps the navigation bar starting at $safeBottom", bounds.bottom < safeBottom)
+        assertTrue("Did not transition to the main screen", waitForMainScreen())
     }
 
     @Test
