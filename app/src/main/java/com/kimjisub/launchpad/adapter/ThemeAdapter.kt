@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.ZipThemeMetadata
@@ -58,7 +59,7 @@ class ThemeItem private constructor(
 			val themeJsonFile = File(dir, "theme.json")
 			val metadata = json.decodeFromString<ZipThemeMetadata>(themeJsonFile.readText())
 			val iconFile = File(dir, "theme_ic.png")
-			val icon: Drawable = decodeIconBounded(iconFile)?.let { BitmapDrawable(context.resources, it) }
+			val icon: Drawable = decodeIconBounded(iconFile)?.toDrawable(context.resources)
 				?: requireNotNull(ResourcesCompat.getDrawable(context.resources, R.drawable.theme_ic, null))
 			return ThemeItem("zip://${dir.name}", icon, metadata.name, metadata.author, metadata.version, ThemeType.ZIP, isBundled)
 		}

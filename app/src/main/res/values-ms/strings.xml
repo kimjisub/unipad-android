@@ -27,7 +27,6 @@
 	<string name="failed">Gagal</string>
 	<string name="delete">Padam</string>
 	<string name="edit">Sunting</string>
-	<string name="update">Kemas Kini</string>
 	<string name="ignore">Abaikan</string>
 	<string name="apply">Guna</string>
 	<string name="restart">Mulakan Semula</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Main Auto</string>
-	<string name="practiceMode">Latihan</string>
 	<string name="guidePlay">Panduan</string>
 	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">Mod Pro Light</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Versi baharu dikesan.</string>
 	<string name="update_available">Kemas kini tersedia</string>
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>
-	<string name="clickToAddUniPack">Klik untuk menambah UniPack.</string>
 	<string name="guide_download_new">Muat turun pack baru</string>
 	<string name="guide_import_external">Import pack yang dimuat turun</string>
 	<string name="guide_restore_packs">Pulihkan pack yang hilang</string>
 	<string name="doYouWantToDeleteUniPack">Adakah anda mahu memadamkan projek ini?</string>
-	<string name="remapDone">Pemetaan semula AutoPlay telah berjaya diselesaikan.</string>
-	<string name="remapFail">AutoPlay tidak wujud</string>
 	<string name="importComplete">Pack berjaya diimport!</string>
 	<string name="importPlayNow">Main sekarang</string>
 	<string name="importFailed">Gagal mengimport</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">Menyambungkan launchpad…</string>
 	<string name="midiDevicesNotDetected">Peranti MIDI Tidak Dikesan</string>
 	<string name="midi_open_panel">Buka</string>
-	<string name="midi_connected_banner">MIDI disambungkan: %1$s</string>
 	<string name="midi_disconnected">Diputuskan</string>
-	<string name="signal_SpeedFirst">Kelajuan dahulu</string>
-	<string name="signal_avoidAfterimage">Elakkan imej sisa</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Tidak boleh keluar semasa memuat turun pack</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">Tema</string>
-	<string name="themeDownload">Muat Turun Tema</string>
 	<string name="requireRestart">Memerlukan mulakan semula aplikasi.</string>
 	<string name="doYouWantToRestartApp">Adakah anda mahu mulakan semula aplikasi?</string>
 
-	<string name="theme_import">Import Tema</string>
 	<string name="theme_import_success">Tema berjaya diimport.</string>
 	<string name="theme_import_failed">Gagal mengimport tema.</string>
 	<string name="theme_import_invalid">Fail tema tidak sah.</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Maklumat</string>
 	<string name="settings_storage">Storan</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">%d dipilih</string>
 	<string name="transfer_start">Mula</string>
 	<string name="transfer_copying">Menyalin: %s</string>
-	<string name="transfer_moving">Memindahkan: %s</string>
 	<string name="transfer_result_transferred">Dipindahkan</string>
 	<string name="transfer_result_skipped">Dilangkau (sudah wujud)</string>
 	<string name="transfer_result_failed">Gagal</string>
 	<string name="transfer_done">Selesai</string>
 	<string name="transfer_no_items">Tiada UniPack dipilih</string>
-	<string name="transfer_select_target">Pilih destinasi</string>
 	<string name="transfer_select_source">Pilih sumber</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Folder</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">Pulihkan</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

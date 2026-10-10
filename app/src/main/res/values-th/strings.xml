@@ -27,7 +27,6 @@
 	<string name="failed">ล้มเหลว</string>
 	<string name="delete">ลบ</string>
 	<string name="edit">แก้ไข</string>
-	<string name="update">อัปเดต</string>
 	<string name="ignore">ข้าม</string>
 	<string name="apply">ใช้งาน</string>
 	<string name="restart">เริ่มใหม่</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">เล่นอัตโนมัติ</string>
-	<string name="practiceMode">ฝึกซ้อม</string>
 	<string name="guidePlay">แนะนำ</string>
 	<string name="stepPractice">ทีละขั้น</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,18 +96,14 @@
 	<string name="proLightMode">โหมด Pro Light</string>
 
 	<!--Version-->
-	<string name="newVersionFound">พบเวอร์ชันใหม่</string>
 	<string name="update_available">มีอัปเดตใหม่</string>
 
 	<string name="permissionRequire">ต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอกเพื่อบันทึกไฟล์โปรเจกต์\nกรุณาให้สิทธิ์</string>
 	<string name="permissionDenied">แอปต้องการสิทธิ์เข้าถึงพื้นที่จัดเก็บภายนอก\nกรุณาเปิดสิทธิ์ใน [ตั้งค่า] > [สิทธิ์]</string>
-	<string name="clickToAddUniPack">คลิกเพื่อเพิ่ม UniPack</string>
 	<string name="guide_download_new">ดาวน์โหลดแพ็คใหม่</string>
 	<string name="guide_import_external">นำเข้าแพ็คที่ดาวน์โหลด</string>
 	<string name="guide_restore_packs">กู้คืนแพ็คที่หายไป</string>
 	<string name="doYouWantToDeleteUniPack">คุณต้องการลบโปรเจกต์นี้หรือไม่?</string>
-	<string name="remapDone">การแมปใหม่ AutoPlay เสร็จสมบูรณ์</string>
-	<string name="remapFail">ไม่มี AutoPlay</string>
 	<string name="importComplete">นำเข้าแพ็คแล้ว!</string>
 	<string name="importPlayNow">เล่นเลย</string>
 	<string name="importFailed">นำเข้าล้มเหลว</string>
@@ -124,10 +118,7 @@
 	<string name="launchpadConnecting">กำลังเชื่อมต่อ launchpad…</string>
 	<string name="midiDevicesNotDetected">ไม่พบอุปกรณ์ MIDI</string>
 	<string name="midi_open_panel">เปิด</string>
-	<string name="midi_connected_banner">เชื่อมต่อ MIDI แล้ว: %1$s</string>
 	<string name="midi_disconnected">ตัดการเชื่อมต่อแล้ว</string>
-	<string name="signal_SpeedFirst">ความเร็วก่อน</string>
-	<string name="signal_avoidAfterimage">หลีกเลี่ยงภาพค้าง</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">ไม่สามารถออกขณะกำลังดาวน์โหลด pack</string>
@@ -135,11 +126,9 @@
 
 	<!--Theme-->
 	<string name="theme">ธีม</string>
-	<string name="themeDownload">ดาวน์โหลดธีม</string>
 	<string name="requireRestart">ต้องเริ่มแอปใหม่</string>
 	<string name="doYouWantToRestartApp">คุณต้องการเริ่มแอปใหม่หรือไม่?</string>
 
-	<string name="theme_import">นำเข้าธีม</string>
 	<string name="theme_import_success">นำเข้าธีมสำเร็จ</string>
 	<string name="theme_import_failed">นำเข้าธีมล้มเหลว</string>
 	<string name="theme_import_invalid">ไฟล์ธีมไม่ถูกต้อง</string>
@@ -156,7 +145,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">ข้อมูล</string>
 	<string name="settings_storage">พื้นที่จัดเก็บ</string>
@@ -246,13 +234,11 @@
 	<string name="transfer_selected_count">เลือก %d รายการ</string>
 	<string name="transfer_start">เริ่ม</string>
 	<string name="transfer_copying">กำลังคัดลอก: %s</string>
-	<string name="transfer_moving">กำลังย้าย: %s</string>
 	<string name="transfer_result_transferred">ถ่ายโอนแล้ว</string>
 	<string name="transfer_result_skipped">ข้ามแล้ว (มีอยู่แล้ว)</string>
 	<string name="transfer_result_failed">ล้มเหลว</string>
 	<string name="transfer_done">เสร็จสิ้น</string>
 	<string name="transfer_no_items">ไม่ได้เลือก UniPack</string>
-	<string name="transfer_select_target">เลือกปลายทาง</string>
 	<string name="transfer_select_source">เลือกต้นทาง</string>
 	<string name="transfer_format_label">รูปแบบ</string>
 	<string name="transfer_format_folder">โฟลเดอร์</string>
@@ -264,7 +250,6 @@
 	<string name="restore_title">กู้คืน</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

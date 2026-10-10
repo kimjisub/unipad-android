@@ -7,11 +7,12 @@ import android.util.Log as AndroidLog
 /**
  * Where a build sends its usage events. A release build always hands them to Firebase. A debug build
  * keeps them on the device, so runs on emulators and test devices add nothing to the real numbers.
- * Checking that the server receives the events is a separate, explicit run of a debug build:
- * `adb shell setprop log.tag.UniPadUsageToFirebase DEBUG`, then restart the app.
+ * Checking that the server receives the events is a separate, explicit run of a debug build made with
+ * `./gradlew assembleDebug -PanalyticsServerCheck`, after `adb shell setprop log.tag.UniPadUsageToFirebase DEBUG`
+ * and a restart of the app.
  *
- * Only the events of [UsageEvent] are routed here. The Firebase SDK's own collection settings, and
- * what it collects by itself, are the same in both builds and are not read or changed.
+ * Only the events of [UsageEvent] are routed here. The Firebase SDK's own collection is switched off for
+ * debug builds in their manifest (`app/src/debug/AndroidManifest.xml`), except in that server-check build.
  */
 object UsageEventRouting {
 	/** At most 23 characters, the limit of `Log.isLoggable` before API 26. */
