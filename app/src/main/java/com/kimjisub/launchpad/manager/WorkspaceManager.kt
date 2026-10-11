@@ -10,7 +10,6 @@ import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -19,6 +18,14 @@ import com.kimjisub.launchpad.tool.Log
 import java.io.File
 
 class WorkspaceManager(val context: Context) : KoinComponent {
+	companion object {
+		/** The folders in [dir] that are packs: not the `.nomedia` marker, not an install still being built. */
+		fun packFolders(dir: File): List<File> =
+			dir.listFiles()
+				?.filter { it.isDirectory && it.name != ".nomedia" && !PackStaging.isStagingFolder(it) }
+				?: emptyList()
+	}
+
 	val repo: UnipackRepository by inject()
 	val preferenceManager by lazy { PreferenceManager(context) }
 
@@ -27,7 +34,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		val file: File,
 	)
 
-	// All available workspaces
+	// All available workspaces. Creates folders and .nomedia files: call off the main thread.
 	val availableWorkspaces: Array<Workspace>
 		get() {
 			val uniPackWorkspaces = mutableListOf<Workspace>()
@@ -112,7 +119,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		}
 
 	suspend fun getAvailableWorkspacesSize() =
-		coroutineScope {
+		withContext(Dispatchers.IO) {
 			val works = availableWorkspaces.map {
 				async { FileManager.getFolderSize(it.file) }
 			}
@@ -136,14 +143,13 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	// Workspace used for downloads
 	val downloadWorkspace: Workspace
-		get() {
-			val downloadPath = preferenceManager.downloadStoragePath
-			if (downloadPath != null) {
-				val match = availableWorkspaces.firstOrNull { it.file.path == downloadPath }
-				if (match != null) return match
-			}
-			return availableWorkspaces[0]
-		}
+		get() = downloadWorkspaceIn(availableWorkspaces.toList())
+
+	/** The chosen download target among [workspaces], read now; touches no files. */
+	fun downloadWorkspaceIn(workspaces: List<Workspace>): Workspace {
+		val downloadPath = preferenceManager.downloadStoragePath
+		return workspaces.firstOrNull { it.file.path == downloadPath } ?: workspaces[0]
+	}
 
 	// -- Old "Unipad" → new "UniPack" folder migration --
 
@@ -182,15 +188,13 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	fun getLegacyAppStorageFolders(): List<File> {
 		val dir = getLegacyAppStorageDir() ?: return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?: emptyList()
+		return packFolders(dir)
 	}
 
 	// Workspaces used for loading unipacks
 
 	fun getUnipackCount(workspace: Workspace): Int {
-		return workspace.file.listFiles()?.count { it.isDirectory && it.name != ".nomedia" } ?: 0
+		return packFolders(workspace.file).size
 	}
 
 	fun getDocumentsWorkspaceDir(): File? {
@@ -211,9 +215,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	fun getDocumentsUnipackFolders(): List<File> {
 		val dir = getDocumentsWorkspaceDir() ?: return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?: emptyList()
+		return packFolders(dir)
 	}
 
 	/** Legacy UniPack directory: getExternalFilesDirs("UniPack") on internal storage */
@@ -225,9 +227,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	fun getLegacyUniPackFolders(): List<File> {
 		val dir = getLegacyUniPackDir() ?: return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?: emptyList()
+		return packFolders(dir)
 	}
 
 	fun getInternalStorageWorkspaceDir(): File? {
@@ -237,9 +237,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 
 	fun getInternalStorageUnipackFolders(): List<File> {
 		val dir = getInternalStorageWorkspaceDir() ?: return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?: emptyList()
+		return packFolders(dir)
 	}
 
 	suspend fun getUnipacks() =
@@ -247,11 +245,7 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			val unipacks = mutableListOf<UniPackItem>()
 
 			for (workspace in availableWorkspaces) {
-				val folder = workspace.file
-				val files = folder.listFiles()
-				files?.forEach {
-					if (!it.isDirectory) return@forEach
-
+				packFolders(workspace.file).forEach {
 					// One unreadable folder (SD card removed mid-scan, a permission-less directory)
 					// used to abort the whole list and take the activity down with it.
 					try {

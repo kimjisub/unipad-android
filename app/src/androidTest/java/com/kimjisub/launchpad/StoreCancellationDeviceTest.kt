@@ -164,7 +164,7 @@ class StoreCancellationDeviceTest {
             capture("downloading")
             evidence("partial-before=${partial.length()} existing=$before")
             val other = Recorder()
-            UniPackDownloader(context, "$id-other", "${server.url}other", workspace, "$id-other", listener = other,
+            UniPackDownloader(context, "$id-other", "${server.url}other", { workspace }, "$id-other", listener = other,
                 usage = GlobalContext.get().get<UsageAnalytics>().packImport(PackImportSource.STORE), scope = otherScope)
             finish(otherScope)
             assertNull(other.error)

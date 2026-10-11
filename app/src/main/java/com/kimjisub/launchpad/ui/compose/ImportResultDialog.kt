@@ -73,7 +73,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import java.io.File
 
 sealed class ImportResult {
-	data class Success(val folder: File, val unipack: UniPack) : ImportResult()
+	data class Success(val folder: File, val unipack: UniPack, val byteSize: Long) : ImportResult()
 	data class Warning(val message: String) : ImportResult()
 	data class Error(val message: String) : ImportResult()
 }
@@ -142,7 +142,7 @@ fun ImportResultDialog(
 					) {
 						StatusLine(result)
 						when (result) {
-							is ImportResult.Success -> PackSummary(result.unipack)
+							is ImportResult.Success -> PackSummary(result)
 							is ImportResult.Warning -> MessageBox(result.message)
 							is ImportResult.Error -> MessageBox(result.message)
 						}
@@ -198,7 +198,8 @@ private fun StatusLine(result: ImportResult) {
 }
 
 @Composable
-private fun PackSummary(unipack: UniPack) {
+private fun PackSummary(result: ImportResult.Success) {
+	val unipack = result.unipack
 	Text(
 		text = unipack.title,
 		color = White,
@@ -223,7 +224,7 @@ private fun PackSummary(unipack: UniPack) {
 	val padSize = "${unipack.buttonX} × ${unipack.buttonY}"
 	val chainLabel = stringResource(R.string.MPP_chain)
 	val autoPlayLabel = stringResource(R.string.autoPlay)
-	val fileSize = "${FileManager.byteToMB(unipack.getByteSize())} MB"
+	val fileSize = "${FileManager.byteToMB(result.byteSize)} MB"
 	FlowRow(
 		horizontalArrangement = Arrangement.spacedBy(6.dp),
 		verticalArrangement = Arrangement.spacedBy(6.dp),
