@@ -7,6 +7,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
+import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.tool.Log
@@ -15,9 +16,14 @@ import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 
 class BaseApplication : Application() {
+	private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	companion object {
 		private const val DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS = 60L
 		private const val PREF_NAME = "data"
@@ -29,6 +35,16 @@ class BaseApplication : Application() {
 		super.onCreate()
 
 		recordInstallSplits()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			backgroundScope.launch {
+				try {
+					SystemExitReporter.collect(this@BaseApplication)
+				} catch (e: Exception) {
+					// Diagnostics must not prevent launch when the system history is unavailable.
+					android.util.Log.w("SystemExitReporter", "Could not read system exit history", e)
+				}
+			}
+		}
 		setupNotification()
 		setupLogger()
 		setupRemoteConfig()
