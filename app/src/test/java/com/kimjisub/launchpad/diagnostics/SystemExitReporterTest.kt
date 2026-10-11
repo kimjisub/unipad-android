@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.RequiresApi
 import com.google.firebase.crashlytics.CustomKeysAndValues
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.mockk.every
@@ -18,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+@RequiresApi(30)
 class SystemExitReporterTest {
     private val context = mockk<Context>()
     private val manager = mockk<ActivityManager>()
