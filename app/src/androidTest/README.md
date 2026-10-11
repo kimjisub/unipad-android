@@ -11,6 +11,12 @@ earlier through the Crashlytics API overrides the manifest, so start from a fres
 app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
 `apkanalyzer manifest print` for an APK; pull requests run it on both build types.
 
+System exit diagnostics are tagged `harness_test=true` in debug builds and remain local by default.
+After reproducing one real system exit, relaunch to record it, close and relaunch once more to finish
+the report session, then run `SystemExitServerCheckTest` with the instrumentation argument
+`systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
+so no other test reports are queued. The test's default path checks that automatic collection stays off.
+
 For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -110,6 +116,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 | Class and test | What it verifies |
 |---|---|
+| `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |
