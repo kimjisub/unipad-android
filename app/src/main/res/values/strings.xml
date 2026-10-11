@@ -295,8 +295,6 @@
 
 	<!--Format-->
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
-	<string name="import_pack_confirm">Install this pack?</string>
-	<string name="import_pack_confirm_source">from %s</string>
 
 	<!-- Approved English/Korean copy; other locales intentionally use the English fallback. -->
 	<string name="midi_help_title" tools:ignore="MissingTranslation">Connection and light help</string>
