@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.firebase.crashlytics.CustomKeysAndValues
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.kimjisub.launchpad.BuildConfig
 
 @RequiresApi(Build.VERSION_CODES.R)
 internal object SystemExitReporter {
@@ -44,6 +45,10 @@ internal object SystemExitReporter {
         .putLong("exit_rss_kb", exit.rssKb)
         .putLong("exit_timestamp", exit.timestamp)
         .putBoolean("lmk_report_supported", lmkSupported)
+        .apply {
+            // Explicit server checks from debug builds must stay out of production crash counts.
+            if (BuildConfig.DEBUG) putBoolean("harness_test", true)
+        }
         .build()
 
     // Stable exception types keep distinct system exit causes in separate Crashlytics groups.
