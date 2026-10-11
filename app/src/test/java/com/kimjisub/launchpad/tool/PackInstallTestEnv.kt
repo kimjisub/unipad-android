@@ -65,10 +65,11 @@ import java.util.zip.ZipOutputStream
  * opened, so a test decides exactly how two requests for the same name overlap.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class PackInstallTestEnv {
-	val root: File = Files.createTempDirectory("pack_install_test").toFile()
+class PackInstallTestEnv(
+	val root: File = Files.createTempDirectory("pack_install_test").toFile(),
+) {
 	val workspace = File(root, "workspace").apply { mkdirs() }
-	private val cache = File(root, "cache").apply { mkdirs() }
+	val cache = File(root, "cache").apply { mkdirs() }
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
 	private val mainExecutor = Executors.newFixedThreadPool(4) { Thread(it, "pack-test-main") }
@@ -159,6 +160,7 @@ class PackInstallTestEnv {
 	): CoroutineScope {
 		val uri = mockk<Uri>()
 		every { resolver.openInputStream(uri) } answers { openInput() }
+		every { resolver.openFileDescriptor(uri, "w") } throws SecurityException("read-only source provider")
 		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } answers { fileNameResolvedOn += Thread.currentThread().name; fileName } }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
