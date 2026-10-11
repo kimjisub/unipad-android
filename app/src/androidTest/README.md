@@ -4,7 +4,14 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
-For the deterministic 29-test release subset, coverage inventory, and signed-candidate limitations,
+The debug app sends no Firebase analytics, performance data or crash reports from its first
+launch (`app/src/debug/AndroidManifest.xml`); it keeps network access, which
+`StoreCancellationDeviceTest` needs for its local download server. A crash collection value saved
+earlier through the Crashlytics API overrides the manifest, so start from a fresh install or cleared
+app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
+`apkanalyzer manifest print` for an APK; pull requests run it on both build types.
+
+For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on a borrowed API 35 emulator
@@ -120,6 +127,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
+| `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
@@ -170,7 +178,8 @@ claimed here as audio or hardware proof.
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
-| `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
 

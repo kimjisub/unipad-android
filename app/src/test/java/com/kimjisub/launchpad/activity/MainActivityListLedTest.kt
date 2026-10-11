@@ -12,8 +12,10 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.Runs
 import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
@@ -48,6 +50,7 @@ class MainActivityListLedTest {
 		})
 		activity = spyk(MainActivity())
 		workspace = mockk()
+		every { workspace.migrateOldAppStorageFolder() } just Runs
 		every { activity.ws } returns workspace
 		field("totalPanelVM").set(activity, mockk<MainTotalPanelViewModel>(relaxed = true))
 		mainController = method("getMidiController").invoke(activity) as MidiController
