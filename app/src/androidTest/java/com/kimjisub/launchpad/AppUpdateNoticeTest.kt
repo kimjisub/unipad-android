@@ -155,13 +155,21 @@ class AppUpdateNoticeTest : BaseUITest() {
 		assumeTrue("needs a device without the Play Store app", storeApps().none { it == PLAY_STORE_PACKAGE })
 		val browsers = storeApps()
 		assumeTrue("needs a browser", browsers.isNotEmpty())
-		reachInstallFailure()
+		try {
+			// Start cold so a previous visit cannot make the store handoff pass.
+			browsers.forEach { device.executeShellCommand("am force-stop $it") }
+			reachInstallFailure()
+			assertFalse("a browser is already resumed", browserIsResumed(browsers))
 
-		openStoreFromFailure()
-		assertTrue(
-			"the store page did not open in a browser",
-			device.wait(Until.hasObject(By.pkg(browsers.first())), 10000L),
-		)
+			openStoreFromFailure()
+			assertTrue(
+				"the store page did not open in a browser",
+				waitUntil(20000L) { browserIsResumed(browsers) },
+			)
+		} finally {
+			// A browser still starting or drawing must not delay the next app launch.
+			browsers.forEach { device.executeShellCommand("am force-stop $it") }
+		}
 		launchToMainScreen()
 	}
 
@@ -233,6 +241,13 @@ class AppUpdateNoticeTest : BaseUITest() {
 		assertTrue("store notice did not appear", waitForText(R.string.update_store_notice))
 		click(R.string.update_store_open)
 	}
+
+	/** Verify the handoff without waiting for the external browser's first frame or network. */
+	private fun browserIsResumed(browsers: List<String>): Boolean =
+		device.executeShellCommand("dumpsys activity activities")
+			.lineSequence()
+			.filter { it.contains("topResumedActivity=") || it.contains("mResumedActivity:") }
+			.any { activity -> browsers.any { activity.contains(" $it/") } }
 
 	/** Packages that can open the app's Play page: the Play Store app and any browser. */
 	private fun storeApps(): List<String> =
