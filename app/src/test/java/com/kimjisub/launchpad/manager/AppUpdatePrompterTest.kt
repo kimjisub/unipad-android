@@ -206,6 +206,72 @@ class AppUpdatePrompterTest {
 	}
 
 	@Test
+	fun laterWhileDownloadCheckIsPendingNeverStartsDownload() = runTest {
+		source.answer = UpdateStatus.Available
+		val prompter = prompter()
+		prompter.onListReady()
+		advanceUntilIdle()
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		prompter.download()
+		runCurrent()
+		assertTrue(source.waiting)
+		prompter.later()
+		answer.complete(UpdateStatus.Available)
+		advanceUntilIdle()
+		assertEquals(0, source.downloads)
+		assertNull(prompter.card)
+		assertEquals(now, store.declinedAt)
+
+		// A new explicit choice still works after postponing the old one.
+		source.pending = null
+		prompter.download()
+		advanceUntilIdle()
+		assertEquals(1, source.downloads)
+	}
+
+	@Test
+	fun laterWhileInstallCheckIsPendingNeverInstalls() = runTest {
+		source.answer = UpdateStatus.Downloaded
+		val prompter = prompter()
+		source.push(UpdateStatus.Downloaded)
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		prompter.install()
+		runCurrent()
+		assertTrue(source.waiting)
+		prompter.later()
+		answer.complete(UpdateStatus.Downloaded)
+		advanceUntilIdle()
+		assertEquals(0, source.installs)
+		assertNull(prompter.card)
+		assertEquals(now, store.installPostponedAt)
+
+		source.pending = null
+		prompter.install()
+		advanceUntilIdle()
+		assertEquals(1, source.installs)
+	}
+
+	@Test
+	fun closingTheCardThroughTheStoreCancelsPendingRetry() = runTest {
+		val prompter = prompter()
+		source.push(UpdateStatus.Failed)
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		prompter.retry()
+		runCurrent()
+		assertTrue(source.waiting)
+		prompter.askStore()
+		prompter.openStore()
+		answer.complete(UpdateStatus.Available)
+		advanceUntilIdle()
+		assertEquals(1, storeOpens)
+		assertEquals(0, source.downloads)
+		assertNull(prompter.card)
+	}
+
+	@Test
 	fun consentResultsMapToRestDownloadOrFailure() = runTest {
 		val prompter = prompter()
 		prompter.onConsentResult(Activity.RESULT_CANCELED)

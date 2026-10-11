@@ -45,6 +45,7 @@ class AppUpdatePrompter(
 	val state: StateFlow<State> = _state.asStateFlow()
 
 	private var job: Job? = null
+	private var actionVersion = 0L
 	private val busy get() = job?.isActive == true
 
 	init {
@@ -58,8 +59,9 @@ class AppUpdatePrompter(
 		val offerNew = schedule.isAutoCheckDue() && schedule.mayOfferDownload()
 		if (!tracking && !offerNew) return
 		if (offerNew) schedule.markAutoCheck()
-		run {
+		run { action ->
 			val status = query() ?: return@run
+			if (action != actionVersion) return@run
 			showAuto(status, offerNew)
 		}
 	}
@@ -68,8 +70,9 @@ class AppUpdatePrompter(
 		if (busy || !isSafe()) return
 		schedule.markAutoCheck()
 		_state.update { it.copy(checking = true, dialog = null) }
-		run {
+		run { action ->
 			val status = query()
+			if (action != actionVersion) return@run
 			_state.update { it.copy(checking = false) }
 			showRequested(status)
 		}
@@ -77,28 +80,29 @@ class AppUpdatePrompter(
 
 	fun download() {
 		if (busy || !isSafe()) return
-		run { startDownload(query()) }
+		run { action -> startDownload(query(), action) }
 	}
 
 	fun retry() {
 		if (busy || !isSafe()) return
-		run {
+		run { action ->
 			when (val status = query()) {
-				UpdateStatus.Available -> startDownload(status)
-				else -> showRequested(status)
+				UpdateStatus.Available -> startDownload(status, action)
+				else -> if (action == actionVersion) showRequested(status)
 			}
 		}
 	}
 
 	fun install() {
 		if (busy || !isSafe()) return
-		run {
+		run { action ->
 			val status = query()
+			if (action != actionVersion) return@run
 			if (status != UpdateStatus.Downloaded) {
 				showRequested(status)
 				return@run
 			}
-			if (!isSafe()) return@run
+			if (action != actionVersion || !isSafe()) return@run
 			try {
 				source.install()
 			} catch (e: CancellationException) {
@@ -111,10 +115,12 @@ class AppUpdatePrompter(
 	}
 
 	fun later() {
+		if (_state.value.card is Card.Downloading) return
+		cancelPendingAction()
 		when (_state.value.card) {
 			Card.Ready -> schedule.markInstallPostponed()
 			Card.Offer, Card.Failed -> decline()
-			is Card.Downloading, null -> return
+			is Card.Downloading, null -> Unit
 		}
 		setCard(null)
 	}
@@ -141,6 +147,7 @@ class AppUpdatePrompter(
 	fun openStore() {
 		dismissDialog()
 		if (!isSafe()) return
+		cancelPendingAction()
 		// The store cannot tell the app whether it updated, so leaving for it counts as a decline.
 		decline()
 		setCard(null)
@@ -152,11 +159,21 @@ class AppUpdatePrompter(
 	}
 
 	fun close() {
+		cancelPendingAction()
 		source.close()
 	}
 
-	private fun run(block: suspend () -> Unit) {
-		job = scope.launch { block() }
+	private fun cancelPendingAction() {
+		// Invalidates even a source that returns after cancellation. A later explicit choice gets a new version.
+		actionVersion++
+		job?.cancel()
+		job = null
+		_state.update { it.copy(checking = false) }
+	}
+
+	private fun run(block: suspend (Long) -> Unit) {
+		val action = ++actionVersion
+		job = scope.launch { block(action) }
 	}
 
 	/** Null when the store did not answer within [TIMEOUT_MS] or failed. */
@@ -169,12 +186,13 @@ class AppUpdatePrompter(
 		null
 	}
 
-	private fun startDownload(status: UpdateStatus?) {
+	private fun startDownload(status: UpdateStatus?, action: Long) {
+		if (action != actionVersion) return
 		if (status != UpdateStatus.Available) {
 			showRequested(status)
 			return
 		}
-		if (!isSafe()) return
+		if (action != actionVersion || !isSafe()) return
 		if (!source.startDownload()) failed()
 	}
 
