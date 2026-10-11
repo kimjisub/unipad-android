@@ -14,7 +14,9 @@ import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import com.kimjisub.launchpad.tool.FirebaseCrashContext
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.ScreenCrashTrail
 import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
 import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import com.orhanobut.logger.AndroidLogAdapter
@@ -44,6 +46,7 @@ class BaseApplication : Application() {
 
 		setupStrictMode()
 		recordInstallSplits()
+		registerActivityLifecycleCallbacks(ScreenCrashTrail(FirebaseCrashContext))
 		setupNotification()
 		setupLogger()
 		setupRemoteConfig()

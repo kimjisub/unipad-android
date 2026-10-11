@@ -60,6 +60,8 @@ platform :android do
     bump_version_code! unless options[:no_bump]
     gradle(task: "clean")
     gradle(task: "bundle", build_type: "Release")
+    # Crashlytics names native crash frames only with these symbols; bundleRelease does not send them.
+    gradle(task: "uploadCrashlyticsSymbolFile", build_type: "Release")
 
     # rollout:0.1 stages a production release to 10% of users (status inProgress);
     # omit it for the old behaviour (completed = everyone). Vitals showed the
