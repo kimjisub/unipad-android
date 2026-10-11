@@ -63,7 +63,17 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 - Launch helpers await the requested activity's completed `onCreate` lifecycle event before
   existing accessibility/screen assertions. They retain the former `startActivitySync` launch
-  bound (45 seconds) without waiting for global queue idleness; screen deadlines are unchanged.
+  bound (45 seconds) without waiting for global queue idleness.
+- Every launch to Main (`launchToMainActivity`, used by `launchToMainScreen`, `AppLaunchTest`,
+  the Settings relaunch and the Store startup check) waits up to 45 seconds for `MainActivity` to
+  resume, then 20 seconds for its window and 20 seconds for its content. Splash finishes before
+  Main starts, so a window wait right after launch would end in that gap on a slow device.
+- Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
+  system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
+- `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system
+  "isn't responding" dialog, logged under the `AnrDialogWatcher` tag. On a stalled emulator a
+  background job can miss its deadline and the dialog would otherwise cover the app until the
+  current wait runs out.
 - Store transition waits treat a temporarily absent Compose root as an empty pending result,
   then still require the exact store list and its displayed state within the same deadline.
 - `BaseUITest` writes `TestUniPack` before each test: an 8x8 pack with two chains, LED,

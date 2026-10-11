@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad
 
-import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
@@ -107,12 +106,7 @@ class SettingsTest : BaseUITest() {
             device.wait(Until.gone(By.pkg(PACKAGE_NAME)), 5000L)
             takeScreenshot("settings_persistence_app_killed")
 
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME)
-            assertNotNull("Could not find launch intent", launchIntent)
-            launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            context.startActivity(launchIntent)
-            handlePermissionDialogs()
-            assertTrue("Did not transition to main screen after restart", waitForMainScreen())
+            launchToMainScreen()
             takeScreenshot("settings_persistence_app_restarted")
 
             openSettings()
