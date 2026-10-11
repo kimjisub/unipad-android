@@ -417,10 +417,9 @@ class PlayActivityTest : BaseUITest() {
         takeScreenshot("before_load_unipack")
 
         device.findObject(By.desc(str(R.string.import_unipack))).click()
-        assertTrue(
-            "File picker did not open",
-            device.wait(Until.gone(By.pkg(PACKAGE_NAME)), 5000L)
-        )
+        val pickerOpened = device.wait(Until.gone(By.pkg(PACKAGE_NAME)), FILE_PICKER_TIMEOUT)
+        if (!pickerOpened) takeScreenshot("file_picker_not_opened")
+        assertTrue("File picker did not open", pickerOpened)
         takeScreenshot("after_load_unipack_click")
 
         // Close the file picker without choosing a file
