@@ -1,10 +1,10 @@
 package com.kimjisub.launchpad.diagnostics
 
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.RequiresApi
 import com.google.firebase.crashlytics.CustomKeysAndValues
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.mockk.every
@@ -19,7 +19,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@RequiresApi(30)
+// All framework calls are mocked; these JVM tests do not run on an Android OS.
+@SuppressLint("NewApi")
 class SystemExitReporterTest {
     private val context = mockk<Context>()
     private val manager = mockk<ActivityManager>()

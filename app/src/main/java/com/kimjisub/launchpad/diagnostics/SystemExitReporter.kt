@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import com.google.firebase.crashlytics.CustomKeysAndValues
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.kimjisub.launchpad.BuildConfig
@@ -31,8 +32,8 @@ internal object SystemExitReporter {
             FirebaseCrashlytics.getInstance().recordException(exceptionFor(exit), keysFor(exit, lmkSupported))
             Log.d(TAG, "Recorded system exit reason=${exit.reason} timestamp=${exit.timestamp}")
         }
-        if (!preferences.edit().putLong(CHECKPOINT, batch.checkpoint).commit()) {
-            Log.w(TAG, "Could not persist the system exit checkpoint")
+        preferences.edit(commit = true) {
+            putLong(CHECKPOINT, batch.checkpoint)
         }
     }
 
