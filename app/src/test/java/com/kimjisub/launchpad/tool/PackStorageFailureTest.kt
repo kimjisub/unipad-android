@@ -7,6 +7,8 @@ import com.kimjisub.launchpad.analytics.UsageParam
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.PACK_NAME
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.contentHashes
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.packFiles
+import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.packZip
+import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.sha256
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.writePack
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Recorder
 import io.mockk.every
@@ -20,16 +22,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.security.MessageDigest
-import java.util.zip.CRC32
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 /** Real importer/downloader and zip4j writes; only the selected output write runs out of space. */
 class PackStorageFailureTest {
@@ -38,7 +35,7 @@ class PackStorageFailureTest {
 	private lateinit var original: File
 	private lateinit var originalHash: String
 	private lateinit var protectedTree: Map<String, String>
-	private val archive = archive("New", 64 * 1024)
+	private val archive = packZip("New", files = archiveFiles("New", 64 * 1024), stored = true)
 	private var failureReached = false
 
 	@Before
@@ -52,12 +49,15 @@ class PackStorageFailureTest {
 			writeBytes(archive)
 			check(setReadOnly())
 		}
-		originalHash = hash(original)
-		protectedTree = tree(env.workspace)
+		originalHash = sha256(original.readBytes())
+		protectedTree = contentHashes(env.workspace, includeDirectories = true)
 	}
 
 	@After
-	fun tearDown() = env.tearDown()
+	fun tearDown() {
+		if (::original.isInitialized) original.setWritable(true)
+		env.tearDown()
+	}
 
 	@Test
 	fun cacheCopyWriteFailurePreservesTheSourceAndExistingFoldersAndCanBeRetried() =
@@ -82,7 +82,7 @@ class PackStorageFailureTest {
 		assertNull(first.error)
 		assertEquals("$PACK_NAME (2)", first.installedFolder?.name)
 		assertEquals(PackInstallTestEnv.expectedHashes("First"), contentHashes(first.installedFolder!!))
-		protectedTree = tree(env.workspace)
+		protectedTree = contentHashes(env.workspace, includeDirectories = true)
 		checkFailure(Source.FILE, Point.UNPACK, retryName = "$PACK_NAME (3)")
 	}
 
@@ -104,8 +104,8 @@ class PackStorageFailureTest {
 		assertNull("retry failed: ${retry.error}", retry.error)
 		assertEquals(retryName, retry.installedFolder?.name)
 		assertEquals(archiveFiles("New", 64 * 1024).mapValues { sha256(it.value) }, contentHashes(retry.installedFolder!!))
-		assertEquals(protectedTree, tree(env.workspace).filterKeys { it != retryName && !it.startsWith("$retryName/") })
-		assertEquals(originalHash, hash(original))
+		assertEquals(protectedTree, contentHashes(env.workspace, includeDirectories = true).filterKeys { it != retryName && !it.startsWith("$retryName/") })
+		assertEquals(originalHash, sha256(original.readBytes()))
 		assertClean()
 		assertEquals(listOf("failure", "success"), sink.events.map { it.parameters[UsageParam.RESULT] })
 	}
@@ -139,8 +139,8 @@ class PackStorageFailureTest {
 				assertTrue("failure came after the whole output was written", partial.length() < if (point == Point.UNPACK) 64 * 1024 else archive.size)
 				if (point == Point.UNPACK) {
 					val folder = partial.parentFile!!.parentFile!!
-					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("info")), hash(File(folder, "info")))
-					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("keySound")), hash(File(folder, "keySound")))
+					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("info")), sha256(File(folder, "info").readBytes()))
+					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("keySound")), sha256(File(folder, "keySound").readBytes()))
 				}
 				failureReached = true
 				throw IOException("write failed: ENOSPC ($NO_SPACE)")
@@ -149,8 +149,8 @@ class PackStorageFailureTest {
 	}
 
 	private fun assertProtectedAndClean() {
-		assertEquals(originalHash, hash(original))
-		assertEquals(protectedTree, tree(env.workspace))
+		assertEquals(originalHash, sha256(original.readBytes()))
+		assertEquals(protectedTree, contentHashes(env.workspace, includeDirectories = true))
 		assertClean()
 	}
 
@@ -165,14 +165,6 @@ class PackStorageFailureTest {
 
 	companion object {
 		private const val NO_SPACE = "No space left on device"
-
-		/** Includes directories as well as hashes, so hidden and empty user folders are checked. */
-		fun tree(root: File): Map<String, String> = root.walkTopDown().filter { it != root }.associate {
-			it.relativeTo(root).invariantSeparatorsPath to if (it.isDirectory) "directory" else hash(it)
-		}
-
-		private fun hash(file: File): String = sha256(file.readBytes())
-		private fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
 		fun archiveFiles(title: String, soundSize: Int): Map<String, ByteArray> = packFiles(title) +
 			("sounds/a.wav" to ByteArray(soundSize).apply {
@@ -192,21 +184,5 @@ class PackStorageFailureTest {
 				}
 			})
 
-		/** Stored entries keep silent data large enough for multiple real output writes. */
-		fun archive(title: String, soundSize: Int): ByteArray {
-			val bytes = ByteArrayOutputStream()
-			ZipOutputStream(bytes).use { zip ->
-				archiveFiles(title, soundSize).forEach { (name, data) ->
-					zip.putNextEntry(ZipEntry(name).apply {
-						method = ZipEntry.STORED
-						size = data.size.toLong()
-						crc = CRC32().apply { update(data) }.value
-					})
-					zip.write(data)
-					zip.closeEntry()
-				}
-			}
-			return bytes.toByteArray()
-		}
 	}
 }
