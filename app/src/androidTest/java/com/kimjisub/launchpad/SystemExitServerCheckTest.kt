@@ -19,7 +19,10 @@ class SystemExitServerCheckTest {
         if (InstrumentationRegistry.getArguments().getString("systemExitServerCheck") == "true") {
             assertTrue("No completed report session is waiting to be sent",
                 Tasks.await(crashlytics.checkForUnsentReports(), 60, TimeUnit.SECONDS))
-            Tasks.await(crashlytics.sendUnsentReports(), 60, TimeUnit.SECONDS)
+            crashlytics.sendUnsentReports()
+            // The SDK has no upload completion task. Keep this explicit check alive for dispatch;
+            // verify the actual receipt separately in the server's report.
+            Thread.sleep(15_000)
         }
     }
 }
