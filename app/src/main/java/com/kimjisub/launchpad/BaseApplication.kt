@@ -51,7 +51,7 @@ class BaseApplication : Application() {
 					SystemExitReporter.collect(this@BaseApplication)
 				} catch (e: Exception) {
 					// Diagnostics must not prevent launch when the system history is unavailable.
-					android.util.Log.w("SystemExitReporter", "Could not read system exit history", e)
+					Log.err("Could not read system exit history", e)
 				}
 			}
 		}
