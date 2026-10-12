@@ -187,6 +187,11 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
 | `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
 | `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
+| `PlayActivityTest.testBoundsOutsideTheResizedWindowNeverCountAsSettled` | Stale accessibility bounds outside the resized window never become a valid observation. |
+| `PlayActivityTest.testBoundsWaitForTwoMatchingReadingsInsideTheResizedWindow` | Ignore stale, missing and single fresh readings; require two matching bounds inside the current window. |
+| `PlayActivityTest.testSettledMenuOutsideTheSafeAreaStillFails` | The same safe-area verdict used by the window-change checks rejects a settled menu under a system bar and accepts one inside the safe area. |
+| `PlayActivityTest.testRotationMismatchRetriesTheWholeLayoutObservation` | Repeat the complete layout observation when the initial rotation is wrong but later correct; a persistently wrong rotation still fails after the bounded retries. |
+| `PlayActivityTest.testMenuOutsideTheWindowIsReportedAsALayoutFailure` | Move the real menu's parent outside the window after Play opens and require a layout failure, then restore the parent. |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 

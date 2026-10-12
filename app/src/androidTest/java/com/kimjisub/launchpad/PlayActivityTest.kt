@@ -124,8 +124,12 @@ class PlayActivityTest : BaseUITest() {
         return Rect(origin[0], origin[1], origin[0] + view.width, origin[1] + view.height)
     }
 
+    private fun safeAreaProblem(safe: Rect, name: String, bounds: Rect): String? =
+        if (safe.contains(bounds)) null else "$name $bounds reaches outside the safe area $safe"
+
     private fun assertInside(safe: Rect, name: String, bounds: Rect) {
-        assertTrue("$name $bounds reaches outside the safe area $safe", safe.contains(bounds))
+        val problem = safeAreaProblem(safe, name, bounds)
+        assertTrue(problem, problem == null)
     }
 
     private fun clearClipboard() {
@@ -814,9 +818,33 @@ class PlayActivityTest : BaseUITest() {
         val outside = Rect(980, 50, 1038, 108)
         val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 1000L) { outside }
         assertNotNull(bounds)
-        val failure = runCatching { assertInside(safe, "menu button", bounds!!) }.exceptionOrNull()
-        assertTrue("A settled menu under a system bar must fail", failure is AssertionError)
-        assertTrue(failure?.message.orEmpty().contains("reaches outside the safe area"))
+        val problem = safeAreaProblem(safe, "menu button", bounds!!)
+        assertNotNull("A settled menu under a system bar must fail", problem)
+        assertTrue(problem.orEmpty().contains("reaches outside the safe area"))
+        assertNull(safeAreaProblem(safe, "menu button", Rect(980, 150, 1038, 208)))
+    }
+
+    @Test
+    fun testRotationMismatchRetriesTheWholeLayoutObservation() {
+        enterPlay()
+        try {
+            var readings = 0
+            val recovered = playLayoutProblems("rotation_recovered", Surface.ROTATION_0, readRotation = {
+                readings++
+                if (readings == 1) Surface.ROTATION_90 else Surface.ROTATION_0
+            })
+            assertTrue("A rotation corrected during the observation must be read again: $recovered", recovered.isEmpty())
+            assertTrue("The complete observation must be repeated", readings > 2)
+
+            val persistent = playLayoutProblems("rotation_still_wrong", Surface.ROTATION_0, readRotation = {
+                Surface.ROTATION_90
+            })
+            assertTrue("A persistently wrong rotation must still fail: $persistent",
+                persistent.any { it.contains("display rotation is 1, not 0") })
+        } finally {
+            device.unfreezeRotation()
+        }
+        quitPlayToMain()
     }
 
     @Test
@@ -859,13 +887,10 @@ class PlayActivityTest : BaseUITest() {
             device.executeShellCommand("wm set-ignore-orientation-request true")
             for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
                 device.executeShellCommand("wm size $size")
-                rotateTo(Surface.ROTATION_90)
                 problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
-                rotateTo(Surface.ROTATION_270)
                 problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
             }
             device.executeShellCommand("wm size 1600x2560")
-            rotateTo(Surface.ROTATION_0)
             problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
         } finally {
             device.executeShellCommand("wm size reset")
@@ -942,6 +967,7 @@ class PlayActivityTest : BaseUITest() {
         rotation: Int? = null,
         layoutTimeoutMs: Long = 10000L,
         attemptsRemaining: Int = 3,
+        readRotation: () -> Int = { device.displayRotation },
     ): List<String> {
         // A resize can override a rotation that was briefly reported as complete.
         if (rotation != null) rotateTo(rotation)
@@ -949,8 +975,11 @@ class PlayActivityTest : BaseUITest() {
         val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270, timeoutMs = layoutTimeoutMs)
         val problems = mutableListOf<String>()
         fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
-        if (rotation != null) check(device.displayRotation == rotation) { "display rotation is ${device.displayRotation}, not $rotation" }
-        fun checkInside(what: String, bounds: Rect) = check(geometry.safe.contains(bounds)) { "$what $bounds reaches outside the safe area ${geometry.safe}" }
+        val initialRotation = readRotation()
+        if (rotation != null) check(initialRotation == rotation) { "display rotation is $initialRotation, not $rotation" }
+        fun checkInside(what: String, bounds: Rect) {
+            safeAreaProblem(geometry.safe, what, bounds)?.let { problem -> check(false) { problem } }
+        }
 
         val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / context.resources.displayMetrics.density
         check(offCentreDp <= CENTRE_TOLERANCE_DP) { "pad grid is ${offCentreDp}dp off the window's centre line" }
@@ -971,14 +1000,16 @@ class PlayActivityTest : BaseUITest() {
         check(logo != null) { "logo bounds did not settle inside ${geometry.window}" }
         logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
         // Native geometry and accessibility are read separately. If another layout landed
-        // between them, repeat the whole observation instead of comparing different windows.
+        // between them, or either rotation reading missed the request, repeat the whole
+        // observation instead of keeping a failure from a transient layout.
         val latest = playGeometry()
-        val rotationMatches = rotation == null || device.displayRotation == rotation
+        val finalRotation = readRotation()
+        val rotationMatches = initialRotation == finalRotation && (rotation == null || initialRotation == rotation)
         if (latest != geometry || !rotationMatches) {
             if (attemptsRemaining > 1) {
-                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1)
+                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1, readRotation)
             }
-            check(false) { "layout or rotation kept changing while reading controls; last: $latest, rotation: ${device.displayRotation}" }
+            check(false) { "layout or rotation kept changing while reading controls; last: $latest, rotation: $finalRotation" }
         }
         // Taken last: the display can still be drawing the rotation when the view tree has settled.
         takeScreenshot("pad_grid_$name")
