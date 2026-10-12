@@ -40,7 +40,6 @@ class WorkspaceManagerTest {
 		every { mockContext.getString(R.string.workspace_documents_android10) } returns "Documents (Android 10)"
 		every { mockContext.getString(R.string.workspace_app_storage) } returns "App Storage (Recommended)"
 		every { mockContext.getString(R.string.workspace_internal_storage) } returns "Internal Storage"
-		every { mockContext.getString(R.string.workspace_internal_sd_card) } returns "Internal SD Card"
 		every { mockContext.getString(R.string.workspace_external_sd_card_format, *anyVararg()) } answers {
 			val args = secondArg<Array<out Any?>>()
 			"External SD Card ${args[0]}"
