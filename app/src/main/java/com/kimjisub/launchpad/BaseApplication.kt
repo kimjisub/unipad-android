@@ -7,9 +7,8 @@ import android.os.StrictMode
 import androidx.core.content.edit
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
+import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
@@ -31,7 +30,6 @@ import java.io.File
 
 class BaseApplication : Application() {
 	companion object {
-		private const val DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS = 60L
 		private const val PREF_NAME = "data"
 		private const val KEY_SELECTED_THEME = "SelectedTheme"
 		private const val CRASH_KEY_INSTALL_SPLITS = "install_splits"
@@ -44,9 +42,18 @@ class BaseApplication : Application() {
 
 		setupStrictMode()
 		recordInstallSplits()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			ioScope.launch {
+				try {
+					SystemExitReporter.collect(this@BaseApplication)
+				} catch (e: Exception) {
+					// Diagnostics must not prevent launch when the system history is unavailable.
+					Log.err("Could not read system exit history", e)
+				}
+			}
+		}
 		setupNotification()
 		setupLogger()
-		setupRemoteConfig()
 		setupBundledThemes()
 		setupOssLicensesTheme()
 
@@ -193,17 +200,4 @@ class BaseApplication : Application() {
 			emptySet()
 		}
 	}
-
-	private fun setupRemoteConfig() {
-		val remoteConfig = FirebaseRemoteConfig.getInstance()
-
-		val configSettings = FirebaseRemoteConfigSettings.Builder().apply {
-			if (BuildConfig.DEBUG)
-				minimumFetchIntervalInSeconds = DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS
-		}.build()
-
-		remoteConfig.setConfigSettingsAsync(configSettings)
-		remoteConfig.fetchAndActivate()
-	}
-
 }

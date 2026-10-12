@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Aceptar</string>
@@ -210,7 +209,6 @@
 	<string name="workspace_documents_android10">Documentos (Android 10)</string>
 	<string name="workspace_app_storage">Almacenamiento de App (Recomendado)</string>
 	<string name="workspace_internal_storage">Almacenamiento Interno</string>
-	<string name="workspace_internal_sd_card">Tarjeta SD Interna</string>
 	<string name="workspace_external_sd_card_format">Tarjeta SD Externa %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
