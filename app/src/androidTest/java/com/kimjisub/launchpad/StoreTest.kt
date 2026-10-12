@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Build
+import android.os.Process
 import android.util.Log
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
@@ -153,6 +154,16 @@ class StoreTest : BaseUITest() {
     /** Actual app startup and browsing must not request notification permission or download. */
     @Test
     fun testNoPermissionDialogBeforeDownload() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Reproduce the permission left by StoreDownloadTest, regardless of test order.
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+            assertEquals(
+                "The regression fixture must start with notification permission granted",
+                PackageManager.PERMISSION_GRANTED,
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS),
+            )
+        }
         launchThroughSplashWithoutPermissionDialog()
         assertTrue("Main screen did not appear without a notification dialog", waitForMainScreen())
         assertNoPermissionDialog()
@@ -219,7 +230,45 @@ class StoreTest : BaseUITest() {
         }
     }
 
+    private fun prepareNotificationPermissionDenied() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+            automation.adoptShellPermissionIdentity(
+                "android.permission.REVOKE_POST_NOTIFICATIONS_WITHOUT_KILL",
+                "android.permission.REVOKE_RUNTIME_PERMISSIONS",
+            )
+            try {
+                // The public revoke API kills this instrumentation's target process.
+                // Android's test-only API keeps it alive; reflection is needed because
+                // the method is absent from the public SDK, even on API 33+.
+                val manager = requireNotNull(context.getSystemService("permission"))
+                manager.javaClass.getMethod(
+                    "revokePostNotificationPermissionWithoutKillForTest",
+                    String::class.java,
+                    Int::class.javaPrimitiveType,
+                ).invoke(
+                    manager,
+                    context.packageName,
+                    Process.myUserHandle().hashCode(),
+                )
+            } finally {
+                automation.dropShellPermissionIdentity()
+            }
+            // A prior Allow leaves USER_SET behind. Clear that decision too, so a
+            // later download test can request permission as on a fresh installation.
+            assertEquals(
+                "Could not reset notification permission decision flags",
+                "",
+                device.executeShellCommand(
+                    "pm clear-permission-flags --user ${Process.myUserHandle().hashCode()} " +
+                        "${context.packageName} ${Manifest.permission.POST_NOTIFICATIONS} user-set user-fixed",
+                ).trim(),
+            )
+        }
+    }
+
     private fun launchThroughSplashWithoutPermissionDialog() {
+        prepareNotificationPermissionDenied()
         prepareLegacyStoragePermissions()
         assertNotificationPermissionDenied()
         val createdActivities = CopyOnWriteArrayList<Class<*>>()

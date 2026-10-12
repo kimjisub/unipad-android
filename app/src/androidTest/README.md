@@ -11,6 +11,12 @@ earlier through the Crashlytics API overrides the manifest, so start from a fres
 app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
 `apkanalyzer manifest print` for an APK; pull requests run it on both build types.
 
+System exit diagnostics are tagged `harness_test=true` in debug builds and remain local by default.
+After reproducing one real system exit, relaunch to record it, close and relaunch once more to finish
+the report session, then run `SystemExitServerCheckTest` with the instrumentation argument
+`systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
+so no other test reports are queued. The test's default path checks that automatic collection stays off.
+
 For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -55,13 +61,31 @@ filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-`BaseUITest` screenshots: `/data/local/tmp/unipad_tests` on the borrowed device; pull them with
-`adb -s <printed-serial> pull`. Keep the emulator offline so app startup cannot send test traffic;
+Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
+which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
+feature screens use `basefeatures-captures/`, readiness failures use
+`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+Clear this root before each run, then pull it with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
+returning the device. The capture helper stages files in app-writable external storage, copies
+them as shell and removes the staging file; it checks that each preserved file is nonempty
+and has the same byte count as its source. Keep the emulator offline so app startup cannot
+send test traffic;
 the catalogue fixture does not disable other application network clients. Restore the original
 network state and return the device when finished:
 
 ```bash
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
+```
+
+After Gradle has uninstalled the debug app, check these files from that run still exist:
+
+```bash
+adb -s <printed-serial> shell pm list packages com.kimjisub.launchpad.dev
+# The target and test packages must no longer be listed.
+for capture in settings-english-language-row file-import-result store-downloaded; do
+  adb -s <printed-serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
+done
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -76,8 +100,11 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
   bound (45 seconds) without waiting for global queue idleness.
 - Every launch to Main (`launchToMainActivity`, used by `launchToMainScreen`, `AppLaunchTest`,
   the Settings relaunch and the Store startup check) waits up to 45 seconds for `MainActivity` to
-  resume, then 20 seconds for its window and 20 seconds for its content. Splash finishes before
+  resume, then 20 seconds for its window and 20 seconds for its content. The window wait uses
+  `ActivityReadiness` to require a laid-out, focused main activity or an app-owned focused dialog. Splash finishes before
   Main starts, so a window wait right after launch would end in that gap on a slow device.
+- Readiness failures save the screenshot, resumed activity state, focused windows and hierarchy
+  under `/data/local/tmp/unipad_tests/activity-readiness-captures/`.
 - Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
   system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
 - `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system
@@ -120,6 +147,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 | Class and test | What it verifies |
 |---|---|
+| `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |
@@ -142,7 +170,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
-| `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. Notification permission is denied before startup and remains denied after browsing on API 33+. Lifecycle assertions prevent bypassing Splash. |
+| `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. On API 33+, the test first grants notification permission to reproduce a prior download, then revokes it without killing the test process before startup; permission remains denied after browsing. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
 | `PlayActivityTest.testPlayActivityRecording` | Recording setting toggles and play input remains available. |
@@ -192,6 +220,15 @@ claimed here as audio or hardware proof.
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
+
+The startup permission fixture uses Android's test-only
+`PermissionManager.revokePostNotificationPermissionWithoutKillForTest` through reflection,
+because it is not in the public SDK. It borrows shell permission identity only for that call
+and always releases it in `finally`. It also clears the prior permission decision flags so
+a later download can still request permission as on a fresh installation. A normal runtime permission revocation would kill the
+target process containing the instrumentation. The forced grant keeps this regression
+reproducible when run alone or after any earlier test, including `StoreDownloadTest`'s real
+notification Allow action. No dialog is dismissed during startup or browsing.
 
 `StoreCatalogTest` is a JVM unit test for the extracted feed: original key fallback, added/changed
 pack events, count forwarding and detaching both subscriptions.

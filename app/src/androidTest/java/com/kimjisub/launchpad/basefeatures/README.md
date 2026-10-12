@@ -48,8 +48,40 @@ with `cmd package compile -f -m speed`, matching the merged Gradle debug test pr
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
 full optimization. Archive `dumpsys package dexopt` with the run output.
-No baseline fixture is downloaded. Screenshots are saved in the target app's external files under
-`basefeatures-captures/`; pull that directory using the same serial before returning the device.
+No baseline fixture is downloaded. Screenshots are copied by the shell to
+`/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
+applications being uninstalled at the end of a complete Gradle run. Pull them with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` before returning the device.
+Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
+Readiness failure screenshots, activity state and hierarchy are kept under the same root.
+
+## Screen transition synchronization
+
+`FeatureScreen` retains the 10-second node, scroll and state deadlines. On API 34+,
+queries clear `UiAutomation`'s accessibility cache before reading the current window;
+locale recreation, rotation and DocumentsUI replacement can otherwise leave a previous
+window or null child nodes in the cached tree. Click helpers reacquire only on a stale
+node, within the same deadline. Query and click operations temporarily cap UI Automator's
+implicit idle wait at 500 ms, as the legacy helper does: playing animation can continue
+producing accessibility events and replace a node during the default 10-second idle wait.
+The explicit 10-second checks and their expected controls remain unchanged; the previous
+idle setting is restored after each operation. `ActivityReadiness`, shared with legacy
+launcher tests, waits within the feature tests' existing 10-second budget for the resumed
+activity to be laid out and for its window or an app-owned dialog to have focus before
+querying controls. Legacy launches wait up to 45 seconds for the requested activity to finish creation,
+then up to 45 seconds for MainActivity to resume, then up to 20 seconds for its window
+to be laid out and focused (an app-owned dialog may hold focus). The former "App did not start"
+check is now this window-readiness check; the later main-screen content checks remain.
+A missing-node capture also saves the hierarchy and
+resumed activity's locale, layout size and focus state.
+
+The language/skin check waits for the initial Settings window to be laid out and focused,
+and for the requested locale to reach a ready Settings window before scrolling. It still
+checks Korean and English text, fresh-screen scroll position, the requested skin preference after the Apply handler runs and
+rendered pad pixels. The ZIP check always opens the real picker drawer, selects Downloads
+inside that drawer and confirms the Downloads toolbar before selecting the ZIP. It still
+checks the result text, pack title, Play now action and imported pack id; a result dialog
+owns focus, so MainActivity focus is not a prerequisite for inspecting that dialog.
 
 ## Existing coverage and the gaps this suite fills
 
