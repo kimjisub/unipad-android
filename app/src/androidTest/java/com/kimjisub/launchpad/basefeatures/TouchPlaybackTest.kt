@@ -176,7 +176,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
                         screen.vm().ledRunner!!.isEventExist(0, it) }
                 } }
                 assertEquals(listOf(-1, -1), audio.loops.toList())
-                screen.capture(if (slide) "slide-cancel-before" else "whole-cancel-before")
+                captureAfterDraw(if (slide) "slide-cancel-before" else "whole-cancel-before")
                 val stopCount = audio.stoppedVoices.size
                 gesture.cancel()
                 try {
