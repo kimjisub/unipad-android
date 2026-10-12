@@ -55,7 +55,7 @@ abstract class BaseUITest {
         private const val SNACKBAR_TIMEOUT = 5000L
         // The resource package differs between build types, so match the id alone.
         private val SNACKBAR_TEXT = Pattern.compile(".*:id/snackbar_text")
-        private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
+        private const val SCREENSHOT_DIR = TestCaptures.DIRECTORY
     }
 
     @Before

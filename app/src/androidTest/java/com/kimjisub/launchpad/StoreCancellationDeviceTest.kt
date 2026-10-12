@@ -284,8 +284,8 @@ class StoreCancellationDeviceTest {
     }
     private fun capture(name: String) {
         val prefix = InstrumentationRegistry.getArguments().getString("capturePrefix", "fixed")
-        val folder = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "store-cancel-captures/$prefix").apply { mkdirs() }
-        assertTrue(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).takeScreenshot(File(folder, "$name.png")))
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue(TestCaptures.screenshot(device, "store-cancel-captures/$prefix/$name.png"))
     }
     private fun evidence(text: String) = InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\nstore-cancel $text\n") })
     private fun files(title: String): Map<String, ByteArray> = mapOf(
