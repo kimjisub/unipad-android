@@ -9,7 +9,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.UiDevice
-import java.io.File
 import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -68,13 +67,13 @@ internal object ActivityReadiness {
     }
 
     fun capture(context: Context, device: UiDevice, name: String) {
-        val folder = File(context.getExternalFilesDir(null), "activity-readiness-captures").apply { mkdirs() }
-        runCatching { check(device.takeScreenshot(File(folder, "$name.png"))) }
+        val folder = "activity-readiness-captures"
+        runCatching { check(TestCaptures.screenshot(device, "$folder/$name.png")) }
             .onFailure { println("Readiness screenshot failed: $it") }
         captureState(context, device, folder, name)
     }
 
-    fun captureState(context: Context, device: UiDevice, folder: File, name: String) {
+    fun captureState(context: Context, device: UiDevice, folder: String, name: String) {
         val state = runCatching {
             onMain(1000) {
                 ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
@@ -91,9 +90,19 @@ internal object ActivityReadiness {
                 "window=${it.id} focused=${it.isFocused} package=${it.root?.packageName}"
             }
         }.getOrElse { "Could not read focused windows: $it" }
-        runCatching { File(folder, "$name-state.txt").writeText("target=${context.packageName}\n$state\n$focus\n") }
+        runCatching {
+            check(TestCaptures.save(device, "$folder/$name-state.txt") {
+                it.writeText("target=${context.packageName}\n$state\n$focus\n")
+                true
+            })
+        }
             .onFailure { println("Readiness state save failed: $it") }
-        runCatching { device.dumpWindowHierarchy(File(folder, "$name.xml")) }
+        runCatching {
+            check(TestCaptures.save(device, "$folder/$name.xml") {
+                device.dumpWindowHierarchy(it)
+                true
+            })
+        }
             .onFailure { println("Readiness hierarchy save failed: $it") }
     }
 }

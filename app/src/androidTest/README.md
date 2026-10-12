@@ -55,13 +55,31 @@ filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-`BaseUITest` screenshots: `/data/local/tmp/unipad_tests` on the borrowed device; pull them with
-`adb -s <printed-serial> pull`. Keep the emulator offline so app startup cannot send test traffic;
+Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
+which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
+feature screens use `basefeatures-captures/`, readiness failures use
+`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+Clear this root before each run, then pull it with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
+returning the device. The capture helper stages files in app-writable external storage, copies
+them as shell and removes the staging file; it checks that each preserved file is nonempty
+and has the same byte count as its source. Keep the emulator offline so app startup cannot
+send test traffic;
 the catalogue fixture does not disable other application network clients. Restore the original
 network state and return the device when finished:
 
 ```bash
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
+```
+
+After Gradle has uninstalled the debug app, check these files from that run still exist:
+
+```bash
+adb -s <printed-serial> shell pm list packages com.kimjisub.launchpad.dev
+# The target and test packages must no longer be listed.
+for capture in settings-english-language-row file-import-result store-downloaded; do
+  adb -s <printed-serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
+done
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -80,7 +98,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
   `ActivityReadiness` to require a laid-out, focused main activity or an app-owned focused dialog. Splash finishes before
   Main starts, so a window wait right after launch would end in that gap on a slow device.
 - Readiness failures save the screenshot, resumed activity state, focused windows and hierarchy
-  under the app's external `activity-readiness-captures/` directory.
+  under `/data/local/tmp/unipad_tests/activity-readiness-captures/`.
 - Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
   system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
 - `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system

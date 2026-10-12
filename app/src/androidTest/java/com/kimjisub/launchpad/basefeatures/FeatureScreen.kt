@@ -23,6 +23,7 @@ import androidx.test.uiautomator.UiObject2
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.ActivityReadiness
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.TestUniPack
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.db.repository.UnipackRepository
@@ -170,8 +171,8 @@ class FeatureScreen {
         node(By.text(text(R.string.autoPlay)))
     }
     fun capture(name: String) {
-        val folder = File(context.getExternalFilesDir(null), "basefeatures-captures").apply { mkdirs() }
-        assertTrue("Screenshot was not saved", device.takeScreenshot(File(folder, "$name.png")))
+        val folder = "basefeatures-captures"
+        assertTrue("Screenshot was not saved", TestCaptures.screenshot(device, "$folder/$name.png"))
         if (name.startsWith("missing-")) {
             ActivityReadiness.captureState(context, device, folder, name)
         }

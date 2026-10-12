@@ -48,8 +48,12 @@ with `cmd package compile -f -m speed`, matching the merged Gradle debug test pr
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
 full optimization. Archive `dumpsys package dexopt` with the run output.
-No baseline fixture is downloaded. Screenshots are saved in the target app's external files under
-`basefeatures-captures/`; pull that directory using the same serial before returning the device.
+No baseline fixture is downloaded. Screenshots are copied by the shell to
+`/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
+applications being uninstalled at the end of a complete Gradle run. Pull them with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` before returning the device.
+Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
+Readiness failure screenshots, activity state and hierarchy are kept under the same root.
 
 ## Screen transition synchronization
 
@@ -64,8 +68,11 @@ The explicit 10-second checks and their expected controls remain unchanged; the 
 idle setting is restored after each operation. `ActivityReadiness`, shared with legacy
 launcher tests, waits within the feature tests' existing 10-second budget for the resumed
 activity to be laid out and for its window or an app-owned dialog to have focus before
-querying controls. Legacy launches share creation and readiness within their existing
-45-second budget, before their unchanged package/main-screen checks. A missing-node capture also saves the hierarchy and
+querying controls. Legacy launches wait up to 45 seconds for the requested activity to finish creation,
+then up to 45 seconds for MainActivity to resume, then up to 20 seconds for its window
+to be laid out and focused (an app-owned dialog may hold focus). The former "App did not start"
+check is now this window-readiness check; the later main-screen content checks remain.
+A missing-node capture also saves the hierarchy and
 resumed activity's locale, layout size and focus state.
 
 The language/skin check waits for the initial Settings window to be laid out and focused,
