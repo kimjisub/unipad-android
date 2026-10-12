@@ -133,6 +133,10 @@ class TouchPlaybackTest : PlaybackScreenTest() {
                 assertEquals(listOf(cancelledVoice), audio.stoppedVoices.drop(stops))
                 assertTrue("The other pad must stay held", pressed(2))
                 captureAfterDraw("one-of-two-pads-cancel")
+                val afterIndividualCancel = audio.stoppedVoices.size
+                gesture.repeatIndividualUp()
+                assertEquals("Repeated individual cancellation requested another stop", afterIndividualCancel, audio.stoppedVoices.size)
+                assertTrue("Repeated individual cancellation released the other pad", pressed(2))
                 val again = start(gesture, 1)
                 gesture.up(again)
                 assertFalse("Repress/release stopped the other voice", audio.stoppedVoices.drop(stops).contains(otherVoice))
@@ -221,6 +225,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         private val held = mutableListOf<Pair<Int, Int>>() // pointer id to pad index
         private var cancelled = emptyList<Pair<Int, Int>>()
         private var downAt = 0L
+        private var lastIndividualUp: Pair<Int, List<Pair<Int, Int>>>? = null
 
         fun down(index: Int): Int {
             val id = generateSequence(0) { it + 1 }.first { id -> held.none { it.first == id } }
@@ -234,9 +239,10 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         fun up(id: Int, cancelled: Boolean = false) {
             val index = held.indexOfFirst { it.first == id }
             check(index >= 0)
-            inject(if (held.size == 1) MotionEvent.ACTION_UP else
-                MotionEvent.ACTION_POINTER_UP or (index shl MotionEvent.ACTION_POINTER_INDEX_SHIFT), held,
-                if (cancelled) MotionEvent.FLAG_CANCELED else 0)
+            val action = if (held.size == 1) MotionEvent.ACTION_UP else
+                MotionEvent.ACTION_POINTER_UP or (index shl MotionEvent.ACTION_POINTER_INDEX_SHIFT)
+            if (cancelled) lastIndividualUp = action to held.toList()
+            inject(action, held, if (cancelled) MotionEvent.FLAG_CANCELED else 0)
             held.removeAt(index)
         }
 
@@ -249,11 +255,19 @@ class TouchPlaybackTest : PlaybackScreenTest() {
 
         fun repeatCancelAndUp() {
             check(held.isEmpty() && cancelled.isNotEmpty())
-            inject(MotionEvent.ACTION_CANCEL, cancelled)
-            inject(MotionEvent.ACTION_UP, cancelled.take(1))
+            // InputDispatcher rejects events after CANCEL. Deliver these defensive repeats to
+            // the real Activity window instead, without claiming the OS accepted a new gesture.
+            inject(MotionEvent.ACTION_CANCEL, cancelled, direct = true)
+            inject(MotionEvent.ACTION_UP, cancelled.take(1), direct = true)
         }
 
-        private fun inject(action: Int, pointers: List<Pair<Int, Int>>, flags: Int = 0) {
+        fun repeatIndividualUp() {
+            val (action, pointers) = checkNotNull(lastIndividualUp)
+            inject(action, pointers, MotionEvent.FLAG_CANCELED, direct = true)
+            inject(action, pointers, direct = true)
+        }
+
+        private fun inject(action: Int, pointers: List<Pair<Int, Int>>, flags: Int = 0, direct: Boolean = false) {
             val pads = screen.padBounds()
             val properties = pointers.map { (id, _) -> MotionEvent.PointerProperties().apply {
                 this.id = id; toolType = MotionEvent.TOOL_TYPE_FINGER
@@ -263,8 +277,10 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             } }.toTypedArray()
             val event = MotionEvent.obtain(downAt, SystemClock.uptimeMillis(), action, pointers.size,
                 properties, coordinates, 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, flags)
-            try { assertTrue("Touch injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true)) }
-            finally { event.recycle() }
+            try {
+                if (direct) screen.onMain { screen.resumed().dispatchTouchEvent(event) }
+                else assertTrue("Touch injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true))
+            } finally { event.recycle() }
         }
     }
 

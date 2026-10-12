@@ -88,7 +88,7 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -102,9 +102,10 @@ press/release check and then runs three isolated scenarios, each with a fresh sy
 
 - `cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain`: injects DOWN/CANCEL/UP through the actual window
   and cancels an individual pointer with a cancelled POINTER_UP. A single cancelled pad loses its pressed light and
-  looping keyLED execution and requests stopping its infinite voice. With two pad views held,
-  cancelling one preserves the other. Repeated CANCEL and a following UP do not stop the
-  other voice; a fresh press works. Finite samples continue on either UP or CANCEL.
+  looping keyLED execution and requests stopping its infinite voice. With two fingers held,
+  a POINTER_UP carrying FLAG_CANCELED releases only that finger and preserves the other.
+  A fresh press/release also leaves the other voice running. Repeated whole-gesture CANCEL
+  and a following UP request no extra stop; a fresh press works. Finite samples continue on either UP or CANCEL.
 - `wholeTouchStreamCancellationReleasesBothPads`: injects two touchscreen pointers through
   `UiAutomation` and cancels their whole stream. Both pressed lights, keyLED executions and
   infinite voices must release, with one stop request for each voice.
@@ -118,8 +119,11 @@ These are synthetic events delivered to real screen input paths, not physical-fi
 and request snapshots. This is request evidence only, not proof of audible playback or silence.
 Screenshots wait for the actual pad LED drawable to clear and two display frames to draw.
 Captured PNGs include `single-pad-cancel`, `one-of-two-pads-cancel`, `whole-cancel-before`
-and `whole-cancel-after`. Capture the same inputs on the base production code before applying
-the fix; on the base, the pressed light/keyLED remains and no active voice stop is requested.
+and `whole-cancel-after`, plus the same pair with a `slide-cancel` prefix.
+The former per-pad input ignored CANCEL. The current Compose input already turns
+CANCEL into releases, so these checks protect that behavior without restoring the old listeners.
+The OS rejects duplicate events after CANCEL; defensive repeat events are dispatched
+directly to the real Activity window. The first cancellation always uses UiAutomation.
 
 Run the existing test entry, or run the full BaseFeaturesSuite as above:
 
@@ -129,6 +133,7 @@ Run the existing test entry, or run the full BaseFeaturesSuite as above:
   --no-daemon --console=plain
 adb -s "$ANDROID_SERIAL" logcat -d -s TouchCancellation:I '*:S'
 ```
+
 ## Several fingers on the play screen
 
 `Fingers` injects one multi-finger touchscreen gesture through `UiAutomation.injectInputEvent`
@@ -153,9 +158,9 @@ and on (dragging moves the press). The test sets the preference and restores it 
 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
-Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
-down (for example when the app leaves the screen), and H, lifting a finger after the chain
-changed. Their fixes are being made separately and their tests join the suite with them.
+Case G cancellation is checked by the touch cancellation regression above in both modes.
+Leaving the screen while fingers remain held and case H, lifting a finger after the chain
+changed, remain separate checks.
 Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## A mouse on the play screen
