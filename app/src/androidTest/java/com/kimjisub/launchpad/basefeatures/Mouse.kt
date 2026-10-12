@@ -47,6 +47,9 @@ class Mouse(private val screen: FeatureScreen) {
         inject(MotionEvent.ACTION_CANCEL)
     }
 
+    /** Forgets a press the window already ended with ACTION_CANCEL, without injecting again. */
+    fun forgetCancelled() { buttons = 0 }
+
     private fun stroke(to: Point, steps: Int, action: Int) {
         val fromX = x
         val fromY = y
