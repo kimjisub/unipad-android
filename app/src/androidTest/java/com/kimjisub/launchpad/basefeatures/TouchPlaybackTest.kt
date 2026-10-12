@@ -302,9 +302,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     private fun resetTouchFixture() {
         screen.close()
         screen.install()
-        audio.plays.clear()
-        audio.loops.clear()
-        audio.stoppedVoices.clear()
+        audio.resetPlaybackRequests()
     }
 
 }
