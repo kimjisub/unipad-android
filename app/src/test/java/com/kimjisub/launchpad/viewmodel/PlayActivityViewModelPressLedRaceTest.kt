@@ -234,6 +234,10 @@ class PlayActivityViewModelPressLedRaceTest {
 				completed++
 			}
 			assertTrue("all $TRIALS trials must finish in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
+			assertEquals("trials whose LED ticks overlap the pad read", TRIALS, overlaps)
+			if (expectFiniteEnd) {
+				assertEquals("trials whose finite blink ends during a press", TRIALS, finiteEnds)
+			}
 		} finally {
 			println(
 				"PRESS_LED_RACE trials=$completed overlaps=$overlaps finiteEnds=$finiteEnds " +
