@@ -108,7 +108,10 @@ abstract class BaseUITest {
         }
         withLifecycleCallback(callback) {
             context.startActivity(intent!!)
-            assertTrue("Requested launch activity did not finish creation", created.await(ACTIVITY_START_TIMEOUT, TimeUnit.MILLISECONDS))
+            if (!created.await(ACTIVITY_START_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                ActivityReadiness.capture(context, device, "missing-launch-${SystemClock.uptimeMillis()}")
+                fail("Requested launch activity did not finish creation")
+            }
         }
     }
 
@@ -119,7 +122,7 @@ abstract class BaseUITest {
         try {
             action()
         } finally {
-            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { monitor.removeLifecycleCallback(callback) }
         }
     }
 
@@ -240,7 +243,7 @@ abstract class BaseUITest {
                 if (answerStoragePermission && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) handlePermissionDialog()
             }
         }
-        assertTrue("App did not start", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), MAIN_TIMEOUT))
+        ActivityReadiness.await(context, device, MAIN_TIMEOUT, MainActivity::class.java)
     }
 
     /**
