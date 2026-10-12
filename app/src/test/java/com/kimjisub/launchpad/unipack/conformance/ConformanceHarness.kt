@@ -84,8 +84,14 @@ fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
 	}
 }
 
-private fun parseResult(pack: UniPack, root: File): JsonElement {
-	val soundsDir = File(root, "sounds")
+/** A sound's path below the pack's sounds folder, whatever case that folder is written in. */
+private fun soundName(file: File, root: File): String {
+	val path = file.relativeTo(root).path.replace(File.separatorChar, '/')
+	val slash = path.indexOf('/')
+	return if (slash > 0 && path.substring(0, slash).equals("sounds", ignoreCase = true)) path.substring(slash + 1) else path
+}
+
+internal fun parseResult(pack: UniPack, root: File): JsonElement {
 	return buildJsonObject {
 		put("loaded", true)
 		putJsonObject("info") {
@@ -105,7 +111,7 @@ private fun parseResult(pack: UniPack, root: File): JsonElement {
 					put("c", c); put("x", x); put("y", y)
 					putJsonArray("queue") {
 						for (s in queue) add(buildJsonObject {
-							put("file", s.file.relativeTo(soundsDir).path.replace(File.separatorChar, '/'))
+							put("file", soundName(s.file, root))
 							put("loop", s.loop)
 							put("wormhole", s.wormhole)
 						})
@@ -192,8 +198,7 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * change of time waits until that thread has read the new value and finished the pass that read it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
-	private val soundsDir = File(root, "sounds")
+private class ScenarioRun(val c: CorpusCase, val pack: UniPack, private val root: File, val deps: Deps) {
 	private val testThread = Thread.currentThread()
 	private val clock = AtomicLong(1000)
 	private val watchFrom = AtomicLong(Long.MAX_VALUE)
@@ -293,7 +298,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			override fun onEnd() = loaded.countDown()
 			override fun onException(throwable: Throwable) { failure = throwable; loaded.countDown() }
 		}, scope, RecordingEngine { file, loop ->
-			val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
+			val name = soundName(file, root)
 			events.add(event("sound", pressChain, pressX, pressY, name, loop))
 		})
 		check(loaded.await(10, TimeUnit.SECONDS)) { "${c.id}: the sounds did not finish loading" }
