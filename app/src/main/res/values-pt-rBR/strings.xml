@@ -96,7 +96,6 @@
 	<string name="proLightMode">Modo Pro Light</string>
 
 	<!--Version-->
-	<string name="update_available">Atualização disponível</string>
 
 	<string name="permissionRequire">É necessário acesso ao armazenamento externo para salvar arquivos do projeto.\nObtenha permissão para este privilégio.</string>
 	<string name="permissionDenied">O app requer acesso ao armazenamento externo.\nPor favor ative as permissões em [Configurações] > [Permissões]</string>
