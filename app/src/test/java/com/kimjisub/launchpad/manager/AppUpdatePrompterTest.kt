@@ -387,6 +387,25 @@ class AppUpdatePrompterTest {
 	}
 
 	@Test
+	fun canceledDownloadOnReturnRestsLikeANotification() = runTest {
+		store.downloadRequested = true
+		store.lastAutoCheckAt = now
+		source.answer = UpdateStatus.Canceled
+		val prompter = prompter()
+		prompter.onListReady()
+		advanceUntilIdle()
+		assertNull(prompter.card)
+		assertFalse(store.downloadRequested)
+		assertEquals(now, store.declinedAt)
+
+		source.answer = UpdateStatus.Available
+		prompter.onListReady()
+		advanceUntilIdle()
+		assertEquals("cancellation does not immediately offer another download", 1, source.queries)
+		assertNull(prompter.card)
+	}
+
+	@Test
 	fun storeLinkCountsAsDeclineAndReportsAMissingStore() = runTest {
 		val prompter = prompter()
 		prompter.askStore()

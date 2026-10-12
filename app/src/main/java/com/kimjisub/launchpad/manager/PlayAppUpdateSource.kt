@@ -34,18 +34,13 @@ class PlayAppUpdateSource(
 			throw e
 		}
 		lastInfo = info
-		return when (info.installStatus()) {
-			InstallStatus.PENDING -> UpdateStatus.Downloading(null)
-			InstallStatus.DOWNLOADING -> UpdateStatus.Downloading(fraction(info.bytesDownloaded(), info.totalBytesToDownload()))
-			InstallStatus.DOWNLOADED -> UpdateStatus.Downloaded
-			InstallStatus.FAILED -> UpdateStatus.Failed
-			else -> when (info.updateAvailability()) {
+		return downloadStatus(info.installStatus(), info.bytesDownloaded(), info.totalBytesToDownload())
+			?: when (info.updateAvailability()) {
 				UpdateAvailability.UPDATE_AVAILABLE ->
 					if (info.isUpdateTypeAllowed(options)) UpdateStatus.Available else UpdateStatus.Unsupported
 				UpdateAvailability.UPDATE_NOT_AVAILABLE -> UpdateStatus.None
 				else -> throw IllegalStateException("update availability ${info.updateAvailability()}")
 			}
-		}
 	}
 
 	override fun startDownload(): Boolean {
@@ -67,14 +62,7 @@ class PlayAppUpdateSource(
 	override fun observe(onChange: (UpdateStatus) -> Unit) {
 		close()
 		val newListener = InstallStateUpdatedListener { state ->
-			val status = when (state.installStatus()) {
-				InstallStatus.PENDING -> UpdateStatus.Downloading(null)
-				InstallStatus.DOWNLOADING -> UpdateStatus.Downloading(fraction(state.bytesDownloaded(), state.totalBytesToDownload()))
-				InstallStatus.DOWNLOADED -> UpdateStatus.Downloaded
-				InstallStatus.FAILED -> UpdateStatus.Failed
-				InstallStatus.CANCELED -> UpdateStatus.Canceled
-				else -> null
-			}
+			val status = downloadStatus(state.installStatus(), state.bytesDownloaded(), state.totalBytesToDownload())
 			status?.let(onChange)
 		}
 		listener = newListener
@@ -84,6 +72,16 @@ class PlayAppUpdateSource(
 	override fun close() {
 		listener?.let(manager::unregisterListener)
 		listener = null
+	}
+
+	/** Query results and listener events must treat a canceled download alike. */
+	private fun downloadStatus(status: Int, done: Long, total: Long): UpdateStatus? = when (status) {
+		InstallStatus.PENDING -> UpdateStatus.Downloading(null)
+		InstallStatus.DOWNLOADING -> UpdateStatus.Downloading(fraction(done, total))
+		InstallStatus.DOWNLOADED -> UpdateStatus.Downloaded
+		InstallStatus.FAILED -> UpdateStatus.Failed
+		InstallStatus.CANCELED -> UpdateStatus.Canceled
+		else -> null
 	}
 
 	private fun fraction(done: Long, total: Long): Float? =
