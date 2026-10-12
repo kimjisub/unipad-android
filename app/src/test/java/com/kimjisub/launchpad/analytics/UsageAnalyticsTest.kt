@@ -37,18 +37,18 @@ class UsageAnalyticsTest {
 
 	@Test
 	fun onlyTheFirstOutcomeOfOneImportIsSent() {
-		val report = sink.analytics.packImport(PackImportSource.CODE)
+		val report = sink.analytics.packImport(PackImportSource.STORE)
 		report.succeeded()
 		report.cancelled()
 		report.failed(UsageErrorType.NETWORK)
 		report.failed(IOException("late"))
 		report.succeeded()
-		assertEquals(listOf(importEvent("code", "success")), sink.events)
+		assertEquals(listOf(importEvent("store", "success")), sink.events)
 
-		val other = sink.analytics.packImport(PackImportSource.CODE)
+		val other = sink.analytics.packImport(PackImportSource.STORE)
 		other.cancelled()
 		other.failed(IOException("after cancel"))
-		assertEquals(importEvent("code", "cancelled"), sink.events.last())
+		assertEquals(importEvent("store", "cancelled"), sink.events.last())
 		assertEquals(2, sink.events.size)
 	}
 
@@ -108,16 +108,26 @@ class UsageAnalyticsTest {
 		PackImportSource.entries.mapTo(values) { it.value }
 		PlayTrigger.entries.mapTo(values) { it.value }
 		UsageErrorType.entries.mapTo(values) { it.value }
+		ScreenOrientation.entries.mapTo(values) { it.value }
+		ScreenShortSide.entries.mapTo(values) { it.value }
+		WindowMode.entries.mapTo(values) { it.value }
 
-		sink.analytics.packImport(PackImportSource.CODE).failed(UsageErrorType.NOT_FOUND)
+		sink.analytics.packImport(PackImportSource.STORE).failed(UsageErrorType.NOT_FOUND)
 		val session = sink.analytics.newPlaySession()
+		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, true))
 		session.loadStarted(); session.loadSucceeded(); session.playTriggered(PlayTrigger.PAD); session.ended()
 
 		for (event in sink.events) {
 			assertTrue("$event", event.parameters.keys.all { it in UsageParam.allowed })
 			event.parameters.filterKeys { it != UsageParam.DURATION_BUCKET }.values.forEach { assertTrue("$it in $event", it in values) }
 		}
-		assertEquals(setOf("result", "import_source", "error_type", "duration_bucket", "trigger"), UsageParam.allowed)
+		assertEquals(
+			setOf(
+				"result", "import_source", "error_type", "duration_bucket", "trigger",
+				"orientation", "screen_short_side", "window_mode",
+			),
+			UsageParam.allowed,
+		)
 	}
 
 	@Test

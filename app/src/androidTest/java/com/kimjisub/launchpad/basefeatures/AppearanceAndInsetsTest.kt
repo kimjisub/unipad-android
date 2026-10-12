@@ -29,14 +29,14 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         val oldLocales = localeManager.applicationLocales
         try {
             var settings = screen.launch(SettingsActivity::class.java)
+            screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
             localeManager.applicationLocales = LocaleList(Locale.KOREAN)
+            screen.awaitActivity(SettingsActivity::class.java, "ko")
             assertNotNull("Korean language row missing", screen.scrollTo(By.text("한국어"), androidx.test.uiautomator.Direction.DOWN))
             assertEquals("ko", screen.onMain { screen.resumed().resources.configuration.locales[0].language })
             screen.capture("settings-korean")
             localeManager.applicationLocales = LocaleList(Locale.ENGLISH)
-            screen.await("English locale did not reach Settings") {
-                screen.onMain { screen.resumed().resources.configuration.locales[0].language == "en" }
-            }
+            screen.awaitActivity(SettingsActivity::class.java, "en")
             // Locale handling may retain scroll state. Reopen without saved state to exercise
             // the language row below the top of a newly created Settings screen deterministically.
             val previousSettings = screen.resumed()
@@ -60,6 +60,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             val selected = choices.first { it.id != theme }
             screen.node(By.text(selected.name)).click()
             screen.clickText(R.string.apply)
+            screen.await("Selected skin was not persisted after Apply") { prefs.selectedTheme == selected.id }
             assertEquals(selected.id, prefs.selectedTheme)
             screen.device.pressBack()
             screen.clickText(R.string.settings_theme)

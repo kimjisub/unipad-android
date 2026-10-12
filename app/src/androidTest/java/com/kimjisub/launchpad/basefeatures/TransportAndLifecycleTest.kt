@@ -82,6 +82,8 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         assertEquals(audio.loaded.getValue("silence2.wav"), audio.plays.last())
         val original = screen.resumed()
         val silenceCount = audio.silences.get()
+        val stopCount = audio.stops.get()
+        val loadedSounds = audio.loaded.toMap()
         // pressHome() waits only 1 second for an accessibility event, even if Home succeeded.
         // Require actual key injection and the launcher/lifecycle result under the existing deadline.
         // Resolve through the device shell: target package visibility can hide the real launcher
@@ -95,9 +97,14 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
             screen.onMain { !vm.screenVisible } && screen.device.currentPackageName == launcher
         }
         screen.await("Leaving play did not silence voices") { audio.silences.get() > silenceCount }
+        // Android 17 mutes, or with strict hardening aborts, an app whose stream stays open unseen.
+        screen.await("Leaving play left the audio stream open") { audio.stops.get() > stopCount }
+        val startCount = audio.starts.get()
         screen.context.getSystemService(android.app.ActivityManager::class.java).appTasks
             .single { it.taskInfo?.taskId == original.taskId }.moveToFront()
         screen.await("Play activity did not resume") { screen.onMain { vm.screenVisible } }
+        screen.await("Returning did not reopen the audio stream") { audio.starts.get() > startCount }
+        assertEquals("Sounds were reloaded on return", loadedSounds, audio.loaded.toMap())
         assertSame(original, screen.resumed())
         assertSame(vm, screen.vm())
         assertEquals(1, screen.onMain { vm.chain.value })

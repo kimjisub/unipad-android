@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
 import com.kimjisub.launchpad.analytics.RecordingUsageSink
+import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.analytics.UsageEvent
 import com.kimjisub.launchpad.analytics.UsageParam
@@ -198,6 +199,28 @@ class PlayActivityViewModelUsageTest {
 
 		assertEquals(listOf(UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), names())
 		assertEquals(mapOf(UsageParam.DURATION_BUCKET to "lt_1s"), sink.named(UsageEvent.PLAY_END).single().parameters)
+	}
+
+	@Test
+	fun playStartCarriesTheWindowTheActivityLastReported() {
+		val vm = newVm()
+		vm.screenLayoutChanged(ScreenLayout.of(2_000, 1_200, false))
+		load(vm, createPack())
+		startPlayback(vm)
+		sink.awaitEvent(UsageEvent.PACK_LOAD)
+		vm.screenLayoutChanged(ScreenLayout.of(900, 1_100, true)) // turned to portrait and moved into split screen
+
+		vm.padTouch(0, 0, true)
+
+		assertEquals(
+			mapOf(
+				UsageParam.TRIGGER to "pad",
+				UsageParam.ORIENTATION to "portrait",
+				UsageParam.SCREEN_SHORT_SIDE to "840dp_plus",
+				UsageParam.WINDOW_MODE to "multi_window",
+			),
+			sink.named(UsageEvent.PLAY_START).single().parameters,
+		)
 	}
 
 	@Test

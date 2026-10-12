@@ -59,6 +59,7 @@ fun UnipackListItem(
 	subtitle: String,
 	hasLed: Boolean,
 	hasAutoPlay: Boolean,
+	modifier: Modifier = Modifier,
 	indicatorFontSize: TextUnit = 9.sp,
 	indicatorOnColor: Color = Green,
 	indicatorOffColor: Color = Pink,
@@ -70,13 +71,13 @@ fun UnipackListItem(
 	onFlagClick: () -> Unit = {},
 	flagContent: @Composable () -> Unit = {},
 	onClick: () -> Unit,
-	modifier: Modifier = Modifier,
 ) {
 	Box(
 		modifier = modifier
 			.fillMaxWidth()
 			.height(60.dp)
 			.padding(horizontal = 16.dp)
+			.focusRing(RoundedCornerShape(5.dp))
 			.clickable { onClick() },
 	) {
 		// Bottom layer: Flag area
@@ -85,7 +86,7 @@ fun UnipackListItem(
 				.width(flagWidth)
 				.fillMaxHeight()
 				.background(flagColor, RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp))
-				.then(if (flagClickable) Modifier.clickable { onFlagClick() } else Modifier),
+				.then(if (flagClickable) Modifier.focusRing(RoundedCornerShape(5.dp)).clickable { onFlagClick() } else Modifier),
 			contentAlignment = Alignment.Center,
 		) {
 			flagContent()

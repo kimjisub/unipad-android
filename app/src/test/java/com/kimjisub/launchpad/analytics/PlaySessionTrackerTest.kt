@@ -166,4 +166,59 @@ class PlaySessionTrackerTest {
 
 		assertEquals(playEnd("lt_1s"), sink.events.last())
 	}
+
+	@Test
+	fun playStartCarriesTheLatestScreenLayoutAndNothingElseDoes() {
+		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		session.loadStarted()
+		session.loadSucceeded()
+		session.screenLayoutChanged(ScreenLayout.of(700, 1_000, true))
+		session.playTriggered(PlayTrigger.PAD)
+		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		session.ended()
+
+		assertEquals(
+			sink.pack(
+				UsageEvent.PLAY_START,
+				UsageParam.TRIGGER to "pad",
+				UsageParam.ORIENTATION to "portrait",
+				UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
+				UsageParam.WINDOW_MODE to "multi_window",
+			),
+			sink.named(UsageEvent.PLAY_START).single(),
+		)
+		assertEquals(listOf(UsageParam.TRIGGER), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters.keys.toList())
+		assertEquals(listOf(UsageParam.DURATION_BUCKET), sink.named(UsageEvent.PLAY_END).single().parameters.keys.toList())
+		assertEquals(4, sink.events.size)
+	}
+
+	@Test
+	fun aMomentOfUndefinedSizeKeepsTheLayoutKnownBefore() {
+		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
+		session.screenLayoutChanged(ScreenLayout.of(0, 0, false))
+		session.loadStarted()
+		session.loadSucceeded()
+		session.playTriggered(PlayTrigger.AUTOPLAY)
+
+		assertEquals(
+			sink.pack(
+				UsageEvent.PLAY_START,
+				UsageParam.TRIGGER to "autoplay",
+				UsageParam.ORIENTATION to "landscape",
+				UsageParam.SCREEN_SHORT_SIDE to "600dp_839dp",
+				UsageParam.WINDOW_MODE to "full_screen",
+			),
+			sink.named(UsageEvent.PLAY_START).single(),
+		)
+	}
+
+	@Test
+	fun playStartWithoutAKnownLayoutCarriesOnlyItsTrigger() {
+		session.screenLayoutChanged(null)
+		session.loadStarted()
+		session.loadSucceeded()
+		session.playTriggered(PlayTrigger.AUTOPLAY)
+
+		assertEquals(playStart("autoplay"), sink.named(UsageEvent.PLAY_START).single())
+	}
 }

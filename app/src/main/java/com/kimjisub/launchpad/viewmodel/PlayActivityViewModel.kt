@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.analytics.PlayTrigger
+import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.audio.AudioFocusPolicy
@@ -32,6 +33,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 enum class PlayMode {
@@ -230,12 +232,18 @@ class PlayActivityViewModel(
 	}
 
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
-	// screen is in the background; the LED runner must not start until the screen is back.
+	// screen is in the background; the LED runner must not start until the screen is back. The audio
+	// stream is open only while the screen is visible, including beside another app in split screen.
 	var screenVisible = false
 		set(value) {
 			field = value
 			syncLedRunner()
+			syncSoundStream()
 		}
+
+	private fun syncSoundStream() {
+		if (screenVisible) soundRunner?.resumeStream() else soundRunner?.pauseStream()
+	}
 
 	private fun syncLedRunner() {
 		if (screenVisible && scbLed.isChecked()) ledRunner?.launch() else ledRunner?.stop()
@@ -261,6 +269,9 @@ class PlayActivityViewModel(
 	val isTraceLogSequenceInitialized get() = ::traceLogSequence.isInitialized
 
 	private val playSession = usage.newPlaySession()
+
+	/** PlayActivity reports its window when it is created and each time it is rotated or resized; `play_start` carries the latest. */
+	fun screenLayoutChanged(layout: ScreenLayout?) = playSession.screenLayoutChanged(layout)
 
 	// This ViewModel outlives a recreated PlayActivity (e.g. a display size change). The pack, its
 	// runners and the open count belong to it and are set up once; the new activity only rebuilds views.
@@ -437,6 +448,7 @@ class PlayActivityViewModel(
 					}
 				}
 			})
+		syncSoundStream()
 
 		chain.addObserver { curr: Int, _: Int ->
 			try {
@@ -992,10 +1004,19 @@ class PlayActivityViewModel(
 			}
 
 			override fun onDone() {
-				autoMappingActive = false
-				folder.reloadAutoPlay()
-				initAutoPlayRunner()
-				log("AutoMapping complete")
+				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
+				viewModelScope.launch {
+					try {
+						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
+						autoMappingActive = false
+						initAutoPlayRunner()
+						log("AutoMapping complete")
+					} catch (e: CancellationException) {
+						throw e
+					} catch (e: Exception) {
+						onException(e)
+					}
+				}
 			}
 
 			override fun onException(throwable: Throwable) {
@@ -1008,7 +1029,6 @@ class PlayActivityViewModel(
 	}
 
 	override fun onCleared() {
-		super.onCleared()
 		playSession.ended()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()

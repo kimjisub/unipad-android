@@ -6,6 +6,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import com.kimjisub.launchpad.R.anim
 import com.kimjisub.launchpad.analytics.UsageAnalytics
@@ -13,6 +14,7 @@ import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.PrimaryButtonFilter
 import org.koin.android.ext.android.inject
 import splitties.activities.start
 
@@ -84,6 +86,8 @@ open class BaseActivity : AppCompatActivity() {
 		)
 	}
 
+	private val primaryButtonFilter = PrimaryButtonFilter()
+
 	fun getActivityName(): String {
 		return localClassName.split('.').last()
 	}
@@ -96,6 +100,11 @@ open class BaseActivity : AppCompatActivity() {
 			@Suppress("DEPRECATION")
 			overridePendingTransition(anim.activity_in, anim.activity_out)
 		}
+	}
+
+	override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+		if (primaryButtonFilter.shouldDrop(ev)) return true
+		return super.dispatchTouchEvent(ev)
 	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {

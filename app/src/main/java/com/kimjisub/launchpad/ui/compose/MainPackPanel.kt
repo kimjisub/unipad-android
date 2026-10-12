@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -91,11 +92,11 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 						.weight(1f)
 						.basicMarquee(),
 				)
-				IconButton(onClick = { vm.youtubeClick() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.youtubeClick() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(painterResource(R.drawable.ic_youtube_24dp), contentDescription = stringResource(R.string.cd_youtube), tint = Color(0xFF555555))
 				}
 				if (unipack.website != null) {
-					IconButton(onClick = { vm.websiteClick() }, modifier = Modifier.size(32.dp)) {
+					IconButton(onClick = { vm.websiteClick() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 						Icon(painterResource(R.drawable.ic_web_24dp), contentDescription = stringResource(R.string.cd_website), tint = Color(0xFF555555))
 					}
 				}
@@ -209,7 +210,7 @@ fun HeaderRow(
 		modifier = Modifier.fillMaxWidth(),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
-		IconButton(onClick = onBookmarkToggle, modifier = Modifier.size(40.dp)) {
+		IconButton(onClick = onBookmarkToggle, modifier = Modifier.focusRing(CircleShape).size(40.dp)) {
 			Icon(
 				painter = painterResource(
 					if (isBookmarked) R.drawable.ic_bookmark_on else R.drawable.ic_bookmark_off
@@ -219,7 +220,7 @@ fun HeaderRow(
 			)
 		}
 		Spacer(Modifier.weight(1f))
-		IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
+		IconButton(onClick = onDelete, modifier = Modifier.focusRing(CircleShape).size(40.dp)) {
 			Icon(painterResource(R.drawable.ic_delete_24dp), contentDescription = stringResource(R.string.cd_delete), tint = Color(0xFF555555))
 		}
 	}

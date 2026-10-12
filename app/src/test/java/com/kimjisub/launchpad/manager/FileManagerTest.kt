@@ -2,9 +2,11 @@ package com.kimjisub.launchpad.manager
 
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Assume.assumeFalse
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.io.IOException
 
 class FileManagerTest {
 
@@ -260,6 +262,20 @@ class FileManagerTest {
 		assertTrue(File(outer, "info").exists())
 		assertEquals("data", File(outer, "info").readText())
 		assertFalse(inner.exists())
+	}
+
+	@Test
+	fun removeDoubleFolder_throwsAndKeepsTheFileItCannotCopy() {
+		val outer = File(tempDir, "unreadable").apply { mkdirs() }
+		val inner = File(outer, "Pack").apply { mkdirs() }
+		File(inner, "info").writeText("info")
+		val sound = File(inner, "a.wav").apply { writeText("sound") }
+		sound.setReadable(false)
+		assumeFalse("running as root, which reads any file", sound.canRead())
+
+		assertThrows(IOException::class.java) { FileManager.removeDoubleFolder(outer.absolutePath) }
+
+		assertTrue("the file that could not be copied is not deleted", sound.exists())
 	}
 
 	// makeNomedia tests

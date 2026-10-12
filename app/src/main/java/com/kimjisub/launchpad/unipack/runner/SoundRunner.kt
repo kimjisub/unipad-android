@@ -35,6 +35,7 @@ class SoundRunner(
 	// loaded and no id is freed twice.
 	private val engineLock = Any()
 	private var destroyed = false // guarded by engineLock
+	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
 	interface LoadingListener {
@@ -97,7 +98,12 @@ class SoundRunner(
 			try {
 				val started = synchronized(engineLock) {
 					if (destroyed) return@launch
-					engine.start().also { engineStarted = it }
+					// start() also creates the native engine the sounds load into, so it runs even when
+					// the screen was hidden first; the stream is then closed again until resumeStream().
+					engine.start().also {
+						engineStarted = it
+						if (it && streamPaused) engine.stop()
+					}
 				}
 				if (!started) {
 					throw RuntimeException("Failed to start Oboe audio engine")
@@ -202,6 +208,27 @@ class SoundRunner(
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
 	fun stopAll() {
 		if (engineStarted) engine.stopAllVoices()
+	}
+
+	/**
+	 * Closes the output stream while the screen is hidden. Android 17 mutes an open stream of an app
+	 * nobody can see, and with strict audio hardening aborts the process from the stream's callback
+	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading.
+	 */
+	fun pauseStream() {
+		synchronized(engineLock) {
+			if (destroyed || streamPaused) return
+			streamPaused = true
+			if (engineStarted) engine.stop()
+		}
+	}
+
+	fun resumeStream() {
+		synchronized(engineLock) {
+			if (destroyed || !streamPaused) return
+			streamPaused = false
+			if (engineStarted && !engine.start()) Log.err("Failed to reopen the audio stream")
+		}
 	}
 
 	fun destroy() {

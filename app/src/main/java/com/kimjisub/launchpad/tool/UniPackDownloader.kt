@@ -13,11 +13,17 @@ import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
@@ -29,7 +35,8 @@ class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
-	private val workspace: File,
+	/** Resolved on the download's IO thread: listing workspaces creates folders. */
+	workspace: () -> File,
 	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
@@ -83,20 +90,33 @@ class UniPackDownloader(
 	init {
 		scope.launch(Dispatchers.IO) {
 			// Another download of the same name may run at the same time, so only paths claimed here
-			// are written to or deleted.
+			// are written to or deleted. The pack is unpacked and checked in its own staging folder
+			// and appears in the list only once complete.
 			var claimedZip: File? = null
+			var staged: File? = null
 			var claimedFolder: File? = null
+			var cancellationWatcher: Job? = null
 			// What the download was doing when it failed: the same I/O error is a broken connection while
 			// the response is read and a storage problem while the file is written.
 			var stage = FailureStage.FILE
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
+				val workspace = workspace()
 				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
 				claimedZip = unipackFile
 
 				stage = FailureStage.NETWORK
 				val call = FileApi.service.download(url)
+				// Run cancellation on the cancelling thread, even while this IO thread is
+				// blocked in execute/read. Cancelling the call closes its socket immediately.
+				cancellationWatcher = launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+					try {
+						awaitCancellation()
+					} finally {
+						call.cancel()
+					}
+				}
 				val response = call.execute()
 				val responseBody = response.body()
 				?: throw HttpStatusException(response.code(), "Empty response body (HTTP ${response.code()})")
@@ -104,21 +124,22 @@ class UniPackDownloader(
 					responseBody.close()
 					throw HttpStatusException(response.code(), "HTTP ${response.code()}")
 				}
-				val contentLength = responseBody.contentLength()
-				// -1 (chunked) or 0 with no pre-known size gave Infinity% below
-				val fileSize = contentLength.coerceAtLeast(preKnownFileSize).coerceAtLeast(0L)
-				withContext(Dispatchers.Main) {
-					onGetFileSize(
-						fileSize,
-						contentLength,
-						preKnownFileSize
-					)
-				}
-
-				// responseBody.use: a failed openFileDescriptor used to skip the whole block silently
-				// and leak the HTTP body; now it throws and the body is always closed.
-				stage = FailureStage.FILE
 				responseBody.use { body ->
+					ensureActive()
+					val contentLength = responseBody.contentLength()
+					// -1 (chunked) or 0 with no pre-known size gave Infinity% below
+					val fileSize = contentLength.coerceAtLeast(preKnownFileSize).coerceAtLeast(0L)
+					withContext(Dispatchers.Main) {
+						onGetFileSize(
+							fileSize,
+							contentLength,
+							preKnownFileSize
+						)
+					}
+
+					// responseBody.use: a failed openFileDescriptor used to skip the whole block silently
+					// and leak the HTTP body; now it throws and the body is always closed.
+					stage = FailureStage.FILE
 					val pfd = contentResolver.openFileDescriptor(unipackFile.toUri(), "w")
 						?: throw IOException("Could not open ${unipackFile.path} for writing")
 					pfd.use {
@@ -130,9 +151,11 @@ class UniPackDownloader(
 								var prevPercent = -1
 								var prevMillis = SystemClock.elapsedRealtime()
 								while (true) {
+									ensureActive()
 									stage = FailureStage.NETWORK
-								n = inputStream.read(buf)
-								stage = FailureStage.FILE
+									n = inputStream.read(buf)
+									ensureActive()
+									stage = FailureStage.FILE
 									if (n == -1)
 										break
 
@@ -169,20 +192,25 @@ class UniPackDownloader(
 
 				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-				val folder = FileManager.claimNextFolder(workspace, folderName)
-				claimedFolder = folder
+				val stagedFolder = PackStaging.create(workspace)
+				staged = stagedFolder
 				ZipFile(unipackFile).use { zip ->
-					zip.extractAll(folder.path)
+					zip.extractAll(stagedFolder.path)
 				}
-				FileManager.removeDoubleFolder(folder.path)
+				FileManager.removeDoubleFolder(stagedFolder.path)
 				// load() runs checkFile + info; without it every parser returned early and criticalError
 				// was always false, so any archive installed as a pack.
-				val unipack = UniPackFolder(folder).load().loadDetail()
-				if (unipack.criticalError) {
-					val errorMsg = unipack.errorDetail ?: "Unknown error"
+				val checked = UniPackFolder(stagedFolder).load().loadDetail()
+				if (checked.criticalError) {
+					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
+
+				ensureActive()
+				val folder = FileManager.moveToNextFolder(stagedFolder, workspace, folderName)
+				claimedFolder = folder
+				val unipack = UniPackFolder(folder).load()
 
 				// Whether the pack stays is settled on the main thread, where the hosting screen
 				// closes. A screen already gone never runs this block and the download is discarded
@@ -198,16 +226,23 @@ class UniPackDownloader(
 				// The hosting scope was cancelled (activity destroyed): remove what was not announced
 				// yet, but do not report it as a failure and do not swallow the cancellation.
 				usage.cancelled()
-				claimedFolder?.let(FileManager::deleteDirectory)
-				claimedZip?.let(FileManager::deleteDirectory)
 				throw e
 			} catch (e: Exception) {
+				// Socket cancellation normally surfaces as IOException. Keep it a cancellation,
+				// without notifying a screen that has already gone or counting a network failure.
+				if (!isActive) usage.cancelled()
+				ensureActive()
 				Log.err("Download failed", e)
 				usage.failed(e, stage)
 				withContext(Dispatchers.Main) { onException(e) }
+			} finally {
+				cancellationWatcher?.cancel()
+				// No suspending callbacks here: cancellation or a failing listener cannot skip
+				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
+				staged?.let(PackStaging::discard)
+				claimedZip?.let(FileManager::deleteDirectory)
 			}
-			claimedZip?.let(FileManager::deleteDirectory)
 		}
 	}
 

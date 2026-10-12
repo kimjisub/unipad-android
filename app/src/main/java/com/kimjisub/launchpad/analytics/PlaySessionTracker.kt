@@ -11,6 +11,8 @@ package com.kimjisub.launchpad.analytics
  * Going to the background and coming back stays in the same session; only leaving the screen for
  * good ends it, so the `play_end` duration includes time spent in the background.
  *
+ * `play_start` also carries the last known [ScreenLayout] from [screenLayoutChanged], when there is one.
+ *
  * Durations come from [nanoTime], which must be monotonic.
  */
 class PlaySessionTracker internal constructor(
@@ -30,6 +32,13 @@ class PlaySessionTracker internal constructor(
 	private val lock = Any()
 	private var state: State = State.Idle
 	private var humanInputRecorded = false
+	private var screenLayout: ScreenLayout? = null
+
+	/**
+	 * The play screen's window was laid out anew: created, rotated, resized or moved in or out of
+	 * multi-window. A null layout (a moment of undefined size) keeps the one known before.
+	 */
+	fun screenLayoutChanged(layout: ScreenLayout?) = synchronized(lock) { if (layout != null) screenLayout = layout }
 
 	fun loadStarted() = transition {
 		if (state is State.Idle) state = State.Loading(nanoTime())
@@ -67,7 +76,7 @@ class PlaySessionTracker internal constructor(
 			buildList {
 				if (state is State.Loaded) {
 					state = State.Playing(nanoTime())
-					add(Event(UsageEvent.PLAY_START, mapOf(UsageParam.TRIGGER to trigger.value)))
+					add(Event(UsageEvent.PLAY_START, mapOf(UsageParam.TRIGGER to trigger.value) + screenLayout?.parameters.orEmpty()))
 				}
 				if (trigger == PlayTrigger.PAD && !humanInputRecorded) {
 					humanInputRecorded = true

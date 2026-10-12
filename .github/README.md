@@ -4,10 +4,12 @@ Every pull request runs these stable checks on Ubuntu 24.04:
 
 | Check name | Command | Timeout |
 | --- | --- | --- |
-| `unit-tests` | `./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain` | 20 minutes |
+| `unit-tests` | `./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain`, then `python3 -m unittest discover -s scripts/tests -v` | 20 minutes |
 | `Android debug build` | `./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain` | 25 minutes |
 | `Android lint` | `./gradlew lintDebug --no-daemon --console=plain` | 25 minutes |
-| `Android UI tests (API 35)` | `bash scripts/ci-connected-tests.sh` | 60 minutes |
+
+The UI suite (`bash scripts/ci-connected-tests.sh`) is not a hosted check; it
+runs on the maintenance Mac before every push, as described below.
 
 Setup uses Java 21 and the SDK/NDK/CMake versions in
 `actions/setup-android/action.yml`. Copy `.github/fixtures/google-services.json`
@@ -33,8 +35,11 @@ never chooses or starts another device. Hosted GitHub runners instead use the
 pinned [Android Emulator Runner action](https://github.com/ReactiveCircus/android-emulator-runner)
 for their isolated, disposable emulator.
 
-`python3 -m unittest discover -s scripts/tests -v` checks that Gradle failures are
-preserved through log capture and that the allocated device id is required.
+`python3 -m unittest discover -s scripts/tests -v` runs in the `unit-tests` check,
+with fake `adb` and Gradle and no device. It checks that the UI runner keeps
+Gradle failures through log capture, requires the allocated device id, and
+fails when the app was not installed, a module has no results, a test was
+failed, errored or skipped, or the number of tests run differs from the sources.
 
 Unit reports, lint reports and UI reports are uploaded even on failure and kept
 for seven days. UI artifacts also include logcat, full Gradle output and elapsed
