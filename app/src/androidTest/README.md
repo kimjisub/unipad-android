@@ -11,6 +11,12 @@ earlier through the Crashlytics API overrides the manifest, so start from a fres
 app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
 `apkanalyzer manifest print` for an APK; pull requests run it on both build types.
 
+System exit diagnostics are tagged `harness_test=true` in debug builds and remain local by default.
+After reproducing one real system exit, relaunch to record it, close and relaunch once more to finish
+the report session, then run `SystemExitServerCheckTest` with the instrumentation argument
+`systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
+so no other test reports are queued. The test's default path checks that automatic collection stays off.
+
 For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -55,13 +61,31 @@ filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-`BaseUITest` screenshots: `/data/local/tmp/unipad_tests` on the borrowed device; pull them with
-`adb -s <printed-serial> pull`. Keep the emulator offline so app startup cannot send test traffic;
+Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
+which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
+feature screens use `basefeatures-captures/`, readiness failures use
+`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+Clear this root before each run, then pull it with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
+returning the device. The capture helper stages files in app-writable external storage, copies
+them as shell and removes the staging file; it checks that each preserved file is nonempty
+and has the same byte count as its source. Keep the emulator offline so app startup cannot
+send test traffic;
 the catalogue fixture does not disable other application network clients. Restore the original
 network state and return the device when finished:
 
 ```bash
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
+```
+
+After Gradle has uninstalled the debug app, check these files from that run still exist:
+
+```bash
+adb -s <printed-serial> shell pm list packages com.kimjisub.launchpad.dev
+# The target and test packages must no longer be listed.
+for capture in settings-english-language-row file-import-result store-downloaded; do
+  adb -s <printed-serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
+done
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -80,7 +104,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
   `ActivityReadiness` to require a laid-out, focused main activity or an app-owned focused dialog. Splash finishes before
   Main starts, so a window wait right after launch would end in that gap on a slow device.
 - Readiness failures save the screenshot, resumed activity state, focused windows and hierarchy
-  under the app's external `activity-readiness-captures/` directory.
+  under `/data/local/tmp/unipad_tests/activity-readiness-captures/`.
 - Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
   system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
 - `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system
@@ -126,6 +150,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer line is fully drawn and Theme opens; real-screen screenshots for comparison. |
 | `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: producer line fits and Theme can be scrolled into view and opened. |
 | `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: same checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
+| `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |

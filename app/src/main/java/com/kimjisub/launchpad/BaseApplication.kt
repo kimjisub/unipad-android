@@ -10,6 +10,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
+import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
@@ -44,6 +45,16 @@ class BaseApplication : Application() {
 
 		setupStrictMode()
 		recordInstallSplits()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			ioScope.launch {
+				try {
+					SystemExitReporter.collect(this@BaseApplication)
+				} catch (e: Exception) {
+					// Diagnostics must not prevent launch when the system history is unavailable.
+					Log.err("Could not read system exit history", e)
+				}
+			}
+		}
 		setupNotification()
 		setupLogger()
 		setupRemoteConfig()
