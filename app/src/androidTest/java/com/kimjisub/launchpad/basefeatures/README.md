@@ -187,8 +187,17 @@ must not stop the other's pad or leave its own playing.
 Both classes are in `BaseFeaturesSuite`. To run only them on the borrowed device:
 
 ```bash
-./gradlew :app:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.HeldPadLayoutChangeTest,com.kimjisub.launchpad.basefeatures.MixedPointerInputTest
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.HeldPadLayoutChangeTest
+```
+
+Check that all four layout cases ran and archive the XML and raw runner output before
+starting the mixed-input invocation, which overwrites those results. Run one class per
+Gradle invocation; a comma-separated selector can execute only its first class.
+
+```bash
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.MixedPointerInputTest
 ```
 
 `HeldPadLayoutChangeTest` resets the display size after each test; if a run is killed, run
