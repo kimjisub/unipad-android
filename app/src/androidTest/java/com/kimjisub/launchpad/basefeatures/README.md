@@ -48,8 +48,40 @@ with `cmd package compile -f -m speed`, matching the merged Gradle debug test pr
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
 full optimization. Archive `dumpsys package dexopt` with the run output.
-No baseline fixture is downloaded. Screenshots are saved in the target app's external files under
-`basefeatures-captures/`; pull that directory using the same serial before returning the device.
+No baseline fixture is downloaded. Screenshots are copied by the shell to
+`/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
+applications being uninstalled at the end of a complete Gradle run. Pull them with
+`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` before returning the device.
+Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
+Readiness failure screenshots, activity state and hierarchy are kept under the same root.
+
+## Screen transition synchronization
+
+`FeatureScreen` retains the 10-second node, scroll and state deadlines. On API 34+,
+queries clear `UiAutomation`'s accessibility cache before reading the current window;
+locale recreation, rotation and DocumentsUI replacement can otherwise leave a previous
+window or null child nodes in the cached tree. Click helpers reacquire only on a stale
+node, within the same deadline. Query and click operations temporarily cap UI Automator's
+implicit idle wait at 500 ms, as the legacy helper does: playing animation can continue
+producing accessibility events and replace a node during the default 10-second idle wait.
+The explicit 10-second checks and their expected controls remain unchanged; the previous
+idle setting is restored after each operation. `ActivityReadiness`, shared with legacy
+launcher tests, waits within the feature tests' existing 10-second budget for the resumed
+activity to be laid out and for its window or an app-owned dialog to have focus before
+querying controls. Legacy launches wait up to 45 seconds for the requested activity to finish creation,
+then up to 45 seconds for MainActivity to resume, then up to 20 seconds for its window
+to be laid out and focused (an app-owned dialog may hold focus). The former "App did not start"
+check is now this window-readiness check; the later main-screen content checks remain.
+A missing-node capture also saves the hierarchy and
+resumed activity's locale, layout size and focus state.
+
+The language/skin check waits for the initial Settings window to be laid out and focused,
+and for the requested locale to reach a ready Settings window before scrolling. It still
+checks Korean and English text, fresh-screen scroll position, the requested skin preference after the Apply handler runs and
+rendered pad pixels. The ZIP check always opens the real picker drawer, selects Downloads
+inside that drawer and confirms the Downloads toolbar before selecting the ZIP. It still
+checks the result text, pack title, Play now action and imported pack id; a result dialog
+owns focus, so MainActivity focus is not a prerequisite for inspecting that dialog.
 
 ## Existing coverage and the gaps this suite fills
 
@@ -62,8 +94,8 @@ sink; this suite does not change that file.
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
-| 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
+| 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
+| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -108,6 +140,84 @@ type. `MouseInputTest` checks that a left click plays a pad for as long as it is
 hovering plays nothing, a held drag with Slide Mode off and on, that right and middle presses
 leave no pad playing, and that a left click on a chain button switches chain after the pointer
 crossed the pads (Compose used to stop handing the embedded chain buttons that press).
+
+## A pad held while the screen changes or another pointer joins
+
+These two classes check what happens to a pad that is still held when something other than a
+plain lift ends it. `HeldPadTest` gives every first-chain pad its own endless loop (`loop` 0 in
+`keySound`, a copy of the silent WAV per pad), so each sound request names the pad that made it and
+a pad left playing shows as a loop nothing stopped (`RecordingAudio.ringingLoops`). Each case
+first shows the held pad played, lit and loops with the pointer still down, then makes the change.
+`ReceivedInput` records every touch and mouse event the play window received (action, device,
+source, pointer ID and tool type; moves left out), logs it under the `ReceivedInput` tag and
+quotes it in failure messages.
+
+`HeldPadLayoutChangeTest` holds a pad with a finger (`Fingers`) through:
+
+| Test | Change while the pad is held |
+|---|---|
+| `heldPadStopsWhenScreenTurnsToPortrait` | landscape → portrait (the screen's requested orientation) |
+| `heldPadStopsWhenScreenTurnsBackToLandscape` | portrait → landscape |
+| `heldPadStopsWhenWindowShrinks` | display shrunk to two thirds with `wm size`, then restored |
+| `heldPadStopsWhenWindowGrowsBack` | shrunk display returned with `wm size reset`; the window must match its original bounds and no override may remain |
+
+The pads must be laid out again. If the system cancels the touch at the change (one `ACTION_CANCEL`
+for the held finger), the held pad must already be dark and silent at that moment; the test sends
+nothing more for that finger, since Android refuses input for a gesture it ended. Without a cancel,
+the held pad is either released at the change or kept until the finger lifts; lit and looping must
+agree, and no other pad may play. After the lift nothing is lit or looping, and the first tap in the
+new layout plays and lights the pad under it. The play screen releases held pads when it lays the
+grid out again (`PadTouchTracker.setGrid`); on the API 35 and 37 emulators the system did not cancel
+the touch for any of the four changes.
+
+`MixedPointerInputTest` holds a pad with one pointer while the other presses and lifts from a
+second pad, then the first lifts: mouse first and finger first, each with Slide Mode off and on.
+The mouse is `Mouse`. The finger is `Touchscreen`, a second touchscreen created as a kernel input
+device with the platform `uinput` shell tool: events injected through UiAutomation all arrive as
+the same device (`-1`), and Android then ends the held mouse press as soon as an injected finger
+lands, which a real mouse and touchscreen (two devices) do not cause by themselves. Each case checks
+one `TOOL_TYPE_MOUSE` pointer and one `TOOL_TYPE_FINGER` pointer from the touchscreen's device ID
+went down and ended.
+
+Android may still end the first device's gesture in a window when another device starts one there
+(input flag `enable_multi_device_same_window_stream` off, as on the API 35 and 37 emulators; the system
+logs `Canceling pointers for device …`). The test accepts that only as one `ACTION_CANCEL` for
+the first pointer before the second device's press, and then requires the first pad to stop at
+that moment. Otherwise both pads must play until each is lifted. Either way, lifting one pointer
+must not stop the other's pad or leave its own playing.
+
+| Checked on the API 35 and 37 emulators | Result |
+|---|---|
+| Held pad through portrait/landscape and window shrink/grow, finger UP after the change | Pass; released at the relayout, no system cancel |
+| Mouse then finger, finger then mouse, Slide Mode off and on | Pass; Android cancelled the first device at the second device's press in all four |
+
+Both classes are in `BaseFeaturesSuite`. To run only them on the borrowed device:
+
+```bash
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.HeldPadLayoutChangeTest
+```
+
+Check that all four layout cases ran and archive the XML and raw runner output before
+starting the mixed-input invocation, which overwrites those results. Run one class per
+Gradle invocation; a comma-separated selector can execute only its first class.
+
+```bash
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.MixedPointerInputTest
+```
+
+`HeldPadLayoutChangeTest` resets the display size after each test; if a run is killed, run
+`adb -s "$ANDROID_SERIAL" shell wm size reset` before returning the device.
+
+Not established by these tests:
+
+- Both devices held at once in one window: needs an Android version or device that streams two
+  devices to the same window; the API 35 and 37 emulators always took the cancel path.
+- Free-form or split-screen window resizing: the emulator's display size was changed instead;
+  freeform windows are not enabled on the borrowed emulator.
+- A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
+  request proves only that the app asked for it.
 
 ## Fixture and isolation
 

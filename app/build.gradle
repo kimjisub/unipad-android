@@ -78,7 +78,11 @@ android {
 			proguardFile 'proguard-retrofit2.pro'
 		}
 		debug {
-			manifestPlaceholders = [appName: "@string/app_name_test"]
+			// -PanalyticsServerCheck builds a debug app whose analytics reach Firebase (see UsageEventRouting).
+			manifestPlaceholders = [
+				appName: "@string/app_name_test",
+				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true'
+			]
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
 			debuggable = true
@@ -106,11 +110,15 @@ android {
 	}
 	namespace = 'com.kimjisub.launchpad'
 
-	// Disable lint check that crashes with Kotlin 2.x (known bug in lifecycle-lint)
 	lint {
+		// NullSafeMutableLiveData crashes with Kotlin 2.x (known bug in lifecycle-lint)
 		disable += ['NullSafeMutableLiveData', 'IconXmlAndPng', 'QueryAllPackagesPermission']
+		// "A newer version is available" checks change result as releases come out, not as the code changes
+		disable += ['AndroidGradlePluginVersion', 'GradleDependency', 'NewerVersionAvailable']
 		// Community-translated strings arrive after features ship; missing ones fall back to English (#57)
-		warning += ['MissingTranslation']
+		informational += ['MissingTranslation']
+		warningsAsErrors = true
+		lintConfig = file('lint.xml')
 	}
 
 	// Test reporting configuration
@@ -118,6 +126,10 @@ android {
 		unitTests {
 			includeAndroidResources = true
 			returnDefaultValues = true
+			all {
+				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
+				jvmArgs '-Xshare:off'
+			}
 		}
 		animationsDisabled = true
 		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
@@ -219,7 +231,7 @@ dependencies {
 
 	implementation 'androidx.appcompat:appcompat:1.8.0'
 	implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
-	implementation 'androidx.core:core-ktx:1.19.0'
+	implementation 'androidx.core:core-ktx:1.19.1'
 	implementation 'androidx.preference:preference-ktx:1.2.1'
 	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0'
 	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
@@ -289,7 +301,9 @@ dependencies {
 	implementation 'net.lingala.zip4j:zip4j:2.11.6'
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
-	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
+	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.2'
+	// Lets the pack list fetch a newer Play build in the background and install it when asked
+	implementation 'com.google.android.play:app-update:2.1.0'
 	api project(':design')
 }
 

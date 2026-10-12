@@ -12,6 +12,8 @@ import org.junit.runners.Suite
     MultiTouchPadModeTest::class,
     MultiTouchSlideModeTest::class,
     MouseInputTest::class,
+    MixedPointerInputTest::class,
+    HeldPadLayoutChangeTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
     StoreDownloadTest::class,
