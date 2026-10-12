@@ -18,7 +18,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -114,9 +113,12 @@ class UniPackConformanceChecksTest {
 
 	@Test
 	fun anUndeterminedCaseIsNeverCountedAsAPass() {
-		val c = corpus.cases.firstOrNull { !it.determined }
-		assertNotNull(c)
-		assertEquals("unverified", classify(c!!, actualFor(c, corpus)).status)
+		// The corpus may have no undetermined case, so one is made from a determined one.
+		val determined = byId("KS-001")
+		val c = determined.copy(determined = false, expected = null, question = "still open?")
+		val actual = actualFor(c, corpus)
+		assertEquals(determined.expected, actual)
+		assertEquals("unverified", classify(c, actual).status)
 	}
 
 	@Test
