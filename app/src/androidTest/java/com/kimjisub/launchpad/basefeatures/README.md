@@ -188,7 +188,8 @@ must not stop the other's pad or leave its own playing. A cancelled injected mou
 forgotten without sending a release or a second cancel. The kernel touchscreen still receives a
 physical lift, so its active slot is released even if the window cancelled its gesture.
 
-Every virtual touchscreen has a unique name. Failed registration and failed finger cleanup both
+Every virtual touchscreen has a unique name and physical port. Android can group input nodes
+sharing a port even when their names differ. Failed registration and failed finger cleanup both
 close the shell streams, ending `uinput` and removing its device. `InputToolsCleanupTest` checks
 that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
 after registration removes the device while preserving the original failure. It runs separately

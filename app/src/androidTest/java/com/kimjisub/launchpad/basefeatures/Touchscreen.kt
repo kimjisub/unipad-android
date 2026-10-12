@@ -24,6 +24,7 @@ class Touchscreen(
         val mode = screen.resumed().display!!.mode
         Point(mode.physicalWidth, mode.physicalHeight)
     }
+    // Android groups input nodes sharing a physical port, even if their names differ.
     private val name = "UniPad test touchscreen ${UUID.randomUUID()}"
     private val streams: Array<ParcelFileDescriptor> = screen.instrumentation.uiAutomation.executeShellCommandRwe("uinput -")
     private val commands: OutputStream = ParcelFileDescriptor.AutoCloseOutputStream(streams[1])
@@ -38,7 +39,7 @@ class Touchscreen(
         try {
             val abs = listOf(ABS_X to natural.x, ABS_Y to natural.y, ABS_MT_SLOT to SLOTS, ABS_MT_POSITION_X to natural.x,
                 ABS_MT_POSITION_Y to natural.y, ABS_MT_TRACKING_ID to 65536)
-            send("""{"id":1,"command":"register","name":"$name","vid":6353,"pid":45057,"bus":"usb","configuration":[""" +
+            send("""{"id":1,"command":"register","name":"$name","port":"$name","vid":6353,"pid":45057,"bus":"usb","configuration":[""" +
                 """{"type":$UI_SET_EVBIT,"data":[$EV_KEY,$EV_ABS]},{"type":$UI_SET_KEYBIT,"data":[$BTN_TOUCH]},""" +
                 """{"type":$UI_SET_ABSBIT,"data":[${abs.joinToString(",") { it.first.toString() }}]},""" +
                 """{"type":$UI_SET_PROPBIT,"data":[$INPUT_PROP_DIRECT]}],"abs_info":[""" +
