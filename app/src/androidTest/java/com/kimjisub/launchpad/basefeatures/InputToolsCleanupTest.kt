@@ -1,7 +1,9 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.hardware.input.InputManager
+import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -52,6 +54,30 @@ class InputToolsCleanupTest : HeldPadTest() {
         assertSame("Registration failure was replaced by a cleanup failure", expected, failure)
         screen.await("Failed registration left its touchscreen alive") {
             inputs.inputDeviceIds.none { inputs.getInputDevice(it)?.name == registeredName }
+        }
+    }
+
+    @Test fun cancelledMouseCleanupLeavesWindowAloneAndAllowsTheNextHover() {
+        startHeld()
+        val mouse = Mouse(screen)
+        try {
+            mouse.press(center(Cell(3, 3)))
+            awaitHeld("Mouse did not hold its pad", setOf(Cell(3, 3)))
+            val finger = fingers.down(center(Cell(3, 5)))
+            screen.await("Injected finger did not cancel the injected mouse") {
+                received.events.any { it.action == MotionEvent.ACTION_CANCEL && it.actor.toolType == MotionEvent.TOOL_TYPE_MOUSE }
+            }
+            mouse.forgetCancelled()
+            fingers.up(finger)
+            awaitHeld("Cancelled mouse or released finger stayed playing", emptySet())
+            val beforeCleanup = received.events.toList()
+            mouse.cancelRemaining()
+            assertEquals("Dispatcher cleanup sent another event to the cancelled window gesture", beforeCleanup, received.events.toList())
+            // A new helper, as in the next test, must be able to hover without a stale device press.
+            Mouse(screen).hover(center(Cell(5, 2)))
+            assertHeldStill("After hovering with a new mouse helper", listOf(Cell(3, 3), Cell(3, 5)), emptySet())
+        } finally {
+            mouse.cancelRemaining()
         }
     }
 }

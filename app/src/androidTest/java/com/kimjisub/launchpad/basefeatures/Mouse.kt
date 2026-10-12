@@ -16,6 +16,7 @@ class Mouse(private val screen: FeatureScreen) {
     private var y = 0f
     private var downAt = 0L
     private var buttons = 0
+    private var resetDispatcher = false
 
     /** Moves the pointer to [at] with no button held. */
     fun hover(at: Point, steps: Int = 3) = stroke(at, steps, MotionEvent.ACTION_HOVER_MOVE)
@@ -42,13 +43,22 @@ class Mouse(private val screen: FeatureScreen) {
 
     /** Ends a press a failed assertion left held, so the next test starts clean. */
     fun cancelRemaining() {
-        if (buttons == 0) return
+        if (buttons == 0 && !resetDispatcher) return
         buttons = 0
-        inject(MotionEvent.ACTION_CANCEL)
+        try {
+            // A window cancel can leave a system gesture monitor holding the injected device.
+            // Reset that device after the assertions; no window delivery is expected in that case.
+            inject(MotionEvent.ACTION_CANCEL, requireDelivery = !resetDispatcher)
+        } finally {
+            resetDispatcher = false
+        }
     }
 
     /** Forgets a press the window already ended with ACTION_CANCEL, without injecting again. */
-    fun forgetCancelled() { buttons = 0 }
+    fun forgetCancelled() {
+        buttons = 0
+        resetDispatcher = true
+    }
 
     private fun stroke(to: Point, steps: Int, action: Int) {
         val fromX = x
@@ -60,7 +70,7 @@ class Mouse(private val screen: FeatureScreen) {
         }
     }
 
-    private fun inject(action: Int, actionButton: Int = 0) {
+    private fun inject(action: Int, actionButton: Int = 0, requireDelivery: Boolean = true) {
         val properties = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_MOUSE }
         val coordinates = MotionEvent.PointerCoords().apply { x = this@Mouse.x; y = this@Mouse.y; pressure = if (buttons != 0) 1f else 0f }
         val now = SystemClock.uptimeMillis()
@@ -68,7 +78,8 @@ class Mouse(private val screen: FeatureScreen) {
             arrayOf(properties), arrayOf(coordinates), 0, buttons, 1f, 1f, 0, 0, InputDevice.SOURCE_MOUSE, 0)
         try {
             if (actionButton != 0) setActionButton(event, actionButton)
-            assertTrue("Mouse injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true))
+            val delivered = screen.instrumentation.uiAutomation.injectInputEvent(event, true)
+            if (requireDelivery) assertTrue("Mouse injection failed", delivered)
         } finally {
             event.recycle()
         }
