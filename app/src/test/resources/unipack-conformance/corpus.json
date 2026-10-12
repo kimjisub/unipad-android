@@ -10457,9 +10457,6 @@
           "note": "LEDs still lit are cleared on exit and no stale light is sent afterwards"
         }
       ],
-      "unobserved": {
-        "ios": "Leaving the play screen is a screen-level step on iOS: the main screen clears the Launchpad when it takes the MIDI controller back (MainView onChange -> MainViewModel.setupMidiController -> MainMidiControllerAdapter.onAttach -> sendClearLed) and the on-screen pads go away with the play view. The iOS harness drives the runners alone, where LedRunner.stop() only cancels the loop, so what a user sees after leaving is not measured. Not checked on a real Launchpad either."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10549,9 +10546,6 @@
           "note": "LEDs still lit are cleared on exit and no stale light is sent afterwards"
         }
       ],
-      "unobserved": {
-        "ios": "Leaving the play screen is a screen-level step on iOS: the main screen clears the Launchpad when it takes the MIDI controller back (MainView onChange -> MainViewModel.setupMidiController -> MainMidiControllerAdapter.onAttach -> sendClearLed) and the on-screen pads go away with the play view. The iOS harness drives the runners alone, where LedRunner.stop() only cancels the loop, so what a user sees after leaving is not measured. Not checked on a real Launchpad either."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10746,9 +10740,6 @@
           "note": "Events are executed sequentially from top to bottom; delay waits in milliseconds"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10843,9 +10834,6 @@
           "note": "a stopped runner sends no more presses"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -11535,9 +11523,6 @@
           "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -11699,9 +11684,6 @@
           "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
