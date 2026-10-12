@@ -123,6 +123,9 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 | Class and test | What it verifies |
 |---|---|
+| `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer line is fully drawn and Theme opens; real-screen screenshots for comparison. |
+| `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: producer line fits and Theme can be scrolled into view and opened. |
+| `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: same checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |

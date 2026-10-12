@@ -310,6 +310,7 @@ private fun CategoryNav(
 	Column(
 		modifier = modifier
 			.background(NavBg)
+			.verticalScroll(rememberScrollState())
 			.padding(vertical = 24.dp, horizontal = 12.dp),
 	) {
 		Row(
