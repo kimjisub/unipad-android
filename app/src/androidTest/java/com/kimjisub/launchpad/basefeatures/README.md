@@ -51,6 +51,31 @@ full optimization. Archive `dumpsys package dexopt` with the run output.
 No baseline fixture is downloaded. Screenshots are saved in the target app's external files under
 `basefeatures-captures/`; pull that directory using the same serial before returning the device.
 
+## Screen transition synchronization
+
+`FeatureScreen` retains the 10-second node, scroll and state deadlines. On API 34+,
+queries clear `UiAutomation`'s accessibility cache before reading the current window;
+locale recreation, rotation and DocumentsUI replacement can otherwise leave a previous
+window or null child nodes in the cached tree. Click helpers reacquire only on a stale
+node, within the same deadline. Query and click operations temporarily cap UI Automator's
+implicit idle wait at 500 ms, as the legacy helper does: playing animation can continue
+producing accessibility events and replace a node during the default 10-second idle wait.
+The explicit 10-second checks and their expected controls remain unchanged; the previous
+idle setting is restored after each operation. `ActivityReadiness`, shared with legacy
+launcher tests, waits within the feature tests' existing 10-second budget for the resumed
+activity to be laid out and for its window or an app-owned dialog to have focus before
+querying controls. Legacy launches share creation and readiness within their existing
+45-second budget, before their unchanged package/main-screen checks. A missing-node capture also saves the hierarchy and
+resumed activity's locale, layout size and focus state.
+
+The language/skin check waits for the initial Settings window to be laid out and focused,
+and for the requested locale to reach a ready Settings window before scrolling. It still
+checks Korean and English text, fresh-screen scroll position, the requested skin preference after the Apply handler runs and
+rendered pad pixels. The ZIP check always opens the real picker drawer, selects Downloads
+inside that drawer and confirms the Downloads toolbar before selecting the ZIP. It still
+checks the result text, pack title, Play now action and imported pack id; a result dialog
+owns focus, so MainActivity focus is not a prerequisite for inspecting that dialog.
+
 ## Existing coverage and the gaps this suite fills
 
 Existing coverage is an inventory, not a claim that the entire legacy suite passed in this change.
@@ -62,7 +87,7 @@ sink; this suite does not change that file.
 | Base feature | Existing tests | New deterministic screen coverage | Status and remaining check |
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
-| 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play and absence of the retired share link/screen. |
+| 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
 | 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |

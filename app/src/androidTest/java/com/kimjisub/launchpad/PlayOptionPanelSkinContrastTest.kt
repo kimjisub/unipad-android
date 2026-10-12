@@ -5,15 +5,21 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -129,7 +135,19 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         val busyShot = screenshot()
         takeScreenshot("option_panel_${name}_automapping")
         val busy = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(AUTO_MAPPING_BUSY), text))
-        assertNotNull("[$name] Auto Mapping did not finish", device.wait(Until.findObject(By.text("Auto Mapping")), AUTO_MAPPING_TIMEOUT_MS))
+        val finished = device.wait(Until.findObject(By.text("Auto Mapping")), AUTO_MAPPING_TIMEOUT_MS)
+        if (finished == null) {
+            val progress = runCatching {
+                ActivityReadiness.onMain(1000) {
+                    val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(Stage.RESUMED).single() as PlayActivity
+                    val vm = ViewModelProvider(activity)[PlayActivityViewModel::class.java]
+                    "${vm.autoMappingProgress}/${vm.autoMappingMax}"
+                }
+            }.getOrElse { "unavailable ($it)" }
+            ActivityReadiness.capture(context, device, "missing-auto-mapping-$name")
+            fail("[$name] Auto Mapping did not finish (progress=$progress)")
+        }
 
         (panel + info + busy).forEach { it.assertReadable(name) }
 
@@ -151,7 +169,8 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         items.map { (label, selector, min) ->
             val node = device.wait(Until.findObject(selector), 3000L)
             assertNotNull("[$name] $label not found in the option panel", node)
-            val area = Rect(node!!.visibleBounds).apply { intersect(0, 0, shot.width, shot.height) }
+            val area = Rect(node!!.visibleBounds)
+            assertTrue("[$name] $label is outside the screenshot", area.intersect(0, 0, shot.width, shot.height))
             val pixels = IntArray(area.width() * area.height())
             shot.getPixels(pixels, 0, area.width(), area.left, area.top, area.width(), area.height())
             val background = Color(pixels.toList().groupingBy { it }.eachCount().maxBy { it.value }.key)

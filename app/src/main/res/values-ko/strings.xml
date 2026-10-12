@@ -27,7 +27,6 @@
 	<string name="failed">실패</string>
 	<string name="delete">삭제</string>
 	<string name="edit">수정</string>
-	<string name="update">업데이트</string>
 	<string name="ignore">무시</string>
 	<string name="apply">적용</string>
 	<string name="restart">재시작</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">자동재생</string>
-	<string name="practiceMode">연습모드</string>
 	<string name="guidePlay">가이드</string>
 	<string name="stepPractice">스텝</string>
 	<string name="feedbackLight">피드백 표시</string>
@@ -97,12 +95,29 @@
 	<string name="proLightMode">프로 라이트 모드</string>
 
 	<!--Version-->
-	<string name="newVersionFound">새로운 버전이 발견되었습니다.</string>
-	<string name="update_available">업데이트 가능</string>
+	<string name="update_check">업데이트 확인</string>
+	<string name="update_offer_title">새 버전이 있어요</string>
+	<string name="update_offer_body">지금 받거나, 나중에 할 수 있어요. 설치는 연주를 마친 뒤 선택해 주세요.</string>
+	<string name="update_download">새 버전 받기</string>
+	<string name="update_later">나중에</string>
+	<string name="update_downloading_title">새 버전을 받고 있어요</string>
+	<string name="update_ready_title">새 버전을 다 받았어요</string>
+	<string name="update_ready_body">적용하면 앱이 다시 시작됩니다. 팩 목록으로 돌아옵니다.</string>
+	<string name="update_install">설치하고 다시 시작</string>
+	<string name="update_none">지금 받을 수 있는 업데이트가 없어요</string>
+	<string name="update_check_failed">업데이트를 확인하지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.</string>
+	<string name="update_check_again">다시 확인</string>
+	<string name="update_close">닫기</string>
+	<string name="update_failed">업데이트를 완료하지 못했어요. 나중에 다시 시도할 수 있어요.</string>
+	<string name="update_retry">다시 시도</string>
+	<string name="update_check_in_store">스토어에서 확인</string>
+	<string name="update_unsupported">이 기기에서는 스토어에서 업데이트를 확인해 주세요.</string>
+	<string name="update_store_notice">Google Play에서 확인합니다. 앱을 업데이트하면 UniPad가 종료될 수 있어요.</string>
+	<string name="update_store_open">스토어 열기</string>
+	<string name="update_store_unavailable">스토어를 열 수 없어요. 나중에 다시 확인해 주세요.</string>
 
 	<string name="permissionRequire">프로젝트 파일 저장을 위해서 저장소 접근 권한이 필요합니다.\n해당 권한에 대한 허가를 받습니다.</string>
 	<string name="permissionDenied">외부 저장소에 액세스해야합니다.\n[설정] > [권한]에서 권한을 켜십시오.</string>
-	<string name="clickToAddUniPack">유니팩을 추가하려면 클릭하세요.</string>
 	<string name="guide_download_new">새로운 팩 다운로드</string>
 	<string name="guide_import_external">다운로드한 팩 불러오기</string>
 	<string name="guide_restore_packs">사라진 팩 복구하기</string>
@@ -113,8 +128,6 @@
 	<string name="guide_empty_link">시작 안내 보기</string>
 	<string name="unipack_play">재생</string>
 	<string name="doYouWantToDeleteUniPack">유니팩을 삭제하시겠습니까?</string>
-	<string name="remapDone">자동재생 파일이 자동매핑되었습니다.</string>
-	<string name="remapFail">AutoPlay 파일이 존재하지 않아 작업을 처리할 수 없습니다.</string>
 	<string name="importComplete">불러오기 성공!</string>
 	<string name="importPlayNow">지금 연주</string>
 	<string name="importFailed">불러오기 실패…</string>
@@ -130,10 +143,7 @@
 	<string name="launchpadConnecting">런치패드 연결중…</string>
 	<string name="midiDevicesNotDetected">MIDI 장치가 감지되지 않았습니다.</string>
 	<string name="midi_open_panel">열기</string>
-	<string name="midi_connected_banner">MIDI 연결됨: %1$s</string>
 	<string name="midi_disconnected">연결 해제됨</string>
-	<string name="signal_SpeedFirst">속도 우선</string>
-	<string name="signal_avoidAfterimage">잔상 방지 (고사양)</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">다운로드중에 종료할 수 없습니다</string>
@@ -141,11 +151,9 @@
 
 	<!--Theme-->
 	<string name="theme">테마</string>
-	<string name="themeDownload">테마 다운로드</string>
 	<string name="requireRestart">앱 재시작이 필요합니다.</string>
 	<string name="doYouWantToRestartApp">앱을 재시작할까요?</string>
 
-	<string name="theme_import">테마 불러오기</string>
 	<string name="theme_import_success">테마를 불러왔습니다.</string>
 	<string name="theme_import_failed">테마 불러오기에 실패했습니다.</string>
 	<string name="theme_import_invalid">유효하지 않은 테마 파일입니다.</string>
@@ -162,7 +170,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_device">기기</string>
 	<string name="settings_play">연주</string>
@@ -251,13 +258,11 @@
 	<string name="transfer_selected_count">%d개 선택됨</string>
 	<string name="transfer_start">시작</string>
 	<string name="transfer_copying">복사 중: %s</string>
-	<string name="transfer_moving">이동 중: %s</string>
 	<string name="transfer_result_transferred">전송됨</string>
 	<string name="transfer_result_skipped">건너뜀 (이미 존재)</string>
 	<string name="transfer_result_failed">실패</string>
 	<string name="transfer_done">완료</string>
 	<string name="transfer_no_items">선택된 유니팩이 없습니다</string>
-	<string name="transfer_select_target">대상을 선택하세요</string>
 	<string name="transfer_select_source">원본을 선택하세요</string>
 	<string name="transfer_format_label">포맷</string>
 	<string name="transfer_format_folder">폴더</string>
@@ -296,7 +301,27 @@
 	<string name="backup_recovery_later">나중에</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 	<string name="option_indicator_format">%s ●</string>
+
+	<!-- Connection and light help -->
+	<string name="midi_help_title">연결·불빛 도움말</string>
+	<string name="midi_help_selected_model">선택한 기종: %1$s</string>
+	<string name="midi_help_common">기종 선택은 실제 장치를 확인한 결과가 아니에요. 불빛이 꺼졌다는 사실만으로 연결 성공이나 실패를 판단할 수 없어요.</string>
+	<string name="midi_help_not_listed_title">장치가 안 보여요</string>
+	<string name="midi_help_not_listed_body">케이블과 연결 상태를 확인해 주세요. 실제 장치 이름과 선택한 기종 이름을 비교해 주세요.</string>
+	<string name="midi_help_android">Android의 USB 앱 선택과 UniPad 안의 기종 선택은 서로 다른 단계예요.</string>
+	<string name="midi_help_no_lights_title">연결됐는데 불빛이 없어요</string>
+	<string name="midi_help_no_lights_body">앱 화면의 패드와 소리가 반응하는지, 팩에 불빛 데이터가 있는지 확인해 주세요. 이미 가진 팩으로 확인할 수 있어요.</string>
+	<string name="midi_help_crash_title">앱이 종료돼요</string>
+	<string name="midi_help_crash_body">장치 연결을 풀고 앱 버전, 휴대폰이나 컴퓨터 모델, 운영체제, 종료된 단계를 기록해 주세요. 같은 종료를 반복할 필요는 없어요.</string>
+	<string name="midi_help_mini">프로그래머 모드에서는 처음에 불빛이 꺼질 수 있어요. 불빛이 있는 팩으로 확인해 주세요.</string>
+	<string name="midi_help_pro">Launchpad Pro와 Launchpad Pro MK3는 서로 다른 기종이에요.</string>
+	<string name="midi_help_other">목록에 같은 이름이 없으면 다른 기종을 대신 고르지 마세요. 이 안내는 새 기종의 호환을 보장하지 않아요.</string>
+	<string name="midi_help_manufacturer">제조사 설명 보기</string>
+	<string name="midi_help_link_failed">제조사 설명을 열 수 없어요. 이 도움말은 계속 읽을 수 있어요.</string>
+	<string name="midi_help_close">도움말 닫기</string>
+	<string name="midi_dual_pad_mode">두 장치 사용</string>
+	<string name="midi_reflected">둘째 장치 좌우 반전</string>
+	<string name="midi_swap_sides">좌우 바꾸기</string>
 </resources>

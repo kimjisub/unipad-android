@@ -35,7 +35,8 @@ class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
-	private val workspace: File,
+	/** Resolved on the download's IO thread: listing workspaces creates folders. */
+	workspace: () -> File,
 	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
@@ -101,6 +102,7 @@ class UniPackDownloader(
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
+				val workspace = workspace()
 				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
 				claimedZip = unipackFile
 

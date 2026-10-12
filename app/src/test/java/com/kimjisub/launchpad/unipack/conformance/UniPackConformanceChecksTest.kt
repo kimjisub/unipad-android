@@ -81,6 +81,29 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
+	fun aCopyThatDoesNotHashToItsCorpusSha256OrHasNoneIsRefused() {
+		val bytes = requireNotNull(javaClass.getResourceAsStream("/unipack-conformance/corpus.json")).use { it.readBytes() }
+		val digest = requireNotNull(javaClass.getResourceAsStream("/unipack-conformance/corpus.sha256")).use { it.readBytes() }.toString(Charsets.UTF_8)
+		assertEquals(corpus.sha256, verifyCorpusDigest(bytes, digest))
+		val changed = bytes.copyOf()
+		val at = String(bytes, Charsets.UTF_8).indexOf("KS-001")
+		changed[at] = (changed[at].toInt() xor 1).toByte()
+		assertThrows(IllegalStateException::class.java) { verifyCorpusDigest(changed, digest) }
+		assertThrows(IllegalStateException::class.java) { verifyCorpusDigest(bytes, null) }
+		assertThrows(IllegalStateException::class.java) { verifyCorpusDigest(bytes, digest.trim()) }
+	}
+
+	@Test
+	fun autoPlayPressesThatDoNotReachThePadsFailAToPadsCase() {
+		val c = byId("RUN-RP-003")
+		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
+		val notForwarded = c.copy(scenario = c.scenario.map {
+			if (it.getValue("do").jsonPrimitive.content == "autoplay") buildJsonObject { put("do", "autoplay") } else it
+		})
+		assertEquals("fail", classify(c, actualFor(notForwarded, corpus)).status)
+	}
+
+	@Test
 	fun aPinnedDifferenceThatStopsHappeningOrChangesIsUnexpected() {
 		val c = byId("KS-001")
 		val pinned = c.copy(known = mapOf(PLATFORM to Known("fail", buildJsonObject { put("loaded", false) }, "pinned")))

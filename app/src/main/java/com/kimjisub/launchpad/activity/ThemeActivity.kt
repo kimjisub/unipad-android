@@ -70,6 +70,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
@@ -133,11 +134,14 @@ class ThemeActivity : BaseActivity() {
 				},
 				onDelete = { themeItem ->
 					val folderName = themeItem.id.removePrefix("zip://")
-					if (ZipThemeImporter.delete(this, folderName)) {
-						if (p.selectedTheme == themeItem.id) {
-							p.selectedTheme = packageName
+					scope.launch {
+						val deleted = withContext(Dispatchers.IO) { ZipThemeImporter.delete(this@ThemeActivity, folderName) }
+						if (deleted) {
+							if (p.selectedTheme == themeItem.id) {
+								p.selectedTheme = packageName
+							}
+							reloadThemes()
 						}
-						scope.launch { reloadThemes() }
 					}
 				},
 			)
@@ -263,7 +267,7 @@ private fun ThemeScreen(
 					.width(animatedLeftWidth)
 					.fillMaxHeight()
 					.clipToBounds()
-					.offset(x = animatedLeftWidth - leftPanelWidth)
+					.offset { IntOffset((animatedLeftWidth - leftPanelWidth).roundToPx(), 0) }
 					.background(Color(0xFF111825)),
 			) {
 				Row(

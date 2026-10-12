@@ -4,6 +4,13 @@ The suite drives the debug app (`com.kimjisub.launchpad.dev`), its real Compose 
 and native pad/chain views. Store tests supply a controlled catalogue to the real
 `FBStoreActivity`; they do not need Firebase, network access, or production downloads.
 
+The debug app sends no Firebase analytics, performance data or crash reports from its first
+launch (`app/src/debug/AndroidManifest.xml`); it keeps network access, which
+`StoreCancellationDeviceTest` needs for its local download server. A crash collection value saved
+earlier through the Crashlytics API overrides the manifest, so start from a fresh install or cleared
+app data. `scripts/check_debug_telemetry_manifest.py` checks a merged manifest or the output of
+`apkanalyzer manifest print` for an APK; pull requests run it on both build types.
+
 For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -66,7 +73,20 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 - Launch helpers await the requested activity's completed `onCreate` lifecycle event before
   existing accessibility/screen assertions. They retain the former `startActivitySync` launch
-  bound (45 seconds) without waiting for global queue idleness; screen deadlines are unchanged.
+  bound (45 seconds) without waiting for global queue idleness.
+- Every launch to Main (`launchToMainActivity`, used by `launchToMainScreen`, `AppLaunchTest`,
+  the Settings relaunch and the Store startup check) waits up to 45 seconds for `MainActivity` to
+  resume, then 20 seconds for its window and 20 seconds for its content. The window wait uses
+  `ActivityReadiness` to require a laid-out, focused main activity or an app-owned focused dialog. Splash finishes before
+  Main starts, so a window wait right after launch would end in that gap on a slow device.
+- Readiness failures save the screenshot, resumed activity state, focused windows and hierarchy
+  under the app's external `activity-readiness-captures/` directory.
+- Selecting the test pack waits 20 seconds for its detail panel; Import waits 15 seconds for the
+  system file picker and saves a `file_picker_not_opened` screenshot when it does not open.
+- `AnrDialogWatcher` runs during every `BaseUITest` test and presses Wait on the system
+  "isn't responding" dialog, logged under the `AnrDialogWatcher` tag. On a stalled emulator a
+  background job can miss its deadline and the dialog would otherwise cover the app until the
+  current wait runs out.
 - Store transition waits treat a temporarily absent Compose root as an empty pending result,
   then still require the exact store list and its displayed state within the same deadline.
 - `BaseUITest` writes `TestUniPack` before each test: an 8x8 pack with two chains, LED,
@@ -125,7 +145,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
-| `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. Notification permission is denied before startup and remains denied after browsing on API 33+. Lifecycle assertions prevent bypassing Splash. |
+| `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. On API 33+, the test first grants notification permission to reproduce a prior download, then revokes it without killing the test process before startup; permission remains denied after browsing. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
 | `PlayActivityTest.testPlayActivityRecording` | Recording setting toggles and play input remains available. |
@@ -171,8 +191,19 @@ claimed here as audio or hardware proof.
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
-| `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
+| `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
+
+The startup permission fixture uses Android's test-only
+`PermissionManager.revokePostNotificationPermissionWithoutKillForTest` through reflection,
+because it is not in the public SDK. It borrows shell permission identity only for that call
+and always releases it in `finally`. It also clears the prior permission decision flags so
+a later download can still request permission as on a fresh installation. A normal runtime permission revocation would kill the
+target process containing the instrumentation. The forced grant keeps this regression
+reproducible when run alone or after any earlier test, including `StoreDownloadTest`'s real
+notification Allow action. No dialog is dismissed during startup or browsing.
 
 `StoreCatalogTest` is a JVM unit test for the extracted feed: original key fallback, added/changed
 pack events, count forwarding and detaching both subscriptions.

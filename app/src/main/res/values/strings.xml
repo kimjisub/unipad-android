@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 	<string name="languageCode">en</string>
 	<string name="language">English</string>
 	<string name="translated_by">Translated by Kimjisub</string>
@@ -27,7 +27,6 @@
 	<string name="failed">Failed</string>
 	<string name="delete">Delete</string>
 	<string name="edit">Edit</string>
-	<string name="update">Update</string>
 	<string name="ignore">Ignore</string>
 	<string name="apply">Apply</string>
 	<string name="restart">Restart</string>
@@ -85,7 +84,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="practiceMode">Practice</string>
 	<string name="guidePlay">Guide</string>
 	<string name="stepPractice">Step</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -98,12 +96,29 @@
 	<string name="proLightMode">Pro Light Mode</string>
 
 	<!--Version-->
-	<string name="newVersionFound">New version detected.</string>
-	<string name="update_available">Update available</string>
+	<string name="update_check">Check for updates</string>
+	<string name="update_offer_title">A new version is available</string>
+	<string name="update_offer_body">Get it now or later. Choose when to install it after you finish playing.</string>
+	<string name="update_download">Get new version</string>
+	<string name="update_later">Later</string>
+	<string name="update_downloading_title">Getting the new version</string>
+	<string name="update_ready_title">The new version is ready</string>
+	<string name="update_ready_body">Installing restarts the app. You will come back to the pack list.</string>
+	<string name="update_install">Install and restart</string>
+	<string name="update_none">No update is available right now.</string>
+	<string name="update_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+	<string name="update_check_again">Check again</string>
+	<string name="update_close">Close</string>
+	<string name="update_failed">The update couldn\'t finish. You can try again later.</string>
+	<string name="update_retry">Try again</string>
+	<string name="update_check_in_store">Check in store</string>
+	<string name="update_unsupported">On this device, please check for updates in the store.</string>
+	<string name="update_store_notice">Checking in Google Play. Updating the app may close UniPad.</string>
+	<string name="update_store_open">Open store</string>
+	<string name="update_store_unavailable">Couldn\'t open the store. Please check again later.</string>
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
-	<string name="clickToAddUniPack">Click to add UniPacks.</string>
 	<string name="guide_download_new">Download new packs</string>
 	<string name="guide_import_external">Import downloaded packs</string>
 	<string name="guide_restore_packs">Recover missing packs</string>
@@ -114,8 +129,6 @@
 	<string name="guide_empty_link">Getting started guide</string>
 	<string name="unipack_play">Play</string>
 	<string name="doYouWantToDeleteUniPack">Do you want to delete this project?</string>
-	<string name="remapDone">AutoPlay remapping has been completed successfully.</string>
-	<string name="remapFail">AutoPlay does not exist</string>
 	<string name="importComplete">Pack imported!</string>
 	<string name="importPlayNow">Play now</string>
 	<string name="importFailed">Import failed</string>
@@ -131,10 +144,7 @@
 	<string name="launchpadConnecting">Connecting launchpad…</string>
 	<string name="midiDevicesNotDetected">MIDI Devices Not Detected</string>
 	<string name="midi_open_panel">Open</string>
-	<string name="midi_connected_banner">MIDI connected: %1$s</string>
 	<string name="midi_disconnected">Disconnected</string>
-	<string name="signal_SpeedFirst">Speed first</string>
-	<string name="signal_avoidAfterimage">Avoid afterimage</string>
 	<string name="midi_lp_s" translatable="false">Launchpad S</string>
 	<string name="midi_lp_mk2" translatable="false">Launchpad MK2</string>
 	<string name="midi_lp_pro" translatable="false">Launchpad PRO</string>
@@ -152,11 +162,9 @@
 
 	<!--Theme-->
 	<string name="theme">Theme</string>
-	<string name="themeDownload">Download Themes</string>
 	<string name="requireRestart">Requires app restart.</string>
 	<string name="doYouWantToRestartApp">Do you want to restart the app?</string>
 
-	<string name="theme_import">Import Theme</string>
 	<string name="theme_import_success">Theme imported successfully.</string>
 	<string name="theme_import_failed">Failed to import theme.</string>
 	<string name="theme_import_invalid">Invalid theme file.</string>
@@ -173,7 +181,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_device">Device</string>
 	<string name="settings_play">Play</string>
@@ -259,16 +266,15 @@
 	<string name="transfer_mode_move">Move</string>
 	<string name="transfer_select_all">Select All</string>
 	<string name="transfer_deselect_all">Deselect All</string>
-	<string name="transfer_selected_count">%d selected</string>
+	<!-- "1 selected" and "5 selected" read the same in English -->
+	<string name="transfer_selected_count" tools:ignore="PluralsCandidate">%d selected</string>
 	<string name="transfer_start">Start</string>
 	<string name="transfer_copying">Copying: %s</string>
-	<string name="transfer_moving">Moving: %s</string>
 	<string name="transfer_result_transferred">Transferred</string>
 	<string name="transfer_result_skipped">Skipped (already exist)</string>
 	<string name="transfer_result_failed">Failed</string>
 	<string name="transfer_done">Done</string>
 	<string name="transfer_no_items">No UniPacks selected</string>
-	<string name="transfer_select_target">Select a destination</string>
 	<string name="transfer_select_source">Select a source</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Folder</string>
@@ -307,6 +313,26 @@
 	<string name="backup_recovery_later">Later</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!-- Approved English/Korean copy; other locales intentionally use the English fallback. -->
+	<string name="midi_help_title" tools:ignore="MissingTranslation">Connection and light help</string>
+	<string name="midi_help_selected_model" tools:ignore="MissingTranslation">Selected model: %1$s</string>
+	<string name="midi_help_common" tools:ignore="MissingTranslation">The selected model does not confirm the actual device. Lights being off alone do not tell you whether the connection succeeded or failed.</string>
+	<string name="midi_help_not_listed_title" tools:ignore="MissingTranslation">My device is not listed</string>
+	<string name="midi_help_not_listed_body" tools:ignore="MissingTranslation">Check the cable and connection. Compare the name on your device with the selected model.</string>
+	<string name="midi_help_android" tools:ignore="MissingTranslation">Choosing an app in Android\'s USB prompt is separate from choosing a model in UniPad.</string>
+	<string name="midi_help_no_lights_title" tools:ignore="MissingTranslation">Connected, but no lights</string>
+	<string name="midi_help_no_lights_body" tools:ignore="MissingTranslation">Check whether the on-screen pads and sound respond, and whether the pack contains light data. You can use a pack you already have.</string>
+	<string name="midi_help_crash_title" tools:ignore="MissingTranslation">The app closes unexpectedly</string>
+	<string name="midi_help_crash_body" tools:ignore="MissingTranslation">Disconnect the device and note the app version, phone or computer model, operating system, and the step where it closed. You do not need to repeat the crash.</string>
+	<string name="midi_help_mini" tools:ignore="MissingTranslation">In Programmer mode, the lights may initially be off. Check with a pack that includes lights.</string>
+	<string name="midi_help_pro" tools:ignore="MissingTranslation">Launchpad Pro and Launchpad Pro MK3 are different models.</string>
+	<string name="midi_help_other" tools:ignore="MissingTranslation">If the same model is not listed, do not choose a different model as a substitute. This guide does not confirm compatibility with new models.</string>
+	<string name="midi_help_manufacturer" tools:ignore="MissingTranslation">Read the manufacturer\'s guide</string>
+	<string name="midi_help_link_failed" tools:ignore="MissingTranslation">Could not open the manufacturer\'s guide. You can continue reading this help.</string>
+	<string name="midi_help_close" tools:ignore="MissingTranslation">Close help</string>
+	<string name="midi_dual_pad_mode" tools:ignore="MissingTranslation">Dual Pad Mode</string>
+	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
+	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
 </resources>
