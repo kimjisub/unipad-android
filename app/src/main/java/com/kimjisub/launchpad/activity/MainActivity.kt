@@ -263,7 +263,7 @@ class MainActivity : BaseActivity() {
 				source = source,
 				schedule = AppUpdateSchedule(PreferenceAppUpdateStore(applicationContext)),
 				scope = lifecycleScope,
-				isSafe = { listInFront() && appUpdate?.state?.value?.dialog == null },
+				isSafe = { canShowAppUpdate() },
 				openStore = { openPlayStorePage(STORE_APP_ID) },
 			)
 		}
@@ -539,6 +539,9 @@ class MainActivity : BaseActivity() {
 	private fun listInFront(): Boolean =
 		listIdle() && resumed && !listRefreshing && otherScreens?.anyAlive != true
 
+	private fun canShowAppUpdate(state: AppUpdatePrompter.State? = appUpdate?.state?.value): Boolean =
+		listInFront() && state?.dialog == null
+
 	private fun appUpdateActions(prompter: AppUpdatePrompter) = AppUpdateActions(
 		download = prompter::download,
 		later = prompter::later,
@@ -628,7 +631,7 @@ class MainActivity : BaseActivity() {
 		}
 
 		val updateState = appUpdate?.state?.collectAsState()?.value
-		val updateSafe = listInFront() && updateState?.dialog == null
+		val updateSafe = canShowAppUpdate(updateState)
 		LaunchedEffect(updateSafe) {
 			if (updateSafe) appUpdate?.onListReady()
 		}

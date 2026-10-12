@@ -232,7 +232,7 @@ also removed. Preference/locale changes and injected modules are restored in `fi
 ZIP bytes for the exact store fixture URL and fails on an unexpected URL. The fake catalogue
 implements the merged `StoreCatalog` subscription, with the same activity attachment/detachment
 contract as production. It needs no Firebase snapshots or SDK-private constructors. Keep the device offline before app launch because
-application initialization still initializes Firebase/remote configuration/analytics.
+application initialization still initializes Firebase/analytics.
 
 `RecordingAudio` uses the real WAV decoder and records `SoundRunner.Engine` start/load/play/stop
 requests without starting native audio output. `MidiConnection.attachTransport` temporarily wires

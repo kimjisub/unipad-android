@@ -29,6 +29,26 @@ environment before every shell command and borrow a device through the harness:
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" up-android
 ```
 
+The complete suite requires an **API 35 Google APIs image without the Play Store**, with an
+installed and enabled browser that handles `https://play.google.com/store/apps/details` links.
+A Google Play image is unsuitable: `AppUpdateNoticeTest.storeOpensInABrowserWithoutPlay`
+would skip its browser fallback check. An image without a browser also skips that check.
+Before running, verify the following command lists at least one browser activity and no
+`com.android.vending` activity. Google APIs images can contain a Play license-checking stub
+under that package name; a package path alone does not prove that the Play Store handles links:
+
+```bash
+adb -s <printed-serial> shell cmd package query-activities --brief \
+  -a android.intent.action.VIEW \
+  -d https://play.google.com/store/apps/details?id=com.kimjisub.launchpad
+```
+
+If either prerequisite is missing, borrow a suitable image through the harness before testing.
+Do not count skips on an unsuitable image as a passing run. The fake Play update manager tests
+run without a Play Store install or network access; the browser check verifies the activity
+handoff without waiting for a network response. The missing-handler test restores every package
+it disables.
+
 Use only the printed serial as `ANDROID_SERIAL`. Run from this repository. Keep the APKs
 installed after the check: uninstalling deletes every pack in the debug app's storage.
 
@@ -212,6 +232,15 @@ claimed here as audio or hardware proof.
 | Class | Tests / purpose |
 |---|---|
 | `PlayOptionPanelContrastTest` | `defaultSkinPanelUsesDarkReadableText`, `fallbackDarkPanelKeepsWhiteText`, `skinPanelColoursStayReadable`: panel text contrast. `defaultSkinKeepsItsAccentAndDarkensOnlyQuit`, `darkSkinLiftsDefaultAccentAndKeepsQuit`, `midGreySkinMarksStayReadable`: accent/arrow/Quit contrast. `readableSkinsKeepTheirTextColours`, `midGreyCardFillsThinJustEnoughForBodyContrast`, `midGreySkinTextReachesBodyContrast`, `knownLimitsGetTheMostReadableColour`, `readableSkinAccentIsPreserved`: text/fill contrast limits and preserved readable colours. |
+| `AppUpdateNoticeTest.downloadAndInstallAreSeparateChoices` | Offer, download progress and ready card; installation starts only after an explicit choice. |
+| `AppUpdateNoticeTest.downloadFinishingDuringPlayWaitsForTheList` | Completing a download while playing keeps Play in front; the ready card waits for return to the list. |
+| `AppUpdateNoticeTest.selectingAPackHidesTheCard` | Selecting a pack hides the update card; deselecting restores it. |
+| `AppUpdateNoticeTest.laterRestsAcrossRestartButTheLinkStillChecks` | Later survives a task restart; the manual check still works during the seven-day rest. |
+| `AppUpdateNoticeTest.checkingByHandWithNothingNewSaysSo` | Manual checking with no update shows and dismisses the result. |
+| `AppUpdateNoticeTest.failedInstallKeepsTheAppAndOffersRetryAndStore` | Failed installation keeps the pack list and offers retry and store choices. |
+| `AppUpdateNoticeTest.storeOpensInABrowserWithoutPlay` | With no Play Store and an enabled browser, the store choice resumes a cold browser. Required emulator conditions are above. |
+| `AppUpdateNoticeTest.storeWithNeitherPlayNorBrowserSaysSoAndKeepsTheApp` | With both handlers disabled, the store choice reports unavailability and keeps the app; packages are restored. |
+| `AppUpdateNoticeTest.restsAreKeptOnDisk` | Decline time and pending download state persist in preferences. |
 | `AppDatabaseMigrationTest` | `migrate1To2_keepsBookmarksAndPlayHistory`, `v1Database_opensThroughTheAppBuilder`, `newerDatabase_isWipedInsteadOfThrowing`: real SQLite upgrade/open/downgrade. |
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
