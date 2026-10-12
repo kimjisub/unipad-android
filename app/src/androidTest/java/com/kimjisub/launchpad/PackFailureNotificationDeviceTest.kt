@@ -17,6 +17,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.UiDevice
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.analytics.UsageAnalytics
@@ -154,7 +156,7 @@ class PackFailureNotificationDeviceTest {
         val label = InstrumentationRegistry.getArguments().getString("notificationEvidence")
         if (label != null) {
             assertTrue(device.openNotification())
-            device.waitForIdle()
+            assertTrue("notification shade did not show $title", device.wait(Until.hasObject(By.text(title)), TIMEOUT_MS))
             assertTrue(TestCaptures.screenshot(device, "pack-failure/$label-$scenario.png"))
         }
         assertEquals(context.getString(R.string.failed), notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())

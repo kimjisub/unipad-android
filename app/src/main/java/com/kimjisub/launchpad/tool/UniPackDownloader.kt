@@ -60,7 +60,8 @@ class UniPackDownloader(
 		fun onException(throwable: Throwable)
 	}
 
-	private var installationComplete = false
+	// Set once the notification shows how the download ended, so cleanup keeps it.
+	private var resultNotified = false
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
@@ -238,7 +239,7 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onException(e) }
 			} finally {
 				cancellationWatcher?.cancel()
-				if (!installationComplete) notificationManager.cancel(notificationId)
+				if (!resultNotified) notificationManager.cancel(notificationId)
 				// No suspending callbacks here: cancellation or a failing listener cannot skip
 				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
@@ -307,14 +308,22 @@ class UniPackDownloader(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
-		installationComplete = true
+		resultNotified = true
 		usage.succeeded()
 		listener.onInstallComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
 		Log.err("Download exception", throwable)
-		notificationManager.cancel(notificationId)
+		notificationBuilder.apply {
+			setContentTitle(title)
+			setContentText(context.getString(R.string.failed))
+			setProgress(0, 0, false)
+			setOngoing(false)
+		}
+		notificationManager.notify(notificationId, notificationBuilder.build())
+		resultNotified = true
+
 		listener.onException(throwable)
 	}
 

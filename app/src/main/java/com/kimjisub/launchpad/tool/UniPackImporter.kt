@@ -141,7 +141,7 @@ class UniPackImporter(
 	private fun onException(throwable: Throwable) {
 		notificationBuilder.apply {
 			setContentTitle(fileName)
-			setContentText(context.getString(R.string.downloadWaiting))
+			setContentText(context.getString(R.string.failed))
 			setProgress(0, 0, false)
 			setOngoing(false)
 		}

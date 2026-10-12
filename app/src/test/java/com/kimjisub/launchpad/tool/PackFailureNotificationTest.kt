@@ -8,30 +8,30 @@ import org.junit.Before
 import org.junit.Test
 
 class PackFailureNotificationTest {
-    private val env = PackInstallTestEnv()
+	private val env = PackInstallTestEnv()
 
-    @Before
-    fun setUp() = env.setUp()
+	@Before
+	fun setUp() = env.setUp()
 
-    @After
-    fun tearDown() = env.tearDown()
+	@After
+	fun tearDown() = env.tearDown()
 
-    @Test
-    fun missingDownloadUsesExistingFailureTranslation() {
-        val result = PackInstallTestEnv.Recorder()
-        env.gate("missing").failWithStatus(404)
-        env.finish(env.download("missing", result))
+	@Test
+	fun missingDownloadUsesExistingFailureTranslation() {
+		val result = PackInstallTestEnv.Recorder()
+		env.gate("missing").failWithStatus(404)
+		env.finish(env.download("missing", result))
 
-        assertNotNull(result.error)
-        assertEquals(R.string.failed, env.notificationTextIds.last())
-    }
+		assertNotNull(result.error)
+		assertEquals(R.string.failed, env.notificationTextIds.last())
+	}
 
-    @Test
-    fun invalidImportUsesExistingFailureTranslation() {
-        val result = PackInstallTestEnv.Recorder()
-        env.finish(env.import("not a ZIP archive".toByteArray(), result))
+	@Test
+	fun invalidImportUsesExistingFailureTranslation() {
+		val result = PackInstallTestEnv.Recorder()
+		env.finish(env.import("not a ZIP archive".toByteArray(), result))
 
-        assertNotNull(result.error)
-        assertEquals(R.string.failed, env.notificationTextIds.last())
-    }
+		assertNotNull(result.error)
+		assertEquals(R.string.failed, env.notificationTextIds.last())
+	}
 }
