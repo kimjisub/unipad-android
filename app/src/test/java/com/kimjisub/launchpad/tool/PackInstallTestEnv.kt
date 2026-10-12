@@ -76,6 +76,7 @@ class PackInstallTestEnv {
 	/** Names of the threads that resolved the target workspace, one per request. */
 	val fileNameResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
 	val workspaceResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
+	val notificationTextIds: MutableList<Int> = Collections.synchronizedList(mutableListOf())
 	private val resolveWorkspace: () -> File = {
 		workspaceResolvedOn += Thread.currentThread().name
 		workspace
@@ -88,6 +89,11 @@ class PackInstallTestEnv {
 
 	fun setUp() {
 		Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
+		every { context.getString(any()) } answers {
+			val id = firstArg<Int>()
+			notificationTextIds += id
+			"resource:$id"
+		}
 
 		val manager = mockk<android.app.NotificationManager>(relaxed = true)
 		every { manager.notify(any<Int>(), any<android.app.Notification>()) } answers {
