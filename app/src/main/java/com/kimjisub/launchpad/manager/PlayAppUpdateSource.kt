@@ -34,7 +34,9 @@ class PlayAppUpdateSource(
 			throw e
 		}
 		lastInfo = info
-		return downloadStatus(info.installStatus(), info.bytesDownloaded(), info.totalBytesToDownload())
+		// A query uses availability after cancellation so a stale canceled status cannot suppress checks.
+		val installStatus = info.installStatus().takeUnless { it == InstallStatus.CANCELED } ?: InstallStatus.UNKNOWN
+		return downloadStatus(installStatus, info.bytesDownloaded(), info.totalBytesToDownload())
 			?: when (info.updateAvailability()) {
 				UpdateAvailability.UPDATE_AVAILABLE ->
 					if (info.isUpdateTypeAllowed(options)) UpdateStatus.Available else UpdateStatus.Unsupported
@@ -74,7 +76,7 @@ class PlayAppUpdateSource(
 		listener = null
 	}
 
-	/** Query results and listener events must treat a canceled download alike. */
+	/** Shared download mapping; only a live cancellation event reports Canceled to rest the notice. */
 	private fun downloadStatus(status: Int, done: Long, total: Long): UpdateStatus? = when (status) {
 		InstallStatus.PENDING -> UpdateStatus.Downloading(null)
 		InstallStatus.DOWNLOADING -> UpdateStatus.Downloading(fraction(done, total))

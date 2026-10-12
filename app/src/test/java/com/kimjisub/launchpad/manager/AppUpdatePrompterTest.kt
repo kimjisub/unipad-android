@@ -387,22 +387,22 @@ class AppUpdatePrompterTest {
 	}
 
 	@Test
-	fun canceledDownloadOnReturnRestsLikeANotification() = runTest {
+	fun availableUpdateOnReturnDoesNotRecordCancellation() = runTest {
 		store.downloadRequested = true
-		store.lastAutoCheckAt = now
-		source.answer = UpdateStatus.Canceled
+		store.lastAutoCheckAt = now - CHECK_INTERVAL_MS
+		// The Play adapter falls back to availability when a query still says canceled.
+		source.answer = UpdateStatus.Available
 		val prompter = prompter()
 		prompter.onListReady()
 		advanceUntilIdle()
-		assertNull(prompter.card)
-		assertFalse(store.downloadRequested)
-		assertEquals(now, store.declinedAt)
+		assertEquals(Card.Offer, prompter.card)
+		assertNull(store.declinedAt)
 
-		source.answer = UpdateStatus.Available
-		prompter.onListReady()
+		prompter.checkByHand()
 		advanceUntilIdle()
-		assertEquals("cancellation does not immediately offer another download", 1, source.queries)
-		assertNull(prompter.card)
+		assertEquals(2, source.queries)
+		assertEquals(Card.Offer, prompter.card)
+		assertNull(store.declinedAt)
 	}
 
 	@Test

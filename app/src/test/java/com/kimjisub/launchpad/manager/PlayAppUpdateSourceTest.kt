@@ -25,8 +25,20 @@ class PlayAppUpdateSourceTest {
 	private val source = PlayAppUpdateSource(manager, launcher)
 
 	@Test
-	fun canceledDownloadIsCanceledOnQueryAndNotification() = runTest {
-		assertBoth(InstallStatus.CANCELED, UpdateStatus.Canceled)
+	fun canceledQueryUsesAvailabilityButNotificationReportsCancellation() = runTest {
+		configureInfo(InstallStatus.CANCELED)
+		assertEquals(UpdateStatus.Available, source.status())
+		configureInfo(InstallStatus.CANCELED, allowed = false)
+		assertEquals(UpdateStatus.Unsupported, source.status())
+		configureInfo(InstallStatus.CANCELED, availability = UpdateAvailability.UPDATE_NOT_AVAILABLE)
+		assertEquals(UpdateStatus.None, source.status())
+
+		val listener = slot<InstallStateUpdatedListener>()
+		every { manager.registerListener(capture(listener)) } returns Unit
+		var observed: UpdateStatus? = null
+		source.observe { observed = it }
+		listener.captured.onStateUpdate(installState(InstallStatus.CANCELED, 0, 0))
+		assertEquals(UpdateStatus.Canceled, observed)
 	}
 
 	@Test
