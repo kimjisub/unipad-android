@@ -2,13 +2,16 @@ package com.kimjisub.launchpad.activity
 
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection.SessionSummary
+import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
+import com.kimjisub.launchpad.midi.driver.LaunchpadS
 import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.Noting
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MidiModelIndexForTargetTest {
@@ -43,6 +46,31 @@ class MidiModelIndexForTargetTest {
 		assertEquals(10, index)
 		assertEquals(R.string.midi_lp_core_fw, midiHelpModelNameResId(index))
 		assertEquals(10, midiModelIndexForTarget(emptyList(), null, LaunchpadCoreFW::class))
+	}
+
+	@Test fun pickingTheHighlightedCoreFwModelKeepsTheRedGreenCodesOfTheS() {
+		val detected = LaunchpadCoreFW(LaunchpadS::sCode)
+		val picked = midiDriverForPick(10, detected)
+		assertEquals(listOf(LaunchpadS.sCode(5)), padLedVelocities(picked, 5))
+	}
+
+	@Test fun pickingAnotherModelGivesThatModelsDriver() {
+		assertTrue(midiDriverForPick(4, LaunchpadCoreFW(LaunchpadS::sCode)) is LaunchpadX)
+		assertTrue(midiDriverForPick(10, LaunchpadX()) is LaunchpadCoreFW)
+		assertTrue(midiDriverForPick(10, null) is LaunchpadCoreFW)
+	}
+
+	private fun padLedVelocities(driver: DriverRef, velocity: Int): List<Int> {
+		val sent = mutableListOf<Int>()
+		driver.setOnSendSignalListener(object : DriverRef.OnSendSignalListener {
+			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
+				sent += velocity.toInt() and 0xFF
+			}
+
+			override fun onSendRaw(messages: List<ByteArray>, cableNumber: Int) {}
+		})
+		driver.sendPadLed(0, 0, velocity)
+		return sent
 	}
 
 	@Test fun helpNamesTheTargetedModelOrNoneWhenItIsUnknown() {

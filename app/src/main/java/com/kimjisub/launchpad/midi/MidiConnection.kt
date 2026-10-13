@@ -1197,6 +1197,8 @@ object MidiConnection {
 			)
 		}
 
+	fun driverForSession(sessionId: Int): DriverRef? = sessions[sessionId]?.driver
+
 	// Sets the model/driver for one specific connected pad, identified by SessionSummary.sessionId.
 	// Unlike assigning `driver` directly, this always targets exactly the requested physical
 	// device and never disturbs the MultiplexDriver dispatcher other pads rely on - this is

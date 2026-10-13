@@ -100,15 +100,15 @@ class MidiSelectActivity : BaseActivity() {
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
 						targetModelIndex.value = index
-						val driver = midiDevices[index].createDriver()
 						val targetSessionId = selectedSessionId.value
 						if (targetSessionId != null && connectedSessions.value.size > 1) {
 							// More than one pad connected - target the specific device
 							// picked above, never disturbing the other connected pad.
+							val driver = midiDriverForPick(index, MidiConnection.driverForSession(targetSessionId))
 							MidiConnection.setDriverForSession(targetSessionId, driver)
 							connectedSessions.value = MidiConnection.connectedSessions
 						} else {
-							MidiConnection.driver = driver
+							MidiConnection.driver = midiDriverForPick(index, MidiConnection.driver)
 						}
 					},
 					onDualPadModeChange = { enabled ->
@@ -172,6 +172,12 @@ internal fun midiModelIndexForTarget(
 		?: fallbackDriverClass
 	return midiDevices.indexOfFirst { it.driverClass == targetClass }.takeIf { it >= 0 }
 }
+
+// Picking the model the pad already runs re-applies its driver rather than a fresh one, so a
+// driver set up at detection (CoreFW on the S and the first Mini keeps its red/green codes)
+// survives a tap on its highlighted model.
+internal fun midiDriverForPick(index: Int, current: DriverRef?): DriverRef =
+	current?.takeIf { it::class == midiDevices[index].driverClass } ?: midiDevices[index].createDriver()
 
 // The help names the targeted pad's model; a driver outside the list (no pad yet) is unknown,
 // even though the grid keeps its last highlight.
