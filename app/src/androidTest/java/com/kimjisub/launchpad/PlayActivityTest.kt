@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
@@ -785,7 +786,7 @@ class PlayActivityTest : BaseUITest() {
 
     /**
      * A 4 x 3 pack with 24 chains (the most a pack can have): eight chains a side are much taller
-     * than four pads, and used to run off the screen. Every chain must show inside the safe area,
+     * than four pads. Every chain must show inside the safe area,
      * clear of the pads, and be selectable, in normal and in Pro light mode.
      */
     @Test
@@ -801,6 +802,50 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    /** A right-only chain column keeps pad-sized buttons when all eight already fit a narrow window. */
+    @Test
+    fun testRightOnlyChainsKeepTheirSizeInANarrowWindow() {
+        TestUniPack.install(context, rows = 4, columns = 4, chains = 8)
+        enterPlay()
+        val ignoredOrientation = device.executeShellCommand("wm get-ignore-orientation-request").contains("true")
+        var orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).single()
+            orientation = activity.requestedOrientation
+            // A resizable window has no fixed landscape request; avoid the full-screen compatibility letterbox.
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+        try {
+            device.executeShellCommand("wm set-ignore-orientation-request true")
+            device.executeShellCommand("wm size 1270x1600")
+            rotateTo(Surface.ROTATION_0)
+            val geometry = settledGeometry(landscape = false)
+            takeScreenshot("right_only_narrow_window")
+            println("Narrow window: $geometry")
+            assertTrue("app uses the narrow window without letterboxing", geometry.window.height() > geometry.window.width())
+            assertEquals("right-side buttons", 8, geometry.chains.size)
+            val padSize = geometry.pads.width() / 4
+            assertTrue("pad-sized chains fit the window height", 8 * padSize <= geometry.safe.height())
+            geometry.chains.forEach { chain ->
+                assertInside(geometry.safe, "right-side chain", chain)
+                assertTrue("chain $chain is on the right of ${geometry.pads}", chain.left >= geometry.pads.right)
+                assertEquals("right-side chain keeps the pad size", padSize, chain.width())
+                assertEquals("right-side chain stays square", padSize, chain.height())
+            }
+            val problems = playLayoutProblems("right_only_narrow_window_check")
+            assertTrue(problems.joinToString("\n"), problems.isEmpty())
+        } finally {
+            device.executeShellCommand("wm size reset")
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).single()
+                    .requestedOrientation = orientation
+            }
+            device.unfreezeRotation()
+            device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
+        }
+        quitPlayToMain()
+    }
+
     /**
      * Checks the chain buttons are on screen and records selecting chains 24, 5 and 18 (top left,
      * right and bottom), each followed by a press of the first pad.
@@ -809,10 +854,13 @@ class PlayActivityTest : BaseUITest() {
         val geometry = settledGeometry(landscape = false)
         takeScreenshot("many_chains_$name")
         assertEquals("chain buttons shown in $name mode", visibleChains, geometry.chains.size)
-        geometry.chains.forEach { chain ->
+        geometry.chains.forEachIndexed { i, chain ->
             assertInside(geometry.safe, "chain button", chain)
             assertTrue("chain button $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
-            geometry.chains.filter { it != chain }.forEach { assertTrue("chain buttons $chain and $it meet", !Rect.intersects(chain, it)) }
+            for (j in i + 1 until geometry.chains.size) {
+                val other = geometry.chains[j]
+                assertTrue("chain buttons $i $chain and $j $other meet", !Rect.intersects(chain, other))
+            }
         }
         // Chains 1-8 run down the right, 9-16 right to left below and 17-24 up the left. The pads
         // are taller than wide, so the side columns stay level with them and the rows may not.

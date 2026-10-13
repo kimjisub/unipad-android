@@ -1100,7 +1100,7 @@ class PlayActivity : BaseActivity() {
 				rows = vm.unipack.buttonX,
 				columns = vm.unipack.buttonY,
 				square = vm.unipack.squareButton,
-				chainRows = PlayLayout.chainRows(vm.scbProLightMode.isChecked(), vm.unipack.chain),
+				sides = PlayLayout.chainSides(vm.scbProLightMode.isChecked(), vm.unipack.chain),
 			)
 
 			vm.setupCheckBoxListeners()
@@ -1201,10 +1201,12 @@ class PlayActivity : BaseActivity() {
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
-			if (i in 0..7) { chainsTopContainer?.addView(view) }
-			if (i in 8..15) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-			if (i in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-			if (i in 24..31) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			when (i / PlayLayout.CHAINS_PER_SIDE) {
+				0 -> chainsTopContainer?.addView(view)
+				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			}
 		}
 	}
 

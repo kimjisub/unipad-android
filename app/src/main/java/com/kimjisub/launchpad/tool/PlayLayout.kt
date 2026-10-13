@@ -31,43 +31,61 @@ object PlayLayout {
 	 */
 	fun sideMargin(insetLeft: Int, insetRight: Int, menuStrip: Int): Int = max(insetLeft, insetRight + menuStrip)
 
-	/**
-	 * Chain rows kept free above and below the grid: the top and bottom strips in Pro light mode,
-	 * and in normal mode once a pack's chains reach the bottom strip (chain 9 and on).
-	 */
-	fun chainRows(proLightMode: Boolean, chains: Int): Int = if (proLightMode || chains > CHAINS_PER_SIDE) 2 else 0
+	/** The chain strips containing visible buttons, in Launchpad order. */
+	data class ChainSides(val top: Boolean, val right: Boolean, val bottom: Boolean, val left: Boolean) {
+		val horizontal: Boolean get() = top || bottom
+		val vertical: Boolean get() = right || left
+		val hasCorner: Boolean get() = horizontal && vertical
+		// Both rows stay reserved to keep the pad grid vertically centred.
+		val rows: Int get() = if (horizontal) 2 else 0
+	}
+
+	/** Pro light mode shows function keys and all chains; normal mode hides a lone chain. */
+	fun chainButtonVisible(index: Int, proLightMode: Boolean, chains: Int): Boolean =
+		proLightMode || (chains > 1 && index - CHAINS_PER_SIDE in 0 until chains)
+
+	fun chainSides(proLightMode: Boolean, chains: Int): ChainSides = ChainSides(
+		top = chainButtonVisible(0, proLightMode, chains),
+		right = chainButtonVisible(CHAINS_PER_SIDE, proLightMode, chains),
+		bottom = chainButtonVisible(2 * CHAINS_PER_SIDE, proLightMode, chains),
+		left = chainButtonVisible(3 * CHAINS_PER_SIDE, proLightMode, chains),
+	)
 
 	/**
-	 * Pad size for [area]. The grid leaves a chain column on each side and [chainRows] above and
-	 * below it. Chains are as large as the largest square pad that fits, and smaller only where
-	 * the [CHAINS_PER_SIDE] chains of a side would otherwise leave the area or meet the strip
-	 * beside them: a pack with few pads, such as 4 x 3, has a side much shorter than eight pads.
+	 * Pad size for [area], keeping the grid centred and reserving rows for [sides]. Chains shrink
+	 * only if a visible strip would leave the area or overlap an adjacent visible strip. The
+	 * horizontal side margins stay symmetric even when only the right chain column is shown.
 	 *
 	 * @param rows pads from top to bottom (UniPack `buttonX`); [columns] from left to right (`buttonY`).
 	 * @param square square pads keep their size and the chains shrink to fit; stretched pads fill
 	 * what the chains leave.
 	 */
-	fun buttonSize(area: Area, rows: Int, columns: Int, square: Boolean, chainRows: Int): ButtonSize {
+	fun buttonSize(area: Area, rows: Int, columns: Int, square: Boolean, sides: ChainSides): ButtonSize {
 		val width = (area.width - 2 * area.sideMargin).coerceAtLeast(0)
 		val height = area.height.coerceAtLeast(0)
-		// A strip may run past the grid's side as long as it stays in the area and the strips
-		// across from it stay within the grid's side, so that no two strips meet at a corner.
-		fun fits(size: ButtonSize) = CHAINS_PER_SIDE * size.chain <= min(width, height) &&
-			CHAINS_PER_SIDE * size.chain <= max(columns * size.x, rows * size.y) &&
-			columns * size.x + CHAIN_COLUMNS * size.chain <= width &&
-			rows * size.y + chainRows * size.chain <= height
-		val largestChain = min(width / (columns + CHAIN_COLUMNS), height / (rows + chainRows))
+		val padRows = rows.coerceAtLeast(1)
+		val padColumns = columns.coerceAtLeast(1)
+		val stripLimit = min(
+			if (sides.horizontal) width / CHAINS_PER_SIDE else Int.MAX_VALUE,
+			if (sides.vertical) height / CHAINS_PER_SIDE else Int.MAX_VALUE,
+		)
+		// A visible strip may extend past the grid, but two visible strips must not meet at a corner.
+		fun fits(size: ButtonSize) = size.chain <= stripLimit &&
+			(!sides.hasCorner || CHAINS_PER_SIDE * size.chain <= max(padColumns * size.x, padRows * size.y)) &&
+			padColumns * size.x + CHAIN_COLUMNS * size.chain <= width &&
+			padRows * size.y + sides.rows * size.chain <= height
+		val largestChain = min(width / (padColumns + CHAIN_COLUMNS), height / (padRows + sides.rows))
 		if (square) {
 			fun withPad(pad: Int): ButtonSize {
-				val chain = minOf(pad, min(width, height) / CHAINS_PER_SIDE, max(rows, columns) * pad / CHAINS_PER_SIDE)
-				return ButtonSize(pad, pad, chain)
+				val cornerLimit = if (sides.hasCorner) max(padRows, padColumns) * pad / CHAINS_PER_SIDE else Int.MAX_VALUE
+				return ButtonSize(pad, pad, minOf(pad, stripLimit, cornerLimit))
 			}
-			val largestPad = min(width / columns, height / rows)
-			return (largestPad downTo largestChain).asSequence().map(::withPad).firstOrNull(::fits) ?: withPad(largestChain)
+			val largestPad = min(width / padColumns, height / padRows)
+			return (largestPad downTo largestChain).asSequence().map(::withPad).first(::fits)
 		}
 		fun withChain(chain: Int) =
-			ButtonSize((width - CHAIN_COLUMNS * chain) / columns, (height - chainRows * chain) / rows, chain)
-		return (largestChain downTo 0).asSequence().map(::withChain).firstOrNull(::fits) ?: withChain(0)
+			ButtonSize((width - CHAIN_COLUMNS * chain) / padColumns, (height - sides.rows * chain) / padRows, chain)
+		return (largestChain downTo 0).asSequence().map(::withChain).first(::fits)
 	}
 
 	/** Top-left corners of the pad grid and of the chain strips centred on its four sides. */
