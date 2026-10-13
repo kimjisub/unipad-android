@@ -1,0 +1,7 @@
+// Intentional security audit fixture, removed before review and never merged.
+// Applies only to the inspection command that explicitly loads this init script.
+gradle.beforeProject { project ->
+    project.configurations.configureEach {
+        resolutionStrategy.force 'com.squareup.okhttp3:okhttp:4.9.0'
+    }
+}
