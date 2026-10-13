@@ -3,6 +3,7 @@ package com.kimjisub.launchpad
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
@@ -781,6 +782,115 @@ class PlayActivityTest : BaseUITest() {
         val problems = playLayoutProblemsAcrossWindows("stretched_")
         assertTrue(problems.joinToString("\n"), problems.isEmpty())
         quitPlayToMain()
+    }
+
+    /**
+     * A 4 x 3 pack with 24 chains (the most a pack can have): eight chains a side are much taller
+     * than four pads. Every chain must show inside the safe area,
+     * clear of the pads, and be selectable, in normal and in Pro light mode.
+     */
+    @Test
+    fun testEveryChainOfASmallPackWithManyChainsCanBeSelected() {
+        TestUniPack.install(context, rows = 4, columns = 3, chains = 24)
+        enterPlay()
+        selectChainsOnEverySide("normal", visibleChains = 24)
+        openPlayOptions()
+        togglePlayOption(R.string.proLightMode)
+        closePlayOptions()
+        // Pro light mode also shows the eight function keys above the pads.
+        selectChainsOnEverySide("pro", visibleChains = 32)
+        quitPlayToMain()
+    }
+
+    /** A right-only chain column keeps pad-sized buttons when all eight already fit a narrow window. */
+    @Test
+    fun testRightOnlyChainsKeepTheirSizeInANarrowWindow() {
+        TestUniPack.install(context, rows = 4, columns = 4, chains = 8)
+        enterPlay()
+        val ignoredOrientation = device.executeShellCommand("wm get-ignore-orientation-request").contains("true")
+        var orientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).single()
+            orientation = activity.requestedOrientation
+            // A resizable window has no fixed landscape request; avoid the full-screen compatibility letterbox.
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+        try {
+            device.executeShellCommand("wm set-ignore-orientation-request true")
+            device.executeShellCommand("wm size 1270x1600")
+            rotateTo(Surface.ROTATION_0)
+            val geometry = settledGeometry(landscape = false)
+            takeScreenshot("right_only_narrow_window")
+            println("Narrow window: $geometry")
+            assertTrue("app uses the narrow window without letterboxing", geometry.window.height() > geometry.window.width())
+            assertEquals("right-side buttons", 8, geometry.chains.size)
+            val padSize = geometry.pads.width() / 4
+            assertTrue("pad-sized chains fit the window height", 8 * padSize <= geometry.safe.height())
+            geometry.chains.forEach { chain ->
+                assertInside(geometry.safe, "right-side chain", chain)
+                assertTrue("chain $chain is on the right of ${geometry.pads}", chain.left >= geometry.pads.right)
+                assertEquals("right-side chain keeps the pad size", padSize, chain.width())
+                assertEquals("right-side chain stays square", padSize, chain.height())
+            }
+            val problems = playLayoutProblems("right_only_narrow_window_check")
+            assertTrue(problems.joinToString("\n"), problems.isEmpty())
+        } finally {
+            device.executeShellCommand("wm size reset")
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).single()
+                    .requestedOrientation = orientation
+            }
+            device.unfreezeRotation()
+            device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
+        }
+        quitPlayToMain()
+    }
+
+    /**
+     * Checks the chain buttons are on screen and records selecting chains 24, 5 and 18 (top left,
+     * right and bottom), each followed by a press of the first pad.
+     */
+    private fun selectChainsOnEverySide(name: String, visibleChains: Int) {
+        val geometry = settledGeometry(landscape = false)
+        takeScreenshot("many_chains_$name")
+        assertEquals("chain buttons shown in $name mode", visibleChains, geometry.chains.size)
+        geometry.chains.forEachIndexed { i, chain ->
+            assertInside(geometry.safe, "chain button", chain)
+            assertTrue("chain button $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
+            for (j in i + 1 until geometry.chains.size) {
+                val other = geometry.chains[j]
+                assertTrue("chain buttons $i $chain and $j $other meet", !Rect.intersects(chain, other))
+            }
+        }
+        // Chains 1-8 run down the right, 9-16 right to left below and 17-24 up the left. The pads
+        // are taller than wide, so the side columns stay level with them and the rows may not.
+        val beside = geometry.chains.filter { it.top < geometry.pads.bottom && it.bottom > geometry.pads.top }
+        val right = beside.filter { it.left >= geometry.pads.right }.sortedBy { it.top }
+        val bottom = geometry.chains.filter { it.top >= geometry.pads.bottom }.sortedByDescending { it.left }
+        val left = beside.filter { it.right <= geometry.pads.left }.sortedByDescending { it.top }
+        val chainButtons = right + bottom + left
+        assertEquals("chains 1-24 beside and below the pads in $name mode", 24, chainButtons.size)
+
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        closePlayOptions()
+        val firstPad = Rect(geometry.pads.left, geometry.pads.top, geometry.pads.left + geometry.pads.width() / 3, geometry.pads.top + geometry.pads.height() / 4)
+        for (chain in listOf(24, 5, 18)) {
+            val button = chainButtons[chain - 1]
+            device.click(button.centerX(), button.centerY())
+            Thread.sleep(300)
+            takeScreenshot("many_chains_${name}_chain_$chain")
+            device.click(firstPad.centerX(), firstPad.centerY())
+        }
+        clearClipboard()
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        assertTrue("Recording was not copied to the clipboard", waitUntil { clipboardText() != null })
+        val log = clipboardText().orEmpty().lines()
+        val selected = log.filter { it.startsWith("chain ") }
+        assertEquals("chains selected in $name mode: $log", listOf("chain 24", "chain 5", "chain 18"), selected)
+        assertEquals("first pad presses in $name mode: $log", 3, log.count { it == "t 1 1" })
+        closePlayOptions()
     }
 
     /** Layout problems in every window of the resize sequence; screenshots are named with [prefix]. */
