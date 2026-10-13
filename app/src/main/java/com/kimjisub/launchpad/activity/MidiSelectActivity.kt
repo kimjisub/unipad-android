@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
@@ -195,6 +196,8 @@ private val midiDevices = listOf(
 	MidiDeviceData(R.drawable.midi_midifighter, R.string.midi_midi_fighter, MidiFighter::class) { MidiFighter() },
 	MidiDeviceData(R.drawable.midi_matrix, R.string.midi_matrix, Matrix::class) { Matrix() },
 	MidiDeviceData(R.drawable.midi_master_keyboard, R.string.midi_master_keyboard, MasterKeyboard::class) { MasterKeyboard() },
+	// Picking it by hand cannot tell the model, so it keeps pack colours as on the RGB models.
+	MidiDeviceData(R.drawable.midi_lp_pro, R.string.midi_lp_core_fw, LaunchpadCoreFW::class) { LaunchpadCoreFW() },
 )
 
 @Composable

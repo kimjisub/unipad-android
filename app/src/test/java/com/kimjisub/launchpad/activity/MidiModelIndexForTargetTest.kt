@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.activity
 
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection.SessionSummary
+import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadX
@@ -33,6 +34,15 @@ class MidiModelIndexForTargetTest {
 
 	@Test fun driverOutsideTheModelListHighlightsNothing() {
 		assertNull(midiModelIndexForTarget(emptyList(), null, Noting::class))
+	}
+
+	@Test fun padDetectedAsCoreFwHighlightsTheCoreFwModel() {
+		// The S and the first Mini get the same driver class with their own colour codes.
+		val coreFwPad = SessionSummary(3, "Launchpad X", LaunchpadCoreFW::class, isPrimary = true)
+		val index = midiModelIndexForTarget(listOf(coreFwPad, padB), 3, Noting::class)
+		assertEquals(10, index)
+		assertEquals(R.string.midi_lp_core_fw, midiHelpModelNameResId(index))
+		assertEquals(10, midiModelIndexForTarget(emptyList(), null, LaunchpadCoreFW::class))
 	}
 
 	@Test fun helpNamesTheTargetedModelOrNoneWhenItIsUnknown() {
