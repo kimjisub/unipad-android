@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Chấp nhận</string>
@@ -22,13 +21,11 @@
 	<string name="loading_phase_audio">Đang tải audio…</string>
 	<string name="download">Tải xuống</string>
 	<string name="downloadWaiting">Chờ Tải xuống</string>
-	<string name="downloading">Đang tải xuống</string>
 	<string name="downloaded">Đã tải xuống</string>
 	<string name="success">Thành công</string>
 	<string name="failed">Thất bại</string>
 	<string name="delete">Xóa</string>
 	<string name="edit">Chỉnh sửa</string>
-	<string name="update">Cập nhật</string>
 	<string name="ignore">Bỏ qua</string>
 	<string name="apply">Áp dụng</string>
 	<string name="restart">Khởi động lại</string>
@@ -86,7 +83,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Tự động phát</string>
-	<string name="practiceMode">Luyện tập</string>
 	<string name="guidePlay">Hướng dẫn</string>
 	<string name="stepPractice">Từng bước</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -99,19 +95,13 @@
 	<string name="proLightMode">Chế độ Pro Light</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Phát hiện phiên bản mới.</string>
-	<string name="update_available">Có bản cập nhật</string>
 
 	<string name="permissionRequire">Cần quyền truy cập bộ nhớ ngoài để lưu file dự án.\nXin cấp quyền cho đặc quyền này.</string>
 	<string name="permissionDenied">Ứng dụng cần quyền truy cập bộ nhớ ngoài.\nVui lòng bật quyền trong [Cài đặt] > [Quyền]</string>
-	<string name="unipackNotFound">Không tìm thấy UniPack.</string>
-	<string name="clickToAddUniPack">Nhấn để thêm UniPack.</string>
 	<string name="guide_download_new">Tải pack mới</string>
 	<string name="guide_import_external">Nhập pack đã tải</string>
 	<string name="guide_restore_packs">Khôi phục pack bị mất</string>
 	<string name="doYouWantToDeleteUniPack">Bạn có muốn xóa dự án này không?</string>
-	<string name="remapDone">Ánh xạ lại AutoPlay đã hoàn tất thành công.</string>
-	<string name="remapFail">AutoPlay không tồn tại</string>
 	<string name="importComplete">Đã nhập pack!</string>
 	<string name="importPlayNow">Chơi ngay</string>
 	<string name="importFailed">Nhập thất bại</string>
@@ -126,10 +116,7 @@
 	<string name="launchpadConnecting">Đang kết nối launchpad…</string>
 	<string name="midiDevicesNotDetected">Không Phát Hiện Thiết Bị MIDI</string>
 	<string name="midi_open_panel">Mở</string>
-	<string name="midi_connected_banner">MIDI đã kết nối: %1$s</string>
 	<string name="midi_disconnected">Đã ngắt kết nối</string>
-	<string name="signal_SpeedFirst">Ưu tiên tốc độ</string>
-	<string name="signal_avoidAfterimage">Tránh bóng mờ</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Không thể thoát khi đang tải pack</string>
@@ -137,11 +124,9 @@
 
 	<!--Theme-->
 	<string name="theme">Giao diện</string>
-	<string name="themeDownload">Tải Giao diện</string>
 	<string name="requireRestart">Cần khởi động lại ứng dụng.</string>
 	<string name="doYouWantToRestartApp">Bạn có muốn khởi động lại ứng dụng không?</string>
 
-	<string name="theme_import">Nhập Giao diện</string>
 	<string name="theme_import_success">Nhập giao diện thành công.</string>
 	<string name="theme_import_failed">Nhập giao diện thất bại.</string>
 	<string name="theme_import_invalid">File giao diện không hợp lệ.</string>
@@ -158,7 +143,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Thông tin</string>
 	<string name="settings_storage">Bộ nhớ</string>
@@ -219,7 +203,6 @@
 	<string name="workspace_documents_android10">Tài liệu (Android 10)</string>
 	<string name="workspace_app_storage">Bộ nhớ Ứng dụng (Khuyến nghị)</string>
 	<string name="workspace_internal_storage">Bộ nhớ Trong</string>
-	<string name="workspace_internal_sd_card">Thẻ SD Trong</string>
 	<string name="workspace_external_sd_card_format">Thẻ SD Ngoài %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -248,13 +231,11 @@
 	<string name="transfer_selected_count">Đã chọn %d</string>
 	<string name="transfer_start">Bắt đầu</string>
 	<string name="transfer_copying">Đang sao chép: %s</string>
-	<string name="transfer_moving">Đang di chuyển: %s</string>
 	<string name="transfer_result_transferred">Đã chuyển</string>
 	<string name="transfer_result_skipped">Đã bỏ qua (đã tồn tại)</string>
 	<string name="transfer_result_failed">Thất bại</string>
 	<string name="transfer_done">Hoàn tất</string>
 	<string name="transfer_no_items">Chưa chọn UniPack nào</string>
-	<string name="transfer_select_target">Chọn đích đến</string>
 	<string name="transfer_select_source">Chọn nguồn</string>
 	<string name="transfer_format_label">Định dạng</string>
 	<string name="transfer_format_folder">Thư mục</string>
@@ -266,11 +247,6 @@
 	<string name="restore_title">Khôi phục</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">lỗi máy chủ\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

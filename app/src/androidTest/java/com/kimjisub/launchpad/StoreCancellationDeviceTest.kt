@@ -184,7 +184,7 @@ class StoreCancellationDeviceTest {
             captureNotifications("notifications-downloading")
             evidence("partial-before=${partial.length()} existing=$before")
             val other = Recorder()
-            UniPackDownloader(context, "$id-other", "${server.url}other", workspace, "$id-other", listener = other,
+            UniPackDownloader(context, "$id-other", "${server.url}other", { workspace }, "$id-other", listener = other,
                 usage = GlobalContext.get().get<UsageAnalytics>().packImport(PackImportSource.STORE), scope = otherScope)
             finish(otherScope)
             assertNull(other.error)
@@ -199,8 +199,8 @@ class StoreCancellationDeviceTest {
             server.breakRead.countDown() // EOF/IO error after the screen has cancelled its scope.
             capture("after-cancel")
             await("cancelled ZIP remained after read error") { !partial.exists() }
-            captureNotifications("notifications-after-cancel")
             await("cancelled progress notification remained") { progressNotifications().isEmpty() }
+            captureNotifications("notifications-after-cancel")
             assertTrue("another download's completed notification was removed", notifications.activeNotifications.any {
                 it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) == "$id-other" && !it.isOngoing
             })
@@ -232,6 +232,9 @@ class StoreCancellationDeviceTest {
             capture("failed")
             throw error
         } finally {
+            if (checkNotificationPermission) {
+                instrumentation.uiAutomation.dropShellPermissionIdentity()
+            }
             evidence("final-files=" + workspace.listFiles().orEmpty().filter { it.name.startsWith(id) }.map { "${it.name}:${it.length()}" })
             server.breakRead.countDown()
             screen?.close()
@@ -249,9 +252,6 @@ class StoreCancellationDeviceTest {
             context.getSystemService(NotificationManager::class.java).activeNotifications.filter {
                 it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) in listOf("Cancellation fixture", "$id-other")
             }.forEach { context.getSystemService(NotificationManager::class.java).cancel(it.tag, it.id) }
-            if (checkNotificationPermission) {
-                instrumentation.uiAutomation.dropShellPermissionIdentity()
-            }
         }
     }
 
@@ -313,8 +313,8 @@ class StoreCancellationDeviceTest {
     }
     private fun capture(name: String) {
         val prefix = InstrumentationRegistry.getArguments().getString("capturePrefix", "fixed")
-        val folder = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "store-cancel-captures/$prefix").apply { mkdirs() }
-        assertTrue(UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).takeScreenshot(File(folder, "$name.png")))
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        assertTrue(TestCaptures.screenshot(device, "store-cancel-captures/$prefix/$name.png"))
     }
     private fun evidence(text: String) = InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\nstore-cancel $text\n") })
     private fun files(title: String): Map<String, ByteArray> = mapOf(

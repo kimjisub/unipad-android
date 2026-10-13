@@ -2,13 +2,13 @@ buildscript {
 	ext.kotlin_version = '2.4.10'
 	ext.splitties_version = '3.0.0'
 	ext.koin_version = '4.2.2'
-	ext.room_version = '2.8.4'
+	ext.room_version = '2.8.5'
 	repositories {
 		google()
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'com.android.tools.build:gradle:9.4.0'
+		classpath 'com.android.tools.build:gradle:9.4.1'
 		classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
 		classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlin_version"
 		classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.11"

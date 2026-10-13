@@ -266,7 +266,7 @@ class SafMigrationHelper(
 	}
 
 	/** Lets [copy] fill a staging folder on [targetDir]'s storage, then renames it to [dest]. */
-	private inline fun copyThroughStaging(targetDir: File, dest: File, copy: (File) -> Unit) {
+	private suspend inline fun copyThroughStaging(targetDir: File, dest: File, copy: (File) -> Unit) {
 		val staged = PackStaging.create(targetDir)
 		try {
 			copy(staged)
