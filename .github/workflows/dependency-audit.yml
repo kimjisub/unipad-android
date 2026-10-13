@@ -33,7 +33,6 @@ jobs:
         run: >-
           ./gradlew :app:exportReleaseDependencies
           --init-script scripts/export_release_dependencies.gradle
-          --init-script .github/fixtures/vulnerable-release-dependency.gradle
           --no-daemon --console=plain
       - name: Check for known vulnerabilities in OSV
         run: python3 scripts/check_release_dependencies.py
