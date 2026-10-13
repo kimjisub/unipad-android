@@ -244,6 +244,7 @@ class UniPackDownloader(
 				claimedFolder?.let(FileManager::deleteDirectory)
 				staged?.let(PackStaging::discard)
 				claimedZip?.let(FileManager::deleteDirectory)
+				PackStorageChanges.notifyChanged()
 			}
 		}
 	}

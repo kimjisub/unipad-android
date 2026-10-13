@@ -18,6 +18,8 @@ import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -91,16 +93,23 @@ class MainTotalPanelViewModel(
 		sortOrder = p.sortOrder
 	}
 
-	fun update() {
-		viewModelScope.launch {
-			unipackCapacity = null
-			val size = ws.getAvailableWorkspacesSize()
-			unipackCapacity = FileManager.byteToMB(size, "%.0f")
-		}
+	private var updateJob: Job? = null
 
-		viewModelScope.launch {
-			unipackCount = null
-			unipackCount = ws.getUnipacks().size
+	fun update() {
+		updateJob?.cancel()
+		updateJob = viewModelScope.launch {
+			launch {
+				unipackCapacity = null
+				val size = ws.getAvailableWorkspacesSize()
+				ensureActive()
+				unipackCapacity = FileManager.byteToMB(size, "%.0f")
+			}
+			launch {
+				unipackCount = null
+				val count = ws.getUnipacks().size
+				ensureActive()
+				unipackCount = count
+			}
 		}
 	}
 

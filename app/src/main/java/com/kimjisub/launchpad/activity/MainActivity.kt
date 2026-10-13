@@ -79,6 +79,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.DataSnapshot
@@ -114,6 +116,7 @@ import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.ListCursor
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.PackStorageChanges
 import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -151,6 +154,7 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
+	private var refreshPending = false
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
 	private var scrollToCenterTrigger by mutableIntStateOf(0)
@@ -248,6 +252,12 @@ class MainActivity : BaseActivity() {
 		totalPanelVM.onSortChanged = { sort, order ->
 			currentSort = Pair(sort, order)
 			update()
+		}
+
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				PackStorageChanges.changes.collect { update() }
+			}
 		}
 
 		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -364,7 +374,11 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) return
+		if (listRefreshing) {
+			refreshPending = true
+			return
+		}
+		refreshPending = false
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
@@ -401,6 +415,7 @@ class MainActivity : BaseActivity() {
 
 				scrollToTopTrigger++
 				listRefreshing = false
+				if (refreshPending) update()
 			}
 		}
 	}

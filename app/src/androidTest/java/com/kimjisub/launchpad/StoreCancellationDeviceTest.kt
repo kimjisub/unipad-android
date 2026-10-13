@@ -12,7 +12,10 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.Configurator
@@ -24,6 +27,9 @@ import com.kimjisub.launchpad.activity.FBStoreActivity
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.api.file.FileApi
+import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.WorkspaceManager
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
@@ -39,6 +45,9 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
+import okio.ForwardingSource
+import okio.buffer
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -89,6 +98,8 @@ class StoreCancellationDeviceTest {
         val client = OkHttpClient.Builder().readTimeout(30, TimeUnit.SECONDS).build()
         val service = Retrofit.Builder().baseUrl(server.url).client(client).build().create(FileApi.FileService::class.java)
         val cancelled = CountDownLatch(1)
+        val cleanupAllowed = CountDownLatch(1)
+        val delayFirstPartial = java.util.concurrent.atomic.AtomicBoolean(true)
         val override = module {
             single<FileApi.FileService> {
                 object : FileApi.FileService {
@@ -96,6 +107,24 @@ class StoreCancellationDeviceTest {
                         val call = service.download(url)
                         return object : Call<okhttp3.ResponseBody> by call {
                             override fun cancel() { call.cancel(); if (url.endsWith("/partial")) cancelled.countDown() }
+                            override fun execute(): retrofit2.Response<ResponseBody> {
+                                val response = call.execute()
+                                if (!url.endsWith("/partial") || !delayFirstPartial.compareAndSet(true, false)) return response
+                                val body = requireNotNull(response.body())
+                                val source = object : ForwardingSource(body.source()) {
+                                    override fun close() {
+                                        // Keep the real partial file until Main has resumed and counted it.
+                                        // Only the downloader's IO thread waits; HTTP cancellation stays immediate.
+                                        check(cleanupAllowed.await(20, TimeUnit.SECONDS)) { "cleanup was not released" }
+                                        super.close()
+                                    }
+                                }.buffer()
+                                return retrofit2.Response.success(object : ResponseBody() {
+                                    override fun contentType() = body.contentType()
+                                    override fun contentLength() = body.contentLength()
+                                    override fun source() = source
+                                }, response.raw())
+                            }
                         }
                     }
                 }
@@ -116,7 +145,23 @@ class StoreCancellationDeviceTest {
         prefs.downloadStoragePath = workspace.path
         val otherScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         var main: ActivityScenario<MainActivity>? = null
-        var screen: ActivityScenario<FBStoreActivity>? = null
+        var screen: FBStoreActivity? = null
+        fun openStore() {
+            main!!.onActivity { it.startActivity(Intent(it, FBStoreActivity::class.java)) }
+            compose.waitUntil(10000) {
+                instrumentation.runOnMainSync {
+                    screen = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                        .filterIsInstance<FBStoreActivity>().singleOrNull()
+                }
+                screen != null
+            }
+        }
+        fun closeStore() {
+            val activity = screen ?: return
+            instrumentation.runOnMainSync { activity.finish() }
+            compose.waitUntil(10000) { activity.isDestroyed }
+            screen = null
+        }
         loadKoinModules(override)
         try {
             if (checkNotificationPermission) {
@@ -134,7 +179,7 @@ class StoreCancellationDeviceTest {
                 device.pressBack()
             }
             main = ActivityScenario.launch(Intent(context, MainActivity::class.java))
-            screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
+            openStore()
             fun selectFixture() {
                 // The landscape window can still rotate after the permission prompt closes.
                 // Use the real clickable row, synchronized with Compose, rather than cached
@@ -153,7 +198,8 @@ class StoreCancellationDeviceTest {
             selectFixture()
             fun startDownloadWithoutChangingNotificationPermission() {
                 var notificationDialogExpected = false
-                screen!!.onActivity { activity ->
+                instrumentation.runOnMainSync {
+                    val activity = requireNotNull(screen)
                     notificationDialogExpected = android.os.Build.VERSION.SDK_INT >= 33 &&
                         context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
                         !activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -168,7 +214,8 @@ class StoreCancellationDeviceTest {
                     assertTrue(device.wait(Until.gone(By.res("com.android.permissioncontroller", "permission_deny_button")), 2000))
                     assertEquals(android.content.pm.PackageManager.PERMISSION_DENIED,
                         context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS))
-                    screen!!.onActivity { activity ->
+                    instrumentation.runOnMainSync {
+                    val activity = requireNotNull(screen)
                         assertFalse("dismissing the prompt must not record a denial",
                             activity.shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS))
                     }
@@ -176,7 +223,7 @@ class StoreCancellationDeviceTest {
             }
             startDownloadWithoutChangingNotificationPermission()
             val partial = File(workspace, "$id.zip")
-            await("partial chunk not written") { partial.length() == 4096L }
+            await("partial chunk not written") { partial.length() == PARTIAL_SIZE.toLong() }
             await("download progress notification missing") {
                 progressNotifications().any { it.isOngoing }
             }
@@ -190,15 +237,36 @@ class StoreCancellationDeviceTest {
             assertNull(other.error)
             val otherFolder = requireNotNull(other.folder)
             val otherBefore = hashes(otherFolder)
+            val ws = GlobalContext.get().get<WorkspaceManager>()
+            fun capacity() = FileManager.byteToMB(runBlocking { ws.getAvailableWorkspacesSize() }, "%.0f")
+            fun shownCapacity(): String? {
+                var value: String? = null
+                main!!.onActivity { value = ViewModelProvider(it)[MainTotalPanelViewModel::class.java].unipackCapacity }
+                return value
+            }
+            val inflated = capacity()
             // Closing the real Activity destroys the same lifecycleScope as the store's top arrow.
-            screen.close()
-            screen = null
+            closeStore()
             val start = SystemClock.elapsedRealtime()
             val cancelledPromptly = cancelled.await(1, TimeUnit.SECONDS)
             evidence("cancelled-before-server-error=$cancelledPromptly")
             server.breakRead.countDown() // EOF/IO error after the screen has cancelled its scope.
+            compose.waitUntil(10000) { shownCapacity() == inflated }
+            capture("capacity-before-cleanup")
+            evidence("capacity-before-cleanup=$inflated partial=${partial.length()}")
+            cleanupAllowed.countDown()
             capture("after-cancel")
             await("cancelled ZIP remained after read error") { !partial.exists() }
+            val expected = capacity()
+            assertNotEquals("partial archive must change the displayed whole MB", inflated, expected)
+            evidence("capacity-after-cleanup-expected=$expected shown=${shownCapacity()}")
+            try {
+                compose.waitUntil(5000) { shownCapacity() == expected }
+                compose.onNode(hasText("$expected ${context.getString(R.string.mb)}")).assertIsDisplayed()
+            } finally {
+                capture("capacity-after-cleanup")
+                evidence("capacity-after-cleanup-shown=${shownCapacity()} expected=$expected")
+            }
             await("cancelled progress notification remained") { progressNotifications().isEmpty() }
             captureNotifications("notifications-after-cancel")
             assertTrue("another download's completed notification was removed", notifications.activeNotifications.any {
@@ -209,7 +277,7 @@ class StoreCancellationDeviceTest {
             assertEquals(before, hashes(existing))
             assertEquals(otherBefore, hashes(otherFolder))
             // The local server supplies a complete ZIP on the next request from the real screen.
-            screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
+            openStore()
             selectFixture()
             startDownloadWithoutChangingNotificationPermission()
             val downloaded = hasText(context.getString(R.string.downloaded)) and
@@ -235,9 +303,10 @@ class StoreCancellationDeviceTest {
             if (checkNotificationPermission) {
                 instrumentation.uiAutomation.dropShellPermissionIdentity()
             }
+            cleanupAllowed.countDown()
             evidence("final-files=" + workspace.listFiles().orEmpty().filter { it.name.startsWith(id) }.map { "${it.name}:${it.length()}" })
             server.breakRead.countDown()
-            screen?.close()
+            closeStore()
             main?.close()
             server.close()
             otherScope.cancel()
@@ -254,6 +323,8 @@ class StoreCancellationDeviceTest {
             }.forEach { context.getSystemService(NotificationManager::class.java).cancel(it.tag, it.id) }
         }
     }
+
+    private companion object { const val PARTIAL_SIZE = 4 * 1024 * 1024 }
 
     private class LocalServer(val zip: ByteArray) {
         private val socket = ServerSocket(0, 8, java.net.InetAddress.getByName("127.0.0.1"))
@@ -275,12 +346,12 @@ class StoreCancellationDeviceTest {
                             while (!reader.readLine().isNullOrEmpty()) { /* consume headers */ }
                             val partial = request.contains("/partial") && partialSent.compareAndSet(false, true)
                             val output = peer.getOutputStream()
-                            output.write("HTTP/1.1 200 OK\r\nContent-Length: ${zip.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                            output.write("HTTP/1.1 200 OK\r\nContent-Length: ${if (partial) PARTIAL_SIZE + zip.size else zip.size}\r\nConnection: close\r\n\r\n".toByteArray())
                             output.flush()
                             SystemClock.sleep(30)
-                            output.write(zip, 0, if (partial) 4096 else zip.size)
+                            output.write(if (partial) ByteArray(PARTIAL_SIZE) { 42 } else zip)
                             output.flush()
-                            if (partial) check(breakRead.await(15, TimeUnit.SECONDS))
+                            if (partial) check(breakRead.await(30, TimeUnit.SECONDS))
                         }
                     }
                 }
@@ -316,7 +387,10 @@ class StoreCancellationDeviceTest {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         assertTrue(TestCaptures.screenshot(device, "store-cancel-captures/$prefix/$name.png"))
     }
-    private fun evidence(text: String) = InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\nstore-cancel $text\n") })
+    private fun evidence(text: String) {
+        println("store-cancel $text")
+        InstrumentationRegistry.getInstrumentation().sendStatus(2, Bundle().apply { putString("stream", "\nstore-cancel $text\n") })
+    }
     private fun files(title: String): Map<String, ByteArray> = mapOf(
         "info" to "title=$title\nproducerName=Device test\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray(),
         "keySound" to "1 1 1 silence.wav\n".toByteArray(),
