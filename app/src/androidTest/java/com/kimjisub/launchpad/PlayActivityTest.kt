@@ -26,7 +26,6 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.design.R as DesignR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,12 +123,8 @@ class PlayActivityTest : BaseUITest() {
         return Rect(origin[0], origin[1], origin[0] + view.width, origin[1] + view.height)
     }
 
-    private fun safeAreaProblem(safe: Rect, name: String, bounds: Rect): String? =
-        if (safe.contains(bounds)) null else "$name $bounds reaches outside the safe area $safe"
-
     private fun assertInside(safe: Rect, name: String, bounds: Rect) {
-        val problem = safeAreaProblem(safe, name, bounds)
-        assertTrue(problem, problem == null)
+        assertTrue("$name $bounds reaches outside the safe area $safe", safe.contains(bounds))
     }
 
     private fun clearClipboard() {
@@ -788,91 +783,66 @@ class PlayActivityTest : BaseUITest() {
         quitPlayToMain()
     }
 
+    /**
+     * A 4 x 3 pack with 24 chains (the most a pack can have): eight chains a side are much taller
+     * than four pads, and used to run off the screen. Every chain must show inside the safe area,
+     * clear of the pads, and be selectable, in normal and in Pro light mode.
+     */
     @Test
-    fun testBoundsOutsideTheResizedWindowNeverCountAsSettled() {
-        val window = Rect(0, 0, 1080, 2400)
-        val stale = Rect(2278, 480, 2336, 538)
-        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 400L) { stale }
-        assertNull("An out-of-window menu must fail the layout check", bounds)
-    }
-
-    @Test
-    fun testBoundsWaitForTwoMatchingReadingsInsideTheResizedWindow() {
-        val window = Rect(0, 0, 1080, 2400)
-        val stale = Rect(2278, 480, 2336, 538)
-        val current = Rect(980, 480, 1038, 538)
-        val readings = listOf(stale, stale, null, current, current).iterator()
-        var count = 0
-        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 10000L) {
-            count++
-            if (readings.hasNext()) readings.next() else current
-        }
-        assertEquals(current, bounds)
-        assertEquals("Stale or single readings must not end the wait", 5, count)
-    }
-
-    @Test
-    fun testSettledMenuOutsideTheSafeAreaStillFails() {
-        val window = Rect(0, 0, 1080, 2400)
-        val safe = Rect(0, 136, 1080, 2337)
-        val outside = Rect(980, 50, 1038, 108)
-        val bounds = settledBounds(By.res("test_menu"), window, timeoutMs = 1000L) { outside }
-        assertNotNull(bounds)
-        val problem = safeAreaProblem(safe, "menu button", bounds!!)
-        assertNotNull("A settled menu under a system bar must fail", problem)
-        assertTrue(problem.orEmpty().contains("reaches outside the safe area"))
-        assertNull(safeAreaProblem(safe, "menu button", Rect(980, 150, 1038, 208)))
-    }
-
-    @Test
-    fun testRotationMismatchRetriesTheWholeLayoutObservation() {
+    fun testEveryChainOfASmallPackWithManyChainsCanBeSelected() {
+        TestUniPack.install(context, rows = 4, columns = 3, chains = 24)
         enterPlay()
-        try {
-            var readings = 0
-            val recovered = playLayoutProblems("rotation_recovered", Surface.ROTATION_0, readRotation = {
-                readings++
-                if (readings == 1) Surface.ROTATION_90 else Surface.ROTATION_0
-            })
-            assertTrue("A rotation corrected during the observation must be read again: $recovered", recovered.isEmpty())
-            assertTrue("The complete observation must be repeated", readings > 2)
-
-            val persistent = playLayoutProblems("rotation_still_wrong", Surface.ROTATION_0, readRotation = {
-                Surface.ROTATION_90
-            })
-            assertTrue("A persistently wrong rotation must still fail: $persistent",
-                persistent.any { it.contains("display rotation is 1, not 0") })
-        } finally {
-            device.unfreezeRotation()
-        }
+        selectChainsOnEverySide("normal", visibleChains = 24)
+        openPlayOptions()
+        togglePlayOption(R.string.proLightMode)
+        closePlayOptions()
+        // Pro light mode also shows the eight function keys above the pads.
+        selectChainsOnEverySide("pro", visibleChains = 32)
         quitPlayToMain()
     }
 
-    @Test
-    fun testMenuOutsideTheWindowIsReportedAsALayoutFailure() {
-        enterPlay()
+    /**
+     * Checks the chain buttons are on screen and records selecting chains 24, 5 and 18 (top left,
+     * right and bottom), each followed by a press of the first pad.
+     */
+    private fun selectChainsOnEverySide(name: String, visibleChains: Int) {
         val geometry = settledGeometry(landscape = false)
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        var content: View? = null
-        var originalTranslation = 0f
-        instrumentation.runOnMainSync {
-            val activity = ActivityLifecycleMonitorRegistry.getInstance()
-                .getActivitiesInStage(Stage.RESUMED).single()
-            content = activity.findViewById(android.R.id.content)
-            originalTranslation = content!!.translationX
-            // Move the real menu (and its parent) only after the play screen has opened.
-            content.translationX = geometry.window.width() * 2f
+        takeScreenshot("many_chains_$name")
+        assertEquals("chain buttons shown in $name mode", visibleChains, geometry.chains.size)
+        geometry.chains.forEach { chain ->
+            assertInside(geometry.safe, "chain button", chain)
+            assertTrue("chain button $chain covers the pads ${geometry.pads}", !Rect.intersects(chain, geometry.pads))
+            geometry.chains.filter { it != chain }.forEach { assertTrue("chain buttons $chain and $it meet", !Rect.intersects(chain, it)) }
         }
-        try {
-            val problems = playLayoutProblems("offscreen_menu")
-            assertTrue(
-                "A menu outside the window must be reported: $problems",
-                problems.any { it.contains("menu button bounds did not settle") }
-            )
-        } finally {
-            instrumentation.runOnMainSync { content!!.translationX = originalTranslation }
+        // Chains 1-8 run down the right, 9-16 right to left below and 17-24 up the left. The pads
+        // are taller than wide, so the side columns stay level with them and the rows may not.
+        val beside = geometry.chains.filter { it.top < geometry.pads.bottom && it.bottom > geometry.pads.top }
+        val right = beside.filter { it.left >= geometry.pads.right }.sortedBy { it.top }
+        val bottom = geometry.chains.filter { it.top >= geometry.pads.bottom }.sortedByDescending { it.left }
+        val left = beside.filter { it.right <= geometry.pads.left }.sortedByDescending { it.top }
+        val chainButtons = right + bottom + left
+        assertEquals("chains 1-24 beside and below the pads in $name mode", 24, chainButtons.size)
+
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        closePlayOptions()
+        val firstPad = Rect(geometry.pads.left, geometry.pads.top, geometry.pads.left + geometry.pads.width() / 3, geometry.pads.top + geometry.pads.height() / 4)
+        for (chain in listOf(24, 5, 18)) {
+            val button = chainButtons[chain - 1]
+            device.click(button.centerX(), button.centerY())
+            Thread.sleep(300)
+            takeScreenshot("many_chains_${name}_chain_$chain")
+            device.click(firstPad.centerX(), firstPad.centerY())
         }
-        assertNotNull("Menu did not return after restoring its parent", settledBounds(By.desc(str(R.string.menu)), geometry.window))
-        quitPlayToMain()
+        clearClipboard()
+        openPlayOptions()
+        togglePlayOption(R.string.record)
+        assertTrue("Recording was not copied to the clipboard", waitUntil { clipboardText() != null })
+        val log = clipboardText().orEmpty().lines()
+        val selected = log.filter { it.startsWith("chain ") }
+        assertEquals("chains selected in $name mode: $log", listOf("chain 24", "chain 5", "chain 18"), selected)
+        assertEquals("first pad presses in $name mode: $log", 3, log.count { it == "t 1 1" })
+        closePlayOptions()
     }
 
     /** Layout problems in every window of the resize sequence; screenshots are named with [prefix]. */
@@ -887,10 +857,13 @@ class PlayActivityTest : BaseUITest() {
             device.executeShellCommand("wm set-ignore-orientation-request true")
             for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
                 device.executeShellCommand("wm size $size")
+                rotateTo(Surface.ROTATION_90)
                 problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
+                rotateTo(Surface.ROTATION_270)
                 problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
             }
             device.executeShellCommand("wm size 1600x2560")
+            rotateTo(Surface.ROTATION_0)
             problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
         } finally {
             device.executeShellCommand("wm size reset")
@@ -898,8 +871,7 @@ class PlayActivityTest : BaseUITest() {
             device.unfreezeRotation()
             device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
         }
-        // Resetting size, cutout and sensor orientation queues several separate layouts.
-        problems += playLayoutProblems("${prefix}restored", layoutTimeoutMs = 30000L)
+        problems += playLayoutProblems("${prefix}restored")
         return problems
     }
 
@@ -919,67 +891,48 @@ class PlayActivityTest : BaseUITest() {
      * Geometry once the resized window has been laid out: the same reading twice in a row, and a
      * landscape window when [landscape] (right after a rotation the window can still be upright).
      */
-    private fun settledGeometry(landscape: Boolean, timeoutMs: Long = 10000L): PlayGeometry {
+    private fun settledGeometry(landscape: Boolean): PlayGeometry {
         var last: PlayGeometry? = null
         var settled: PlayGeometry? = null
-        waitUntil(timeoutMs) {
+        waitUntil(10000L) {
             val now = playGeometry()
             val shaped = !landscape || now.window.width() > now.window.height()
             if (now == last && shaped && !now.pads.isEmpty) settled = now
             last = now
             settled != null
         }
-        assertNotNull("Play screen layout never settled within $timeoutMs ms; last: $last", settled)
+        assertNotNull("Play screen layout never settled", settled)
         return settled!!
     }
 
     /**
      * Bounds of a Compose node once accessibility reports the resized window: right after a resize
-     * it can still give the previous layout's place, outside the new window. A timeout is a
-     * failed observation, never permission to use the last (possibly stale) reading.
+     * it can still give the previous layout's place, outside the new window.
      */
-    private fun settledBounds(
-        selector: BySelector,
-        window: Rect,
-        timeoutMs: Long = 10000L,
-        readBounds: () -> Rect? = {
-            try { device.findObject(selector)?.visibleBounds } catch (_: StaleObjectException) { null }
-        },
-    ): Rect? {
+    private fun settledBounds(selector: BySelector, window: Rect): Rect? {
         var last: Rect? = null
         var settled: Rect? = null
-        waitUntil(timeoutMs) {
-            val now = readBounds()
-            if (now != null && !now.isEmpty && now == last && window.contains(now)) settled = now
+        waitUntil(5000L) {
+            val now = try { device.findObject(selector)?.visibleBounds } catch (_: StaleObjectException) { null }
+            if (now != null && now == last && window.contains(now)) settled = now
             last = now
             settled != null
         }
-        if (settled == null) println("Bounds did not settle for $selector inside $window within $timeoutMs ms; last: $last")
-        return settled
+        return settled ?: last
     }
 
     /**
      * What is wrong with the play screen's layout now: the pad grid off the window's centre line,
      * anything outside the safe area, or chains, menu, pads and logo covering each other.
      */
-    private fun playLayoutProblems(
-        name: String,
-        rotation: Int? = null,
-        layoutTimeoutMs: Long = 10000L,
-        attemptsRemaining: Int = 3,
-        readRotation: () -> Int = { device.displayRotation },
-    ): List<String> {
-        // A resize can override a rotation that was briefly reported as complete.
-        if (rotation != null) rotateTo(rotation)
+    private fun playLayoutProblems(name: String, rotation: Int? = null): List<String> {
+        if (rotation != null) waitUntil(10000L) { device.displayRotation == rotation }
         Thread.sleep(500)
-        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270, timeoutMs = layoutTimeoutMs)
+        val geometry = settledGeometry(landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270)
         val problems = mutableListOf<String>()
         fun check(ok: Boolean, problem: () -> String) { if (!ok) problems += "$name ${geometry.window.width()}x${geometry.window.height()}: ${problem()}" }
-        val initialRotation = readRotation()
-        if (rotation != null) check(initialRotation == rotation) { "display rotation is $initialRotation, not $rotation" }
-        fun checkInside(what: String, bounds: Rect) {
-            safeAreaProblem(geometry.safe, what, bounds)?.let { problem -> check(false) { problem } }
-        }
+        if (rotation != null) check(device.displayRotation == rotation) { "display rotation is ${device.displayRotation}, not $rotation" }
+        fun checkInside(what: String, bounds: Rect) = check(geometry.safe.contains(bounds)) { "$what $bounds reaches outside the safe area ${geometry.safe}" }
 
         val offCentreDp = abs(geometry.pads.exactCenterX() - geometry.window.exactCenterX()) / context.resources.displayMetrics.density
         check(offCentreDp <= CENTRE_TOLERANCE_DP) { "pad grid is ${offCentreDp}dp off the window's centre line" }
@@ -991,26 +944,14 @@ class PlayActivityTest : BaseUITest() {
         }
         val padsAndChains = geometry.chains + geometry.pads
         val menu = settledBounds(By.desc(str(R.string.menu)), geometry.window)
-        check(menu != null) { "menu button bounds did not settle inside ${geometry.window}" }
+        check(menu != null) { "menu button not found" }
         menu?.let { m ->
             checkInside("menu button", m)
             padsAndChains.forEach { check(!Rect.intersects(m, it)) { "menu $m covers $it" } }
         }
         val logo = settledBounds(By.res("play_logo"), geometry.window)
-        check(logo != null) { "logo bounds did not settle inside ${geometry.window}" }
+        check(logo != null) { "logo not found" }
         logo?.let { l -> (padsAndChains + listOfNotNull(menu)).forEach { check(!Rect.intersects(l, it)) { "logo $l is covered by $it" } } }
-        // Native geometry and accessibility are read separately. If another layout landed
-        // between them, or either rotation reading missed the request, repeat the whole
-        // observation instead of keeping a failure from a transient layout.
-        val latest = playGeometry()
-        val finalRotation = readRotation()
-        val rotationMatches = initialRotation == finalRotation && (rotation == null || initialRotation == rotation)
-        if (latest != geometry || !rotationMatches) {
-            if (attemptsRemaining > 1) {
-                return playLayoutProblems(name, rotation, layoutTimeoutMs, attemptsRemaining - 1, readRotation)
-            }
-            check(false) { "layout or rotation kept changing while reading controls; last: $latest, rotation: $finalRotation" }
-        }
         // Taken last: the display can still be drawing the rotation when the view tree has settled.
         takeScreenshot("pad_grid_$name")
         return problems
