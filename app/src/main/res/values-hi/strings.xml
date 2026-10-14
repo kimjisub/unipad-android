@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">स्वीकार करें</string>
@@ -96,7 +95,6 @@
 	<string name="proLightMode">प्रो लाइट मोड</string>
 
 	<!--Version-->
-	<string name="update_available">अपडेट उपलब्ध</string>
 
 	<string name="permissionRequire">प्रोजेक्ट फ़ाइलें सहेजने के लिए बाहरी स्टोरेज एक्सेस आवश्यक है।\nइस अनुमति के लिए स्वीकृति प्राप्त करें।</string>
 	<string name="permissionDenied">ऐप को बाहरी स्टोरेज एक्सेस चाहिए।\nकृपया [सेटिंग] > [अनुमतियां] में अनुमतियां चालू करें</string>
@@ -205,7 +203,6 @@
 	<string name="workspace_documents_android10">दस्तावेज़ (Android 10)</string>
 	<string name="workspace_app_storage">ऐप स्टोरेज (अनुशंसित)</string>
 	<string name="workspace_internal_storage">आंतरिक स्टोरेज</string>
-	<string name="workspace_internal_sd_card">आंतरिक SD कार्ड</string>
 	<string name="workspace_external_sd_card_format">बाहरी SD कार्ड %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 

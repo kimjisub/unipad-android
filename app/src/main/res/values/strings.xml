@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Accept</string>
@@ -96,7 +95,26 @@
 	<string name="proLightMode">Pro Light Mode</string>
 
 	<!--Version-->
-	<string name="update_available">Update available</string>
+	<string name="update_check">Check for updates</string>
+	<string name="update_offer_title">A new version is available</string>
+	<string name="update_offer_body">Get it now or later. Choose when to install it after you finish playing.</string>
+	<string name="update_download">Get new version</string>
+	<string name="update_later">Later</string>
+	<string name="update_downloading_title">Getting the new version</string>
+	<string name="update_ready_title">The new version is ready</string>
+	<string name="update_ready_body">Installing restarts the app. You will come back to the pack list.</string>
+	<string name="update_install">Install and restart</string>
+	<string name="update_none">No update is available right now.</string>
+	<string name="update_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+	<string name="update_check_again">Check again</string>
+	<string name="update_close">Close</string>
+	<string name="update_failed">The update couldn\'t finish. You can try again later.</string>
+	<string name="update_retry">Try again</string>
+	<string name="update_check_in_store">Check in store</string>
+	<string name="update_unsupported">On this device, please check for updates in the store.</string>
+	<string name="update_store_notice">Checking in Google Play. Updating the app may close UniPad.</string>
+	<string name="update_store_open">Open store</string>
+	<string name="update_store_unavailable">Couldn\'t open the store. Please check again later.</string>
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
@@ -228,7 +246,6 @@
 	<string name="workspace_documents_android10">Documents/Unipad (Backup)</string>
 	<string name="workspace_app_storage">App Storage (Recommended)</string>
 	<string name="workspace_internal_storage">Internal Storage</string>
-	<string name="workspace_internal_sd_card">Internal SD Card</string>
 	<string name="workspace_external_sd_card_format">External SD Card %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -295,4 +312,25 @@
 
 	<!--Format-->
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
+
+	<!-- Approved English/Korean copy; other locales intentionally use the English fallback. -->
+	<string name="midi_help_title" tools:ignore="MissingTranslation">Connection and light help</string>
+	<string name="midi_help_selected_model" tools:ignore="MissingTranslation">Selected model: %1$s</string>
+	<string name="midi_help_common" tools:ignore="MissingTranslation">The selected model does not confirm the actual device. Lights being off alone do not tell you whether the connection succeeded or failed.</string>
+	<string name="midi_help_not_listed_title" tools:ignore="MissingTranslation">My device is not listed</string>
+	<string name="midi_help_not_listed_body" tools:ignore="MissingTranslation">Check the cable and connection. Compare the name on your device with the selected model.</string>
+	<string name="midi_help_android" tools:ignore="MissingTranslation">Choosing an app in Android\'s USB prompt is separate from choosing a model in UniPad.</string>
+	<string name="midi_help_no_lights_title" tools:ignore="MissingTranslation">Connected, but no lights</string>
+	<string name="midi_help_no_lights_body" tools:ignore="MissingTranslation">Check whether the on-screen pads and sound respond, and whether the pack contains light data. You can use a pack you already have.</string>
+	<string name="midi_help_crash_title" tools:ignore="MissingTranslation">The app closes unexpectedly</string>
+	<string name="midi_help_crash_body" tools:ignore="MissingTranslation">Disconnect the device and note the app version, phone or computer model, operating system, and the step where it closed. You do not need to repeat the crash.</string>
+	<string name="midi_help_mini" tools:ignore="MissingTranslation">In Programmer mode, the lights may initially be off. Check with a pack that includes lights.</string>
+	<string name="midi_help_pro" tools:ignore="MissingTranslation">Launchpad Pro and Launchpad Pro MK3 are different models.</string>
+	<string name="midi_help_other" tools:ignore="MissingTranslation">If the same model is not listed, do not choose a different model as a substitute. This guide does not confirm compatibility with new models.</string>
+	<string name="midi_help_manufacturer" tools:ignore="MissingTranslation">Read the manufacturer\'s guide</string>
+	<string name="midi_help_link_failed" tools:ignore="MissingTranslation">Could not open the manufacturer\'s guide. You can continue reading this help.</string>
+	<string name="midi_help_close" tools:ignore="MissingTranslation">Close help</string>
+	<string name="midi_dual_pad_mode" tools:ignore="MissingTranslation">Dual Pad Mode</string>
+	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
+	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
 </resources>
