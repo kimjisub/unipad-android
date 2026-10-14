@@ -37,8 +37,8 @@ android {
 		applicationId = "com.kimjisub.launchpad"
 		minSdkVersion 24
 		targetSdkVersion 37
-		versionCode = 116
-		versionName = "4.1.9"
+		versionCode = 119
+		versionName = "4.2.0"
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
@@ -54,7 +54,7 @@ android {
 	externalNativeBuild {
 		cmake {
 			path 'src/main/cpp/CMakeLists.txt'
-			version '3.22.1'
+			version = '3.22.1'
 		}
 	}
 	buildTypes {
@@ -78,7 +78,11 @@ android {
 			proguardFile 'proguard-retrofit2.pro'
 		}
 		debug {
-			manifestPlaceholders = [appName: "@string/app_name_test"]
+			// -PanalyticsServerCheck builds a debug app whose analytics reach Firebase (see UsageEventRouting).
+			manifestPlaceholders = [
+				appName: "@string/app_name_test",
+				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true'
+			]
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
 			debuggable = true
@@ -101,15 +105,20 @@ android {
 	tasks.withType(KotlinCompile).configureEach {
 		compilerOptions {
 			jvmTarget = JvmTarget.JVM_21
+			allWarningsAsErrors = true
 		}
 	}
 	namespace = 'com.kimjisub.launchpad'
 
-	// Disable lint check that crashes with Kotlin 2.x (known bug in lifecycle-lint)
 	lint {
+		// NullSafeMutableLiveData crashes with Kotlin 2.x (known bug in lifecycle-lint)
 		disable += ['NullSafeMutableLiveData', 'IconXmlAndPng', 'QueryAllPackagesPermission']
+		// "A newer version is available" checks change result as releases come out, not as the code changes
+		disable += ['AndroidGradlePluginVersion', 'GradleDependency', 'NewerVersionAvailable']
 		// Community-translated strings arrive after features ship; missing ones fall back to English (#57)
-		warning += ['MissingTranslation']
+		informational += ['MissingTranslation']
+		warningsAsErrors = true
+		lintConfig = file('lint.xml')
 	}
 
 	// Test reporting configuration
@@ -117,6 +126,10 @@ android {
 		unitTests {
 			includeAndroidResources = true
 			returnDefaultValues = true
+			all {
+				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
+				jvmArgs '-Xshare:off'
+			}
 		}
 		animationsDisabled = true
 		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
@@ -218,7 +231,7 @@ dependencies {
 
 	implementation 'androidx.appcompat:appcompat:1.8.0'
 	implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
-	implementation 'androidx.core:core-ktx:1.19.0'
+	implementation 'androidx.core:core-ktx:1.19.1'
 	implementation 'androidx.preference:preference-ktx:1.2.1'
 	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0'
 	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
@@ -241,10 +254,10 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'io.mockk:mockk:1.14.11'
 	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0'
-	testImplementation "io.insert-koin:koin-test:$koin_version"
+	testImplementation "io.insert-koin:koin-test:${rootProject.koin_version}"
 	// Real SQLite on the JVM, so database migrations run in unit tests without a device
 	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
-	androidTestImplementation "androidx.room:room-testing:$room_version"
+	androidTestImplementation "androidx.room:room-testing:${rootProject.room_version}"
 	androidTestImplementation 'androidx.test:runner:1.7.0'
 	androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
 	androidTestImplementation 'androidx.test.ext:junit:1.3.0'
@@ -255,14 +268,14 @@ dependencies {
 	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
 	// splitties
-	implementation("com.louiscad.splitties:splitties-activities:$splitties_version")
-	implementation("com.louiscad.splitties:splitties-alertdialog:$splitties_version")
+	implementation("com.louiscad.splitties:splitties-activities:${rootProject.splitties_version}")
+	implementation("com.louiscad.splitties:splitties-alertdialog:${rootProject.splitties_version}")
 
 	// Room
-	implementation "androidx.room:room-ktx:$room_version"
-	implementation "androidx.room:room-runtime:$room_version"
-	ksp "androidx.room:room-compiler:$room_version"
-	implementation "io.insert-koin:koin-android:$koin_version"
+	implementation "androidx.room:room-ktx:${rootProject.room_version}"
+	implementation "androidx.room:room-runtime:${rootProject.room_version}"
+	ksp "androidx.room:room-compiler:${rootProject.room_version}"
+	implementation "io.insert-koin:koin-android:${rootProject.koin_version}"
 
 
 	// Firebase (using BOM for version management)
@@ -271,7 +284,6 @@ dependencies {
 	implementation 'com.google.firebase:firebase-database'
 	implementation 'com.google.firebase:firebase-messaging'
 	implementation 'com.google.firebase:firebase-perf'
-	implementation 'com.google.firebase:firebase-config'
 	implementation 'com.google.firebase:firebase-crashlytics'
 	implementation 'com.google.firebase:firebase-analytics'
 
@@ -288,7 +300,9 @@ dependencies {
 	implementation 'net.lingala.zip4j:zip4j:2.11.6'
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
-	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
+	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.2'
+	// Lets the pack list fetch a newer Play build in the background and install it when asked
+	implementation 'com.google.android.play:app-update:2.1.0'
 	api project(':design')
 }
 

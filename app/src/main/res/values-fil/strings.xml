@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Tanggapin</string>
@@ -22,13 +21,11 @@
 	<string name="loading_phase_audio">Nilo-load ang audio…</string>
 	<string name="download">I-download</string>
 	<string name="downloadWaiting">Naghihintay ng Download</string>
-	<string name="downloading">Nagda-download</string>
 	<string name="downloaded">Na-download na</string>
 	<string name="success">Tagumpay</string>
 	<string name="failed">Nabigo</string>
 	<string name="delete">Tanggalin</string>
 	<string name="edit">I-edit</string>
-	<string name="update">I-update</string>
 	<string name="ignore">Balewalain</string>
 	<string name="apply">Ilapat</string>
 	<string name="restart">I-restart</string>
@@ -86,7 +83,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Autoplay</string>
-	<string name="practiceMode">Pagsasanay</string>
 	<string name="guidePlay">Gabay</string>
 	<string name="stepPractice">Hakbang</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -99,19 +95,13 @@
 	<string name="proLightMode">Pro Light Mode</string>
 
 	<!--Version-->
-	<string name="newVersionFound">May nakitang bagong bersyon.</string>
-	<string name="update_available">May available na update</string>
 
 	<string name="permissionRequire">Kailangan ang access sa external storage para sa pag-save ng mga project file.\nKumuha ng pahintulot para dito.</string>
 	<string name="permissionDenied">Kailangan ng app ang access sa external storage.\nPakibukas ang mga pahintulot sa [Settings] > [Permissions]</string>
-	<string name="unipackNotFound">Hindi nahanap ang UniPack.</string>
-	<string name="clickToAddUniPack">Mag-click para magdagdag ng mga UniPack.</string>
 	<string name="guide_download_new">Mag-download ng bagong packs</string>
 	<string name="guide_import_external">I-import ang na-download na packs</string>
 	<string name="guide_restore_packs">I-recover ang nawawalang packs</string>
 	<string name="doYouWantToDeleteUniPack">Gusto mo bang tanggalin ang project na ito?</string>
-	<string name="remapDone">Matagumpay na nakumpleto ang AutoPlay remapping.</string>
-	<string name="remapFail">Walang AutoPlay</string>
 	<string name="importComplete">Na-import ang pack!</string>
 	<string name="importPlayNow">Laruin ngayon</string>
 	<string name="importFailed">Nabigo ang pag-import</string>
@@ -126,10 +116,7 @@
 	<string name="launchpadConnecting">Kumokonekta sa launchpad…</string>
 	<string name="midiDevicesNotDetected">Hindi Nakita ang mga MIDI Device</string>
 	<string name="midi_open_panel">Buksan</string>
-	<string name="midi_connected_banner">MIDI nakakonekta: %1$s</string>
 	<string name="midi_disconnected">Nadiskonekta</string>
-	<string name="signal_SpeedFirst">Bilis muna</string>
-	<string name="signal_avoidAfterimage">Iwasan ang afterimage</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">Hindi makakalabas habang nagda-download ng pack</string>
@@ -137,11 +124,9 @@
 
 	<!--Theme-->
 	<string name="theme">Tema</string>
-	<string name="themeDownload">Mag-download ng Tema</string>
 	<string name="requireRestart">Kailangan i-restart ang app.</string>
 	<string name="doYouWantToRestartApp">Gusto mo bang i-restart ang app?</string>
 
-	<string name="theme_import">Mag-import ng Tema</string>
 	<string name="theme_import_success">Matagumpay na na-import ang tema.</string>
 	<string name="theme_import_failed">Nabigong mag-import ng tema.</string>
 	<string name="theme_import_invalid">Hindi valid na file ng tema.</string>
@@ -158,7 +143,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Impormasyon</string>
 	<string name="settings_storage">Imbakan</string>
@@ -219,7 +203,6 @@
 	<string name="workspace_documents_android10">Mga Dokumento (Android 10)</string>
 	<string name="workspace_app_storage">App Storage (Inirerekomenda)</string>
 	<string name="workspace_internal_storage">Internal Storage</string>
-	<string name="workspace_internal_sd_card">Internal SD Card</string>
 	<string name="workspace_external_sd_card_format">External SD Card %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -248,13 +231,11 @@
 	<string name="transfer_selected_count">%d ang napili</string>
 	<string name="transfer_start">Simulan</string>
 	<string name="transfer_copying">Kinokopya: %s</string>
-	<string name="transfer_moving">Inililipat: %s</string>
 	<string name="transfer_result_transferred">Na-transfer</string>
 	<string name="transfer_result_skipped">Nilaktawan (mayroon na)</string>
 	<string name="transfer_result_failed">Nabigo</string>
 	<string name="transfer_done">Tapos na</string>
 	<string name="transfer_no_items">Walang napiling UniPack</string>
-	<string name="transfer_select_target">Pumili ng patutunguhan</string>
 	<string name="transfer_select_source">Pumili ng pinagmulan</string>
 	<string name="transfer_format_label">Format</string>
 	<string name="transfer_format_folder">Folder</string>
@@ -266,11 +247,6 @@
 	<string name="restore_title">I-restore</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">error sa server\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->

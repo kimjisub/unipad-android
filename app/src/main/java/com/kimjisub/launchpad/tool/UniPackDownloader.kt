@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
@@ -34,7 +35,8 @@ class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
-	private val workspace: File,
+	/** Resolved on the download's IO thread: listing workspaces creates folders. */
+	workspace: () -> File,
 	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
@@ -58,6 +60,7 @@ class UniPackDownloader(
 		fun onException(throwable: Throwable)
 	}
 
+	private var installationComplete = false
 	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
 	private val notificationManager = NotificationManager.getManager(context)
 	private val notificationBuilder: NotificationCompat.Builder by lazy {
@@ -88,8 +91,10 @@ class UniPackDownloader(
 	init {
 		scope.launch(Dispatchers.IO) {
 			// Another download of the same name may run at the same time, so only paths claimed here
-			// are written to or deleted.
+			// are written to or deleted. The pack is unpacked and checked in its own staging folder
+			// and appears in the list only once complete.
 			var claimedZip: File? = null
+			var staged: File? = null
 			var claimedFolder: File? = null
 			var cancellationWatcher: Job? = null
 			// What the download was doing when it failed: the same I/O error is a broken connection while
@@ -98,6 +103,7 @@ class UniPackDownloader(
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
+				val workspace = workspace()
 				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
 				claimedZip = unipackFile
 
@@ -187,29 +193,34 @@ class UniPackDownloader(
 
 				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-				val folder = FileManager.claimNextFolder(workspace, folderName)
-				claimedFolder = folder
+				val stagedFolder = PackStaging.create(workspace)
+				staged = stagedFolder
 				ZipFile(unipackFile).use { zip ->
-					zip.extractAll(folder.path)
+					zip.extractAll(stagedFolder.path)
 				}
-				FileManager.removeDoubleFolder(folder.path)
+				FileManager.removeDoubleFolder(stagedFolder.path)
 				// load() runs checkFile + info; without it every parser returned early and criticalError
 				// was always false, so any archive installed as a pack.
-				val unipack = UniPackFolder(folder).load().loadDetail()
-				if (unipack.criticalError) {
-					val errorMsg = unipack.errorDetail ?: "Unknown error"
+				val checked = UniPackFolder(stagedFolder).load().loadDetail()
+				if (checked.criticalError) {
+					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
+
+				ensureActive()
+				val folder = FileManager.moveToNextFolder(stagedFolder, workspace, folderName)
+				claimedFolder = folder
+				val unipack = UniPackFolder(folder).load()
 
 				// Whether the pack stays is settled on the main thread, where the hosting screen
 				// closes. A screen already gone never runs this block and the download is discarded
 				// below; a pack that was announced is released from cleanup and counted, so closing
 				// the screen right after cannot delete a pack recorded as imported.
 				withContext(Dispatchers.Main) {
-					onInstallComplete(folder, unipack)
+					// Transfer ownership before a completion listener can close the screen or throw.
 					claimedFolder = null
-					usage.succeeded()
+					onInstallComplete(folder, unipack)
 				}
 
 			} catch (e: CancellationException) {
@@ -227,9 +238,11 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onException(e) }
 			} finally {
 				cancellationWatcher?.cancel()
+				if (!installationComplete) notificationManager.cancel(notificationId)
 				// No suspending callbacks here: cancellation or a failing listener cannot skip
 				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
+				staged?.let(PackStaging::discard)
 				claimedZip?.let(FileManager::deleteDirectory)
 			}
 		}
@@ -294,19 +307,14 @@ class UniPackDownloader(
 		}
 		notificationManager.notify(notificationId, notificationBuilder.build())
 
+		installationComplete = true
+		usage.succeeded()
 		listener.onInstallComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
 		Log.err("Download exception", throwable)
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.downloadWaiting))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
-
+		notificationManager.cancel(notificationId)
 		listener.onException(throwable)
 	}
 

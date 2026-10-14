@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
+import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -33,6 +34,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 enum class PlayMode {
@@ -621,19 +623,11 @@ class PlayActivityViewModel(
 	}
 
 	fun proLightMode(bool: Boolean) {
-		if (bool) {
-			for (i in 0 until CIRCLE_ARRAY_SIZE) {
-				uiCallback?.setChainViewVisibility(i, View.VISIBLE)
-			}
-		} else {
-			val chainRange = 0 until (if (unipack.chain > 1) unipack.chain else 0)
-			for (i in 0 until CIRCLE_ARRAY_SIZE) {
-				val c = i - CHAIN_INDEX_OFFSET
-				uiCallback?.setChainViewVisibility(
-					i,
-					if (c in chainRange) View.VISIBLE else View.INVISIBLE
-				)
-			}
+		for (i in 0 until CIRCLE_ARRAY_SIZE) {
+			uiCallback?.setChainViewVisibility(
+				i,
+				if (PlayLayout.chainButtonVisible(i, bool, unipack.chain)) View.VISIBLE else View.INVISIBLE,
+			)
 		}
 		if (isChannelManagerInitialized) channelManager.setCirIgnore(Channel.LED, !bool)
 		chainBtnsRefresh()
@@ -1003,10 +997,19 @@ class PlayActivityViewModel(
 			}
 
 			override fun onDone() {
-				autoMappingActive = false
-				folder.reloadAutoPlay()
-				initAutoPlayRunner()
-				log("AutoMapping complete")
+				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
+				viewModelScope.launch {
+					try {
+						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
+						autoMappingActive = false
+						initAutoPlayRunner()
+						log("AutoMapping complete")
+					} catch (e: CancellationException) {
+						throw e
+					} catch (e: Exception) {
+						onException(e)
+					}
+				}
 			}
 
 			override fun onException(throwable: Throwable) {
@@ -1019,7 +1022,6 @@ class PlayActivityViewModel(
 	}
 
 	override fun onCleared() {
-		super.onCleared()
 		playSession.ended()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()

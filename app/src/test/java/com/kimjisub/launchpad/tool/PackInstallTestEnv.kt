@@ -49,6 +49,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.security.MessageDigest
+import java.util.Collections
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
@@ -70,17 +71,30 @@ class PackInstallTestEnv {
 	private val cache = File(root, "cache").apply { mkdirs() }
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
-	private val mainExecutor = Executors.newFixedThreadPool(4)
+	private val mainExecutor = Executors.newFixedThreadPool(4) { Thread(it, "pack-test-main") }
+
+	/** Names of the threads that resolved the target workspace, one per request. */
+	val fileNameResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
+	val workspaceResolvedOn: MutableList<String> = Collections.synchronizedList(mutableListOf())
+	private val resolveWorkspace: () -> File = {
+		workspaceResolvedOn += Thread.currentThread().name
+		workspace
+	}
 	private val openStreams = mutableListOf<Closeable>()
 	private val gates = ConcurrentHashMap<String, Gate>()
+	val notifications = ConcurrentHashMap<Int, android.app.Notification>()
 	private val context: Context = mockk(relaxed = true)
 	private val resolver: ContentResolver = mockk(relaxed = true)
 
 	fun setUp() {
 		Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
 
-		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns
-			mockk<android.app.NotificationManager>(relaxed = true)
+		val manager = mockk<android.app.NotificationManager>(relaxed = true)
+		every { manager.notify(any<Int>(), any<android.app.Notification>()) } answers {
+			notifications[firstArg()] = secondArg()
+		}
+		every { manager.cancel(any<Int>()) } answers { notifications.remove(firstArg()) }
+		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns manager
 		every { context.contentResolver } returns resolver
 		every { context.cacheDir } returns cache
 		mockkStatic(PendingIntent::class)
@@ -132,7 +146,7 @@ class PackInstallTestEnv {
 			context = context,
 			title = name,
 			url = url,
-			workspace = workspace,
+			workspace = resolveWorkspace,
 			folderName = name,
 			listener = listener,
 			usage = usage,
@@ -150,12 +164,12 @@ class PackInstallTestEnv {
 	): CoroutineScope {
 		val uri = mockk<Uri>()
 		every { resolver.openInputStream(uri) } answers { openInput() }
-		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } returns fileName }
+		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } answers { fileNameResolvedOn += Thread.currentThread().name; fileName } }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
 			context = context,
 			uri = uri,
-			workspace = workspace,
+			workspace = resolveWorkspace,
 			onEventListener = listener,
 			usage = usage,
 			scope = scope,
@@ -282,7 +296,7 @@ class PackInstallTestEnv {
 			installedFolder = folder
 		}
 
-		override fun onImportComplete(folder: File, unipack: UniPack) {
+		override fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
 			installedFolder = folder
 		}
 

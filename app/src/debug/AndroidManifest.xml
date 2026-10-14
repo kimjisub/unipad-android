@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        Debug installs send no analytics, performance or crash reports to Firebase, from the very first
+        launch. The SDKs read these values while their content providers start, before
+        BaseApplication.onCreate(), so turning collection off in code would be too late.
+        A crash collection value saved earlier through the Crashlytics API overrides the one here:
+        clear the app's data before a run that must not report.
+    -->
+    <application>
+        <!-- false only in a build made for an analytics server check, see UsageEventRouting. -->
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="${analyticsCollectionDeactivated}" />
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+    </application>
+</manifest>
