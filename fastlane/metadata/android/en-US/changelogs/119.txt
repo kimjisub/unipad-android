@@ -1,0 +1,5 @@
+• Device selection now has connection and light help: what to check first when your Launchpad isn't listed, has no lights or the app closes. OK no longer gets cut off on small screens.
+• Fixed the main screen closing a few seconds after launch on some installs.
+• Get new versions from the pack list and choose when to install. Both can wait with Later.
+• Search saved packs by title or producer.
+• The pad grid is centred while playing, and chain buttons stay clear of the menu.
