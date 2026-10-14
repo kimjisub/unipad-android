@@ -209,6 +209,11 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
 | `PlayActivityTest.testEveryChainOfASmallPackWithManyChainsCanBeSelected` | A 4×3 pack with 24 chains shows every chain button inside the safe area, clear of the pads, in normal and Pro light mode; selecting chains 24, 5 and 18 and pressing the first pad is recorded. |
 | `PlayActivityTest.testRightOnlyChainsKeepTheirSizeInANarrowWindow` | A 4×4 pack with eight chains keeps pad-sized chain buttons in a narrow resizable window; all eight chains, pads, menu and logo stay clear. |
+| `PlayActivityTest.testBoundsOutsideTheResizedWindowNeverCountAsSettled` | Stale accessibility bounds outside the resized window never become a valid observation. |
+| `PlayActivityTest.testBoundsWaitForTwoMatchingReadingsInsideTheResizedWindow` | Ignore stale, missing and single fresh readings; require two matching bounds inside the current window. |
+| `PlayActivityTest.testSettledMenuOutsideTheSafeAreaStillFails` | The same safe-area verdict used by the window-change checks rejects a settled menu under a system bar and accepts one inside the safe area. |
+| `PlayActivityTest.testRotationMismatchRetriesTheWholeLayoutObservation` | Repeat the complete layout observation when the initial rotation is wrong but later correct; a persistently wrong rotation still fails after the bounded retries. |
+| `PlayActivityTest.testMenuOutsideTheWindowIsReportedAsALayoutFailure` | Move the real menu's parent outside the window after Play opens and require a layout failure, then restore the parent. |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
