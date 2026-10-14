@@ -119,9 +119,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 screen.node(By.desc(screen.text(R.string.menu)))
                 screen.capture("rotation-$orientation")
             }
-            val before = audio.plays.size
-            screen.tapPad(0)
-            screen.await("Rotated pad did not play") { audio.plays.size == before + 1 }
+            pressPad(0)
         } finally {
             screen.onMain { activity.requestedOrientation = oldOrientation }
         }

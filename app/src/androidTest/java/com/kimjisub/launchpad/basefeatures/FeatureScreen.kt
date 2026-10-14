@@ -115,6 +115,8 @@ class FeatureScreen {
         capture("missing-click-node-${SystemClock.uptimeMillis()}")
         throw AssertionError("Could not click $selector")
     }
+    /** Whether [selector] is on screen now; unlike [UiDevice.hasObject] it waits at most 0.5 s for idle and reads a fresh tree. */
+    fun has(selector: BySelector): Boolean = freshNode(selector) != null
     fun clickText(id: Int) = click(By.text(text(id)))
     fun clickDescription(id: Int) = click(By.desc(text(id)))
     fun awaitActivity(type: Class<out Activity>, language: String? = null) {
@@ -215,6 +217,12 @@ class FeatureScreen {
     fun options() {
         clickDescription(R.string.menu)
         node(By.text(text(R.string.autoPlay)))
+    }
+    /** Picks a play option, then waits for the panel to go: while it closes it still takes touches meant for the pads. */
+    fun chooseOption(id: Int) {
+        options()
+        clickText(id)
+        await("Options remained on screen") { !has(By.text(text(id))) }
     }
     fun capture(name: String) {
         val folder = "basefeatures-captures"
