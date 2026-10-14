@@ -1,0 +1,181 @@
+package com.kimjisub.launchpad.viewmodel
+
+import android.os.SystemClock
+import androidx.lifecycle.ViewModelStore
+import com.kimjisub.launchpad.analytics.UsageAnalytics
+import com.kimjisub.launchpad.audio.OboeAudioEngine
+import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.unipack.UniPackFolder
+import com.kimjisub.launchpad.unipack.runner.SoundRunner
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class PlayActivityViewModelAutoPlayReleaseTest {
+    @get:Rule val tmp = TemporaryFolder()
+    private val main = FakeMainDispatcher()
+    private lateinit var vm: PlayActivityViewModel
+    private val engine = RecordingEngine()
+
+    private class RecordingEngine : SoundRunner.Engine {
+        val voices = mutableMapOf<Int, Int>()
+        var playCount = 0
+            private set
+        override fun start() = true
+        override fun stop() {}
+        override fun decode(file: File) = OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44100)
+        override fun load(decoded: OboeAudioEngine.DecodedAudio) = 1
+        override fun unloadSound(soundId: Int) {}
+        override fun unloadAll() {}
+        override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int =
+            (++playCount).also { voices[it] = loop }
+        override fun stopVoice(stopKey: Int) { voices.remove(stopKey) }
+        override fun stopAllVoices() { voices.clear() }
+    }
+
+    @Before fun setUp() {
+        Dispatchers.setMain(main)
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } answers { System.nanoTime() / 1_000_000 }
+    }
+
+    @After fun tearDown() {
+        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
+        main.runAll()
+        unmockkStatic(SystemClock::class)
+        Dispatchers.resetMain()
+    }
+
+    private fun await(check: () -> Boolean) {
+        val deadline = System.nanoTime() + 5_000_000_000L
+        while (!check() && System.nanoTime() < deadline) {
+            main.runAll()
+            Thread.sleep(5)
+        }
+        main.runAll()
+        assertTrue("Condition did not become true", check())
+    }
+
+    private fun start(keySound: String = "1 1 1 a.wav 0\n", sequence: String = "o 1 1\nd 60000\nf 1 1\n") {
+        val folder = tmp.newFolder()
+        File(folder, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=2\nsquareButton=true\n")
+        File(folder, "sounds").mkdir()
+        File(folder, "sounds/a.wav").writeText("")
+        File(folder, "keySound").writeText(keySound)
+        File(folder, "autoPlay").writeText(sequence)
+        vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
+        vm.unipack = UniPackFolder(folder).load().loadDetail()
+        vm.initState()
+        vm.initPlayback()
+        await { !vm.soundLoadingActive && vm.unipack.soundGet(0, 0, 0)?.id == 1 }
+        vm.switchPlayMode(PlayMode.AutoPlay)
+        await { engine.playCount > 0 }
+    }
+
+    @Test fun disablingAutoplayStopsTheLoopItPressed() {
+        start()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun pausingAutoplayStopsTheLoopItPressed() {
+        start()
+        vm.autoPlayPause()
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun disablingAutoplayPreservesOtherManuallyHeldPads() {
+        start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n")
+        vm.padTouch(0, 1, true)
+        val manualVoice = engine.voices.keys.last()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(mapOf(manualVoice to -1), engine.voices)
+        vm.padTouch(0, 1, false)
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun disablingAutoplayPreservesTheSamePadHeldManually() {
+        start()
+        vm.padTouch(0, 0, true)
+        val manual = engine.voices.toMap()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(manual, engine.voices)
+        vm.padTouch(0, 0, false)
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun manualReleaseDoesNotStopThePadAutoplayStillHolds() {
+        start()
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        assertEquals(1, engine.voices.size)
+        vm.autoPlayPause()
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun finiteAndOneShotSoundsContinueWhenAutoplayStops() {
+        start("1 1 1 a.wav 3\n1 1 2 a.wav 1\n", "o 1 1\no 1 2\nd 60000\nf 1 1\nf 1 2\n")
+        await { engine.voices.size == 2 }
+        val before = engine.voices.toMap()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(before, engine.voices)
+    }
+
+    @Test fun releaseUsesThePlayedMappingRatherThanTheNextMapping() {
+        start("1 1 1 a.wav 0\n1 1 1 a.wav 3\n")
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun releaseDoesNotStopFiniteSoundWhenTheNextMappingLoopsForever() {
+        start("1 1 1 a.wav 3\n1 1 1 a.wav 0\n")
+        val before = engine.voices.toMap()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(before, engine.voices)
+    }
+
+    @Test fun releaseStopsTheLoopOnTheChainWhereAutoplayPressedIt() {
+        start()
+        vm.chain.value = 1
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun queuedPressDoesNotRestartTheLoopAfterPause() {
+        start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n", "o 1 1\nd 200\no 1 2\nd 60000\nf 1 2\n")
+        // The runner emits the next press while the main looper is busy handling input.
+        Thread.sleep(400)
+        vm.autoPlayPause()
+        main.runAll()
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+
+    @Test fun stoppingTwiceIsSafeAndDoesNotReleaseManualInput() {
+        start()
+        vm.padTouch(0, 0, true)
+        vm.switchPlayMode(PlayMode.None)
+        val manual = engine.voices.toMap()
+        vm.switchPlayMode(PlayMode.None)
+        assertEquals(manual, engine.voices)
+    }
+
+    @Test fun naturalEndReleasesAnUnmatchedAutoplayPress() {
+        start(sequence = "o 1 1\nd 100\n")
+        await { vm.playMode == PlayMode.None }
+        assertEquals(emptyMap<Int, Int>(), engine.voices)
+    }
+}

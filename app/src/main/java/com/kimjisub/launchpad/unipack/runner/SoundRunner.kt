@@ -27,6 +27,7 @@ class SoundRunner(
 ) {
 
 	private var stopKey: Array<Array<Array<Int>>>
+	private val looping = Array(unipack.chain) { Array(unipack.buttonX) { BooleanArray(unipack.buttonY) } }
 	@Volatile
 	private var engineStarted = false
 
@@ -181,16 +182,19 @@ class SoundRunner(
 	}
 
 	fun soundOn(x: Int, y: Int) {
-		engine.stopVoice(stopKey[chain.value][x][y])
-		val sound: Sound? = unipack.soundGet(chain.value, x, y)
+		val c = chain.value
+		engine.stopVoice(stopKey[c][x][y])
+		looping[c][x][y] = false
+		val sound: Sound? = unipack.soundGet(c, x, y)
 		if (sound != null && sound.id >= 0) {
-			stopKey[chain.value][x][y] = engine.play(
+			stopKey[c][x][y] = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
 				volumeR = 1.0f,
 				loop = sound.loop,
 			)
-			unipack.soundPush(chain.value, x, y)
+			looping[c][x][y] = sound.loop == -1
+			unipack.soundPush(c, x, y)
 			if (sound.wormhole != Sound.NO_WORMHOLE)
 				scope.launch(Dispatchers.Main) {
 					delay(100)
@@ -199,10 +203,12 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOff(x: Int, y: Int) {
-		val sound = unipack.soundGet(chain.value, x, y)
-		if (sound != null && sound.loop == -1)
-			engine.stopVoice(stopKey[chain.value][x][y])
+	fun soundOff(x: Int, y: Int, c: Int = chain.value) {
+		// soundPush has already advanced the mapping; only the voice actually played matters.
+		if (looping[c][x][y]) {
+			engine.stopVoice(stopKey[c][x][y])
+			looping[c][x][y] = false
+		}
 	}
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */

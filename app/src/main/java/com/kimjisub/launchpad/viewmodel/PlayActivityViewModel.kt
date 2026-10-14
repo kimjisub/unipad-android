@@ -488,6 +488,17 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
+	private data class HeldPad(val chain: Int, val x: Int, val y: Int)
+	// Main-thread input ownership: releasing one source must not release the other source's hold.
+	private val heldPads = mutableMapOf<HeldPad, MutableSet<PlayTrigger>>()
+	@Volatile private var autoPlayInputGeneration = 0L
+
+	private fun releaseAutoPlayPads() {
+		autoPlayInputGeneration++
+		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.map { it.x to it.y }.distinct()
+		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY)
+	}
+
 	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
 	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
 
@@ -502,6 +513,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
+				heldPads.getOrPut(HeldPad(chain.value, x, y)) { mutableSetOf() }.add(pressedBy)
 				playSession.playTriggered(pressedBy)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -521,7 +533,14 @@ class PlayActivityViewModel(
 				}
 				ledRunner?.eventOn(x, y)
 			} else {
-				soundRunner?.soundOff(x, y)
+				for (pad in heldPads.keys.filter { it.x == x && it.y == y }) {
+					val sources = heldPads.getValue(pad)
+					if (sources.remove(pressedBy) && sources.isEmpty()) {
+						soundRunner?.soundOff(x, y, pad.chain)
+						heldPads.remove(pad)
+					}
+				}
+				if (heldPads.keys.any { it.x == x && it.y == y }) return
 				channelManager.remove(x, y, Channel.PRESSED)
 				uiCallback?.setLedPad(x, y)
 				ledRunner?.eventOff(x, y)
@@ -535,7 +554,14 @@ class PlayActivityViewModel(
 
 	fun padInit() {
 		log("padInit")
-		for (i in 0 until unipack.buttonX) for (j in 0 until unipack.buttonY) padTouch(i, j, false)
+		if (!isChannelManagerInitialized) return
+		for (i in 0 until unipack.buttonX) for (j in 0 until unipack.buttonY) {
+			if (heldPads.keys.none { it.x == i && it.y == j }) {
+				channelManager.remove(i, j, Channel.PRESSED)
+				ledRunner?.eventOff(i, j)
+			}
+			uiCallback?.setLedPad(i, j)
+		}
 	}
 
 	fun chainBtnsRefresh() {
@@ -708,7 +734,7 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		val currentMode = playMode
 
-		if (mode == currentMode) {
+		if (mode == currentMode && mode != PlayMode.None) {
 			switchPlayMode(PlayMode.None)
 			return
 		}
@@ -720,6 +746,7 @@ class PlayActivityViewModel(
 			runner.playmode = false
 			autoPlayRemoveGuide()
 			if (runner.active) runner.stop()
+			releaseAutoPlayPads()
 			padInit()
 			ledInitInOrder()
 			isPracticeMode = false
@@ -750,6 +777,7 @@ class PlayActivityViewModel(
 	}
 
 	private fun applyModeFlags(runner: AutoPlayRunner, mode: PlayMode) {
+		if (mode != PlayMode.AutoPlay) releaseAutoPlayPads()
 		when (mode) {
 			PlayMode.AutoPlay -> {
 				runner.practiceGuide = false
@@ -798,6 +826,7 @@ class PlayActivityViewModel(
 		runner.stepMode = false
 		runner.resetStepState()
 		autoPlayRemoveGuide()
+		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
 		runner.playmode = true
@@ -815,6 +844,7 @@ class PlayActivityViewModel(
 		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
+		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
 		isAutoPlayPlaying = false
@@ -826,6 +856,7 @@ class PlayActivityViewModel(
 	fun autoPlayPrev() {
 		log("autoPlayPrev")
 		val runner = autoPlayRunner ?: return
+		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
 		autoPlayRemoveGuide()
@@ -835,6 +866,7 @@ class PlayActivityViewModel(
 	fun autoPlayNext() {
 		log("autoPlayNext")
 		val runner = autoPlayRunner ?: return
+		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
 		autoPlayRemoveGuide()
@@ -892,6 +924,7 @@ class PlayActivityViewModel(
 	fun initAutoPlayRunner() {
 		if (!unipack.autoPlayExist) return
 		autoPlayRunner?.stop()
+		releaseAutoPlayPads()
 		// onEnd of a stopped runner arrives asynchronously; by then autoPlayRunner may already be
 		// its replacement, whose flags the old one must not reset.
 		var created: AutoPlayRunner? = null
@@ -908,11 +941,20 @@ class PlayActivityViewModel(
 				}
 
 				override fun onPadTouchOn(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, true, PlayTrigger.AUTOPLAY) }
+					val generation = autoPlayInputGeneration
+					viewModelScope.launch {
+						if (created === autoPlayRunner && generation == autoPlayInputGeneration &&
+							playMode == PlayMode.AutoPlay && created?.playmode == true)
+							padEvent(x, y, true, PlayTrigger.AUTOPLAY)
+					}
 				}
 
 				override fun onPadTouchOff(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, false, PlayTrigger.AUTOPLAY) }
+					val generation = autoPlayInputGeneration
+					viewModelScope.launch {
+						if (created === autoPlayRunner && generation == autoPlayInputGeneration)
+							padEvent(x, y, false, PlayTrigger.AUTOPLAY)
+					}
 				}
 
 				override fun onChainChange(c: Int) {
@@ -953,6 +995,7 @@ class PlayActivityViewModel(
 				override fun onEnd() {
 					viewModelScope.launch {
 						if (created != null && created !== autoPlayRunner) return@launch
+						releaseAutoPlayPads()
 						isAutoPlayPlaying = false
 						autoPlayRunner?.practiceGuide = false
 						autoPlayRunner?.stepMode = false
@@ -979,6 +1022,7 @@ class PlayActivityViewModel(
 		if (!folder.autoPlayExist || autoMappingActive) return
 
 		autoPlayRunner?.stop()
+		releaseAutoPlayPads()
 		scbAutoPlay.setCheckedSilently(false)
 		autoPlayControlVisible = false
 
