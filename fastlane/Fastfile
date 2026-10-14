@@ -44,6 +44,46 @@ def bump_version_code!
   next_code
 end
 
+# Read and update a production release in one edit, preserving every other field.
+def update_production_release(version_code)
+  UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
+  require "supply"
+  require "supply/options"
+
+  Supply.config = FastlaneCore::Configuration.create(
+    Supply::Options.available_options,
+    json_key: ENV["PLAY_JSON_KEY_FILE"], track: "production",
+  )
+  client = Supply::Client.make_from_config
+  begin
+    client.begin_edit(package_name: Supply.config[:package_name])
+    track = client.get_edit_track("production")
+    release = track&.releases&.find { |item| Array(item.version_codes).map(&:to_s).include?(version_code) }
+    UI.user_error!("Production release #{version_code} not found") unless release
+    yield release
+    client.update_track("production", track)
+    begin
+      client.commit_current_edit!
+    rescue StandardError => error
+      raise error, "#{error.message}. The change may already have been applied to Play. Re-read the production track before retrying."
+    end
+  ensure
+    if client.current_edit
+      begin
+        client.abort_current_edit
+      rescue StandardError => error
+        UI.important("Unable to discard the Play edit: #{error.message}")
+      end
+    end
+  end
+end
+
+def staged_rollout_fraction(release, version_code)
+  fraction = release.user_fraction
+  UI.user_error!("Production release #{version_code} has no valid staged rollout fraction") unless fraction && fraction.finite? && fraction > 0 && fraction < 1
+  fraction
+end
+
 platform :android do
   desc "Build a signed release AAB without uploading (build/sign verification)."
   lane :build_only do
@@ -103,52 +143,34 @@ platform :android do
     UI.success("promoted #{options[:version_code] || current_version_code} from #{from} to production at #{fraction}")
   end
 
-  desc "Change the staged rollout fraction of the current production release. Pass fraction:0.5 (1 = complete) and version_code:NNN."
+  desc "Widen or resume a staged production rollout. Pass fraction:0.5 (1 = complete) and version_code:NNN."
   lane :rollout do |options|
-    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
-    fraction = options[:fraction].to_s
-    UI.user_error!("pass fraction:0.1..1") if fraction.empty?
-    upload_to_play_store(
-      track: "production",
-      version_code: options[:version_code] || current_version_code,
-      version_name: options[:version_name] || current_version_name,
-      rollout: fraction,
-      release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
-      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
-      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
-    )
-    UI.success("production rollout -> #{fraction}")
+    fraction = begin
+      Float(options[:fraction].to_s)
+    rescue ArgumentError, TypeError
+      nil
+    end
+    UI.user_error!("Pass fraction as a finite positive number (1 or greater = complete)") unless fraction && fraction.finite? && fraction > 0
+    version_code = (options[:version_code] || current_version_code).to_s
+    update_production_release(version_code) do |release|
+      UI.user_error!("Production release #{version_code} must be inProgress or halted to widen or resume (was #{release.status})") unless %w[inProgress halted].include?(release.status)
+      current_fraction = staged_rollout_fraction(release, version_code)
+      UI.user_error!("Requested fraction #{fraction} is lower than the current fraction #{current_fraction}") if fraction < current_fraction
+      release.status = fraction >= 1 ? "completed" : "inProgress"
+      release.user_fraction = fraction >= 1 ? nil : fraction
+    end
+    UI.success("production rollout #{version_code} -> #{fraction}")
   end
 
   desc "Halt the current staged production rollout (keeps the release, stops new users getting it)."
   lane :halt do |options|
-    UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
-    require "supply"
-    require "supply/options"
-
     version_code = (options[:version_code] || current_version_code).to_s
-    Supply.config = FastlaneCore::Configuration.create(
-      Supply::Options.available_options,
-      json_key: ENV["PLAY_JSON_KEY_FILE"], track: "production",
-    )
-    client = Supply::Client.make_from_config
-    begin
-      client.begin_edit(package_name: Supply.config[:package_name])
-      # Read and update in the same edit so the current fraction and all other
-      # release fields are preserved. A supply upload without rollout is a no-op.
-      track = client.get_edit_track("production")
-      release = track&.releases&.find { |item| Array(item.version_codes).map(&:to_s).include?(version_code) }
-      UI.user_error!("Production release #{version_code} not found") unless release
+    fraction = nil
+    update_production_release(version_code) do |release|
       UI.user_error!("Production release #{version_code} is completed; a 100% rollout cannot be halted") if release.status == "completed"
       UI.user_error!("Production release #{version_code} must be inProgress to halt (was #{release.status})") unless release.status == "inProgress"
-      fraction = release.user_fraction
-      UI.user_error!("Production release #{version_code} has no valid staged rollout fraction") unless fraction && fraction > 0 && fraction < 1
-
+      fraction = staged_rollout_fraction(release, version_code)
       release.status = "halted"
-      client.update_track("production", track)
-      client.commit_current_edit!
-    ensure
-      client.abort_current_edit if client.current_edit
     end
     UI.success("production rollout #{version_code} halted at #{fraction}")
   end
