@@ -125,13 +125,33 @@ platform :android do
   desc "Halt the current staged production rollout (keeps the release, stops new users getting it)."
   lane :halt do |options|
     UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
-    upload_to_play_store(
-      track: "production",
-      version_code: options[:version_code] || current_version_code,
-      release_status: "halted",
-      skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
-      skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
+    require "supply"
+    require "supply/options"
+
+    version_code = (options[:version_code] || current_version_code).to_s
+    Supply.config = FastlaneCore::Configuration.create(
+      Supply::Options.available_options,
+      json_key: ENV["PLAY_JSON_KEY_FILE"], track: "production",
     )
-    UI.success("production rollout halted")
+    client = Supply::Client.make_from_config
+    begin
+      client.begin_edit(package_name: Supply.config[:package_name])
+      # Read and update in the same edit so the current fraction and all other
+      # release fields are preserved. A supply upload without rollout is a no-op.
+      track = client.get_edit_track("production")
+      release = track&.releases&.find { |item| Array(item.version_codes).map(&:to_s).include?(version_code) }
+      UI.user_error!("Production release #{version_code} not found") unless release
+      UI.user_error!("Production release #{version_code} is completed; a 100% rollout cannot be halted") if release.status == "completed"
+      UI.user_error!("Production release #{version_code} must be inProgress to halt (was #{release.status})") unless release.status == "inProgress"
+      fraction = release.user_fraction
+      UI.user_error!("Production release #{version_code} has no valid staged rollout fraction") unless fraction && fraction > 0 && fraction < 1
+
+      release.status = "halted"
+      client.update_track("production", track)
+      client.commit_current_edit!
+    ensure
+      client.abort_current_edit if client.current_edit
+    end
+    UI.success("production rollout #{version_code} halted at #{fraction}")
   end
 end

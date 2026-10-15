@@ -8,7 +8,6 @@ import android.content.ContentValues
 import android.provider.MediaStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
@@ -32,6 +31,7 @@ class LibraryAndFileTest {
         val launch = screen.context.packageManager.getLaunchIntentForPackage(screen.context.packageName)!!
         launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
         screen.context.startActivity(launch)
+        screen.awaitActivity(MainActivity::class.java)
         screen.node(By.desc(screen.text(R.string.setting)))
         assertFalse(screen.device.hasObject(By.text(FeatureScreen.TITLE)))
         screen.node(By.text(screen.text(R.string.guide_import_external)))
@@ -80,21 +80,18 @@ class LibraryAndFileTest {
                 screen.launch(MainActivity::class.java)
                 screen.clickText(R.string.guide_import_external)
                 // These are system picker labels; the dedicated emulator's system language is English.
-                val file = screen.device.wait(Until.findObject(By.text("basefeatures-file.zip")), 3000)
-                if (file == null) {
-                    val toolbar = screen.node(By.res("com.google.android.documentsui", "toolbar"))
-                    val roots = toolbar.findObject(By.clazz("android.widget.ImageButton"))
-                        ?: throw AssertionError("Documents picker navigation button missing")
-                    roots.click()
-                    // Opening the drawer replaces its accessibility nodes during animation.
-                    screen.device.waitForIdle()
-                    screen.node(By.text("Downloads")).click()
-                    screen.device.waitForIdle()
-                }
+                val picker = "com.google.android.documentsui"
+                // Always navigate to the known destination. A previous picker can remember Downloads,
+                // while its replacement initially shows Recent; neither idle nor an old title proves it.
+                screen.click(By.pkg(picker).clazz("android.widget.ImageButton")
+                    .hasAncestor(By.res(picker, "toolbar")))
+                screen.node(By.res(picker, "roots_list"))
+                screen.click(By.text("Downloads").hasAncestor(By.res(picker, "roots_list")))
+                screen.node(By.text("Downloads").hasAncestor(By.res(picker, "toolbar")))
                 // Select explicitly: a delayed injected tap can become a long press and leave
                 // DocumentsUI in selection mode without returning the document to the app.
                 screen.node(By.text("basefeatures-file.zip")).longClick()
-                screen.node(By.text("Select")).click()
+                screen.click(By.pkg(picker).text("Select"))
                 screen.node(By.text(screen.text(R.string.importComplete)))
                 screen.node(By.text(FeatureScreen.TITLE))
                 screen.node(By.desc("${screen.text(R.string.fileSize)} 0.01 MB"))

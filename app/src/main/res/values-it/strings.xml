@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Accetta</string>
@@ -96,7 +95,6 @@
 	<string name="proLightMode">Modalità Pro Light</string>
 
 	<!--Version-->
-	<string name="update_available">Aggiornamento disponibile</string>
 
 	<string name="permissionRequire">È necessario l\'accesso alla memoria esterna per salvare i file del progetto.\nConcedi l\'autorizzazione.</string>
 	<string name="permissionDenied">L\'app richiede l\'accesso alla memoria esterna.\nAttiva le autorizzazioni in [Impostazioni] > [Autorizzazioni]</string>
@@ -205,7 +203,6 @@
 	<string name="workspace_documents_android10">Documenti (Android 10)</string>
 	<string name="workspace_app_storage">Archivio App (Consigliato)</string>
 	<string name="workspace_internal_storage">Memoria Interna</string>
-	<string name="workspace_internal_sd_card">Scheda SD Interna</string>
 	<string name="workspace_external_sd_card_format">Scheda SD Esterna %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
