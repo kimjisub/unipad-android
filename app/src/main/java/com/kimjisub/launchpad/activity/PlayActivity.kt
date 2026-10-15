@@ -608,12 +608,19 @@ class PlayActivity : BaseActivity() {
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
 						val chromePlaceable = measurables[6].measure(unconstrained)
-						val padX = PlayLayout.padLeft(constraints.maxWidth, padPlaceable.width)
-						val padY = (constraints.maxHeight - padPlaceable.height) / 2
-						val leftPos = IntOffset(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
-						val rightPos = IntOffset(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
-						val topPos = IntOffset(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
-						val bottomPos = IntOffset(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
+						val placement = PlayLayout.place(
+							constraints.maxWidth, constraints.maxHeight,
+							pads = IntSize(padPlaceable.width, padPlaceable.height),
+							top = IntSize(topPlaceable.width, topPlaceable.height),
+							right = IntSize(rightPlaceable.width, rightPlaceable.height),
+							bottom = IntSize(bottomPlaceable.width, bottomPlaceable.height),
+							left = IntSize(leftPlaceable.width, leftPlaceable.height),
+						)
+						val (padX, padY) = placement.pads
+						val leftPos = placement.left
+						val rightPos = placement.right
+						val topPos = placement.top
+						val bottomPos = placement.bottom
 						// Chrome column on the right, inside the right inset, vertically centered on pads
 						val chromePos = IntOffset(
 							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
@@ -1093,7 +1100,7 @@ class PlayActivity : BaseActivity() {
 				rows = vm.unipack.buttonX,
 				columns = vm.unipack.buttonY,
 				square = vm.unipack.squareButton,
-				chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0,
+				sides = PlayLayout.chainSides(vm.scbProLightMode.isChecked(), vm.unipack.chain),
 			)
 
 			vm.setupCheckBoxListeners()
@@ -1194,10 +1201,12 @@ class PlayActivity : BaseActivity() {
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
-			if (i in 0..7) { chainsTopContainer?.addView(view) }
-			if (i in 8..15) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-			if (i in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-			if (i in 24..31) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			when (i / PlayLayout.CHAINS_PER_SIDE) {
+				0 -> chainsTopContainer?.addView(view)
+				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			}
 		}
 	}
 

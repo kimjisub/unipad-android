@@ -56,6 +56,9 @@ class Fingers(private val screen: FeatureScreen) {
         fingers.clear()
     }
 
+    /** Forgets the fingers of a gesture the system already ended with its own cancel; injecting more would be refused. */
+    fun forgetCancelled() = fingers.clear()
+
     private fun finger(id: Int) = fingers.first { it.id == id }
 
     private fun pointerAction(action: Int, index: Int) = action or (index shl MotionEvent.ACTION_POINTER_INDEX_SHIFT)

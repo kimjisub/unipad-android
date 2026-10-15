@@ -39,17 +39,34 @@ data class CorpusCase(
 class Corpus(val assets: Map<String, String>, val cases: List<CorpusCase>, val sha256: String)
 
 private const val CORPUS_RESOURCE = "/unipack-conformance/corpus.json"
+private const val DIGEST_RESOURCE = "/unipack-conformance/corpus.sha256"
 
 fun sha256Hex(bytes: ByteArray): String =
 	MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
+/**
+ * The sha256 of the corpus.json bytes, after checking it against corpus.sha256, which unipad.io's
+ * build-corpus.mjs writes and sync.mjs copies beside it. A copy without that file, or one that does
+ * not hash to it, is refused.
+ */
+fun verifyCorpusDigest(bytes: ByteArray, digestFile: String?): String {
+	val actual = sha256Hex(bytes)
+	checkNotNull(digestFile) { "corpus.sha256 is missing beside corpus.json; copy both with unipad.io meta/unipack-conformance/sync.mjs" }
+	val declared = Regex("^([0-9a-f]{64}) {2}corpus\\.json\n$").find(digestFile)?.groupValues?.get(1)
+	checkNotNull(declared) { "corpus.sha256 is not one \"<sha256>  corpus.json\" line: $digestFile" }
+	check(declared == actual) { "corpus.json hashes to $actual, corpus.sha256 declares $declared" }
+	return actual
+}
+
+private fun resourceBytes(name: String): ByteArray? = Corpus::class.java.getResourceAsStream(name)?.use { it.readBytes() }
+
 fun loadCorpus(): Corpus {
-	val bytes = Corpus::class.java.getResourceAsStream(CORPUS_RESOURCE)?.use { it.readBytes() }
-		?: error("$CORPUS_RESOURCE is not on the test classpath")
+	val bytes = resourceBytes(CORPUS_RESOURCE) ?: error("$CORPUS_RESOURCE is not on the test classpath")
+	val sha256 = verifyCorpusDigest(bytes, resourceBytes(DIGEST_RESOURCE)?.toString(Charsets.UTF_8))
 	val root = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)).jsonObject
 	val assets = root.getValue("assets").jsonObject.mapValues { it.value.jsonObject.getValue("base64").jsonPrimitive.content }
 	val cases = root.getValue("cases").jsonArray.map { it.jsonObject.toCase() }
-	return Corpus(assets, cases, sha256Hex(bytes))
+	return Corpus(assets, cases, sha256)
 }
 
 private fun JsonObject.string(key: String): String? = this[key]?.jsonPrimitive?.content

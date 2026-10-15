@@ -37,8 +37,8 @@ android {
 		applicationId = "com.kimjisub.launchpad"
 		minSdkVersion 24
 		targetSdkVersion 37
-		versionCode = 116
-		versionName = "4.1.9"
+		versionCode = 119
+		versionName = "4.2.0"
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
@@ -126,6 +126,10 @@ android {
 		unitTests {
 			includeAndroidResources = true
 			returnDefaultValues = true
+			all {
+				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
+				jvmArgs '-Xshare:off'
+			}
 		}
 		animationsDisabled = true
 		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
@@ -280,7 +284,6 @@ dependencies {
 	implementation 'com.google.firebase:firebase-database'
 	implementation 'com.google.firebase:firebase-messaging'
 	implementation 'com.google.firebase:firebase-perf'
-	implementation 'com.google.firebase:firebase-config'
 	implementation 'com.google.firebase:firebase-crashlytics'
 	implementation 'com.google.firebase:firebase-analytics'
 
@@ -298,6 +301,8 @@ dependencies {
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
 	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.2'
+	// Lets the pack list fetch a newer Play build in the background and install it when asked
+	implementation 'com.google.android.play:app-update:2.1.0'
 	api project(':design')
 }
 

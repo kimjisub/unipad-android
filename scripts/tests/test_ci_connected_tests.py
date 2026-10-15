@@ -8,6 +8,7 @@ import unittest
 RUNNER = Path(__file__).resolve().parents[1] / "ci-connected-tests.sh"
 COMMAND = ":app:connectedDebugAndroidTest :design:connectedDebugAndroidTest --no-daemon --console=plain"
 RESULTS = "build/outputs/androidTest-results/connected"
+TEST_PACKAGES = ("com.kimjisub.launchpad.dev", "com.kimjisub.launchpad.dev.test", "com.kimjisub.design.test")
 
 
 def source(tests):
@@ -77,7 +78,8 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertIn("diagnostic-output", (root / ".ci-results/logcat.txt").read_text())
         self.assertRegex(self.status(root), rf"exit_code={exit_code}\nelapsed_seconds=\d+\n")
         self.assertEqual((root / "adb-calls.txt").read_text().splitlines(),
-                         ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime"])
+                         [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
+                         + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime"])
 
     def assert_rejected(self, root, result, *reasons):
         self.assertNotEqual(result.returncode, 0, result.stdout)

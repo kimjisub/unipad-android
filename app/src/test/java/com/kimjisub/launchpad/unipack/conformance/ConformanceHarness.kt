@@ -30,6 +30,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -43,6 +44,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Runs a corpus case through Android's real parser and runners and reports what they did in the
@@ -234,7 +236,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"chain" -> silently { vm.chain.value = step.getValue("c").jsonPrimitive.int }
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
-					"autoplay" -> startAutoPlay()
+					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
 					"stop" -> stop()
 					else -> error("${c.id}: unknown scenario step $name")
 				}
@@ -341,11 +343,18 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		main.runAll()
 	}
 
-	private fun startAutoPlay() {
+	/**
+	 * [toPads]: each press and release also reaches the pads the way PlayActivityViewModel's own
+	 * auto-play listener sends it, posted to the main thread and handled like a pad touch.
+	 */
+	private fun startAutoPlay(toPads: Boolean) {
+		fun forward(x: Int, y: Int, down: Boolean) {
+			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down) })
+		}
 		val listener = object : AutoPlayRunner.Listener {
 			override fun onStart() {}
-			override fun onPadTouchOn(x: Int, y: Int) { events.add(event("autoOn", x, y)) }
-			override fun onPadTouchOff(x: Int, y: Int) { events.add(event("autoOff", x, y)) }
+			override fun onPadTouchOn(x: Int, y: Int) { events.add(event("autoOn", x, y)); forward(x, y, true) }
+			override fun onPadTouchOff(x: Int, y: Int) { events.add(event("autoOff", x, y)); forward(x, y, false) }
 			override fun onChainChange(c: Int) {
 				chainTag.set("autoChain")
 				try { vm.chain.value = c } finally { chainTag.set(null) }
