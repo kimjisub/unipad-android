@@ -129,6 +129,15 @@ android {
 			all {
 				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
 				jvmArgs '-Xshare:off'
+				// Store packs stay out of the repository; their LED timing runs only when given a folder of them.
+				def ledTimingPacks = project.findProperty('ledTimingPacks')
+				if (ledTimingPacks) {
+					systemProperty 'ledTiming.packs', ledTimingPacks
+					systemProperty 'ledTiming.measure', project.findProperty('ledTimingMeasure') ?: ''
+					outputs.upToDateWhen { false }
+				} else {
+					exclude '**/StorePackLedTimingTest*'
+				}
 			}
 		}
 		animationsDisabled = true
