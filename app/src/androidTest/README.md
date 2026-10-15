@@ -176,6 +176,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `AppLaunchTest.testPlayActivityNavigation` | Select the pack, enter Play, Back opens options, Quit returns to Main. |
 | `MainActivityTest.testMainNavigationButtonsAndSettingsReturn` | Current Store/Import/Settings buttons exist; Settings opens and returns. |
 | `MainActivityTest.testMainScreenSorting` | Each sort method is saved/shown; order toggles and restores. |
+| `MainActivityTest.testSortNamesFollowAppLanguageChange` | Switching UniPad to Korean through the per-app language setting turns the sort bar and its list Korean at once and after a relaunch. API 33+ (per-app language); API 35 full runs do not skip it. |
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
@@ -184,6 +185,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
+| `SettingsTest.testLanguageRowOpensSystemAppLanguageScreen` | On API 33+ the language row opens the system's language screen for UniPad, which lists Korean and stays open; Back returns to Settings. Below 33 tapping it leaves Settings open. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
