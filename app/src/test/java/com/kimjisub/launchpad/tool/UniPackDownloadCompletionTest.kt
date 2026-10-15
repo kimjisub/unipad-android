@@ -4,7 +4,9 @@ import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.contentHashes
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.expectedHashes
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.packZip
+import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.text
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Recorder
+import com.kimjisub.launchpad.tool.PackInstallTestEnv.Shown
 import com.kimjisub.launchpad.unipack.UniPack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -44,7 +46,7 @@ class UniPackDownloadCompletionTest {
 		assertEquals(expectedHashes("Completed"), contentHashes(folder))
 		assertEquals(listOf(folder.name), env.workspaceContents())
 		assertNull(listener.error)
-		assertEquals("keep the completed notification", 1, env.notifications.size)
+		assertEquals("keep the completed notification", listOf(Shown(text(R.string.success))), env.shownNow())
 	}
 
 	@Test fun cancellationBeforeCompletionDiscardsTheUnannouncedPackAndNotification() {
@@ -96,8 +98,7 @@ class UniPackDownloadCompletionTest {
 		assertTrue(listener.error is IOException)
 		assertNull(listener.installedFolder)
 		assertTrue(env.workspaceContents().isEmpty())
-		assertEquals("keep only the failure notification", 1, env.notifications.size)
-		assertEquals(R.string.failed, env.notificationTextIds.last())
+		assertEquals("keep only the failure notification", listOf(Shown(text(R.string.failed))), env.shownNow())
 	}
 
 	@Test fun failingErrorCallbackKeepsFailureNotification() {
@@ -114,8 +115,7 @@ class UniPackDownloadCompletionTest {
 
 		assertNotNull(listener.error)
 		assertTrue(env.workspaceContents().isEmpty())
-		assertEquals("failed callback removed the failure notification", 1, env.notifications.size)
-		assertEquals(R.string.failed, env.notificationTextIds.last())
+		assertEquals("failed callback removed the failure notification", listOf(Shown(text(R.string.failed))), env.shownNow())
 	}
 
 	companion object {

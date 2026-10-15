@@ -1,16 +1,11 @@
 package com.kimjisub.launchpad.tool
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.PackImportReport
-import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -32,30 +27,7 @@ class UniPackImporter(
 ) {
 	private var fileName: String? = null
 
-	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
-	private val notificationManager = NotificationManager.getManager(context)
-	private val notificationBuilder: NotificationCompat.Builder by lazy {
-		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
-		builder.apply {
-			setAutoCancel(true)
-			setSmallIcon(R.mipmap.ic_launcher)
-
-			val intent = Intent(context, SplashActivity::class.java)
-			intent.action = Intent.ACTION_MAIN
-			intent.addCategory(Intent.CATEGORY_LAUNCHER)
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			// minSdk 29+ always requires FLAG_IMMUTABLE (introduced in API 23)
-			val pIntent: PendingIntent =
-				PendingIntent.getActivity(
-					context,
-					1,
-					intent,
-					PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-				)
-			setContentIntent(pIntent)
-		}
-		builder
-	}
+	private val notification = PackInstallNotification(context)
 
 	init {
 		scope.launch(Dispatchers.IO) {
@@ -115,37 +87,19 @@ class UniPackImporter(
 	}
 
 	private fun onImportStart() {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.importing))
-			setProgress(100, 0, false)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(fileName, R.string.importing, 0, indeterminate = false)
 
 		onEventListener.onImportStart()
 	}
 
 	private fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.success))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showResult(fileName, R.string.success)
 
 		onEventListener.onImportComplete(folder, unipack, byteSize)
 	}
 
 	private fun onException(throwable: Throwable) {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.failed))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showResult(fileName, R.string.failed)
 
 		onEventListener.onException(throwable)
 	}

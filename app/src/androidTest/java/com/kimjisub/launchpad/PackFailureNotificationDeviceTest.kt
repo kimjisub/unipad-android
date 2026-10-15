@@ -40,13 +40,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.io.IOException
 import java.net.InetAddress
 import java.net.ServerSocket
+import java.net.Socket
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-/** Real HTTP 404 and invalid archive failures must leave dismissible, finished notifications. */
+/** Real download and import failures must leave one dismissible, finished notification. */
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = 29) // ContentResolver.wrap for the local file provider.
 class PackFailureNotificationDeviceTest {
@@ -62,6 +64,7 @@ class PackFailureNotificationDeviceTest {
     private lateinit var root: File
     private lateinit var scope: CoroutineScope
     private val titles = mutableSetOf<String>()
+    private var shadeOpened = false
 
     @Before
     fun setUp() {
@@ -75,40 +78,56 @@ class PackFailureNotificationDeviceTest {
     fun tearDown() {
         scope.cancel()
         runBlocking { withTimeout(TIMEOUT_MS) { scope.coroutineContext.job.children.toList().joinAll() } }
-        notifications.activeNotifications.filter {
-            it.notification.extras.getString(Notification.EXTRA_TITLE) in titles
-        }.forEach { notifications.cancel(it.tag, it.id) }
-        device.pressBack()
+        shown(titles).forEach { notifications.cancel(it.tag, it.id) }
+        if (shadeOpened) device.pressBack()
         check(root.deleteRecursively())
     }
 
     @Test
     fun missingDownloadShowsFailureWithoutProgressAndCanBeDismissed() {
-        val title = "Missing pack.zip"
-        titles += title
-        val result = Result()
-        ServerSocket(0, 1, InetAddress.getByName("127.0.0.1")).use { server ->
-            server.soTimeout = TIMEOUT_MS.toInt()
-            val responder = thread {
-                server.accept().use { socket ->
-                    socket.soTimeout = TIMEOUT_MS.toInt()
-                    val input = socket.getInputStream().bufferedReader()
-                    while (!input.readLine().isNullOrEmpty()) { /* Read the HTTP request. */ }
-                    socket.getOutputStream().write(
-                        "HTTP/1.1 404 Not Found\r\nContent-Length: 7\r\nConnection: close\r\n\r\nmissing".toByteArray()
-                    )
-                }
-            }
-            UniPackDownloader(context, title, "http://127.0.0.1:${server.localPort}/missing.zip",
-                { root }, "missing", listener = result,
-                usage = UsageAnalytics { _, _ -> }.packImport(PackImportSource.STORE), scope = scope)
-            awaitFailure(result)
-            responder.join(TIMEOUT_MS)
-            assertFalse("HTTP responder did not finish", responder.isAlive)
-        }
+        val result = OneShotServer { socket ->
+            socket.getOutputStream().write(
+                "HTTP/1.1 404 Not Found\r\nContent-Length: 7\r\nConnection: close\r\n\r\nmissing".toByteArray()
+            )
+        }.use { server -> download("Missing pack.zip", "${server.url}/missing.zip", server) }
         assertTrue(result.error is UniPackDownloader.HttpStatusException)
         assertEquals(404, (result.error as UniPackDownloader.HttpStatusException).status)
-        checkNotification(title, "download")
+        checkNotification("Missing pack.zip", "download")
+    }
+
+    /**
+     * Progress changes many times a second, so Android drops further updates to the progress
+     * notification for a while. The failure right after must still replace the progress bar.
+     */
+    @Test
+    fun connectionLostDuringFastDownloadShowsFailureWithoutProgress() {
+        val result = OneShotServer { socket ->
+            val output = socket.getOutputStream()
+            output.write(
+                "HTTP/1.1 200 OK\r\nContent-Length: $FAST_BODY_BYTES\r\nConnection: close\r\n\r\n".toByteArray()
+            )
+            val chunk = ByteArray(FAST_CHUNK_BYTES)
+            val end = System.currentTimeMillis() + FAST_SEND_MS
+            while (System.currentTimeMillis() < end) {
+                output.write(chunk)
+                output.flush()
+                Thread.sleep(FAST_CHUNK_INTERVAL_MS)
+            }
+            // Reset instead of a clean close: the connection is lost partway through the body.
+            socket.setSoLinger(true, 0)
+        }.use { server -> download("Interrupted pack.zip", "${server.url}/interrupted.zip", server) }
+        assertTrue(result.error is IOException)
+        checkNotification("Interrupted pack.zip", "connection-lost")
+    }
+
+    private fun download(title: String, url: String, server: OneShotServer): Result {
+        titles += title
+        val result = Result()
+        UniPackDownloader(context, title, url, { root }, "download", listener = result,
+            usage = UsageAnalytics { _, _ -> }.packImport(PackImportSource.STORE), scope = scope)
+        awaitFailure(result)
+        server.finish()
+        return result
     }
 
     @Test
@@ -148,14 +167,17 @@ class PackFailureNotificationDeviceTest {
     }
 
     private fun checkNotification(title: String, scenario: String) {
-        val notification = awaitSettledNotification(title)
+        val shownForTitle = awaitSettledNotifications(title)
         // Capture before asserting so the same test also records the old failure wording.
         val label = InstrumentationRegistry.getArguments().getString("notificationEvidence")
-        if (label != null) {
+        if (label != null && shownForTitle.isNotEmpty()) {
+            shadeOpened = true
             assertTrue(device.openNotification())
             assertTrue("notification shade did not show $title", device.wait(Until.hasObject(By.text(title)), TIMEOUT_MS))
             assertTrue(TestCaptures.screenshot(device, "pack-failure/$label-$scenario.png"))
         }
+        assertEquals("notifications for $title: ${shownForTitle.map(::describe)}", 1, shownForTitle.size)
+        val notification = shownForTitle.single()
         assertEquals(context.getString(R.string.failed), notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         assertEquals(0, notification.extras.getInt(Notification.EXTRA_PROGRESS_MAX))
         assertFalse(notification.extras.getBoolean(Notification.EXTRA_PROGRESS_INDETERMINATE))
@@ -165,21 +187,58 @@ class PackFailureNotificationDeviceTest {
     }
 
     /**
-     * The system applies notify() asynchronously, so right after the failure callback the shade
-     * can still hold the previous progress update. Waits for the failure text, then returns
-     * whatever is shown so the assertions report the wording that stayed.
+     * The system applies notify() and cancel() asynchronously, so right after the failure callback
+     * the shade can still hold the progress notification. Waits until only the failure is shown
+     * for [title], then returns whatever is shown so the assertions report what stayed.
      */
-    private fun awaitSettledNotification(title: String): Notification {
+    private fun awaitSettledNotifications(title: String): List<Notification> {
         val failed = context.getString(R.string.failed)
         val deadline = System.currentTimeMillis() + TIMEOUT_MS
         while (true) {
-            val notification = notifications.activeNotifications.single {
-                it.notification.extras.getString(Notification.EXTRA_TITLE) == title
-            }.notification
-            val text = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-            if (text == failed || System.currentTimeMillis() > deadline) return notification
+            val current = shown(setOf(title)).map { it.notification }
+            val settled = current.singleOrNull()?.extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString() == failed
+            if (settled || System.currentTimeMillis() > deadline) return current
             Thread.sleep(POLL_INTERVAL_MS)
         }
+    }
+
+    private fun shown(titles: Set<String>) = notifications.activeNotifications.filter {
+        it.notification.extras.getString(Notification.EXTRA_TITLE) in titles
+    }
+
+    private fun describe(notification: Notification) =
+        "${notification.extras.getCharSequence(Notification.EXTRA_TEXT)}" +
+            " ongoing=${notification.flags and Notification.FLAG_ONGOING_EVENT != 0}" +
+            " progressMax=${notification.extras.getInt(Notification.EXTRA_PROGRESS_MAX)}"
+
+    /** Answers one HTTP request on a local port: [respond] runs once the request has been read. */
+    private class OneShotServer(respond: (Socket) -> Unit) : AutoCloseable {
+        private val server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1")).apply {
+            soTimeout = TIMEOUT_MS.toInt()
+        }
+        @Volatile private var failure: Throwable? = null
+        private val responder = thread {
+            try {
+                server.accept().use { socket ->
+                    socket.soTimeout = TIMEOUT_MS.toInt()
+                    val input = socket.getInputStream().bufferedReader()
+                    while (!input.readLine().isNullOrEmpty()) { /* Read the HTTP request. */ }
+                    respond(socket)
+                }
+            } catch (e: Exception) {
+                failure = e
+            }
+        }
+        val url = "http://127.0.0.1:${server.localPort}"
+
+        /** Waits for the response to be sent and fails the test if it could not be. */
+        fun finish() {
+            responder.join(TIMEOUT_MS)
+            assertFalse("HTTP responder did not finish", responder.isAlive)
+            failure?.let { throw AssertionError("HTTP responder failed", it) }
+        }
+
+        override fun close() = server.close()
     }
 
     private class Result : UniPackDownloader.Listener, UniPackImporter.OnEventListener {
@@ -199,5 +258,10 @@ class PackFailureNotificationDeviceTest {
     private companion object {
         const val TIMEOUT_MS = 15_000L
         const val POLL_INTERVAL_MS = 100L
+        // About 6 MB a second for 0.6 s: the percentage changes every few milliseconds.
+        const val FAST_BODY_BYTES = 6_400_000
+        const val FAST_CHUNK_BYTES = 64 * 1024
+        const val FAST_CHUNK_INTERVAL_MS = 10L
+        const val FAST_SEND_MS = 600L
     }
 }
