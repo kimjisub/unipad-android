@@ -179,7 +179,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
-| `MainActivityTest.testUnipackDeletionFailureKeepsHistory` | Read-only pack deletion reports an error and keeps history; fixture failure is an assertion, not a skip. |
+| `MainActivityTest.testUnipackDeletionFailureKeepsHistory` | Deleting a pack the app cannot empty reports an error and keeps history; fixture failure is an assertion, not a skip. |
 | `SettingsTest.testSettingsActivityNavigation` | Settings opens and returns to Main. |
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
@@ -286,8 +286,10 @@ engine. They are now ordinary tests of the actual Import and Settings controls. 
 - The instrumentation lives in the app process. Settings persistence rebuilds the cleared task;
   it does not kill and restart that process.
 - Emulator checks do not prove real USB MIDI hardware behavior, audible output, or every OS/device.
-- The deletion failure fixture requires storage that honors permission bits. If it cannot be made
-  read-only, the test fails explicitly and restores permissions instead of silently skipping.
+- The deletion failure fixture nests folders inside the pack until the innermost one is beyond the
+  kernel's path length limit, so the app cannot empty the pack. Permission bits were not used
+  because Android 10's emulated storage ignores them. If the fixture cannot be built, the test
+  fails explicitly instead of silently skipping, and it removes the folders afterwards.
 
 ## Overlapping file imports (isolated device regression)
 
