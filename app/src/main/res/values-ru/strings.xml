@@ -93,6 +93,11 @@
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
 	<string name="proLightMode">Режим Pro Light</string>
+	<string name="play_section_play_mode">Режим игры</string>
+	<string name="play_section_performance">Исполнение</string>
+	<string name="play_section_display">Экран</string>
+	<string name="play_section_tools">Инструменты</string>
+	<string name="autoMapping">Авто-маппинг</string>
 
 	<!--Version-->
 

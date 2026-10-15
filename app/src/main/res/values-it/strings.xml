@@ -93,6 +93,11 @@
 	<string name="hideUI">Nascondi UI</string>
 	<string name="watermark">Filigrana</string>
 	<string name="proLightMode">Modalità Pro Light</string>
+	<string name="play_section_play_mode">Modalità di gioco</string>
+	<string name="play_section_performance">Esecuzione</string>
+	<string name="play_section_display">Visualizzazione</string>
+	<string name="play_section_tools">Strumenti</string>
+	<string name="autoMapping">Mappatura Automatica</string>
 
 	<!--Version-->
 

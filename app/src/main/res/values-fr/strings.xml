@@ -93,6 +93,11 @@
 	<string name="hideUI">Masquer l\'interface</string>
 	<string name="watermark">Filigrane</string>
 	<string name="proLightMode">Mode Pro Light</string>
+	<string name="play_section_play_mode">Mode de jeu</string>
+	<string name="play_section_performance">Performance</string>
+	<string name="play_section_display">Affichage</string>
+	<string name="play_section_tools">Outils</string>
+	<string name="autoMapping">Mappage Automatique</string>
 
 	<!--Version-->
 

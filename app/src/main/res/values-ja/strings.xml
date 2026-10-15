@@ -93,6 +93,11 @@
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
 	<string name="proLightMode">Proライトモード</string>
+	<string name="play_section_play_mode">プレイモード</string>
+	<string name="play_section_performance">演奏</string>
+	<string name="play_section_display">表示</string>
+	<string name="play_section_tools">ツール</string>
+	<string name="autoMapping">自動マッピング</string>
 
 	<!--Version-->
 

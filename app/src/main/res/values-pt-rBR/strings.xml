@@ -93,6 +93,11 @@
 	<string name="hideUI">Ocultar UI</string>
 	<string name="watermark">Marca d\'água</string>
 	<string name="proLightMode">Modo Pro Light</string>
+	<string name="play_section_play_mode">Modo de jogo</string>
+	<string name="play_section_performance">Execução</string>
+	<string name="play_section_display">Exibição</string>
+	<string name="play_section_tools">Ferramentas</string>
+	<string name="autoMapping">Mapeamento Automático</string>
 
 	<!--Version-->
 

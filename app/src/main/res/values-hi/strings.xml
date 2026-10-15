@@ -93,6 +93,11 @@
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
 	<string name="proLightMode">प्रो लाइट मोड</string>
+	<string name="play_section_play_mode">प्ले मोड</string>
+	<string name="play_section_performance">प्रदर्शन</string>
+	<string name="play_section_display">डिस्प्ले</string>
+	<string name="play_section_tools">टूल्स</string>
+	<string name="autoMapping">स्वचालित मैपिंग</string>
 
 	<!--Version-->
 

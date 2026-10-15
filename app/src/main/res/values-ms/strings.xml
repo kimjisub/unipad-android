@@ -93,6 +93,11 @@
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tera Air</string>
 	<string name="proLightMode">Mod Pro Light</string>
+	<string name="play_section_play_mode">Mod Bermain</string>
+	<string name="play_section_performance">Persembahan</string>
+	<string name="play_section_display">Paparan</string>
+	<string name="play_section_tools">Alatan</string>
+	<string name="autoMapping">Pemetaan Automatik</string>
 
 	<!--Version-->
 

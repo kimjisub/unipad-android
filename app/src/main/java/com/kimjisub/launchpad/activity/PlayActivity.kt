@@ -22,6 +22,7 @@ import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -910,7 +911,7 @@ class PlayActivity : BaseActivity() {
 
 			// PLAY MODE — top of Performance (most frequently changed during a session)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
-				SectionTitle("Play Mode", sectionColor)
+				SectionTitle(string.play_section_play_mode, sectionColor)
 				PlayModeSegmented(playModeFill.text.primary, tint.copy(alpha = playModeFill.alpha))
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
@@ -919,7 +920,7 @@ class PlayActivity : BaseActivity() {
 				Spacer(modifier = Modifier.height(16.dp))
 			}
 
-			SectionTitle("Performance", sectionColor)
+			SectionTitle(string.play_section_performance, sectionColor)
 			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, tint, accentColor)
 			OptionSwitch(vm.scbLed, string.led, textColor, tint, accentColor)
 			// NOTE: AutoPlay transport controls intentionally removed here — the chrome column
@@ -927,14 +928,14 @@ class PlayActivity : BaseActivity() {
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Display", sectionColor)
+			SectionTitle(string.play_section_display, sectionColor)
 			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, tint, accentColor)
 			OptionSwitch(vm.scbWatermark, string.watermark, textColor, tint, accentColor)
 			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Tools", sectionColor)
+			SectionTitle(string.play_section_tools, sectionColor)
 			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
 			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
@@ -990,7 +991,7 @@ class PlayActivity : BaseActivity() {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-				Text("Auto Mapping…", color = textColor, fontSize = 13.sp)
+				Text(stringResource(string.autoMapping) + "…", color = textColor, fontSize = 13.sp)
 				Spacer(modifier = Modifier.height(4.dp))
 				androidx.compose.material3.LinearProgressIndicator(
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
@@ -1008,16 +1009,16 @@ class PlayActivity : BaseActivity() {
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				Text("Auto Mapping", color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
+				Text(stringResource(string.autoMapping), color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
 				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
 	}
 
 	@Composable
-	private fun SectionTitle(title: String, color: Color) {
+	private fun SectionTitle(@StringRes titleRes: Int, color: Color) {
 		Text(
-			text = title.uppercase(),
+			text = stringResource(titleRes).uppercase(),
 			color = color,
 			fontSize = 11.sp,
 			letterSpacing = 1.sp,
