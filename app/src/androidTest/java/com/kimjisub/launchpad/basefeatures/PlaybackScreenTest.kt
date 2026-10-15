@@ -1,7 +1,11 @@
 package com.kimjisub.launchpad.basefeatures
 
+import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.unloadKoinModules
@@ -27,5 +31,19 @@ abstract class PlaybackScreenTest {
         } finally {
             if (this::doubles.isInitialized) unloadKoinModules(doubles)
         }
+    }
+
+    /**
+     * Opens the pack in the given pad input mode with the press light on. A pack with keyLED starts
+     * with it off; the option is set on the screen's state rather than through the options panel,
+     * whose open/close by Back is not what these tests check. The caller restores [prefs]' mode.
+     */
+    protected fun openPlayWithPressLight(prefs: PreferenceManager, slide: Boolean) {
+        prefs.slideMode = slide
+        screen.openPlay()
+        screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
+        assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
+        val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
+        assertEquals("Slide Mode applied on the play screen must match the mode under test", slide, applied)
     }
 }

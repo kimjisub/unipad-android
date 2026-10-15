@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.graphics.Point
 import android.os.SystemClock
 import android.view.InputDevice
 import android.view.MotionEvent
@@ -93,69 +94,68 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     private fun cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain() {
         resetTouchFixture()
         android.util.Log.i("TouchCancellation", "cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain")
-        withTouchFixture(slide = false, finitePad = true) { pads ->
+        withTouchFixture(slide = false, finitePad = true) { pads, fingers ->
             fun pressed(index: Int) = screen.onMain {
                 screen.vm().channelManager.get(0, index)?.channel == Channel.PRESSED &&
                     screen.vm().ledRunner!!.isEventExist(0, index)
             }
-            fun start(gesture: CancelledGesture, index: Int): Int {
-                val id = gesture.down(index)
+            fun start(index: Int): Int {
+                val id = fingers.down(center(index))
                 screen.await("Pad $index was not pressed with a running LED") { pressed(index) }
                 assertEquals(-1, audio.loops.last())
                 return id
             }
-            val gesture = CancelledGesture()
-            try {
-                start(gesture, 1)
-                val voice = audio.plays.size
-                val before = audio.stoppedVoices.size
-                gesture.cancel()
-                try {
-                    screen.await("Cancelled pad 1 still has a pressed light or running LED") { released(pads, 1) }
-                    assertEquals(listOf(voice), audio.stoppedVoices.drop(before))
-                } finally { captureAfterDraw("single-pad-cancel") }
-                val after = audio.stoppedVoices.size
-                gesture.repeatCancelAndUp()
-                assertEquals("Repeated cancel/up stopped another voice", after, audio.stoppedVoices.size)
-                val repressed = start(gesture, 1)
-                gesture.up(repressed)
-                screen.await("Repressed pad did not release") { released(pads, 1) }
-                assertEquals(audio.plays.size, audio.stoppedVoices.last())
+            start(1)
+            val voice = audio.plays.size
+            val before = audio.stoppedVoices.size
+            fingers.cancelRemaining()
+            checkThenCapture("single-pad-cancel") {
+                screen.await("Cancelled pad 1 still has a pressed light or running LED") { released(pads, 1) }
+                assertEquals(listOf(voice), audio.stoppedVoices.drop(before))
+            }
+            val after = audio.stoppedVoices.size
+            repeatCancelAndUp(fingers)
+            assertEquals("Repeated cancel/up stopped another voice", after, audio.stoppedVoices.size)
+            val repressed = start(1)
+            fingers.up(repressed)
+            screen.await("Repressed pad did not release") { released(pads, 1) }
+            assertEquals(audio.plays.size, audio.stoppedVoices.last())
 
-                val other = start(gesture, 2)
-                val otherVoice = audio.plays.size
-                val cancelled = start(gesture, 1)
-                val cancelledVoice = audio.plays.size
-                val stops = audio.stoppedVoices.size
-                // Android 13+ reports an individually cancelled finger as POINTER_UP with FLAG_CANCELED.
-                gesture.up(cancelled, cancelled = true)
-                screen.await("Individually cancelled pad did not release") { released(pads, 1) }
-                assertEquals(listOf(cancelledVoice), audio.stoppedVoices.drop(stops))
-                assertTrue("The other pad must stay held", pressed(2))
-                captureAfterDraw("one-of-two-pads-cancel")
-                val afterIndividualCancel = audio.stoppedVoices.size
-                gesture.repeatIndividualUp()
-                assertEquals("Repeated individual cancellation requested another stop", afterIndividualCancel, audio.stoppedVoices.size)
-                assertTrue("Repeated individual cancellation released the other pad", pressed(2))
-                val again = start(gesture, 1)
-                gesture.up(again)
-                assertFalse("Repress/release stopped the other voice", audio.stoppedVoices.drop(stops).contains(otherVoice))
-                assertTrue("The other pad must stay held", pressed(2))
-                gesture.up(other)
-                screen.await("Other pad did not release") { released(pads, 2) }
-                assertEquals(otherVoice, audio.stoppedVoices.last())
+            val other = start(2)
+            val otherVoice = audio.plays.size
+            val cancelled = start(1)
+            val cancelledVoice = audio.plays.size
+            val stops = audio.stoppedVoices.size
+            fingers.up(cancelled, cancelled = true)
+            screen.await("Individually cancelled pad did not release") { released(pads, 1) }
+            assertEquals(listOf(cancelledVoice), audio.stoppedVoices.drop(stops))
+            assertTrue("The other pad must stay held", pressed(2))
+            captureAfterDraw("one-of-two-pads-cancel")
+            val afterIndividualCancel = audio.stoppedVoices.size
+            fingers.redeliverEnd()
+            fingers.redeliverEnd(flags = 0)
+            assertEquals("Repeated individual cancellation requested another stop", afterIndividualCancel, audio.stoppedVoices.size)
+            assertTrue("Repeated individual cancellation released the other pad", pressed(2))
+            val again = start(1)
+            fingers.up(again)
+            assertFalse("Repress/release stopped the other voice", audio.stoppedVoices.drop(stops).contains(otherVoice))
+            assertTrue("The other pad must stay held", pressed(2))
+            fingers.up(other)
+            screen.await("Other pad did not release") { released(pads, 2) }
+            assertEquals(otherVoice, audio.stoppedVoices.last())
 
-                // Finite samples follow the existing UP rule: releasing does not stop their voice.
-                for (cancel in listOf(false, true)) {
-                    val id = gesture.down(3)
-                    screen.await("Finite sample did not play") { audio.loops.lastOrNull() == 0 }
-                    val count = audio.stoppedVoices.size
-                    if (cancel) gesture.cancel() else gesture.up(id)
-                    screen.await("Finite sample pad stayed pressed") { released(pads, 3) }
-                    assertEquals("Finite sound was cut off", count, audio.stoppedVoices.size)
-                }
-                android.util.Log.i("TouchCancellation", "per-pad plays=${audio.plays} stops=${audio.stoppedVoices}")
-            } finally { gesture.cancel() }
+            // Finite samples follow the existing UP rule: releasing does not stop their voice.
+            for (cancel in listOf(false, true)) {
+                val requested = audio.plays.size
+                val id = fingers.down(center(3))
+                // soundOn stops the pad's previous voice before it plays, so wait for this press's own request.
+                screen.await("Finite sample did not play") { audio.plays.size == requested + 1 && audio.loops.last() == 0 }
+                val count = audio.stoppedVoices.size
+                if (cancel) fingers.cancelRemaining() else fingers.up(id)
+                screen.await("Finite sample pad stayed pressed") { released(pads, 3) }
+                assertEquals("Finite sound was cut off", count, audio.stoppedVoices.size)
+            }
+            android.util.Log.i("TouchCancellation", "per-pad plays=${audio.plays} stops=${audio.stoppedVoices}")
         }
     }
 
@@ -166,53 +166,56 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     private fun checkWholeCancellation(slide: Boolean) {
         resetTouchFixture()
         android.util.Log.i("TouchCancellation", "wholeTouchStreamCancellation slide=$slide")
-        withTouchFixture(slide) { pads ->
-            val gesture = CancelledGesture()
-            try {
-                gesture.down(1)
-                gesture.down(2)
-                screen.await("Two looping pads did not start") { audio.plays.size == 2 && screen.onMain {
-                    (1..2).all { screen.vm().channelManager.get(0, it)?.channel == Channel.PRESSED &&
-                        screen.vm().ledRunner!!.isEventExist(0, it) }
-                } }
-                assertEquals(listOf(-1, -1), audio.loops.toList())
-                captureAfterDraw(if (slide) "slide-cancel-before" else "whole-cancel-before")
-                val stopCount = audio.stoppedVoices.size
-                gesture.cancel()
-                try {
-                    screen.await("Whole cancellation left lights or LED execution") { (1..2).all { released(pads, it) } }
-                    assertEquals(setOf(1, 2), audio.stoppedVoices.drop(stopCount).toSet())
-                    assertEquals(2, audio.stoppedVoices.size - stopCount)
-                } finally { captureAfterDraw(if (slide) "slide-cancel-after" else "whole-cancel-after") }
-                val after = audio.stoppedVoices.size
-                gesture.repeatCancelAndUp()
-                assertEquals("Repeated cancel/up requested another stop", after, audio.stoppedVoices.size)
-                val id = gesture.down(1)
-                screen.await("Repress after cancellation did not play") { audio.plays.size == 3 }
-                gesture.up(id)
-                screen.await("Repress after cancellation did not release") { released(pads, 1) }
-                android.util.Log.i("TouchCancellation", "whole-cancel slide=$slide plays=${audio.plays} stops=${audio.stoppedVoices}")
-            } finally { gesture.cancel() }
+        withTouchFixture(slide) { pads, fingers ->
+            fingers.down(center(1))
+            fingers.down(center(2))
+            screen.await("Two looping pads did not start") { audio.plays.size == 2 && screen.onMain {
+                (1..2).all { screen.vm().channelManager.get(0, it)?.channel == Channel.PRESSED &&
+                    screen.vm().ledRunner!!.isEventExist(0, it) }
+            } }
+            assertEquals(listOf(-1, -1), audio.loops.toList())
+            captureAfterDraw(if (slide) "slide-cancel-before" else "whole-cancel-before")
+            val stopCount = audio.stoppedVoices.size
+            fingers.cancelRemaining()
+            checkThenCapture(if (slide) "slide-cancel-after" else "whole-cancel-after") {
+                screen.await("Whole cancellation left lights or LED execution") { (1..2).all { released(pads, it) } }
+                assertEquals(setOf(1, 2), audio.stoppedVoices.drop(stopCount).toSet())
+                assertEquals(2, audio.stoppedVoices.size - stopCount)
+            }
+            val after = audio.stoppedVoices.size
+            repeatCancelAndUp(fingers)
+            assertEquals("Repeated cancel/up requested another stop", after, audio.stoppedVoices.size)
+            val id = fingers.down(center(1))
+            screen.await("Repress after cancellation did not play") { audio.plays.size == 3 }
+            fingers.up(id)
+            screen.await("Repress after cancellation did not release") { released(pads, 1) }
+            android.util.Log.i("TouchCancellation", "whole-cancel slide=$slide plays=${audio.plays} stops=${audio.stoppedVoices}")
         }
     }
 
-    private fun withTouchFixture(slide: Boolean, finitePad: Boolean = false, check: (List<PadView>) -> Unit) {
+    private fun withTouchFixture(slide: Boolean, finitePad: Boolean = false, check: (List<PadView>, Fingers) -> Unit) {
         val prefs = PreferenceManager(screen.context)
         val original = prefs.slideMode
-        prefs.slideMode = slide
+        val fingers = Fingers(screen)
         try {
             val pack = screen.pack()
             File(pack, "keySound").writeText("1 1 2 silence.wav 0\n1 1 3 silence2.wav 0\n" +
                 if (finitePad) "1 1 4 silence.wav\n" else "")
             for (column in 2..3) File(pack, "keyLED/1 1 $column 0").writeText("o 1 $column a 5\nd 100\n")
-            screen.openPlay()
-            screen.options()
-            screen.clickText(R.string.feedbackLight)
-            screen.device.pressBack()
-            screen.await("Options remained open") { screen.onMain { !screen.vm().isOptionWindowVisible } }
-            check(screen.onMain { screen.views(screen.resumed().window.decorView).filterIsInstance<PadView>() })
-        } finally { prefs.slideMode = original }
+            openPlayWithPressLight(prefs, slide)
+            check(screen.onMain { screen.views(screen.resumed().window.decorView).filterIsInstance<PadView>() }, fingers)
+        } finally {
+            try { fingers.cancelRemaining() } finally { prefs.slideMode = original }
+        }
     }
+
+    /** After a whole cancel, delivers it again and then a lift of its first finger, as a defensive duplicate. */
+    private fun repeatCancelAndUp(fingers: Fingers) {
+        fingers.redeliverEnd()
+        fingers.redeliverEnd(MotionEvent.ACTION_UP, pointers = 1)
+    }
+
+    private fun center(index: Int) = screen.padBounds()[index].let { Point(it.centerX(), it.centerY()) }
 
     private fun released(pads: List<PadView>, index: Int) = screen.onMain {
         val channel = screen.vm().channelManager.get(0, index)?.channel
@@ -220,73 +223,22 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             !screen.vm().ledRunner!!.isEventExist(0, index) && ledIsOff(pads[index])
     }
 
-    /** Sends cancellation through the real window, including a cancelled individual pointer. */
-    private inner class CancelledGesture {
-        private val held = mutableListOf<Pair<Int, Int>>() // pointer id to pad index
-        private var cancelled = emptyList<Pair<Int, Int>>()
-        private var downAt = 0L
-        private var lastIndividualUp: Pair<Int, List<Pair<Int, Int>>>? = null
-
-        fun down(index: Int): Int {
-            val id = generateSequence(0) { it + 1 }.first { id -> held.none { it.first == id } }
-            if (held.isEmpty()) downAt = SystemClock.uptimeMillis()
-            held += id to index
-            inject(if (held.size == 1) MotionEvent.ACTION_DOWN else
-                MotionEvent.ACTION_POINTER_DOWN or (held.lastIndex shl MotionEvent.ACTION_POINTER_INDEX_SHIFT), held)
-            return id
-        }
-
-        fun up(id: Int, cancelled: Boolean = false) {
-            val index = held.indexOfFirst { it.first == id }
-            check(index >= 0)
-            val action = if (held.size == 1) MotionEvent.ACTION_UP else
-                MotionEvent.ACTION_POINTER_UP or (index shl MotionEvent.ACTION_POINTER_INDEX_SHIFT)
-            if (cancelled) lastIndividualUp = action to held.toList()
-            inject(action, held, if (cancelled) MotionEvent.FLAG_CANCELED else 0)
-            held.removeAt(index)
-        }
-
-        fun cancel() {
-            if (held.isEmpty()) return
-            cancelled = held.toList()
-            inject(MotionEvent.ACTION_CANCEL, held)
-            held.clear()
-        }
-
-        fun repeatCancelAndUp() {
-            check(held.isEmpty() && cancelled.isNotEmpty())
-            // InputDispatcher rejects events after CANCEL. Deliver these defensive repeats to
-            // the real Activity window instead, without claiming the OS accepted a new gesture.
-            inject(MotionEvent.ACTION_CANCEL, cancelled, direct = true)
-            inject(MotionEvent.ACTION_UP, cancelled.take(1), direct = true)
-        }
-
-        fun repeatIndividualUp() {
-            val (action, pointers) = checkNotNull(lastIndividualUp)
-            inject(action, pointers, MotionEvent.FLAG_CANCELED, direct = true)
-            inject(action, pointers, direct = true)
-        }
-
-        private fun inject(action: Int, pointers: List<Pair<Int, Int>>, flags: Int = 0, direct: Boolean = false) {
-            val pads = screen.padBounds()
-            val properties = pointers.map { (id, _) -> MotionEvent.PointerProperties().apply {
-                this.id = id; toolType = MotionEvent.TOOL_TYPE_FINGER
-            } }.toTypedArray()
-            val coordinates = pointers.map { (_, pad) -> MotionEvent.PointerCoords().apply {
-                x = pads[pad].centerX().toFloat(); y = pads[pad].centerY().toFloat(); pressure = 1f; size = 1f
-            } }.toTypedArray()
-            val event = MotionEvent.obtain(downAt, SystemClock.uptimeMillis(), action, pointers.size,
-                properties, coordinates, 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, flags)
-            try {
-                if (direct) screen.onMain { screen.resumed().dispatchTouchEvent(event) }
-                else assertTrue("Touch injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true))
-            } finally { event.recycle() }
-        }
-    }
-
     private fun ledIsOff(pad: PadView): Boolean {
         val led = pad.findViewById<View>(com.kimjisub.design.R.id.led)
         return (led.background as? android.graphics.drawable.ColorDrawable)?.color == 0
+    }
+
+    /** Runs [check] and captures [name] after it; a failed capture never hides the check's own failure. */
+    private fun checkThenCapture(name: String, check: () -> Unit) {
+        var failure: Throwable? = null
+        try {
+            check()
+        } catch (e: Throwable) {
+            failure = e
+            throw e
+        } finally {
+            try { captureAfterDraw(name) } catch (e: Throwable) { failure?.addSuppressed(e) ?: throw e }
+        }
     }
 
     private fun captureAfterDraw(name: String) {

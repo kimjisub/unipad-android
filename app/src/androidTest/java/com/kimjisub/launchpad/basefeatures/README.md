@@ -117,7 +117,7 @@ press/release check and then runs three isolated scenarios, each with a fresh sy
   `UiAutomation` and cancels their whole stream. Both pressed lights, keyLED executions and
   infinite voices must release, with one stop request for each voice.
 - `slideTouchCancellationStillReleasesBothPads`: injects two pointers and CANCEL through
-  the actual window with Slide Mode enabled and verifies both infinite voices stop, with no extra stop from
+  the actual window with Slide Mode enabled (checked as applied on the play screen) and verifies both infinite voices stop, with no extra stop from
   a repeated CANCEL or following UP.
 
 These are synthetic events delivered to real screen input paths, not physical-finger checks.
@@ -131,8 +131,10 @@ Captured PNGs include `single-pad-cancel`, `one-of-two-pads-cancel`, `whole-canc
 and `whole-cancel-after`, plus the same pair with a `slide-cancel` prefix.
 The former per-pad input ignored CANCEL. The current Compose input already turns
 CANCEL into releases, so these checks protect that behavior without restoring the old listeners.
-The OS rejects duplicate events after CANCEL; defensive repeat events are dispatched
-directly to the real Activity window. The first cancellation always uses UiAutomation.
+Every gesture goes through `Fingers`. The OS rejects duplicate events after CANCEL; defensive
+repeat events are dispatched directly to the real Activity window (`Fingers.redeliverEnd`).
+The first cancellation always uses UiAutomation. A failed screenshot after a failed release
+check is attached to that failure instead of replacing it.
 
 Run the existing test entry, or run the full BaseFeaturesSuite as above:
 
