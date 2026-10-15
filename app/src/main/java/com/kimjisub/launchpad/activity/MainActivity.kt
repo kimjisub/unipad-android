@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,8 +34,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -644,8 +646,10 @@ class MainActivity : BaseActivity() {
 
 		// From API 35 the window is edge-to-edge: the navigation bar sits over the bottom (gesture handle)
 		// or a side (3-button bar in landscape), and a display cutout can take a side as well. Below API 35
-		// the window already fits the system bars, so these insets are zero there.
-		val safeBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+		// the window already fits the system bars, so these insets are zero there. The keyboard is left
+		// out: it covers the panels as it always has rather than squeezing them.
+		val barsAndCutout = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -656,7 +660,7 @@ class MainActivity : BaseActivity() {
 			Row(
 				modifier = Modifier
 					.fillMaxSize()
-					.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+					.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
 			) {
 				// Left panel (weight 2 = 40%)
 				Box(
@@ -664,7 +668,8 @@ class MainActivity : BaseActivity() {
 						.weight(2f)
 						.fillMaxHeight()
 						.windowInsetsPadding(safeBottom)
-						.padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
+						.padding(start = 16.dp, top = 16.dp, bottom = 16.dp)
+						.testTag("main_left_panel"),
 				) {
 					Crossfade(
 						targetState = selectedItem,

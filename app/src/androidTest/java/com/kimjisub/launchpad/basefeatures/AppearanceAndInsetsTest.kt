@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.DisplayOverlays
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
@@ -107,10 +108,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 assertEquals(1, screen.onMain { vm.chain.value })
                 screen.onMain {
                     val decor = activity.window.decorView
-                    val safe = screen.bounds(decor)
-                    val insets = ViewCompat.getRootWindowInsets(decor)!!
-                        .getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-                    safe.left += insets.left; safe.top += insets.top; safe.right -= insets.right; safe.bottom -= insets.bottom
+                    val safe = freeArea(decor)!!
                     val controls = screen.views(decor).filter { it is PadView || it is ChainView }.filter { it.width > 0 && it.height > 0 }
                     assertEquals("Incomplete pad grid", 64, controls.count { it is PadView })
                     controls.forEach { assertTrue("Control ${screen.bounds(it)} outside $safe", safe.contains(screen.bounds(it))) }
@@ -129,13 +127,9 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     @Test fun mainScreenButtonsStayClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
-        // takes the opposite side; both are emulated through the system's own overlays.
-        val previous = enabledOverlays()
-        try {
-            for (overlay in listOf(THREE_BUTTON_NAVIGATION, HOLE_CUTOUT)) {
-                val result = screen.device.executeShellCommand("cmd overlay enable-exclusive --category $overlay")
-                assertTrue("Could not enable $overlay: $result", result.isBlank())
-            }
+        // takes the opposite side; both are emulated through the system's own overlays. From API 35 the
+        // window spans the display and reports both as insets; below it the window is laid out between them.
+        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
             screen.launch(MainActivity::class.java)
             screen.node(By.text(FeatureScreen.TITLE))
             for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
@@ -144,19 +138,13 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 screen.await("Side navigation bar and cutout did not reach the rotated window") {
                     screen.onMain {
                         val activity = screen.resumed()
-                        val insets = ViewCompat.getRootWindowInsets(activity.window.decorView) ?: return@onMain false
-                        val bar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-                        val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
-                        activity.display!!.rotation == expected && bar.left + bar.right > 0 && cutout.left + cutout.right > 0
+                        val display = activity.windowManager.maximumWindowMetrics.bounds
+                        val safe = freeArea(activity.window.decorView)
+                        activity.display!!.rotation == expected && safe != null && safe.left > display.left && safe.right < display.right
                     }
                 }
                 screen.instrumentation.waitForIdleSync()
-                val safe = screen.onMain {
-                    val decor = screen.resumed().window.decorView
-                    val insets = ViewCompat.getRootWindowInsets(decor)!!
-                        .getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-                    screen.bounds(decor).apply { left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom }
-                }
+                val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
                 screen.node(By.desc(screen.text(R.string.store)))
                 screen.node(By.desc(screen.text(R.string.import_unipack)))
                 screen.node(By.res("main_pack_${FeatureScreen.PACK_ID}"))
@@ -168,28 +156,38 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                     assertTrue("Control ${it.contentDescription ?: it.resourceName ?: it.text} $bounds outside $safe", safe.contains(bounds))
                 }
             }
-        } finally {
-            restoreOverlays(previous)
         }
     }
 
-    private fun enabledOverlays(): Map<String, String?> {
-        val enabled = screen.device.executeShellCommand("cmd overlay list").lines()
-            .filter { it.trim().startsWith("[x]") }.map { it.substringAfter("]").trim() }
-        return listOf(NAVIGATION_CATEGORY, CUTOUT_CATEGORY).associateWith { category -> enabled.firstOrNull { it.startsWith(category) } }
+    @Test fun mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        screen.launch(MainActivity::class.java)
+        screen.node(By.text(FeatureScreen.TITLE))
+        val panel = By.res("main_left_panel")
+        val before = screen.node(panel).visibleBounds
+        screen.clickDescription(R.string.transfer_search)
+        var keyboard = -1 to 0L
+        screen.await("Search keyboard did not finish opening") {
+            val height = screen.onMain {
+                ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
+            }
+            val now = android.os.SystemClock.elapsedRealtime()
+            if (height != keyboard.first) keyboard = height to now
+            height > 0 && now - keyboard.second >= KEYBOARD_SETTLE_MS
+        }
+        screen.instrumentation.waitForIdleSync()
+        screen.capture("main-search-keyboard")
+        assertEquals("Left panel changed size under the search keyboard", before, screen.node(panel).visibleBounds)
     }
 
-    private fun restoreOverlays(previous: Map<String, String?>) {
-        previous.forEach { (category, overlay) ->
-            if (overlay != null) screen.device.executeShellCommand("cmd overlay enable-exclusive --category $overlay")
-            else enabledOverlays()[category]?.let { screen.device.executeShellCommand("cmd overlay disable $it") }
-        }
+    /** The window's area on screen that neither a system bar nor the display cutout covers. */
+    private fun freeArea(decor: android.view.View): android.graphics.Rect? {
+        val insets = ViewCompat.getRootWindowInsets(decor)
+            ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()) ?: return null
+        return screen.bounds(decor).apply { left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom }
     }
 
     private companion object {
-        const val NAVIGATION_CATEGORY = "com.android.internal.systemui.navbar."
-        const val CUTOUT_CATEGORY = "com.android.internal.display.cutout.emulation."
-        const val THREE_BUTTON_NAVIGATION = NAVIGATION_CATEGORY + "threebutton"
-        const val HOLE_CUTOUT = CUTOUT_CATEGORY + "hole"
+        const val KEYBOARD_SETTLE_MS = 500L
     }
 }
