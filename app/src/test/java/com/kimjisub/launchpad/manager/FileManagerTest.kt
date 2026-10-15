@@ -329,6 +329,43 @@ class FileManagerTest {
 	}
 
 	@Test
+	fun removeDoubleFolder_keepsHiddenFoldersInTheWrapperNamedLikeItsTemporaryName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		val wrapper = File(root, "Pack")
+		File(wrapper, ".unwrap").mkdirs()
+		File(wrapper, ".unwrap/info").writeText("title=Pack")
+		File(wrapper, ".unwrap-1").mkdirs()
+		File(wrapper, ".unwrap-1/keySound").writeText("1 1 1 a.wav")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("title=Pack", File(root, ".unwrap/info").readText())
+		assertEquals("1 1 1 a.wav", File(root, ".unwrap-1/keySound").readText())
+		assertEquals(setOf(".unwrap", ".unwrap-1"), root.list().orEmpty().toSet())
+	}
+
+	@Test
+	fun removeDoubleFolder_picksATemporaryNameFreeBesideAndInsideTheWrapper() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		File(root, ".unwrap").mkdirs()
+		File(root, ".unwrap/leftover").writeText("leftover")
+		writePack(File(root, "Pack"))
+		File(root, "Pack/.unwrap (2)").mkdirs()
+		File(root, "Pack/.unwrap (2)/note").writeText("note")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("leftover", File(root, ".unwrap/leftover").readText())
+		assertEquals("note", File(root, ".unwrap (2)/note").readText())
+		assertEquals("title=Pack", File(root, "info").readText())
+		assertEquals("sound", File(root, "sounds/a.wav").readText())
+		assertEquals(
+			setOf(".unwrap", ".unwrap (2)", "info", "keySound", "sounds"),
+			root.list().orEmpty().toSet(),
+		)
+	}
+
+	@Test
 	fun removeDoubleFolder_throwsAndKeepsTheFileItCannotCopy() {
 		val outer = File(tempDir, "unreadable").apply { mkdirs() }
 		val inner = File(outer, "Pack").apply { mkdirs() }
@@ -339,10 +376,10 @@ class FileManagerTest {
 
 		assertThrows(IOException::class.java) { FileManager.removeDoubleFolder(outer.absolutePath) }
 
-		val kept = outer.walk().filter { it.isFile && it.name == "a.wav" }.toList()
-		assertEquals("the file that could not be copied is not deleted", 1, kept.size)
-		kept[0].setReadable(true)
-		assertEquals("sound", kept[0].readText())
+		val kept = File(outer, ".unwrap/a.wav")
+		assertTrue("the file that could not be copied is not deleted", kept.exists())
+		kept.setReadable(true)
+		assertEquals("sound", kept.readText())
 	}
 
 	// makeNomedia tests
