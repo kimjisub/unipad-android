@@ -148,10 +148,7 @@ class PackFailureNotificationDeviceTest {
     }
 
     private fun checkNotification(title: String, scenario: String) {
-        val active = notifications.activeNotifications.single {
-            it.notification.extras.getString(Notification.EXTRA_TITLE) == title
-        }
-        val notification = active.notification
+        val notification = awaitSettledNotification(title)
         // Capture before asserting so the same test also records the old failure wording.
         val label = InstrumentationRegistry.getArguments().getString("notificationEvidence")
         if (label != null) {
@@ -165,6 +162,24 @@ class PackFailureNotificationDeviceTest {
         assertEquals(0, notification.flags and Notification.FLAG_ONGOING_EVENT)
         assertEquals(0, notification.flags and Notification.FLAG_NO_CLEAR)
         assertTrue(notification.flags and Notification.FLAG_AUTO_CANCEL != 0)
+    }
+
+    /**
+     * The system applies notify() asynchronously, so right after the failure callback the shade
+     * can still hold the previous progress update. Waits for the failure text, then returns
+     * whatever is shown so the assertions report the wording that stayed.
+     */
+    private fun awaitSettledNotification(title: String): Notification {
+        val failed = context.getString(R.string.failed)
+        val deadline = System.currentTimeMillis() + TIMEOUT_MS
+        while (true) {
+            val notification = notifications.activeNotifications.single {
+                it.notification.extras.getString(Notification.EXTRA_TITLE) == title
+            }.notification
+            val text = notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
+            if (text == failed || System.currentTimeMillis() > deadline) return notification
+            Thread.sleep(POLL_INTERVAL_MS)
+        }
     }
 
     private class Result : UniPackDownloader.Listener, UniPackImporter.OnEventListener {
@@ -183,5 +198,6 @@ class PackFailureNotificationDeviceTest {
 
     private companion object {
         const val TIMEOUT_MS = 15_000L
+        const val POLL_INTERVAL_MS = 100L
     }
 }
