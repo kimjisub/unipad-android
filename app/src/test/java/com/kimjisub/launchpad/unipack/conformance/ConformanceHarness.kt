@@ -1,10 +1,11 @@
 package com.kimjisub.launchpad.unipack.conformance
 
+import android.media.AudioManager
 import android.os.SystemClock
+import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
-import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.LaunchpadColor
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -15,14 +16,13 @@ import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
+import com.kimjisub.launchpad.viewmodel.PlayMode
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -40,7 +40,6 @@ import kotlinx.serialization.json.putJsonObject
 import java.io.File
 import java.nio.file.Files
 import java.util.IdentityHashMap
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -190,6 +189,11 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * One virtual clock for SystemClock, the LED runner's tick (called the way its coroutine calls it)
  * and the runners' threads. The auto-play runner polls the clock on its own thread, so every
  * change of time waits until that thread has read the new value and finished the pass that read it.
+ *
+ * The play screen's view model is set up the way PlayActivity does it (initState, initPlayback), so
+ * its chain observer and options are in place; only its LED and auto-play runners are swapped for ones
+ * this run drives, of the same classes. Leaving and returning to the screen are PlayActivity's onStop
+ * and onStart/onResume calls into the view model.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
@@ -203,8 +207,10 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private val chainTag = ThreadLocal<String?>()
 
 	private val main = FakeMainDispatcher()
-	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
-	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, RecordingEngine { file, loop ->
+		val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
+		events.add(event("sound", pressChain, pressX, pressY, name, loop))
+	})
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 	private val lit = HashMap<String, Pair<Int, Int>>()
 	private val wormholes = ArrayList<Triple<Long, Int, Int>>()
@@ -212,9 +218,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private var pressX = 0
 	private var pressY = 0
 
-	private lateinit var led: LedRunner
-	private lateinit var sound: SoundRunner
 	private var autoPlay: AutoPlayRunner? = null
+	private var finished = false
 
 	fun run(): List<JsonElement> {
 		Dispatchers.setMain(main)
@@ -238,15 +243,18 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
 					"stop" -> stop()
+					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
+					"start" -> start()
+					"resume" -> afterAutoPlayPass("auto play to continue", STARTING) { vm.autoPlayResume() }
 					else -> error("${c.id}: unknown scenario step $name")
 				}
 			}
 			return checkpoints
 		} finally {
 			autoPlay?.stop()
-			if (::led.isInitialized) led.stop()
-			if (::sound.isInitialized) sound.destroy()
-			scope.cancel()
+			vm.ledRunner?.stop()
+			vm.soundRunner?.destroy()
+			vm.viewModelScope.cancel()
 			unmockkStatic(SystemClock::class)
 			Dispatchers.resetMain()
 		}
@@ -261,14 +269,16 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	private fun setUp() {
 		vm.unipack = pack
-		vm.channelManager = ChannelManager(pack.buttonX, pack.buttonY)
+		vm.uiCallback = LedSink()
+		vm.initState()
+		vm.setupCheckBoxListeners()
 		// Pro light mode on. Off, which is the play screen's default (PlayActivityViewModel.proLightMode),
 		// hides the round and logo lights of a keyLED file, and the cases that light them would see nothing.
-		vm.channelManager.setCirIgnore(ChannelManager.Channel.LED, false)
-		vm.chain.range = 0 until pack.chain
-		vm.scbFeedbackLight.setChecked(false)
-		vm.scbLed.setChecked(true)
-		vm.uiCallback = LedSink()
+		vm.scbProLightMode.setChecked(true)
+		// The option window open with the UI hidden: the screen's own lights on the round buttons (selected
+		// chain, option bar, logo) are all off, so only the pack's lights are reported.
+		vm.scbHideUI.setChecked(true)
+		vm.toggleOptionWindow(true)
 		vm.chain.addObserver { curr, _ ->
 			val tag = chainTag.get()
 			if (tag == null) {
@@ -276,29 +286,36 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 				events.add(event("chain", curr))
 			} else if (tag.isNotEmpty()) events.add(event(tag, curr))
 		}
+		vm.initPlayback()
+		// Touch feedback off, which initPlayback turns on for a pack without a keyLED file: the cases report
+		// the pack's own lights only.
+		vm.scbFeedbackLight.setChecked(false)
+		vm.scbLed.setChecked(true)
 
-		led = deps.wrapLedRunner(LedRunner(pack, vm.ledRunnerListener, vm.chain, 3_600_000L))
-		vm.ledRunner = led
+		// The app's LED runner ticks every 4 ms of real time. This one is the same class ticked on the
+		// virtual clock; its own coroutine runs the first tick at launch and then waits an hour.
+		vm.ledRunner?.let { vm.ledRunner = deps.wrapLedRunner(LedRunner(pack, vm.ledRunnerListener, vm.chain, 3_600_000L)) }
+		waitUntil("the sounds to finish loading", seconds = 10) { main.runAll(); !vm.soundLoadingActive }
+		check(!finished) { "${c.id}: sound loading failed" }
+		start()
+		// The screen's own lights blink on and off while the options above are set; a case starts after that.
+		check(lit.isEmpty()) { "${c.id}: lights left on after setup: $lit" }
+		events.clear()
+	}
+
+	/** Back on the play screen, as PlayActivity.onStart and onResume do it. */
+	private fun start() {
+		val led = vm.ledRunner
+		watchReads.set(0)
 		watchFrom.set(0)
 		vm.screenVisible = true
-		waitUntil("the LED runner's first tick") { watchReads.get() >= 1 }
-		led.afterDelivery { }
+		if (led != null && led.active) {
+			waitUntil("the LED runner's first tick") { watchReads.get() >= 1 }
+			led.afterDelivery { }
+		}
 		watchFrom.set(Long.MAX_VALUE)
-
-		val loaded = CountDownLatch(1)
-		var failure: Throwable? = null
-		sound = SoundRunner(pack, vm.chain, object : SoundRunner.LoadingListener {
-			override fun onStart(soundCount: Int) {}
-			override fun onProgressTick() {}
-			override fun onEnd() = loaded.countDown()
-			override fun onException(throwable: Throwable) { failure = throwable; loaded.countDown() }
-		}, scope, RecordingEngine { file, loop ->
-			val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
-			events.add(event("sound", pressChain, pressX, pressY, name, loop))
-		})
-		check(loaded.await(10, TimeUnit.SECONDS)) { "${c.id}: the sounds did not finish loading" }
-		failure?.let { throw AssertionError("${c.id}: sound loading failed", it) }
-		vm.soundRunner = sound
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
 	}
 
 	/**
@@ -322,7 +339,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 		override fun updateTraceLogOverlay() {}
 		override fun showToast(resId: Int) {}
-		override fun finishActivity() {}
+		override fun finishActivity() { finished = true }
 		override fun copyToClipboard(text: String) {}
 		override fun setChainViewVisibility(index: Int, visibility: Int) {}
 		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {}
@@ -370,11 +387,28 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 		val runner = AutoPlayRunner(pack, listener, vm.chain)
 		autoPlay = runner
+		vm.autoPlayRunner = runner
+		afterAutoPlayPass("the auto-play runner's first pass", STARTING) { vm.switchPlayMode(PlayMode.AutoPlay) }
+	}
+
+	/**
+	 * Runs [action] and, when auto play was or is now playing, waits until its runner has read the clock
+	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
+	 * reads the clock once, at its top, and the next pass's read marks its end. Starting or continuing
+	 * reads it once more before the first pass (the start time, or the time spent paused); pausing reads it
+	 * at least twice after the pass in progress before the runner waits.
+	 */
+	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
+		val runner = autoPlay
+		val wasPlaying = runner != null && runner.active && runner.playmode
 		watchReads.set(0)
 		watchFrom.set(0)
-		runner.launch()
-		waitUntil("the auto-play runner's first pass") { watchReads.get() >= 2 || !runner.active }
+		action()
+		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
+			waitUntil(what) { watchReads.get() >= reads || !runner.active }
+		}
 		watchFrom.set(Long.MAX_VALUE)
+		main.runAll()
 	}
 
 	private fun advance(ms: Int) {
@@ -384,7 +418,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			left -= step
 			val now = clock.get() + step
 			setClock(now)
-			if (led.active) loopMethod.invoke(led)
+			vm.ledRunner?.takeIf { it.active }?.let { loopMethod.invoke(it) }
 			main.runAll()
 			awaitWormholes(now)
 		}
@@ -392,7 +426,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	private fun setClock(now: Long) {
 		val runner = autoPlay
-		if (runner == null || !runner.active) {
+		if (runner == null || !runner.active || !runner.playmode) {
 			clock.set(now)
 			return
 		}
@@ -415,17 +449,19 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 	}
 
-	/** Leaving the play screen, as PlayActivity.onStop does it: the view model clears the lights. */
-	private fun stop() {
-		autoPlay?.stop()
+	/**
+	 * Leaving the play screen, as PlayActivity.onStop does it: a permanent audio focus loss pauses auto
+	 * play where it is and silences the pack, then the LED runner and the audio stream stop and the
+	 * lights are cleared. The sounds stay loaded. Giving the focus back to the system is not modelled.
+	 */
+	private fun stop() = afterAutoPlayPass("auto play to pause") {
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
 		vm.screenVisible = false
 		vm.ledInit()
-		sound.destroy()
-		main.runAll()
 	}
 
-	private fun waitUntil(what: String, condition: () -> Boolean) {
-		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+	private fun waitUntil(what: String, seconds: Long = 5, condition: () -> Boolean) {
+		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(seconds)
 		while (!condition()) {
 			check(System.nanoTime() < deadline) { "${c.id}: timed out waiting for $what" }
 			Thread.sleep(1)
@@ -434,6 +470,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	private companion object {
 		const val TICK_MS = 4
+		const val STARTING = 3
 	}
 }
 
