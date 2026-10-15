@@ -264,6 +264,70 @@ class FileManagerTest {
 		assertFalse(inner.exists())
 	}
 
+	private fun writePack(dir: File) {
+		dir.mkdirs()
+		File(dir, "info").writeText("title=Pack")
+		File(dir, "keySound").writeText("1 1 1 a.wav")
+		File(dir, "sounds").mkdirs()
+		File(dir, "sounds/a.wav").writeText("sound")
+	}
+
+	private fun assertPackAtRoot(root: File) {
+		assertEquals("title=Pack", File(root, "info").readText())
+		assertEquals("1 1 1 a.wav", File(root, "keySound").readText())
+		assertEquals("sound", File(root, "sounds/a.wav").readText())
+		assertEquals(
+			setOf("info", "keySound", "sounds"),
+			root.listFiles().orEmpty().map { it.name }.toSet(),
+		)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInTwoFoldersOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack"))
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInThreeFoldersOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack/Pack"))
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInTwoFoldersOfTheSameNameBesideMacosx() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack"))
+		File(root, "__MACOSX/Pack/Pack").mkdirs()
+		File(root, "__MACOSX/Pack/Pack/._info").writeText("resource fork")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsFilesBesideAnInnerFolderOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		val wrapper = File(root, "Pack")
+		writePack(File(wrapper, "Pack"))
+		File(wrapper, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("readme", File(root, "readme.txt").readText())
+		assertEquals("title=Pack", File(root, "Pack/info").readText())
+		assertEquals("sound", File(root, "Pack/sounds/a.wav").readText())
+	}
+
 	@Test
 	fun removeDoubleFolder_throwsAndKeepsTheFileItCannotCopy() {
 		val outer = File(tempDir, "unreadable").apply { mkdirs() }
@@ -275,7 +339,10 @@ class FileManagerTest {
 
 		assertThrows(IOException::class.java) { FileManager.removeDoubleFolder(outer.absolutePath) }
 
-		assertTrue("the file that could not be copied is not deleted", sound.exists())
+		val kept = outer.walk().filter { it.isFile && it.name == "a.wav" }.toList()
+		assertEquals("the file that could not be copied is not deleted", 1, kept.size)
+		kept[0].setReadable(true)
+		assertEquals("sound", kept[0].readText())
 	}
 
 	// makeNomedia tests

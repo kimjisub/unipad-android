@@ -32,10 +32,27 @@ object FileManager {
 			val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
 			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
 				children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
-				moveDirectory(nonHidden[0], rootFolder)
+				moveDirectory(renameAside(nonHidden[0]), rootFolder)
 			} else {
 				return
 			}
+		}
+	}
+
+	/**
+	 * Renames [dir] to a free hidden name beside it. A wrapper holding an entry of its own name
+	 * (Pack/Pack/info) would otherwise be moved onto itself, and deleting the emptied source then
+	 * deleted the pack that had just been moved there.
+	 */
+	private fun renameAside(dir: File): File {
+		var i = 1
+		while (true) {
+			val aside = File(dir.parentFile, ".unwrap-$i")
+			if (!aside.exists()) {
+				if (!dir.renameTo(aside)) throw IOException("Could not rename ${dir.path}")
+				return aside
+			}
+			i++
 		}
 	}
 
