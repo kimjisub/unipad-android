@@ -184,6 +184,8 @@ class PackInstallTestEnv {
 
 	fun workspaceContents(): List<String> = workspace.list().orEmpty().sorted()
 
+	fun cacheContents(): List<String> = cache.list().orEmpty().sorted()
+
 	/** The server side of one download URL: `execute()` blocks until [open] or [fail]. */
 	class Gate {
 		private val entered = CountDownLatch(1)

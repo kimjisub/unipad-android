@@ -123,6 +123,7 @@ class BaseApplication : Application() {
 	private fun setupNotification() {
 		// minSdk 29+ always supports notification channels (introduced in API 26)
 		NotificationManager.createChannel(this)
+		NotificationManager.cancelLeftoverDownloadProgress(this)
 	}
 
 	private fun setupLogger() {

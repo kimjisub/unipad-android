@@ -250,6 +250,7 @@ claimed here as audio or hardware proof.
 | `AppUpdateNoticeTest.restsAreKeptOnDisk` | Decline time and pending download state persist in preferences. |
 | `AppDatabaseMigrationTest` | `migrate1To2_keepsBookmarksAndPlayHistory`, `v1Database_opensThroughTheAppBuilder`, `newerDatabase_isWipedInsteadOfThrowing`: real SQLite upgrade/open/downgrade. |
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
+| `LeftoverDownloadNotificationTest` | `startupRemovesOnlyUnfinishedDownloadProgress`: the start-up cleanup removes a download progress notification left by a killed process and keeps finished downloads and other channels' notifications. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |

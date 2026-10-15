@@ -62,13 +62,6 @@ object FileManager {
 	}
 
 	/**
-	 * Like [makeNextPath], but creates the empty file in the same step that finds the free
-	 * name, so a request running at the same time can never be handed the same file.
-	 */
-	fun claimNextFile(dir: File, name: String, extension: String): File =
-		claimNextPath(dir, name, extension) { it.createNewFile() }
-
-	/**
 	 * Renames the finished folder [staged] to the first free name in [dir], numbered as
 	 * [makeNextPath] does. The rename puts the whole pack in place at once and fails on a name
 	 * taken in the meantime, so two installs of the same name never share a folder; a name that is

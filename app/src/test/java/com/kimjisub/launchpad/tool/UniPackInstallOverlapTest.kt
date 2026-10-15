@@ -118,7 +118,7 @@ class UniPackInstallOverlapTest {
 		val (reading, fail) = env.gate(FIRST_URL).openBlockedBody(ByteArray(1024) { 7 }, false)
 		try {
 			assertTrue(reading.await(10, TimeUnit.SECONDS))
-			val partial = env.workspace.listFiles()!!.single { it.extension == "zip" }
+			val partial = env.workspace.walkTopDown().single { it.isFile && it.extension == "zip" }
 			assertEquals(1024L, partial.length())
 			val imported = Recorder()
 			env.finish(env.import(packZip("Imported"), imported))

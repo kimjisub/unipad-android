@@ -47,6 +47,7 @@ class UniPackDownloader(
 		private const val DOWNLOAD_BUFFER_SIZE = 1024
 		private const val PROGRESS_UPDATE_INTERVAL_MS = 20
 		private const val PERCENT_MULTIPLIER = 100
+		private const val ARCHIVE_NAME = "download.zip"
 	}
 
 	interface Listener {
@@ -91,9 +92,10 @@ class UniPackDownloader(
 	init {
 		scope.launch(Dispatchers.IO) {
 			// Another download of the same name may run at the same time, so only paths claimed here
-			// are written to or deleted. The pack is unpacked and checked in its own staging folder
-			// and appears in the list only once complete.
-			var claimedZip: File? = null
+			// are written to or deleted. The archive is received and the pack unpacked and checked in
+			// staging folders of their own, which the next start clears if the app is killed meanwhile,
+			// and the pack appears in the list only once complete.
+			var download: File? = null
 			var staged: File? = null
 			var claimedFolder: File? = null
 			var cancellationWatcher: Job? = null
@@ -104,8 +106,9 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onInstallStart() }
 
 				val workspace = workspace()
-				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
-				claimedZip = unipackFile
+				val downloadFolder = PackStaging.create(workspace)
+				download = downloadFolder
+				val unipackFile = File(downloadFolder, ARCHIVE_NAME)
 
 				stage = FailureStage.NETWORK
 				val call = FileApi.service.download(url)
@@ -243,7 +246,7 @@ class UniPackDownloader(
 				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
 				staged?.let(PackStaging::discard)
-				claimedZip?.let(FileManager::deleteDirectory)
+				download?.let(PackStaging::discard)
 			}
 		}
 	}
