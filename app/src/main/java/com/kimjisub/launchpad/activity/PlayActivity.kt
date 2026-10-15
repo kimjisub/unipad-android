@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.view.children
+import androidx.core.view.isVisible
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -82,6 +84,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
@@ -91,10 +94,6 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.LayoutModifier
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -550,7 +549,7 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsLeftContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsLeftContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
@@ -564,14 +563,14 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsRightContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsRightContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
 									orientation = LinearLayout.HORIZONTAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsBottomContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsBottomContainer }
 							)
 							AndroidView(
 								factory = { ctx -> TraceLogOverlayView(ctx).also { overlay ->
@@ -609,12 +608,19 @@ class PlayActivity : BaseActivity() {
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
 						val chromePlaceable = measurables[6].measure(unconstrained)
-						val padX = PlayLayout.padLeft(constraints.maxWidth, padPlaceable.width)
-						val padY = (constraints.maxHeight - padPlaceable.height) / 2
-						val leftPos = IntOffset(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
-						val rightPos = IntOffset(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
-						val topPos = IntOffset(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
-						val bottomPos = IntOffset(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
+						val placement = PlayLayout.place(
+							constraints.maxWidth, constraints.maxHeight,
+							pads = IntSize(padPlaceable.width, padPlaceable.height),
+							top = IntSize(topPlaceable.width, topPlaceable.height),
+							right = IntSize(rightPlaceable.width, rightPlaceable.height),
+							bottom = IntSize(bottomPlaceable.width, bottomPlaceable.height),
+							left = IntSize(leftPlaceable.width, leftPlaceable.height),
+						)
+						val (padX, padY) = placement.pads
+						val leftPos = placement.left
+						val rightPos = placement.right
+						val topPos = placement.top
+						val bottomPos = placement.bottom
 						// Chrome column on the right, inside the right inset, vertically centered on pads
 						val chromePos = IntOffset(
 							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
@@ -711,6 +717,32 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/**
+	 * Chain buttons for every pointer, taken in Compose like the pads. Compose stops handing an
+	 * embedded view the press that follows a mouse hover across the screen, so the buttons' own
+	 * clicks never came with a mouse. A chain is selected when the pointer that pressed it is
+	 * released over it, as a tap; a cancelled gesture selects nothing.
+	 */
+	private fun Modifier.chainTouchInput(container: () -> ViewGroup?) = pointerInput(Unit) {
+		awaitPointerEventScope {
+			val pressed = HashMap<Long, ChainView>()
+			while (true) {
+				for (change in awaitPointerEvent().changes) {
+					val id = change.id.value
+					if (change.changedToDownIgnoreConsumed()) {
+						container()?.chainAt(change.position)?.let { pressed[id] = it }
+					} else if (change.changedToUpIgnoreConsumed()) {
+						val chain = pressed.remove(id) ?: continue
+						if (!change.isConsumed && container()?.chainAt(change.position) === chain) chain.click()
+					}
+				}
+			}
+		}
+	}
+
+	private fun ViewGroup.chainAt(position: Offset): ChainView? = children.filterIsInstance<ChainView>().firstOrNull { chain ->
+		chain.isVisible && position.x >= chain.left && position.x < chain.right && position.y >= chain.top && position.y < chain.bottom
+	}
 
 	@Composable
 	private fun ChromeColumn() {
@@ -1035,15 +1067,6 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun scaleLayoutModifier(scale: Float): Modifier = object : LayoutModifier {
-		override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
-			val placeable = measurable.measure(constraints)
-			return layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
-				placeable.place(0, 0)
-			}
-		}
-	}
-
 	@Composable
 	private fun DrawableView(drawable: Drawable?, modifier: Modifier = Modifier, scaleType: ImageView.ScaleType = ImageView.ScaleType.FIT_CENTER) {
 		if (drawable == null) return
@@ -1077,7 +1100,7 @@ class PlayActivity : BaseActivity() {
 				rows = vm.unipack.buttonX,
 				columns = vm.unipack.buttonY,
 				square = vm.unipack.squareButton,
-				chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0,
+				sides = PlayLayout.chainSides(vm.scbProLightMode.isChecked(), vm.unipack.chain),
 			)
 
 			vm.setupCheckBoxListeners()
@@ -1178,10 +1201,12 @@ class PlayActivity : BaseActivity() {
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
-			if (i in 0..7) { chainsTopContainer?.addView(view) }
-			if (i in 8..15) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-			if (i in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-			if (i in 24..31) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			when (i / PlayLayout.CHAINS_PER_SIDE) {
+				0 -> chainsTopContainer?.addView(view)
+				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			}
 		}
 	}
 
@@ -1368,7 +1393,7 @@ class PlayActivity : BaseActivity() {
 	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
 	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
 	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
-	// asks for it again. The LED runner stops until onStart.
+	// asks for it again. The LED runner and the audio stream stop until onStart; loaded sounds stay.
 	override fun onStop() {
 		super.onStop()
 		audioFocus.abandon()

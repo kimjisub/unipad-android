@@ -77,7 +77,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -104,7 +104,6 @@ class SettingsActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 
 		val appVersionInfo = getAppVersionInfo()
-		val workspaces = workspaceManager.availableWorkspaces.toList()
 		val initialCategory = when (intent.getStringExtra(EXTRA_INITIAL_CATEGORY)) {
 			CATEGORY_STORAGE -> SettingsCategory.STORAGE
 			else -> SettingsCategory.INFO
@@ -115,7 +114,6 @@ class SettingsActivity : AppCompatActivity() {
 			UniPadTheme {
 				SettingsScreen(
 					appVersionInfo = appVersionInfo,
-					workspaces = workspaces,
 					prefManager = prefManager,
 					workspaceManager = workspaceManager,
 					initialCategory = initialCategory,
@@ -169,7 +167,11 @@ class SettingsActivity : AppCompatActivity() {
 
 	private fun copyFcmToken() {
 		try {
-			FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+			// Token registration is deprecated in firebase-messaging 25.1 in favour of installation-ID
+			// registration, which turns tokens off for every install; that move is a separate change.
+			@Suppress("DEPRECATION")
+			val token = FirebaseMessaging.getInstance().token
+			token.addOnCompleteListener { task ->
 				// task.result throws when the token fetch failed (Crashlytics 2f4ba056:
 				// IOException TOO_MANY_REGISTRATIONS on 4.1.4), so check first.
 				if (task.isSuccessful) {
@@ -221,7 +223,6 @@ private val DividerColor = Color(0xFF2A3648)
 @Composable
 private fun SettingsScreen(
 	appVersionInfo: String,
-	workspaces: List<WorkspaceManager.Workspace>,
 	prefManager: PreferenceManager,
 	workspaceManager: WorkspaceManager,
 	initialCategory: SettingsCategory = SettingsCategory.INFO,
@@ -284,7 +285,6 @@ private fun SettingsScreen(
 				)
 
 				SettingsCategory.STORAGE -> StorageContent(
-					workspaces = workspaces,
 					prefManager = prefManager,
 					workspaceManager = workspaceManager,
 					highlightBackup = highlightBackup,
@@ -708,7 +708,6 @@ private fun CommunityDialog(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun StorageContent(
-	workspaces: List<WorkspaceManager.Workspace>,
 	prefManager: PreferenceManager,
 	workspaceManager: WorkspaceManager,
 	highlightBackup: Boolean = false,
@@ -716,7 +715,9 @@ private fun StorageContent(
 	onBackupClick: () -> Unit = {},
 	onRestoreClick: () -> Unit = {},
 ) {
-	var downloadPath by remember { mutableStateOf(workspaceManager.downloadWorkspace.file.path) }
+	var workspaces by remember { mutableStateOf(emptyList<WorkspaceManager.Workspace>()) }
+	var unipackCounts by remember { mutableStateOf(emptyMap<String, Int>()) }
+	var downloadPath by remember { mutableStateOf<String?>(null) }
 	val snackbarHostState = remember { SnackbarHostState() }
 	val scope = rememberCoroutineScope()
 	var refreshKey by remember { mutableIntStateOf(0) }
@@ -724,6 +725,19 @@ private fun StorageContent(
 	LifecycleResumeEffect(Unit) {
 		refreshKey++
 		onPauseOrDispose {}
+	}
+
+	// Listing workspaces creates folders and counting packs reads every entry; on a slow card,
+	// doing either while drawing froze the screen. The download target is read only once the
+	// listing is back, so a choice made while counting is not overwritten.
+	LaunchedEffect(refreshKey) {
+		val (list, counts) = withContext(Dispatchers.IO) {
+			val list = workspaceManager.availableWorkspaces.toList()
+			list to list.associate { it.file.path to workspaceManager.getUnipackCount(it) }
+		}
+		workspaces = list
+		unipackCounts = counts
+		downloadPath = workspaceManager.downloadWorkspaceIn(list).file.path
 	}
 
 	Box(modifier = Modifier.fillMaxSize()) {
@@ -740,9 +754,7 @@ private fun StorageContent(
 				workspaces.forEachIndexed { index, workspace ->
 					val isDownloadTarget = workspace.file.path == downloadPath
 					val description = getWorkspaceDescription(workspace)
-					val unipackCount = remember(workspace.file.path, refreshKey) {
-						workspaceManager.getUnipackCount(workspace)
-					}
+					val unipackCount = unipackCounts[workspace.file.path] ?: 0
 
 					if (index > 0) CardDivider()
 

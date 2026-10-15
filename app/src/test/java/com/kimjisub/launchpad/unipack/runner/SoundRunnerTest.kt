@@ -67,8 +67,18 @@ class SoundRunnerTest {
 		var decodeGate: CountDownLatch? = null
 		val decodeEntered = CountDownLatch(1)
 
-		override fun start() = true
-		override fun stop() {}
+		/** Whether the output stream is open; Android 17 mutes an open stream while the app is hidden. */
+		@Volatile
+		var streamOpen = false
+			private set
+
+		override fun start(): Boolean {
+			streamOpen = true
+			return true
+		}
+		override fun stop() {
+			streamOpen = false
+		}
 
 		override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
 			decodesInFlight.incrementAndGet()
@@ -371,5 +381,58 @@ class SoundRunnerTest {
 		assertTrue(engine.liveIds.isEmpty())
 		awaitLoadJobsFinished()
 		assertTrue("failure escaped the load job: $uncaught", uncaught.isEmpty())
+	}
+
+	@Test
+	fun pausedStream_closesWithoutUnloadingAndResumesWithoutReloading() {
+		val unipack = pack(fileCount = 10)
+		val engine = FakeEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		assertTrue(engine.streamOpen)
+		val ids = unipack.sounds().map { it.id }
+
+		runner.pauseStream()
+		assertFalse("stream left open while the screen is hidden", engine.streamOpen)
+		assertEquals(10, engine.liveIds.size)
+
+		runner.resumeStream()
+		assertTrue("stream did not reopen when the screen came back", engine.streamOpen)
+		assertEquals("sounds were reloaded on return", 10, engine.loadCalls.get())
+		assertEquals(ids, unipack.sounds().map { it.id })
+		runner.destroy()
+	}
+
+	@Test
+	fun pausedBeforeLoading_loadsEverySoundWithTheStreamClosed() {
+		val unipack = pack(fileCount = 10)
+		val engine = FakeEngine()
+		val listener = RecordingListener(engine)
+		// The screen can be hidden before or after the loader opens the stream; both end closed.
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		runner.pauseStream()
+
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+		assertFalse("stream opened while the screen was hidden", engine.streamOpen)
+		assertTrue(unipack.sounds().all { it.id >= 0 })
+
+		runner.resumeStream()
+		assertTrue(engine.streamOpen)
+		runner.destroy()
+	}
+
+	@Test
+	fun resumeAfterDestroy_leavesTheStreamClosed() {
+		val unipack = pack(fileCount = 3)
+		val engine = FakeEngine()
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
+
+		runner.pauseStream()
+		runner.destroy()
+		runner.resumeStream()
+		assertFalse("a destroyed runner reopened the stream", engine.streamOpen)
 	}
 }

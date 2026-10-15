@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -45,18 +47,27 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-android
       - name: Build every debug module and compile both Kotlin variants
-        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :app:processReleaseManifest :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+      - name: Check debug builds send no Firebase reports and release builds are unchanged
+        run: >-
+          python3 scripts/check_debug_telemetry_manifest.py
+          app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+          app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 
   lint:
     name: Android lint
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

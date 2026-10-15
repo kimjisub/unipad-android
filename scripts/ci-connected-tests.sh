@@ -26,6 +26,11 @@ finish() {
   exit "$result"
 }
 trap finish EXIT
+# A run stopped early leaves the apps installed with the permissions its tests gave them,
+# so every run starts from a device these apps are not installed on.
+for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test com.kimjisub.design.test; do
+  adb -s "$ANDROID_SERIAL" uninstall "$package" > /dev/null 2>&1 || true
+done
 adb -s "$ANDROID_SERIAL" logcat -c
 tasks=()
 for module in "${MODULES[@]}"; do tasks+=(":$module:connectedDebugAndroidTest"); done

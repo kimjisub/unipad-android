@@ -2,10 +2,10 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
 import com.kimjisub.launchpad.R
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -85,7 +85,7 @@ class ZipThemeResources(
 	private fun loadPng(name: String): Drawable? {
 		val file = candidateFiles(themeDir, name).firstOrNull { it.exists() } ?: return null
 		val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
-		return BitmapDrawable(context.resources, bitmap)
+		return bitmap.toDrawable(context.resources)
 	}
 
 	private fun defaultDrawable(resId: Int): Drawable {
@@ -99,7 +99,7 @@ class ZipThemeResources(
 	private fun parseColor(hex: String?): Int? {
 		if (hex == null) return null
 		return try {
-			Color.parseColor(hex)
+			hex.toColorInt()
 		} catch (_: IllegalArgumentException) {
 			null
 		}

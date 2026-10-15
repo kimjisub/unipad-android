@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+	<issue id="IconDuplicates">
+		<!-- Launchpad X and Launchpad Mini MK3 look the same, so the device list shows one picture for both -->
+		<ignore path="src/main/res/drawable-nodpi/midi_lp_x.png" />
+		<ignore path="src/main/res/drawable-nodpi/midi_lp_mini_mk3.png" />
+	</issue>
+</lint>

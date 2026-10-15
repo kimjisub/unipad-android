@@ -12,11 +12,13 @@ runs:
         cache-read-only: true
     - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       with:
-        packages: platform-tools
+        cmdline-tools-version: '15859902'
+        packages: ''
+        accept-android-sdk-licenses: false
         log-accepted-android-sdk-licenses: false
     - name: Install Android SDK packages
       shell: bash
-      run: sdkmanager --sdk_root="$ANDROID_HOME" 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865' 'cmake;3.22.1'
+      run: bash scripts/install-android-sdk.sh
     - name: Use test-only Firebase configuration
       shell: bash
       run: cp .github/fixtures/google-services.json app/google-services.json

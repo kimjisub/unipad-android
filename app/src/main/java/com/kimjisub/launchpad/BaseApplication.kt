@@ -3,41 +3,94 @@ package com.kimjisub.launchpad
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import android.os.StrictMode
+import androidx.core.content.edit
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.kimjisub.launchpad.di.appModule
+import com.kimjisub.launchpad.diagnostics.SystemExitReporter
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackStaging
+import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
+import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.GlobalContext.startKoin
 import java.io.File
 
 class BaseApplication : Application() {
 	companion object {
-		private const val DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS = 60L
 		private const val PREF_NAME = "data"
 		private const val KEY_SELECTED_THEME = "SelectedTheme"
 		private const val CRASH_KEY_INSTALL_SPLITS = "install_splits"
 	}
 
+	private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
 	override fun onCreate() {
 		super.onCreate()
 
+		setupStrictMode()
 		recordInstallSplits()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			ioScope.launch {
+				try {
+					SystemExitReporter.collect(this@BaseApplication)
+				} catch (e: Exception) {
+					// Diagnostics must not prevent launch when the system history is unavailable.
+					Log.err("Could not read system exit history", e)
+				}
+			}
+		}
 		setupNotification()
 		setupLogger()
-		setupRemoteConfig()
 		setupBundledThemes()
+		setupOssLicensesTheme()
 
 		startKoin {
 			androidContext(applicationContext)
 			modules(appModule)
 		}
+		clearPackStagingLeftovers()
+	}
+
+	/**
+	 * Removes what an install or a move was building when the app was last killed. Runs once per
+	 * process on IO; new installs and moves await only the rename through [PackStaging.create].
+	 */
+	private fun clearPackStagingLeftovers() {
+		PackStaging.startCleanup(
+			scope = ioScope,
+			setAside = {
+				try {
+					val workspaces = GlobalContext.get().get<WorkspaceManager>().availableWorkspaces
+					workspaces.flatMap { PackStaging.setAsideLeftovers(it.file) }
+				} catch (e: Exception) {
+					Log.err("Pack staging cleanup failed", e)
+					emptyList()
+				}
+			},
+			deleteLeftovers = { leftovers ->
+				try {
+					if (leftovers.isNotEmpty()) {
+						Log.log("Clearing ${leftovers.size} unfinished pack folders")
+						leftovers.forEach(FileManager::deleteDirectory)
+					}
+				} catch (e: Exception) {
+					Log.err("Pack staging deletion failed", e)
+				}
+			},
+		)
 	}
 
 	/**
@@ -51,6 +104,20 @@ class BaseApplication : Application() {
 		val splits = names?.joinToString(",") ?: "none"
 		FirebaseCrashlytics.getInstance().setCustomKey(CRASH_KEY_INSTALL_SPLITS, splits)
 		Log.log("Install splits: $splits")
+	}
+
+	// Debug builds log file access on the main thread (`adb logcat -s StrictMode`), where a slow
+	// storage turns it into a frozen screen or an ANR. Logging only: platform and library reads
+	// are reported too, so stopping the app would break every test run.
+	private fun setupStrictMode() {
+		if (!BuildConfig.DEBUG) return
+		StrictMode.setThreadPolicy(
+			StrictMode.ThreadPolicy.Builder()
+				.detectDiskReads()
+				.detectDiskWrites()
+				.penaltyLog()
+				.build()
+		)
 	}
 
 	private fun setupNotification() {
@@ -69,9 +136,19 @@ class BaseApplication : Application() {
 		Logger.d("Logger Ready")
 	}
 
+	/**
+	 * The license screen follows the system light/dark setting unless told otherwise; UniPad is
+	 * always dark. Set here rather than when the screen is opened, because a process restored
+	 * onto the license screen never passes through the screen that opened it.
+	 */
+	private fun setupOssLicensesTheme() {
+		OssLicensesMenuActivity.setTheme(UniPadColorScheme, UniPadColorScheme, UniPadTypography)
+	}
+
 	private fun setupBundledThemes() {
 		migrateBundledThemePreference()
-		cleanupLegacyExtractedThemes()
+		// Deleting whole theme folders on the first launch after an update froze startup (ANR).
+		ioScope.launch { cleanupLegacyExtractedThemes() }
 	}
 
 	private fun migrateBundledThemePreference() {
@@ -84,7 +161,7 @@ class BaseApplication : Application() {
 
 			for (name in bundledNames) {
 				if (selectedTheme == "zip://$name") {
-					pref.edit().putString(KEY_SELECTED_THEME, "asset://$name").apply()
+					pref.edit { putString(KEY_SELECTED_THEME, "asset://$name") }
 					Log.log("Migrated theme preference: zip://$name → asset://$name")
 					break
 				}
@@ -123,17 +200,4 @@ class BaseApplication : Application() {
 			emptySet()
 		}
 	}
-
-	private fun setupRemoteConfig() {
-		val remoteConfig = FirebaseRemoteConfig.getInstance()
-
-		val configSettings = FirebaseRemoteConfigSettings.Builder().apply {
-			if (BuildConfig.DEBUG)
-				minimumFetchIntervalInSeconds = DEBUG_REMOTE_CONFIG_FETCH_INTERVAL_SECONDS
-		}.build()
-
-		remoteConfig.setConfigSettingsAsync(configSettings)
-		remoteConfig.fetchAndActivate()
-	}
-
 }
