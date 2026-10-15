@@ -187,6 +187,15 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
+| `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. |
+| `BackupFolderTest.disconnectAfterThePermissionIsGoneKeepsSettingsOpen` | Connect Documents/Unipad through the system folder picker; Disconnect after its permission is gone forgets it and Settings stays open. |
+| `BackupFolderTest.restoreAsksForTheFolderAgainWhenItsPermissionIsGone` | Restore offers Grant Access again for a saved folder whose permission is gone. |
+| `BackupFolderTest.restoreRefusesAFolderOtherThanUnipad` | Choosing Documents itself from Restore is refused: nothing saved, no permission kept, Grant Access still offered. |
+| `BackupFolderTest.restoreAcceptsTheUnipadFolder` | Choosing Documents/Unipad from Restore saves it and lists the backed-up folder. |
+| `BackupFolderTest.settingsWithoutFolderPickerReportsIt` | With the folder picker disabled, Connect shows a message and Settings stays open; the picker is enabled again after. |
+| `BackupFolderTest.restoreWithoutFolderPickerStaysOpen` | With the folder picker disabled, Grant Access leaves Restore open. |
+| `BackupFolderTest.themeImportWithoutFilePickerStaysOpen` | With the file pickers disabled, theme ZIP import leaves the theme screen open. |
+| `BackupFolderTest.packImportWithoutFilePickerStaysOpen` | With the file picker disabled, Import leaves Main open. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |

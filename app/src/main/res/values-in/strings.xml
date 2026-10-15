@@ -255,6 +255,8 @@
 	<string name="backup_grant_access">Hubungkan Folder Cadangan</string>
 	<string name="backup_revoke">Putuskan Folder Cadangan</string>
 	<string name="backup_invalid_folder">Silakan pilih folder Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad tidak dapat mempertahankan akses ke folder ini. Pilih Documents/Unipad lagi.</string>
+	<string name="picker_unavailable">Tidak ada aplikasi di perangkat ini yang dapat memilih file atau folder.</string>
 	<string name="backup_backup_button">Cadangkan</string>
 	<string name="backup_backup_description">Salin UniPacks ke folder cadangan</string>
 	<string name="backup_restore_button">Pulihkan</string>

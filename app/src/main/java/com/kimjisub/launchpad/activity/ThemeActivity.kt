@@ -82,6 +82,7 @@ import com.kimjisub.launchpad.adapter.ThemeType
 import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.Orange
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -176,6 +177,8 @@ private fun ThemeScreen(
 	onDelete: (ThemeItem) -> Unit,
 ) {
 	val context = LocalContext.current
+	// Resolved in composition so the message follows configuration changes (lint LocalContextGetResourceValueCall)
+	val pickerUnavailableMessage = stringResource(R.string.picker_unavailable)
 	var selectedIndex by remember(themes) { mutableIntStateOf(appliedIndex) }
 	var previewBitmaps by remember { mutableStateOf<PreviewBitmaps?>(null) }
 	var deleteTarget by remember { mutableStateOf<ThemeItem?>(null) }
@@ -331,7 +334,11 @@ private fun ThemeScreen(
 				if (selectedIndex == themes.size) {
 					AddThemePanel(
 						onCreateGuide = onCreateGuide,
-						onImportZip = { filePickerLauncher.launch("application/zip") },
+						onImportZip = {
+							if (!filePickerLauncher.tryLaunch("application/zip")) {
+								Toast.makeText(context, pickerUnavailableMessage, Toast.LENGTH_LONG).show()
+							}
+						},
 					)
 				} else {
 					Box(modifier = Modifier.fillMaxSize().clickable { isFullscreen = !isFullscreen }) {

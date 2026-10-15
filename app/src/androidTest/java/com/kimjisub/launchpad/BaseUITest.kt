@@ -223,6 +223,31 @@ abstract class BaseUITest {
 
     protected fun str(resId: Int): String = context.getString(resId)
 
+    /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
+    protected fun withoutHandlers(vararg queries: String, block: () -> Unit) {
+        val packages = queries.flatMap { query ->
+            device.executeShellCommand("cmd package query-activities --brief $query")
+                .lines()
+                .mapNotNull { Regex("""^\s+([\w.]+)/\S+$""").find(it)?.groupValues?.get(1) }
+        }.distinct()
+        try {
+            packages.forEach { device.executeShellCommand("pm disable-user --user 0 $it") }
+            block()
+        } finally {
+            packages.forEach { device.executeShellCommand("pm enable --user 0 $it") }
+        }
+    }
+
+    protected fun openSettings() {
+        val settingsButton = device.wait(Until.findObject(By.desc(str(R.string.setting))), 5000L)
+        assertNotNull("Could not find the Settings button", settingsButton)
+        settingsButton!!.click()
+        assertTrue(
+            "Did not transition to the settings screen",
+            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+        )
+    }
+
     /**
      * Launch the app and wait until MainActivity has resumed and its window is shown.
      * Splash finishes itself before starting MainActivity, so the app briefly has no window: waiting for
