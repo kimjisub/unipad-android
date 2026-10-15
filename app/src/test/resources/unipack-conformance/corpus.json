@@ -550,78 +550,6 @@
         "leds": [],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format"
-            ]
-          },
-          "note": "Android records a format warning (`info: … format is incorrect`) for the line without `=`; the pack opens and plays the same."
-        },
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format"
-            ]
-          },
-          "note": "iOS records a format warning for the line without `=`; the pack opens and plays the same."
-        }
       }
     },
     {
@@ -792,55 +720,6 @@
       "fingerprint": "f95645a1225af7ea7686dfc26cfba32aae24f7dcf223dff8389a76802351b64e",
       "expected": {
         "loaded": false
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 0,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format",
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "Android reads `abc` as 0 and opens the pack without a pad column: a format warning, buttonX missing, and the keySound line out of range."
-        },
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 0,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "iOS reads `abc` as 0 and opens the pack without a pad column: buttonX missing, and the keySound line out of range."
-        }
       }
     },
     {
@@ -1069,41 +948,46 @@
       "fingerprint": "da29d8d8572c9639b3f8c6903a1c6ea2eec6cd09215fb281e5771fcf32375b49",
       "expected": {
         "loaded": false
-      },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "iOS reads `info.json` when there is no `info` file and opens the pack."
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "INF-016",
+      "area": "info",
+      "title": "buttonY that is not a number aborts loading",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "Loading is aborted if buttonX or buttonY is not an integer"
         }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=abc\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "c4ecfd7ba4cf87f6b1ec0059da35a5677ecc800b320105023907de2de385d695",
+      "expected": {
+        "loaded": false
       }
     },
     {
