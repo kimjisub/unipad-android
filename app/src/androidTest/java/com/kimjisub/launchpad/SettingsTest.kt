@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad
 
 import android.app.Activity
+import android.os.Build
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,6 +32,10 @@ import org.junit.runner.RunWith
 class SettingsTest : BaseUITest() {
 
     private val prefs by lazy { PreferenceManager(context) }
+
+    private companion object {
+        const val SYSTEM_SETTINGS_PACKAGE = "com.android.settings"
+    }
 
     @Test
     fun testSettingsActivityNavigation() {
@@ -157,6 +162,45 @@ class SettingsTest : BaseUITest() {
         if (context.resources.configuration.locales[0].language != "en") {
             assertNull("Push identifier hint is still English", device.findObject(By.text("Tap to copy")))
         }
+    }
+
+    /**
+     * From Android 13 the language row opens the system's language screen for UniPad, which lists
+     * UniPad's translations (it closed at once while the app declared none). Below 13 the row only
+     * names the translators and tapping it leaves Settings as it was.
+     */
+    @Test
+    fun testLanguageRowOpensSystemAppLanguageScreen() {
+        launchToMainScreen()
+        openSettings()
+
+        val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+        assertNotNull("Settings content is not scrollable", content)
+        val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.language))))
+        assertNotNull("Language row not found", row)
+        row!!.click()
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            assertSettingsStillOpen("language")
+            takeScreenshot("settings_language_row_without_system_screen")
+            return
+        }
+        val korean = By.pkg(SYSTEM_SETTINGS_PACKAGE).text("한국어")
+        val list = device.wait(Until.findObject(By.pkg(SYSTEM_SETTINGS_PACKAGE).scrollable(true)), 10000L)
+        assertNotNull("The system language screen for UniPad did not open", list)
+        assertNotNull(
+            "The system language screen does not list Korean",
+            list!!.scrollUntil(Direction.DOWN, Until.findObject(korean))
+        )
+        Thread.sleep(1500L)
+        assertTrue("The system language screen closed by itself", device.hasObject(korean))
+        takeScreenshot("settings_language_system_screen")
+
+        device.pressBack()
+        assertTrue(
+            "Did not return to settings from the system language screen",
+            device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))), 5000L)
+        )
     }
 
     /**
