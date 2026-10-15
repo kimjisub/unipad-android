@@ -84,7 +84,8 @@ Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/d
 Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
 which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
 feature screens use `basefeatures-captures/`, readiness failures use
-`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+`activity-readiness-captures/`, Store cancellation uses `store-cancel-captures/<prefix>/` and Store download progress uses
+`store-progress-captures/<prefix>/`.
 Clear this root before each run, then pull it with
 `adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
 returning the device. The capture helper stages files in app-writable external storage, copies
@@ -193,6 +194,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
+| `StoreTest.testStoreDetailHasNoWebsiteButton` | A store entry's detail offers no website button: entries carry only their download address. |
 | `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. On API 33+, the test first grants notification permission to reproduce a prior download, then revokes it without killing the test process before startup; permission remains denied after browsing. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
@@ -257,6 +259,7 @@ claimed here as audio or hardware proof.
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
 | `PackFailureNotificationDeviceTest` | `missingDownloadShowsFailureWithoutProgressAndCanBeDismissed`, `connectionLostDuringFastDownloadShowsFailureWithoutProgress`, `invalidImportShowsFailureWithoutProgressAndCanBeDismissed`: real local HTTP 404, a connection reset right after fast progress (when Android drops further progress updates) and invalid ZIP failures leave only one notification, with the existing failure translation, no progress, and allow dismissal. API 29+ file-provider test APIs. Optional `notificationEvidence=<label>` saves notification shade screenshots. |
+| `StoreDownloadProgressDeviceTest` | Real store screen downloading from a local server. `topArrowWhileDownloadingKeepsTheStoreAndTheDownload`: the top arrow closes the detail, then refuses to leave mid-download and the pack still installs. `unknownSizeShowsTheReceivedAmountAndAnOpenEndedBar`: with no Content-Length the detail shows only the received MB and an indeterminate bar. `unpackingShowsAnOpenEndedBarInsteadOfStartingOver`: while unpacking the bar is indeterminate. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
