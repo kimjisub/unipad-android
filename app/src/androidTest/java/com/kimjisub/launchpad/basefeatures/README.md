@@ -95,7 +95,7 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -219,6 +219,17 @@ Not established by these tests:
 - A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
   request proves only that the app asked for it.
 
+## Pressing the edges of a pad
+
+`PadEdgeTouchTest` rewrites the fixture as a single chain in which every pad has its own silent
+sound file, opens it and presses each pad with one injected finger at its centre and, 4 px inside
+the pad, the middle of every edge and every corner. Every press must request that pad's own sound,
+and every pad must lie inside the grid the touch position is divided over. It runs three shapes:
+a 4 × 3 pack with stretched pads (`squareButton=false`, the shape of the drum packs that use it),
+an 8 × 8 stretched pack and an 8 × 8 square pack. Stretched pads used to be sized from the play
+area before its padding was taken off, so the lower edge of each pad played the pad below and the
+right edge the pad beside it; the square check keeps the usual layout covered by the same presses.
+
 ## Fixture and isolation
 
 `FeatureScreen` reuses `TestUniPack` (small generated silent WAVs, 8 × 8 pads, two chains,
@@ -232,7 +243,7 @@ also removed. Preference/locale changes and injected modules are restored in `fi
 ZIP bytes for the exact store fixture URL and fails on an unexpected URL. The fake catalogue
 implements the merged `StoreCatalog` subscription, with the same activity attachment/detachment
 contract as production. It needs no Firebase snapshots or SDK-private constructors. Keep the device offline before app launch because
-application initialization still initializes Firebase/remote configuration/analytics.
+application initialization still initializes Firebase/analytics.
 
 `RecordingAudio` uses the real WAV decoder and records `SoundRunner.Engine` start/load/play/stop
 requests without starting native audio output. `MidiConnection.attachTransport` temporarily wires

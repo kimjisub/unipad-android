@@ -17,7 +17,7 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
-For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
+For the deterministic 50-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on a borrowed API 35 emulator
@@ -28,6 +28,26 @@ environment before every shell command and borrow a device through the harness:
 ```bash
 . /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" up-android
 ```
+
+The complete suite requires an **API 35 Google APIs image without the Play Store**, with an
+installed and enabled browser that handles `https://play.google.com/store/apps/details` links.
+A Google Play image is unsuitable: `AppUpdateNoticeTest.storeOpensInABrowserWithoutPlay`
+would skip its browser fallback check. An image without a browser also skips that check.
+Before running, verify the following command lists at least one browser activity and no
+`com.android.vending` activity. Google APIs images can contain a Play license-checking stub
+under that package name; a package path alone does not prove that the Play Store handles links:
+
+```bash
+adb -s <printed-serial> shell cmd package query-activities --brief \
+  -a android.intent.action.VIEW \
+  -d https://play.google.com/store/apps/details?id=com.kimjisub.launchpad
+```
+
+If either prerequisite is missing, borrow a suitable image through the harness before testing.
+Do not count skips on an unsuitable image as a passing run. The fake Play update manager tests
+run without a Play Store install or network access; the browser check verifies the activity
+handoff without waiting for a network response. The missing-handler test restores every package
+it disables.
 
 Use only the printed serial as `ANDROID_SERIAL`. Run from this repository. Keep the APKs
 installed after the check: uninstalling deletes every pack in the debug app's storage.
@@ -186,7 +206,14 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityRecordingClipboard` | Stopping recording copies chain and touch commands to the clipboard. |
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
 | `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
-| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
+| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). Presses at each pad's edges and corners are checked by `basefeatures.PadEdgeTouchTest`. |
+| `PlayActivityTest.testEveryChainOfASmallPackWithManyChainsCanBeSelected` | A 4×3 pack with 24 chains shows every chain button inside the safe area, clear of the pads, in normal and Pro light mode; selecting chains 24, 5 and 18 and pressing the first pad is recorded. |
+| `PlayActivityTest.testRightOnlyChainsKeepTheirSizeInANarrowWindow` | A 4×4 pack with eight chains keeps pad-sized chain buttons in a narrow resizable window; all eight chains, pads, menu and logo stay clear. |
+| `PlayActivityTest.testBoundsOutsideTheResizedWindowNeverCountAsSettled` | Stale accessibility bounds outside the resized window never become a valid observation. |
+| `PlayActivityTest.testBoundsWaitForTwoMatchingReadingsInsideTheResizedWindow` | Ignore stale, missing and single fresh readings; require two matching bounds inside the current window. |
+| `PlayActivityTest.testSettledMenuOutsideTheSafeAreaStillFails` | The same safe-area verdict used by the window-change checks rejects a settled menu under a system bar and accepts one inside the safe area. |
+| `PlayActivityTest.testRotationMismatchRetriesTheWholeLayoutObservation` | Repeat the complete layout observation when the initial rotation is wrong but later correct; a persistently wrong rotation still fails after the bounded retries. |
+| `PlayActivityTest.testMenuOutsideTheWindowIsReportedAsALayoutFailure` | Move the real menu's parent outside the window after Play opens and require a layout failure, then restore the parent. |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
@@ -212,6 +239,15 @@ claimed here as audio or hardware proof.
 | Class | Tests / purpose |
 |---|---|
 | `PlayOptionPanelContrastTest` | `defaultSkinPanelUsesDarkReadableText`, `fallbackDarkPanelKeepsWhiteText`, `skinPanelColoursStayReadable`: panel text contrast. `defaultSkinKeepsItsAccentAndDarkensOnlyQuit`, `darkSkinLiftsDefaultAccentAndKeepsQuit`, `midGreySkinMarksStayReadable`: accent/arrow/Quit contrast. `readableSkinsKeepTheirTextColours`, `midGreyCardFillsThinJustEnoughForBodyContrast`, `midGreySkinTextReachesBodyContrast`, `knownLimitsGetTheMostReadableColour`, `readableSkinAccentIsPreserved`: text/fill contrast limits and preserved readable colours. |
+| `AppUpdateNoticeTest.downloadAndInstallAreSeparateChoices` | Offer, download progress and ready card; installation starts only after an explicit choice. |
+| `AppUpdateNoticeTest.downloadFinishingDuringPlayWaitsForTheList` | Completing a download while playing keeps Play in front; the ready card waits for return to the list. |
+| `AppUpdateNoticeTest.selectingAPackHidesTheCard` | Selecting a pack hides the update card; deselecting restores it. |
+| `AppUpdateNoticeTest.laterRestsAcrossRestartButTheLinkStillChecks` | Later survives a task restart; the manual check still works during the seven-day rest. |
+| `AppUpdateNoticeTest.checkingByHandWithNothingNewSaysSo` | Manual checking with no update shows and dismisses the result. |
+| `AppUpdateNoticeTest.failedInstallKeepsTheAppAndOffersRetryAndStore` | Failed installation keeps the pack list and offers retry and store choices. |
+| `AppUpdateNoticeTest.storeOpensInABrowserWithoutPlay` | With no Play Store and an enabled browser, the store choice resumes a cold browser. Required emulator conditions are above. |
+| `AppUpdateNoticeTest.storeWithNeitherPlayNorBrowserSaysSoAndKeepsTheApp` | With both handlers disabled, the store choice reports unavailability and keeps the app; packages are restored. |
+| `AppUpdateNoticeTest.restsAreKeptOnDisk` | Decline time and pending download state persist in preferences. |
 | `AppDatabaseMigrationTest` | `migrate1To2_keepsBookmarksAndPlayHistory`, `v1Database_opensThroughTheAppBuilder`, `newerDatabase_isWipedInsteadOfThrowing`: real SQLite upgrade/open/downgrade. |
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |

@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">확인</string>
@@ -236,7 +235,6 @@
 	<string name="workspace_documents_android10">Documents/Unipad (백업)</string>
 	<string name="workspace_app_storage">앱 저장소 (권장)</string>
 	<string name="workspace_internal_storage">내부 저장소</string>
-	<string name="workspace_internal_sd_card">내장 SD 카드</string>
 	<string name="workspace_external_sd_card_format">외장 SD 카드 %d</string>
 	<string name="workspace_unipack_count">%d개의 유니팩</string>
 

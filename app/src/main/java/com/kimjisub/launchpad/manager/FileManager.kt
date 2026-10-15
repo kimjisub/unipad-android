@@ -32,11 +32,21 @@ object FileManager {
 			val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
 			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
 				children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
-				moveDirectory(nonHidden[0], rootFolder)
+				moveDirectory(renameAside(nonHidden[0]), rootFolder)
 			} else {
 				return
 			}
 		}
+	}
+
+	/**
+	 * Renames [dir] to a hidden name that is free both beside it and inside it, so no entry of
+	 * [dir] (an inner folder of the same name, or one named like the temporary name) is moved
+	 * onto the folder it is being moved out of.
+	 */
+	private fun renameAside(dir: File): File {
+		val taken = { aside: File -> aside.exists() || File(dir, aside.name).exists() }
+		return claimNextPath(dir.parentFile!!, ".unwrap", "", taken) { !taken(it) && dir.renameTo(it) }
 	}
 
 	fun sortByTime(files: Array<File>): Array<File> {
@@ -77,13 +87,20 @@ object FileManager {
 	fun moveToNextFolder(staged: File, dir: File, name: String): File =
 		claimNextPath(dir, name, "") { !it.exists() && staged.renameTo(it) }
 
-	private fun claimNextPath(dir: File, name: String, extension: String, create: (File) -> Boolean): File {
+	/** Tries [create] on each numbered name in turn, skipping the names [isTaken] reports. */
+	private fun claimNextPath(
+		dir: File,
+		name: String,
+		extension: String,
+		isTaken: (File) -> Boolean = File::exists,
+		create: (File) -> Boolean,
+	): File {
 		val newName = filterFilename(name)
 		var i = 1
 		while (true) {
 			val candidate = numberedPath(dir, newName, extension, i)
 			if (create(candidate)) return candidate
-			if (!candidate.exists()) throw IOException("Could not create ${candidate.path}")
+			if (!isTaken(candidate)) throw IOException("Could not create ${candidate.path}")
 			i++
 		}
 	}
