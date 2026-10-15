@@ -1291,10 +1291,8 @@ class PlayActivity : BaseActivity() {
 
 	private var midiController: MidiController? = object : MidiController() {
 		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
-		override fun onDetach() {}
-		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
-			if (!vm.isOptionWindowVisible) vm.padTouch(x, y, upDown)
-		}
+		override fun onDetach() = releaseLaunchpadPads()
+		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 			if (upDown) {
 				if (!vm.isOptionWindowVisible) {
@@ -1328,6 +1326,8 @@ class PlayActivity : BaseActivity() {
 			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chain.refresh(); vm.refreshWatermark() }
 		}
 	}
+
+	private fun releaseLaunchpadPads() = vm.releaseControllerPads(padTouch::holds)
 
 	// endregion
 
@@ -1383,6 +1383,7 @@ class PlayActivity : BaseActivity() {
 		launchpadOutputEnabled = false
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
+		releaseLaunchpadPads()
 	}
 
 	override fun onStart() {
