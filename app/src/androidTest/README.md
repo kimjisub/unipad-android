@@ -17,7 +17,7 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
-For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
+For the deterministic 50-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on a borrowed API 35 emulator
