@@ -17,7 +17,7 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
-For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
+For the deterministic 50-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on a borrowed API 35 emulator
@@ -206,7 +206,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityRecordingClipboard` | Stopping recording copies chain and touch commands to the clipboard. |
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
 | `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
-| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
+| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). Presses at each pad's edges and corners are checked by `basefeatures.PadEdgeTouchTest`. |
 | `PlayActivityTest.testEveryChainOfASmallPackWithManyChainsCanBeSelected` | A 4×3 pack with 24 chains shows every chain button inside the safe area, clear of the pads, in normal and Pro light mode; selecting chains 24, 5 and 18 and pressing the first pad is recorded. |
 | `PlayActivityTest.testRightOnlyChainsKeepTheirSizeInANarrowWindow` | A 4×4 pack with eight chains keeps pad-sized chain buttons in a narrow resizable window; all eight chains, pads, menu and logo stay clear. |
 | `PlayActivityTest.testBoundsOutsideTheResizedWindowNeverCountAsSettled` | Stale accessibility bounds outside the resized window never become a valid observation. |
