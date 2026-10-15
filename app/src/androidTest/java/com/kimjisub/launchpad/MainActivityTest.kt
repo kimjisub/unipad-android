@@ -15,7 +15,6 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -116,11 +115,24 @@ class MainActivityTest : BaseUITest() {
      * Choosing UniPad's language in the system settings (Android 13+) changes the sort bar and its
      * list right away and after a relaunch. The names used to be read once by the view model, which
      * survives the change, so they stayed in the old language until the app was closed.
+     * Below Android 13 there is no per-app language; the sort bar shows the device language.
      */
     @Test
     fun testSortNamesFollowAppLanguageChange() {
-        assumeTrue("Per-app language needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         val originalMethod = prefs.sortMethod
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            try {
+                prefs.sortMethod = 2
+                launchToMainScreen()
+                assertTrue(
+                    "Sort bar does not show '${str(R.string.sort_download_date)}'",
+                    device.wait(Until.hasObject(By.text(str(R.string.sort_download_date))), 5000L)
+                )
+            } finally {
+                prefs.sortMethod = originalMethod
+            }
+            return
+        }
         val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
         val english = sortRes.map { strIn(Locale.ENGLISH, it) }
         val korean = sortRes.map { strIn(Locale.KOREAN, it) }
