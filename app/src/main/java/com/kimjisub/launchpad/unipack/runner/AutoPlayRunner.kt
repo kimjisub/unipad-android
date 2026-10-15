@@ -123,6 +123,9 @@ class AutoPlayRunner(
 
 	private fun guideKey(x: Int, y: Int) = x * 256 + y
 
+	/** A guide pad on a chain the user cannot select would be waited for forever, so it is passed over. */
+	private fun isSelectable(c: Int) = c in chain.range
+
 	private fun buildGuideTimeline(autoPlay: AutoPlay): List<GuideEvent> {
 		val events = mutableListOf<GuideEvent>()
 		var time = 0L
@@ -218,6 +221,10 @@ class AutoPlayRunner(
 									while (guideIndex < guideTimeline.size) {
 										val event = guideTimeline[guideIndex]
 										if (event.timeMs <= elapsed + GUIDE_LOOKAHEAD_MS) {
+											if (!isSelectable(event.chain)) {
+												guideIndex++
+												continue
+											}
 											if (event.chain != chain.value) {
 												// Chain mismatch — pause and show chain indicator
 												waitingForChain = event.chain
@@ -440,6 +447,10 @@ class AutoPlayRunner(
 			val (index, element) = elementAtProgress(autoPlay) ?: break
 			when (element) {
 				is AutoPlay.Element.On -> {
+					if (!isSelectable(element.currChain)) {
+						advanceProgressFrom(index)
+						continue@scanLoop
+					}
 					if (chain.value != element.currChain) {
 						if (newPending.isEmpty()) {
 							waitingForChain = element.currChain
