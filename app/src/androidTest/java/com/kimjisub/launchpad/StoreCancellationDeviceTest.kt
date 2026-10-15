@@ -190,7 +190,7 @@ class StoreCancellationDeviceTest {
             assertNull(other.error)
             val otherFolder = requireNotNull(other.folder)
             val otherBefore = hashes(otherFolder)
-            // Closing the real Activity destroys the same lifecycleScope as the store's top arrow.
+            // Closing the real Activity destroys the lifecycleScope the download runs in.
             screen.close()
             screen = null
             val start = SystemClock.elapsedRealtime()

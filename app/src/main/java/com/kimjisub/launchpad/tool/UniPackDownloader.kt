@@ -47,6 +47,10 @@ class UniPackDownloader(
 		private const val DOWNLOAD_BUFFER_SIZE = 1024
 		private const val PROGRESS_UPDATE_INTERVAL_MS = 20
 		private const val PERCENT_MULTIPLIER = 100
+
+		/** Share of [fileSize] received, or null when the server did not say how large the file is. */
+		fun fraction(downloadedSize: Long, fileSize: Long): Float? =
+			if (fileSize > 0) (downloadedSize.toFloat() / fileSize).coerceIn(0f, 1f) else null
 	}
 
 	interface Listener {
@@ -164,7 +168,7 @@ class UniPackDownloader(
 									downloadedSize += n.toLong()
 									val millis = SystemClock.elapsedRealtime()
 									if (millis - prevMillis > PROGRESS_UPDATE_INTERVAL_MS) {
-										val percent = if (fileSize > 0) (downloadedSize.toFloat() / fileSize * PERCENT_MULTIPLIER).toInt() else -1
+										val percent = fraction(downloadedSize, fileSize)?.let { (it * PERCENT_MULTIPLIER).toInt() } ?: -1
 										withContext(Dispatchers.Main) {
 											onDownloadProgress(
 												percent,
