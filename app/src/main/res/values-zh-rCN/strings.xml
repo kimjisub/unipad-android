@@ -257,6 +257,8 @@
 	<string name="backup_grant_access">连接备份文件夹</string>
 	<string name="backup_revoke">断开备份文件夹</string>
 	<string name="backup_invalid_folder">请选择 Documents/Unipad 文件夹</string>
+	<string name="backup_permission_refused">UniPad 无法保留此文件夹的访问权限。请重新选择 Documents/Unipad。</string>
+	<string name="picker_unavailable">此设备上没有可以选择文件或文件夹的应用。</string>
 	<string name="backup_backup_button">备份</string>
 	<string name="backup_backup_description">将 UniPacks 复制到备份文件夹</string>
 	<string name="backup_restore_button">恢复</string>

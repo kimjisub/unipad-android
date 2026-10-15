@@ -255,6 +255,8 @@
 	<string name="backup_grant_access">Yedek Klasörü Bağla</string>
 	<string name="backup_revoke">Yedek Klasörü Bağlantısını Kes</string>
 	<string name="backup_invalid_folder">Lütfen Documents/Unipad klasörünü seçin</string>
+	<string name="backup_permission_refused">UniPad bu klasöre erişimi koruyamadı. Documents/Unipad klasörünü yeniden seçin.</string>
+	<string name="picker_unavailable">Bu cihazda dosya veya klasör seçebilen bir uygulama yok.</string>
 	<string name="backup_backup_button">Yedekle</string>
 	<string name="backup_backup_description">UniPack\'ları yedek klasörüne kopyala</string>
 	<string name="backup_restore_button">Geri Yükle</string>

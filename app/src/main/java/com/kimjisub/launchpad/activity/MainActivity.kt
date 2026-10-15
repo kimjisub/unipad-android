@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -118,6 +119,7 @@ import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.tool.splitties.openPlayStorePage
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.Red
 import com.kimjisub.launchpad.ui.theme.SkyBlue
@@ -282,7 +284,12 @@ class MainActivity : BaseActivity() {
 						)
 					},
 					// Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j.
-					onLoadUniPackClick = { filePick.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+					onLoadUniPackClick = {
+						val zipTypes = arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")
+						if (!filePick.tryLaunch(zipTypes)) {
+							Toast.makeText(this@MainActivity, string.picker_unavailable, Toast.LENGTH_LONG).show()
+						}
+					},
 					onRestoreClick = {
 						settingsActivityResultLauncher.launch(
 							Intent(applicationContext, SettingsActivity::class.java).apply {
