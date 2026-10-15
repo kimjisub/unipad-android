@@ -95,10 +95,6 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         resetTouchFixture()
         android.util.Log.i("TouchCancellation", "cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain")
         withTouchFixture(slide = false, finitePad = true) { pads, fingers ->
-            fun pressed(index: Int) = screen.onMain {
-                screen.vm().channelManager.get(0, index)?.channel == Channel.PRESSED &&
-                    screen.vm().ledRunner!!.isEventExist(0, index)
-            }
             fun start(index: Int): Int {
                 val id = fingers.down(center(index))
                 screen.await("Pad $index was not pressed with a running LED") { pressed(index) }
@@ -169,10 +165,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         withTouchFixture(slide) { pads, fingers ->
             fingers.down(center(1))
             fingers.down(center(2))
-            screen.await("Two looping pads did not start") { audio.plays.size == 2 && screen.onMain {
-                (1..2).all { screen.vm().channelManager.get(0, it)?.channel == Channel.PRESSED &&
-                    screen.vm().ledRunner!!.isEventExist(0, it) }
-            } }
+            screen.await("Two looping pads did not start") { audio.plays.size == 2 && (1..2).all { pressed(it) } }
             assertEquals(listOf(-1, -1), audio.loops.toList())
             captureAfterDraw(if (slide) "slide-cancel-before" else "whole-cancel-before")
             val stopCount = audio.stoppedVoices.size
@@ -186,7 +179,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             repeatCancelAndUp(fingers)
             assertEquals("Repeated cancel/up requested another stop", after, audio.stoppedVoices.size)
             val id = fingers.down(center(1))
-            screen.await("Repress after cancellation did not play") { audio.plays.size == 3 }
+            screen.await("Repress after cancellation did not play") { audio.plays.size == 3 && pressed(1) }
             fingers.up(id)
             screen.await("Repress after cancellation did not release") { released(pads, 1) }
             android.util.Log.i("TouchCancellation", "whole-cancel slide=$slide plays=${audio.plays} stops=${audio.stoppedVoices}")
@@ -216,6 +209,16 @@ class TouchPlaybackTest : PlaybackScreenTest() {
     }
 
     private fun center(index: Int) = screen.padBounds()[index].let { Point(it.centerX(), it.centerY()) }
+
+    /**
+     * The pad shows its press light and its keyLED runs. Every press here waits for this before it
+     * lifts: the LED runner starts a pressed pad's keyLED on its next tick, and a lift before that
+     * tick does not stop it.
+     */
+    private fun pressed(index: Int) = screen.onMain {
+        screen.vm().channelManager.get(0, index)?.channel == Channel.PRESSED &&
+            screen.vm().ledRunner!!.isEventExist(0, index)
+    }
 
     private fun released(pads: List<PadView>, index: Int) = screen.onMain {
         val channel = screen.vm().channelManager.get(0, index)?.channel
