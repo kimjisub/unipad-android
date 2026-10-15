@@ -10,6 +10,7 @@ import androidx.test.uiautomator.By
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
 import com.kimjisub.launchpad.adapter.ThemeTool
@@ -123,5 +124,72 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         } finally {
             screen.onMain { activity.requestedOrientation = oldOrientation }
         }
+    }
+
+    @Test fun mainScreenButtonsStayClearOfSideNavigationBarAndCutout() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
+        // takes the opposite side; both are emulated through the system's own overlays.
+        val previous = enabledOverlays()
+        try {
+            for (overlay in listOf(THREE_BUTTON_NAVIGATION, HOLE_CUTOUT)) {
+                val result = screen.device.executeShellCommand("cmd overlay enable-exclusive --category $overlay")
+                assertTrue("Could not enable $overlay: $result", result.isBlank())
+            }
+            screen.launch(MainActivity::class.java)
+            screen.node(By.text(FeatureScreen.TITLE))
+            for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+                screen.onMain { screen.resumed().requestedOrientation = orientation }
+                val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+                screen.await("Side navigation bar and cutout did not reach the rotated window") {
+                    screen.onMain {
+                        val activity = screen.resumed()
+                        val insets = ViewCompat.getRootWindowInsets(activity.window.decorView) ?: return@onMain false
+                        val bar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                        val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+                        activity.display!!.rotation == expected && bar.left + bar.right > 0 && cutout.left + cutout.right > 0
+                    }
+                }
+                screen.instrumentation.waitForIdleSync()
+                val safe = screen.onMain {
+                    val decor = screen.resumed().window.decorView
+                    val insets = ViewCompat.getRootWindowInsets(decor)!!
+                        .getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                    screen.bounds(decor).apply { left += insets.left; top += insets.top; right -= insets.right; bottom -= insets.bottom }
+                }
+                screen.node(By.desc(screen.text(R.string.store)))
+                screen.node(By.desc(screen.text(R.string.import_unipack)))
+                screen.node(By.res("main_pack_${FeatureScreen.PACK_ID}"))
+                val controls = screen.device.findObjects(By.pkg(screen.context.packageName).clickable(true))
+                assertTrue("No main screen controls found", controls.isNotEmpty())
+                screen.capture("main-side-bar-$orientation")
+                controls.forEach {
+                    val bounds = it.visibleBounds
+                    assertTrue("Control ${it.contentDescription ?: it.resourceName ?: it.text} $bounds outside $safe", safe.contains(bounds))
+                }
+            }
+        } finally {
+            restoreOverlays(previous)
+        }
+    }
+
+    private fun enabledOverlays(): Map<String, String?> {
+        val enabled = screen.device.executeShellCommand("cmd overlay list").lines()
+            .filter { it.trim().startsWith("[x]") }.map { it.substringAfter("]").trim() }
+        return listOf(NAVIGATION_CATEGORY, CUTOUT_CATEGORY).associateWith { category -> enabled.firstOrNull { it.startsWith(category) } }
+    }
+
+    private fun restoreOverlays(previous: Map<String, String?>) {
+        previous.forEach { (category, overlay) ->
+            if (overlay != null) screen.device.executeShellCommand("cmd overlay enable-exclusive --category $overlay")
+            else enabledOverlays()[category]?.let { screen.device.executeShellCommand("cmd overlay disable $it") }
+        }
+    }
+
+    private companion object {
+        const val NAVIGATION_CATEGORY = "com.android.internal.systemui.navbar."
+        const val CUTOUT_CATEGORY = "com.android.internal.display.cutout.emulation."
+        const val THREE_BUTTON_NAVIGATION = NAVIGATION_CATEGORY + "threebutton"
+        const val HOLE_CUTOUT = CUTOUT_CATEGORY + "hole"
     }
 }

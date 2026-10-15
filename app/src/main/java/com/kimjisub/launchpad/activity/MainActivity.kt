@@ -23,13 +23,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -636,6 +642,10 @@ class MainActivity : BaseActivity() {
 			if (updateSafe) appUpdate?.onListReady()
 		}
 
+		// From API 35 the window is edge-to-edge: the navigation bar sits over the bottom (gesture handle)
+		// or a side (3-button bar in landscape), and a display cutout can take a side as well. Below API 35
+		// the window already fits the system bars, so these insets are zero there.
+		val safeBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -643,12 +653,17 @@ class MainActivity : BaseActivity() {
 				.semantics { testTagsAsResourceId = true },
 		) {
 			// Main two-panel layout
-			Row(modifier = Modifier.fillMaxSize()) {
+			Row(
+				modifier = Modifier
+					.fillMaxSize()
+					.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+			) {
 				// Left panel (weight 2 = 40%)
 				Box(
 					modifier = Modifier
 						.weight(2f)
 						.fillMaxHeight()
+						.windowInsetsPadding(safeBottom)
 						.padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
 				) {
 					Crossfade(
@@ -753,7 +768,10 @@ class MainActivity : BaseActivity() {
 									)
 								} else LazyColumn(
 									state = listState,
-									contentPadding = PaddingValues(top = 4.dp, bottom = 6.dp),
+									contentPadding = PaddingValues(
+										top = 4.dp,
+										bottom = 6.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+									),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
 								) {
