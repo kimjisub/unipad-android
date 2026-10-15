@@ -15,7 +15,7 @@ import java.util.Locale
 class AutoPlayFileReplacer(
 	private val now: () -> Date = ::Date,
 	private val write: (File, String) -> Unit = ::writeToDisk,
-	private val copy: (File, File) -> Unit = { from, to -> from.copyTo(to) },
+	private val copy: (File, File) -> Unit = ::copyToDisk,
 ) {
 	fun replace(autoPlayFile: File, content: String) {
 		val folder = autoPlayFile.absoluteFile.parentFile
@@ -53,6 +53,26 @@ class AutoPlayFileReplacer(
 			FileOutputStream(file).use {
 				it.write(content.toByteArray())
 				it.fd.sync()
+			}
+		}
+
+		/**
+		 * Copies [from] to [to] through a flushed file beside it, so [to] only ever appears whole and
+		 * stays whole after a power loss right after autoPlay is replaced.
+		 */
+		internal fun copyToDisk(from: File, to: File) {
+			val partial = File(to.path + TEMP_SUFFIX)
+			try {
+				from.inputStream().use { input ->
+					FileOutputStream(partial).use {
+						input.copyTo(it)
+						it.fd.sync()
+					}
+				}
+				if (!partial.renameTo(to)) throw IOException("Could not create ${to.path}")
+			} catch (e: Exception) {
+				partial.delete()
+				throw e
 			}
 		}
 	}

@@ -74,4 +74,30 @@ class AutoPlayFileReplacerTest {
 		assertEquals((earlier + "autoPlay").sorted(), files())
 		assertEquals("first", File(folder, earlier.single()).readText())
 	}
+
+	/**
+	 * The default backup copy goes through a flushed file and leaves only the whole backup. Whether
+	 * it survives a power loss cannot be checked in a unit test.
+	 */
+	@Test
+	fun theDefaultBackupCopy_keepsTheOldContentWholeAndNoPartialFile() {
+		createAutoPlay("old")
+
+		AutoPlayFileReplacer(now = { sameSecond }).replace(autoPlay, "new")
+
+		assertEquals("new", autoPlay.readText())
+		val backup = (files() - "autoPlay").single()
+		assertEquals("old", File(folder, backup).readText())
+	}
+
+	@Test
+	fun copyToDisk_failingToReadLeavesNoPartialFile() {
+		createAutoPlay()
+
+		assertThrows(IOException::class.java) {
+			AutoPlayFileReplacer.copyToDisk(File(folder, "missing"), File(folder, "autoPlay_backup"))
+		}
+
+		assertEquals(listOf("autoPlay"), files())
+	}
 }
