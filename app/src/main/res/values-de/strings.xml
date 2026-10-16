@@ -93,6 +93,12 @@
 	<string name="hideUI">UI ausblenden</string>
 	<string name="watermark">Wasserzeichen</string>
 	<string name="proLightMode">Pro-Licht-Modus</string>
+	<string name="play_section_play_mode">Spielmodus</string>
+	<string name="play_section_performance">Effekte</string>
+	<string name="play_section_display">Anzeige</string>
+	<string name="play_section_tools">Werkzeuge</string>
+	<string name="autoMapping">Auto-Mapping</string>
+	<string name="autoMappingRunning">Auto-Mapping…</string>
 
 	<!--Version-->
 

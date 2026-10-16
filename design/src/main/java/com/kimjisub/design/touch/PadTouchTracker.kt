@@ -38,6 +38,10 @@ class PadTouchTracker(
 		listener(cell / cols, cell % cols, false)
 	}
 
+	/** Whether a finger is holding pad (x, y). */
+	fun holds(x: Int, y: Int): Boolean =
+		x in 0 until rows && y in 0 until cols && held.containsValue(x * cols + y)
+
 	fun releaseAll() {
 		val cells = held.values.toList()
 		held.clear()
