@@ -4,14 +4,21 @@ import android.app.LocaleManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.LocaleList
+import android.os.SystemClock
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.tool.PackStorageChanges
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -295,6 +302,60 @@ class MainActivityTest : BaseUITest() {
         assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("back_from_store")
     }
+
+    /**
+     * Coming back to Main re-reads the pack list once, also after a download announced a storage
+     * change earlier; a change announced while Main is shown is one more read.
+     */
+    @Test
+    fun testReturningToMainReadsThePackListOnce() {
+        launchToMainScreen()
+        val start = settledListRefreshes()
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { PackStorageChanges.notifyChanged() }
+        val afterChange = settledListRefreshes()
+        assertEquals("a storage change on the shown main screen must re-read the list once", start + 1, afterChange)
+
+        device.findObject(By.desc(str(R.string.store))).click()
+        assertTrue("Did not transition to the store screen", waitForStoreScreen())
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        val afterStore = settledListRefreshes()
+        assertEquals("returning from the store must re-read the list once", afterChange + 1, afterStore)
+
+        openSettings()
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        assertEquals("returning from settings must re-read the list once", afterStore + 1, settledListRefreshes())
+    }
+
+    /** Completed list reads of the resumed main screen, once no read is running or starts for a while. */
+    private fun settledListRefreshes(): Int {
+        val deadline = SystemClock.uptimeMillis() + 15_000
+        var last = -1
+        var stableSince = SystemClock.uptimeMillis()
+        while (SystemClock.uptimeMillis() < deadline) {
+            var count = -1
+            var refreshing = true
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                val main = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().singleOrNull() ?: return@runOnMainSync
+                count = (delegate(main, "scrollToTopTrigger") as MutableIntState).intValue
+                refreshing = (delegate(main, "listRefreshing") as MutableState<*>).value as Boolean
+            }
+            if (count != last || refreshing) {
+                last = count
+                stableSince = SystemClock.uptimeMillis()
+            } else if (SystemClock.uptimeMillis() - stableSince >= 2_000) {
+                return count
+            }
+            SystemClock.sleep(100)
+        }
+        throw AssertionError("main screen list did not settle (last count $last)")
+    }
+
+    private fun delegate(main: MainActivity, property: String): Any =
+        MainActivity::class.java.getDeclaredField("$property\$delegate").apply { isAccessible = true }.get(main)!!
 
     /**
      * Tapping the order arrow currently also expands the sort dropdown (reported separately as an
