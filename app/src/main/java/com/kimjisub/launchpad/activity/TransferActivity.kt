@@ -1,14 +1,14 @@
 package com.kimjisub.launchpad.activity
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -63,10 +63,12 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.manager.BackupFolderAccess
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.SafMigrationHelper
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.SearchField
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
@@ -91,6 +93,7 @@ class TransferActivity : AppCompatActivity() {
 
 	private val workspaceManager: WorkspaceManager by inject()
 	private val prefManager: PreferenceManager by inject()
+	private val backupFolder by lazy { BackupFolderAccess(contentResolver, prefManager) }
 
 	private var screenState by mutableStateOf<TransferState>(TransferState.Loading)
 	private var customTitle by mutableStateOf<String?>(null)
@@ -99,13 +102,12 @@ class TransferActivity : AppCompatActivity() {
 		ActivityResultContracts.OpenDocumentTree()
 	) { uri ->
 		if (uri != null) {
-			contentResolver.takePersistableUriPermission(
-				uri,
-				Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-			)
-			prefManager.backupSafUri = uri.toString()
-			// Re-scan to pick up the new SAF uri
-			loadConfiguration()
+			when (backupFolder.connect(uri, DocumentFile.fromTreeUri(this, uri)?.name)) {
+				// Re-scan to pick up the new SAF uri
+				BackupFolderAccess.ConnectResult.CONNECTED -> loadConfiguration()
+				BackupFolderAccess.ConnectResult.WRONG_FOLDER -> toast(R.string.backup_invalid_folder)
+				BackupFolderAccess.ConnectResult.PERMISSION_REFUSED -> toast(R.string.backup_permission_refused)
+			}
 		}
 	}
 
@@ -166,12 +168,10 @@ class TransferActivity : AppCompatActivity() {
 	}
 
 	private fun launchSafPicker() {
-		val initialUri = DocumentsContract.buildDocumentUri(
-			"com.android.externalstorage.documents",
-			"primary:Documents"
-		)
-		safPickerLauncher.launch(initialUri)
+		if (!safPickerLauncher.tryLaunch(BackupFolderAccess.pickerStartUri())) toast(R.string.picker_unavailable)
 	}
+
+	private fun toast(@StringRes message: Int) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
 	private fun loadConfiguration() {
 		screenState = TransferState.Loading
@@ -188,8 +188,8 @@ class TransferActivity : AppCompatActivity() {
 			}
 
 			val workspaces = loadWorkspaces()
-			val backupSafUri = prefManager.backupSafUri
-			val targets = buildAllTargets(workspaces)
+			val backupSafUri = backupFolder.usableUri
+			val targets = buildAllTargets(workspaces, backupSafUri)
 
 			// Determine source and items
 			when {
@@ -307,7 +307,10 @@ class TransferActivity : AppCompatActivity() {
 	private suspend fun loadWorkspaces(): List<WorkspaceManager.Workspace> =
 		withContext(Dispatchers.IO) { workspaceManager.availableWorkspaces.toList() }
 
-	private fun buildAllTargets(workspaces: List<WorkspaceManager.Workspace>): List<TransferTarget> {
+	private fun buildAllTargets(
+		workspaces: List<WorkspaceManager.Workspace>,
+		backupSafUri: String? = backupFolder.usableUri,
+	): List<TransferTarget> {
 		val targets = mutableListOf<TransferTarget>()
 		workspaces.forEach { ws ->
 			targets.add(
@@ -319,7 +322,6 @@ class TransferActivity : AppCompatActivity() {
 				)
 			)
 		}
-		val backupSafUri = prefManager.backupSafUri
 		if (backupSafUri != null) {
 			targets.add(
 				TransferTarget(

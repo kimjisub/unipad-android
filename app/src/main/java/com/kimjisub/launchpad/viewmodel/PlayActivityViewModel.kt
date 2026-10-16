@@ -502,6 +502,36 @@ class PlayActivityViewModel(
 	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
 	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
 
+	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
+	// unplugged or stops being the screen's controller, so these are let go then.
+	private val controllerHeldPads = LinkedHashSet<Pair<Int, Int>>()
+
+	/**
+	 * A pad pressed or released on the MIDI controller. Presses are ignored while the option window
+	 * is open, where the controller's buttons change settings; the release of a pad that was played
+	 * still goes through so it does not stay held.
+	 */
+	fun controllerPadTouch(x: Int, y: Int, upDown: Boolean) {
+		val pad = x to y
+		if (upDown) {
+			if (isOptionWindowVisible) return
+			controllerHeldPads += pad
+		} else if (!controllerHeldPads.remove(pad)) {
+			return
+		}
+		padTouch(x, y, upDown)
+	}
+
+	/**
+	 * Lets go of every pad still held on the MIDI controller, except the ones [heldOnScreen] says a
+	 * finger on the screen is still pressing.
+	 */
+	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
+		val pads = controllerHeldPads.toList()
+		controllerHeldPads.clear()
+		for ((x, y) in pads) if (!heldOnScreen(x, y)) padTouch(x, y, false)
+	}
+
 	/** [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence. */
 	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later

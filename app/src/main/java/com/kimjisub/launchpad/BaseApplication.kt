@@ -13,7 +13,9 @@ import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
+import com.kimjisub.launchpad.tool.FirebaseCrashContext
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.ScreenCrashTrail
 import com.kimjisub.launchpad.ui.theme.UniPadColorScheme
 import com.kimjisub.launchpad.ui.theme.UniPadTypography
 import com.orhanobut.logger.AndroidLogAdapter
@@ -42,6 +44,7 @@ class BaseApplication : Application() {
 
 		setupStrictMode()
 		recordInstallSplits()
+		registerActivityLifecycleCallbacks(ScreenCrashTrail(FirebaseCrashContext))
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
 			ioScope.launch {
 				try {
@@ -123,6 +126,7 @@ class BaseApplication : Application() {
 	private fun setupNotification() {
 		// minSdk 29+ always supports notification channels (introduced in API 26)
 		NotificationManager.createChannel(this)
+		NotificationManager.cancelLeftoverDownloadProgress(this)
 	}
 
 	private fun setupLogger() {

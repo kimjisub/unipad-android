@@ -1,7 +1,9 @@
 package com.kimjisub.design.touch
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PadTouchTrackerTest {
@@ -85,5 +87,21 @@ class PadTouchTrackerTest {
 		t.setGrid(4, 4)
 		t.up(0)
 		assertEquals(listOf(Event(2, 5, true), Event(2, 5, false)), events)
+	}
+
+	@Test
+	fun holds_isTrueOnlyForPadsAFingerIsOn() {
+		val t = tracker(slide = false)
+		t.down(0, 1, 2)
+		t.down(1, 3, 4)
+		assertTrue(t.holds(1, 2))
+		assertTrue(t.holds(3, 4))
+		assertFalse(t.holds(2, 1))
+		assertFalse(t.holds(-1, 2))
+		assertFalse(t.holds(8, 0))
+
+		t.up(0)
+		assertFalse(t.holds(1, 2))
+		assertTrue(t.holds(3, 4))
 	}
 }

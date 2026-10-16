@@ -84,6 +84,8 @@ class PackInterruptionTest {
 		awaitHeld()
 
 		assertEquals(emptyMap<String, List<String>>(), nextLaunch())
+		assertEquals("files left in the workspace", emptyList<String>(), env.workspaceContents())
+		assertEquals("archive copies left in the cache", emptyList<String>(), env.cacheContents())
 	}
 
 	@Test
@@ -94,19 +96,59 @@ class PackInterruptionTest {
 		awaitHeld()
 
 		assertEquals(emptyMap<String, List<String>>(), nextLaunch())
+		assertEquals("files left in the workspace", emptyList<String>(), env.workspaceContents())
 	}
 
 	@Test
-	fun theNextLaunchKeepsEveryFolderThePersonPutInTheWorkspace() {
+	fun storeDownloadStoppedWhileReceivingLeavesNoFileOnTheNextLaunch() {
+		val scope = env.download(URL, Recorder())
+		val (reading, breakRead) = env.gate(URL).openBlockedBody(packZip("Song").copyOf(PARTIAL_BYTES), cancelBreaksRead = false)
+		assertTrue("the download never started receiving", reading.await(TIMEOUT_S, TimeUnit.SECONDS))
+
+		val listed = nextLaunch()
+		val left = env.workspaceContents()
+		breakRead.countDown()
+		env.finish(scope)
+
+		assertEquals(emptyMap<String, List<String>>(), listed)
+		assertEquals("files left in the workspace", emptyList<String>(), left)
+	}
+
+	/** Each stopped download used to leave its archive under a new name, so retries piled up. */
+	@Test
+	fun downloadingAgainAfterAStoppedDownloadLeavesOnlyThePack() {
+		val stopped = env.download(URL, Recorder())
+		val (reading, breakRead) = env.gate(URL).openBlockedBody(packZip("Song").copyOf(PARTIAL_BYTES), cancelBreaksRead = false)
+		assertTrue("the download never started receiving", reading.await(TIMEOUT_S, TimeUnit.SECONDS))
+		nextLaunch()
+
+		val retry = Recorder()
+		val retryScope = env.download(RETRY_URL, retry)
+		env.gate(RETRY_URL).open(packZip("Song"))
+		env.finish(retryScope)
+		val left = env.workspaceContents()
+		breakRead.countDown()
+		env.finish(stopped)
+
+		assertNull(retry.error)
+		assertEquals(expectedHashes("Song"), contentHashes(requireNotNull(retry.installedFolder)))
+		assertEquals(listOf(PACK_NAME), left)
+	}
+
+	@Test
+	fun theNextLaunchKeepsEverythingThePersonPutInTheWorkspace() {
 		writePack(File(env.workspace, PACK_NAME), "Existing")
 		File(env.workspace, ".hidden pack").mkdirs()
 		File(env.workspace, "empty").mkdirs()
+		val personsArchive = packZip("To import later")
+		File(env.workspace, "$PACK_NAME.zip").writeBytes(personsArchive)
 		stopUnpackingHalfway()
 		env.import(packZip("Song"), Recorder())
 		awaitHeld()
 
 		assertEquals(mapOf(PACK_NAME to expectedHashes("Existing").keys.sorted(), ".hidden pack" to emptyList(), "empty" to emptyList()), nextLaunch())
-		assertEquals(listOf(".hidden pack", "empty", PACK_NAME), env.workspaceContents())
+		assertEquals(listOf(".hidden pack", "empty", PACK_NAME, "$PACK_NAME.zip"), env.workspaceContents())
+		assertTrue(personsArchive.contentEquals(File(env.workspace, "$PACK_NAME.zip").readBytes()))
 	}
 
 	/** A file that cannot be copied while the pack's extra top folder is removed fails the import. */
@@ -176,6 +218,8 @@ class PackInterruptionTest {
 
 	private companion object {
 		const val URL = "https://test.invalid/song.zip"
+		const val RETRY_URL = "https://test.invalid/song-again.zip"
+		const val PARTIAL_BYTES = 100
 		const val TIMEOUT_S = 10L
 	}
 }

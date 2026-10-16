@@ -1,16 +1,11 @@
 package com.kimjisub.launchpad.tool
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.PackImportReport
-import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -32,36 +27,15 @@ class UniPackImporter(
 ) {
 	private var fileName: String? = null
 
-	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
-	private val notificationManager = NotificationManager.getManager(context)
-	private val notificationBuilder: NotificationCompat.Builder by lazy {
-		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
-		builder.apply {
-			setAutoCancel(true)
-			setSmallIcon(R.mipmap.ic_launcher)
-
-			val intent = Intent(context, SplashActivity::class.java)
-			intent.action = Intent.ACTION_MAIN
-			intent.addCategory(Intent.CATEGORY_LAUNCHER)
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			// minSdk 29+ always requires FLAG_IMMUTABLE (introduced in API 23)
-			val pIntent: PendingIntent =
-				PendingIntent.getActivity(
-					context,
-					1,
-					intent,
-					PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-				)
-			setContentIntent(pIntent)
-		}
-		builder
-	}
+	private val notification = PackInstallNotification(context)
 
 	init {
 		scope.launch(Dispatchers.IO) {
 			// A download or another import of the same name may run at the same time, so only the
-			// folders created here are written to or deleted. The pack is unpacked and checked in
-			// its own staging folder and appears in the list only once complete.
+			// folders created here are written to or deleted. The archive is copied and the pack
+			// unpacked and checked in staging folders of their own, which the next start clears if the
+			// app is killed meanwhile, and the pack appears in the list only once complete.
+			var copy: File? = null
 			var staged: File? = null
 			var claimedFolder: File? = null
 			try {
@@ -70,21 +44,19 @@ class UniPackImporter(
 				withContext(Dispatchers.Main) { onImportStart() }
 
 				val targetWorkspace = workspace()
+				val copyFolder = PackStaging.create(targetWorkspace)
+				copy = copyFolder
 				val stagedFolder = PackStaging.create(targetWorkspace)
 				staged = stagedFolder
 
-				val tempZip = File.createTempFile("unipack_import_", ".zip", context.cacheDir)
-				try {
-					context.contentResolver.openInputStream(uri)?.use { inputStream ->
-						tempZip.outputStream().use { output ->
-							inputStream.copyTo(output)
-						}
+				val zipCopy = File(copyFolder, ARCHIVE_NAME)
+				context.contentResolver.openInputStream(uri)?.use { inputStream ->
+					zipCopy.outputStream().use { output ->
+						inputStream.copyTo(output)
 					}
-					ZipFile(tempZip).use { zip ->
-						zip.extractAll(stagedFolder.path)
-					}
-				} finally {
-					tempZip.delete()
+				}
+				ZipFile(zipCopy).use { zip ->
+					zip.extractAll(stagedFolder.path)
 				}
 				FileManager.removeDoubleFolder(stagedFolder.path)
 
@@ -109,43 +81,26 @@ class UniPackImporter(
 				withContext(Dispatchers.Main) { onException(e) }
 				claimedFolder?.let(FileManager::deleteDirectory)
 			} finally {
+				copy?.let(PackStaging::discard)
 				staged?.let(PackStaging::discard)
 			}
 		}
 	}
 
 	private fun onImportStart() {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.importing))
-			setProgress(100, 0, false)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(fileName, R.string.importing, 0, indeterminate = false)
 
 		onEventListener.onImportStart()
 	}
 
 	private fun onImportComplete(folder: File, unipack: UniPack, byteSize: Long) {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.success))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showResult(fileName, R.string.success)
 
 		onEventListener.onImportComplete(folder, unipack, byteSize)
 	}
 
 	private fun onException(throwable: Throwable) {
-		notificationBuilder.apply {
-			setContentTitle(fileName)
-			setContentText(context.getString(R.string.downloadWaiting))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showResult(fileName, R.string.failed)
 
 		onEventListener.onException(throwable)
 	}
@@ -159,4 +114,8 @@ class UniPackImporter(
 	}
 
 	class UniPackCriticalErrorException(message: String) : Exception(message)
+
+	private companion object {
+		const val ARCHIVE_NAME = "import.zip"
+	}
 }
