@@ -203,7 +203,7 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOff(x: Int, y: Int, c: Int = chain.value) {
+	fun soundOff(x: Int, y: Int, c: Int) {
 		// soundPush has already advanced the mapping; only the voice actually played matters.
 		if (looping[c][x][y]) {
 			engine.stopVoice(stopKey[c][x][y])

@@ -499,6 +499,13 @@ class PlayActivityViewModel(
 		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY)
 	}
 
+	/** Lets go of auto play's pads and clears the lights auto play left on. */
+	private fun resetPadsAfterAutoPlay() {
+		releaseAutoPlayPads()
+		padInit()
+		ledInitInOrder()
+	}
+
 	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
 	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
 
@@ -565,7 +572,10 @@ class PlayActivityViewModel(
 			} else {
 				for (pad in heldPads.keys.filter { it.x == x && it.y == y }) {
 					val sources = heldPads.getValue(pad)
-					if (sources.remove(pressedBy) && sources.isEmpty()) {
+					// A hand letting go releases the pad even while auto play holds it; auto play
+					// letting go keeps a pad a hand still holds.
+					if (pressedBy == PlayTrigger.PAD) sources.clear() else sources.remove(pressedBy)
+					if (sources.isEmpty()) {
 						soundRunner?.soundOff(x, y, pad.chain)
 						heldPads.remove(pad)
 					}
@@ -776,9 +786,7 @@ class PlayActivityViewModel(
 			runner.playmode = false
 			autoPlayRemoveGuide()
 			if (runner.active) runner.stop()
-			releaseAutoPlayPads()
-			padInit()
-			ledInitInOrder()
+			resetPadsAfterAutoPlay()
 			isPracticeMode = false
 			isAutoPlayPlaying = false
 			scbAutoPlay.setCheckedSilently(false)
@@ -856,9 +864,7 @@ class PlayActivityViewModel(
 		runner.stepMode = false
 		runner.resetStepState()
 		autoPlayRemoveGuide()
-		releaseAutoPlayPads()
-		padInit()
-		ledInitInOrder()
+		resetPadsAfterAutoPlay()
 		runner.playmode = true
 		isAutoPlayPlaying = true
 		if (unipack.keyLedExist) {
@@ -874,9 +880,7 @@ class PlayActivityViewModel(
 		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
-		releaseAutoPlayPads()
-		padInit()
-		ledInitInOrder()
+		resetPadsAfterAutoPlay()
 		isAutoPlayPlaying = false
 		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
@@ -886,9 +890,7 @@ class PlayActivityViewModel(
 	fun autoPlayPrev() {
 		log("autoPlayPrev")
 		val runner = autoPlayRunner ?: return
-		releaseAutoPlayPads()
-		padInit()
-		ledInitInOrder()
+		resetPadsAfterAutoPlay()
 		autoPlayRemoveGuide()
 		runner.progressOffset(-40)
 	}
@@ -896,9 +898,7 @@ class PlayActivityViewModel(
 	fun autoPlayNext() {
 		log("autoPlayNext")
 		val runner = autoPlayRunner ?: return
-		releaseAutoPlayPads()
-		padInit()
-		ledInitInOrder()
+		resetPadsAfterAutoPlay()
 		autoPlayRemoveGuide()
 		runner.progressOffset(40)
 	}
