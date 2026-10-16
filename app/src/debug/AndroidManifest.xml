@@ -11,6 +11,11 @@
         <!-- false only in a build made for an analytics server check, see UsageEventRouting. -->
         <meta-data android:name="firebase_analytics_collection_deactivated" android:value="${analyticsCollectionDeactivated}" />
         <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
-        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <!-- true only in a build made for a crash report check (-PcrashReportCheck), see NativeCrashCheckReceiver. -->
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="${crashlyticsCollectionEnabled}" />
+        <receiver
+            android:name=".tool.NativeCrashCheckReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
     </application>
 </manifest>
