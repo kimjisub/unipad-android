@@ -2752,30 +2752,6 @@
         "leds": [],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:format"
-            ]
-          },
-          "note": "The web parser reads the file as UTF-8, so the UTF-16 line is not a keySound line: one format warning, and the pack has no sound."
-        }
       }
     },
     {
@@ -7278,55 +7254,6 @@
         ],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": []
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:format"
-            ]
-          },
-          "note": "The web parser drops an LED event outside the pad grid when it reads the file and records a format warning for each such line."
-        }
       }
     },
     {
