@@ -199,13 +199,14 @@ class MidiConnectionLifecycleTest {
 	fun attach_coreFwSerialNumber_picksTheCoreFwDriver() {
 		midiManager.stubDeviceList() returns emptyArray()
 		val drivers = recordDrivers()
+		val connectedNames = recordConnectedNames()
 		val (device, _) = launchpad(deviceId = 1)
 		every { device.serialNumber } returns "COREFW-LPX"
 
 		attach(device)
 
 		assertEquals(LaunchpadCoreFW::class, drivers.last()::class)
-		assertEquals("Launchpad X (CoreFW)", MidiConnection.connectedDevice?.name)
+		assertEquals("Launchpad X (CoreFW)", connectedNames.last())
 		assertNoCrash()
 	}
 
@@ -214,13 +215,14 @@ class MidiConnectionLifecycleTest {
 	fun attach_unreadableSerialNumber_keepsTheOfficialDriver() {
 		midiManager.stubDeviceList() returns emptyArray()
 		val drivers = recordDrivers()
+		val connectedNames = recordConnectedNames()
 		val (device, connection) = launchpad(deviceId = 1)
 		every { device.serialNumber } throws SecurityException("no permission for the serial number")
 
 		attach(device)
 
 		assertEquals(LaunchpadX::class, drivers.last()::class)
-		assertEquals("Launchpad X", MidiConnection.connectedDevice?.name)
+		assertEquals("Launchpad X", connectedNames.last())
 		verify(timeout = TIMEOUT_MS) { connection.claimInterface(any(), true) }
 		assertNoCrash()
 	}
@@ -231,6 +233,18 @@ class MidiConnectionLifecycleTest {
 		every { listener.onChangeDriver(any()) } answers { drivers.add(firstArg()) }
 		MidiConnection.listener = listener
 		return drivers
+	}
+
+	/**
+	 * The fake receive loop ends at once and the session clears `connectedDevice` on another
+	 * thread, so the name is read from the connect callback rather than from that field.
+	 */
+	private fun recordConnectedNames(): List<String> {
+		val names = Collections.synchronizedList(mutableListOf<String>())
+		val observer = mockk<MidiConnection.ConnectionObserver>(relaxed = true)
+		every { observer.onConnected(any()) } answers { names.add(firstArg<MidiConnection.ConnectedDeviceSnapshot>().name) }
+		MidiConnection.connectionObserver = observer
+		return names
 	}
 
 	private fun attach(device: UsbDevice) {
