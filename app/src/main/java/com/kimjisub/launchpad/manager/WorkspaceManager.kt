@@ -40,7 +40,8 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			val uniPackWorkspaces = mutableListOf<Workspace>()
 
 			// All versions: app-specific external storage (no permission required, deleted with app uninstall)
-			context.getExternalFilesDir(null)?.let { appExternalDir ->
+			val appExternalDir = context.getExternalFilesDir(null)
+			if (appExternalDir != null) {
 				val appWorkspace = File(appExternalDir, "UniPack")
 				if (!appWorkspace.exists()) {
 					appWorkspace.mkdirs()
@@ -53,14 +54,17 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 						appWorkspace
 					)
 				)
-			} ?: run {
-				// No app-specific external dir (primary volume unmounted or not ready): fall back
-				// to the internal app folder so the list is never empty. downloadWorkspace indexes
-				// [0] and would otherwise throw (#46).
-				val internalWorkspace = File(context.filesDir, "UniPack")
-				if (!internalWorkspace.exists()) {
-					internalWorkspace.mkdirs()
-				}
+			}
+
+			// The internal app folder stands in when there is no app-specific external dir (primary
+			// volume unmounted or not ready), so the list is never empty: downloadWorkspace indexes
+			// [0] and would otherwise throw (#46). Packs saved there meanwhile stay listed, and so
+			// playable and deletable, once the external dir is back.
+			val internalWorkspace = File(context.filesDir, "UniPack")
+			if (appExternalDir == null && !internalWorkspace.exists()) {
+				internalWorkspace.mkdirs()
+			}
+			if (appExternalDir == null || packFolders(internalWorkspace).isNotEmpty()) {
 				uniPackWorkspaces.add(
 					Workspace(
 						context.getString(R.string.workspace_internal_storage),
@@ -188,16 +192,6 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		val dirs = context.getExternalFilesDirs("UniPack")
 		val internal = dirs.filterNotNull().firstOrNull { it.absolutePath.contains("/storage/emulated/0") }
 		return if (internal != null && internal.exists() && internal.canRead()) internal else null
-	}
-
-	fun getInternalStorageWorkspaceDir(): File? {
-		val unipackDir = File(context.filesDir, "UniPack")
-		return if (unipackDir.exists() && unipackDir.canRead()) unipackDir else null
-	}
-
-	fun getInternalStorageUnipackFolders(): List<File> {
-		val dir = getInternalStorageWorkspaceDir() ?: return emptyList()
-		return packFolders(dir)
 	}
 
 	suspend fun getUnipacks() =
