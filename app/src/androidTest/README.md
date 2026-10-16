@@ -22,13 +22,15 @@ see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on an API 35 emulator
 
-Use JDK 21 and the Android SDK. Start an API 35 emulator that nothing else is using and find its
-serial:
+Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using
+on a fixed port, so its serial is known, and wait until it has finished booting. The commands below
+write that serial (`emulator-5580` here) as `<serial>`:
 
 ```bash
-"$ANDROID_HOME/emulator/emulator" -avd <your-api-35-avd> -no-snapshot-load &
-adb wait-for-device
-adb devices
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-35-avd> -port 5580 -wipe-data -no-snapshot-load &
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 ```
 
 The complete suite requires an **API 35 Google APIs image without the Play Store**, with an
@@ -94,12 +96,7 @@ stopping the emulator. The capture helper stages files in app-writable external 
 them as shell and removes the staging file; it checks that each preserved file is nonempty
 and has the same byte count as its source. Keep the emulator offline so app startup cannot
 send test traffic;
-the catalogue fixture does not disable other application network clients. Restore the original
-network state and stop the emulator when finished:
-
-```bash
-adb -s <serial> emu kill
-```
+the catalogue fixture does not disable other application network clients.
 
 After Gradle has uninstalled the debug app, check these files from that run still exist:
 
@@ -109,6 +106,12 @@ adb -s <serial> shell pm list packages com.kimjisub.launchpad.dev
 for capture in settings-english-language-row file-import-result store-downloaded; do
   adb -s <serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
 done
+```
+
+Only after these checks, restore the original network state and stop the emulator:
+
+```bash
+adb -s <serial> emu kill
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing

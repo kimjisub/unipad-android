@@ -36,7 +36,7 @@ for their isolated, disposable emulator.
 
 `python3 -m unittest discover -s scripts/tests -v` runs in the `unit-tests` check,
 with fake `adb` and Gradle and no device. It checks that the UI runner keeps
-Gradle failures through log capture, requires the allocated device id, and
+Gradle failures through log capture, requires `ANDROID_SERIAL`, and
 fails when the app was not installed, a module has no results, a test was
 failed, errored or skipped, or the number of tests run differs from the sources.
 

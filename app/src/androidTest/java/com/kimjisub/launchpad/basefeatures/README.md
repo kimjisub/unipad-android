@@ -11,13 +11,15 @@ Use a dedicated, disposable app installation on API 33 or newer with the system 
 English and no screen-lock PIN. The suite refuses an installation containing non-fixture packs.
 It only removes its named fixture folders/rows; it does not clear the whole database or app data.
 
-Start a freshly wiped emulator that nothing else is using, then turn its network off:
+Start a freshly wiped emulator that nothing else is using on a fixed port, so its serial is known,
+wait until it has finished booting, then turn its network off:
 
 ```bash
-"$ANDROID_HOME/emulator/emulator" -avd <your-api-33-or-newer-avd> -wipe-data -no-snapshot-load &
-adb wait-for-device
-# Set this to the emulator's serial from `adb devices`; never touch another device.
-export ANDROID_SERIAL='<serial>'
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-33-or-newer-avd> -port 5580 -wipe-data -no-snapshot-load &
+# Every command names this emulator; never touch another device.
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode enable
 adb -s "$ANDROID_SERIAL" shell svc wifi disable
 adb -s "$ANDROID_SERIAL" shell svc data disable
@@ -34,7 +36,8 @@ adb -s "$ANDROID_SERIAL" shell svc data enable
 adb -s "$ANDROID_SERIAL" emu kill
 ```
 
-For Gradle/Orchestrator, with only this emulator connected (Gradle uses every connected device):
+For Gradle/Orchestrator, keep `ANDROID_SERIAL` set to this emulator (without it, Gradle runs on every
+connected device):
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest \
