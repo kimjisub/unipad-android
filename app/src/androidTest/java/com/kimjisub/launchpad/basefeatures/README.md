@@ -227,7 +227,21 @@ Android may still end the first device's gesture in a window when another device
 logs `Canceling pointers for device …`). The test accepts that only as one `ACTION_CANCEL` for
 the first pointer before the second device's press, and then requires the first pad to stop at
 that moment. Otherwise both pads must play until each is lifted. Either way, lifting one pointer
-must not stop the other's pad or leave its own playing.
+must not stop the other's pad or leave its own playing. A cancelled injected mouse press is
+forgotten during the assertions without sending a release. During teardown, a cancel resets
+system gesture monitors that can still hold the injected mouse device after the window's cancel;
+window delivery is not required for that reset. All active input injections still require success. The kernel touchscreen still receives a
+physical lift, so its active slot is released even if the window cancelled its gesture.
+
+Every virtual touchscreen has a unique name and physical port. Android can group input nodes
+sharing a port even when their names differ. Failed registration and failed finger cleanup both
+close the shell streams, ending `uinput` and removing its device. `InputToolsCleanupTest` checks
+that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
+after registration removes the device while preserving the original failure. It also checks
+that cancelled-mouse teardown sends no new window event and a new mouse helper can hover. It runs separately
+from the 47-test release preflight. Layout-test cleanup waits within the existing 10-second checks
+for the display override to disappear and the play window's landscape orientation and original
+bounds to return before the next test starts.
 
 | Checked on the API 35 and 37 emulators | Result |
 |---|---|
