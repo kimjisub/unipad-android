@@ -261,11 +261,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					addErr("keySound : [$s] format is incorrect")
 					continue
 				}
-				// The sound still plays; only the move goes. A chain the pack lacks became autoPlay's
-				// current chain, and practice mode lit its button past the end of the round button table.
+				// A chain the pack lacks moves to the nearest chain it has, as on iOS and the web. Kept raw,
+				// it became autoPlay's current chain and practice mode lit a button past the round button table.
 				if (wormhole != Sound.NO_WORMHOLE && wormhole !in 0 until chain) {
 					addErr("keySound : [$s] wormhole is incorrect")
-					wormhole = Sound.NO_WORMHOLE
+					wormhole = wormhole.coerceIn(0, chain - 1)
 				}
 				if (c < 0 || c >= chain)
 					addErr("keySound : [$s] chain is incorrect")
