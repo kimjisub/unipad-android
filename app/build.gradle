@@ -214,6 +214,11 @@ ksp {
 	arg("room.schemaLocation", "$projectDir/schemas")
 }
 android.sourceSets.androidTest.assets.srcDirs += files("$projectDir/schemas")
+// Code and data both test layers share: the chain-release corpus every UniPad app checks against.
+android.sourceSets.test.kotlin.srcDir("$projectDir/src/sharedTest/java")
+android.sourceSets.test.resources.srcDirs += files("$projectDir/src/sharedTest/assets")
+android.sourceSets.androidTest.kotlin.srcDir("$projectDir/src/sharedTest/java")
+android.sourceSets.androidTest.assets.srcDirs += files("$projectDir/src/sharedTest/assets")
 
 jacoco {
 	toolVersion = "0.8.12"
