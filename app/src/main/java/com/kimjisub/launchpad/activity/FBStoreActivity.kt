@@ -100,6 +100,8 @@ class StoreItemState(
 	var downloading by mutableStateOf(false)
 	var isToggle by mutableStateOf(false)
 	var playText by mutableStateOf("")
+	/** Share of the pack received; null while its size is unknown or it is being unpacked. */
+	var downloadFraction by mutableStateOf<Float?>(0f)
 	var flagColorOverride by mutableStateOf<Color?>(null)
 }
 
@@ -141,7 +143,9 @@ class FBStoreActivity : BaseActivity() {
 				val selectedItem = storeItems.firstOrNull { it.isToggle }
 				val hasDownloading = storeItems.any { it.downloading }
 
-				BackHandler {
+				// The top arrow and system Back both close the detail first, and the store is not left
+				// mid-download: its downloads run in this screen's scope and would be cancelled.
+				val onBack = {
 					if (selectedItem != null) {
 						togglePlay(null)
 					} else if (hasDownloading) {
@@ -150,11 +154,12 @@ class FBStoreActivity : BaseActivity() {
 						finish()
 					}
 				}
+				BackHandler(onBack = onBack)
 
 				StoreScreen(
 					storeItems = storeItems,
 					selectedItem = selectedItem,
-					onBackClick = { finish() },
+					onBackClick = onBack,
 					storeCount = storeItems.size,
 					downloadedCount = storeItems.count { it.downloaded },
 					onItemClick = { item -> togglePlay(item) },
@@ -173,11 +178,6 @@ class FBStoreActivity : BaseActivity() {
 						if (item != null) {
 							browse("https://www.youtube.com/results?search_query=" + android.net.Uri.encode("UniPad ${item.storeVO.title} ${item.storeVO.producerName}"))
 						}
-					},
-					onWebsiteClick = {
-						// The icon was rendered with an empty handler; iOS/web open the entry's URL.
-						val url = storeItems.firstOrNull { it.isToggle }?.storeVO?.URL
-						if (url != null && url.startsWith("http")) browse(url)
 					},
 				)
 			}
@@ -215,6 +215,7 @@ class FBStoreActivity : BaseActivity() {
 		val itemCode = item.storeVO.code ?: return
 		item.flagColorOverride = Gray1
 		item.playText = "0%"
+		item.downloadFraction = 0f
 		item.downloading = true
 
 		UniPackDownloader(
@@ -232,9 +233,7 @@ class FBStoreActivity : BaseActivity() {
 					contentLength: Long,
 					preKnownFileSize: Long,
 				) {
-					val downloadedMB: String = FileManager.byteToMB(0)
-					val fileSizeMB: String = FileManager.byteToMB(fileSize)
-					item.playText = getString(R.string.download_progress_format, 0, downloadedMB, fileSizeMB)
+					showProgress(item, 0, 0, fileSize)
 				}
 
 				override fun onDownloadProgress(
@@ -242,9 +241,7 @@ class FBStoreActivity : BaseActivity() {
 					downloadedSize: Long,
 					fileSize: Long,
 				) {
-					val downloadedMB: String = FileManager.byteToMB(downloadedSize)
-					val fileSizeMB: String = FileManager.byteToMB(fileSize)
-					item.playText = getString(R.string.download_progress_format, percent, downloadedMB, fileSizeMB)
+					showProgress(item, percent, downloadedSize, fileSize)
 				}
 
 				override fun onDownloadProgressPercent(
@@ -255,6 +252,7 @@ class FBStoreActivity : BaseActivity() {
 
 				override fun onImportStart(zip: File) {
 					item.playText = getString(R.string.importing)
+					item.downloadFraction = null
 					item.flagColorOverride = Orange
 				}
 
@@ -278,6 +276,16 @@ class FBStoreActivity : BaseActivity() {
 		requestNotificationPermissionIfUnanswered()
 	}
 
+	private fun showProgress(item: StoreItemState, percent: Int, downloadedSize: Long, fileSize: Long) {
+		val downloadedMB = FileManager.byteToMB(downloadedSize)
+		item.downloadFraction = UniPackDownloader.fraction(downloadedSize, fileSize)
+		item.playText = if (fileSize > 0) {
+			getString(R.string.download_progress_format, percent, downloadedMB, FileManager.byteToMB(fileSize))
+		} else {
+			"$downloadedMB MB"
+		}
+	}
+
 	private fun requestNotificationPermissionIfUnanswered() {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || requestingNotificationPermission) return
 		if (ContextCompat.checkSelfPermission(this, permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
@@ -293,12 +301,6 @@ class FBStoreActivity : BaseActivity() {
 	}
 }
 
-
-private fun parseDownloadPercent(playText: String): Float {
-	val match = Regex("""^(\d+)%""").find(playText)
-	return (match?.groupValues?.get(1)?.toFloatOrNull() ?: 0f) / 100f
-}
-
 private const val FLAG_ANIMATION_MS = 500
 
 @Composable
@@ -312,7 +314,6 @@ private fun StoreScreen(
 	onPlayClick: (StoreItemState) -> Unit,
 	onDownloadClick: (StoreItemState) -> Unit,
 	onYoutubeClick: () -> Unit,
-	onWebsiteClick: () -> Unit,
 ) {
 	// The window is edge-to-edge (see onCreate): the navigation bar sits over the bottom (gesture handle)
 	// or the side (3-button bar in landscape), and a display cutout can take a side as well.
@@ -347,11 +348,10 @@ private fun StoreScreen(
 							isAutoPlay = item.storeVO.isAutoPlay,
 							isDownloaded = item.downloaded,
 							isDownloading = item.downloading,
-							downloadProgress = parseDownloadPercent(item.playText),
+							downloadProgress = item.downloadFraction,
 							downloadStatusText = item.playText,
 							onDownloadClick = { onDownloadClick(item) },
 							onYoutubeClick = onYoutubeClick,
-							onWebsiteClick = onWebsiteClick,
 							modifier = Modifier.testTag("store_detail"),
 						)
 					}
@@ -378,7 +378,7 @@ private fun StoreScreen(
 					.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				IconButton(onClick = onBackClick) {
+				IconButton(onClick = onBackClick, modifier = Modifier.testTag("store_back")) {
 					Icon(
 						imageVector = Icons.AutoMirrored.Filled.ArrowBack,
 						contentDescription = null,
