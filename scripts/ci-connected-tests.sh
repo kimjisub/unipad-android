@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Use only the device allocated by the local harness or the hosted runner.
-: "${ANDROID_SERIAL:?Set ANDROID_SERIAL to the allocated emulator id}"
+# Use only the emulator named by ANDROID_SERIAL (a local one or the hosted runner's).
+: "${ANDROID_SERIAL:?Set ANDROID_SERIAL to the emulator serial from adb devices}"
 MODULES=(app design)
 CHECKER="$(dirname "${BASH_SOURCE[0]}")/check_connected_results.py"
 mkdir -p .ci-results

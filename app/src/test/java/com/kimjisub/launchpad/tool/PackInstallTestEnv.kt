@@ -57,6 +57,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -69,7 +70,7 @@ import java.util.zip.ZipOutputStream
 class PackInstallTestEnv {
 	val root: File = Files.createTempDirectory("pack_install_test").toFile()
 	val workspace = File(root, "workspace").apply { mkdirs() }
-	private val cache = File(root, "cache").apply { mkdirs() }
+	val cache = File(root, "cache").apply { mkdirs() }
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
 	private val mainExecutor = Executors.newFixedThreadPool(4) { Thread(it, "pack-test-main") }
@@ -189,6 +190,13 @@ class PackInstallTestEnv {
 	): CoroutineScope {
 		val uri = mockk<Uri>()
 		every { resolver.openInputStream(uri) } answers { openInput() }
+		// A picked source is read-only through every resolver write API, even on a relaxed mock.
+		every { resolver.openOutputStream(uri) } throws SecurityException("read-only source provider")
+		every { resolver.openOutputStream(uri, any()) } throws SecurityException("read-only source provider")
+		every { resolver.openFileDescriptor(uri, match { it != "r" }) } throws SecurityException("read-only source provider")
+		every { resolver.openFileDescriptor(uri, match { it != "r" }, any()) } throws SecurityException("read-only source provider")
+		every { resolver.openAssetFileDescriptor(uri, match { it != "r" }) } throws SecurityException("read-only source provider")
+		every { resolver.openAssetFileDescriptor(uri, match { it != "r" }, any()) } throws SecurityException("read-only source provider")
 		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } answers { fileNameResolvedOn += Thread.currentThread().name; fileName } }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
@@ -355,20 +363,33 @@ class PackInstallTestEnv {
 
 		/**
 		 * [topFolder] wraps the pack in one folder and [directoryEntries] lists every folder as an
-		 * entry ahead of the files; both together is how Finder zips a pack.
+		 * entry ahead of the files; both together is how Finder zips a pack. [files] overrides the
+		 * contents, and [stored] keeps entries uncompressed for tests that need several writes.
 		 */
-		fun packZip(title: String, topFolder: String? = null, directoryEntries: Boolean = false): ByteArray {
-			val files = packFiles(title).mapKeys { (name, _) -> topFolder?.let { "$it/$name" } ?: name }
+		fun packZip(
+			title: String,
+			topFolder: String? = null,
+			directoryEntries: Boolean = false,
+			files: Map<String, ByteArray> = packFiles(title),
+			stored: Boolean = false,
+		): ByteArray {
+			val entries = files.mapKeys { (name, _) -> topFolder?.let { "$it/$name" } ?: name }
 			val folders = if (directoryEntries) {
-				files.keys.flatMap { path -> path.split('/').dropLast(1).runningReduce { parent, child -> "$parent/$child" } }.distinct()
+				entries.keys.flatMap { path -> path.split('/').dropLast(1).runningReduce { parent, child -> "$parent/$child" } }.distinct()
 			} else {
 				emptyList()
 			}
 			val bytes = ByteArrayOutputStream()
 			ZipOutputStream(bytes).use { zip ->
 				folders.forEach { zip.putNextEntry(ZipEntry("$it/")); zip.closeEntry() }
-				files.forEach { (path, data) ->
-					zip.putNextEntry(ZipEntry(path))
+				entries.forEach { (path, data) ->
+					zip.putNextEntry(ZipEntry(path).apply {
+						if (stored) {
+							method = ZipEntry.STORED
+							size = data.size.toLong()
+							crc = CRC32().apply { update(data) }.value
+						}
+					})
 					zip.write(data)
 					zip.closeEntry()
 				}
@@ -382,13 +403,15 @@ class PackInstallTestEnv {
 			}
 		}
 
-		/** Relative path to SHA-256 of every file in [folder]. */
-		fun contentHashes(folder: File): Map<String, String> =
-			folder.walkTopDown().filter { it.isFile }.associate { it.relativeTo(folder).invariantSeparatorsPath to sha256(it.readBytes()) }
+		/** Relative file hashes; optionally includes directories to check hidden and empty folders. */
+		fun contentHashes(folder: File, includeDirectories: Boolean = false): Map<String, String> =
+			folder.walkTopDown().filter { it != folder && (it.isFile || includeDirectories && it.isDirectory) }.associate {
+				it.relativeTo(folder).invariantSeparatorsPath to if (it.isDirectory) "directory" else sha256(it.readBytes())
+			}
 
 		fun expectedHashes(title: String): Map<String, String> = packFiles(title).mapValues { sha256(it.value) }
 
-		private fun sha256(data: ByteArray): String =
+		internal fun sha256(data: ByteArray): String =
 			MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) }
 	}
 }

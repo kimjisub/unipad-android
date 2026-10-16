@@ -261,6 +261,8 @@
 	<string name="backup_grant_access">Connecter le dossier de sauvegarde</string>
 	<string name="backup_revoke">Déconnecter le dossier de sauvegarde</string>
 	<string name="backup_invalid_folder">Veuillez sélectionner le dossier Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad n\'a pas pu garder l\'accès à ce dossier. Choisissez à nouveau Documents/Unipad.</string>
+	<string name="picker_unavailable">Aucune application de cet appareil ne peut choisir des fichiers ou des dossiers.</string>
 	<string name="backup_backup_button">Sauvegarder</string>
 	<string name="backup_backup_description">Copier les UniPacks vers le dossier de sauvegarde</string>
 	<string name="backup_restore_button">Restaurer</string>

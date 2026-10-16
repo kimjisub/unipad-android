@@ -7,6 +7,8 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.manager.ChannelManager
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.*
 import org.junit.Test
@@ -19,7 +21,7 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         var result: Int? = null
         for (index in 0 until 64) {
             val item = screen.vm().channelManager.get(index / 8, index % 8)
-            if (item?.channel == com.kimjisub.launchpad.manager.ChannelManager.Channel.GUIDE && item.code > 0) {
+            if (item?.channel == ChannelManager.Channel.GUIDE && item.code > 0) {
                 result = index
                 break
             }
@@ -75,8 +77,9 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
     }
 
     /**
-     * The first autoPlay press is pad 1 1, whose sound moves to chain 40. Step practice used to light that
-     * chain's button past the end of the round button table and close the app on the next step.
+     * The first autoPlay press is pad 1 1, whose sound moves to chain 40 of a two chain pack. That move goes
+     * to the last chain, as on iOS and the web, and step practice carries on there. Kept raw, chain 40 lit a
+     * chain button past the end of the round button table and closed the app on the next step.
      */
     @Test fun stepPracticeContinuesPastAMoveToAChainThePackLacks() {
         val keySound = File(screen.pack(), "keySound")
@@ -89,17 +92,30 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
             screen.clickText(R.string.accept)
             assertTrue(screen.device.wait(Until.gone(By.text(screen.text(R.string.accept))), 5000))
         }
+        val lastChain = screen.onMain { screen.vm().unipack.chain } - 1
         screen.options()
         screen.clickText(R.string.stepPractice)
         screen.await("Step hint did not appear") { hintedPad() == 0 }
         screen.tapPad(0)
-        screen.await("Step practice did not move to the next pad, 2 1") { hintedPad() == 8 }
-        assertEquals(0, screen.onMain { screen.vm().chain.value })
+        screen.await({ "Step practice did not continue on the last chain, at 2 1: chain ${screen.onMain { screen.vm().chain.value }}, hint ${hintedPad()}" }) {
+            hintedPad() == 8 && screen.onMain { screen.vm().chain.value } == lastChain
+        }
+        screen.await("The last chain's button is not lit as the selected chain") { selectedChainButton() == lastChain }
         assertEquals(
             "keySound : [1 1 1 silence.wav 1 40] wormhole is incorrect",
             screen.onMain { screen.vm().unipack.errorDetail },
         )
+        screen.capture("missing-chain-moved-to-last")
+        screen.tapPad(8)
+        screen.await("Step practice did not move on to 3 1 on the last chain") { hintedPad() == 16 }
+        assertEquals(lastChain, screen.onMain { screen.vm().chain.value })
         screen.capture("missing-chain-next-step")
+    }
+
+    private fun selectedChainButton(): Int? = screen.onMain {
+        (0 until PlayActivityViewModel.MAX_CHAIN_BUTTONS).firstOrNull { c ->
+            screen.vm().channelManager.get(-1, PlayActivityViewModel.CHAIN_INDEX_OFFSET + c)?.channel == ChannelManager.Channel.CHAIN
+        }
     }
 
     @Test fun playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain() {

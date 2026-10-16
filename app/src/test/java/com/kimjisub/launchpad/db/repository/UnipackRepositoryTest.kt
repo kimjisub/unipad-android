@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.db.repository
 
+import android.database.sqlite.SQLiteFullException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.kimjisub.launchpad.db.dao.UnipackDao
@@ -22,11 +23,12 @@ class UnipackRepositoryTest {
 
 	private lateinit var dao: UnipackDao
 	private lateinit var repository: UnipackRepository
+	private val reported = mutableListOf<Throwable>()
 
 	@Before
 	fun setUp() {
 		dao = mockk(relaxed = true)
-		repository = UnipackRepository(dao)
+		repository = UnipackRepository(dao) { reported += it }
 	}
 
 	@Test
@@ -136,5 +138,34 @@ class UnipackRepositoryTest {
 		val capturedTime = dateSlot.captured.time
 		assert(capturedTime >= before.time) { "Timestamp should be >= test start time" }
 		assert(capturedTime <= after.time) { "Timestamp should be <= test end time" }
+	}
+
+	// A full disk fails Room writes with SQLiteFullException; it reached the app's coroutines uncaught.
+
+	@Test
+	fun recordOpen_skipsTheRecordWhenTheDiskIsFull() {
+		every { dao.addOpenCount("test-id") } throws SQLiteFullException("database or disk is full")
+
+		repository.recordOpen("test-id")
+		assertTrue(reported.single() is SQLiteFullException)
+	}
+
+	@Test
+	fun toggleBookmark_skipsTheRecordWhenTheDiskIsFull() {
+		every { dao.toggleBookmark("test-id") } throws SQLiteFullException("database or disk is full")
+
+		repository.toggleBookmark("test-id")
+		assertTrue(reported.single() is SQLiteFullException)
+	}
+
+	@Test
+	fun getOrCreate_stillReturnsTheRowWhenTheInsertFails() {
+		val liveData = MutableLiveData<Unipack>()
+		every { dao.exists("new-id") } returns false
+		every { dao.insert(any()) } throws SQLiteFullException("database or disk is full")
+		every { dao.find("new-id") } returns liveData
+
+		assertSame(liveData, repository.getOrCreate("new-id"))
+		assertTrue(reported.single() is SQLiteFullException)
 	}
 }
