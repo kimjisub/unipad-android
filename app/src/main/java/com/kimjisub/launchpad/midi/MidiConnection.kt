@@ -19,6 +19,7 @@ import android.os.SystemClock
 import androidx.core.content.edit
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK2
 import com.kimjisub.launchpad.midi.driver.LaunchpadMK3
 import com.kimjisub.launchpad.midi.driver.LaunchpadMiniMK3
@@ -50,11 +51,13 @@ import kotlin.reflect.KClass
 
 object MidiConnection {
 
-	private data class DriverEntry(
+	internal data class DriverEntry(
 		val name: String,
 		val factory: () -> DriverRef,
 		val interfaceNum: Int = 0,
 		val productNameMatcher: ((String?) -> Boolean)? = null,
+		// The same Launchpad running CoreFW, which keeps the official product id and name.
+		val coreFwFactory: (() -> DriverRef)? = null,
 	)
 
 	private val driverRegistryByName: List<DriverEntry> = listOf(
@@ -78,14 +81,40 @@ object MidiConnection {
 	)
 
 	private val driverRegistryRanges: List<DriverRange> = listOf(
-		DriverRange(0x0020, 0x002F, DriverEntry("Launchpad S", ::LaunchpadS)),           // 32~47
-		DriverRange(0x0036, 0x0036, DriverEntry("Launchpad Mini", ::LaunchpadS)),         // 54 (single)
-		DriverRange(0x0051, 0x0060, DriverEntry("Launchpad Pro", ::LaunchpadPRO)),        // 81~96
-		DriverRange(0x0069, 0x0078, DriverEntry("Launchpad MK2", ::LaunchpadMK2)),        // 105~120
-		DriverRange(0x0103, 0x0112, DriverEntry("Launchpad X", ::LaunchpadX)),            // 259~274
-		DriverRange(0x0113, 0x0122, DriverEntry("Launchpad Mini MK3", ::LaunchpadMiniMK3)), // 275~290
-		DriverRange(0x0123, 0x0132, DriverEntry("Launchpad Pro MK3", ::LaunchpadMK3)),    // 291~306
+		DriverRange(0x0020, 0x002F, DriverEntry("Launchpad S", ::LaunchpadS, coreFwFactory = ::coreFwTwoColour)),        // 32~47
+		DriverRange(0x0036, 0x0036, DriverEntry("Launchpad Mini", ::LaunchpadS, coreFwFactory = ::coreFwTwoColour)),      // 54 (single)
+		DriverRange(0x0051, 0x0060, DriverEntry("Launchpad Pro", ::LaunchpadPRO, coreFwFactory = ::coreFwRgb)),           // 81~96
+		DriverRange(0x0069, 0x0078, DriverEntry("Launchpad MK2", ::LaunchpadMK2, coreFwFactory = ::coreFwRgb)),           // 105~120
+		DriverRange(0x0103, 0x0112, DriverEntry("Launchpad X", ::LaunchpadX, coreFwFactory = ::coreFwRgb)),               // 259~274
+		DriverRange(0x0113, 0x0122, DriverEntry("Launchpad Mini MK3", ::LaunchpadMiniMK3, coreFwFactory = ::coreFwRgb)), // 275~290
+		DriverRange(0x0123, 0x0132, DriverEntry("Launchpad Pro MK3", ::LaunchpadMK3, coreFwFactory = ::coreFwRgb)),       // 291~306
 	)
+
+	private fun coreFwRgb(): DriverRef = LaunchpadCoreFW()
+	private fun coreFwTwoColour(): DriverRef = LaunchpadCoreFW(LaunchpadS::sCode)
+
+	/**
+	 * The driver for a USB device: by product name, then exact product id, then Novation's id ranges.
+	 * A Launchpad whose serial number marks it as running CoreFW gets the CoreFW driver instead; the
+	 * serial number is read only for those models, and an unreadable one counts as official firmware.
+	 */
+	internal fun driverEntryFor(pid: Int, productName: String?, serialNumber: () -> String?): DriverEntry? {
+		val entry = driverRegistryByName.firstOrNull { it.productNameMatcher?.invoke(productName) == true }
+			?: driverRegistryExact[pid]
+			?: driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }?.entry
+			?: return null
+		val coreFwFactory = entry.coreFwFactory ?: return entry
+		if (!LaunchpadCoreFW.isCoreFwSerial(serialNumber())) return entry
+		return DriverEntry("${entry.name} (CoreFW)", coreFwFactory, entry.interfaceNum)
+	}
+
+	// Android 10+ throws SecurityException without the device's USB permission.
+	private fun readSerialNumber(device: UsbDevice): String? = try {
+		device.serialNumber
+	} catch (e: RuntimeException) {
+		Log.midiDetail("USB serial number unreadable: $e")
+		null
+	}
 
 	private const val MATRIX_PRODUCT_ID_MASK = 0xFFC0
 	private const val MATRIX_PRODUCT_ID_BASE = 0x1040
@@ -572,18 +601,11 @@ object MidiConnection {
 			listener?.onUiLog("ProductId : ${device.productId}")
 
 			val pid = device.productId
-			val productName = device.productName
-			val nameEntry = driverRegistryByName.firstOrNull { it.productNameMatcher?.invoke(productName) == true }
-			val exactEntry = driverRegistryExact[pid]
-			val rangeEntry = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }?.entry
-
-			val entry = nameEntry ?: exactEntry ?: rangeEntry
+			val entry = driverEntryFor(pid, device.productName) { readSerialNumber(device) }
 
 			if (entry != null) {
-				val deviceId = if (rangeEntry != null) {
-					val range = driverRegistryRanges.first { pid in it.pidStart..it.pidEnd }
-					pid - range.pidStart + 1
-				} else null
+				val deviceId = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }
+					?.let { pid - it.pidStart + 1 }
 				val idStr = if (deviceId != null) " (Device ID $deviceId)" else ""
 				listener?.onUiLog("prediction : ${entry.name}$idStr")
 				Log.midiDetail("Driver: ${entry.name}$idStr (PID=0x${"%04X".format(pid)})")
@@ -1174,6 +1196,8 @@ object MidiConnection {
 				isPrimary = it.usbDevice.deviceId == primarySessionId,
 			)
 		}
+
+	fun driverForSession(sessionId: Int): DriverRef? = sessions[sessionId]?.driver
 
 	// Sets the model/driver for one specific connected pad, identified by SessionSummary.sessionId.
 	// Unlike assigning `driver` directly, this always targets exactly the requested physical

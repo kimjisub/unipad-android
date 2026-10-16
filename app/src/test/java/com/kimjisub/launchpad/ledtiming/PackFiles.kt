@@ -5,9 +5,9 @@ import com.kimjisub.launchpad.unipack.UniPackFolder
 import java.io.File
 
 /** Writes a one-chain pack with [keyLed] files (named "chain x y loop") and an [autoPlay] script. */
-fun writePack(root: File, buttons: Int, keyLed: Map<String, String>, autoPlay: String): File {
+fun writePack(root: File, buttons: Int, keyLed: Map<String, String>, autoPlay: String, chains: Int = 1): File {
 	root.mkdirs()
-	File(root, "info").writeText("title=LED timing\nproducerName=Test\nbuttonX=$buttons\nbuttonY=$buttons\nchain=1\n")
+	File(root, "info").writeText("title=LED timing\nproducerName=Test\nbuttonX=$buttons\nbuttonY=$buttons\nchain=$chains\n")
 	File(root, "keySound").writeText("1 1 1 a.wav\n")
 	File(root, "sounds").mkdir()
 	File(root, "sounds/a.wav").writeText("")

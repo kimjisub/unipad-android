@@ -11,6 +11,7 @@ object DisplayOverlays {
     private const val NAVIGATION = "com.android.internal.systemui.navbar."
     private const val CUTOUT = "com.android.internal.display.cutout.emulation."
     const val THREE_BUTTON_NAVIGATION = NAVIGATION + "threebutton"
+    const val GESTURAL_NAVIGATION = NAVIGATION + "gestural"
     const val HOLE_CUTOUT = CUTOUT + "hole"
 
     fun <T> with(device: UiDevice, vararg overlays: String, block: () -> T): T {

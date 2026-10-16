@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -74,6 +73,7 @@ import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.ui.compose.StorePackPanelContent
 import com.kimjisub.launchpad.ui.compose.StoreTotalPanelContent
 import com.kimjisub.launchpad.ui.compose.UnipackListItem
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
@@ -315,14 +315,14 @@ private fun StoreScreen(
 	onDownloadClick: (StoreItemState) -> Unit,
 	onYoutubeClick: () -> Unit,
 ) {
-	// The window is edge-to-edge (see onCreate): the navigation bar sits over the bottom (gesture handle)
-	// or the side (3-button bar in landscape), and a display cutout can take a side as well.
-	val safeBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+	// The window is edge-to-edge (see onCreate) on every API level.
+	val barsAndCutout = WindowInsets.barsAndCutout
+	val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
 			.background(MaterialTheme.colorScheme.background)
-			.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+			.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left panel (weight 2)
 		Box(

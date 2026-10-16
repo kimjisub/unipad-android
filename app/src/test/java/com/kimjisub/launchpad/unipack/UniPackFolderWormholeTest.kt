@@ -12,7 +12,8 @@ import java.io.File
 
 /**
  * The sixth keySound column moves to another chain after the sound plays. A chain the pack does not have
- * used to reach autoPlay as the current chain, and practice mode lit a chain button past the end of the
+ * moves to the nearest chain it has (the first or the last), as on iOS and the web, with a warning. Kept
+ * raw, it reached autoPlay as the current chain and practice mode lit a chain button past the end of the
  * round button table, which closed the app.
  */
 class UniPackFolderWormholeTest {
@@ -40,14 +41,14 @@ class UniPackFolderWormholeTest {
 			}
 		}
 
-	private fun assertMoveIgnored(wormhole: String) {
+	private fun assertMovesToNearestChain(wormhole: String, nearest: Int) {
 		val pack = load(wormhole)
 
 		assertFalse(pack.criticalError)
 		assertEquals(1, pack.soundCount)
-		assertEquals(Sound.NO_WORMHOLE, pack.soundGet(0, 0, 0)?.wormhole)
+		assertEquals(nearest, pack.soundGet(0, 0, 0)?.wormhole)
 		assertEquals("keySound : [1 1 1 a.wav 1 $wormhole] wormhole is incorrect", pack.errorDetail)
-		assertEquals(listOf("on 0,0 chain=0", "on 0,1 chain=0"), autoPlay(pack))
+		assertEquals(listOf("on 0,0 chain=0", "chain $nearest", "on 0,1 chain=$nearest"), autoPlay(pack))
 	}
 
 	@Test
@@ -69,13 +70,13 @@ class UniPackFolderWormholeTest {
 	}
 
 	@Test
-	fun oneChainPastTheLast_isIgnoredWithAWarning() = assertMoveIgnored("${CHAIN + 1}")
+	fun oneChainPastTheLast_movesToTheLastChainWithAWarning() = assertMovesToNearestChain("${CHAIN + 1}", CHAIN - 1)
 
 	@Test
-	fun chainBeyondTheRoundButtons_isIgnoredWithAWarning() = assertMoveIgnored("40")
+	fun chainBeyondTheRoundButtons_movesToTheLastChainWithAWarning() = assertMovesToNearestChain("40", CHAIN - 1)
 
 	@Test
-	fun negativeChain_isIgnoredWithAWarning() = assertMoveIgnored("-1")
+	fun negativeChain_movesToTheFirstChainWithAWarning() = assertMovesToNearestChain("-1", 0)
 
 	companion object {
 		private const val CHAIN = 3

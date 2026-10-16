@@ -389,8 +389,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
-			override fun onPadTouchOn(x: Int, y: Int) { events.add(event("autoOn", x, y)); forward(x, y, true) }
-			override fun onPadTouchOff(x: Int, y: Int) { events.add(event("autoOff", x, y)); forward(x, y, false) }
+			override fun onPadTouchOn(x: Int, y: Int, atMs: Long) { events.add(event("autoOn", x, y)); forward(x, y, true) }
+			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) { events.add(event("autoOff", x, y)); forward(x, y, false) }
 			override fun onChainChange(c: Int) {
 				chainTag.set("autoChain")
 				try { vm.chain.value = c } finally { chainTag.set(null) }

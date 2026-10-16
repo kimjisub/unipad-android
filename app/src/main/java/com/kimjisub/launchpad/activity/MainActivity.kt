@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,9 +34,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -108,6 +106,7 @@ import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -663,12 +662,11 @@ class MainActivity : BaseActivity() {
 			if (updateSafe) appUpdate?.onListReady()
 		}
 
-		// From API 35 the window is edge-to-edge: the navigation bar sits over the bottom (gesture handle)
-		// or a side (3-button bar in landscape), and a display cutout can take a side as well. Below API 35
-		// the window already fits the system bars, so these insets are zero there. The keyboard is left
-		// out: it covers the panels as it always has rather than squeezing them.
-		val barsAndCutout = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+		// The keyboard covers the panels rather than squeezing them, but the list's end takes it in so its
+		// last rows can still be scrolled above it.
+		val barsAndCutout = WindowInsets.barsAndCutout
 		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
+		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -740,6 +738,7 @@ class MainActivity : BaseActivity() {
 										.verticalScroll(rememberScrollState())
 										.fillMaxWidth()
 										.heightIn(min = maxHeight)
+										.windowInsetsPadding(listBottom)
 										.padding(horizontal = 16.dp, vertical = 16.dp),
 									horizontalAlignment = Alignment.CenterHorizontally,
 									verticalArrangement = Arrangement.Center,
@@ -785,13 +784,14 @@ class MainActivity : BaseActivity() {
 									NoSearchResults(
 										query = searchQuery,
 										onClearClick = { updateSearchQuery("") },
+										bottomInsets = listBottom,
 										modifier = Modifier.weight(1f),
 									)
 								} else LazyColumn(
 									state = listState,
 									contentPadding = PaddingValues(
 										top = 4.dp,
-										bottom = 6.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+										bottom = 6.dp + listBottom.asPaddingValues().calculateBottomPadding(),
 									),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
@@ -956,6 +956,7 @@ class MainActivity : BaseActivity() {
 	private fun NoSearchResults(
 		query: String,
 		onClearClick: () -> Unit,
+		bottomInsets: WindowInsets,
 		modifier: Modifier = Modifier,
 	) {
 		BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -964,6 +965,7 @@ class MainActivity : BaseActivity() {
 					.verticalScroll(rememberScrollState())
 					.fillMaxWidth()
 					.heightIn(min = maxHeight)
+					.windowInsetsPadding(bottomInsets)
 					.padding(16.dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center,
