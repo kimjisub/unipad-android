@@ -99,7 +99,7 @@ sink; this suite does not change that file.
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, and a pad whose sound moves to a chain the pack lacks. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
-| 7. Language, skin, rotation, bars/cutout | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout`, `mainScreenButtonsStayClearOfSideNavigationBarAndCutout`, `mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. The main screen test turns on three-button navigation and a punch-hole cutout itself (`DisplayOverlays`, restored afterwards) and checks every main screen control lies clear of the side bar and the cutout in both landscape rotations; the search keyboard covers the main screen's left panel without resizing it. The play screen rotation test still runs in the device's own navigation mode and cutout profile, so three-button navigation on the play screen and other form factors need repeated device configurations. |
+| 7. Language, skin, rotation, bars/cutout, keyboard | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout`, `mainScreenButtonsStayClearOfSideNavigationBarAndCutout`, `settingsScreenStaysClearOfSideNavigationBarAndCutout`, `themeScreenStaysClearOfSideNavigationBarAndCutout`, `transferScreenStaysClearOfSideNavigationBarAndCutout`, `emptyLibraryGuideStaysClearOfGestureNavigation`, `mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt`, `mainScreenSearchResultsScrollAboveKeyboard`, `mainScreenNoSearchResultsScrollAboveKeyboard` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. The main, settings (both categories), theme and transfer screen tests turn on three-button navigation and a punch-hole cutout themselves (`DisplayOverlays`, restored afterwards) and check every control on screen lies clear of the side bar and the cutout in both landscape rotations. The empty library test turns on gesture navigation and the largest font size (2.0, restored afterwards), scrolls the guide to its end and checks its buttons stay above the gesture handle. The search keyboard covers the main screen's left panel without resizing it; dragging the results in the strip left above the keyboard brings the last row, and the "no results" clear button, above it. Below API 35 the main window is not edge-to-edge and is never told the keyboard's height, so the keyboard still covers the end of the list there; those two keyboard tests check that only from API 35. The play screen rotation test still runs in the device's own navigation mode and cutout profile, so three-button navigation on the play screen and other form factors need repeated device configurations. |
 | 8. Background/lock/return while playing | `AudioFocusPolicyTest` covers focus policy; transfer lifecycle test covers a different screen | `playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain` | Partial: Home, screen off/on, silence on leave, same activity/viewmodel/process/chain and a new sound request after returning. OS process eviction/OEM lock/power policies need hardware/long-duration checks. |
 
 ## Touch cancellation regression (base feature 3)
@@ -275,6 +275,23 @@ Not established by these tests:
   freeform windows are not enabled on the borrowed emulator.
 - A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
   request proves only that the app asked for it.
+
+## Device settings the screen tests change
+
+`DisplayOverlays` switches the emulated navigation mode and display cutout, and
+`emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size; each is restored in
+`finally`. If a run is killed in between, put the emulator back before returning it:
+
+```bash
+adb -s "$ANDROID_SERIAL" shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural
+adb -s "$ANDROID_SERIAL" shell cmd overlay disable com.android.internal.display.cutout.emulation.hole
+adb -s "$ANDROID_SERIAL" shell settings put system font_scale 1.0
+# Check: only navbar.gestural is marked [x] among the navbar/cutout overlays.
+adb -s "$ANDROID_SERIAL" shell cmd overlay list | grep -E 'navbar|cutout'
+```
+
+Use the navigation mode the emulator had before (`navbar.threebutton` instead of `navbar.gestural`)
+if it was not gesture navigation.
 
 ## Pressing the edges of a pad
 
