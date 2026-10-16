@@ -157,7 +157,10 @@ private fun event(vararg parts: Any): JsonElement = buildJsonArray {
 	for (p in parts) add(if (p is Int) JsonPrimitive(p) else JsonPrimitive(p as String))
 }
 
-/** Stands in for the native audio engine and reports which file each `play` call started. */
+/**
+ * Stands in for the native audio engine and reports which file each `play` call started. It has no
+ * output stream: opening and closing one (start, stop) are accepted and not checked.
+ */
 private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Unit) : SoundRunner.Engine {
 	private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, File>()
 	private val fileById = HashMap<Int, File>()
@@ -191,14 +194,15 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * change of time waits until that thread has read the new value and finished the pass that read it.
  *
  * The play screen's view model is set up the way PlayActivity does it (initState, the option locks and
- * listeners, initPlayback), so its chain observer and options are in place; only its LED and auto-play
- * runners are swapped for ones this run drives, of the same classes. Leaving and returning to the screen
- * are PlayActivity's onStop and onStart/onResume calls into the view model.
+ * listeners, initPlayback), so its chain observer and options are in place; only its LED runner is
+ * swapped for one this run drives, of the same class. Auto play is the screen's own runner, with its
+ * listener wrapped: pad presses and releases are recorded, and onEnd is the screen's own. Leaving and
+ * returning to the screen are PlayActivity's onStop and onStart/onResume calls into the view model.
  *
- * Where this run still differs from the play screen: the auto-play listener records events and ignores
- * onEnd, so after auto play has played to its end the screen still counts it as playing; its chain
- * changes run on the runner's thread, not posted to the main thread; a second "autoplay" step turns auto
- * play off and leaves the first runner behind; "start" expects a "stop" before it.
+ * Where this run still differs from the play screen: the auto-play listener's other calls (start,
+ * progress, guides, chain lights) are not passed on; its chain changes run on the runner's thread, not
+ * posted to the main thread; "start" expects a "stop" before it; returning to the screen is checked up to
+ * the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
@@ -217,6 +221,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		events.add(event("sound", pressChain, pressX, pressY, name, loop))
 	})
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
+	private val listenerField = AutoPlayRunner::class.java.getDeclaredField("listener").apply { isAccessible = true }
 	private val lit = HashMap<String, Pair<Int, Int>>()
 	private val wormholes = ArrayList<Triple<Long, Int, Int>>()
 	private var pressChain = 0
@@ -371,10 +376,18 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	 * auto-play listener sends it, posted to the main thread and handled like a pad touch.
 	 */
 	private fun startAutoPlay(toPads: Boolean) {
+		val runner = checkNotNull(vm.autoPlayRunner) { "${c.id}: the play screen has no auto play" }
+		if (autoPlay !== runner) listenerField.set(runner, recording(listenerField.get(runner) as AutoPlayRunner.Listener, toPads))
+		autoPlay = runner
+		afterAutoPlayPass("the auto-play runner's first pass", STARTING) { vm.switchPlayMode(PlayMode.AutoPlay) }
+	}
+
+	/** The screen's auto-play listener, recording pad presses and releases instead of passing them on. */
+	private fun recording(screen: AutoPlayRunner.Listener, toPads: Boolean): AutoPlayRunner.Listener {
 		fun forward(x: Int, y: Int, down: Boolean) {
 			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down) })
 		}
-		val listener = object : AutoPlayRunner.Listener {
+		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
 			override fun onPadTouchOn(x: Int, y: Int) { events.add(event("autoOn", x, y)); forward(x, y, true) }
 			override fun onPadTouchOff(x: Int, y: Int) { events.add(event("autoOff", x, y)); forward(x, y, false) }
@@ -389,12 +402,9 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			override fun onRemoveGuide() {}
 			override fun chainButsRefresh() {}
 			override fun onProgressUpdate(progress: Int) {}
-			override fun onEnd() {}
+			// At its end auto play turns its option off, so leaving the screen afterwards finds it not playing.
+			override fun onEnd() = screen.onEnd()
 		}
-		val runner = AutoPlayRunner(pack, listener, vm.chain)
-		autoPlay = runner
-		vm.autoPlayRunner = runner
-		afterAutoPlayPass("the auto-play runner's first pass", STARTING) { vm.switchPlayMode(PlayMode.AutoPlay) }
 	}
 
 	/**

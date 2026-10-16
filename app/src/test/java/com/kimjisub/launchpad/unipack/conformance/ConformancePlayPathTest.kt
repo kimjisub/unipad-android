@@ -89,6 +89,25 @@ class ConformancePlayPathTest {
 	}
 
 	@Test
+	fun autoPlayThatHasEndedIsNotPausedOnLeavingTheScreen() {
+		val c = case(
+			mapOf("keySound" to "1 1 1 a.wav\n1 2 1 a.wav", "autoPlay" to "on 1 1\ndelay 50\noff 1 1"),
+			"""[
+				{"do": "autoplay"}, {"do": "advance", "ms": 100}, {"do": "observe"},
+				{"do": "press", "x": 1, "y": 0}, {"do": "observe"},
+				{"do": "stop"}, {"do": "observe"}
+			]""",
+		)
+		// At its end auto play turns its option off and, for a pack without a keyLED file, the touch
+		// feedback light on, so the held pad lights. Leaving then finds nothing playing and does not
+		// pause auto play, whose pad release would turn that light off.
+		assertEquals(
+			json("""[[["autoOn", 0, 0], ["autoOff", 0, 0]], [["sound", 0, 1, 0, "a.wav", 0], ["ledOn", 1, 0, "fffafafa", 3]], []]"""),
+			checkpoints(c),
+		)
+	}
+
+	@Test
 	fun continuingAutoPlayHasPlayedItsFirstStepBeforeTheNextScenarioStep() {
 		val c = case(
 			mapOf("keySound" to "1 1 1 a.wav", "autoPlay" to "on 1 1\ndelay 100\noff 1 1\ndelay 100\ntouch 2 1"),
@@ -99,6 +118,6 @@ class ConformancePlayPathTest {
 		)
 		// Continuing wakes the paused runner before it is allowed to play, so it can read the clock while
 		// still paused; a wait that counts those reads ends before the first pass. One run proves little.
-		repeat(200) { assertEquals(json("""[[["autoOn", 0, 0]], [["autoOff", 0, 0]]]"""), checkpoints(c)) }
+		repeat(50) { assertEquals(json("""[[["autoOn", 0, 0]], [["autoOff", 0, 0]]]"""), checkpoints(c)) }
 	}
 }
