@@ -93,6 +93,12 @@
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tanda air</string>
 	<string name="proLightMode">Mode Pro Light</string>
+	<string name="play_section_play_mode">Mode Bermain</string>
+	<string name="play_section_performance">Pertunjukan</string>
+	<string name="play_section_display">Tampilan</string>
+	<string name="play_section_tools">Alat</string>
+	<string name="autoMapping">Pemetaan Otomatis</string>
+	<string name="autoMappingRunning">Pemetaan Otomatis…</string>
 
 	<!--Version-->
 

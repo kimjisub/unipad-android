@@ -85,6 +85,7 @@ import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.openAppLanguageSettings
 import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import org.koin.android.ext.android.inject
@@ -123,6 +124,9 @@ class SettingsActivity : AppCompatActivity() {
 					onThemeClick = { start<ThemeActivity>() },
 					onGithubClick = { browse("https://github.com/kimjisub/unipad-android") },
 					onOssLicenseClick = { start<OssLicensesMenuActivity>() },
+					onLanguageClick = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+						{ openAppLanguageSettings() }
+					} else null,
 					onFcmTokenCopy = { copyFcmToken() },
 					onCommunityItemClick = { action, url ->
 						browse(url, action)
@@ -234,6 +238,7 @@ private fun SettingsScreen(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	onTransferClick: (sourcePath: String) -> Unit = {},
 	onBackupClick: () -> Unit = {},
@@ -272,6 +277,7 @@ private fun SettingsScreen(
 					onOssLicenseClick = onOssLicenseClick,
 					onFcmTokenCopy = onFcmTokenCopy,
 					onCommunityItemClick = onCommunityItemClick,
+					onLanguageClick = onLanguageClick,
 					onReconnectClick = onReconnectClick,
 					traceLogClassic = traceLogClassic,
 					onTraceLogClassicChange = {
@@ -484,6 +490,7 @@ private fun InfoContent(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	traceLogClassic: Boolean = false,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
@@ -555,6 +562,7 @@ private fun InfoContent(
 			SettingsRow(
 				title = stringResource(R.string.language),
 				subtitle = stringResource(R.string.translated_by),
+				onClick = onLanguageClick,
 			)
 			CardDivider()
 			SettingsRow(

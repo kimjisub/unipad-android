@@ -93,6 +93,8 @@
 	<string name="hideUI">UI ဖျောက်</string>
 	<string name="watermark">ရေစာ</string>
 	<string name="proLightMode">Pro Light မုဒ်</string>
+	<string name="autoMapping">အလိုအလျောက် မြေပုံဆွဲခြင်း</string>
+	<string name="autoMappingRunning">အလိုအလျောက် မြေပုံဆွဲခြင်း…</string>
 
 	<!--Version-->
 

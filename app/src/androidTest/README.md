@@ -170,12 +170,14 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
+| `AppLaunchTest.testSplashFooterStaysAboveNavigationBar` | Splash copyright is above the navigation bar, then startup reaches Main. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |
 | `AppLaunchTest.testNavigationFlow` | App remains running after taps in the lower screen area (smoke check). |
 | `AppLaunchTest.testPermissionHandling` | App remains usable after launch permissions are handled. |
 | `AppLaunchTest.testPlayActivityNavigation` | Select the pack, enter Play, Back opens options, Quit returns to Main. |
 | `MainActivityTest.testMainNavigationButtonsAndSettingsReturn` | Current Store/Import/Settings buttons exist; Settings opens and returns. |
 | `MainActivityTest.testMainScreenSorting` | Each sort method is saved/shown; order toggles and restores. |
+| `MainActivityTest.testSortNamesFollowAppLanguageChange` | Switching UniPad to Korean through the per-app language setting turns the sort bar and its list Korean at once and after a relaunch. API 33+ (per-app language); API 35 full runs do not skip it. |
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
@@ -184,6 +186,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
+| `SettingsTest.testLanguageRowOpensSystemAppLanguageScreen` | On API 33+ the language row opens the system's language screen for UniPad, which lists Korean and stays open; Back returns to Settings. Below 33 tapping it leaves Settings open. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
 | `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. |
@@ -259,8 +262,10 @@ claimed here as audio or hardware proof.
 | `AppUpdateNoticeTest.restsAreKeptOnDisk` | Decline time and pending download state persist in preferences. |
 | `AppDatabaseMigrationTest` | `migrate1To2_keepsBookmarksAndPlayHistory`, `v1Database_opensThroughTheAppBuilder`, `newerDatabase_isWipedInsteadOfThrowing`: real SQLite upgrade/open/downgrade. |
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
+| `LeftoverDownloadNotificationTest` | `startupRemovesOnlyUnfinishedDownloadProgress`: the start-up cleanup removes a download progress notification left by a killed process and keeps finished downloads and other channels' notifications. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
+| `PackFailureNotificationDeviceTest` | `missingDownloadShowsFailureWithoutProgressAndCanBeDismissed`, `connectionLostDuringFastDownloadShowsFailureWithoutProgress`, `invalidImportShowsFailureWithoutProgressAndCanBeDismissed`: real local HTTP 404, a connection reset right after fast progress (when Android drops further progress updates) and invalid ZIP failures leave only one notification, with the existing failure translation, no progress, and allow dismissal. API 29+ file-provider test APIs. Optional `notificationEvidence=<label>` saves notification shade screenshots. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |

@@ -93,6 +93,12 @@
 	<string name="hideUI">ซ่อน UI</string>
 	<string name="watermark">ลายน้ำ</string>
 	<string name="proLightMode">โหมด Pro Light</string>
+	<string name="play_section_play_mode">โหมดการเล่น</string>
+	<string name="play_section_performance">การแสดง</string>
+	<string name="play_section_display">การแสดงผล</string>
+	<string name="play_section_tools">เครื่องมือ</string>
+	<string name="autoMapping">แมปอัตโนมัติ</string>
+	<string name="autoMappingRunning">แมปอัตโนมัติ…</string>
 
 	<!--Version-->
 
