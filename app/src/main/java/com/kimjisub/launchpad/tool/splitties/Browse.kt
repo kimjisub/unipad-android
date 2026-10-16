@@ -1,9 +1,13 @@
 package com.kimjisub.launchpad.tool.splitties
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.tool.Log
@@ -24,13 +28,26 @@ fun android.content.Context.openPlayStorePage(appId: String): Boolean {
 		tryStart(Intent(Intent.ACTION_VIEW, page))
 }
 
-private fun android.content.Context.tryStart(intent: Intent): Boolean {
-	intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
+/**
+ * Opens the system's per-app language screen for this app on top of [this] activity, so picking a
+ * language or going back returns here rather than to whatever the Settings app last showed. Some
+ * manufacturers remove or lock that screen; then nothing opens and the app carries on.
+ */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+fun Activity.openAppLanguageSettings() {
+	tryStart(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, "package:$packageName".toUri()), newTask = false)
+}
+
+private fun android.content.Context.tryStart(intent: Intent, newTask: Boolean = true): Boolean {
+	if (newTask) intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
 	return try {
 		startActivity(intent)
 		true
 	} catch (e: ActivityNotFoundException) {
 		Log.err("no activity for ${intent.data}", e)
+		false
+	} catch (e: SecurityException) {
+		Log.err("activity for ${intent.data} not allowed", e)
 		false
 	}
 }

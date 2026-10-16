@@ -32,11 +32,21 @@ object FileManager {
 			val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
 			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
 				children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
-				moveDirectory(nonHidden[0], rootFolder)
+				moveDirectory(renameAside(nonHidden[0]), rootFolder)
 			} else {
 				return
 			}
 		}
+	}
+
+	/**
+	 * Renames [dir] to a hidden name that is free both beside it and inside it, so no entry of
+	 * [dir] (an inner folder of the same name, or one named like the temporary name) is moved
+	 * onto the folder it is being moved out of.
+	 */
+	private fun renameAside(dir: File): File {
+		val taken = { aside: File -> aside.exists() || File(dir, aside.name).exists() }
+		return claimNextPath(dir.parentFile!!, ".unwrap", "", taken) { !taken(it) && dir.renameTo(it) }
 	}
 
 	fun sortByTime(files: Array<File>): Array<File> {
@@ -62,13 +72,6 @@ object FileManager {
 	}
 
 	/**
-	 * Like [makeNextPath], but creates the empty file in the same step that finds the free
-	 * name, so a request running at the same time can never be handed the same file.
-	 */
-	fun claimNextFile(dir: File, name: String, extension: String): File =
-		claimNextPath(dir, name, extension) { it.createNewFile() }
-
-	/**
 	 * Renames the finished folder [staged] to the first free name in [dir], numbered as
 	 * [makeNextPath] does. The rename puts the whole pack in place at once and fails on a name
 	 * taken in the meantime, so two installs of the same name never share a folder; a name that is
@@ -77,13 +80,20 @@ object FileManager {
 	fun moveToNextFolder(staged: File, dir: File, name: String): File =
 		claimNextPath(dir, name, "") { !it.exists() && staged.renameTo(it) }
 
-	private fun claimNextPath(dir: File, name: String, extension: String, create: (File) -> Boolean): File {
+	/** Tries [create] on each numbered name in turn, skipping the names [isTaken] reports. */
+	private fun claimNextPath(
+		dir: File,
+		name: String,
+		extension: String,
+		isTaken: (File) -> Boolean = File::exists,
+		create: (File) -> Boolean,
+	): File {
 		val newName = filterFilename(name)
 		var i = 1
 		while (true) {
 			val candidate = numberedPath(dir, newName, extension, i)
 			if (create(candidate)) return candidate
-			if (!candidate.exists()) throw IOException("Could not create ${candidate.path}")
+			if (!isTaken(candidate)) throw IOException("Could not create ${candidate.path}")
 			i++
 		}
 	}

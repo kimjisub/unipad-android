@@ -25,8 +25,6 @@ class PackStorageChangesTest {
 		observer.launch(start = CoroutineStart.UNDISPATCHED) {
 			PackStorageChanges.changes.collect { snapshots += env.workspaceContents() }
 		}
-		// Ignore a change replayed from the previous test; measure this download only.
-		snapshots.clear()
 	}
 
 	@After fun tearDown() {
@@ -57,7 +55,7 @@ class PackStorageChangesTest {
 		val (reading, release) = env.gate(URL).openBlockedBody(ByteArray(4096), cancelBreaksRead = true)
 		try {
 			assertTrue(reading.await(10, TimeUnit.SECONDS))
-			assertTrue(env.workspaceContents().any { it.endsWith(".zip") })
+			assertTrue(env.workspace.walk().any { it.name.endsWith(".zip") })
 			scope.cancel()
 			env.finish(scope)
 			assertEquals(listOf(emptyList<String>()), snapshots.toList())
@@ -66,6 +64,15 @@ class PackStorageChangesTest {
 			scope.cancel()
 			env.finish(scope)
 		}
+	}
+
+	@Test fun aScreenThatStartsListeningLaterIsNotGivenAnEarlierChange() {
+		PackStorageChanges.notifyChanged()
+		val late = CopyOnWriteArrayList<Unit>()
+		observer.launch(start = CoroutineStart.UNDISPATCHED) {
+			PackStorageChanges.changes.collect { late += it }
+		}.cancel()
+		assertEquals(emptyList<Unit>(), late.toList())
 	}
 
 	companion object { private const val URL = "https://test.invalid/storage-change" }

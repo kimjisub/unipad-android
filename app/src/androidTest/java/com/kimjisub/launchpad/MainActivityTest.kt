@@ -1,18 +1,31 @@
 package com.kimjisub.launchpad
 
+import android.app.LocaleManager
+import android.content.res.Configuration
+import android.os.Build
+import android.os.LocaleList
+import android.os.SystemClock
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.tool.PackStorageChanges
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.Locale
 
 /**
  * MainActivity Tests
@@ -103,6 +116,75 @@ class MainActivityTest : BaseUITest() {
             prefs.sortMethod = originalMethod
             prefs.sortOrder = originalOrder
         }
+    }
+
+    /**
+     * Choosing UniPad's language in the system settings (Android 13+) changes the sort bar and its
+     * list right away, while the main screen's view model survives the change, and after a relaunch.
+     * Below Android 13 there is no per-app language; the sort bar shows the device language.
+     */
+    @Test
+    fun testSortNamesFollowAppLanguageChange() {
+        val originalMethod = prefs.sortMethod
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            try {
+                prefs.sortMethod = 2
+                launchToMainScreen()
+                assertTrue(
+                    "Sort bar does not show '${str(R.string.sort_download_date)}'",
+                    device.wait(Until.hasObject(By.text(str(R.string.sort_download_date))), 5000L)
+                )
+            } finally {
+                prefs.sortMethod = originalMethod
+            }
+            return
+        }
+        val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
+        val english = sortRes.map { strIn(Locale.ENGLISH, it) }
+        val korean = sortRes.map { strIn(Locale.KOREAN, it) }
+        val originalLocales = appLanguage()
+        try {
+            setAppLanguage(LocaleList.forLanguageTags("en"))
+            prefs.sortMethod = 2
+            launchToMainScreen()
+            assertTrue("Sort bar does not show '${english[2]}'", device.wait(Until.hasObject(By.text(english[2])), 5000L))
+
+            setAppLanguage(LocaleList.forLanguageTags("ko"))
+            assertTrue(
+                "Sort bar still shows '${english[2]}' after switching to Korean",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            sortAnchor(korean).click()
+            assertTrue(
+                "Sort list is not in Korean",
+                waitUntil(3000L) { korean.all { device.hasObject(By.text(it)) } }
+            )
+            takeScreenshot("sort_names_korean_without_relaunch")
+            device.pressBack()
+
+            launchToMainActivity()
+            assertTrue(
+                "Sort bar is not Korean after a relaunch",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            takeScreenshot("sort_names_korean_after_relaunch")
+        } finally {
+            setAppLanguage(originalLocales)
+            prefs.sortMethod = originalMethod
+        }
+    }
+
+    private fun appLanguage(): LocaleList = context.getSystemService(LocaleManager::class.java).applicationLocales
+
+    private fun setAppLanguage(locales: LocaleList) {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            context.getSystemService(LocaleManager::class.java).applicationLocales = locales
+        }
+    }
+
+    private fun strIn(locale: Locale, resId: Int): String {
+        val configuration = Configuration(context.resources.configuration).apply { setLocale(locale) }
+        return context.createConfigurationContext(configuration).getString(resId)
     }
 
     @Test
@@ -220,6 +302,60 @@ class MainActivityTest : BaseUITest() {
         assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("back_from_store")
     }
+
+    /**
+     * Coming back to Main re-reads the pack list once, also after a download announced a storage
+     * change earlier; a change announced while Main is shown is one more read.
+     */
+    @Test
+    fun testReturningToMainReadsThePackListOnce() {
+        launchToMainScreen()
+        val start = settledListRefreshes()
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { PackStorageChanges.notifyChanged() }
+        val afterChange = settledListRefreshes()
+        assertEquals("a storage change on the shown main screen must re-read the list once", start + 1, afterChange)
+
+        device.findObject(By.desc(str(R.string.store))).click()
+        assertTrue("Did not transition to the store screen", waitForStoreScreen())
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        val afterStore = settledListRefreshes()
+        assertEquals("returning from the store must re-read the list once", afterChange + 1, afterStore)
+
+        openSettings()
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        assertEquals("returning from settings must re-read the list once", afterStore + 1, settledListRefreshes())
+    }
+
+    /** Completed list reads of the resumed main screen, once no read is running or starts for a while. */
+    private fun settledListRefreshes(): Int {
+        val deadline = SystemClock.uptimeMillis() + 15_000
+        var last = -1
+        var stableSince = SystemClock.uptimeMillis()
+        while (SystemClock.uptimeMillis() < deadline) {
+            var count = -1
+            var refreshing = true
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                val main = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().singleOrNull() ?: return@runOnMainSync
+                count = (delegate(main, "scrollToTopTrigger") as MutableIntState).intValue
+                refreshing = (delegate(main, "listRefreshing") as MutableState<*>).value as Boolean
+            }
+            if (count != last || refreshing) {
+                last = count
+                stableSince = SystemClock.uptimeMillis()
+            } else if (SystemClock.uptimeMillis() - stableSince >= 2_000) {
+                return count
+            }
+            SystemClock.sleep(100)
+        }
+        throw AssertionError("main screen list did not settle (last count $last)")
+    }
+
+    private fun delegate(main: MainActivity, property: String): Any =
+        MainActivity::class.java.getDeclaredField("$property\$delegate").apply { isAccessible = true }.get(main)!!
 
     /**
      * Tapping the order arrow currently also expands the sort dropdown (reported separately as an

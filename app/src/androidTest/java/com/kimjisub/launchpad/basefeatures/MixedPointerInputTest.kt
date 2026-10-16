@@ -62,6 +62,7 @@ class MixedPointerInputTest : HeldPadTest() {
         }
         settle()
         val ended = endedBySystem(first, received.events.drop(beforeSecond))
+        if (ended && mouseFirst) mouse.forgetCancelled()
         Log.i(ReceivedInput.TAG, "${second.name} pressed while the ${first.name} held a pad: " +
             if (ended) "Android ended the ${first.name}'s gesture" else "both kept")
         val firstHeld = if (ended) emptySet() else setOf(held)
@@ -71,7 +72,8 @@ class MixedPointerInputTest : HeldPadTest() {
         second.lift()
         awaitHeld("Lifting the ${second.name} changed the ${first.name}'s pad or left its own playing", firstHeld)
         assertHeldStill("After lifting the ${second.name}", listOf(held, other), firstHeld)
-        first.lift()
+        // A kernel touchscreen still needs a physical lift; an injected mouse ended at cancel.
+        if (!ended || !mouseFirst) first.lift()
         awaitHeld("The ${first.name}'s pad stayed lit or looping after lifting", emptySet())
         assertHeldStill("After lifting the ${first.name}", listOf(held, other), emptySet())
         assertPointers(first, ended)
