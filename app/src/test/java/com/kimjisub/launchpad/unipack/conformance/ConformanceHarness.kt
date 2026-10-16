@@ -190,10 +190,15 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * and the runners' threads. The auto-play runner polls the clock on its own thread, so every
  * change of time waits until that thread has read the new value and finished the pass that read it.
  *
- * The play screen's view model is set up the way PlayActivity does it (initState, initPlayback), so
- * its chain observer and options are in place; only its LED and auto-play runners are swapped for ones
- * this run drives, of the same classes. Leaving and returning to the screen are PlayActivity's onStop
- * and onStart/onResume calls into the view model.
+ * The play screen's view model is set up the way PlayActivity does it (initState, the option locks and
+ * listeners, initPlayback), so its chain observer and options are in place; only its LED and auto-play
+ * runners are swapped for ones this run drives, of the same classes. Leaving and returning to the screen
+ * are PlayActivity's onStop and onStart/onResume calls into the view model.
+ *
+ * Where this run still differs from the play screen: the auto-play listener records events and ignores
+ * onEnd, so after auto play has played to its end the screen still counts it as playing; its chain
+ * changes run on the runner's thread, not posted to the main thread; a second "autoplay" step turns auto
+ * play off and leaves the first runner behind; "start" expects a "stop" before it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
@@ -245,7 +250,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"stop" -> stop()
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
-					"resume" -> afterAutoPlayPass("auto play to continue", STARTING) { vm.autoPlayResume() }
+					"resume" -> resumeAutoPlay()
 					else -> error("${c.id}: unknown scenario step $name")
 				}
 			}
@@ -271,6 +276,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		vm.unipack = pack
 		vm.uiCallback = LedSink()
 		vm.initState()
+		vm.setupCheckBoxVisibility()
 		vm.setupCheckBoxListeners()
 		// Pro light mode on. Off, which is the play screen's default (PlayActivityViewModel.proLightMode),
 		// hides the round and logo lights of a keyLED file, and the cases that light them would see nothing.
@@ -394,9 +400,10 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	/**
 	 * Runs [action] and, when auto play was or is now playing, waits until its runner has read the clock
 	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
-	 * reads the clock once, at its top, and the next pass's read marks its end. Starting or continuing
-	 * reads it once more before the first pass (the start time, or the time spent paused); pausing reads it
-	 * at least twice after the pass in progress before the runner waits.
+	 * reads the clock once, at its top, and the next pass's read marks its end. Starting reads it once more
+	 * before the first pass (the start time); continuing counts from after autoPlayResume, where a paused
+	 * pass may still read it once on waking (the time spent paused); pausing reads it at least twice after
+	 * the pass in progress before the runner waits.
 	 */
 	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
 		val runner = autoPlay
@@ -409,6 +416,16 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		main.runAll()
+	}
+
+	/**
+	 * The play button of paused auto play. autoPlayResume wakes the paused runner (stepMode,
+	 * resetStepState) before it sets playmode, so the runner can read the clock a few times while still
+	 * paused; only the reads after autoPlayResume has returned are counted.
+	 */
+	private fun resumeAutoPlay() {
+		vm.autoPlayResume()
+		afterAutoPlayPass("auto play to continue", STARTING) {}
 	}
 
 	private fun advance(ms: Int) {
