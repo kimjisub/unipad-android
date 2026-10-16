@@ -170,6 +170,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
+| `AppLaunchTest.testSplashFooterStaysAboveNavigationBar` | Splash copyright is above the navigation bar, then startup reaches Main. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |
 | `AppLaunchTest.testNavigationFlow` | App remains running after taps in the lower screen area (smoke check). |
 | `AppLaunchTest.testPermissionHandling` | App remains usable after launch permissions are handled. |
