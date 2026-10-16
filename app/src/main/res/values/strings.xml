@@ -294,6 +294,7 @@
 	<string name="migration_grant_access">Grant Access</string>
 	<string name="migration_same_as_source">Same as source</string>
 	<string name="migration_result">Result</string>
+	<string name="picker_unavailable">No app on this device can pick files or folders.</string>
 
 	<!--Backup-->
 	<string name="backup_section">Backup</string>
@@ -301,6 +302,7 @@
 	<string name="backup_grant_access">Connect Backup Folder</string>
 	<string name="backup_revoke">Disconnect Backup Folder</string>
 	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_permission_refused">UniPad could not keep access to this folder. Choose Documents/Unipad again.</string>
 	<string name="backup_backup_button">Backup</string>
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>

@@ -261,6 +261,8 @@
 	<string name="backup_grant_access">เชื่อมต่อโฟลเดอร์สำรอง</string>
 	<string name="backup_revoke">ยกเลิกการเชื่อมต่อโฟลเดอร์สำรอง</string>
 	<string name="backup_invalid_folder">กรุณาเลือกโฟลเดอร์ Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad ไม่สามารถคงสิทธิ์เข้าถึงโฟลเดอร์นี้ได้ กรุณาเลือก Documents/Unipad อีกครั้ง</string>
+	<string name="picker_unavailable">ไม่มีแอปในอุปกรณ์นี้ที่เลือกไฟล์หรือโฟลเดอร์ได้</string>
 	<string name="backup_backup_button">สำรองข้อมูล</string>
 	<string name="backup_backup_description">คัดลอก UniPacks ไปยังโฟลเดอร์สำรอง</string>
 	<string name="backup_restore_button">กู้คืน</string>
