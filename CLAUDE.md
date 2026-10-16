@@ -221,8 +221,8 @@ export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"  # Windows
 
 ### Linting & Code Quality
 ```bash
-# Run Android lint (warnings fail the build in app and design; CI runs lintDebug)
-./gradlew lintDebug
+# Run Android lint (warnings fail the build in app and design; CI runs both)
+./gradlew lintDebug :app:lintRelease
 
 # Format Kotlin code (if ktlint is configured)
 ./gradlew ktlintFormat

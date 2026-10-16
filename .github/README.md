@@ -6,7 +6,7 @@ Every pull request runs these stable checks on Ubuntu 24.04:
 | --- | --- | --- |
 | `unit-tests` | `./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain`, then `python3 -m unittest discover -s scripts/tests -v` | 20 minutes |
 | `Android debug build` | `./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain` | 25 minutes |
-| `Android lint` | `./gradlew lintDebug --no-daemon --console=plain` | 25 minutes |
+| `Android lint` | `./gradlew lintDebug :app:lintRelease --no-daemon --console=plain` | 25 minutes |
 
 The UI suite (`bash scripts/ci-connected-tests.sh`) is not a hosted check; it
 runs on the maintenance Mac before every push, as described below.
