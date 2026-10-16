@@ -161,6 +161,10 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
+	// Set when a refresh is asked for while one is reading; that one may have read the folders too early.
+	private var refreshAgain = false
+	// Set from the first play press until the list is back, so a double press opens one play screen.
+	private var playOpening = false
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
 	private var scrollToCenterTrigger by mutableIntStateOf(0)
@@ -379,7 +383,11 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) return
+		if (listRefreshing) {
+			refreshAgain = true
+			return
+		}
+		refreshAgain = false
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
@@ -416,6 +424,7 @@ class MainActivity : BaseActivity() {
 
 				scrollToTopTrigger++
 				listRefreshing = false
+				if (refreshAgain) update()
 			}
 		}
 	}
@@ -446,6 +455,8 @@ class MainActivity : BaseActivity() {
 	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
 
 	private fun playUniPack(path: String) {
+		if (playOpening) return
+		playOpening = true
 		start<PlayActivity> {
 			putExtra("path", path)
 		}
@@ -608,6 +619,7 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		resumed = true
+		playOpening = false
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		update()
@@ -695,11 +707,8 @@ class MainActivity : BaseActivity() {
 								checkingUpdate = updateState?.checking == true,
 							)
 						} else {
-							val packVM = remember(item.unipack.getPathString()) {
-								ViewModelProvider(
-									this@MainActivity,
-									MainPackPanelViewModel.Factory(application, item.unipack)
-								)["pack_${item.unipack.getPathString()}", MainPackPanelViewModel::class.java]
+							val packVM = remember(MainPackPanelViewModel.key(item.unipack)) {
+								MainPackPanelViewModel.of(this@MainActivity, application, item.unipack)
 							}
 
 							// Handle delete event from VM

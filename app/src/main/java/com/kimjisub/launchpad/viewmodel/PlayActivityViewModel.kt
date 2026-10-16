@@ -158,7 +158,6 @@ class PlayActivityViewModel(
 
 	// Unipack loading state
 	var unipackLoading by mutableStateOf(true)
-	var unipackLoadError by mutableStateOf<String?>(null)
 	var loadingPhase by mutableStateOf("")
 	var loadingPhaseIndex by mutableIntStateOf(0)
 	var loadingPhaseTotal by mutableIntStateOf(1)

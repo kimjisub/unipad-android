@@ -136,6 +136,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	}
 
 	override fun checkFile() {
+		folderModified = rootFolder.lastModified()
 		rootFolder.listFiles()?.forEach {
 			when (it.name.lowercase()) {
 				"info" -> infoFile = if (it.isFile) it else null
