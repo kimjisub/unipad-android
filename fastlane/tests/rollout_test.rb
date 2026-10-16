@@ -31,7 +31,7 @@ cases.concat([
 end
 
 failures = []
-Tempfile.create(["fake-play", ".json"], ENV["PAPERCLIP_RUN_SCRATCH_DIR"] || ENV["PAPERCLIP_SCRATCH_DIR"]) do |key|
+Tempfile.create(["fake-play", ".json"]) do |key|
   key.write("{}")
   key.flush
   ENV["PLAY_JSON_KEY_FILE"] = key.path
@@ -80,7 +80,9 @@ Tempfile.create(["fake-play", ".json"], ENV["PAPERCLIP_RUN_SCRATCH_DIR"] || ENV[
         actual_release = target.to_h.reject { |key, _| key == :user_fraction }
         assert(actual_release == expected_release, "Unrelated release fields changed")
         assert(JSON.parse(target.to_json)["userFraction"].nil?, "Completed release still sends a fraction value") if requested_fraction >= 1
-        assert(play.updated_track.releases == [previous, target], "Track releases changed")
+        # Completing replaces the previous full release; a staged rollout keeps it serving everyone else.
+        expected_releases = requested_fraction >= 1 ? [target] : [previous, target]
+        assert(play.updated_track.releases == expected_releases, "Expected releases #{expected_releases.map(&:version_codes)}, got #{play.updated_track.releases.map(&:version_codes)}")
         assert(client.current_edit.nil?, "Successful commit left an edit open")
       end
       assert(previous.to_h == previous_before, "Unrelated release changed")

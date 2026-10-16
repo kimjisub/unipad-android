@@ -60,7 +60,7 @@ def update_production_release(version_code)
     track = client.get_edit_track("production")
     release = track&.releases&.find { |item| Array(item.version_codes).map(&:to_s).include?(version_code) }
     UI.user_error!("Production release #{version_code} not found") unless release
-    yield release
+    yield release, track
     client.update_track("production", track)
     begin
       client.commit_current_edit!
@@ -152,12 +152,19 @@ platform :android do
     end
     UI.user_error!("Pass fraction as a finite positive number (1 or greater = complete)") unless fraction && fraction.finite? && fraction > 0
     version_code = (options[:version_code] || current_version_code).to_s
-    update_production_release(version_code) do |release|
+    update_production_release(version_code) do |release, track|
       UI.user_error!("Production release #{version_code} must be inProgress or halted to widen or resume (was #{release.status})") unless %w[inProgress halted].include?(release.status)
       current_fraction = staged_rollout_fraction(release, version_code)
       UI.user_error!("Requested fraction #{fraction} is lower than the current fraction #{current_fraction}") if fraction < current_fraction
-      release.status = fraction >= 1 ? "completed" : "inProgress"
-      release.user_fraction = fraction >= 1 ? nil : fraction
+      if fraction >= 1
+        # Play allows one release per status on a track, so the new full release replaces the old one.
+        track.releases = track.releases.reject { |item| !item.equal?(release) && item.status == "completed" }
+        release.status = "completed"
+        release.user_fraction = nil
+      else
+        release.status = "inProgress"
+        release.user_fraction = fraction
+      end
     end
     UI.success("production rollout #{version_code} -> #{fraction}")
   end

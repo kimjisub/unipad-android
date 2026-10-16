@@ -35,9 +35,12 @@ class FakePlay
     AndroidPublisher::TracksListResponse.new(tracks: [@track].compact)
   end
 
+  # Play refuses a track that carries two releases with the same status.
   def update_edit_track(package, edit, track, object)
     @calls << [:update, package, edit, track]
     fail_at(:update)
+    statuses = Array(object.releases).map(&:status)
+    raise ArgumentError, "Duplicate release statuses #{statuses.inspect}" if statuses.uniq.length != statuses.length
     @updated_track = object
   end
 

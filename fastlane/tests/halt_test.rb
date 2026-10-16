@@ -22,7 +22,7 @@ cases.concat([
 ])
 
 failures = []
-Tempfile.create(["fake-play", ".json"], ENV["PAPERCLIP_RUN_SCRATCH_DIR"] || ENV["PAPERCLIP_SCRATCH_DIR"]) do |key|
+Tempfile.create(["fake-play", ".json"]) do |key|
   key.write("{}")
   key.flush
   ENV["PLAY_JSON_KEY_FILE"] = key.path
