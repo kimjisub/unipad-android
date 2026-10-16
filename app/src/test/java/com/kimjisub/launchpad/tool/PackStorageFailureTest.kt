@@ -16,7 +16,6 @@ import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -35,7 +34,8 @@ class PackStorageFailureTest {
 	private lateinit var original: File
 	private lateinit var originalHash: String
 	private lateinit var protectedTree: Map<String, String>
-	private val archive = packZip("New", files = archiveFiles("New", 64 * 1024), stored = true)
+	private val newFiles = archiveFiles("New", SOUND_SIZE)
+	private val archive = packZip("New", files = newFiles, stored = true)
 	private var failureReached = false
 
 	@Before
@@ -60,8 +60,8 @@ class PackStorageFailureTest {
 	}
 
 	@Test
-	fun cacheCopyWriteFailurePreservesTheSourceAndExistingFoldersAndCanBeRetried() =
-		checkFailure(Source.FILE, Point.CACHE)
+	fun importArchiveCopyWriteFailurePreservesTheSourceAndExistingFoldersAndCanBeRetried() =
+		checkFailure(Source.FILE, Point.IMPORT_COPY)
 
 	@Test
 	fun importUnpackWriteFailurePreservesTheSourceAndExistingFoldersAndCanBeRetried() =
@@ -103,7 +103,7 @@ class PackStorageFailureTest {
 		val retry = runAttempt(source, "retry")
 		assertNull("retry failed: ${retry.error}", retry.error)
 		assertEquals(retryName, retry.installedFolder?.name)
-		assertEquals(archiveFiles("New", 64 * 1024).mapValues { sha256(it.value) }, contentHashes(retry.installedFolder!!))
+		assertEquals(newFiles.mapValues { sha256(it.value) }, contentHashes(retry.installedFolder!!))
 		assertEquals(protectedTree, contentHashes(env.workspace, includeDirectories = true).filterKeys { it != retryName && !it.startsWith("$retryName/") })
 		assertEquals(originalHash, sha256(original.readBytes()))
 		assertClean()
@@ -130,17 +130,13 @@ class PackStorageFailureTest {
 		every { anyConstructed<FileOutputStream>().write(any<ByteArray>(), any(), any()) } answers {
 			// Let the real native write put bytes on disk before failing, never replace extraction.
 			callOriginal()
-			val partial = when (point) {
-				Point.CACHE -> env.cache.listFiles().orEmpty().firstOrNull { it.name.startsWith("unipack_import_") && it.length() > 0 }
-				Point.DOWNLOAD -> env.workspace.listFiles().orEmpty().firstOrNull { it.extension == "zip" && it.length() > 0 }
-				Point.UNPACK -> File(env.workspace, ".unipad-staging").walkTopDown().firstOrNull { it.isFile && it.name == "a.wav" && it.length() > 0 }
-			}
+			val partial = File(env.workspace, STAGING).walkTopDown().firstOrNull { it.isFile && it.name == point.fileName && it.length() > 0 }
 			if (partial != null) {
-				assertTrue("failure came after the whole output was written", partial.length() < if (point == Point.UNPACK) 64 * 1024 else archive.size)
+				assertTrue("failure came after the whole output was written", partial.length() < if (point == Point.UNPACK) SOUND_SIZE else archive.size)
 				if (point == Point.UNPACK) {
 					val folder = partial.parentFile!!.parentFile!!
-					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("info")), sha256(File(folder, "info").readBytes()))
-					assertEquals(sha256(archiveFiles("New", 64 * 1024).getValue("keySound")), sha256(File(folder, "keySound").readBytes()))
+					assertEquals(sha256(newFiles.getValue("info")), sha256(File(folder, "info").readBytes()))
+					assertEquals(sha256(newFiles.getValue("keySound")), sha256(File(folder, "keySound").readBytes()))
 				}
 				failureReached = true
 				throw IOException("write failed: ENOSPC ($NO_SPACE)")
@@ -154,17 +150,20 @@ class PackStorageFailureTest {
 		assertClean()
 	}
 
+	/** The archive copy and the unpacked files are written inside staging folders, never the app cache. */
 	private fun assertClean() {
-		assertFalse(File(env.workspace, ".unipad-staging").exists())
-		assertEquals(emptyList<String>(), env.cache.list().orEmpty().toList())
-		assertFalse(env.workspace.listFiles().orEmpty().any { it.extension == "zip" })
+		assertEquals(emptyList<String>(), env.workspace.list().orEmpty().filter { it.startsWith(STAGING) })
+		assertEquals(emptyList<String>(), env.cacheContents())
 	}
 
 	private enum class Source(val value: String) { FILE("file"), STORE("store") }
-	private enum class Point { CACHE, UNPACK, DOWNLOAD }
+	/** The file whose write runs out of space, named as the importer and downloader stage it. */
+	private enum class Point(val fileName: String) { IMPORT_COPY("import.zip"), DOWNLOAD("download.zip"), UNPACK("a.wav") }
 
 	companion object {
 		private const val NO_SPACE = "No space left on device"
+		private const val STAGING = ".unipad-staging"
+		private const val SOUND_SIZE = 64 * 1024
 
 		fun archiveFiles(title: String, soundSize: Int): Map<String, ByteArray> = packFiles(title) +
 			("sounds/a.wav" to ByteArray(soundSize).apply {
