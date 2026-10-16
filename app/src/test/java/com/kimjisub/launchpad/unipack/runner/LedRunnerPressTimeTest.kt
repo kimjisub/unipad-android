@@ -155,4 +155,39 @@ class LedRunnerPressTimeTest {
 
 		assertEquals(listOf("1,1=5@1004", "1,1=0@1004", "1,1=5@1004", "2,2=9@1004"), events)
 	}
+
+	/**
+	 * Lit (1,1) at the press and (2,2) 10 ms later, its last event. A press placed at 8 ms reaches the
+	 * runner only after that: the animation was still running at the press time, so its LEDs go off.
+	 */
+	@Test
+	fun pressReachingTheRunnerLate_stillEndsAnAnimationThatFinishedAfterThePressTime() {
+		setUpRunner { _, _ -> animation(LedEvent.On(1, 1, velocity = 5), LedEvent.Delay(10), LedEvent.On(2, 2, velocity = 9)) }
+		pressAt(1000)
+		tick(1000)
+		tick(1012)
+		clock.set(1014)
+		runner.eventOn(0, 0, pressedAt = 1008)
+		tick(1016)
+		tick(1020)
+
+		assertEquals(
+			listOf("1,1=5@1000", "2,2=9@1012", "1,1=0@1016", "2,2=0@1016", "1,1=5@1016", "2,2=9@1020"),
+			events,
+		)
+	}
+
+	/** A press placed after the animation's last event finds it finished, as the pack's timeline does: nothing goes off. */
+	@Test
+	fun pressAfterTheLastEvent_leavesTheFinishedAnimationsLedsLit() {
+		setUpRunner { _, _ -> animation(LedEvent.On(1, 1, velocity = 5), LedEvent.Delay(10), LedEvent.On(2, 2, velocity = 9)) }
+		pressAt(1000)
+		tick(1000)
+		tick(1012)
+		clock.set(1014)
+		runner.eventOn(0, 0, pressedAt = 1010)
+		tick(1016)
+
+		assertEquals(listOf("1,1=5@1000", "2,2=9@1012", "1,1=5@1016"), events)
+	}
 }

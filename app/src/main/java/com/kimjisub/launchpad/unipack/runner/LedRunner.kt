@@ -22,6 +22,10 @@ class LedRunner(
 ) {
 	companion object {
 		private const val CIRCULAR_LED_COUNT = 36
+
+		// How long a finished animation is kept for a press that reaches the runner after it finished but
+		// was placed before: autoplay's presses come by way of the main thread, a few milliseconds late.
+		private const val LATE_PRESS_MS = 1_000L
 	}
 
 	private val btnLed: Array<Array<Led?>> = Array(unipack.buttonX) { arrayOfNulls<Led>(unipack.buttonY) }
@@ -99,7 +103,7 @@ class LedRunner(
 			}
 			while (true) {
 				val step = due.poll() ?: break
-				if (step.isShutdown) step.state.shutDown(changes) else step.state.playEvent(changes)
+				if (step.isShutdown) step.state.shutDown(changes) else step.state.playEvent(step.at, changes)
 				step.state.nextStep(currTime)?.let(due::add)
 			}
 			ledAnimationStates.removeAll { it.remove }
@@ -172,7 +176,7 @@ class LedRunner(
 	private fun searchEvent(x: Int, y: Int, chain: Int): LedAnimationState? {
 		synchronized(this) {
 			for (state in ledAnimationStates) {
-				if (state.equal(x, y, chain)) {
+				if (state.equal(x, y, chain) && state.isPlaying) {
 					return state
 				}
 			}
@@ -184,7 +188,7 @@ class LedRunner(
 
 	fun isEventExist(x: Int, y: Int): Boolean {
 		synchronized(this) {
-			return ledAnimationStates.any { it.buttonX == x && it.buttonY == y }
+			return ledAnimationStates.any { it.buttonX == x && it.buttonY == y && it.isPlaying }
 		}
 	}
 
@@ -258,6 +262,8 @@ class LedRunner(
 		/** When a press or release ended the animation; what fell due before then still plays. */
 		private var shutdownAt: Long? = null
 		private var shutdownOrder = 0L
+		/** When the last event played; null until then, or for an animation with nothing to play. */
+		private var finishedAt: Long? = null
 		var remove = false
 		var loopProgress = 0
 		/** Events played in the current tick. */
@@ -294,17 +300,25 @@ class LedRunner(
 		internal fun resume(pausedSince: Long, pausedFor: Long) {
 			startedAt += pausedFor
 			delay += pausedFor
+			finishedAt = finishedAt?.let { it + pausedFor }
 			shutdownAt = shutdownAt?.let { minOf(it, pausedSince) + pausedFor }
 		}
 
 		/** The step due by [currTime], if any; marks the animation for removal once it has none left. */
 		internal fun nextStep(currTime: Long): Step? {
 			val animation = ledAnimation
-			if (remove || animation == null || !isPlaying) {
+			if (remove || animation == null) {
 				remove = true
 				return null
 			}
 			val shutdown = shutdownAt?.let { Step(this, it, Step.SHUTDOWN, shutdownOrder, isShutdown = true) }
+			if (!isPlaying) {
+				// A press placed before the last event still ends the animation and turns its LEDs off.
+				val end = finishedAt
+				if (shutdown != null && end != null && shutdown.at < end) return shutdown
+				if (end == null || currTime - end > LATE_PRESS_MS) remove = true
+				return null
+			}
 			var event: Step? = Step(this, delay, if (delay == startedAt) Step.STARTING else Step.RUNNING, order, isShutdown = false)
 			// An animation with no delay lines never pushes delay past currTime, so it would play forever
 			// while holding the monitor and the next padTouch would block into an ANR. One tick may play at
@@ -320,7 +334,8 @@ class LedRunner(
 			return next?.takeIf { it.at <= currTime }
 		}
 
-		internal fun playEvent(changes: MutableList<LedChange>) {
+		/** Plays the event due [at]. */
+		internal fun playEvent(at: Long, changes: MutableList<LedChange>) {
 			val ledEvents = ledAnimation?.ledEvents ?: return
 			processed++
 			try {
@@ -374,6 +389,7 @@ class LedRunner(
 			}
 			index++
 			finishIfDone()
+			if (!isPlaying) finishedAt = at
 		}
 
 		private fun finishIfDone() {
