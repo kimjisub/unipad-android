@@ -104,6 +104,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -879,7 +880,7 @@ class PlayActivity : BaseActivity() {
 			) {
 				Row(verticalAlignment = Alignment.CenterVertically) {
 					Text(
-						text = vm.unipack.title.ifEmpty { "Untitled" },
+						text = vm.unipack.title.ifEmpty { stringResource(string.play_info_untitled) },
 						color = cardText.primary,
 						fontSize = 14.sp,
 						fontWeight = FontWeight.SemiBold,
@@ -900,7 +901,7 @@ class PlayActivity : BaseActivity() {
 						Text(vm.unipack.producerName, color = cardText.secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
 					}
 					Text(
-						text = "${vm.unipack.buttonX}×${vm.unipack.buttonY}  ·  ${vm.unipack.chain} chain",
+						text = pluralStringResource(R.plurals.play_info_size_chains, vm.unipack.chain, vm.unipack.buttonX, vm.unipack.buttonY, vm.unipack.chain),
 						color = cardText.secondary,
 						fontSize = 12.sp,
 					)

@@ -342,12 +342,17 @@ abstract class BaseUITest {
 
     /** Select the test pack (unless already selected) and press its Play flag; returns once the play screen is ready. */
     protected fun openTestPackInPlay() {
+        pressTestPackPlayFlag()
+        assertTrue("Play screen did not open", waitForPlayScreen())
+    }
+
+    /** Select the test pack (unless already selected) and press its Play flag without waiting for the play screen. */
+    protected fun pressTestPackPlayFlag() {
         val row = selectTestPack()
         Thread.sleep(700) // Play flag slide-in animation (FLAG_ANIMATION_MS = 500)
         val bounds = row.visibleBounds
         val flagCenterX = bounds.left + (PLAY_FLAG_TAP_DP * context.resources.displayMetrics.density).toInt()
         device.click(flagCenterX, bounds.centerY())
-        assertTrue("Play screen did not open", waitForPlayScreen())
     }
 
     /** PlayActivity is ready when its menu button is shown (after the loading overlay). */

@@ -99,6 +99,12 @@
 	<string name="play_section_tools">Ferramentas</string>
 	<string name="autoMapping">Mapeamento Automático</string>
 	<string name="autoMappingRunning">Mapeamento Automático…</string>
+	<string name="play_info_untitled">Sem título</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d cadeia"</item>
+		<item quantity="many">"%1$d×%2$d  ·  %3$d cadeias"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d cadeias"</item>
+	</plurals>
 
 	<!--Version-->
 

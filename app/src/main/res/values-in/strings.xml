@@ -99,6 +99,10 @@
 	<string name="play_section_tools">Alat</string>
 	<string name="autoMapping">Pemetaan Otomatis</string>
 	<string name="autoMappingRunning">Pemetaan Otomatis…</string>
+	<string name="play_info_untitled">Tanpa judul</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d rantai"</item>
+	</plurals>
 
 	<!--Version-->
 

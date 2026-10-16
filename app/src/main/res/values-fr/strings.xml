@@ -99,6 +99,12 @@
 	<string name="play_section_tools">Outils</string>
 	<string name="autoMapping">Mappage Automatique</string>
 	<string name="autoMappingRunning">Mappage Automatique…</string>
+	<string name="play_info_untitled">Sans titre</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d chaîne"</item>
+		<item quantity="many">"%1$d×%2$d  ·  %3$d chaînes"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d chaînes"</item>
+	</plurals>
 
 	<!--Version-->
 
