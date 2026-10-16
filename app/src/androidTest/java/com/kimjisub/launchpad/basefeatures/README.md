@@ -11,13 +11,15 @@ Use a dedicated, disposable app installation on API 33 or newer with the system 
 English and no screen-lock PIN. The suite refuses an installation containing non-fixture packs.
 It only removes its named fixture folders/rows; it does not clear the whole database or app data.
 
-On the maintenance machine, borrow and return the device through the harness:
+Start a freshly wiped emulator that nothing else is using on a fixed port, so its serial is known,
+wait until it has finished booting, then turn its network off:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh
-python3 "$HARNESS/devices.py" up-android --fresh
-# Set this to the serial printed above; never use another worker's device.
-export ANDROID_SERIAL='<printed serial>'
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-33-or-newer-avd> -port 5580 -wipe-data -no-snapshot-load &
+# Every command names this emulator; never touch another device.
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode enable
 adb -s "$ANDROID_SERIAL" shell svc wifi disable
 adb -s "$ANDROID_SERIAL" shell svc data disable
@@ -31,10 +33,11 @@ for run in 1 2 3; do ./scripts/run-base-features.sh "$ANDROID_SERIAL" || break; 
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode disable
 adb -s "$ANDROID_SERIAL" shell svc wifi enable
 adb -s "$ANDROID_SERIAL" shell svc data enable
-python3 "$HARNESS/devices.py" down
+adb -s "$ANDROID_SERIAL" emu kill
 ```
 
-For Gradle/Orchestrator on an exclusively borrowed device:
+For Gradle/Orchestrator, keep `ANDROID_SERIAL` set to this emulator (without it, Gradle runs on every
+connected device):
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest \
@@ -51,7 +54,7 @@ full optimization. Archive `dumpsys package dexopt` with the run output.
 No baseline fixture is downloaded. Screenshots are copied by the shell to
 `/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
 applications being uninstalled at the end of a complete Gradle run. Pull them with
-`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` before returning the device.
+`adb -s <serial> pull /data/local/tmp/unipad_tests` before stopping the emulator.
 Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
 Readiness failure screenshots, activity state and hierarchy are kept under the same root.
 
@@ -248,7 +251,7 @@ bounds to return before the next test starts.
 | Held pad through portrait/landscape and window shrink/grow, finger UP after the change | Pass; released at the relayout, no system cancel |
 | Mouse then finger, finger then mouse, Slide Mode off and on | Pass; Android cancelled the first device at the second device's press in all four |
 
-Both classes are in `BaseFeaturesSuite`. To run only them on the borrowed device:
+Both classes are in `BaseFeaturesSuite`. To run only them on the emulator:
 
 ```bash
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
@@ -265,14 +268,14 @@ ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 `HeldPadLayoutChangeTest` resets the display size after each test; if a run is killed, run
-`adb -s "$ANDROID_SERIAL" shell wm size reset` before returning the device.
+`adb -s "$ANDROID_SERIAL" shell wm size reset` before using the device for anything else.
 
 Not established by these tests:
 
 - Both devices held at once in one window: needs an Android version or device that streams two
   devices to the same window; the API 35 and 37 emulators always took the cancel path.
 - Free-form or split-screen window resizing: the emulator's display size was changed instead;
-  freeform windows are not enabled on the borrowed emulator.
+  freeform windows are not enabled on the test emulator.
 - A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
   request proves only that the app asked for it.
 
@@ -340,7 +343,7 @@ or re-signing it for this suite would change the artifact being verified.
 
 QA should run this suite on a debug build of the **same source commit**, record the commit and APK
 hashes, then separately install the exact signed candidate APK/splits from the approved build on a
-borrowed device. Drive the eight features with external UI automation/manual checks and attach
+test device. Drive the eight features with external UI automation/manual checks and attach
 candidate hashes, captures and results. The signed-candidate check must include startup, local ZIP
 import/playback, skin/rotation, Home/lock/return and real audible output. Real server/USB checks
 are separate and explicitly reported when hardware/network is unavailable. Do not replace the
@@ -359,6 +362,6 @@ requests or replace production repositories in an unchanged candidate.
   or conditional pass hides this limitation.
 - OEM process eviction, long locks, low-memory conditions, tablets and cutouts: run separate candidate
   checks on those devices/configurations. The rotation test asserts only insets actually present on
-  the borrowed device; a rectangular emulator cannot prove behavior around a notch.
+  the device under test; a rectangular emulator cannot prove behavior around a notch.
 - Live store servers: run read-only catalog availability checks separately and
   use an explicitly designated synthetic download if end-to-end server verification is needed.

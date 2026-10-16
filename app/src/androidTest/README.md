@@ -20,13 +20,17 @@ so no other test reports are queued. The test's default path checks that automat
 For the deterministic 50-test release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
-## Run on a borrowed API 35 emulator
+## Run on an API 35 emulator
 
-Use JDK 21 and the Android SDK. For Paperclip runs on the maintenance Mac, load the machine
-environment before every shell command and borrow a device through the harness:
+Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using
+on a fixed port, so its serial is known, and wait until it has finished booting. The commands below
+write that serial (`emulator-5580` here) as `<serial>`:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" up-android
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-35-avd> -port 5580 -wipe-data -no-snapshot-load &
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 ```
 
 The complete suite requires an **API 35 Google APIs image without the Play Store**, with an
@@ -38,26 +42,26 @@ Before running, verify the following command lists at least one browser activity
 under that package name; a package path alone does not prove that the Play Store handles links:
 
 ```bash
-adb -s <printed-serial> shell cmd package query-activities --brief \
+adb -s <serial> shell cmd package query-activities --brief \
   -a android.intent.action.VIEW \
   -d https://play.google.com/store/apps/details?id=com.kimjisub.launchpad
 ```
 
-If either prerequisite is missing, borrow a suitable image through the harness before testing.
+If either prerequisite is missing, create a suitable AVD before testing.
 Do not count skips on an unsuitable image as a passing run. The fake Play update manager tests
 run without a Play Store install or network access; the browser check verifies the activity
 handoff without waiting for a network response. The missing-handler test restores every package
 it disables.
 
-Use only the printed serial as `ANDROID_SERIAL`. Run from this repository. Keep the APKs
+Use that serial as `ANDROID_SERIAL` so no other connected device is touched. Run from this repository. Keep the APKs
 installed after the check: uninstalling deletes every pack in the debug app's storage.
 
 ```bash
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --console=plain
 
 # A focused check; the final verification must still run both complete suites.
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
 ```
@@ -81,32 +85,33 @@ filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
+Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the emulator,
 which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
 feature screens use `basefeatures-captures/`, readiness failures use
 `activity-readiness-captures/`, Store cancellation uses `store-cancel-captures/<prefix>/` and Store download progress uses
 `store-progress-captures/<prefix>/`.
 Clear this root before each run, then pull it with
-`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
-returning the device. The capture helper stages files in app-writable external storage, copies
+`adb -s <serial> pull /data/local/tmp/unipad_tests` after the complete run and before
+stopping the emulator. The capture helper stages files in app-writable external storage, copies
 them as shell and removes the staging file; it checks that each preserved file is nonempty
 and has the same byte count as its source. Keep the emulator offline so app startup cannot
 send test traffic;
-the catalogue fixture does not disable other application network clients. Restore the original
-network state and return the device when finished:
-
-```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
-```
+the catalogue fixture does not disable other application network clients.
 
 After Gradle has uninstalled the debug app, check these files from that run still exist:
 
 ```bash
-adb -s <printed-serial> shell pm list packages com.kimjisub.launchpad.dev
+adb -s <serial> shell pm list packages com.kimjisub.launchpad.dev
 # The target and test packages must no longer be listed.
 for capture in settings-english-language-row file-import-result store-downloaded; do
-  adb -s <printed-serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
+  adb -s <serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
 done
+```
+
+Only after these checks, restore the original network state and stop the emulator:
+
+```bash
+adb -s <serial> emu kill
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -326,7 +331,7 @@ and cancels only notifications carrying its unique ZIP name. It never uses the l
 plays sound, launches an activity, or contacts a pack server. Failure and cancellation preservation
 remain covered separately by `UniPackInstallOverlapTest`; this device test covers two successes.
 
-Borrow an emulator through the maintenance harness first and use only the printed serial:
+Start an emulator that nothing else is using and set `ANDROID_SERIAL` to its serial:
 
 ```bash
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
@@ -338,13 +343,13 @@ adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
 ```
 
 Keep the device offline during this check so application startup cannot send test traffic.
-Restore its prior network state and return it through the harness afterward. Direct instrumentation
+Restore its prior network state afterward. Direct instrumentation
 avoids Gradle uninstalling existing app data. `adb` exits zero even for a JUnit failure: require
 `OK (1 test)` and status code `0` for the test, not just the shell exit code.
 
 For the before/after comparison, export parent `c7bb0af67578be3cea90ea812499a0f81aa336e3`
-of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate run-owned directory,
-copy this exact test there, build both APKs, and run the same command on the borrowed device.
+of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate temporary directory,
+copy this exact test there, build both APKs, and run the same command on the same emulator.
 That source selects the output path in each constructor before creating the folder, so this
 schedule deterministically completes both imports into the same folder and fails the distinct
 folder assertion; the final hashes also show the second pack replacing the first. Record the
