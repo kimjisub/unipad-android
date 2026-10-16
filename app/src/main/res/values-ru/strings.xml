@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Принять</string>
@@ -94,9 +93,14 @@
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
 	<string name="proLightMode">Режим Pro Light</string>
+	<string name="play_section_play_mode">Режим игры</string>
+	<string name="play_section_performance">Исполнение</string>
+	<string name="play_section_display">Экран</string>
+	<string name="play_section_tools">Инструменты</string>
+	<string name="autoMapping">Авто-маппинг</string>
+	<string name="autoMappingRunning">Авто-маппинг…</string>
 
 	<!--Version-->
-	<string name="update_available">Доступно обновление</string>
 
 	<string name="permissionRequire">Для сохранения файлов проекта необходим доступ к внешнему хранилищу.\nПредоставьте разрешение.</string>
 	<string name="permissionDenied">Приложению необходим доступ к внешнему хранилищу.\nВключите разрешения в [Настройки] > [Разрешения]</string>
@@ -205,7 +209,6 @@
 	<string name="workspace_documents_android10">Документы (Android 10)</string>
 	<string name="workspace_app_storage">Хранилище приложения (Рекомендуется)</string>
 	<string name="workspace_internal_storage">Внутреннее хранилище</string>
-	<string name="workspace_internal_sd_card">Внутренняя SD-карта</string>
 	<string name="workspace_external_sd_card_format">Внешняя SD-карта %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 

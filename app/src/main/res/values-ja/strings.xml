@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">承諾</string>
@@ -94,9 +93,14 @@
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
 	<string name="proLightMode">Proライトモード</string>
+	<string name="play_section_play_mode">プレイモード</string>
+	<string name="play_section_performance">演奏</string>
+	<string name="play_section_display">表示</string>
+	<string name="play_section_tools">ツール</string>
+	<string name="autoMapping">自動マッピング</string>
+	<string name="autoMappingRunning">自動マッピング…</string>
 
 	<!--Version-->
-	<string name="update_available">アップデートがあります</string>
 
 	<string name="permissionRequire">プロジェクトファイルの保存に外部ストレージへのアクセスが必要です。\nこの権限を許可してください。</string>
 	<string name="permissionDenied">アプリは外部ストレージへのアクセスが必要です。\n[設定] > [権限]で権限をオンにしてください</string>
@@ -205,7 +209,6 @@
 	<string name="workspace_documents_android10">ドキュメント (Android 10)</string>
 	<string name="workspace_app_storage">アプリストレージ（推奨）</string>
 	<string name="workspace_internal_storage">内部ストレージ</string>
-	<string name="workspace_internal_sd_card">内蔵SDカード</string>
 	<string name="workspace_external_sd_card_format">外部SDカード %d</string>
 	<string name="workspace_unipack_count">%d個のUniPack</string>
 

@@ -7,7 +7,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
-import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.After
@@ -44,18 +43,9 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         }
     }
 
-    /**
-     * Opens the pack with the press light on. A pack with keyLED starts with it off; the option is
-     * set on the screen's state rather than through the options panel, whose open/close by Back is
-     * not what these tests check. [slide] overrides the class's pad input mode for one test.
-     */
+    /** Opens the pack with the press light on. [slide] overrides the class's pad input mode for one test. */
     protected fun start(slide: Boolean = slideMode) {
-        prefs.slideMode = slide
-        screen.openPlay()
-        screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
-        assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
-        val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
-        assertEquals("Slide Mode applied on the play screen must match the mode under test", slide, applied)
+        openPlayWithPressLight(prefs, slide)
         fingers = Fingers(screen)
     }
 
@@ -66,7 +56,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.await({ "$message (expected lit: $lit, lit: $last)" }) { litCells().also { last = it } == lit }
     }
 
-    private fun litCells(): Set<Cell> = screen.onMain {
+    protected fun litCells(): Set<Cell> = screen.onMain {
         val channels = screen.vm().channelManager
         (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }
             .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }

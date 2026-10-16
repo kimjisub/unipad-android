@@ -5,7 +5,6 @@
 	<string name="translated_by">Translated by 203Null</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">接受</string>
@@ -94,9 +93,14 @@
 	<string name="hideUI">隐藏UI</string>
 	<string name="watermark">UI灯光</string>
 	<string name="proLightMode">Pro灯光模式</string>
+	<string name="play_section_play_mode">演奏模式</string>
+	<string name="play_section_performance">效果</string>
+	<string name="play_section_display">显示</string>
+	<string name="play_section_tools">工具</string>
+	<string name="autoMapping">自动映射</string>
+	<string name="autoMappingRunning">自动映射…</string>
 
 	<!--Version-->
-	<string name="update_available">有可用更新</string>
 
 	<string name="permissionRequire">保存项目文件需要访问外部存储的权限。\n请为此权限获取权限。</string>
 	<string name="permissionDenied">应用程序需要访问外部存储。\n请在 [设置] > [权限] 中打开权限</string>
@@ -206,7 +210,6 @@
 	<string name="workspace_documents_android10">文档 (Android 10)</string>
 	<string name="workspace_app_storage">应用存储 (推荐)</string>
 	<string name="workspace_internal_storage">内部存储</string>
-	<string name="workspace_internal_sd_card">内置 SD 卡</string>
 	<string name="workspace_external_sd_card_format">外置 SD 卡 %d</string>
 	<string name="workspace_unipack_count">%d 个 UniPack</string>
 

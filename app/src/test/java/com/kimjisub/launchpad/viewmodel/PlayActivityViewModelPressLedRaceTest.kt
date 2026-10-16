@@ -8,8 +8,8 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.struct.LedAnimation
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
-import io.mockk.clearStaticMockk
 import io.mockk.every
+import io.mockk.excludeRecords
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -25,13 +25,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
 import java.util.Collections
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.locks.LockSupport
 import kotlin.concurrent.thread
 
 /**
@@ -87,6 +87,7 @@ class PlayActivityViewModelPressLedRaceTest {
 
 	private val sentToPad = Collections.synchronizedList(ArrayList<Int>())
 	private val sentOffMain = AtomicInteger()
+	private var afterPadRead: (() -> Unit)? = null
 
 	private inner class FakeActivity : PlayActivityViewModel.UiCallback {
 		override fun setLedPad(x: Int, y: Int) {
@@ -94,7 +95,12 @@ class PlayActivityViewModelPressLedRaceTest {
 			if (Thread.currentThread() !== main.mainThread) sentOffMain.incrementAndGet()
 			val code = vm.channelManager.get(x, y)?.code ?: 0
 			// The driver turns the code into a MIDI message before queueing it.
-			Thread.yield()
+			if (Thread.currentThread() === main.mainThread) {
+				afterPadRead?.let { overlap ->
+					afterPadRead = null
+					overlap()
+				}
+			}
 			sentToPad += code
 		}
 
@@ -117,6 +123,8 @@ class PlayActivityViewModelPressLedRaceTest {
 		Dispatchers.setMain(main)
 		mockkStatic(SystemClock::class)
 		every { SystemClock.elapsedRealtime() } answers { clock.get() }
+		// Clock calls supply time only; recording them adds work on every tick and grows the heap.
+		excludeRecords { SystemClock.elapsedRealtime() }
 		val blink = LedAnimation(
 			arrayListOf(LedEvent.On(PAD, PAD, velocity = LED_VELOCITY), LedEvent.Delay(1), LedEvent.Off(PAD, PAD), LedEvent.Delay(1)),
 			loop,
@@ -144,57 +152,99 @@ class PlayActivityViewModelPressLedRaceTest {
 	}
 
 	/** Returns how many trials ended with the last command sent to the pad differing from its state. */
-	private fun pressWhileTheSamePadBlinks(): Int {
+	private fun pressWhileTheSamePadBlinks(expectFiniteEnd: Boolean): Int {
+		var completed = 0
+		var overlaps = 0
+		var finiteEnds = 0
 		var mismatches = 0
 		var firstMismatch: String? = null
-		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TRIALS_DEADLINE_SECONDS)
-		repeat(TRIALS) { trial ->
-			// Fails on this thread, after the trial's worker has stopped, so tearDown runs before the next test.
-			assertTrue("only $trial of $TRIALS trials ran in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
-			// MockK keeps every call it answers; without this the trials run out of heap.
-			clearStaticMockk(SystemClock::class, answers = false, recordedCalls = true, childMocks = false)
-			sentToPad.clear()
-			runner.eventOn(0, 0)
-			val barrier = CyclicBarrier(2)
-			val pressing = AtomicBoolean(true)
-			// Ticks until the presses end, so the last tick and the last press overlap. The pause between
-			// ticks stands in for the runner's loop delay and lets presses take the runner's lock.
-			val tickFailure = AtomicReference<Throwable>()
-			val ticks = thread(isDaemon = true, name = "press-led-ticks-$trial") {
+		val started = System.nanoTime()
+		val deadline = started + TimeUnit.SECONDS.toNanos(TRIALS_DEADLINE_SECONDS)
+		try {
+			repeat(TRIALS) { trial ->
+				// Fails on this thread, after the trial's worker has stopped, so tearDown runs before the next test.
+				assertTrue("only $trial of $TRIALS trials ran in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
+				sentToPad.clear()
+				runner.eventOn(0, 0)
+				val barrier = CyclicBarrier(2)
+				val pressing = AtomicBoolean(true)
+				val firstRead = CountDownLatch(1)
+				val blinkDuringRead = CountDownLatch(1)
+				val blinkEnded = CountDownLatch(1)
+				// Hold the first pad command after its state read until the other thread has ticked.
+				// This guarantees the race window in every trial without yielding on every delivery.
+				afterPadRead = {
+					firstRead.countDown()
+					assertTrue("LED ticks did not overlap the pad read in trial $trial", blinkDuringRead.await(5, TimeUnit.SECONDS))
+					overlaps++
+				}
+				// Ticks alongside the presses until they end. The pause between
+				// ticks stands in for the runner's loop delay and lets presses take the runner's lock.
+				val tickFailure = AtomicReference<Throwable>()
+				val ticks = thread(isDaemon = true, name = "press-led-ticks-$trial") {
+					try {
+						barrier.await(5, TimeUnit.SECONDS)
+						check(firstRead.await(5, TimeUnit.SECONDS)) { "pad read did not start in trial $trial" }
+						var tickCount = 0
+						while (pressing.get()) {
+							clock.incrementAndGet()
+							loopMethod.invoke(runner)
+							// The first tick may only add the new animation; the second emits its light.
+							if (++tickCount == 2) blinkDuringRead.countDown()
+							if (expectFiniteEnd && tickCount >= 2 && !runner.isEventExist(0, 0)) blinkEnded.countDown()
+							// Parking this short wait can oversleep enough to miss the trial deadline.
+							// Keep the same minimum gap without an OS timer on every tick.
+							val nextTick = System.nanoTime() + TICK_PAUSE_NANOS
+							while (System.nanoTime() < nextTick) Thread.onSpinWait()
+						}
+					} catch (failure: Throwable) {
+						tickFailure.set(failure)
+					}
+				}
 				try {
 					barrier.await(5, TimeUnit.SECONDS)
-					while (pressing.get()) {
-						clock.incrementAndGet()
-						loopMethod.invoke(runner)
-						LockSupport.parkNanos(TICK_PAUSE_NANOS)
+					repeat(OPS_PER_TRIAL) { i ->
+						if (expectFiniteEnd && i == OPS_PER_TRIAL / 2) {
+							// Keep the finite case: it must finish during a press, with later presses still to come.
+							afterPadRead = {
+								assertTrue("finite blink did not finish during trial $trial", blinkEnded.await(5, TimeUnit.SECONDS))
+								finiteEnds++
+							}
+						}
+						vm.padTouch(PAD, PAD, i % 2 == 0)
+						main.runAll()
 					}
-				} catch (failure: Throwable) {
-					tickFailure.set(failure)
+				} finally {
+					afterPadRead = null
+					pressing.set(false)
+					firstRead.countDown()
+					ticks.join(5_000)
+					if (ticks.isAlive) ticks.interrupt()
 				}
-			}
-			try {
-				barrier.await(5, TimeUnit.SECONDS)
-				repeat(OPS_PER_TRIAL) { i ->
-					vm.padTouch(PAD, PAD, i % 2 == 0)
-					main.runAll()
-				}
-			} finally {
-				pressing.set(false)
-				ticks.join(5_000)
-				if (ticks.isAlive) ticks.interrupt()
-			}
-			assertFalse("LED tick worker did not stop in trial $trial", ticks.isAlive)
-			tickFailure.get()?.let { throw AssertionError("LED tick worker failed in trial $trial", it) }
-			main.runAll()
+				assertFalse("LED tick worker did not stop in trial $trial", ticks.isAlive)
+				tickFailure.get()?.let { throw AssertionError("LED tick worker failed in trial $trial", it) }
+				main.runAll()
 
-			val state = vm.channelManager.get(PAD, PAD)?.code ?: 0
-			val lastSent = synchronized(sentToPad) { sentToPad.lastOrNull() }
-			if (lastSent != state) {
-				mismatches++
-				if (firstMismatch == null) firstMismatch = "trial $trial: state=$state lastSent=$lastSent"
+				val state = vm.channelManager.get(PAD, PAD)?.code ?: 0
+				val lastSent = synchronized(sentToPad) { sentToPad.lastOrNull() }
+				if (lastSent != state) {
+					mismatches++
+					if (firstMismatch == null) firstMismatch = "trial $trial: state=$state lastSent=$lastSent"
+				}
+				completed++
 			}
+			assertTrue("all $TRIALS trials must finish in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
+			assertEquals("trials whose LED ticks overlap the pad read", TRIALS, overlaps)
+			if (expectFiniteEnd) {
+				assertEquals("trials whose finite blink ends during a press", TRIALS, finiteEnds)
+			}
+		} finally {
+			println(
+				"PRESS_LED_RACE trials=$completed overlaps=$overlaps finiteEnds=$finiteEnds " +
+					"mismatches=$mismatches sentOffMain=${sentOffMain.get()} first=$firstMismatch " +
+					"elapsedMs=${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)}"
+			)
 		}
-		println("PRESS_LED_RACE trials=$TRIALS mismatches=$mismatches sentOffMain=${sentOffMain.get()} first=$firstMismatch")
 		return mismatches
 	}
 
@@ -202,7 +252,7 @@ class PlayActivityViewModelPressLedRaceTest {
 	fun endlessBlink_pressedOnTheSamePad_lastCommandSentMatchesTheState() {
 		setUp(loop = 0)
 
-		val mismatches = pressWhileTheSamePadBlinks()
+		val mismatches = pressWhileTheSamePadBlinks(expectFiniteEnd = false)
 
 		assertEquals("pad commands sent off the main thread", 0, sentOffMain.get())
 		assertEquals("trials whose last command differs from the state", 0, mismatches)
@@ -213,7 +263,7 @@ class PlayActivityViewModelPressLedRaceTest {
 		// Ends partway through each trial, so later ticks send nothing and presses have the last word.
 		setUp(loop = OPS_PER_TRIAL / 4)
 
-		val mismatches = pressWhileTheSamePadBlinks()
+		val mismatches = pressWhileTheSamePadBlinks(expectFiniteEnd = true)
 
 		assertEquals("pad commands sent off the main thread", 0, sentOffMain.get())
 		assertEquals("trials whose last command differs from the state", 0, mismatches)

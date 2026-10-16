@@ -40,7 +40,6 @@ class WorkspaceManagerTest {
 		every { mockContext.getString(R.string.workspace_documents_android10) } returns "Documents (Android 10)"
 		every { mockContext.getString(R.string.workspace_app_storage) } returns "App Storage (Recommended)"
 		every { mockContext.getString(R.string.workspace_internal_storage) } returns "Internal Storage"
-		every { mockContext.getString(R.string.workspace_internal_sd_card) } returns "Internal SD Card"
 		every { mockContext.getString(R.string.workspace_external_sd_card_format, *anyVararg()) } answers {
 			val args = secondArg<Array<out Any?>>()
 			"External SD Card ${args[0]}"
@@ -270,6 +269,22 @@ class WorkspaceManagerTest {
 		val sdCardDir = createSdCardWithPack()
 		val expected = sdCardDir.walk().filter { it.isFile }.sumOf { it.length() }
 		val manager = managerWithExternalDirs(sdCardDir, null)
+
+		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
+	// A killed install's leftovers are still being deleted when the first screen counts the size.
+	@Test
+	fun getAvailableWorkspacesSize_skipsInstallsInProgressAndLeftovers() {
+		val sdCardDir = createSdCardWithPack()
+		File(sdCardDir, "to import later.zip").writeBytes(ByteArray(300))
+		val expected = sdCardDir.walk().filter { it.isFile }.sumOf { it.length() }
+		runBlocking {
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(4000))
+			PackStaging.setAsideLeftovers(sdCardDir)
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(2000))
+		}
+		val manager = managerWithExternalDirs(sdCardDir)
 
 		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
 	}

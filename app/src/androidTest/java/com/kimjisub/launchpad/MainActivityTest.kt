@@ -1,6 +1,11 @@
 package com.kimjisub.launchpad
 
+import android.app.LocaleManager
+import android.content.res.Configuration
+import android.os.Build
+import android.os.LocaleList
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -13,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.Locale
 
 /**
  * MainActivity Tests
@@ -103,6 +109,75 @@ class MainActivityTest : BaseUITest() {
             prefs.sortMethod = originalMethod
             prefs.sortOrder = originalOrder
         }
+    }
+
+    /**
+     * Choosing UniPad's language in the system settings (Android 13+) changes the sort bar and its
+     * list right away, while the main screen's view model survives the change, and after a relaunch.
+     * Below Android 13 there is no per-app language; the sort bar shows the device language.
+     */
+    @Test
+    fun testSortNamesFollowAppLanguageChange() {
+        val originalMethod = prefs.sortMethod
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            try {
+                prefs.sortMethod = 2
+                launchToMainScreen()
+                assertTrue(
+                    "Sort bar does not show '${str(R.string.sort_download_date)}'",
+                    device.wait(Until.hasObject(By.text(str(R.string.sort_download_date))), 5000L)
+                )
+            } finally {
+                prefs.sortMethod = originalMethod
+            }
+            return
+        }
+        val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
+        val english = sortRes.map { strIn(Locale.ENGLISH, it) }
+        val korean = sortRes.map { strIn(Locale.KOREAN, it) }
+        val originalLocales = appLanguage()
+        try {
+            setAppLanguage(LocaleList.forLanguageTags("en"))
+            prefs.sortMethod = 2
+            launchToMainScreen()
+            assertTrue("Sort bar does not show '${english[2]}'", device.wait(Until.hasObject(By.text(english[2])), 5000L))
+
+            setAppLanguage(LocaleList.forLanguageTags("ko"))
+            assertTrue(
+                "Sort bar still shows '${english[2]}' after switching to Korean",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            sortAnchor(korean).click()
+            assertTrue(
+                "Sort list is not in Korean",
+                waitUntil(3000L) { korean.all { device.hasObject(By.text(it)) } }
+            )
+            takeScreenshot("sort_names_korean_without_relaunch")
+            device.pressBack()
+
+            launchToMainActivity()
+            assertTrue(
+                "Sort bar is not Korean after a relaunch",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            takeScreenshot("sort_names_korean_after_relaunch")
+        } finally {
+            setAppLanguage(originalLocales)
+            prefs.sortMethod = originalMethod
+        }
+    }
+
+    private fun appLanguage(): LocaleList = context.getSystemService(LocaleManager::class.java).applicationLocales
+
+    private fun setAppLanguage(locales: LocaleList) {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            context.getSystemService(LocaleManager::class.java).applicationLocales = locales
+        }
+    }
+
+    private fun strIn(locale: Locale, resId: Int): String {
+        val configuration = Configuration(context.resources.configuration).apply { setLocale(locale) }
+        return context.createConfigurationContext(configuration).getString(resId)
     }
 
     @Test

@@ -490,9 +490,15 @@
       "layer": "parse",
       "id": "INF-007",
       "area": "info",
-      "title": "a line without = in info",
-      "question": "The docs say lines are key=value but not what a line without = does. Android and iOS record a warning, the web parser ignores it silently.",
-      "expectation": "undetermined",
+      "title": "a line without = in info is ignored",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "A line without = is ignored, without a warning"
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -515,7 +521,73 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "4e1c1027c9a650009dbc4cf57c1fdd9bd829a47d0dadf67829b4b7e1549fb8e5"
+      "fingerprint": "4e1c1027c9a650009dbc4cf57c1fdd9bd829a47d0dadf67829b4b7e1549fb8e5",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "file": "a.wav",
+                    "loop": 0,
+                    "wormhole": -1
+                  }
+                ]
+              }
+            ],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "info:format"
+            ]
+          },
+          "note": "Android records a format warning (`info: … format is incorrect`) for the line without `=`; the pack opens and plays the same."
+        }
+      }
     },
     {
       "layer": "parse",
@@ -651,9 +723,15 @@
       "layer": "parse",
       "id": "INF-010",
       "area": "info",
-      "title": "buttonX that is not a number",
-      "question": "The docs say only \"1 or more\". Whether \"abc\" is a warning (treated as 0) or a refusal is not stated.",
-      "expectation": "undetermined",
+      "title": "buttonX that is not a number aborts loading",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "Loading is aborted if buttonX or buttonY is not an integer"
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -676,15 +754,50 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "f95645a1225af7ea7686dfc26cfba32aae24f7dcf223dff8389a76802351b64e"
+      "fingerprint": "f95645a1225af7ea7686dfc26cfba32aae24f7dcf223dff8389a76802351b64e",
+      "expected": {
+        "loaded": false
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 0,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "info:format",
+              "info:missing-field",
+              "keySound:range"
+            ]
+          },
+          "note": "Android reads `abc` as 0 and opens the pack without a pad column: a format warning, buttonX missing, and the keySound line out of range."
+        }
+      }
     },
     {
       "layer": "parse",
       "id": "INF-011",
       "area": "info",
-      "title": "a 65 x 65 grid",
-      "question": "All three parsers refuse a grid above 64, an allocation guard that is not in the docs (\"1 or more\").",
-      "expectation": "undetermined",
+      "title": "a 65 x 65 grid is refused",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "All three parsers refuse a grid above 64, an allocation guard that is not in the docs (\"1 or more\")."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -707,15 +820,24 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "5fee16d462c48aae9c64d8d7dc71b8bd2b27a7ede263f440d8fb8eca9e67e28b"
+      "fingerprint": "5fee16d462c48aae9c64d8d7dc71b8bd2b27a7ede263f440d8fb8eca9e67e28b",
+      "expected": {
+        "loaded": false
+      }
     },
     {
       "layer": "parse",
       "id": "INF-012",
       "area": "info",
-      "title": "squareButton left out",
-      "question": "The docs say the default is false; Android, iOS and the web parser all start from true.",
-      "expectation": "undetermined",
+      "title": "squareButton left out reads as true",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "info.mdx gives false as the default, but Android, iOS and the web parser all start from true. Held at true until the docs or the apps change."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -738,7 +860,36 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "ee6cd6c4f603d022927eea547945f3851106716eac507d59c4ef4c6a6c5af8b3"
+      "fingerprint": "ee6cd6c4f603d022927eea547945f3851106716eac507d59c4ef4c6a6c5af8b3",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
@@ -826,9 +977,15 @@
       "layer": "parse",
       "id": "INF-015",
       "area": "info",
-      "title": "info.json instead of info",
-      "question": "Only iOS reads info.json; the format docs describe the key=value `info` file only.",
-      "expectation": "undetermined",
+      "title": "info.json instead of info refuses the pack",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "the metadata is the key=value `info` file; there is no other info format, so the pack has no info, as in INF-013"
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "keySound",
@@ -851,7 +1008,76 @@
           "text": "{\"title\":\"Conformance\",\"producerName\":\"UniPad Conformance\",\"buttonX\":4,\"buttonY\":3,\"chain\":2,\"squareButton\":true}"
         }
       ],
-      "fingerprint": "da29d8d8572c9639b3f8c6903a1c6ea2eec6cd09215fb281e5771fcf32375b49"
+      "fingerprint": "da29d8d8572c9639b3f8c6903a1c6ea2eec6cd09215fb281e5771fcf32375b49",
+      "expected": {
+        "loaded": false
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "INF-016",
+      "area": "info",
+      "title": "buttonY that is not a number aborts loading",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/info.mdx",
+          "note": "Loading is aborted if buttonX or buttonY is not an integer"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=abc\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "c4ecfd7ba4cf87f6b1ec0059da35a5677ecc800b320105023907de2de385d695",
+      "expected": {
+        "loaded": false
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 0,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "info:format",
+              "info:missing-field",
+              "keySound:range"
+            ]
+          },
+          "note": "Android reads `abc` as 0 and opens the pack without a pad row: a format warning, buttonY missing, and the keySound line out of range."
+        }
+      }
     },
     {
       "layer": "parse",
@@ -2243,8 +2469,14 @@
       "id": "KS-015",
       "area": "keySound",
       "title": "lines that look like comments",
-      "question": "The format has no comment syntax. Two-token lines fall under \"fewer than 3 columns are ignored\"; a longer one is a format error.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The format has no comment syntax. Two-token lines fall under \"fewer than 3 columns are ignored\"; a longer one is a format error."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -2267,7 +2499,38 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "ec5d121b07e19a21dc5ee7155db46428236108e02ec9f8c6c0d91080e687439b"
+      "fingerprint": "ec5d121b07e19a21dc5ee7155db46428236108e02ec9f8c6c0d91080e687439b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -2352,8 +2615,14 @@
       "id": "KS-017",
       "area": "keySound",
       "title": "a lone carriage return between lines",
-      "question": "The docs say nothing about classic-Mac line ends; the web parser splits on them explicitly, the apps rely on their line readers.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The docs say nothing about classic-Mac line ends; the web parser splits on them explicitly, the apps rely on their line readers."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -2376,15 +2645,62 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "7a0b40862c205767fc6b1fdf7206a1334c38e6b57e6e4d25ebfcc8eeb01950cc"
+      "fingerprint": "7a0b40862c205767fc6b1fdf7206a1334c38e6b57e6e4d25ebfcc8eeb01950cc",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
       "id": "KS-018",
       "area": "keySound",
       "title": "a UTF-16 little-endian keySound with a byte order mark",
-      "question": "Android and iOS decode UTF-16 by its BOM; the docs and the web parser do not mention it.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "The file is UTF-8, or UTF-16 that starts with a byte order mark"
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -2407,7 +2723,36 @@
           "asset": "silence-10ms"
         }
       ],
-      "fingerprint": "4dfd72f03b4b2fd9d6541a6890328b92bb191a7f45619108f3942b77003d77ac"
+      "fingerprint": "4dfd72f03b4b2fd9d6541a6890328b92bb191a7f45619108f3942b77003d77ac",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
@@ -2672,15 +3017,19 @@
       "id": "KL-003",
       "area": "keyLed",
       "title": "file names one past each end of chain, x and y are ignored",
-      "question": "key-led.mdx says files with out-of-range coordinates in the file name are ignored; whether each ignored file records a warning is not stated. The same warning-evidence rule as KL-M07.",
       "basis": [
         {
           "type": "doc",
           "ref": "content/docs/en/unipack/key-led.mdx",
           "note": "Files with out-of-range coordinates in the file name are ignored"
+        },
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "Whether each ignored file records a warning is not stated; all three record one range warning per file."
         }
       ],
-      "expectation": "undetermined",
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -2719,7 +3068,41 @@
           "text": "f 1 1"
         }
       ],
-      "fingerprint": "06e11f3778868dceaf6d6efdf6b3c65f21e1a5d1443466e834fe28fbb94267bc"
+      "fingerprint": "06e11f3778868dceaf6d6efdf6b3c65f21e1a5d1443466e834fe28fbb94267bc",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:range",
+          "keyLed:range",
+          "keyLed:range",
+          "keyLed:range"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -2837,8 +3220,14 @@
       "id": "KL-005",
       "area": "keyLed",
       "title": "a negative loop count in the file name",
-      "question": "The docs say a warning is logged; whether the file is dropped is not stated.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The docs say a warning is logged; whether the file is dropped is not stated. All three drop it with a range warning."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -2865,7 +3254,38 @@
           "text": "f 1 1"
         }
       ],
-      "fingerprint": "0c75013a28e859097aa7ffeee9a327442455674e2049bbbb8a66b511f8a66897"
+      "fingerprint": "0c75013a28e859097aa7ffeee9a327442455674e2049bbbb8a66b511f8a66897",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:range"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -2937,43 +3357,6 @@
         "errors": [
           "keyLed:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric keyLed file name field as `range` (`<field> is incorrect`); Android and iOS report `format`. The file is dropped by all three (parser.ts parseKeyLed)."
-        }
       }
     },
     {
@@ -3046,43 +3429,6 @@
         "errors": [
           "keyLed:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric keyLed file name field as `range` (`<field> is incorrect`); Android and iOS report `format`. The file is dropped by all three (parser.ts parseKeyLed)."
-        }
       }
     },
     {
@@ -3155,43 +3501,6 @@
         "errors": [
           "keyLed:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric keyLed file name field as `range` (`<field> is incorrect`); Android and iOS report `format`. The file is dropped by all three (parser.ts parseKeyLed)."
-        }
       }
     },
     {
@@ -3264,43 +3573,6 @@
         "errors": [
           "keyLed:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric keyLed file name field as `range` (`<field> is incorrect`); Android and iOS report `format`. The file is dropped by all three (parser.ts parseKeyLed)."
-        }
       }
     },
     {
@@ -3373,43 +3645,6 @@
         "errors": [
           "keyLed:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric keyLed file name field as `range` (`<field> is incorrect`); Android and iOS report `format`. The file is dropped by all three (parser.ts parseKeyLed)."
-        }
       }
     },
     {
@@ -3417,8 +3652,14 @@
       "id": "KL-006",
       "area": "keyLed",
       "title": "a stray file whose name has fewer than 3 columns",
-      "question": "The keyLED docs describe the name as \"chain x y [loop]\" but not what a file that is not a mapping means; the parsers skip it silently.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The keyLED docs describe the name as \"chain x y [loop]\" but not what a file that is not a mapping means; the parsers skip it silently."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -3449,15 +3690,50 @@
           "text": "hello"
         }
       ],
-      "fingerprint": "741d0a0de34e28348250ea0eaebc22976bc792dbafed144a32b5d6de69d83999"
+      "fingerprint": "741d0a0de34e28348250ea0eaebc22976bc792dbafed144a32b5d6de69d83999",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
       "id": "KL-007",
       "area": "keyLed",
       "title": "the keyLed folder is empty of mappings but present",
-      "question": "Whether an existing keyLED folder with no valid file counts as \"has LED animations\" is not stated.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "Whether an existing keyLED folder with no valid file counts as \"has LED animations\" is not stated; all three say it exists."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -3484,7 +3760,36 @@
           "text": "f 1 1"
         }
       ],
-      "fingerprint": "e54d8c4f5f1e33bc24f8b94185c09aa0fa0a6cec188d315ab8696a07f96e92fc"
+      "fingerprint": "e54d8c4f5f1e33bc24f8b94185c09aa0fa0a6cec188d315ab8696a07f96e92fc",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
@@ -6413,8 +6718,19 @@
       "id": "KL-M07",
       "area": "keyLed",
       "title": "malformed event: an unknown command",
-      "question": "key-led.mdx says unrecognized commands are skipped; whether the skip is recorded as a warning is not stated. The same open question as KL-025.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "Unrecognized commands are skipped"
+        },
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "Whether the skip is recorded as a warning is not stated; all three record a format warning. The same as KL-025."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -6441,15 +6757,70 @@
           "text": "bogus 1 1\nf 1 1"
         }
       ],
-      "fingerprint": "e925b675da3363851bc5ee3b71009f6f5f7bf559013dc6289737670a7993f455"
+      "fingerprint": "e925b675da3363851bc5ee3b71009f6f5f7bf559013dc6289737670a7993f455",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
     },
     {
       "layer": "parse",
       "id": "KL-020",
       "area": "keyLed",
       "title": "velocity above 127 next to a hex colour",
-      "question": "The docs give 0~127 for velocity; no parser rejects a hex line with a larger one (the drivers clamp it later).",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The docs give 0~127 for velocity; no parser rejects a hex line with a larger one (the drivers clamp it later)."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -6476,7 +6847,56 @@
           "text": "o 1 1 FF0000 200"
         }
       ],
-      "fingerprint": "6eab1f91de108df5ad62871a7aa10f9f8ace0b8e356f77aebe2dc9191e97ff26"
+      "fingerprint": "6eab1f91de108df5ad62871a7aa10f9f8ace0b8e356f77aebe2dc9191e97ff26",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ffff0000",
+                    200
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
@@ -6664,8 +7084,14 @@
       "id": "KL-023",
       "area": "keyLed",
       "title": "a chain event that names a chain the pack does not have",
-      "question": "The docs do not say whether a keyLED `chain` beyond the pack's chain count is a warning or kept as written.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "The docs do not say whether a keyLED `chain` beyond the pack's chain count is a warning or kept as written; all three keep it as written."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -6692,15 +7118,67 @@
           "text": "c 9"
         }
       ],
-      "fingerprint": "76ed9edaa5325902cb42b365465abcd51012c83cfbbd02e40f987103001be51c"
+      "fingerprint": "76ed9edaa5325902cb42b365465abcd51012c83cfbbd02e40f987103001be51c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "chain",
+                    8
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
       "id": "KL-024",
       "area": "keyLed",
-      "title": "an LED event outside the pad grid",
-      "question": "The docs do not say whether coordinates inside a keyLED file are range-checked when parsing.",
-      "expectation": "undetermined",
+      "title": "an LED event outside the pad grid is kept as written",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-12",
+          "note": "The docs do not say whether coordinates inside a keyLED file are range-checked when parsing. Packs do light positions outside their grid, and a warning per line gives the user nothing to act on: the line is kept as written, without a warning, and skipped when it is lit."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -6727,15 +7205,75 @@
           "text": "o 9 9 FF0000"
         }
       ],
-      "fingerprint": "6a01c06db40e08f8b05e3060fb963cc7cada67fb2033420ed45f35317c8447b1"
+      "fingerprint": "6a01c06db40e08f8b05e3060fb963cc7cada67fb2033420ed45f35317c8447b1",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    8,
+                    8,
+                    "ffff0000",
+                    4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
       "id": "KL-025",
       "area": "keyLed",
       "title": "a comment-like line inside a keyLED file",
-      "question": "There is no comment syntax in the format; key-led.mdx says unrecognized commands are skipped, whether with a warning is not stated. The same open question as KL-M07.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "Unrecognized commands are skipped"
+        },
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "There is no comment syntax in the format, and whether the skip warns is not stated; all three record a format warning. The same as KL-M07."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -6762,7 +7300,56 @@
           "text": "# note\nf 1 1"
         }
       ],
-      "fingerprint": "50a66258403435a4a24e19abbb6ac2fa30758d2d9874baa8d94828fc392833c9"
+      "fingerprint": "50a66258403435a4a24e19abbb6ac2fa30758d2d9874baa8d94828fc392833c9",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -7163,15 +7750,19 @@
       "id": "AP-004",
       "area": "autoPlay",
       "title": "coordinates and chains outside the pack are skipped",
-      "question": "auto-play.mdx says lines with out-of-range coordinates are skipped; whether each skipped line records a warning is not stated. The same warning-evidence rule as AP-M10.",
       "basis": [
         {
           "type": "doc",
           "ref": "content/docs/en/unipack/auto-play.mdx",
           "note": "Lines with out-of-range coordinates are skipped"
+        },
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "Whether each skipped line records a warning is not stated; all three record one range warning per line."
         }
       ],
-      "expectation": "undetermined",
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -7198,7 +7789,56 @@
           "text": "on 5 1\non 1 4\non 0 1\nchain 3\nchain 0\noff 5 5\ntouch 9 9"
         }
       ],
-      "fingerprint": "14d46481dcf2569e8f565b98020b1d2dd6cf69aaa81a73bdae78f80fbc0a14eb"
+      "fingerprint": "14d46481dcf2569e8f565b98020b1d2dd6cf69aaa81a73bdae78f80fbc0a14eb",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [],
+        "errors": [
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -7428,63 +8068,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -7577,63 +8160,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -7726,63 +8252,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -7875,63 +8344,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8024,63 +8436,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8173,63 +8528,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8322,63 +8620,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8471,63 +8712,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8620,63 +8804,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8769,63 +8896,6 @@
         "errors": [
           "autoPlay:format"
         ]
-      },
-      "known": {
-        "web": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": [
-              "autoPlay:range"
-            ]
-          },
-          "note": "The web parser reports a non-numeric autoPlay value as `range` (`coordinate|chain|delay is incorrect`); Android and iOS report `format`. The line is dropped by all three (unipad.io parser.ts parseAutoPlay)."
-        }
       }
     },
     {
@@ -8833,8 +8903,14 @@
       "id": "AP-M10",
       "area": "autoPlay",
       "title": "malformed line: an unknown command",
-      "question": "auto-play.mdx lists the commands but does not say what a line starting with another word does, neither that it is skipped nor whether it warns (key-led.mdx says \"skipped\", for keyLED files only). The same open question as AP-022.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "auto-play.mdx lists the commands but does not say what a line starting with another word does (key-led.mdx says \"skipped\", for keyLED files only); all three skip it with a format warning. The same as AP-022."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -8861,7 +8937,58 @@
           "text": "bogus 1 1\non 1 1"
         }
       ],
-      "fingerprint": "89c84e33afbfd67b0b5197eb46266d3640283a4fac552f96eacbce9e54399c3b"
+      "fingerprint": "89c84e33afbfd67b0b5197eb46266d3640283a4fac552f96eacbce9e54399c3b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format"
+        ]
+      }
     },
     {
       "layer": "parse",
@@ -9050,8 +9177,14 @@
       "id": "AP-022",
       "area": "autoPlay",
       "title": "a comment-like line in autoPlay",
-      "question": "There is no comment syntax in the format, and auto-play.mdx does not say what a line starting with an unknown word does (key-led.mdx says \"skipped\", for keyLED files only). The same open question as AP-M10.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "There is no comment syntax in the format, and auto-play.mdx does not say what a line starting with an unknown word does; all three skip it with a format warning. The same as AP-M10."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -9078,7 +9211,58 @@
           "text": "# start\non 1 1"
         }
       ],
-      "fingerprint": "cdc003a6e631c0a52650eef20398dc5fbe076280fefe1a12c05d3c4bc05fddc2"
+      "fingerprint": "cdc003a6e631c0a52650eef20398dc5fbe076280fefe1a12c05d3c4bc05fddc2",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format"
+        ]
+      }
     },
     {
       "id": "PAL-001",
@@ -10173,9 +10357,6 @@
           "note": "LEDs still lit are cleared on exit and no stale light is sent afterwards"
         }
       ],
-      "unobserved": {
-        "ios": "Leaving the play screen is a screen-level step on iOS: the main screen clears the Launchpad when it takes the MIDI controller back (MainView onChange -> MainViewModel.setupMidiController -> MainMidiControllerAdapter.onAttach -> sendClearLed) and the on-screen pads go away with the play view. The iOS harness drives the runners alone, where LedRunner.stop() only cancels the loop, so what a user sees after leaving is not measured. Not checked on a real Launchpad either."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10265,9 +10446,6 @@
           "note": "LEDs still lit are cleared on exit and no stale light is sent afterwards"
         }
       ],
-      "unobserved": {
-        "ios": "Leaving the play screen is a screen-level step on iOS: the main screen clears the Launchpad when it takes the MIDI controller back (MainView onChange -> MainViewModel.setupMidiController -> MainMidiControllerAdapter.onAttach -> sendClearLed) and the on-screen pads go away with the play view. The iOS harness drives the runners alone, where LedRunner.stop() only cancels the loop, so what a user sees after leaving is not measured. Not checked on a real Launchpad either."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10322,7 +10500,7 @@
       "id": "RUN-L-008",
       "layer": "run",
       "area": "led",
-      "title": "pressing a pad again while its animation plays",
+      "title": "pressing a pad again while its animation plays restarts it after an off",
       "scenario": [
         {
           "do": "press",
@@ -10354,9 +10532,14 @@
           "do": "observe"
         }
       ],
-      "basis": [],
-      "question": "Whether a re-press restarts the lights with an off in between, or without, is not stated; the runners are expected to agree but no doc or note says so.",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "Whether a re-press restarts the lights with an off in between, or without, is not stated; all three runners send the off first."
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -10383,7 +10566,34 @@
           "text": "o 1 1 FF0000\nd 40\nf 1 1\nd 40"
         }
       ],
-      "fingerprint": "dfa36106d26ecb1596911c9c28acc2a43e0994ebf356588f785b4babd9b97e80"
+      "fingerprint": "dfa36106d26ecb1596911c9c28acc2a43e0994ebf356588f785b4babd9b97e80",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ]
+        ]
+      }
     },
     {
       "id": "RUN-A-001",
@@ -10430,9 +10640,6 @@
           "note": "Events are executed sequentially from top to bottom; delay waits in milliseconds"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10527,9 +10734,6 @@
           "note": "a stopped runner sends no more presses"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -10746,8 +10950,19 @@
       "id": "RP-002",
       "area": "realPack",
       "title": "two keyLED files for one pad whose names have a fifth part",
-      "question": "key-led.mdx names a file \"chain x y [loop]\" and gives a fifth part no meaning, yet packs made by other tools name several files for one pad this way. Whether such a file is read, and in which order the two queue, is not stated (KL-004 states the order only for names that are mappings).",
-      "expectation": "undetermined",
+      "basis": [
+        {
+          "type": "agreed",
+          "ref": "android, ios and web results of corpus c30e75b9 (2026-10-10)",
+          "note": "key-led.mdx names a file \"chain x y [loop]\" and gives a fifth part no meaning, yet packs made by other tools name several files for one pad this way. All three read both files and queue them in name order (KL-004 states the order only for names that are mappings)."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
       "files": [
         {
           "path": "info",
@@ -10778,7 +10993,68 @@
           "text": "o 1 1 00FF00"
         }
       ],
-      "fingerprint": "f9923fb8e94a4440ff0ab5dfa5909382f8e16a31cd1860c5b0d5c293272a6a71"
+      "fingerprint": "f9923fb8e94a4440ff0ab5dfa5909382f8e16a31cd1860c5b0d5c293272a6a71",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ffff0000",
+                    4
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ff00ff00",
+                    4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
     },
     {
       "layer": "parse",
@@ -11147,9 +11423,6 @@
           "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {
@@ -11311,9 +11584,6 @@
           "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
         }
       ],
-      "unobserved": {
-        "ios": "The iOS AutoPlayRunner reads the wall clock and sleeps in real time (currentTimeMillis, Task.sleep), so a scenario cannot be driven on a virtual clock without a product change."
-      },
       "expectation": "determined",
       "files": [
         {

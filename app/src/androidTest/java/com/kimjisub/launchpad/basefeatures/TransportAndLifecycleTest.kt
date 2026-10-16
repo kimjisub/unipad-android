@@ -6,10 +6,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class TransportAndLifecycleTest : PlaybackScreenTest() {
@@ -70,6 +72,34 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         screen.tapPad(hint)
         screen.await("Practice did not advance after the expected pad") { screen.onMain { screen.vm().autoPlayProgress > before } }
         screen.capture("step-practice")
+    }
+
+    /**
+     * The first autoPlay press is pad 1 1, whose sound moves to chain 40. Step practice used to light that
+     * chain's button past the end of the round button table and close the app on the next step.
+     */
+    @Test fun stepPracticeContinuesPastAMoveToAChainThePackLacks() {
+        val keySound = File(screen.pack(), "keySound")
+        keySound.writeText(keySound.readText().replaceFirst("1 1 1 silence.wav\n", "1 1 1 silence.wav 1 40\n"))
+        screen.launch(PlayActivity::class.java) { putExtra("path", screen.pack().path) }
+        screen.await("Pack did not load") { screen.ready() }
+        if (screen.onMain { screen.vm().unipack.errorDetail != null }) {
+            screen.node(By.text(screen.text(R.string.accept)))
+            screen.capture("missing-chain-warning")
+            screen.clickText(R.string.accept)
+            assertTrue(screen.device.wait(Until.gone(By.text(screen.text(R.string.accept))), 5000))
+        }
+        screen.options()
+        screen.clickText(R.string.stepPractice)
+        screen.await("Step hint did not appear") { hintedPad() == 0 }
+        screen.tapPad(0)
+        screen.await("Step practice did not move to the next pad, 2 1") { hintedPad() == 8 }
+        assertEquals(0, screen.onMain { screen.vm().chain.value })
+        assertEquals(
+            "keySound : [1 1 1 silence.wav 1 40] wormhole is incorrect",
+            screen.onMain { screen.vm().unipack.errorDetail },
+        )
+        screen.capture("missing-chain-next-step")
     }
 
     @Test fun playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain() {

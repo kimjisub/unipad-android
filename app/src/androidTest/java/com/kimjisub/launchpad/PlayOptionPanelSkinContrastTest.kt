@@ -5,15 +5,21 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.PlayActivity
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -36,6 +42,7 @@ import java.io.File
 class PlayOptionPanelSkinContrastTest : BaseUITest() {
 
     private val prefs by lazy { context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE) }
+    private val autoMappingBusy by lazy { str(R.string.autoMappingRunning) }
     private var originalTheme: String? = null
     private var themeChanged = false
 
@@ -106,11 +113,11 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
             name,
             shot,
             knownLimits,
-            Triple("Auto Mapping", By.text("Auto Mapping"), text),
+            Triple("Auto Mapping", By.text(str(R.string.autoMapping)), text),
             Triple("Auto Mapping arrow", By.text("→"), graphic),
             Triple("Quit", By.desc(str(R.string.quit)), graphic),
             Triple("title", By.text(str(R.string.menu)), text),
-            Triple("section title", By.text("PERFORMANCE"), text),
+            Triple("section title", By.text(str(R.string.play_section_performance).uppercase()), text),
             Triple("option label", By.text(str(R.string.feedbackLight)), text),
             Triple(INFO_CARD_TITLE, By.text(TestUniPack.TITLE), text),
             Triple(PLAY_MODE_LABEL, By.text(str(R.string.guidePlay)), text),
@@ -124,12 +131,24 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         takeScreenshot("option_panel_${name}_info")
         val info = measureAll(name, screenshot(), knownLimits, Triple(INFO_CARD_PRODUCER, By.text(TestUniPack.PRODUCER), text))
 
-        device.findObject(By.text("Auto Mapping")).click()
-        assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(AUTO_MAPPING_BUSY)), 5000L))
+        device.findObject(By.text(str(R.string.autoMapping))).click()
+        assertNotNull("[$name] Auto Mapping did not start", device.wait(Until.findObject(By.text(autoMappingBusy)), 5000L))
         val busyShot = screenshot()
         takeScreenshot("option_panel_${name}_automapping")
-        val busy = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(AUTO_MAPPING_BUSY), text))
-        assertNotNull("[$name] Auto Mapping did not finish", device.wait(Until.findObject(By.text("Auto Mapping")), AUTO_MAPPING_TIMEOUT_MS))
+        val busy = measureAll(name, busyShot, knownLimits, Triple("auto mapping progress", By.text(autoMappingBusy), text))
+        val finished = device.wait(Until.findObject(By.text(str(R.string.autoMapping))), AUTO_MAPPING_TIMEOUT_MS)
+        if (finished == null) {
+            val progress = runCatching {
+                ActivityReadiness.onMain(1000) {
+                    val activity = ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(Stage.RESUMED).single() as PlayActivity
+                    val vm = ViewModelProvider(activity)[PlayActivityViewModel::class.java]
+                    "${vm.autoMappingProgress}/${vm.autoMappingMax}"
+                }
+            }.getOrElse { "unavailable ($it)" }
+            ActivityReadiness.capture(context, device, "missing-auto-mapping-$name")
+            fail("[$name] Auto Mapping did not finish (progress=$progress)")
+        }
 
         (panel + info + busy).forEach { it.assertReadable(name) }
 
@@ -173,7 +192,6 @@ class PlayOptionPanelSkinContrastTest : BaseUITest() {
         private const val KEY_SELECTED_THEME = "SelectedTheme"
         private const val SKIN_FOLDER = "zz_ui_test_panel_skin"
         private const val PANEL_SETTLE_MS = 800L
-        private const val AUTO_MAPPING_BUSY = "Auto Mapping…"
         private const val AUTO_MAPPING_TIMEOUT_MS = 60_000L
         private const val FLOOR_TOLERANCE = 0.05f
         private const val INFO_CARD_TITLE = "pack title (info card)"

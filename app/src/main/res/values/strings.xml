@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by Kimjisub</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Accept</string>
@@ -94,9 +93,34 @@
 	<string name="hideUI">Hide UI</string>
 	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
+	<string name="play_section_play_mode">Play Mode</string>
+	<string name="play_section_performance">Performance</string>
+	<string name="play_section_display">Display</string>
+	<string name="play_section_tools">Tools</string>
+	<string name="autoMapping">Auto Mapping</string>
+	<string name="autoMappingRunning">Auto Mapping…</string>
 
 	<!--Version-->
-	<string name="update_available">Update available</string>
+	<string name="update_check">Check for updates</string>
+	<string name="update_offer_title">A new version is available</string>
+	<string name="update_offer_body">Get it now or later. Choose when to install it after you finish playing.</string>
+	<string name="update_download">Get new version</string>
+	<string name="update_later">Later</string>
+	<string name="update_downloading_title">Getting the new version</string>
+	<string name="update_ready_title">The new version is ready</string>
+	<string name="update_ready_body">Installing restarts the app. You will come back to the pack list.</string>
+	<string name="update_install">Install and restart</string>
+	<string name="update_none">No update is available right now.</string>
+	<string name="update_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+	<string name="update_check_again">Check again</string>
+	<string name="update_close">Close</string>
+	<string name="update_failed">The update couldn\'t finish. You can try again later.</string>
+	<string name="update_retry">Try again</string>
+	<string name="update_check_in_store">Check in store</string>
+	<string name="update_unsupported">On this device, please check for updates in the store.</string>
+	<string name="update_store_notice">Checking in Google Play. Updating the app may close UniPad.</string>
+	<string name="update_store_open">Open store</string>
+	<string name="update_store_unavailable">Couldn\'t open the store. Please check again later.</string>
 
 	<string name="permissionRequire">External storage access is required for saving project files.\nObtain permission for this privilege.</string>
 	<string name="permissionDenied">Apps require access to external storage.\nPlease Turn on permissions in [Settings] > [Permissions]</string>
@@ -228,7 +252,6 @@
 	<string name="workspace_documents_android10">Documents/Unipad (Backup)</string>
 	<string name="workspace_app_storage">App Storage (Recommended)</string>
 	<string name="workspace_internal_storage">Internal Storage</string>
-	<string name="workspace_internal_sd_card">Internal SD Card</string>
 	<string name="workspace_external_sd_card_format">External SD Card %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 

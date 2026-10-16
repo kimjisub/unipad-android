@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Aceptar</string>
@@ -94,9 +93,14 @@
 	<string name="hideUI">Ocultar UI</string>
 	<string name="watermark">Marca de agua</string>
 	<string name="proLightMode">Modo Pro Light</string>
+	<string name="play_section_play_mode">Modo de juego</string>
+	<string name="play_section_performance">Interpretación</string>
+	<string name="play_section_display">Pantalla</string>
+	<string name="play_section_tools">Herramientas</string>
+	<string name="autoMapping">Mapeo Automático</string>
+	<string name="autoMappingRunning">Mapeo Automático…</string>
 
 	<!--Version-->
-	<string name="update_available">Actualización disponible</string>
 
 	<string name="permissionRequire">Se requiere acceso al almacenamiento externo para guardar archivos del proyecto.\nObtener permiso para este privilegio.</string>
 	<string name="permissionDenied">La app requiere acceso al almacenamiento externo.\nPor favor active los permisos en [Configuración] > [Permisos]</string>
@@ -211,7 +215,6 @@
 	<string name="workspace_documents_android10">Documentos (Android 10)</string>
 	<string name="workspace_app_storage">Almacenamiento de App (Recomendado)</string>
 	<string name="workspace_internal_storage">Almacenamiento Interno</string>
-	<string name="workspace_internal_sd_card">Tarjeta SD Interna</string>
 	<string name="workspace_external_sd_card_format">Tarjeta SD Externa %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 

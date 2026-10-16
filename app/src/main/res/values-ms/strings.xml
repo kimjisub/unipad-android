@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Terima</string>
@@ -94,9 +93,14 @@
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tera Air</string>
 	<string name="proLightMode">Mod Pro Light</string>
+	<string name="play_section_play_mode">Mod Bermain</string>
+	<string name="play_section_performance">Persembahan</string>
+	<string name="play_section_display">Paparan</string>
+	<string name="play_section_tools">Alatan</string>
+	<string name="autoMapping">Pemetaan Automatik</string>
+	<string name="autoMappingRunning">Pemetaan Automatik…</string>
 
 	<!--Version-->
-	<string name="update_available">Kemas kini tersedia</string>
 
 	<string name="permissionRequire">Akses storan luaran diperlukan untuk menyimpan fail projek.\nDapatkan kebenaran untuk keistimewaan ini.</string>
 	<string name="permissionDenied">Aplikasi memerlukan akses ke storan luaran.\nSila hidupkan kebenaran di [Tetapan] > [Kebenaran]</string>
@@ -205,7 +209,6 @@
 	<string name="workspace_documents_android10">Dokumen (Android 10)</string>
 	<string name="workspace_app_storage">Storan Aplikasi (Disyorkan)</string>
 	<string name="workspace_internal_storage">Storan Dalaman</string>
-	<string name="workspace_internal_sd_card">Kad SD Dalaman</string>
 	<string name="workspace_external_sd_card_format">Kad SD Luaran %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 

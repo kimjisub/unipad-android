@@ -264,6 +264,107 @@ class FileManagerTest {
 		assertFalse(inner.exists())
 	}
 
+	private fun writePack(dir: File) {
+		dir.mkdirs()
+		File(dir, "info").writeText("title=Pack")
+		File(dir, "keySound").writeText("1 1 1 a.wav")
+		File(dir, "sounds").mkdirs()
+		File(dir, "sounds/a.wav").writeText("sound")
+	}
+
+	private fun assertPackAtRoot(root: File) {
+		assertEquals("title=Pack", File(root, "info").readText())
+		assertEquals("1 1 1 a.wav", File(root, "keySound").readText())
+		assertEquals("sound", File(root, "sounds/a.wav").readText())
+		assertEquals(
+			setOf("info", "keySound", "sounds"),
+			root.listFiles().orEmpty().map { it.name }.toSet(),
+		)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInTwoFoldersOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack"))
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInThreeFoldersOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack/Pack"))
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsPackWrappedInTwoFoldersOfTheSameNameBesideMacosx() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack/Pack"))
+		File(root, "__MACOSX/Pack/Pack").mkdirs()
+		File(root, "__MACOSX/Pack/Pack/._info").writeText("resource fork")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsFilesBesideAnInnerFolderOfTheSameName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		val wrapper = File(root, "Pack")
+		writePack(File(wrapper, "Pack"))
+		File(wrapper, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("readme", File(root, "readme.txt").readText())
+		assertEquals("title=Pack", File(root, "Pack/info").readText())
+		assertEquals("sound", File(root, "Pack/sounds/a.wav").readText())
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsHiddenFoldersInTheWrapperNamedLikeItsTemporaryName() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		val wrapper = File(root, "Pack")
+		File(wrapper, ".unwrap").mkdirs()
+		File(wrapper, ".unwrap/info").writeText("title=Pack")
+		File(wrapper, ".unwrap-1").mkdirs()
+		File(wrapper, ".unwrap-1/keySound").writeText("1 1 1 a.wav")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("title=Pack", File(root, ".unwrap/info").readText())
+		assertEquals("1 1 1 a.wav", File(root, ".unwrap-1/keySound").readText())
+		assertEquals(setOf(".unwrap", ".unwrap-1"), root.list().orEmpty().toSet())
+	}
+
+	@Test
+	fun removeDoubleFolder_picksATemporaryNameFreeBesideAndInsideTheWrapper() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		File(root, ".unwrap").mkdirs()
+		File(root, ".unwrap/leftover").writeText("leftover")
+		writePack(File(root, "Pack"))
+		File(root, "Pack/.unwrap (2)").mkdirs()
+		File(root, "Pack/.unwrap (2)/note").writeText("note")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("leftover", File(root, ".unwrap/leftover").readText())
+		assertEquals("note", File(root, ".unwrap (2)/note").readText())
+		assertEquals("title=Pack", File(root, "info").readText())
+		assertEquals("sound", File(root, "sounds/a.wav").readText())
+		assertEquals(
+			setOf(".unwrap", ".unwrap (2)", "info", "keySound", "sounds"),
+			root.list().orEmpty().toSet(),
+		)
+	}
+
 	@Test
 	fun removeDoubleFolder_throwsAndKeepsTheFileItCannotCopy() {
 		val outer = File(tempDir, "unreadable").apply { mkdirs() }
@@ -275,7 +376,10 @@ class FileManagerTest {
 
 		assertThrows(IOException::class.java) { FileManager.removeDoubleFolder(outer.absolutePath) }
 
-		assertTrue("the file that could not be copied is not deleted", sound.exists())
+		val kept = File(outer, ".unwrap/a.wav")
+		assertTrue("the file that could not be copied is not deleted", kept.exists())
+		kept.setReadable(true)
+		assertEquals("sound", kept.readText())
 	}
 
 	// makeNomedia tests
