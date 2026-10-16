@@ -93,6 +93,12 @@
 	<string name="hideUI">Arayüzü Gizle</string>
 	<string name="watermark">Filigran</string>
 	<string name="proLightMode">Pro Işık Modu</string>
+	<string name="play_section_play_mode">Çalma Modu</string>
+	<string name="play_section_performance">Performans</string>
+	<string name="play_section_display">Görünüm</string>
+	<string name="play_section_tools">Araçlar</string>
+	<string name="autoMapping">Otomatik Eşleme</string>
+	<string name="autoMappingRunning">Otomatik Eşleme…</string>
 
 	<!--Version-->
 

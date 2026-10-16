@@ -93,6 +93,12 @@
 	<string name="hideUI">Ẩn UI</string>
 	<string name="watermark">Hình mờ</string>
 	<string name="proLightMode">Chế độ Pro Light</string>
+	<string name="play_section_play_mode">Chế độ chơi</string>
+	<string name="play_section_performance">Biểu diễn</string>
+	<string name="play_section_display">Hiển thị</string>
+	<string name="play_section_tools">Công cụ</string>
+	<string name="autoMapping">Tự Động Ánh Xạ</string>
+	<string name="autoMappingRunning">Tự Động Ánh Xạ…</string>
 
 	<!--Version-->
 
