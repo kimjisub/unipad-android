@@ -46,7 +46,10 @@ connected device):
 ```
 
 The shell runner uses an explicit serial for every device action and checks the JUnit footer:
-`adb shell am instrument` alone can exit zero after a failed test. It does not start a device. Before instrumentation it prepares both installed debug packages
+`adb shell am instrument` alone can exit zero after a failed test. The footer must count exactly
+the `@Test` methods declared by the classes `BaseFeaturesSuite` lists
+(`scripts/check_connected_results.py --suite-expected`), and no test may be skipped.
+It does not start a device. Before instrumentation it prepares both installed debug packages
 with `cmd package compile -f -m speed`, matching the merged Gradle debug test preparation.
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
@@ -242,7 +245,7 @@ close the shell streams, ending `uinput` and removing its device. `InputToolsCle
 that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
 after registration removes the device while preserving the original failure. It also checks
 that cancelled-mouse teardown sends no new window event and a new mouse helper can hover. It runs separately
-from the 47-test release preflight. Layout-test cleanup waits within the existing 10-second checks
+from the release preflight. Layout-test cleanup waits within the existing 10-second checks
 for the display override to disappear and the play window's landscape orientation and original
 bounds to return before the next test starts.
 
