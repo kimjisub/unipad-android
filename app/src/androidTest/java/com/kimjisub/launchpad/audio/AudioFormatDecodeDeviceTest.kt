@@ -2,11 +2,12 @@ package com.kimjisub.launchpad.audio
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import java.io.File
 import kotlin.math.abs
@@ -16,25 +17,22 @@ import kotlin.math.abs
  *
  * Every fixture in `assets/audio-formats` is the same 0.3 s, 440 Hz, half-scale mono tone at
  * 44.1 kHz, so a decoder that returns silence, noise or the wrong rate fails the same checks.
- * `mp3-named.wav` is an MP3 (with an ID3v2 tag) under a `.wav` name, as some official packs ship.
+ * `mp3-named.wav` is a bare MP3 (frames from the first byte, no tag) under a `.wav` name, as
+ * some official packs ship; `mp3-id3-named.wav` is the same with an ID3v2 tag in front.
  */
 @RunWith(AndroidJUnit4::class)
 class AudioFormatDecodeDeviceTest {
-    private lateinit var dir: File
+    private val instrumentation = InstrumentationRegistry.getInstrumentation()
+
+    @get:Rule
+    val dir = TemporaryFolder(instrumentation.targetContext.cacheDir)
 
     @Before
     fun copyFixtures() {
-        val context = InstrumentationRegistry.getInstrumentation()
-        dir = kotlin.io.path.createTempDirectory(context.targetContext.cacheDir.toPath(), "audio-formats-").toFile()
-        val assets = context.context.assets
+        val assets = instrumentation.context.assets
         for (name in assets.list(FIXTURES).orEmpty()) {
-            assets.open("$FIXTURES/$name").use { input -> File(dir, name).outputStream().use(input::copyTo) }
+            assets.open("$FIXTURES/$name").use { input -> dir.newFile(name).outputStream().use(input::copyTo) }
         }
-    }
-
-    @After
-    fun removeFixtures() {
-        dir.deleteRecursively()
     }
 
     @Test
@@ -49,8 +47,11 @@ class AudioFormatDecodeDeviceTest {
     @Test
     fun decodesMp3NamedWavByItsContent() = assertTone("mp3-named.wav")
 
+    @Test
+    fun decodesTaggedMp3NamedWavByItsContent() = assertTone("mp3-id3-named.wav")
+
     private fun assertTone(name: String) {
-        val file = File(dir, name)
+        val file = File(dir.root, name)
         assertTrue("Fixture missing: $name", file.isFile)
         val decoded = OboeAudioEngine.decodeOnly(file) ?: throw AssertionError("$name did not decode")
 
