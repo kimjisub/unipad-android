@@ -95,6 +95,13 @@ android {
 	androidResources {
 		generateLocaleConfig = true
 	}
+	// Play would otherwise install only the phone's language, so a language picked for UniPad
+	// alone would have no strings and stay in English.
+	bundle {
+		language {
+			enableSplit = false
+		}
+	}
 	buildFeatures {
 		viewBinding = true
 		buildConfig = true
