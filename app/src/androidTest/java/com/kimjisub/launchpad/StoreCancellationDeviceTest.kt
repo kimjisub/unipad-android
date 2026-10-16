@@ -24,6 +24,7 @@ import com.kimjisub.launchpad.activity.FBStoreActivity
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.api.file.FileApi
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
@@ -79,6 +80,8 @@ class StoreCancellationDeviceTest {
         val oldIdle = configurator.waitForIdleTimeout
         configurator.waitForIdleTimeout = 0
         val id = "store-cancel-${UUID.randomUUID()}"
+        val notificationPermission = android.Manifest.permission.POST_NOTIFICATIONS
+        val checkNotificationPermission = android.os.Build.VERSION.SDK_INT >= 33
         val workspace = File(context.getExternalFilesDir(null), "UniPack").apply { mkdirs() }
         val existing = File(workspace, "$id-existing").apply { mkdirs() }
         files("Existing").forEach { (path, bytes) -> File(existing, path).apply { parentFile!!.mkdirs(); writeBytes(bytes) } }
@@ -117,6 +120,20 @@ class StoreCancellationDeviceTest {
         var screen: ActivityScenario<FBStoreActivity>? = null
         loadKoinModules(override)
         try {
+            if (checkNotificationPermission) {
+                instrumentation.uiAutomation.adoptShellPermissionIdentity(notificationPermission)
+            }
+            val notifications = context.getSystemService(NotificationManager::class.java)
+            fun progressNotifications() = notifications.activeNotifications.filter {
+                it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) == "Cancellation fixture"
+            }
+            fun captureNotifications(name: String) {
+                assertTrue(device.openNotification())
+                assertTrue("notification panel did not open", device.wait(
+                    Until.hasObject(By.res("com.android.systemui", "notification_stack_scroller")), 10000))
+                capture(name)
+                device.pressBack()
+            }
             main = ActivityScenario.launch(Intent(context, MainActivity::class.java))
             screen = ActivityScenario.launch(Intent(context, FBStoreActivity::class.java))
             fun selectFixture() {
@@ -159,9 +176,13 @@ class StoreCancellationDeviceTest {
                 }
             }
             startDownloadWithoutChangingNotificationPermission()
-            val partial = File(workspace, "$id.zip")
-            await("partial chunk not written") { partial.length() == 4096L }
+            await("partial chunk not written") { receivedArchive(workspace)?.length() == 4096L }
+            val partial = requireNotNull(receivedArchive(workspace))
+            await("download progress notification missing") {
+                progressNotifications().any { it.isOngoing }
+            }
             capture("downloading")
+            captureNotifications("notifications-downloading")
             evidence("partial-before=${partial.length()} existing=$before")
             val other = Recorder()
             UniPackDownloader(context, "$id-other", "${server.url}other", { workspace }, "$id-other", listener = other,
@@ -170,7 +191,7 @@ class StoreCancellationDeviceTest {
             assertNull(other.error)
             val otherFolder = requireNotNull(other.folder)
             val otherBefore = hashes(otherFolder)
-            // Closing the real Activity destroys the same lifecycleScope as the store's top arrow.
+            // Closing the real Activity destroys the lifecycleScope the download runs in.
             screen.close()
             screen = null
             val start = SystemClock.elapsedRealtime()
@@ -179,6 +200,11 @@ class StoreCancellationDeviceTest {
             server.breakRead.countDown() // EOF/IO error after the screen has cancelled its scope.
             capture("after-cancel")
             await("cancelled ZIP remained after read error") { !partial.exists() }
+            await("cancelled progress notification remained") { progressNotifications().isEmpty() }
+            captureNotifications("notifications-after-cancel")
+            assertTrue("another download's completed notification was removed", notifications.activeNotifications.any {
+                it.notification.extras.getString(android.app.Notification.EXTRA_TITLE) == "$id-other" && !it.isOngoing
+            })
             evidence("cleanup-ms=${SystemClock.elapsedRealtime() - start} partial-after=${partial.exists()} cancelled=${cancelled.count}")
             assertTrue("cancellation did not reach the real HTTP call", cancelledPromptly)
             assertEquals(before, hashes(existing))
@@ -200,12 +226,16 @@ class StoreCancellationDeviceTest {
             assertEquals(before, hashes(existing))
             assertEquals(otherBefore, hashes(otherFolder))
             assertFalse(partial.exists())
+            await("completed notification missing") { progressNotifications().any { !it.isOngoing } }
             capture("retried")
             evidence("PASS retried=${hashes(retried)} other=${hashes(otherFolder)} existing=${hashes(existing)}")
         } catch (error: Throwable) {
             capture("failed")
             throw error
         } finally {
+            if (checkNotificationPermission) {
+                instrumentation.uiAutomation.dropShellPermissionIdentity()
+            }
             evidence("final-files=" + workspace.listFiles().orEmpty().filter { it.name.startsWith(id) }.map { "${it.name}:${it.length()}" })
             server.breakRead.countDown()
             screen?.close()
@@ -301,6 +331,12 @@ class StoreCancellationDeviceTest {
     private fun zip(title: String): ByteArray = ByteArrayOutputStream().also { bytes ->
         ZipOutputStream(bytes).use { zip -> files(title).forEach { (name, data) -> zip.putNextEntry(ZipEntry(name)); zip.write(data); zip.closeEntry() } }
     }.toByteArray()
+    /** The archive being received: downloads write it inside the app's staging folder. */
+    private fun receivedArchive(workspace: File): File? = workspace.listFiles().orEmpty()
+        .filter(PackStaging::isStagingFolder)
+        .flatMap { folder -> folder.walkTopDown().filter { it.isFile && it.extension == "zip" }.toList() }
+        .singleOrNull()
+
     private fun hashes(folder: File): Map<String, String> = hashesFrom(folder.walkTopDown().filter { it.isFile }.associate { it.relativeTo(folder).invariantSeparatorsPath to it.readBytes() })
     private fun hashesFrom(files: Map<String, ByteArray>) = files.mapValues { (_, bytes) -> MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) } }
 }
