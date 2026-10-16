@@ -28,7 +28,11 @@ class IntendedTimeline(
 	val pressTimes: List<Long>,
 	/** The last autoplay element's time. */
 	val autoPlayLengthMs: Long,
-	/** Endless animations with no delay in a pass; LedRunner plays one pass per tick, which no timeline can state. */
+	/**
+	 * Endless animations with no delay in a pass. LedRunner plays one pass per tick, which no timeline can
+	 * state, so after the first pass this one plays nothing more of them but keeps the LEDs they lit theirs
+	 * until a press or release ends them.
+	 */
 	val delaylessEndlessAnimations: Int,
 ) {
 	val lastT0: Long get() = commands.lastOrNull()?.t0 ?: 0
@@ -60,11 +64,16 @@ fun UniPack.autoPlayLengthMs(): Long =
  * animations. LedRunner plays these on 4 ms ticks; here nothing waits for a tick, and events due in
  * the same millisecond play animations in press order, then autoplay.
  *
+ * A keyLED chain event (`c`) moves the chain later presses and the final release use, as the play
+ * screen applies it.
+ *
  * [pack] must be loaded for this alone: its multi-mapping queues rotate as the play screen's do.
  * [releaseAllAtMs] releases every pad on the last chain, as PlayActivityViewModel.padInit does.
+ * Nothing after [giveUpAtMs] is played, as [LedPathRun] stops recording then: an endless animation no
+ * release reaches would otherwise run forever.
  */
-fun intendedTimeline(pack: UniPack, releaseAllAtMs: Long? = null): IntendedTimeline =
-	TimelineSimulation(pack).run(releaseAllAtMs)
+fun intendedTimeline(pack: UniPack, releaseAllAtMs: Long? = null, giveUpAtMs: Long = Long.MAX_VALUE): IntendedTimeline =
+	TimelineSimulation(pack).run(releaseAllAtMs, giveUpAtMs)
 
 private class TimelineSimulation(private val pack: UniPack) {
 	private data class Owner(val x: Int, val y: Int, val chain: Int)
@@ -83,7 +92,7 @@ private class TimelineSimulation(private val pack: UniPack) {
 	private var delayless = 0
 	private var chain = 0
 
-	fun run(releaseAllAtMs: Long?): IntendedTimeline {
+	fun run(releaseAllAtMs: Long?, giveUpAtMs: Long): IntendedTimeline {
 		val elements = pack.autoPlayTable?.elements ?: arrayListOf()
 		var next = 0
 		var autoPlayTime = 0L
@@ -100,7 +109,7 @@ private class TimelineSimulation(private val pack: UniPack) {
 			}
 			val animationDue = running.minOfOrNull { it.due } ?: Long.MAX_VALUE
 			val t = minOf(autoPlayDue, animationDue)
-			if (t == Long.MAX_VALUE) break
+			if (t == Long.MAX_VALUE || t > giveUpAtMs) break
 
 			for (animation in running.toList()) if (animation.due <= t) play(animation, t)
 			running.removeAll { !it.playing }
@@ -187,14 +196,14 @@ private class TimelineSimulation(private val pack: UniPack) {
 			// Only an endless animation whose pass has no delay gets here, LedRunner's cap for it.
 			if (++played > events.size * animation.led.loop.coerceAtLeast(1) + 1) {
 				delayless++
-				animation.playing = false
+				animation.due = Long.MAX_VALUE
 				return
 			}
 			when (val event = events[animation.index]) {
 				is LedEvent.On -> light(event, animation.owner, t)
 				is LedEvent.Off -> dim(event, animation.owner, t)
 				is LedEvent.Delay -> animation.due += event.delay
-				is LedEvent.Chain -> Unit
+				is LedEvent.Chain -> chain = event.chain.coerceIn(0, pack.chain - 1)
 			}
 			animation.index++
 		}

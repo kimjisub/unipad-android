@@ -75,7 +75,7 @@ class UniPackConformanceChecksTest {
 	fun aLedRunnerWhoseEventOnDoesNothingFailsARunCase() {
 		val c = byId("RUN-L-001")
 		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
-		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any()) } just Runs } })
+		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any(), any()) } just Runs } })
 		assertEquals("fail", classify(c, actualFor(c, corpus, silent)).status)
 	}
 

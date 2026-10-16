@@ -18,6 +18,7 @@ object FileManager {
 	private const val BYTES_PER_MB = 1024 * 1024
 	private const val DEFAULT_DURATION_MS = 10000
 	private const val MAX_UNWRAP_DEPTH = 8
+	private const val MACOSX_FOLDER = "__MACOSX"
 	private val FILENAME_FILTER_REGEX = "[|\\\\?*<\":>/]+".toRegex()
 
 	/** Throws [IOException] when a file cannot be moved up, so the pack is not kept with it missing. */
@@ -27,16 +28,31 @@ object FileManager {
 
 		// Repeats like iOS (Pack/Pack/Pack/info used to stay broken here), and Finder's
 		// __MACOSX sibling does not count as content (every Mac-zipped pack was rejected).
+		// A readme or cover image beside the pack folder is not part of the pack and is dropped,
+		// as long as only one folder holds an info; two packs in one archive are left unopened.
 		repeat(MAX_UNWRAP_DEPTH) {
 			val children = rootFolder.listFiles() ?: return
-			val nonHidden = children.filter { !it.name.startsWith(".") && it.name != "__MACOSX" }
-			if (nonHidden.size == 1 && nonHidden[0].isDirectory) {
-				children.filter { it.name == "__MACOSX" }.forEach { deleteDirectory(it) }
-				moveDirectory(renameAside(nonHidden[0]), rootFolder)
-			} else {
-				return
-			}
+			val content = children.filter { !isHiddenEntry(it) }
+			val packFolder = content.singleOrNull()?.takeIf { it.isDirectory }
+				?: soleFolderHoldingInfo(rootFolder, content)
+				?: return
+			children.filter { it.name == MACOSX_FOLDER || (it in content && it != packFolder) }
+				.forEach { deleteDirectory(it) }
+			moveDirectory(renameAside(packFolder), rootFolder)
 		}
+	}
+
+	private fun isHiddenEntry(file: File) = file.name.startsWith(".") || file.name == MACOSX_FOLDER
+
+	private fun hasInfoFile(dir: File) = dir.listFiles().orEmpty().any { it.isFile && it.name.equals("info", ignoreCase = true) }
+
+	private fun holdsInfo(dir: File, depth: Int): Boolean =
+		hasInfoFile(dir) || depth > 0 && dir.listFiles().orEmpty()
+			.any { it.isDirectory && !isHiddenEntry(it) && holdsInfo(it, depth - 1) }
+
+	private fun soleFolderHoldingInfo(rootFolder: File, content: List<File>): File? {
+		if (hasInfoFile(rootFolder)) return null
+		return content.filter { it.isDirectory && holdsInfo(it, MAX_UNWRAP_DEPTH) }.singleOrNull()
 	}
 
 	/**

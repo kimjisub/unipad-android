@@ -69,7 +69,7 @@ class StorePackLedTimingTest {
 			withPack(source) { root ->
 				val timeline = timelineFor(loadPack(root))
 				val releaseAll = timeline.autoPlayLengthMs + TAIL_MS
-				val recording = LedPathRun(loadPack(root)).run(releaseAllAtMs = releaseAll, giveUpAtMs = timeline.lastT0 + GIVE_UP_AFTER_MS)
+				val recording = LedPathRun(loadPack(root)).run(releaseAllAtMs = releaseAll, giveUpAtMs = releaseAll + GIVE_UP_AFTER_MS)
 				val measurement = LedTimingMeasurement(name, timeline, recording)
 				val text = measurement.describe()
 				File(reports, "$name.txt").writeText(text)
@@ -80,9 +80,14 @@ class StorePackLedTimingTest {
 		assertTrue("reordered, missing or extra commands: $failed", failed.isEmpty())
 	}
 
-	/** The timeline [LedPathRun] is compared with: every pad released [TAIL_MS] after autoplay ends. */
-	private fun timelineFor(pack: UniPack): IntendedTimeline =
-		intendedTimeline(pack, releaseAllAtMs = pack.autoPlayLengthMs() + TAIL_MS)
+	/**
+	 * The timeline [LedPathRun] is compared with: every pad released [TAIL_MS] after autoplay ends, and
+	 * nothing recorded [GIVE_UP_AFTER_MS] after that.
+	 */
+	private fun timelineFor(pack: UniPack): IntendedTimeline {
+		val releaseAll = pack.autoPlayLengthMs() + TAIL_MS
+		return intendedTimeline(pack, releaseAllAtMs = releaseAll, giveUpAtMs = releaseAll + GIVE_UP_AFTER_MS)
+	}
 
 	private fun packSources(): List<File> =
 		(packs.listFiles() ?: emptyArray()).filter { it.isDirectory || it.extension.equals("zip", true) }.sortedBy { it.name }
