@@ -83,8 +83,26 @@ fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
 	}
 }
 
+/** The pack's sounds folder as it is on disk; the parser finds it whatever its letter case. */
+private fun soundsDirOf(root: File): File =
+	root.listFiles()?.firstOrNull { it.isDirectory && it.name.equals("sounds", ignoreCase = true) } ?: File(root, "sounds")
+
+/**
+ * Whether files whose names differ only in letter case are different files where the packs are
+ * written. Where they are not, a parser that opens only the exact name of `info` passes too.
+ */
+fun caseSensitiveFileSystem(): Boolean {
+	val dir = Files.createTempDirectory("unipack-case").toFile()
+	try {
+		File(dir, "a").writeText("")
+		return !File(dir, "A").exists()
+	} finally {
+		dir.deleteRecursively()
+	}
+}
+
 private fun parseResult(pack: UniPack, root: File): JsonElement {
-	val soundsDir = File(root, "sounds")
+	val soundsDir = soundsDirOf(root)
 	return buildJsonObject {
 		put("loaded", true)
 		putJsonObject("info") {
@@ -157,20 +175,39 @@ private fun event(vararg parts: Any): JsonElement = buildJsonArray {
 	for (p in parts) add(if (p is Int) JsonPrimitive(p) else JsonPrimitive(p as String))
 }
 
+/** A WAV (RIFF), or an MP3 with an ID3 tag or starting at a frame: what the decoder stand-in accepts. */
+private fun looksLikeAudio(file: File): Boolean {
+	val head = file.inputStream().use { it.readNBytes(12) }
+	fun ascii(at: Int, text: String) = head.size >= at + text.length && text.indices.all { head[at + it] == text[it].code.toByte() }
+	val mpegFrame = head.size >= 2 && head[0] == 0xff.toByte() && (head[1].toInt() and 0xe0) == 0xe0
+	return (ascii(0, "RIFF") && ascii(8, "WAVE")) || ascii(0, "ID3") || mpegFrame
+}
+
 /**
- * Stands in for the native audio engine and reports which file each `play` call started. It has no
- * output stream: opening and closing one (start, stop) are accepted and not checked.
+ * Stands in for the native audio engine and reports which file each `play` call started, and each
+ * voice a `stopVoice` call stopped the first time. It decodes no audio: any bytes that start like a
+ * WAV or an MP3 decode, others fail to decode as they would in the native decoder. It has no output
+ * stream: opening and closing one (start, stop) are accepted and not checked.
+ * [onPlay] records the start and returns the event its stop is recorded as.
  */
-private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Unit) : SoundRunner.Engine {
+private class RecordingEngine(
+	private val onPlay: (file: File, loop: Int) -> JsonElement,
+	private val onStop: (stopEvent: JsonElement) -> Unit,
+) : SoundRunner.Engine {
 	private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, File>()
 	private val fileById = HashMap<Int, File>()
+	private val stopEvents = HashMap<Int, JsonElement>()
 	private var nextId = 0
+	// 0 is the runner's "no voice" key.
+	private var nextStopKey = 1
 
 	override fun start() = true
 	override fun stop() {}
 
-	override fun decode(file: File): OboeAudioEngine.DecodedAudio =
-		OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file } }
+	override fun decode(file: File): OboeAudioEngine.DecodedAudio? {
+		if (!looksLikeAudio(file)) return null
+		return OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file } }
+	}
 
 	override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = synchronized(this) {
 		nextId++.also { fileById[it] = this.decoded.getValue(decoded) }
@@ -180,11 +217,13 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
 	override fun unloadAll() {}
 
 	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-		onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
-		return 0
+		val stopEvent = onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
+		return synchronized(this) { nextStopKey++.also { stopEvents[it] = stopEvent } }
 	}
 
-	override fun stopVoice(stopKey: Int) {}
+	override fun stopVoice(stopKey: Int) {
+		synchronized(this) { stopEvents.remove(stopKey) }?.let(onStop)
+	}
 	override fun stopAllVoices() {}
 }
 
@@ -206,7 +245,7 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
-	private val soundsDir = File(root, "sounds")
+	private val soundsDir = soundsDirOf(root)
 	private val testThread = Thread.currentThread()
 	private val clock = AtomicLong(1000)
 	private val watchFrom = AtomicLong(Long.MAX_VALUE)
@@ -216,10 +255,14 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private val chainTag = ThreadLocal<String?>()
 
 	private val main = FakeMainDispatcher()
-	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, RecordingEngine { file, loop ->
-		val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
-		events.add(event("sound", pressChain, pressX, pressY, name, loop))
-	})
+	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, RecordingEngine(
+		onPlay = { file, loop ->
+			val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
+			events.add(event("sound", pressChain, pressX, pressY, name, loop))
+			event("soundStop", pressChain, pressX, pressY, name)
+		},
+		onStop = { if (watchingStops) events.add(it) },
+	))
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 	private val listenerField = AutoPlayRunner::class.java.getDeclaredField("listener").apply { isAccessible = true }
 	private val lit = HashMap<String, Pair<Int, Int>>()
@@ -227,6 +270,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private var pressChain = 0
 	private var pressX = 0
 	private var pressY = 0
+	@Volatile private var watchingStops = false
 
 	private var autoPlay: AutoPlayRunner? = null
 	private var finished = false
@@ -253,6 +297,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
 					"stop" -> stop()
+					"watchStops" -> watchingStops = true
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
 					"resume" -> resumeAutoPlay()
@@ -364,8 +409,9 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		pressX = x
 		pressY = y
 		if (down) {
-			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id >= 0 }?.wormhole
-			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole, chainLog.size))
+			// Every sound with a wormhole, decoded or not: whether the runner switches is what is measured.
+			val wormhole = pack.soundGet(pressChain, x, y)?.wormhole
+			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole.coerceIn(vm.chain.range), chainLog.size))
 		}
 		vm.padTouch(x, y, down)
 		main.runAll()
@@ -478,14 +524,20 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		watchFrom.set(Long.MAX_VALUE)
 	}
 
-	/** A wormhole switches the chain 100 ms after its sound, on the main thread, after a real delay. */
+	/**
+	 * A wormhole switches the chain 100 ms after its sound, on the main thread, after a real delay. A
+	 * runner that does not switch (a sound that failed to decode) is waited for no longer than
+	 * [WORMHOLE_WAIT_MS]; the missing chain event then shows in the result.
+	 */
 	private fun awaitWormholes(now: Long) {
 		val due = wormholes.filter { it.first <= now }
 		for (w in due) {
 			wormholes.remove(w)
-			waitUntil("the wormhole to chain ${w.second}") {
+			val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(WORMHOLE_WAIT_MS)
+			while (System.nanoTime() < deadline) {
 				main.runAll()
-				synchronized(chainLog) { chainLog.drop(w.third).contains(w.second) }
+				if (synchronized(chainLog) { chainLog.drop(w.third).contains(w.second) }) break
+				Thread.sleep(1)
 			}
 		}
 	}
@@ -512,6 +564,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private companion object {
 		const val TICK_MS = 4
 		const val STARTING = 3
+		const val WORMHOLE_WAIT_MS = 1_000L
 	}
 }
 
