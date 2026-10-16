@@ -15,6 +15,7 @@ import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.Reader
+import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -30,8 +31,8 @@ private fun String.trimLine(): String = trim { it.isWhitespace() || it == '\uFEF
 
 /**
  * A reader that honours a BOM: UTF-16 (FE FF / FF FE) as iOS does, UTF-8 with the BOM skipped,
- * otherwise UTF-8 (Android's platform default). A UTF-16 info used to decode to garbage and reject
- * the pack here while it played on iOS.
+ * otherwise UTF-8 or, for text that is not valid UTF-8, CP949 ([LegacyText]). A UTF-16 info used to
+ * decode to garbage and reject the pack here while it played on iOS.
  */
 private fun bomAwareReader(input: InputStream): Reader {
 	val buffered = BufferedInputStream(input)
@@ -44,7 +45,10 @@ private fun bomAwareReader(input: InputStream): Reader {
 		n >= 2 && b[0] == 0xFE.toByte() && b[1] == 0xFF.toByte() -> { charset = StandardCharsets.UTF_16BE; skip = 2 }
 		n >= 2 && b[0] == 0xFF.toByte() && b[1] == 0xFE.toByte() -> { charset = StandardCharsets.UTF_16LE; skip = 2 }
 		n >= 3 && b[0] == 0xEF.toByte() && b[1] == 0xBB.toByte() && b[2] == 0xBF.toByte() -> { charset = StandardCharsets.UTF_8; skip = 3 }
-		else -> { charset = StandardCharsets.UTF_8; skip = 0 }
+		else -> {
+			buffered.reset()
+			return StringReader(LegacyText.decode(buffered.use { it.readBytes() }))
+		}
 	}
 	buffered.reset()
 	var toSkip = skip.toLong()
@@ -478,6 +482,22 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	private fun readAutoPlay(autoPlayFile: File, autoPlay: AutoPlay) {
 		val map = Array(buttonX) { IntArray(buttonY) }
 		var currChain = 0
+
+		// `touch` is `on` + `off` in one line: it releases the pad on the chain it pressed, then follows
+		// the sound's wormhole as `on` does.
+		fun press(x: Int, y: Int, release: Boolean) {
+			autoPlay.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
+			if (release) autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
+			val sound = soundGet(currChain, x, y, map[x][y])
+			map[x][y]++
+			if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
+				autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
+					currChain = it
+				}))
+				map.forEach { row -> row.fill(0) }
+			}
+		}
+
 		val inputStream = try {
 			FileInputStream(autoPlayFile)
 		} catch (e: FileNotFoundException) {
@@ -556,24 +576,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					continue
 				}
 				when (option) {
-					"on", "o" -> {
-						autoPlay.elements.add(
-							AutoPlay.Element.On(
-								x,
-								y,
-								currChain,
-								map[x][y]
-							)
-						)
-						val sound = soundGet(currChain, x, y, map[x][y])
-						map[x][y]++
-						if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
-							autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
-								currChain = it
-							}))
-							map.forEach { row -> row.fill(0) }
-						}
-					}
+					"on", "o" -> press(x, y, release = false)
 
 					"off", "f" -> autoPlay.elements.add(
 						AutoPlay.Element.Off(
@@ -583,18 +586,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						)
 					)
 
-					"touch", "t" -> {
-						autoPlay.elements.add(
-							AutoPlay.Element.On(
-								x,
-								y,
-								currChain,
-								map[x][y]
-							)
-						)
-						autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
-						map[x][y]++
-					}
+					"touch", "t" -> press(x, y, release = true)
 
 					"chain", "c" -> {
 						autoPlay.elements.add(AutoPlay.Element.Chain(chain.also {

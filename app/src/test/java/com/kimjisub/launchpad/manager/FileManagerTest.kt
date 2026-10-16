@@ -315,7 +315,7 @@ class FileManagerTest {
 	}
 
 	@Test
-	fun removeDoubleFolder_keepsFilesBesideAnInnerFolderOfTheSameName() {
+	fun removeDoubleFolder_opensAnInnerPackOfTheSameNameBesideAFile() {
 		val root = File(tempDir, "staged").apply { mkdirs() }
 		val wrapper = File(root, "Pack")
 		writePack(File(wrapper, "Pack"))
@@ -323,9 +323,73 @@ class FileManagerTest {
 
 		FileManager.removeDoubleFolder(root.absolutePath)
 
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_opensThePackFolderBesideAReadme() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack"))
+		File(root, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_opensThePackFolderBesideFilesAFolderWithoutInfoAndMacosx() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Pack"))
+		File(root, "cover.png").writeText("image")
+		File(root, "videos").mkdirs()
+		File(root, "videos/tutorial.mp4").writeText("video")
+		File(root, "__MACOSX/Pack").mkdirs()
+		File(root, "__MACOSX/Pack/._info").writeText("resource fork")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_opensAPackWrappedTwiceBesideAReadme() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "Wrapper/Pack"))
+		File(root, "Wrapper/notes.txt").writeText("notes")
+		File(root, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertPackAtRoot(root)
+	}
+
+	@Test
+	fun removeDoubleFolder_leavesTwoPacksInOneArchiveUnopened() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(File(root, "First"))
+		writePack(File(root, "Second"))
+		File(root, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals(setOf("First", "Second", "readme.txt"), root.list().orEmpty().toSet())
+		assertEquals("title=Pack", File(root, "First/info").readText())
+		assertEquals("title=Pack", File(root, "Second/info").readText())
+	}
+
+	@Test
+	fun removeDoubleFolder_keepsAPackAtTheRootWithAFolderHoldingAnotherInfo() {
+		val root = File(tempDir, "staged").apply { mkdirs() }
+		writePack(root)
+		File(root, "extras/info").apply { parentFile!!.mkdirs() }.writeText("title=Other")
+		File(root, "readme.txt").writeText("readme")
+
+		FileManager.removeDoubleFolder(root.absolutePath)
+
+		assertEquals("title=Pack", File(root, "info").readText())
+		assertEquals("title=Other", File(root, "extras/info").readText())
 		assertEquals("readme", File(root, "readme.txt").readText())
-		assertEquals("title=Pack", File(root, "Pack/info").readText())
-		assertEquals("sound", File(root, "Pack/sounds/a.wav").readText())
 	}
 
 	@Test

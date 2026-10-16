@@ -8,6 +8,7 @@ import com.kimjisub.launchpad.analytics.FailureStage
 import com.kimjisub.launchpad.analytics.PackImportReport
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.PackArchive
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -21,7 +22,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -174,9 +174,7 @@ class UniPackDownloader(
 
 				val stagedFolder = PackStaging.create(workspace)
 				staged = stagedFolder
-				ZipFile(unipackFile).use { zip ->
-					zip.extractAll(stagedFolder.path)
-				}
+				PackArchive.extract(unipackFile, stagedFolder)
 				FileManager.removeDoubleFolder(stagedFolder.path)
 				// load() runs checkFile + info; without it every parser returned early and criticalError
 				// was always false, so any archive installed as a pack.
