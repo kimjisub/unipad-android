@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.tool
 
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.PackArchive
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.PACK_NAME
@@ -12,12 +13,10 @@ import com.kimjisub.launchpad.tool.PackInstallTestEnv.Companion.writePack
 import com.kimjisub.launchpad.tool.PackInstallTestEnv.Recorder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import net.lingala.zip4j.ZipFile
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -55,9 +54,9 @@ class PackInterruptionTest {
 
 	/** Unpacking stops after `info` and `keySound`, before the sounds, and waits there. */
 	private fun stopUnpackingHalfway() {
-		mockkConstructor(ZipFile::class)
-		every { anyConstructed<ZipFile>().extractAll(any()) } answers {
-			val target = File(firstArg<String>()).apply { mkdirs() }
+		mockkObject(PackArchive)
+		every { PackArchive.extract(any(), any()) } answers {
+			val target = secondArg<File>().apply { mkdirs() }
 			packFiles("Halfway").filterKeys { it in setOf("info", "keySound") }
 				.forEach { (name, data) -> File(target, name).writeBytes(data) }
 			held.countDown()
@@ -154,10 +153,10 @@ class PackInterruptionTest {
 	/** A file that cannot be copied while the pack's extra top folder is removed fails the import. */
 	@Test
 	fun aFileThatCannotBeCopiedOutOfTheTopFolderFailsTheImport() {
-		mockkConstructor(ZipFile::class)
-		every { anyConstructed<ZipFile>().extractAll(any()) } answers {
+		mockkObject(PackArchive)
+		every { PackArchive.extract(any(), any()) } answers {
 			callOriginal()
-			val sound = File(firstArg<String>(), "Song/sounds/a.wav")
+			val sound = File(secondArg<File>(), "Song/sounds/a.wav")
 			sound.setReadable(false)
 			assumeFalse("running as root, which reads any file", sound.canRead())
 		}
