@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.InputSource
 import com.kimjisub.launchpad.analytics.PlayTrigger
 import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.analytics.UsageAnalytics
@@ -488,8 +489,8 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
-	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
+	/** A pad the person pressed or released on the screen. */
+	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN)
 
 	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
 	// unplugged or stops being the screen's controller, so these are let go then.
@@ -508,7 +509,7 @@ class PlayActivityViewModel(
 		} else if (!controllerHeldPads.remove(pad)) {
 			return
 		}
-		padTouch(x, y, upDown)
+		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
 	/**
@@ -518,11 +519,14 @@ class PlayActivityViewModel(
 	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
 		val pads = controllerHeldPads.toList()
 		controllerHeldPads.clear()
-		for ((x, y) in pads) if (!heldOnScreen(x, y)) padTouch(x, y, false)
+		for ((x, y) in pads) if (!heldOnScreen(x, y)) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
-	/** [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence. */
-	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger) {
+	/**
+	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence;
+	 * [source] is what the person pressed it on.
+	 */
+	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger, source: InputSource? = null) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -532,7 +536,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				playSession.playTriggered(pressedBy)
+				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
