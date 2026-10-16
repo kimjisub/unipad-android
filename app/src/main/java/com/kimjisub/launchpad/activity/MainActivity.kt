@@ -850,7 +850,7 @@ class MainActivity : BaseActivity() {
 						.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
 				) {
 					Text(
-						text = vm.sortMethodTitleList.getOrElse(sortMethod) { "" },
+						text = vm.sortMethodTitleResList.getOrNull(sortMethod)?.let { stringResource(it) }.orEmpty(),
 						fontSize = 12.sp,
 						color = Gray1,
 					)
@@ -868,9 +868,9 @@ class MainActivity : BaseActivity() {
 					expanded = expanded,
 					onDismissRequest = { expanded = false },
 				) {
-					vm.sortMethodTitleList.forEachIndexed { index, title ->
+					vm.sortMethodTitleResList.forEachIndexed { index, titleRes ->
 						DropdownMenuItem(
-							text = { Text(title, fontSize = 13.sp) },
+							text = { Text(stringResource(titleRes), fontSize = 13.sp) },
 							onClick = {
 								vm.updateSortMethod(index)
 								expanded = false
