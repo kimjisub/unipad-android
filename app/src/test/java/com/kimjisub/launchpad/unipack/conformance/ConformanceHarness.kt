@@ -429,11 +429,25 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	}
 
 	/**
-	 * The play button of paused auto play. autoPlayResume wakes the paused runner (stepMode,
-	 * resetStepState) before it sets playmode, so the runner can read the clock a few times while still
-	 * paused; only the reads after autoPlayResume has returned are counted.
+	 * The play button of paused auto play. A paused runner drops the time it spent paused when it next
+	 * reads the clock while not playing. A person presses play long after that; here the clock may have
+	 * moved on before the runner got that far, and it would play everything due meanwhile at once. So it
+	 * is first woken (setting playmode to what it is only wakes it) and has read the clock twice: the
+	 * first pass after the wake has dropped the time.
+	 *
+	 * autoPlayResume wakes the paused runner (stepMode, resetStepState) before it sets playmode, so the
+	 * runner can read the clock a few times while still paused; only the reads after autoPlayResume has
+	 * returned are counted.
 	 */
 	private fun resumeAutoPlay() {
+		val runner = autoPlay
+		if (runner != null && runner.active && !runner.playmode) {
+			watchReads.set(0)
+			watchFrom.set(0)
+			runner.playmode = false
+			waitUntil("paused auto play to drop the time spent paused") { watchReads.get() >= 2 || !runner.active }
+			watchFrom.set(Long.MAX_VALUE)
+		}
 		vm.autoPlayResume()
 		afterAutoPlayPass("auto play to continue", STARTING) {}
 	}
