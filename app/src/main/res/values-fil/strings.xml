@@ -255,6 +255,8 @@
 	<string name="backup_grant_access">Ikonekta ang Backup Folder</string>
 	<string name="backup_revoke">I-disconnect ang Backup Folder</string>
 	<string name="backup_invalid_folder">Piliin ang Documents/Unipad folder</string>
+	<string name="backup_permission_refused">Hindi napanatili ng UniPad ang access sa folder na ito. Piliin muli ang Documents/Unipad.</string>
+	<string name="picker_unavailable">Walang app sa device na ito na makakapili ng mga file o folder.</string>
 	<string name="backup_backup_button">I-backup</string>
 	<string name="backup_backup_description">Kopyahin ang UniPacks sa backup folder</string>
 	<string name="backup_restore_button">I-restore</string>

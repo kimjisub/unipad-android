@@ -153,15 +153,15 @@ class LedPathRun(private val pack: UniPack) {
 			startNanos = System.nanoTime()
 		}
 
-		override fun onPadTouchOn(x: Int, y: Int) {
+		override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
 			vm.viewModelScope.launch {
 				presses += now()
-				padEvent { vm.padTouch(x, y, true) }
+				padEvent { vm.autoPlayPadTouch(x, y, true, atMs) }
 			}
 		}
 
-		override fun onPadTouchOff(x: Int, y: Int) {
-			vm.viewModelScope.launch { padEvent { vm.padTouch(x, y, false) } }
+		override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
+			vm.viewModelScope.launch { padEvent { vm.autoPlayPadTouch(x, y, false, atMs) } }
 		}
 
 		override fun onChainChange(c: Int) {
@@ -240,7 +240,11 @@ class LedPathRun(private val pack: UniPack) {
 					synchronized(errors) { errors += e }
 				}
 			}
-		}, "led-timing-main").apply { start() }
+		}, "led-timing-main").apply {
+			// A coroutine on main hands its exception to the thread's handler rather than to the task.
+			uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e -> synchronized(errors) { errors += e } }
+			start()
+		}
 
 		override val immediate: MainCoroutineDispatcher = object : MainCoroutineDispatcher() {
 			override val immediate: MainCoroutineDispatcher get() = this

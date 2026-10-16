@@ -82,8 +82,9 @@ class AutoPlayRunner(
 
 	interface Listener {
 		fun onStart()
-		fun onPadTouchOn(x: Int, y: Int)
-		fun onPadTouchOff(x: Int, y: Int)
+		/** [atMs] is when the pack places the press, on the SystemClock.elapsedRealtime clock. */
+		fun onPadTouchOn(x: Int, y: Int, atMs: Long)
+		fun onPadTouchOff(x: Int, y: Int, atMs: Long)
 		fun onChainChange(c: Int)
 		fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long)
 		fun onGuidePadOff(x: Int, y: Int)
@@ -280,14 +281,14 @@ class AutoPlayRunner(
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
 												unipack.soundPush(element.currChain, element.x, element.y, element.num)
 												unipack.ledPush(element.currChain, element.x, element.y, element.num)
-												listener.onPadTouchOn(element.x, element.y)
+												listener.onPadTouchOn(element.x, element.y, startTime + delayAccum)
 											}
 										}
 
 										is AutoPlay.Element.Off -> {
 											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												listener.onPadTouchOff(element.x, element.y)
+												listener.onPadTouchOff(element.x, element.y, startTime + delayAccum)
 											}
 										}
 										is AutoPlay.Element.Delay -> {

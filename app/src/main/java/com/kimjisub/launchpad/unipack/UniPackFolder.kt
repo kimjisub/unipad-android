@@ -221,7 +221,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 
 	private fun keySound() {
 		val keySoundFile = keySoundFile ?: return
-		val soundsDir = soundsDir
+		val soundFiles = soundsDir?.let(::SoundFileIndex)
 		val table = Array(chain) {
 			Array(buttonX) {
 				arrayOfNulls<ArrayDeque<Sound>>(buttonY)
@@ -279,16 +279,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					"keySound : [$s] y is incorrect"
 				) else {
 					try {
-						if (soundsDir == null) {
+						if (soundFiles == null) {
 							addErr("keySound : [$s] sounds directory not found")
 							continue
 						}
-						val soundFile = File(soundsDir, soundURL)
-						val sound = Sound(soundFile, loop, wormhole)
-						if (!sound.file.isFile) {
+						val soundFile = soundFiles.find(soundURL)
+						if (soundFile == null) {
 							addErr("keySound : [$s] sound was not found")
 							continue
 						}
+						val sound = Sound(soundFile, loop, wormhole)
 						if (table[c][x][y] == null)
 							table[c][x][y] = ArrayDeque()
 						sound.num = table[c][x][y]?.size ?: 0

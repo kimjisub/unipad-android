@@ -84,7 +84,8 @@ Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/d
 Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
 which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
 feature screens use `basefeatures-captures/`, readiness failures use
-`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+`activity-readiness-captures/`, Store cancellation uses `store-cancel-captures/<prefix>/` and Store download progress uses
+`store-progress-captures/<prefix>/`.
 Clear this root before each run, then pull it with
 `adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
 returning the device. The capture helper stages files in app-writable external storage, copies
@@ -189,10 +190,20 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testLanguageRowOpensSystemAppLanguageScreen` | On API 33+ the language row opens the system's language screen for UniPad, which lists Korean and stays open; Back returns to Settings. Below 33 tapping it leaves Settings open. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
+| `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. |
+| `BackupFolderTest.disconnectAfterThePermissionIsGoneKeepsSettingsOpen` | Connect Documents/Unipad through the system folder picker; Disconnect after its permission is gone forgets it and Settings stays open. |
+| `BackupFolderTest.restoreAsksForTheFolderAgainWhenItsPermissionIsGone` | Restore offers Grant Access again for a saved folder whose permission is gone. |
+| `BackupFolderTest.restoreRefusesAFolderOtherThanUnipad` | Choosing Documents itself from Restore is refused: nothing saved, no permission kept, Grant Access still offered. |
+| `BackupFolderTest.restoreAcceptsTheUnipadFolder` | Choosing Documents/Unipad from Restore saves it and lists the backed-up folder. |
+| `BackupFolderTest.settingsWithoutFolderPickerReportsIt` | With the folder picker disabled, Connect shows a message and Settings stays open; the picker is enabled again after. |
+| `BackupFolderTest.restoreWithoutFolderPickerStaysOpen` | With the folder picker disabled, Grant Access leaves Restore open. |
+| `BackupFolderTest.themeImportWithoutFilePickerStaysOpen` | With the file pickers disabled, theme ZIP import leaves the theme screen open. |
+| `BackupFolderTest.packImportWithoutFilePickerStaysOpen` | With the file picker disabled, Import leaves Main open. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
+| `StoreTest.testStoreDetailHasNoWebsiteButton` | A store entry's detail offers no website button: entries carry only their download address. |
 | `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. On API 33+, the test first grants notification permission to reproduce a prior download, then revokes it without killing the test process before startup; permission remains denied after browsing. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
@@ -257,9 +268,11 @@ claimed here as audio or hardware proof.
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
 | `PackFailureNotificationDeviceTest` | `missingDownloadShowsFailureWithoutProgressAndCanBeDismissed`, `connectionLostDuringFastDownloadShowsFailureWithoutProgress`, `invalidImportShowsFailureWithoutProgressAndCanBeDismissed`: real local HTTP 404, a connection reset right after fast progress (when Android drops further progress updates) and invalid ZIP failures leave only one notification, with the existing failure translation, no progress, and allow dismissal. API 29+ file-provider test APIs. Optional `notificationEvidence=<label>` saves notification shade screenshots. |
+| `StoreDownloadProgressDeviceTest` | Real store screen downloading from a local server. `topArrowWhileDownloadingKeepsTheStoreAndTheDownload`: the top arrow closes the detail, then refuses to leave mid-download and the pack still installs. `unknownSizeShowsTheReceivedAmountAndAnOpenEndedBar`: with no Content-Length the detail shows only the received MB and an indeterminate bar. `unpackingShowsAnOpenEndedBarInsteadOfStartingOver`: while unpacking the bar is indeterminate. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
 | `UniPackLegacyArchiveDeviceTest` | `theDeviceReadsCp949`, `aKoreanWindowsArchiveWithAReadmeBesideThePackImports`: the device offers CP949 (not only EUC-KR), and the real importer opens an archive zipped on Korean Windows (CP949 entry names without the UTF-8 flag, CP949 text files) with a readme beside the pack folder. |
 | `basefeatures.AutoPlayTouchChainTest` | `autoplayTouchOnAPadThatMovesTheChainStaysOnTheNewChain`: autoplay `touch` on a pad whose sound moves the chain stays on the new chain and plays its sounds. Not in `BaseFeaturesSuite`. |
+| `SoundNameCaseDeviceTest` | `appStorageFindsTheStoredFile`, `internalStorageFindsTheStoredFile`: a keySound name that differs from its file only in case (`End.wav` for `END.wav`, `FX/Sweep.wav` for `fx/sweep.wav`) finds the stored file under its stored name both in app storage, which ignores case, and in the case-sensitive internal folder. |
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
