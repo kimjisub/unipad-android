@@ -1,18 +1,13 @@
 package com.kimjisub.launchpad.tool
 
-import android.app.PendingIntent
 import android.os.SystemClock
 import android.content.Context
-import android.content.Intent
-import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.FailureStage
 import com.kimjisub.launchpad.analytics.PackImportReport
-import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.NotificationManager
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -61,30 +56,7 @@ class UniPackDownloader(
 		fun onException(throwable: Throwable)
 	}
 
-	private var installationComplete = false
-	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
-	private val notificationManager = NotificationManager.getManager(context)
-	private val notificationBuilder: NotificationCompat.Builder by lazy {
-		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
-		builder.apply {
-			setAutoCancel(true)
-			setSmallIcon(R.mipmap.ic_launcher)
-
-			val intent = Intent(context, SplashActivity::class.java)
-			intent.action = Intent.ACTION_MAIN
-			intent.addCategory(Intent.CATEGORY_LAUNCHER)
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			val pIntent: PendingIntent =
-				PendingIntent.getActivity(
-					context,
-					1,
-					intent,
-					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-				)
-			setContentIntent(pIntent)
-		}
-		builder
-	}
+	private val notification = PackInstallNotification(context)
 
 	val contentResolver: android.content.ContentResolver = context.contentResolver
 
@@ -241,7 +213,7 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onException(e) }
 			} finally {
 				cancellationWatcher?.cancel()
-				if (!installationComplete) notificationManager.cancel(notificationId)
+				notification.cancelProgress()
 				// No suspending callbacks here: cancellation or a failing listener cannot skip
 				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
@@ -252,13 +224,7 @@ class UniPackDownloader(
 	}
 
 	private fun onInstallStart() {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.downloadWaiting))
-			setProgress(100, 0, true)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(title, R.string.downloadWaiting, 0, indeterminate = true)
 
 		listener.onInstallStart()
 	}
@@ -272,52 +238,31 @@ class UniPackDownloader(
 	}
 
 	private fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(
-				"${FileManager.byteToMB(downloadedSize)} / ${
-					FileManager.byteToMB(
-						fileSize
-					)
-				} MB"
-			)
-			setProgress(100, percent, false)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(
+			title,
+			"${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB",
+			percent,
+			indeterminate = false
+		)
 
 		listener.onDownloadProgressPercent(percent, downloadedSize, fileSize)
 	}
 
 	private fun onImportStart(zip: File) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.importing))
-			setProgress(100, 0, true)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(title, R.string.importing, 0, indeterminate = true)
 
 		listener.onImportStart(zip)
 	}
 
 	private fun onInstallComplete(folder: File, unipack: UniPack) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.success))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
-
-		installationComplete = true
+		notification.showResult(title, R.string.success)
 		usage.succeeded()
 		listener.onInstallComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
 		Log.err("Download exception", throwable)
-		notificationManager.cancel(notificationId)
+		notification.showResult(title, R.string.failed)
 		listener.onException(throwable)
 	}
 

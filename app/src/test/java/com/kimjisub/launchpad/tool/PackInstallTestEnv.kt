@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.analytics.PackImportReport
@@ -83,15 +84,22 @@ class PackInstallTestEnv {
 	private val openStreams = mutableListOf<Closeable>()
 	private val gates = ConcurrentHashMap<String, Gate>()
 	val notifications = ConcurrentHashMap<Int, android.app.Notification>()
+	/** Every notify() in order: the id and what that notification showed. */
+	val notifyLog: MutableList<Pair<Int, Shown>> = Collections.synchronizedList(mutableListOf())
+	private val shown = ConcurrentHashMap<android.app.Notification, Shown>()
+	private val building = ConcurrentHashMap<Any, Shown>()
 	private val context: Context = mockk(relaxed = true)
 	private val resolver: ContentResolver = mockk(relaxed = true)
 
 	fun setUp() {
 		Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
+		every { context.getString(any()) } answers { text(firstArg()) }
 
 		val manager = mockk<android.app.NotificationManager>(relaxed = true)
 		every { manager.notify(any<Int>(), any<android.app.Notification>()) } answers {
-			notifications[firstArg()] = secondArg()
+			val notification = secondArg<android.app.Notification>()
+			notifications[firstArg()] = notification
+			notifyLog += firstArg<Int>() to shown.getValue(notification)
 		}
 		every { manager.cancel(any<Int>()) } answers { notifications.remove(firstArg()) }
 		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns manager
@@ -100,7 +108,21 @@ class PackInstallTestEnv {
 		mockkStatic(PendingIntent::class)
 		every { PendingIntent.getActivity(any(), any(), any(), any()) } returns mockk()
 		mockkConstructor(NotificationCompat.Builder::class)
-		every { anyConstructed<NotificationCompat.Builder>().build() } returns mockk()
+		every { anyConstructed<NotificationCompat.Builder>().setContentText(any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(text = firstArg<CharSequence?>()?.toString()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().setOngoing(any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(ongoing = firstArg()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().setProgress(any(), any(), any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(progressMax = firstArg()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().build() } answers {
+			mockk<android.app.Notification>().also { shown[it] = building[self] ?: Shown() }
+		}
 
 		mockkStatic(Uri::class)
 		every { Uri.fromFile(any()) } answers {
@@ -127,6 +149,9 @@ class PackInstallTestEnv {
 		synchronized(openStreams) { openStreams.forEach { runCatching { it.close() } } }
 		root.deleteRecursively()
 	}
+
+	/** What the notifications still shown display, in no particular order. */
+	fun shownNow(): List<Shown> = notifications.values.map(shown::getValue)
 
 	/** The device refuses to open the download's target file, as with a revoked storage permission. */
 	fun cannotOpenFilesForWriting() {
@@ -307,7 +332,13 @@ class PackInstallTestEnv {
 		}
 	}
 
+	/** What a posted notification displayed, recorded from the builder calls that made it. */
+	data class Shown(val text: String? = null, val ongoing: Boolean = false, val progressMax: Int = 0)
+
 	companion object {
+		/** The text [Context.getString] returns for [id] in these tests. */
+		fun text(@StringRes id: Int) = "resource:$id"
+
 		const val PACK_NAME = "pack"
 		private const val TIMEOUT_MS = 10_000L
 		private const val PROMISED_MORE_BYTES = 1_000L
