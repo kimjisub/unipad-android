@@ -2,6 +2,7 @@ package com.kimjisub.launchpad
 
 import android.app.Activity
 import android.os.Build
+import android.provider.Settings
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -166,40 +167,61 @@ class SettingsTest : BaseUITest() {
 
     /**
      * From Android 13 the language row opens the system's language screen for UniPad, which lists
-     * UniPad's translations (it closed at once while the app declared none). Below 13 the row only
-     * names the translators and tapping it leaves Settings as it was.
+     * UniPad's translations and stays open; going back returns to UniPad's settings even while the
+     * Settings app keeps another screen open behind it. Below 13 the row only names the translators
+     * and tapping it leaves Settings as it was.
      */
     @Test
     fun testLanguageRowOpensSystemAppLanguageScreen() {
-        launchToMainScreen()
-        openSettings()
+        val modern = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        try {
+            if (modern) openOtherSystemSettingsScreen()
+            launchToMainScreen()
+            openSettings()
 
-        val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
-        assertNotNull("Settings content is not scrollable", content)
-        val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.language))))
-        assertNotNull("Language row not found", row)
-        row!!.click()
+            val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+            assertNotNull("Settings content is not scrollable", content)
+            val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.language))))
+            assertNotNull("Language row not found", row)
+            row!!.click()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            assertSettingsStillOpen("language")
-            takeScreenshot("settings_language_row_without_system_screen")
-            return
+            if (!modern) {
+                assertSettingsStillOpen("language")
+                takeScreenshot("settings_language_row_without_system_screen")
+                return
+            }
+            val korean = By.pkg(SYSTEM_SETTINGS_PACKAGE).text("한국어")
+            val list = device.wait(Until.findObject(By.pkg(SYSTEM_SETTINGS_PACKAGE).scrollable(true)), 10000L)
+            assertNotNull("The system language screen for UniPad did not open", list)
+            assertNotNull(
+                "The system language screen does not list Korean",
+                list!!.scrollUntil(Direction.DOWN, Until.findObject(korean))
+            )
+            Thread.sleep(1500L)
+            assertTrue("The system language screen closed by itself", device.hasObject(korean))
+            takeScreenshot("settings_language_system_screen")
+
+            device.pressBack()
+            assertTrue(
+                "Did not return to settings from the system language screen",
+                device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))), 5000L)
+            )
+        } finally {
+            if (modern) device.executeShellCommand("am force-stop $SYSTEM_SETTINGS_PACKAGE")
         }
-        val korean = By.pkg(SYSTEM_SETTINGS_PACKAGE).text("한국어")
-        val list = device.wait(Until.findObject(By.pkg(SYSTEM_SETTINGS_PACKAGE).scrollable(true)), 10000L)
-        assertNotNull("The system language screen for UniPad did not open", list)
-        assertNotNull(
-            "The system language screen does not list Korean",
-            list!!.scrollUntil(Direction.DOWN, Until.findObject(korean))
-        )
-        Thread.sleep(1500L)
-        assertTrue("The system language screen closed by itself", device.hasObject(korean))
-        takeScreenshot("settings_language_system_screen")
+    }
 
-        device.pressBack()
+    /** Leaves the Settings app on its Wi-Fi screen in the background, as after a user visited it. */
+    private fun openOtherSystemSettingsScreen() {
+        device.executeShellCommand("am start -a ${Settings.ACTION_WIFI_SETTINGS}")
         assertTrue(
-            "Did not return to settings from the system language screen",
-            device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))), 5000L)
+            "The Settings app did not open",
+            device.wait(Until.hasObject(By.pkg(SYSTEM_SETTINGS_PACKAGE)), 10000L)
+        )
+        device.pressHome()
+        assertTrue(
+            "The Settings app stayed in front after Home",
+            device.wait(Until.gone(By.pkg(SYSTEM_SETTINGS_PACKAGE)), 5000L)
         )
     }
 

@@ -1,9 +1,9 @@
 package com.kimjisub.launchpad.tool.splitties
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
@@ -29,16 +29,17 @@ fun android.content.Context.openPlayStorePage(appId: String): Boolean {
 }
 
 /**
- * Opens the system's per-app language screen for this app. Some manufacturers remove or lock that
- * screen; then nothing opens and the app carries on.
+ * Opens the system's per-app language screen for this app on top of [this] activity, so picking a
+ * language or going back returns here rather than to whatever the Settings app last showed. Some
+ * manufacturers remove or lock that screen; then nothing opens and the app carries on.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun android.content.Context.openAppLanguageSettings() {
-	tryStart(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", packageName, null)))
+fun Activity.openAppLanguageSettings() {
+	tryStart(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, "package:$packageName".toUri()), newTask = false)
 }
 
-private fun android.content.Context.tryStart(intent: Intent): Boolean {
-	intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
+private fun android.content.Context.tryStart(intent: Intent, newTask: Boolean = true): Boolean {
+	if (newTask) intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
 	return try {
 		startActivity(intent)
 		true

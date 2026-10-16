@@ -113,8 +113,7 @@ class MainActivityTest : BaseUITest() {
 
     /**
      * Choosing UniPad's language in the system settings (Android 13+) changes the sort bar and its
-     * list right away and after a relaunch. The names used to be read once by the view model, which
-     * survives the change, so they stayed in the old language until the app was closed.
+     * list right away, while the main screen's view model survives the change, and after a relaunch.
      * Below Android 13 there is no per-app language; the sort bar shows the device language.
      */
     @Test
@@ -136,6 +135,7 @@ class MainActivityTest : BaseUITest() {
         val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
         val english = sortRes.map { strIn(Locale.ENGLISH, it) }
         val korean = sortRes.map { strIn(Locale.KOREAN, it) }
+        val originalLocales = appLanguage()
         try {
             setAppLanguage(LocaleList.forLanguageTags("en"))
             prefs.sortMethod = 2
@@ -162,10 +162,12 @@ class MainActivityTest : BaseUITest() {
             )
             takeScreenshot("sort_names_korean_after_relaunch")
         } finally {
-            setAppLanguage(LocaleList.getEmptyLocaleList())
+            setAppLanguage(originalLocales)
             prefs.sortMethod = originalMethod
         }
     }
+
+    private fun appLanguage(): LocaleList = context.getSystemService(LocaleManager::class.java).applicationLocales
 
     private fun setAppLanguage(locales: LocaleList) {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
