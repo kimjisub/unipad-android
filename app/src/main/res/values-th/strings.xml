@@ -98,6 +98,7 @@
 	<string name="play_section_display">การแสดงผล</string>
 	<string name="play_section_tools">เครื่องมือ</string>
 	<string name="autoMapping">แมปอัตโนมัติ</string>
+	<string name="autoMappingRunning">แมปอัตโนมัติ…</string>
 
 	<!--Version-->
 

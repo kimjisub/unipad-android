@@ -98,6 +98,7 @@
 	<string name="play_section_display">Hiển thị</string>
 	<string name="play_section_tools">Công cụ</string>
 	<string name="autoMapping">Tự Động Ánh Xạ</string>
+	<string name="autoMappingRunning">Tự Động Ánh Xạ…</string>
 
 	<!--Version-->
 

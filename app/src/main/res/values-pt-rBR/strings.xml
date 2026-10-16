@@ -98,6 +98,7 @@
 	<string name="play_section_display">Exibição</string>
 	<string name="play_section_tools">Ferramentas</string>
 	<string name="autoMapping">Mapeamento Automático</string>
+	<string name="autoMappingRunning">Mapeamento Automático…</string>
 
 	<!--Version-->
 

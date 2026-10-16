@@ -98,6 +98,7 @@
 	<string name="play_section_display">Görünüm</string>
 	<string name="play_section_tools">Araçlar</string>
 	<string name="autoMapping">Otomatik Eşleme</string>
+	<string name="autoMappingRunning">Otomatik Eşleme…</string>
 
 	<!--Version-->
 

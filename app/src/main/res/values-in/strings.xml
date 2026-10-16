@@ -98,6 +98,7 @@
 	<string name="play_section_display">Tampilan</string>
 	<string name="play_section_tools">Alat</string>
 	<string name="autoMapping">Pemetaan Otomatis</string>
+	<string name="autoMappingRunning">Pemetaan Otomatis…</string>
 
 	<!--Version-->
 

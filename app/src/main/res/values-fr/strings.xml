@@ -98,6 +98,7 @@
 	<string name="play_section_display">Affichage</string>
 	<string name="play_section_tools">Outils</string>
 	<string name="autoMapping">Mappage Automatique</string>
+	<string name="autoMappingRunning">Mappage Automatique…</string>
 
 	<!--Version-->
 

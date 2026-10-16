@@ -42,7 +42,7 @@ import java.io.File
 class PlayOptionPanelSkinContrastTest : BaseUITest() {
 
     private val prefs by lazy { context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE) }
-    private val autoMappingBusy by lazy { str(R.string.autoMapping) + "…" }
+    private val autoMappingBusy by lazy { str(R.string.autoMappingRunning) }
     private var originalTheme: String? = null
     private var themeChanged = false
 

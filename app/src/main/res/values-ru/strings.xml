@@ -98,6 +98,7 @@
 	<string name="play_section_display">Экран</string>
 	<string name="play_section_tools">Инструменты</string>
 	<string name="autoMapping">Авто-маппинг</string>
+	<string name="autoMappingRunning">Авто-маппинг…</string>
 
 	<!--Version-->
 

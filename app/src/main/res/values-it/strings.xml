@@ -98,6 +98,7 @@
 	<string name="play_section_display">Visualizzazione</string>
 	<string name="play_section_tools">Strumenti</string>
 	<string name="autoMapping">Mappatura Automatica</string>
+	<string name="autoMappingRunning">Mappatura Automatica…</string>
 
 	<!--Version-->
 

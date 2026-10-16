@@ -991,7 +991,7 @@ class PlayActivity : BaseActivity() {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-				Text(stringResource(string.autoMapping) + "…", color = textColor, fontSize = 13.sp)
+				Text(stringResource(string.autoMappingRunning), color = textColor, fontSize = 13.sp)
 				Spacer(modifier = Modifier.height(4.dp))
 				androidx.compose.material3.LinearProgressIndicator(
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },

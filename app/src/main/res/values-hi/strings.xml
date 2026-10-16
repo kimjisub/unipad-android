@@ -98,6 +98,7 @@
 	<string name="play_section_display">डिस्प्ले</string>
 	<string name="play_section_tools">टूल्स</string>
 	<string name="autoMapping">स्वचालित मैपिंग</string>
+	<string name="autoMappingRunning">स्वचालित मैपिंग…</string>
 
 	<!--Version-->
 

@@ -98,6 +98,7 @@
 	<string name="play_section_display">Display</string>
 	<string name="play_section_tools">Tools</string>
 	<string name="autoMapping">Auto Mapping</string>
+	<string name="autoMappingRunning">Auto Mapping…</string>
 
 	<!--Version-->
 	<string name="update_check">Check for updates</string>

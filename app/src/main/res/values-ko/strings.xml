@@ -93,10 +93,11 @@
 	<string name="watermark">워터마크</string>
 	<string name="proLightMode">프로 라이트 모드</string>
 	<string name="play_section_play_mode">연주 모드</string>
-	<string name="play_section_performance">연주</string>
+	<string name="play_section_performance">효과</string>
 	<string name="play_section_display">화면</string>
 	<string name="play_section_tools">도구</string>
 	<string name="autoMapping">자동 매핑</string>
+	<string name="autoMappingRunning">자동 매핑…</string>
 
 	<!--Version-->
 	<string name="update_check">업데이트 확인</string>

@@ -98,6 +98,7 @@
 	<string name="play_section_display">表示</string>
 	<string name="play_section_tools">ツール</string>
 	<string name="autoMapping">自動マッピング</string>
+	<string name="autoMappingRunning">自動マッピング…</string>
 
 	<!--Version-->
 

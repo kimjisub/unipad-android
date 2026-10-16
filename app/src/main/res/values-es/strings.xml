@@ -98,6 +98,7 @@
 	<string name="play_section_display">Pantalla</string>
 	<string name="play_section_tools">Herramientas</string>
 	<string name="autoMapping">Mapeo Automático</string>
+	<string name="autoMappingRunning">Mapeo Automático…</string>
 
 	<!--Version-->
 

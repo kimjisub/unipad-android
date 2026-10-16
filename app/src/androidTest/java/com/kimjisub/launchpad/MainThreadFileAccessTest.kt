@@ -131,7 +131,7 @@ class MainThreadFileAccessTest : BaseUITest() {
         openTestPackInPlay()
         openPlayOptions()
         val autoMapping = By.text(str(R.string.autoMapping))
-        val running = By.text(str(R.string.autoMapping) + "…")
+        val running = By.text(str(R.string.autoMappingRunning))
         val row = device.wait(Until.findObject(autoMapping), 1000L)
             ?: device.findObject(By.res("play_options"))?.scrollUntil(Direction.DOWN, Until.findObject(autoMapping))
         assertNotNull("Auto Mapping is not offered", row)
