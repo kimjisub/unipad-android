@@ -217,7 +217,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 
 	private fun keySound() {
 		val keySoundFile = keySoundFile ?: return
-		val soundsDir = soundsDir
+		val soundFiles = soundsDir?.let(::SoundFileIndex)
 		val table = Array(chain) {
 			Array(buttonX) {
 				arrayOfNulls<ArrayDeque<Sound>>(buttonY)
@@ -261,6 +261,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					addErr("keySound : [$s] format is incorrect")
 					continue
 				}
+				// The sound still plays; only the move goes. A chain the pack lacks became autoPlay's
+				// current chain, and practice mode lit its button past the end of the round button table.
+				if (wormhole != Sound.NO_WORMHOLE && wormhole !in 0 until chain) {
+					addErr("keySound : [$s] wormhole is incorrect")
+					wormhole = Sound.NO_WORMHOLE
+				}
 				if (c < 0 || c >= chain)
 					addErr("keySound : [$s] chain is incorrect")
 				else if (x < 0 || x >= buttonX)
@@ -269,16 +275,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					"keySound : [$s] y is incorrect"
 				) else {
 					try {
-						if (soundsDir == null) {
+						if (soundFiles == null) {
 							addErr("keySound : [$s] sounds directory not found")
 							continue
 						}
-						val soundFile = File(soundsDir, soundURL)
-						val sound = Sound(soundFile, loop, wormhole)
-						if (!sound.file.isFile) {
+						val soundFile = soundFiles.find(soundURL)
+						if (soundFile == null) {
 							addErr("keySound : [$s] sound was not found")
 							continue
 						}
+						val sound = Sound(soundFile, loop, wormhole)
 						if (table[c][x][y] == null)
 							table[c][x][y] = ArrayDeque()
 						sound.num = table[c][x][y]?.size ?: 0

@@ -67,6 +67,11 @@ android {
 			ndk {
 				debugSymbolLevel = 'FULL'
 			}
+			// Lets Crashlytics name the frames of native crashes. The symbols are sent only by
+			// uploadCrashlyticsSymbolFileRelease, which the Play deploy lane runs after the bundle.
+			firebaseCrashlytics {
+				nativeSymbolUploadEnabled = true
+			}
 
 			minifyEnabled = true
 			shrinkResources = true
@@ -79,9 +84,11 @@ android {
 		}
 		debug {
 			// -PanalyticsServerCheck builds a debug app whose analytics reach Firebase (see UsageEventRouting).
+			// -PcrashReportCheck builds a debug app that sends crash reports, for checking what a report carries.
 			manifestPlaceholders = [
 				appName: "@string/app_name_test",
-				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true'
+				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true',
+				crashlyticsCollectionEnabled: project.hasProperty('crashReportCheck') ? 'true' : 'false'
 			]
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
@@ -89,6 +96,17 @@ android {
 
 			minifyEnabled = false
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
+	// Lists the translated languages for the system's per-app language screen (Android 13+).
+	androidResources {
+		generateLocaleConfig = true
+	}
+	// Play would otherwise install only the phone's language, so a language picked for UniPad
+	// alone would have no strings and stay in English.
+	bundle {
+		language {
+			enableSplit = false
 		}
 	}
 	buildFeatures {
@@ -129,6 +147,15 @@ android {
 			all {
 				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
 				jvmArgs '-Xshare:off'
+				// Store packs stay out of the repository; their LED timing runs only when given a folder of them.
+				def ledTimingPacks = project.findProperty('ledTimingPacks')
+				if (ledTimingPacks) {
+					systemProperty 'ledTiming.packs', rootProject.file(ledTimingPacks).absolutePath
+					systemProperty 'ledTiming.measure', project.findProperty('ledTimingMeasure') ?: ''
+					outputs.upToDateWhen { false }
+				} else {
+					exclude '**/StorePackLedTimingTest*'
+				}
 			}
 		}
 		animationsDisabled = true
@@ -285,6 +312,8 @@ dependencies {
 	implementation 'com.google.firebase:firebase-messaging'
 	implementation 'com.google.firebase:firebase-perf'
 	implementation 'com.google.firebase:firebase-crashlytics'
+	// Native crashes (Android's drawing thread, the Oboe audio engine) with the same keys and logs.
+	implementation 'com.google.firebase:firebase-crashlytics-ndk'
 	implementation 'com.google.firebase:firebase-analytics'
 
 	// Retrofit 2

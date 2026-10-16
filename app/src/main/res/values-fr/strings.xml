@@ -93,6 +93,12 @@
 	<string name="hideUI">Masquer l\'interface</string>
 	<string name="watermark">Filigrane</string>
 	<string name="proLightMode">Mode Pro Light</string>
+	<string name="play_section_play_mode">Mode de jeu</string>
+	<string name="play_section_performance">Performance</string>
+	<string name="play_section_display">Affichage</string>
+	<string name="play_section_tools">Outils</string>
+	<string name="autoMapping">Mappage Automatique</string>
+	<string name="autoMappingRunning">Mappage Automatique…</string>
 
 	<!--Version-->
 
@@ -255,6 +261,8 @@
 	<string name="backup_grant_access">Connecter le dossier de sauvegarde</string>
 	<string name="backup_revoke">Déconnecter le dossier de sauvegarde</string>
 	<string name="backup_invalid_folder">Veuillez sélectionner le dossier Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad n\'a pas pu garder l\'accès à ce dossier. Choisissez à nouveau Documents/Unipad.</string>
+	<string name="picker_unavailable">Aucune application de cet appareil ne peut choisir des fichiers ou des dossiers.</string>
 	<string name="backup_backup_button">Sauvegarder</string>
 	<string name="backup_backup_description">Copier les UniPacks vers le dossier de sauvegarde</string>
 	<string name="backup_restore_button">Restaurer</string>

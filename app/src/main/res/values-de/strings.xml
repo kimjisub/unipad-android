@@ -93,6 +93,12 @@
 	<string name="hideUI">UI ausblenden</string>
 	<string name="watermark">Wasserzeichen</string>
 	<string name="proLightMode">Pro-Licht-Modus</string>
+	<string name="play_section_play_mode">Spielmodus</string>
+	<string name="play_section_performance">Effekte</string>
+	<string name="play_section_display">Anzeige</string>
+	<string name="play_section_tools">Werkzeuge</string>
+	<string name="autoMapping">Auto-Mapping</string>
+	<string name="autoMappingRunning">Auto-Mapping…</string>
 
 	<!--Version-->
 
@@ -255,6 +261,8 @@
 	<string name="backup_grant_access">Backup-Ordner verbinden</string>
 	<string name="backup_revoke">Backup-Ordner trennen</string>
 	<string name="backup_invalid_folder">Bitte wählen Sie den Documents/Unipad-Ordner</string>
+	<string name="backup_permission_refused">UniPad konnte den Zugriff auf diesen Ordner nicht behalten. Wählen Sie Documents/Unipad erneut.</string>
+	<string name="picker_unavailable">Auf diesem Gerät gibt es keine App, die Dateien oder Ordner auswählen kann.</string>
 	<string name="backup_backup_button">Sichern</string>
 	<string name="backup_backup_description">UniPacks in Backup-Ordner kopieren</string>
 	<string name="backup_restore_button">Wiederherstellen</string>

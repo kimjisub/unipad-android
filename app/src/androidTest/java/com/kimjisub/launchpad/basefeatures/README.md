@@ -95,12 +95,55 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes and an injected mouse on pads and chains. Audible output/latency and real fingers need a real device/headphones. |
-| 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light and practice waiting/advancing. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
+| 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, and a pad whose sound moves to a chain the pack lacks. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
-| 7. Language, skin, rotation, bars/cutout | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. Run with a cutout profile for cutout coverage; gesture/three-button modes and other form factors need repeated device configurations. |
+| 7. Language, skin, rotation, bars/cutout, keyboard | `SettingsTest.testInfoRowsFollowDeviceLanguage`, `ThemeTest`, `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout`, `StoreTest.testStoreLastRowClearOfSystemBars` | `languageAndSkinSelectionPersistAndPlayLoadsSelectedSkin`, `rotationKeepsPackAndChainAndPadsStayClearOfBarsAndCutout`, `mainScreenButtonsStayClearOfSideNavigationBarAndCutout`, `settingsScreenStaysClearOfSideNavigationBarAndCutout`, `themeScreenStaysClearOfSideNavigationBarAndCutout`, `transferScreenStaysClearOfSideNavigationBarAndCutout`, `emptyLibraryGuideStaysClearOfGestureNavigation`, `mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt`, `mainScreenSearchResultsScrollAboveKeyboard`, `mainScreenNoSearchResultsScrollAboveKeyboard` | Partial: per-app English/Korean settings, apply/persist/render skin, both landscape rotations, pack/chain preservation, bounds vs actual system insets. The main, settings (both categories), theme and transfer screen tests turn on three-button navigation and a punch-hole cutout themselves (`DisplayOverlays`, restored afterwards) and check every control on screen lies clear of the side bar and the cutout in both landscape rotations. The empty library test turns on gesture navigation and the largest font size (2.0, restored afterwards), scrolls the guide to its end and checks its buttons stay above the gesture handle. The search keyboard covers the main screen's left panel without resizing it; dragging the results in the strip left above the keyboard brings the last row, and the "no results" clear button, above it. Below API 35 the main window is not edge-to-edge and is never told the keyboard's height, so the keyboard still covers the end of the list there; those two keyboard tests check that only from API 35. The play screen rotation test still runs in the device's own navigation mode and cutout profile, so three-button navigation on the play screen and other form factors need repeated device configurations. |
 | 8. Background/lock/return while playing | `AudioFocusPolicyTest` covers focus policy; transfer lifecycle test covers a different screen | `playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain` | Partial: Home, screen off/on, silence on leave, same activity/viewmodel/process/chain and a new sound request after returning. OS process eviction/OEM lock/power policies need hardware/long-duration checks. |
+
+## Touch cancellation regression (base feature 3)
+
+`twoSimultaneousFingersPlayBothPadsAndReleaseBoth` retains its simultaneous-pointer
+press/release check and then runs three isolated scenarios, each with a fresh synthetic pack:
+
+- `cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain`: injects DOWN/CANCEL/UP through the actual window
+  and cancels an individual pointer with a cancelled POINTER_UP. A single cancelled pad loses its pressed light and
+  looping keyLED execution and requests stopping its infinite voice. With two fingers held,
+  a POINTER_UP carrying FLAG_CANCELED releases only that finger and preserves the other.
+  A fresh press/release also leaves the other voice running. Repeated whole-gesture CANCEL
+  and a following UP request no extra stop; a fresh press works. Finite samples continue on either UP or CANCEL.
+- `wholeTouchStreamCancellationReleasesBothPads`: injects two touchscreen pointers through
+  `UiAutomation` and cancels their whole stream. Both pressed lights, keyLED executions and
+  infinite voices must release, with one stop request for each voice.
+- `slideTouchCancellationStillReleasesBothPads`: injects two pointers and CANCEL through
+  the actual window with Slide Mode enabled (checked as applied on the play screen) and verifies both infinite voices stop, with no extra stop from
+  a repeated CANCEL or following UP.
+
+These are synthetic events delivered to real screen input paths, not physical-finger checks.
+`RecordingAudio.loops` records the requested repeat count; `stoppedVoices` records stop keys
+(including empty key 0 on initial press). Resetting request history also resets the silence boundary
+used by `ringingLoops`, so a fresh fixture starts with consistent playback tracking.
+The `TouchCancellation` log tag prints the scenarios
+and request snapshots. This is request evidence only, not proof of audible playback or silence.
+Screenshots wait for the actual pad LED drawable to clear and two display frames to draw.
+Captured PNGs include `single-pad-cancel`, `one-of-two-pads-cancel`, `whole-cancel-before`
+and `whole-cancel-after`, plus the same pair with a `slide-cancel` prefix.
+The former per-pad input ignored CANCEL. The current Compose input already turns
+CANCEL into releases, so these checks protect that behavior without restoring the old listeners.
+Every gesture goes through `Fingers`. The OS rejects duplicate events after CANCEL; defensive
+repeat events are dispatched directly to the real Activity window (`Fingers.redeliverEnd`).
+The first cancellation always uses UiAutomation. A failed screenshot after a failed release
+check is attached to that failure instead of replacing it.
+
+Run the existing test entry, or run the full BaseFeaturesSuite as above:
+
+```bash
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.TouchPlaybackTest#twoSimultaneousFingersPlayBothPadsAndReleaseBoth \
+  --no-daemon --console=plain
+adb -s "$ANDROID_SERIAL" logcat -d -s TouchCancellation:I '*:S'
+```
 
 ## Several fingers on the play screen
 
@@ -126,9 +169,9 @@ and on (dragging moves the press). The test sets the preference and restores it 
 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
-Two more cases are not in the table yet: G, the system cancelling the touch while fingers are
-down (for example when the app leaves the screen), and H, lifting a finger after the chain
-changed. Their fixes are being made separately and their tests join the suite with them.
+Case G cancellation is checked by the touch cancellation regression above in both modes.
+Leaving the screen while fingers remain held and case H, lifting a finger after the chain
+changed, remain separate checks.
 Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## A mouse on the play screen
@@ -184,7 +227,21 @@ Android may still end the first device's gesture in a window when another device
 logs `Canceling pointers for device …`). The test accepts that only as one `ACTION_CANCEL` for
 the first pointer before the second device's press, and then requires the first pad to stop at
 that moment. Otherwise both pads must play until each is lifted. Either way, lifting one pointer
-must not stop the other's pad or leave its own playing.
+must not stop the other's pad or leave its own playing. A cancelled injected mouse press is
+forgotten during the assertions without sending a release. During teardown, a cancel resets
+system gesture monitors that can still hold the injected mouse device after the window's cancel;
+window delivery is not required for that reset. All active input injections still require success. The kernel touchscreen still receives a
+physical lift, so its active slot is released even if the window cancelled its gesture.
+
+Every virtual touchscreen has a unique name and physical port. Android can group input nodes
+sharing a port even when their names differ. Failed registration and failed finger cleanup both
+close the shell streams, ending `uinput` and removing its device. `InputToolsCleanupTest` checks
+that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
+after registration removes the device while preserving the original failure. It also checks
+that cancelled-mouse teardown sends no new window event and a new mouse helper can hover. It runs separately
+from the 47-test release preflight. Layout-test cleanup waits within the existing 10-second checks
+for the display override to disappear and the play window's landscape orientation and original
+bounds to return before the next test starts.
 
 | Checked on the API 35 and 37 emulators | Result |
 |---|---|
@@ -218,6 +275,34 @@ Not established by these tests:
   freeform windows are not enabled on the test emulator.
 - A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
   request proves only that the app asked for it.
+
+## Device settings the screen tests change
+
+`DisplayOverlays` switches the emulated navigation mode and display cutout, and
+`emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size; each is restored in
+`finally`. If a run is killed in between, put the emulator back before returning it:
+
+```bash
+adb -s "$ANDROID_SERIAL" shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural
+adb -s "$ANDROID_SERIAL" shell cmd overlay disable com.android.internal.display.cutout.emulation.hole
+adb -s "$ANDROID_SERIAL" shell settings put system font_scale 1.0
+# Check: only navbar.gestural is marked [x] among the navbar/cutout overlays.
+adb -s "$ANDROID_SERIAL" shell cmd overlay list | grep -E 'navbar|cutout'
+```
+
+Use the navigation mode the emulator had before (`navbar.threebutton` instead of `navbar.gestural`)
+if it was not gesture navigation.
+
+## Pressing the edges of a pad
+
+`PadEdgeTouchTest` rewrites the fixture as a single chain in which every pad has its own silent
+sound file, opens it and presses each pad with one injected finger at its centre and, 4 px inside
+the pad, the middle of every edge and every corner. Every press must request that pad's own sound,
+and every pad must lie inside the grid the touch position is divided over. It runs three shapes:
+a 4 × 3 pack with stretched pads (`squareButton=false`, the shape of the drum packs that use it),
+an 8 × 8 stretched pack and an 8 × 8 square pack. Stretched pads used to be sized from the play
+area before its padding was taken off, so the lower edge of each pad played the pad below and the
+right edge the pad beside it; the square check keeps the usual layout covered by the same presses.
 
 ## Fixture and isolation
 

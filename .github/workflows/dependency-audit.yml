@@ -1,0 +1,46 @@
+name: Release dependency security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    name: Release dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-android
+      - name: Check the audit failure handling
+        run: python3 -m unittest discover -s scripts/tests -p 'test_check_release_dependencies.py' -v
+      - name: Export resolved release dependencies, including transitive dependencies
+        run: >-
+          ./gradlew :app:exportReleaseDependencies
+          --init-script scripts/export_release_dependencies.gradle
+          --no-daemon --console=plain
+      - name: Check for known vulnerabilities in OSV
+        run: python3 scripts/check_release_dependencies.py
+      - name: Upload dependency list and security results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-dependency-security
+          path: build/security/*.json
+          if-no-files-found: warn
+          retention-days: 14
