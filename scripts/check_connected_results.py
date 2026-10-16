@@ -8,8 +8,11 @@ The expected count is the number of `@Test` annotations under `<module>/src/andr
 Counting the sources means the number can never fall behind newly added tests.
 Tests filtered by `@SdkSuppress` on an older device, or inherited from an abstract class,
 make the counts differ; the run then fails with both numbers instead of passing silently.
+`--suite-expected` counts the same way for a JUnit suite: the `@Test` annotations in the
+sources of the classes its `@Suite.SuiteClasses` lists.
 
 Usage: check_connected_results.py [--expected-only] [--gradle-output FILE] MODULE...
+       check_connected_results.py --suite-expected SUITE_SOURCE
 Prints `key=value` lines and exits 1 when the run must not count as a success.
 """
 import argparse
@@ -19,15 +22,35 @@ import sys
 import xml.etree.ElementTree as ET
 
 TEST_ANNOTATION = re.compile(r"^\s*@(?:org\.junit\.)?Test\b", re.MULTILINE)
+SUITE_CLASSES = re.compile(r"@(?:Suite\.)?SuiteClasses\s*\((.*?)\)", re.DOTALL)
+SUITE_MEMBER = re.compile(r"\b(\w+)(?:::|\.)class\b")
 INSTALL_FAILURE = re.compile(r"Failed to install APK|INSTALL_FAILED")
 RESULTS = Path("build/outputs/androidTest-results/connected")
 OUTCOMES = ("failure", "error", "skipped")
 
 
+def declared_tests(path):
+    return len(TEST_ANNOTATION.findall(path.read_text(encoding="utf-8")))
+
+
 def expected_tests(module):
     sources = Path(module, "src/androidTest")
-    return sum(len(TEST_ANNOTATION.findall(path.read_text(encoding="utf-8")))
-               for pattern in ("*.kt", "*.java") for path in sources.rglob(pattern))
+    return sum(declared_tests(path) for pattern in ("*.kt", "*.java") for path in sources.rglob(pattern))
+
+
+def suite_expected_tests(suite_source):
+    """Count the tests of every class a suite lists; each must have its source beside the suite."""
+    suite_source = Path(suite_source)
+    listed = SUITE_CLASSES.search(suite_source.read_text(encoding="utf-8"))
+    if not listed:
+        raise ValueError(f"{suite_source}: no @Suite.SuiteClasses list")
+    total = 0
+    for name in SUITE_MEMBER.findall(listed.group(1)):
+        sources = [path for extension in ("kt", "java") for path in suite_source.parent.glob(f"{name}.{extension}")]
+        if len(sources) != 1:
+            raise ValueError(f"{suite_source}: no single source file for {name} beside the suite")
+        total += declared_tests(sources[0])
+    return total
 
 
 def reported_tests(module):
@@ -74,8 +97,19 @@ def main():
     parser.add_argument("--expected-only", action="store_true",
                         help="print the source test counts and exit")
     parser.add_argument("--gradle-output", help="Gradle console output to scan for install failures")
-    parser.add_argument("modules", nargs="+")
+    parser.add_argument("--suite-expected", metavar="SUITE_SOURCE",
+                        help="print the test count of the classes a suite source lists and exit")
+    parser.add_argument("modules", nargs="*")
     args = parser.parse_args()
+    if args.suite_expected:
+        try:
+            print(f"suite_expected={suite_expected_tests(args.suite_expected)}")
+        except (OSError, ValueError) as error:
+            print(error, file=sys.stderr)
+            return 2
+        return 0
+    if not args.modules:
+        parser.error("name at least one module")
     if args.expected_only:
         for module in args.modules:
             print(f"{module}_expected={expected_tests(module)}")
