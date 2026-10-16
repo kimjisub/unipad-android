@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Принять</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
 	<string name="proLightMode">Режим Pro Light</string>
+	<string name="play_section_play_mode">Режим игры</string>
+	<string name="play_section_performance">Исполнение</string>
+	<string name="play_section_display">Экран</string>
+	<string name="play_section_tools">Инструменты</string>
+	<string name="autoMapping">Авто-маппинг</string>
+	<string name="autoMappingRunning">Авто-маппинг…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">Документы (Android 10)</string>
 	<string name="workspace_app_storage">Хранилище приложения (Рекомендуется)</string>
 	<string name="workspace_internal_storage">Внутреннее хранилище</string>
-	<string name="workspace_internal_sd_card">Внутренняя SD-карта</string>
 	<string name="workspace_external_sd_card_format">Внешняя SD-карта %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">Подключить папку резервного копирования</string>
 	<string name="backup_revoke">Отключить папку резервного копирования</string>
 	<string name="backup_invalid_folder">Выберите папку Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad не удалось сохранить доступ к этой папке. Выберите Documents/Unipad ещё раз.</string>
+	<string name="picker_unavailable">На этом устройстве нет приложения для выбора файлов или папок.</string>
 	<string name="backup_backup_button">Резервное копирование</string>
 	<string name="backup_backup_description">Копировать UniPacks в папку резервного копирования</string>
 	<string name="backup_restore_button">Восстановить</string>

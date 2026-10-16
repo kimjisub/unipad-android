@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 serial="${1:-${ANDROID_SERIAL:-}}"
 if [[ -z "$serial" ]]; then
-  echo 'Pass the serial printed by devices.py (or set ANDROID_SERIAL).' >&2
+  echo 'Pass the test device serial from adb devices (or set ANDROID_SERIAL).' >&2
   exit 2
 fi
 adb_bin="${ANDROID_HOME:?Set ANDROID_HOME}/platform-tools/adb"
@@ -13,7 +13,7 @@ if (( api < 33 )); then
   exit 2
 fi
 if [[ "$($adb_bin -s "$serial" shell settings get global airplane_mode_on | tr -d '\r')" != 1 ]]; then
-  echo 'Disable network on the borrowed test device before running (see README).' >&2
+  echo 'Disable network on the test device before running (see README).' >&2
   exit 2
 fi
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
@@ -24,13 +24,13 @@ fi
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test; do
   "$adb_bin" -s "$serial" shell cmd package compile -f -m speed "$package"
 done
-output="$(mktemp "${PAPERCLIP_RUN_SCRATCH_DIR:-${TMPDIR:-/tmp}}/basefeatures.XXXXXX")"
+output="$(mktemp "${TMPDIR:-/tmp}/basefeatures.XXXXXX")"
 trap 'rm -f "$output"' EXIT
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer.
-if ! grep -Eq '^OK \(39 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
+if ! grep -Eq '^OK \(50 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
   exit 1
 fi

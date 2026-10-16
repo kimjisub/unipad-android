@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">स्वीकार करें</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
 	<string name="proLightMode">प्रो लाइट मोड</string>
+	<string name="play_section_play_mode">प्ले मोड</string>
+	<string name="play_section_performance">प्रदर्शन</string>
+	<string name="play_section_display">डिस्प्ले</string>
+	<string name="play_section_tools">टूल्स</string>
+	<string name="autoMapping">स्वचालित मैपिंग</string>
+	<string name="autoMappingRunning">स्वचालित मैपिंग…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">दस्तावेज़ (Android 10)</string>
 	<string name="workspace_app_storage">ऐप स्टोरेज (अनुशंसित)</string>
 	<string name="workspace_internal_storage">आंतरिक स्टोरेज</string>
-	<string name="workspace_internal_sd_card">आंतरिक SD कार्ड</string>
 	<string name="workspace_external_sd_card_format">बाहरी SD कार्ड %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">बैकअप फ़ोल्डर कनेक्ट करें</string>
 	<string name="backup_revoke">बैकअप फ़ोल्डर डिस्कनेक्ट करें</string>
 	<string name="backup_invalid_folder">कृपया Documents/Unipad फ़ोल्डर चुनें</string>
+	<string name="backup_permission_refused">UniPad इस फ़ोल्डर तक पहुँच बनाए नहीं रख सका। Documents/Unipad को फिर से चुनें।</string>
+	<string name="picker_unavailable">इस डिवाइस पर कोई भी ऐप फ़ाइलें या फ़ोल्डर नहीं चुन सकता।</string>
 	<string name="backup_backup_button">बैकअप</string>
 	<string name="backup_backup_description">UniPacks को बैकअप फ़ोल्डर में कॉपी करें</string>
 	<string name="backup_restore_button">पुनर्स्थापित</string>

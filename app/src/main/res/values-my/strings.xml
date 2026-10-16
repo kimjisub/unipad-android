@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">လက်ခံသည်</string>
@@ -94,6 +93,8 @@
 	<string name="hideUI">UI ဖျောက်</string>
 	<string name="watermark">ရေစာ</string>
 	<string name="proLightMode">Pro Light မုဒ်</string>
+	<string name="autoMapping">အလိုအလျောက် မြေပုံဆွဲခြင်း</string>
+	<string name="autoMappingRunning">အလိုအလျောက် မြေပုံဆွဲခြင်း…</string>
 
 	<!--Version-->
 
@@ -204,7 +205,6 @@
 	<string name="workspace_documents_android10">စာရွက်စာတမ်းများ (Android 10)</string>
 	<string name="workspace_app_storage">အက်ပ်သိုလှောင်ခန်း (အကြံပြု)</string>
 	<string name="workspace_internal_storage">အတွင်းသိုလှောင်ခန်း</string>
-	<string name="workspace_internal_sd_card">အတွင်း SD ကတ်</string>
 	<string name="workspace_external_sd_card_format">ပြင်ပ SD ကတ် %d</string>
 	<string name="workspace_unipack_count">UniPack %d ခု</string>
 
@@ -257,6 +257,8 @@
 	<string name="backup_grant_access">အရန်ဖိုင်တွဲ ချိတ်ဆက်</string>
 	<string name="backup_revoke">အရန်ဖိုင်တွဲ ချိတ်ဆက်မှု ဖြုတ်</string>
 	<string name="backup_invalid_folder">Documents/Unipad ဖိုင်တွဲကို ရွေးပါ</string>
+	<string name="backup_permission_refused">UniPad သည် ဤဖိုင်တွဲကို ဆက်လက်အသုံးပြုခွင့် မရနိုင်ပါ။ Documents/Unipad ကို ထပ်မံရွေးပါ။</string>
+	<string name="picker_unavailable">ဤစက်ပေါ်တွင် ဖိုင် သို့မဟုတ် ဖိုင်တွဲများကို ရွေးနိုင်သော အက်ပ် မရှိပါ။</string>
 	<string name="backup_backup_button">အရန်သိမ်း</string>
 	<string name="backup_backup_description">UniPacks ကို အရန်ဖိုင်တွဲသို့ ကူးယူ</string>
 	<string name="backup_restore_button">ပြန်လည်ရယူ</string>

@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Terima</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tanda air</string>
 	<string name="proLightMode">Mode Pro Light</string>
+	<string name="play_section_play_mode">Mode Bermain</string>
+	<string name="play_section_performance">Pertunjukan</string>
+	<string name="play_section_display">Tampilan</string>
+	<string name="play_section_tools">Alat</string>
+	<string name="autoMapping">Pemetaan Otomatis</string>
+	<string name="autoMappingRunning">Pemetaan Otomatis…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">Dokumen (Android 10)</string>
 	<string name="workspace_app_storage">Penyimpanan Aplikasi (Disarankan)</string>
 	<string name="workspace_internal_storage">Penyimpanan Internal</string>
-	<string name="workspace_internal_sd_card">Kartu SD Internal</string>
 	<string name="workspace_external_sd_card_format">Kartu SD Eksternal %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">Hubungkan Folder Cadangan</string>
 	<string name="backup_revoke">Putuskan Folder Cadangan</string>
 	<string name="backup_invalid_folder">Silakan pilih folder Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad tidak dapat mempertahankan akses ke folder ini. Pilih Documents/Unipad lagi.</string>
+	<string name="picker_unavailable">Tidak ada aplikasi di perangkat ini yang dapat memilih file atau folder.</string>
 	<string name="backup_backup_button">Cadangkan</string>
 	<string name="backup_backup_description">Salin UniPacks ke folder cadangan</string>
 	<string name="backup_restore_button">Pulihkan</string>

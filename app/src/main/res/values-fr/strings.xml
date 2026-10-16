@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Accepter</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">Masquer l\'interface</string>
 	<string name="watermark">Filigrane</string>
 	<string name="proLightMode">Mode Pro Light</string>
+	<string name="play_section_play_mode">Mode de jeu</string>
+	<string name="play_section_performance">Performance</string>
+	<string name="play_section_display">Affichage</string>
+	<string name="play_section_tools">Outils</string>
+	<string name="autoMapping">Mappage Automatique</string>
+	<string name="autoMappingRunning">Mappage Automatique…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">Documents (Android 10)</string>
 	<string name="workspace_app_storage">Stockage de l\'application (Recommandé)</string>
 	<string name="workspace_internal_storage">Stockage interne</string>
-	<string name="workspace_internal_sd_card">Carte SD interne</string>
 	<string name="workspace_external_sd_card_format">Carte SD externe %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">Connecter le dossier de sauvegarde</string>
 	<string name="backup_revoke">Déconnecter le dossier de sauvegarde</string>
 	<string name="backup_invalid_folder">Veuillez sélectionner le dossier Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad n\'a pas pu garder l\'accès à ce dossier. Choisissez à nouveau Documents/Unipad.</string>
+	<string name="picker_unavailable">Aucune application de cet appareil ne peut choisir des fichiers ou des dossiers.</string>
 	<string name="backup_backup_button">Sauvegarder</string>
 	<string name="backup_backup_description">Copier les UniPacks vers le dossier de sauvegarde</string>
 	<string name="backup_restore_button">Restaurer</string>

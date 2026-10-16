@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Kabul Et</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">Arayüzü Gizle</string>
 	<string name="watermark">Filigran</string>
 	<string name="proLightMode">Pro Işık Modu</string>
+	<string name="play_section_play_mode">Çalma Modu</string>
+	<string name="play_section_performance">Performans</string>
+	<string name="play_section_display">Görünüm</string>
+	<string name="play_section_tools">Araçlar</string>
+	<string name="autoMapping">Otomatik Eşleme</string>
+	<string name="autoMappingRunning">Otomatik Eşleme…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">Belgeler (Android 10)</string>
 	<string name="workspace_app_storage">Uygulama Deposu (Önerilen)</string>
 	<string name="workspace_internal_storage">Dahili Depolama</string>
-	<string name="workspace_internal_sd_card">Dahili SD Kart</string>
 	<string name="workspace_external_sd_card_format">Harici SD Kart %d</string>
 	<string name="workspace_unipack_count">%d UniPack</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">Yedek Klasörü Bağla</string>
 	<string name="backup_revoke">Yedek Klasörü Bağlantısını Kes</string>
 	<string name="backup_invalid_folder">Lütfen Documents/Unipad klasörünü seçin</string>
+	<string name="backup_permission_refused">UniPad bu klasöre erişimi koruyamadı. Documents/Unipad klasörünü yeniden seçin.</string>
+	<string name="picker_unavailable">Bu cihazda dosya veya klasör seçebilen bir uygulama yok.</string>
 	<string name="backup_backup_button">Yedekle</string>
 	<string name="backup_backup_description">UniPack\'ları yedek klasörüne kopyala</string>
 	<string name="backup_restore_button">Geri Yükle</string>

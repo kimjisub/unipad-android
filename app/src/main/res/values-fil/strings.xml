@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Tanggapin</string>
@@ -204,7 +203,6 @@
 	<string name="workspace_documents_android10">Mga Dokumento (Android 10)</string>
 	<string name="workspace_app_storage">App Storage (Inirerekomenda)</string>
 	<string name="workspace_internal_storage">Internal Storage</string>
-	<string name="workspace_internal_sd_card">Internal SD Card</string>
 	<string name="workspace_external_sd_card_format">External SD Card %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +255,8 @@
 	<string name="backup_grant_access">Ikonekta ang Backup Folder</string>
 	<string name="backup_revoke">I-disconnect ang Backup Folder</string>
 	<string name="backup_invalid_folder">Piliin ang Documents/Unipad folder</string>
+	<string name="backup_permission_refused">Hindi napanatili ng UniPad ang access sa folder na ito. Piliin muli ang Documents/Unipad.</string>
+	<string name="picker_unavailable">Walang app sa device na ito na makakapili ng mga file o folder.</string>
 	<string name="backup_backup_button">I-backup</string>
 	<string name="backup_backup_description">Kopyahin ang UniPacks sa backup folder</string>
 	<string name="backup_restore_button">I-restore</string>

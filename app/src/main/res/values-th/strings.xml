@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">ยอมรับ</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">ซ่อน UI</string>
 	<string name="watermark">ลายน้ำ</string>
 	<string name="proLightMode">โหมด Pro Light</string>
+	<string name="play_section_play_mode">โหมดการเล่น</string>
+	<string name="play_section_performance">การแสดง</string>
+	<string name="play_section_display">การแสดงผล</string>
+	<string name="play_section_tools">เครื่องมือ</string>
+	<string name="autoMapping">แมปอัตโนมัติ</string>
+	<string name="autoMappingRunning">แมปอัตโนมัติ…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">เอกสาร (Android 10)</string>
 	<string name="workspace_app_storage">พื้นที่แอป (แนะนำ)</string>
 	<string name="workspace_internal_storage">พื้นที่จัดเก็บภายใน</string>
-	<string name="workspace_internal_sd_card">SD Card ภายใน</string>
 	<string name="workspace_external_sd_card_format">SD Card ภายนอก %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">เชื่อมต่อโฟลเดอร์สำรอง</string>
 	<string name="backup_revoke">ยกเลิกการเชื่อมต่อโฟลเดอร์สำรอง</string>
 	<string name="backup_invalid_folder">กรุณาเลือกโฟลเดอร์ Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad ไม่สามารถคงสิทธิ์เข้าถึงโฟลเดอร์นี้ได้ กรุณาเลือก Documents/Unipad อีกครั้ง</string>
+	<string name="picker_unavailable">ไม่มีแอปในอุปกรณ์นี้ที่เลือกไฟล์หรือโฟลเดอร์ได้</string>
 	<string name="backup_backup_button">สำรองข้อมูล</string>
 	<string name="backup_backup_description">คัดลอก UniPacks ไปยังโฟลเดอร์สำรอง</string>
 	<string name="backup_restore_button">กู้คืน</string>

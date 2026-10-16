@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">承諾</string>
@@ -94,6 +93,12 @@
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
 	<string name="proLightMode">Proライトモード</string>
+	<string name="play_section_play_mode">プレイモード</string>
+	<string name="play_section_performance">演奏</string>
+	<string name="play_section_display">表示</string>
+	<string name="play_section_tools">ツール</string>
+	<string name="autoMapping">自動マッピング</string>
+	<string name="autoMappingRunning">自動マッピング…</string>
 
 	<!--Version-->
 
@@ -204,7 +209,6 @@
 	<string name="workspace_documents_android10">ドキュメント (Android 10)</string>
 	<string name="workspace_app_storage">アプリストレージ（推奨）</string>
 	<string name="workspace_internal_storage">内部ストレージ</string>
-	<string name="workspace_internal_sd_card">内蔵SDカード</string>
 	<string name="workspace_external_sd_card_format">外部SDカード %d</string>
 	<string name="workspace_unipack_count">%d個のUniPack</string>
 
@@ -257,6 +261,8 @@
 	<string name="backup_grant_access">バックアップフォルダを接続</string>
 	<string name="backup_revoke">バックアップフォルダの接続を解除</string>
 	<string name="backup_invalid_folder">Documents/Unipadフォルダを選択してください</string>
+	<string name="backup_permission_refused">このフォルダへのアクセスを保持できませんでした。Documents/Unipadフォルダをもう一度選択してください。</string>
+	<string name="picker_unavailable">この端末にはファイルやフォルダを選べるアプリがありません。</string>
 	<string name="backup_backup_button">バックアップ</string>
 	<string name="backup_backup_description">UniPacksをバックアップフォルダにコピー</string>
 	<string name="backup_restore_button">復元</string>

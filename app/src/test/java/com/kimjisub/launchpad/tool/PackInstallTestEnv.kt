@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.analytics.PackImportReport
@@ -56,6 +57,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -68,7 +70,7 @@ import java.util.zip.ZipOutputStream
 class PackInstallTestEnv {
 	val root: File = Files.createTempDirectory("pack_install_test").toFile()
 	val workspace = File(root, "workspace").apply { mkdirs() }
-	private val cache = File(root, "cache").apply { mkdirs() }
+	val cache = File(root, "cache").apply { mkdirs() }
 
 	// Several threads, so a callback that blocks on another request does not stall that request.
 	private val mainExecutor = Executors.newFixedThreadPool(4) { Thread(it, "pack-test-main") }
@@ -82,20 +84,46 @@ class PackInstallTestEnv {
 	}
 	private val openStreams = mutableListOf<Closeable>()
 	private val gates = ConcurrentHashMap<String, Gate>()
+	val notifications = ConcurrentHashMap<Int, android.app.Notification>()
+	/** Every notify() in order: the id and what that notification showed. */
+	val notifyLog: MutableList<Pair<Int, Shown>> = Collections.synchronizedList(mutableListOf())
+	private val shown = ConcurrentHashMap<android.app.Notification, Shown>()
+	private val building = ConcurrentHashMap<Any, Shown>()
 	private val context: Context = mockk(relaxed = true)
 	private val resolver: ContentResolver = mockk(relaxed = true)
 
 	fun setUp() {
 		Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
+		every { context.getString(any()) } answers { text(firstArg()) }
 
-		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns
-			mockk<android.app.NotificationManager>(relaxed = true)
+		val manager = mockk<android.app.NotificationManager>(relaxed = true)
+		every { manager.notify(any<Int>(), any<android.app.Notification>()) } answers {
+			val notification = secondArg<android.app.Notification>()
+			notifications[firstArg()] = notification
+			notifyLog += firstArg<Int>() to shown.getValue(notification)
+		}
+		every { manager.cancel(any<Int>()) } answers { notifications.remove(firstArg()) }
+		every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns manager
 		every { context.contentResolver } returns resolver
 		every { context.cacheDir } returns cache
 		mockkStatic(PendingIntent::class)
 		every { PendingIntent.getActivity(any(), any(), any(), any()) } returns mockk()
 		mockkConstructor(NotificationCompat.Builder::class)
-		every { anyConstructed<NotificationCompat.Builder>().build() } returns mockk()
+		every { anyConstructed<NotificationCompat.Builder>().setContentText(any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(text = firstArg<CharSequence?>()?.toString()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().setOngoing(any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(ongoing = firstArg()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().setProgress(any(), any(), any()) } answers {
+			building.compute(self) { _, it -> (it ?: Shown()).copy(progressMax = firstArg()) }
+			callOriginal()
+		}
+		every { anyConstructed<NotificationCompat.Builder>().build() } answers {
+			mockk<android.app.Notification>().also { shown[it] = building[self] ?: Shown() }
+		}
 
 		mockkStatic(Uri::class)
 		every { Uri.fromFile(any()) } answers {
@@ -122,6 +150,9 @@ class PackInstallTestEnv {
 		synchronized(openStreams) { openStreams.forEach { runCatching { it.close() } } }
 		root.deleteRecursively()
 	}
+
+	/** What the notifications still shown display, in no particular order. */
+	fun shownNow(): List<Shown> = notifications.values.map(shown::getValue)
 
 	/** The device refuses to open the download's target file, as with a revoked storage permission. */
 	fun cannotOpenFilesForWriting() {
@@ -159,6 +190,13 @@ class PackInstallTestEnv {
 	): CoroutineScope {
 		val uri = mockk<Uri>()
 		every { resolver.openInputStream(uri) } answers { openInput() }
+		// A picked source is read-only through every resolver write API, even on a relaxed mock.
+		every { resolver.openOutputStream(uri) } throws SecurityException("read-only source provider")
+		every { resolver.openOutputStream(uri, any()) } throws SecurityException("read-only source provider")
+		every { resolver.openFileDescriptor(uri, match { it != "r" }) } throws SecurityException("read-only source provider")
+		every { resolver.openFileDescriptor(uri, match { it != "r" }, any()) } throws SecurityException("read-only source provider")
+		every { resolver.openAssetFileDescriptor(uri, match { it != "r" }) } throws SecurityException("read-only source provider")
+		every { resolver.openAssetFileDescriptor(uri, match { it != "r" }, any()) } throws SecurityException("read-only source provider")
 		every { DocumentFile.fromSingleUri(context, uri) } returns mockk { every { name } answers { fileNameResolvedOn += Thread.currentThread().name; fileName } }
 		val scope = CoroutineScope(SupervisorJob())
 		UniPackImporter(
@@ -178,6 +216,8 @@ class PackInstallTestEnv {
 	}
 
 	fun workspaceContents(): List<String> = workspace.list().orEmpty().sorted()
+
+	fun cacheContents(): List<String> = cache.list().orEmpty().sorted()
 
 	/** The server side of one download URL: `execute()` blocks until [open] or [fail]. */
 	class Gate {
@@ -300,7 +340,13 @@ class PackInstallTestEnv {
 		}
 	}
 
+	/** What a posted notification displayed, recorded from the builder calls that made it. */
+	data class Shown(val text: String? = null, val ongoing: Boolean = false, val progressMax: Int = 0)
+
 	companion object {
+		/** The text [Context.getString] returns for [id] in these tests. */
+		fun text(@StringRes id: Int) = "resource:$id"
+
 		const val PACK_NAME = "pack"
 		private const val TIMEOUT_MS = 10_000L
 		private const val PROMISED_MORE_BYTES = 1_000L
@@ -317,20 +363,33 @@ class PackInstallTestEnv {
 
 		/**
 		 * [topFolder] wraps the pack in one folder and [directoryEntries] lists every folder as an
-		 * entry ahead of the files; both together is how Finder zips a pack.
+		 * entry ahead of the files; both together is how Finder zips a pack. [files] overrides the
+		 * contents, and [stored] keeps entries uncompressed for tests that need several writes.
 		 */
-		fun packZip(title: String, topFolder: String? = null, directoryEntries: Boolean = false): ByteArray {
-			val files = packFiles(title).mapKeys { (name, _) -> topFolder?.let { "$it/$name" } ?: name }
+		fun packZip(
+			title: String,
+			topFolder: String? = null,
+			directoryEntries: Boolean = false,
+			files: Map<String, ByteArray> = packFiles(title),
+			stored: Boolean = false,
+		): ByteArray {
+			val entries = files.mapKeys { (name, _) -> topFolder?.let { "$it/$name" } ?: name }
 			val folders = if (directoryEntries) {
-				files.keys.flatMap { path -> path.split('/').dropLast(1).runningReduce { parent, child -> "$parent/$child" } }.distinct()
+				entries.keys.flatMap { path -> path.split('/').dropLast(1).runningReduce { parent, child -> "$parent/$child" } }.distinct()
 			} else {
 				emptyList()
 			}
 			val bytes = ByteArrayOutputStream()
 			ZipOutputStream(bytes).use { zip ->
 				folders.forEach { zip.putNextEntry(ZipEntry("$it/")); zip.closeEntry() }
-				files.forEach { (path, data) ->
-					zip.putNextEntry(ZipEntry(path))
+				entries.forEach { (path, data) ->
+					zip.putNextEntry(ZipEntry(path).apply {
+						if (stored) {
+							method = ZipEntry.STORED
+							size = data.size.toLong()
+							crc = CRC32().apply { update(data) }.value
+						}
+					})
 					zip.write(data)
 					zip.closeEntry()
 				}
@@ -344,13 +403,15 @@ class PackInstallTestEnv {
 			}
 		}
 
-		/** Relative path to SHA-256 of every file in [folder]. */
-		fun contentHashes(folder: File): Map<String, String> =
-			folder.walkTopDown().filter { it.isFile }.associate { it.relativeTo(folder).invariantSeparatorsPath to sha256(it.readBytes()) }
+		/** Relative file hashes; optionally includes directories to check hidden and empty folders. */
+		fun contentHashes(folder: File, includeDirectories: Boolean = false): Map<String, String> =
+			folder.walkTopDown().filter { it != folder && (it.isFile || includeDirectories && it.isDirectory) }.associate {
+				it.relativeTo(folder).invariantSeparatorsPath to if (it.isDirectory) "directory" else sha256(it.readBytes())
+			}
 
 		fun expectedHashes(title: String): Map<String, String> = packFiles(title).mapValues { sha256(it.value) }
 
-		private fun sha256(data: ByteArray): String =
+		internal fun sha256(data: ByteArray): String =
 			MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) }
 	}
 }

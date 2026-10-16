@@ -387,6 +387,25 @@ class AppUpdatePrompterTest {
 	}
 
 	@Test
+	fun availableUpdateOnReturnDoesNotRecordCancellation() = runTest {
+		store.downloadRequested = true
+		store.lastAutoCheckAt = now - CHECK_INTERVAL_MS
+		// The Play adapter falls back to availability when a query still says canceled.
+		source.answer = UpdateStatus.Available
+		val prompter = prompter()
+		prompter.onListReady()
+		advanceUntilIdle()
+		assertEquals(Card.Offer, prompter.card)
+		assertNull(store.declinedAt)
+
+		prompter.checkByHand()
+		advanceUntilIdle()
+		assertEquals(2, source.queries)
+		assertEquals(Card.Offer, prompter.card)
+		assertNull(store.declinedAt)
+	}
+
+	@Test
 	fun storeLinkCountsAsDeclineAndReportsAMissingStore() = runTest {
 		val prompter = prompter()
 		prompter.askStore()
