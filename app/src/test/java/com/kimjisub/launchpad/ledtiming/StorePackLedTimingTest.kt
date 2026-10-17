@@ -17,7 +17,8 @@ import java.nio.file.Files
  * [rankPacks] lists every pack with autoplay and keyLED by LED commands a second at peak.
  * [measurePacks] plays each pack named in ledTimingMeasure in real time (as long as its autoplay) and
  * fails when the driver does not receive exactly what LedRunner handed over, or receives the pack's
- * commands reordered, incomplete or with extra ones. Reports go to build/reports/led-timing/.
+ * commands reordered, incomplete or with extra ones, telling a loss from lag as
+ * [LedTimingMeasurement.packToDriverFailure] does. Reports go to build/reports/led-timing/.
  */
 class StorePackLedTimingTest {
 
@@ -74,10 +75,11 @@ class StorePackLedTimingTest {
 				val text = measurement.describe()
 				File(reports, "$name.txt").writeText(text)
 				println(text)
-				if (!measurement.deliveredAsHandedOver || !measurement.packToDriver.orderedAndComplete) failed += name
+				if (!measurement.deliveredAsHandedOver) failed += "$name: not delivered as LedRunner handed it over"
+				measurement.packToDriverFailure()?.let { failed += "$name: ${it.lineSequence().first()}" }
 			}
 		}
-		assertTrue("reordered, missing or extra commands: $failed", failed.isEmpty())
+		assertTrue(failed.joinToString("\n"), failed.isEmpty())
 	}
 
 	/**

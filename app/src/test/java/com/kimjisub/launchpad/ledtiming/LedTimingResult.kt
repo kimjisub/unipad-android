@@ -8,17 +8,17 @@ import kotlin.math.ceil
  * LedRunner's output against the driver. Each LED is compared on its own: its sequence of codes as
  * they arrived against the sequence expected, matched by longest common subsequence. An expected code
  * left unmatched but arriving elsewhere in that LED's sequence counts as reordered; otherwise it is
- * missing when a later command of that LED arrived, and unreached when none did. A code that arrived
- * and is left unmatched after that is extra.
+ * missing when a later expected command of that LED was matched, and unreached when none was. A code
+ * that arrived and is left unmatched after that is extra.
  */
 class LedTimingResult(
 	val expected: Int,
 	val arrived: Int,
 	val matched: Int,
 	val reordered: Int,
-	/** Expected commands that did not arrive though a later command of the same LED did. */
+	/** Expected commands that did not arrive though a later expected command of the same LED did. */
 	val missing: Int,
-	/** Expected commands after the last command that arrived on their LED: lost, or still on their way. */
+	/** Expected commands after the last expected command that arrived on their LED: lost, or still on their way. */
 	val unreached: Int,
 	val extra: Int,
 	/** Matched commands that arrived after one expected more than [OVERTAKE_MS] later, on any LED. */

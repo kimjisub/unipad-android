@@ -39,8 +39,15 @@ class Recording(
 	val releaseRepaints: Int,
 	/** LED runner commands that went out with another channel's colour on top. */
 	val covered: Int,
-	/** How long after the final release the run gave up with animations still playing; null when they all ended. */
+	/**
+	 * How long after the final release the run stopped counting arrivals with animations still playing;
+	 * null when they all ended first. [handedOver] and [toDriver] hold what arrived until then.
+	 */
 	val gaveUpAfterReleaseMs: Long?,
+	/** Commands that reached the driver after the run gave up, while it went on to tell lag from loss. */
+	val toDriverLate: List<SentCommand> = emptyList(),
+	/** How long the run went on after giving up. */
+	val lateForMs: Long = 0,
 )
 
 /**
@@ -184,6 +191,10 @@ class LedPathRun(private val pack: UniPack) {
 	 * Plays the autoplay, releases every pad at [releaseAllAtMs] as PlayActivityViewModel.padInit does
 	 * (ending endless animations), waits until no animation runs or [giveUpAtMs] passes, and returns what
 	 * the driver received. Times count from AutoPlayRunner's start.
+	 *
+	 * Every command the pack asks for before [giveUpAtMs] is due by then, so a run that gives up keeps
+	 * going while LedRunner still hands changes over (up to [LATE_MAX_MS]) and records what arrives late
+	 * apart: commands that only came late were delayed, commands that never came were lost.
 	 */
 	fun run(releaseAllAtMs: Long, giveUpAtMs: Long): Recording {
 		Dispatchers.setMain(main)
@@ -204,14 +215,50 @@ class LedPathRun(private val pack: UniPack) {
 			check(ended.await(giveUpAtMs + 60_000, TimeUnit.MILLISECONDS)) { "autoplay did not end" }
 
 			sleepUntil(releaseAllAtMs)
-			main.runAndWait { padEvent { vm.padInit() } }
-			while (now() < giveUpAtMs && animating()) Thread.sleep(20)
-			val gaveUpAfterReleaseMs = if (animating()) giveUpAtMs - releaseAllAtMs else null
+			val releasedAt = main.runAndWait {
+				padEvent { vm.padInit() }
+				now()
+			}
+			var gaveUp = false
+			while (animating()) {
+				if (now() >= giveUpAtMs) {
+					gaveUp = true
+					break
+				}
+				Thread.sleep(20)
+			}
 			// The last tick may still be on its way to main.
 			Thread.sleep(50)
+			var inTime = Int.MAX_VALUE
+			var gaveUpAfterReleaseMs: Long? = null
+			var lateForMs = 0L
+			if (gaveUp) {
+				inTime = ledRunner.afterDelivery { handedOver.size }
+				val gaveUpAt = now()
+				gaveUpAfterReleaseMs = (gaveUpAt - releasedAt).toLong()
+				var count = inTime
+				var changedAt = gaveUpAt
+				while (animating() && now() - gaveUpAt < LATE_MAX_MS && now() - changedAt < LATE_IDLE_MS) {
+					Thread.sleep(20)
+					val next = ledRunner.afterDelivery { handedOver.size }
+					if (next != count) {
+						count = next
+						changedAt = now()
+					}
+				}
+				Thread.sleep(50)
+				lateForMs = (now() - gaveUpAt).toLong()
+			}
 			ledRunner.stop()
 			main.drain()
-			return main.runAndWait { Recording(ArrayList(handedOver), ArrayList(sent), ArrayList(presses), releaseRepaints, covered, gaveUpAfterReleaseMs) }
+			// The driver gets one command per change handed over (deliveredAsHandedOver), so the first
+			// inTime of each line up.
+			return main.runAndWait {
+				Recording(
+					handedOver.take(inTime), sent.take(inTime), ArrayList(presses), releaseRepaints, covered,
+					gaveUpAfterReleaseMs, sent.drop(inTime), lateForMs,
+				)
+			}
 		} finally {
 			autoPlay.stop()
 			if (::ledRunner.isInitialized) ledRunner.stop()
@@ -219,6 +266,12 @@ class LedPathRun(private val pack: UniPack) {
 			unmockkStatic(SystemClock::class)
 			Dispatchers.resetMain()
 		}
+	}
+
+	private companion object {
+		/** After giving up, the run stops waiting for late commands once LedRunner hands nothing over for this long. */
+		const val LATE_IDLE_MS = 5_000L
+		const val LATE_MAX_MS = 60_000L
 	}
 
 	private fun animating(): Boolean =
