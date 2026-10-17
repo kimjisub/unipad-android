@@ -65,6 +65,7 @@ class UniPackConformanceCasesTest(private val id: String) {
 				put("corpusSha256", corpus.sha256)
 				put("generatedAt", Instant.now().toString())
 				put("assertions", if (recordOnly) "skipped" else "checked")
+				put("caseSensitiveFileSystem", caseSensitiveFileSystem())
 				putJsonArray("cases") {
 					for (r in sorted) add(buildJsonObject {
 						put("id", r.id)
