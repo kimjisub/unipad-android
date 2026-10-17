@@ -8,14 +8,18 @@ import kotlin.math.ceil
  * LedRunner's output against the driver. Each LED is compared on its own: its sequence of codes as
  * they arrived against the sequence expected, matched by longest common subsequence. An expected code
  * left unmatched but arriving elsewhere in that LED's sequence counts as reordered; otherwise it is
- * missing. A code that arrived and is left unmatched after that is extra.
+ * missing when a later expected command of that LED was matched, and unreached when none was. A code
+ * that arrived and is left unmatched after that is extra.
  */
 class LedTimingResult(
 	val expected: Int,
 	val arrived: Int,
 	val matched: Int,
 	val reordered: Int,
+	/** Expected commands that did not arrive though a later expected command of the same LED did. */
 	val missing: Int,
+	/** Expected commands after the last expected command that arrived on their LED: lost, or still on their way. */
+	val unreached: Int,
 	val extra: Int,
 	/** Matched commands that arrived after one expected more than [OVERTAKE_MS] later, on any LED. */
 	val overtaken: Int,
@@ -26,7 +30,7 @@ class LedTimingResult(
 ) {
 	class Latency(val t0: Double, val ms: Double)
 
-	val orderedAndComplete: Boolean get() = reordered == 0 && missing == 0 && extra == 0
+	val orderedAndComplete: Boolean get() = reordered == 0 && missing == 0 && unreached == 0 && extra == 0
 
 	private val sorted by lazy { latencies.map { it.ms }.sorted() }
 
@@ -72,6 +76,7 @@ class LedTimingResult(
 			var matched = 0
 			var reordered = 0
 			var missing = 0
+			var unreached = 0
 			var extra = 0
 			val latencies = ArrayList<Latency>()
 			val matchOf = IdentityHashMap<LedCommand, LedCommand>()
@@ -90,8 +95,13 @@ class LedTimingResult(
 
 				val unmatchedWant = want.indices.toSet() - pairs.map { it.first }.toSet()
 				val unmatchedGot = (got.indices.toSet() - pairs.map { it.second }.toSet()).map { got[it].code }.toMutableList()
+				val lastArrived = pairs.maxOfOrNull { it.first } ?: -1
 				for (w in unmatchedWant) {
-					if (unmatchedGot.remove(want[w].code)) reordered++ else missing++
+					when {
+						unmatchedGot.remove(want[w].code) -> reordered++
+						w < lastArrived -> missing++
+						else -> unreached++
+					}
 				}
 				extra += unmatchedGot.size
 				if (differences.size < MAX_REPORTED_DIFFERENCES) differences += describe(led, want, got)
@@ -111,6 +121,7 @@ class LedTimingResult(
 				matched = matched,
 				reordered = reordered,
 				missing = missing,
+				unreached = unreached,
 				extra = extra,
 				overtaken = overtaken,
 				latencies = latencies.sortedBy { it.t0 },

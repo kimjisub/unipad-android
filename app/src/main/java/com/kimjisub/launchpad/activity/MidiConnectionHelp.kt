@@ -37,9 +37,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.ui.compose.AppDialog
 
 internal const val MINI_MK3_GUIDE_URL =
 	"https://userguides.novationmusic.com/hc/en-gb/articles/23731330721682-Launchpad-Mini-MK3-s-Settings-menu"
@@ -63,7 +63,7 @@ internal fun MidiConnectionHelpDialog(
 	val focusRequester = remember { FocusRequester() }
 	val modelNote = midiHelpModelNote(modelNameResId, explicitlySelected)
 	var linkFailed by rememberSaveable(modelNameResId) { mutableStateOf(false) }
-	Dialog(
+	AppDialog(
 		onDismissRequest = onClose,
 		properties = DialogProperties(usePlatformDefaultWidth = false),
 	) {

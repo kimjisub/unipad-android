@@ -133,6 +133,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
@@ -328,7 +329,7 @@ class PlayActivity : BaseActivity() {
 				PlayScreen()
 
 				unipackErrorDialog?.let { (title, message) ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(title) },
 						text = { Text(message) },
@@ -344,7 +345,7 @@ class PlayActivity : BaseActivity() {
 				}
 
 				if (showRestartDialog) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(stringResource(string.requireRestart)) },
 						text = { Text(stringResource(string.doYouWantToRestartApp)) },
@@ -663,12 +664,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+					// While the scrim fades out of a closed window, a pad pressed under it plays.
 					Box(
 						modifier = Modifier
 							.fillMaxSize()
 							.background(PlayPalette.optionScrim)
 							.focusProperties { canFocus = false }
-							.clickable { vm.toggleOptionWindow(false) }
+							.then(if (vm.isOptionWindowVisible) Modifier.clickable { vm.toggleOptionWindow(false) } else Modifier)
 					)
 				}
 				AnimatedVisibility(

@@ -6,6 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 import android.content.ContentValues
 import android.provider.MediaStore
+import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
@@ -136,6 +137,25 @@ class LibraryAndFileTest {
         screen.node(By.text(FeatureScreen.TITLE))
         assertEquals(0L to false, history(FeatureScreen.PACK_ID))
         screen.capture("delete-reinstall")
+    }
+    @Test fun deleteConfirmationIgnoresRightAndMiddleClicksButNotLeftClicks() {
+        screen.install()
+        screen.launch(MainActivity::class.java)
+        screen.node(By.text(FeatureScreen.TITLE)).click()
+        screen.clickDescription(R.string.cd_delete)
+        val question = By.text(screen.text(R.string.doYouWantToDeleteUniPack))
+        screen.node(question)
+        val mouse = Mouse(screen)
+        val accept = screen.node(By.text(screen.text(R.string.accept))).visibleCenter
+        mouse.click(accept, MotionEvent.BUTTON_SECONDARY)
+        mouse.click(accept, MotionEvent.BUTTON_TERTIARY)
+        screen.device.waitForIdle()
+        // Had either press confirmed, the dialog would be gone and its Cancel button with it.
+        screen.node(question)
+        screen.capture("delete-confirm-after-right-and-middle-click")
+        mouse.click(screen.node(By.text(screen.text(R.string.cancel))).visibleCenter, MotionEvent.BUTTON_PRIMARY)
+        screen.await("A left click did not close the dialog") { !screen.device.hasObject(question) }
+        assertTrue("Right or middle click deleted the pack", screen.pack().exists())
     }
     private fun history(id: String): Pair<Long, Boolean>? =
         AppDatabase.getInstance(screen.context).openHelper.readableDatabase
