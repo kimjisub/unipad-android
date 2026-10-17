@@ -86,6 +86,11 @@ FastlaneCore::UI.define_singleton_method(:important) do |message|
   TEST_WARNINGS << message
   puts message
 end
+TEST_SUCCESSES = []
+FastlaneCore::UI.define_singleton_method(:success) do |message|
+  TEST_SUCCESSES << message
+  puts message
+end
 
 def fake_client(play)
   client = Supply::Client.allocate
