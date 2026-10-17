@@ -106,7 +106,8 @@ class ChainReleaseCorpusTest(private val id: String) {
 			check(loaded.await(10, TimeUnit.SECONDS)) { "Sounds did not finish loading" }
 			failure?.let { throw AssertionError("Sound loading failed", it) }
 			vm.soundRunner = sound
-			// Ticks only when the test calls loop(), at the virtual time.
+			// Its coroutine ticks once right after launch and then waits for good, so the LEDs move when the
+			// test calls loop(). Should that first tick land late, it plays at the current virtual time like the test's own.
 			led = LedRunner(pack, vm.ledRunnerListener, vm.chain, loopDelay = Long.MAX_VALUE).also { it.launch() }
 			vm.ledRunner = led
 			tracker.setGrid(pack.buttonX, pack.buttonY)
