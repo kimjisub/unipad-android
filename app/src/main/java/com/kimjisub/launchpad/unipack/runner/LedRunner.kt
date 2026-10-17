@@ -231,10 +231,12 @@ class LedRunner(
 		// No `active` guard: ledInit() calls this right after stop() to shut the looping
 		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
 		synchronized(this) {
-			for (state in ledAnimationStates) {
-				if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
-					// Before anything still due: nothing more of it plays.
-					state.shutDownAt(Long.MIN_VALUE, 0)
+			for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+				for (state in states) {
+					if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
+						// Before anything still due: nothing more of it plays.
+						state.shutDownAt(Long.MIN_VALUE, 0)
+					}
 				}
 			}
 		}
