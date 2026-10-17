@@ -128,10 +128,11 @@ class FeatureScreen {
         awaitActivity(type)
         return scenario
     }
-    fun openPlay(folder: File = pack()) {
-        launch(PlayActivity::class.java) { putExtra("path", folder.path) }
+    fun openPlay(folder: File = pack()): ActivityScenario<PlayActivity> {
+        val scenario = launch(PlayActivity::class.java) { putExtra("path", folder.path) }
         await("Pack/audio loading did not finish") { onMain { !vm().unipackLoading && !vm().soundLoadingActive && vm().uiLoaded } }
         node(By.desc(text(R.string.menu)))
+        return scenario
     }
     /**
      * Presses Home and waits for the launcher. pressHome() waits only 1 second for an accessibility
