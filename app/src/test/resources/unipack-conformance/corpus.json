@@ -8806,80 +8806,6 @@
           ]
         ],
         "errors": []
-      },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": 1
-                  }
-                ]
-              },
-              {
-                "c": 1,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": [
-              [
-                "on",
-                0,
-                0,
-                0,
-                0
-              ],
-              [
-                "off",
-                0,
-                0,
-                0
-              ],
-              [
-                "on",
-                0,
-                0,
-                0,
-                1
-              ],
-              [
-                "off",
-                0,
-                0,
-                0
-              ]
-            ],
-            "errors": []
-          },
-          "note": "iOS does not follow a wormhole under `touch` when it reads autoPlay: the second touch stays on chain 1, as queue number 1."
-        }
       }
     },
     {
@@ -12056,20 +11982,6 @@
             ]
           ]
         ]
-      },
-      "known": {
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [],
-              [],
-              [],
-              []
-            ]
-          },
-          "note": "A sound that fails to decode stops the pad's queue at it (SoundEngine moves the queue only for a loaded sound): every press of the pad is silent, and the wormhole of such a sound does not switch the chain."
-        }
       }
     },
     {
