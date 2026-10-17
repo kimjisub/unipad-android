@@ -202,10 +202,11 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 }
                 assertEquals(LARGEST_FONT_SCALE.toFloat(), screen.onMain { screen.resumed().resources.configuration.fontScale })
                 scrollToEnd(guide)
-                val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
                 screen.node(By.clickable(true).hasDescendant(By.text(screen.text(R.string.guide_import_external))))
+                val controls = screen.freshControls()
+                val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
                 screen.capture("empty-library-gesture-navigation")
-                screen.device.findObjects(By.pkg(screen.context.packageName).clickable(true)).forEach {
+                controls.forEach {
                     val bounds = it.visibleBounds
                     assertTrue("Empty library control ${it.contentDescription ?: it.text} $bounds outside $safe", safe.contains(bounds))
                 }
@@ -317,9 +318,9 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 }
             }
             screen.instrumentation.waitForIdleSync()
-            val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
             ready()
-            val controls = screen.device.findObjects(By.pkg(screen.context.packageName).clickable(true))
+            val controls = screen.freshControls()
+            val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
             assertTrue("No $name controls found", controls.isNotEmpty())
             screen.capture("$name-side-bar-$orientation")
             controls.forEach {

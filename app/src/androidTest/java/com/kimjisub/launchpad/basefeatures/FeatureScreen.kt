@@ -53,10 +53,34 @@ class FeatureScreen {
         configurator.waitForIdleTimeout = minOf(previous, 500L)
         return try { block() } finally { configurator.waitForIdleTimeout = previous }
     }
-    /** A window/locale transition can leave UiAutomation's previous tree cached during transitions. */
-    private fun freshNode(selector: BySelector): UiObject2? = withResponsiveInput {
+    /** A window/locale transition can leave UiAutomation's previous tree cached; API 33 has no cache to clear. */
+    private fun clearNodeCache() {
         if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
+    }
+    private fun freshNode(selector: BySelector): UiObject2? = withResponsiveInput {
+        clearNodeCache()
         device.findObject(selector)
+    }
+    /**
+     * Clickable controls of the resumed screen, read once accessibility places that screen's window where
+     * it is. A rotation the activity handles itself changes no view, so nodes read around it can still
+     * carry the previous rotation's screen coordinates.
+     */
+    fun freshControls(): List<UiObject2> {
+        var controls = emptyList<UiObject2>()
+        var seen = emptyList<Rect>()
+        var window = Rect()
+        await({ "Accessibility placed the window at $seen instead of $window" }) {
+            withResponsiveInput {
+                window = onMain { bounds(resumed().window.decorView) }
+                clearNodeCache()
+                seen = instrumentation.uiAutomation.windows.mapNotNull { it.root }
+                    .filter { it.packageName == context.packageName }
+                    .map { Rect().also(it::getBoundsInScreen) }
+                (window in seen).also { if (it) controls = device.findObjects(By.pkg(context.packageName).clickable(true)) }
+            }
+        }
+        return controls
     }
     fun node(selector: BySelector): UiObject2 = device.wait(
         Condition<UiDevice, UiObject2?> { freshNode(selector) }, 10000
