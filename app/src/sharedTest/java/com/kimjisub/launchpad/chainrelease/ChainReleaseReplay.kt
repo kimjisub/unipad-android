@@ -9,9 +9,10 @@ import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Step
  * Plays the cases of [ChainReleaseCorpus] through one layer of the app ([Driver]) and checks every
  * step. Playback is judged from the audio engine's requests: each play is a start, and a stop
  * request counts only against a voice that is still playing, since a press also asks to stop the
- * pad's previous voice, which has usually ended long before.
+ * pad's previous voice, which has usually ended long before. With [lights] the pack's LED animations
+ * are judged too: the cells lit must be those of the active playbacks.
  */
-class ChainReleaseReplay(private val driver: Driver) {
+class ChainReleaseReplay(private val driver: Driver, private val lights: ChainReleaseLights? = null) {
 	interface Driver {
 		/**
 		 * Whether the layer runs on a virtual clock. Without one, the natural end of finite samples, a
@@ -37,6 +38,8 @@ class ChainReleaseReplay(private val driver: Driver) {
 		fun plays(): List<Pair<String, Int>>
 		/** Every stop key requested so far. */
 		fun stops(): List<Int>
+		/** Pad cells an LED animation lights now; asked only when the replay has [ChainReleaseLights]. */
+		fun litCells(): Set<Pad> = emptySet()
 		/** Called once a step passed, with a name like `CR-001-4` for its record. */
 		fun stepChecked(name: String) = Unit
 	}
@@ -50,6 +53,7 @@ class ChainReleaseReplay(private val driver: Driver) {
 		val playing = LinkedHashSet<Int>()
 		val pads = HashMap<String, Pad>()
 		val held = HashSet<String>()
+		val cells = HashMap<String, Pad>()
 		var seenPlays = driver.plays().size
 		var seenStops = driver.stops().size
 
@@ -59,6 +63,7 @@ class ChainReleaseReplay(private val driver: Driver) {
 				record += "$name: not checked without a virtual clock"
 				return@forEachIndexed
 			}
+			lights?.let { for (start in step.expected.starts) cells[start.playbackId] = it.cellOf(step.expected.chain, start.pad, start.file) }
 			driver.advanceTo(step.atMs)
 			val delivered = when (val input = step.input) {
 				is Input.Press -> {
@@ -101,6 +106,16 @@ class ChainReleaseReplay(private val driver: Driver) {
 				val active = labels.filter { driver.virtualTime || it.value }.keys
 				val expectedActive = expected.active.filter { driver.virtualTime || labels[it] != false }.toSet()
 				if (active != expectedActive) return "$name: playing $active, expected $expectedActive"
+				lights?.let {
+					// Without a virtual clock a finite animation may end a little early or late, so only endless ones are judged.
+					val judged = if (driver.virtualTime) it.all else it.endless
+					val lit = driver.litCells() intersect judged
+					val expectedLit = expected.active.map(cells::getValue).filter(judged::contains).toSet()
+					if (lit != expectedLit) {
+						fun named(pads: Set<Pad>) = pads.map { pad -> cells.filterValues { it == pad }.keys.sorted().joinToString("/").ifEmpty { "$pad" } }.toSet()
+						return "$name: lights of ${named(lit)} lit, expected ${named(expectedLit)}"
+					}
+				}
 				val chain = driver.chain()
 				if (chain != expected.chain && (driver.virtualTime || !chainMovesOnTimer)) return "$name: chain ${chain + 1}, expected ${expected.chain + 1}"
 				val pressed = driver.pressedPads()

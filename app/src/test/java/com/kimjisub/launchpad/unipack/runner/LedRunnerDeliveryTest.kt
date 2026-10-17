@@ -341,11 +341,12 @@ class LedRunnerDeliveryTest {
 	}
 
 	/**
-	 * The UI thread walks the runner's animation list (eventOn/eventOff from a touch, isEventExist and
-	 * eventOffAll from ledInit) while a tick may add the animations started since the last one. 4.0.1
-	 * walked it without the runner lock and crashed with ConcurrentModificationException (Crashlytics
-	 * dff744e1, LedRunner.searchEvent from padTouch). [walk] pauses on its first animation while a tick
-	 * runs on the LED thread, so a walk the tick can overlap fails every time.
+	 * The UI thread walks the runner's animation list (eventOn from a touch, isEventExist and eventOffAll
+	 * from ledInit) while a tick may add the animations started since the last one. 4.0.1 walked it
+	 * without the runner lock and crashed with ConcurrentModificationException (Crashlytics dff744e1,
+	 * LedRunner.searchEvent from padTouch). [walk] pauses on its first animation while a tick runs on the
+	 * LED thread, so a walk the tick can overlap fails every time. A release does not walk the list: it
+	 * ends the animation its press kept.
 	 */
 	private fun assertNoTickChangesTheListDuring(walk: () -> Unit) {
 		val walker = Thread.currentThread()
@@ -395,9 +396,6 @@ class LedRunnerDeliveryTest {
 
 	@Test
 	fun press_neverWalksTheAnimationListWhileATickChangesIt() = assertNoTickChangesTheListDuring { runner.eventOn(0, 0) }
-
-	@Test
-	fun release_neverWalksTheAnimationListWhileATickChangesIt() = assertNoTickChangesTheListDuring { runner.eventOff(0, 0) }
 
 	/** Asks for a pad with no animation, so the walk does not stop at the first match. */
 	@Test
