@@ -57,6 +57,26 @@ class FeatureScreen {
         if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
         device.findObject(selector)
     }
+    /**
+     * Clickable controls of the resumed screen, read once accessibility places that screen's window where
+     * it is. A rotation the activity handles itself changes no view, so nodes read around it can still
+     * carry the previous rotation's screen coordinates.
+     */
+    fun freshControls(): List<UiObject2> {
+        var controls = emptyList<UiObject2>()
+        var seen = emptyList<Rect>()
+        val window = onMain { bounds(resumed().window.decorView) }
+        await({ "Accessibility placed the window at $seen instead of $window" }) {
+            withResponsiveInput {
+                if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
+                seen = instrumentation.uiAutomation.windows.mapNotNull { it.root }
+                    .filter { it.packageName == context.packageName }
+                    .map { Rect().also(it::getBoundsInScreen) }
+                (window in seen).also { if (it) controls = device.findObjects(By.pkg(context.packageName).clickable(true)) }
+            }
+        }
+        return controls
+    }
     fun node(selector: BySelector): UiObject2 = device.wait(
         Condition<UiDevice, UiObject2?> { freshNode(selector) }, 10000
     )

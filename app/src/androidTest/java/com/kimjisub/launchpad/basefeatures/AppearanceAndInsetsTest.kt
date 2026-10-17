@@ -205,7 +205,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
                 screen.node(By.clickable(true).hasDescendant(By.text(screen.text(R.string.guide_import_external))))
                 screen.capture("empty-library-gesture-navigation")
-                screen.device.findObjects(By.pkg(screen.context.packageName).clickable(true)).forEach {
+                screen.freshControls().forEach {
                     val bounds = it.visibleBounds
                     assertTrue("Empty library control ${it.contentDescription ?: it.text} $bounds outside $safe", safe.contains(bounds))
                 }
@@ -319,7 +319,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             screen.instrumentation.waitForIdleSync()
             val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
             ready()
-            val controls = screen.device.findObjects(By.pkg(screen.context.packageName).clickable(true))
+            val controls = screen.freshControls()
             assertTrue("No $name controls found", controls.isNotEmpty())
             screen.capture("$name-side-bar-$orientation")
             controls.forEach {
