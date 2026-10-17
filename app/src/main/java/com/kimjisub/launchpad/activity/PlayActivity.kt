@@ -663,12 +663,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+					// While the scrim fades out of a closed window, a pad pressed under it plays.
 					Box(
 						modifier = Modifier
 							.fillMaxSize()
 							.background(PlayPalette.optionScrim)
 							.focusProperties { canFocus = false }
-							.clickable { vm.toggleOptionWindow(false) }
+							.then(if (vm.isOptionWindowVisible) Modifier.clickable { vm.toggleOptionWindow(false) } else Modifier)
 					)
 				}
 				AnimatedVisibility(
