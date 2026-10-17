@@ -52,9 +52,12 @@ class FeatureScreen {
         configurator.waitForIdleTimeout = minOf(previous, 500L)
         return try { block() } finally { configurator.waitForIdleTimeout = previous }
     }
-    /** A window/locale transition can leave UiAutomation's previous tree cached during transitions. */
-    private fun freshNode(selector: BySelector): UiObject2? = withResponsiveInput {
+    /** A window/locale transition can leave UiAutomation's previous tree cached; API 33 has no cache to clear. */
+    private fun clearNodeCache() {
         if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
+    }
+    private fun freshNode(selector: BySelector): UiObject2? = withResponsiveInput {
+        clearNodeCache()
         device.findObject(selector)
     }
     /**
@@ -65,10 +68,11 @@ class FeatureScreen {
     fun freshControls(): List<UiObject2> {
         var controls = emptyList<UiObject2>()
         var seen = emptyList<Rect>()
-        val window = onMain { bounds(resumed().window.decorView) }
+        var window = Rect()
         await({ "Accessibility placed the window at $seen instead of $window" }) {
             withResponsiveInput {
-                if (android.os.Build.VERSION.SDK_INT >= 34) instrumentation.uiAutomation.clearCache()
+                window = onMain { bounds(resumed().window.decorView) }
+                clearNodeCache()
                 seen = instrumentation.uiAutomation.windows.mapNotNull { it.root }
                     .filter { it.packageName == context.packageName }
                     .map { Rect().also(it::getBoundsInScreen) }
