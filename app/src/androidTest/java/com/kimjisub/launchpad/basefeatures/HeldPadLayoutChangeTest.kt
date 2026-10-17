@@ -95,7 +95,7 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
                 listOf(MotionEvent.TOOL_TYPE_FINGER), cancels.map { it.actor.toolType })
             // The cancel is the end of the touch: the pad must already be dark and silent.
             assertHeldStill("After the system cancelled the touch at $context", listOf(held), emptySet())
-            fingers.forgetCancelled()
+            forgetCancelledFingers("After the system cancelled the touch at $context")
         } else {
             val lit = litCells()
             val looping = loopingCells().toSet()
