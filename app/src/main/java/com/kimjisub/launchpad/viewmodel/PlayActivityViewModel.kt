@@ -748,9 +748,9 @@ class PlayActivityViewModel(
 	private fun stopLoopingLeds(runner: LedRunner) {
 		for (i in 0 until unipack.buttonX)
 			for (j in 0 until unipack.buttonY)
-				if (runner.isEventExist(i, j)) runner.eventOffAll(i, j)
+				runner.eventOffAll(i, j)
 		for (i in 0 until FUNCTION_KEY_COUNT)
-			if (runner.isEventExist(-1, i)) runner.eventOffAll(-1, i)
+			runner.eventOffAll(-1, i)
 	}
 
 	private fun clearLeds() {

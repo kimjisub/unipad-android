@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * eventOn queues a pressed pad's animation for the next tick, which plays it from the press time. A
- * release or an LED switch-off that lands before that tick must still reach it, otherwise an endless
- * (loop 0) animation starts after the finger is already up and nothing ever stops it.
+ * release, or the eventOffAll an autoplay control sends to every pad, that lands before that tick must
+ * still reach it, otherwise an endless (loop 0) animation starts after it was told to stop.
  * Ticks are driven through the private loop() at a controlled clock, as in [LedRunnerToggleTest].
  */
 class LedRunnerQuickReleaseTest {
@@ -82,7 +82,7 @@ class LedRunnerQuickReleaseTest {
 	}
 
 	@Test
-	fun infinite_ledSwitchOffBeforeFirstTick_neverPlays() {
+	fun infinite_offAllBeforeFirstTick_neverPlays() {
 		setUpRunner(loop = 0)
 		runner.eventOn(0, 0)
 		runner.eventOffAll(0, 0)
