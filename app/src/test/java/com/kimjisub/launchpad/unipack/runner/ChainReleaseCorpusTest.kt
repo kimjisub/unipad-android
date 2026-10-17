@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.unipack.runner
 
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
-import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
 import com.kimjisub.launchpad.chainrelease.ChainReleaseReplay
@@ -28,8 +27,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
-import java.util.IdentityHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -69,34 +66,8 @@ class ChainReleaseCorpusTest(private val id: String) {
 		record.forEach(::println)
 	}
 
-	/** Stands in for the native engine; a voice's stop key is its 1-based position in [plays]. */
-	private class RecordingEngine : SoundRunner.Engine {
-		private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, String>()
-		private val names = HashMap<Int, String>()
-		val plays = CopyOnWriteArrayList<Pair<String, Int>>()
-		val stops = CopyOnWriteArrayList<Int>()
-
-		override fun start() = true
-		override fun stop() {}
-		override fun decode(file: File) =
-			OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file.name } }
-		override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = synchronized(this) {
-			names.size.also { names[it] = this.decoded.getValue(decoded) }
-		}
-		override fun unloadSound(soundId: Int) {}
-		override fun unloadAll() {}
-		@Synchronized override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-			plays += names.getValue(soundId) to loop
-			return plays.size
-		}
-		override fun stopVoice(stopKey: Int) {
-			stops += stopKey
-		}
-		override fun stopAllVoices() {}
-	}
-
 	private inner class Driver(private val pack: UniPack) : ChainReleaseReplay.Driver {
-		private val engine = RecordingEngine()
+		private val engine = RecordingSoundEngine()
 		private val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 		private val tracker = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 		private val pointers = HashMap<String, Long>()
