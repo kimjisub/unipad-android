@@ -159,7 +159,6 @@ class PlayActivityViewModel(
 
 	// Unipack loading state
 	var unipackLoading by mutableStateOf(true)
-	var unipackLoadError by mutableStateOf<String?>(null)
 	var loadingPhase by mutableStateOf("")
 	var loadingPhaseIndex by mutableIntStateOf(0)
 	var loadingPhaseTotal by mutableIntStateOf(1)
@@ -522,11 +521,23 @@ class PlayActivityViewModel(
 		for ((x, y) in pads) if (!heldOnScreen(x, y)) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
+	/** A pad auto play presses or releases, [atMs] (SystemClock.elapsedRealtime) being when the pack places it. */
+	internal fun autoPlayPadTouch(x: Int, y: Int, upDown: Boolean, atMs: Long) =
+		padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, source = null, atMs = atMs)
+
 	/**
 	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence;
-	 * [source] is what the person pressed it on.
+	 * [source] is what the person pressed it on. The pad's LED animation runs from [atMs], however
+	 * long the event took to get here.
 	 */
-	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger, source: InputSource? = null) {
+	private fun padEvent(
+		x: Int,
+		y: Int,
+		upDown: Boolean,
+		pressedBy: PlayTrigger,
+		source: InputSource?,
+		atMs: Long = SystemClock.elapsedRealtime(),
+	) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -553,12 +564,12 @@ class PlayActivityViewModel(
 					channelManager.add(x, y, Channel.PRESSED, ChannelManager.NO_COLOR, LED_RED)
 					uiCallback?.setLedPad(x, y)
 				}
-				ledRunner?.eventOn(x, y)
+				ledRunner?.eventOn(x, y, atMs)
 			} else {
 				soundRunner?.soundOff(x, y)
 				channelManager.remove(x, y, Channel.PRESSED)
 				uiCallback?.setLedPad(x, y)
-				ledRunner?.eventOff(x, y)
+				ledRunner?.eventOff(x, y, atMs)
 			}
 		} catch (e: ArrayIndexOutOfBoundsException) {
 			Log.err("padTouch ArrayIndexOutOfBounds", e)
@@ -941,12 +952,12 @@ class PlayActivityViewModel(
 					}
 				}
 
-				override fun onPadTouchOn(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, true, PlayTrigger.AUTOPLAY) }
+				override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
+					viewModelScope.launch { autoPlayPadTouch(x, y, true, atMs) }
 				}
 
-				override fun onPadTouchOff(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, false, PlayTrigger.AUTOPLAY) }
+				override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
+					viewModelScope.launch { autoPlayPadTouch(x, y, false, atMs) }
 				}
 
 				override fun onChainChange(c: Int) {
