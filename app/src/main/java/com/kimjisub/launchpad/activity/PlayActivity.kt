@@ -1381,6 +1381,8 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
+	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1389,6 +1391,7 @@ class PlayActivity : BaseActivity() {
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
 		releaseLaunchpadPads()
+		padTouch.cancel()
 	}
 
 	override fun onStart() {
