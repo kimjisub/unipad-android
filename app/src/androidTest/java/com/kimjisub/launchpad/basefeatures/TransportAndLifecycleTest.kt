@@ -130,8 +130,7 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         val silenceCount = audio.silences.get()
         val stopCount = audio.stops.get()
         val loadedSounds = audio.loaded.toMap()
-        screen.goHome()
-        screen.await("Home did not hide play") { screen.onMain { !vm.screenVisible } }
+        screen.goHome { screen.onMain { !vm.screenVisible } }
         screen.await("Leaving play did not silence voices") { audio.silences.get() > silenceCount }
         // Android 17 mutes, or with strict hardening aborts, an app whose stream stays open unseen.
         screen.await("Leaving play left the audio stream open") { audio.stops.get() > stopCount }

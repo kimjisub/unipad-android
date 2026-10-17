@@ -16,6 +16,13 @@ if [[ "$($adb_bin -s "$serial" shell settings get global airplane_mode_on | tr -
   echo 'Disable network on the test device before running (see README).' >&2
   exit 2
 fi
+# The suite runs every @Test of the classes it lists; count them so the footer check keeps up with new tests.
+if ! counted="$(python3 scripts/check_connected_results.py \
+    --suite app/src/androidTest/java/com/kimjisub/launchpad/basefeatures/BaseFeaturesSuite.kt app)"; then
+  echo "$counted" >&2
+  exit 2
+fi
+expected="${counted#suite_expected=}"
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
@@ -23,12 +30,6 @@ fi
 # Direct am instrument bypasses Gradle's force-aot-compilation setup.
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test; do
   "$adb_bin" -s "$serial" shell cmd package compile -f -m speed "$package"
-done
-# The suite runs every @Test of the classes it lists; count them so the footer check keeps up with new tests.
-suite=app/src/androidTest/java/com/kimjisub/launchpad/basefeatures
-expected=0
-for class in $(sed -n 's/^ *\([A-Za-z0-9_]*\)::class,$/\1/p' "$suite/BaseFeaturesSuite.kt"); do
-  expected=$((expected + $(grep -cE '^[[:space:]]*@Test([^A-Za-z]|$)' "$suite/$class.kt")))
 done
 output="$(mktemp "${TMPDIR:-/tmp}/basefeatures.XXXXXX")"
 trap 'rm -f "$output"' EXIT

@@ -137,16 +137,17 @@ class FeatureScreen {
     /**
      * Presses Home and waits for the launcher. pressHome() waits only 1 second for an accessibility
      * event, even if Home succeeded, so this requires the key injection and the launcher in front
-     * under the usual deadline. The launcher is resolved through the device shell: target package
-     * visibility can hide it and make UiDevice.launcherPackageName return Settings' fallback home.
+     * under the usual deadline, together with [left]: what leaving must have done to the app. The
+     * launcher is resolved through the device shell: target package visibility can hide it and make
+     * UiDevice.launcherPackageName return Settings' fallback home.
      */
-    fun goHome() {
+    fun goHome(left: () -> Boolean) {
         val launcher = device.executeShellCommand(
             "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
         ).lineSequence().map(String::trim).lastOrNull { it.contains('/') }?.substringBefore('/')
         assertNotNull("Default launcher missing", launcher)
         assertTrue("Home key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
-        await("Home did not show the launcher") { device.currentPackageName == launcher }
+        await("Home did not show the launcher and leave the app") { device.currentPackageName == launcher && left() }
     }
     /** Brings [activity]'s task back in front, as choosing it in recent apps does. */
     fun bringToFront(activity: Activity) {

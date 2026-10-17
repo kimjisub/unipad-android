@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,28 +27,32 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
 
     /** ActivityScenario pauses the play screen by opening a floating activity over it. */
     private fun holdWhilePaused(slide: Boolean) = holdWhileLeaving("pausing the play screen", slide,
-        leave = { play.moveToState(Lifecycle.State.STARTED) },
+        leave = { _ -> play.moveToState(Lifecycle.State.STARTED) },
         back = { play.moveToState(Lifecycle.State.RESUMED) },
     )
 
     private fun holdWhileHome(slide: Boolean) {
-        lateinit var vm: PlayActivityViewModel
         lateinit var activity: android.app.Activity
         holdWhileLeaving("going Home", slide,
-            leave = {
-                vm = screen.vm()
+            leave = { vm ->
                 activity = screen.resumed()
-                screen.goHome()
-                screen.await("Home did not stop the play screen") { screen.onMain { !vm.screenVisible } }
+                screen.goHome { screen.onMain { !vm.screenVisible } }
             },
-            back = {
-                screen.bringToFront(activity)
-                screen.await("Play screen did not come back") { screen.onMain { vm.screenVisible } }
-            },
+            back = { screen.bringToFront(activity) },
         )
     }
 
-    private fun holdWhileLeaving(context: String, slide: Boolean, leave: () -> Unit, back: () -> Unit) {
+    /**
+     * [leave] gets the play screen's state, which [FeatureScreen.vm] cannot reach while the screen
+     * is not resumed. After [back], the play window must be resumed and focused again before the
+     * finger lifts, so the lift reaches it.
+     */
+    private fun holdWhileLeaving(
+        context: String,
+        slide: Boolean,
+        leave: (PlayActivityViewModel) -> Unit,
+        back: () -> Unit,
+    ) {
         startHeld(slide)
         val mode = if (slide) "Slide Mode" else "pad mode"
         val vm = screen.vm()
@@ -56,7 +61,7 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
         awaitHeld("Held pad did not play, light and loop before $context in $mode", setOf(held))
         val receivedBefore = received.events.size
 
-        leave()
+        leave(vm)
         var lit = emptySet<Cell>()
         var looping = emptyList<Cell>()
         screen.await({ "$context in $mode with the finger still down left the pad lit or looping (lit: $lit, looping: $looping)\n$received" }) {
@@ -64,10 +69,13 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
             looping = loopingCells()
             lit.isEmpty() && looping.isEmpty()
         }
+        // The screen can let go of the pad before a system cancel queued behind it is delivered.
+        settle()
         val cancelled = received.events.drop(receivedBefore).any { it.action == MotionEvent.ACTION_CANCEL }
         Log.i(ReceivedInput.TAG, "$context in $mode with a pad held: system ${if (cancelled) "cancelled" else "did not cancel"} the touch")
 
         back()
+        screen.awaitActivity(PlayActivity::class.java)
         if (cancelled) fingers.forgetCancelled() else fingers.up(finger)
         assertHeldStill("After $context in $mode and lifting the finger", listOf(held), emptySet())
 

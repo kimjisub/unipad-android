@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 RUNNER = Path(__file__).resolve().parents[1] / "ci-connected-tests.sh"
+CHECKER = RUNNER.with_name("check_connected_results.py")
 COMMAND = ":app:connectedDebugAndroidTest :design:connectedDebugAndroidTest --no-daemon --console=plain"
 RESULTS = "build/outputs/androidTest-results/connected"
 FIRST = "com.example.FirstTest"
@@ -235,6 +236,42 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                 self.assertIn(selector, result.stderr)
                 self.assertFalse((root / "adb-calls.txt").exists())
                 self.assertFalse((root / "gradle-args.txt").exists())
+
+
+class SuiteCountTest(unittest.TestCase):
+    """`--suite` counts the tests of the classes a JUnit suite lists, from their sources."""
+
+    def count(self, listed, sources):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for class_name, text in sources.items():
+                path = root / "app" / source_path(class_name)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+            entries = "".join(f"    {name}::class,\n" for name in listed)
+            suite = root / "app" / source_path("com.example.ExampleSuite")
+            suite.write_text("package com.example\n\n@RunWith(Suite::class)\n"
+                             f"@Suite.SuiteClasses(\n{entries})\nclass ExampleSuite\n", encoding="utf-8")
+            return subprocess.run(["python3", str(CHECKER), "--suite", str(suite), "app"],
+                                  cwd=root, capture_output=True, text=True)
+
+    def test_counts_only_listed_classes_including_qualified_annotations(self):
+        result = self.count(["FirstTest", SECOND], {
+            FIRST: source(2, FIRST),
+            SECOND: source(1, SECOND).replace("@Test", "@org.junit.Test"),
+            "com.example.UnlistedTest": source(5, "com.example.UnlistedTest"),
+        })
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stdout, "suite_expected=3\n")
+
+    def test_listed_class_without_tests_fails_and_names_it(self):
+        result = self.count(["FirstTest", "EmptyTest"], {
+            FIRST: source(2, FIRST),
+            "com.example.EmptyTest": source(0, "com.example.EmptyTest"),
+        })
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("verdict=fail", result.stdout)
+        self.assertIn("com.example.EmptyTest declares no @Test", result.stdout)
 
 
 if __name__ == "__main__":

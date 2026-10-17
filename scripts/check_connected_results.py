@@ -14,7 +14,10 @@ every test the selected class declares (or the selected method) must be in the J
 and no other test may be. `--plan` prints the modules holding the selection and the
 `tests_regex` runner argument that runs exactly it.
 
-Usage: check_connected_results.py [--expected-only | --plan] [--gradle-output FILE]
+`--suite FILE` prints how many tests the JUnit `@Suite.SuiteClasses` in FILE runs, counted
+the same way from the listed classes' sources; a listed class without tests is an error.
+
+Usage: check_connected_results.py [--expected-only | --plan | --suite FILE] [--gradle-output FILE]
                                   [--test CLASS[#METHOD]]... MODULE...
 Prints `key=value` lines and exits 1 when the run must not count as a success.
 """
@@ -31,6 +34,8 @@ TEST_NAME = re.compile(r"^\s*@(?:org\.junit\.)?Test\b(?:\([^)]*\))?\s*(?:@[\w.]+
                        re.MULTILINE)
 PACKAGE = re.compile(r"^\s*package\s+([\w.]+)", re.MULTILINE)
 SDK_SUPPRESS = re.compile(r"@SdkSuppress\([^)]*\)")
+SUITE_CLASSES = re.compile(r"@(?:Suite\.)?SuiteClasses\((.*?)\)\s*\n", re.DOTALL)
+CLASS_LITERAL = re.compile(r"([\w.]+)::class")
 INSTALL_FAILURE = re.compile(r"Failed to install APK|INSTALL_FAILED")
 RESULTS = Path("build/outputs/androidTest-results/connected")
 OUTCOMES = ("failure", "error", "skipped")
@@ -141,6 +146,29 @@ def plan_selection(selectors, modules):
     return 0
 
 
+def suite_expected(suite, modules):
+    """Print the suite's test count; listed classes resolve like Kotlin names in the suite's package."""
+    text = Path(suite).read_text(encoding="utf-8")
+    listed = SUITE_CLASSES.search(text)
+    names = CLASS_LITERAL.findall(listed.group(1)) if listed else []
+    package = PACKAGE.search(text)
+    classes = source_classes(modules)
+    reasons = [] if names else [f"{suite}: no @Suite.SuiteClasses with ::class entries"]
+    expected = 0
+    for name in names:
+        class_name = name if "." in name or not package else f"{package.group(1)}.{name}"
+        source = classes.get(class_name)
+        if source is None:
+            reasons.append(f"{suite}: {class_name} declares no @Test in {' '.join(modules)}")
+        else:
+            expected += len(source.names) + source.unnamed
+    if reasons:
+        print("\n".join(["verdict=fail"] + [f"reason={reason}" for reason in reasons]))
+        return 1
+    print(f"suite_expected={expected}")
+    return 0
+
+
 def judge_selection(selectors, modules, lines, reasons):
     classes = source_classes(modules)
     selection, unresolved = resolve_selection(selectors, classes)
@@ -187,6 +215,8 @@ def main():
                         help="print the source test counts and exit")
     parser.add_argument("--plan", action="store_true",
                         help="print the modules holding the --test selection and its tests_regex, then exit")
+    parser.add_argument("--suite", metavar="FILE",
+                        help="print the number of tests the JUnit suite in FILE runs, then exit")
     parser.add_argument("--gradle-output", help="Gradle console output to scan for install failures")
     parser.add_argument("--test", action="append", default=[], metavar="CLASS[#METHOD]",
                         help="judge only this selected class or method (repeatable)")
@@ -196,6 +226,8 @@ def main():
         for module in args.modules:
             print(f"{module}_expected={expected_tests(module)}")
         return 0
+    if args.suite:
+        return suite_expected(args.suite, args.modules)
     if args.plan:
         if not args.test:
             parser.error("--plan needs at least one --test")
