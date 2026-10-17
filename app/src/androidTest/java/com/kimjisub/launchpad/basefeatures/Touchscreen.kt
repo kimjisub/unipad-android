@@ -10,8 +10,9 @@ import java.util.UUID
 /**
  * A second touchscreen, created as a kernel input device with the platform `uinput` shell tool, for
  * a finger that must come from another device than the [Mouse]. Events injected through
- * UiAutomation all arrive as one device, so the system ends a held injected mouse press as soon as
- * an injected finger lands; a real mouse and touchscreen are two devices. Positions are in screen
+ * UiAutomation all arrive as one device (`-1`). With a held injected mouse press, API 35 ends that
+ * press as soon as an injected finger lands, and API 37 refuses the finger ("Invalid DOWN event -
+ * pointers already down"); a real mouse and touchscreen are two devices. Positions are in screen
  * coordinates, as with [Fingers]; the device reports them in the display's natural orientation.
  */
 class Touchscreen(

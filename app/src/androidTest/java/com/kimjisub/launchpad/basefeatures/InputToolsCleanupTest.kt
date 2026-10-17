@@ -60,15 +60,18 @@ class InputToolsCleanupTest : HeldPadTest() {
     @Test fun cancelledMouseCleanupLeavesWindowAloneAndAllowsTheNextHover() {
         startHeld()
         val mouse = Mouse(screen)
+        // The finger comes from its own device, as on hardware: Android 17 refuses an injected
+        // finger DOWN while the injected mouse (the same injection device) is still pressed.
+        val touchscreen = Touchscreen(screen)
         try {
             mouse.press(center(Cell(3, 3)))
             awaitHeld("Mouse did not hold its pad", setOf(Cell(3, 3)))
-            val finger = fingers.down(center(Cell(3, 5)))
-            screen.await("Injected finger did not cancel the injected mouse") {
+            val finger = touchscreen.down(center(Cell(3, 5)))
+            screen.await({ "Touchscreen finger did not cancel the injected mouse\n$received" }) {
                 received.events.any { it.action == MotionEvent.ACTION_CANCEL && it.actor.toolType == MotionEvent.TOOL_TYPE_MOUSE }
             }
             mouse.forgetCancelled()
-            fingers.up(finger)
+            touchscreen.up(finger)
             awaitHeld("Cancelled mouse or released finger stayed playing", emptySet())
             val beforeCleanup = received.events.toList()
             mouse.cancelRemaining()
@@ -77,7 +80,7 @@ class InputToolsCleanupTest : HeldPadTest() {
             Mouse(screen).hover(center(Cell(5, 2)))
             assertHeldStill("After hovering with a new mouse helper", listOf(Cell(3, 3), Cell(3, 5)), emptySet())
         } finally {
-            mouse.cancelRemaining()
+            try { mouse.cancelRemaining() } finally { touchscreen.close() }
         }
     }
 }

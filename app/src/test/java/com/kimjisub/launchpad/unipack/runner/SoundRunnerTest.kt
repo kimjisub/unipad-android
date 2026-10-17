@@ -216,7 +216,7 @@ class SoundRunnerTest {
 		val loadsBeforeDestroy = engine.loadCalls.get()
 		runner.destroy()
 		assertTrue("sounds left in the engine: ${engine.liveIds}", engine.liveIds.isEmpty())
-		assertTrue(unipack.sounds().all { it.id == -1 })
+		assertTrue(unipack.sounds().all { it.id == Sound.NOT_LOADED })
 		awaitDecodesDrained(engine)
 		assertEquals("files were loaded after destroy()", loadsBeforeDestroy, engine.loadCalls.get())
 	}
@@ -280,7 +280,7 @@ class SoundRunnerTest {
 		assertTrue(listener.ended.await(5, TimeUnit.SECONDS))
 		assertEquals(3, listener.ticks.get())
 		val idByName = unipack.sounds().associate { it.file.name to it.id }
-		assertEquals(-1, idByName["1.wav"])
+		assertEquals(Sound.UNDECODABLE, idByName["1.wav"])
 		assertTrue(idByName["0.wav"]!! >= 0)
 		assertTrue(idByName["2.wav"]!! >= 0)
 		assertEquals(2, engine.liveIds.size)
@@ -302,7 +302,7 @@ class SoundRunnerTest {
 
 		assertEquals("files were loaded after destroy()", loadsAtDestroy, engine.loadCalls.get())
 		assertTrue("sounds left in the engine: ${engine.liveIds}", engine.liveIds.isEmpty())
-		assertTrue(unipack.sounds().all { it.id == -1 })
+		assertTrue(unipack.sounds().all { it.id == Sound.NOT_LOADED })
 		assertEquals(1L, listener.ended.count)
 		assertEquals(null, listener.failure)
 	}
