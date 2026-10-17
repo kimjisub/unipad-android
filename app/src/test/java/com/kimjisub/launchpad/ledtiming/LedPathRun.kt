@@ -39,6 +39,8 @@ class Recording(
 	val releaseRepaints: Int,
 	/** LED runner commands that went out with another channel's colour on top. */
 	val covered: Int,
+	/** How long after the final release the run gave up with animations still playing; null when they all ended. */
+	val gaveUpAfterReleaseMs: Long?,
 )
 
 /**
@@ -204,11 +206,12 @@ class LedPathRun(private val pack: UniPack) {
 			sleepUntil(releaseAllAtMs)
 			main.runAndWait { padEvent { vm.padInit() } }
 			while (now() < giveUpAtMs && animating()) Thread.sleep(20)
+			val gaveUpAfterReleaseMs = if (animating()) giveUpAtMs - releaseAllAtMs else null
 			// The last tick may still be on its way to main.
 			Thread.sleep(50)
 			ledRunner.stop()
 			main.drain()
-			return main.runAndWait { Recording(ArrayList(handedOver), ArrayList(sent), ArrayList(presses), releaseRepaints, covered) }
+			return main.runAndWait { Recording(ArrayList(handedOver), ArrayList(sent), ArrayList(presses), releaseRepaints, covered, gaveUpAfterReleaseMs) }
 		} finally {
 			autoPlay.stop()
 			if (::ledRunner.isInitialized) ledRunner.stop()
