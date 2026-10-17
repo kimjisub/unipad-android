@@ -130,15 +130,16 @@ class MainThreadFileAccessTest : BaseUITest() {
         launchToMainScreen()
         openTestPackInPlay()
         openPlayOptions()
-        val autoMapping = By.text(AUTO_MAPPING)
+        val autoMapping = By.text(str(R.string.autoMapping))
+        val running = By.text(str(R.string.autoMappingRunning))
         val row = device.wait(Until.findObject(autoMapping), 1000L)
             ?: device.findObject(By.res("play_options"))?.scrollUntil(Direction.DOWN, Until.findObject(autoMapping))
         assertNotNull("Auto Mapping is not offered", row)
 
         watchMainThread()
         row!!.click()
-        assertTrue("Auto Mapping did not start", device.wait(Until.hasObject(By.text(AUTO_MAPPING_RUNNING)), LAUNCH_TIMEOUT))
-        assertTrue("Auto Mapping did not finish", device.wait(Until.gone(By.text(AUTO_MAPPING_RUNNING)), AUTO_MAPPING_TIMEOUT))
+        assertTrue("Auto Mapping did not start", device.wait(Until.hasObject(running), LAUNCH_TIMEOUT))
+        assertTrue("Auto Mapping did not finish", device.wait(Until.gone(running), AUTO_MAPPING_TIMEOUT))
 
         assertTrue("Auto Mapping is not offered again", device.wait(Until.hasObject(autoMapping), LAUNCH_TIMEOUT))
         assertNoWatchedViolations()
@@ -175,8 +176,6 @@ class MainThreadFileAccessTest : BaseUITest() {
         const val LEGACY_PACK = "zz_ui_legacy_unipad_pack"
         const val THEME_FOLDER = "zz_ui_test_theme"
         const val THEME_NAME = "UI Test Theme"
-        const val AUTO_MAPPING = "Auto Mapping"
-        const val AUTO_MAPPING_RUNNING = "Auto Mapping…"
         const val AUTO_MAPPING_TIMEOUT = 60_000L
 
         val WATCHED = listOf(

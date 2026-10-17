@@ -35,6 +35,7 @@
 	<string name="menu">မီနူး</string>
 	<string name="website">ဝက်ဘ်ဆိုက်</string>
 	<string name="measuring">တိုင်းတာနေသည်…</string>
+	<string name="unknownCount">မသိရ</string>
 	<string name="general">အထွေထွေ</string>
 	<string name="notice">အသိပေးချက်</string>
 	<string name="newUniPack">UniPack အသစ်</string>
@@ -93,6 +94,8 @@
 	<string name="hideUI">UI ဖျောက်</string>
 	<string name="watermark">ရေစာ</string>
 	<string name="proLightMode">Pro Light မုဒ်</string>
+	<string name="autoMapping">အလိုအလျောက် မြေပုံဆွဲခြင်း</string>
+	<string name="autoMappingRunning">အလိုအလျောက် မြေပုံဆွဲခြင်း…</string>
 
 	<!--Version-->
 
@@ -255,6 +258,8 @@
 	<string name="backup_grant_access">အရန်ဖိုင်တွဲ ချိတ်ဆက်</string>
 	<string name="backup_revoke">အရန်ဖိုင်တွဲ ချိတ်ဆက်မှု ဖြုတ်</string>
 	<string name="backup_invalid_folder">Documents/Unipad ဖိုင်တွဲကို ရွေးပါ</string>
+	<string name="backup_permission_refused">UniPad သည် ဤဖိုင်တွဲကို ဆက်လက်အသုံးပြုခွင့် မရနိုင်ပါ။ Documents/Unipad ကို ထပ်မံရွေးပါ။</string>
+	<string name="picker_unavailable">ဤစက်ပေါ်တွင် ဖိုင် သို့မဟုတ် ဖိုင်တွဲများကို ရွေးနိုင်သော အက်ပ် မရှိပါ။</string>
 	<string name="backup_backup_button">အရန်သိမ်း</string>
 	<string name="backup_backup_description">UniPacks ကို အရန်ဖိုင်တွဲသို့ ကူးယူ</string>
 	<string name="backup_restore_button">ပြန်လည်ရယူ</string>

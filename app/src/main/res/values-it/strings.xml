@@ -35,6 +35,7 @@
 	<string name="menu">Menu</string>
 	<string name="website">Sito Web</string>
 	<string name="measuring">Misurazione…</string>
+	<string name="unknownCount">Sconosciuto</string>
 	<string name="general">Generale</string>
 	<string name="notice">Avviso</string>
 	<string name="newUniPack">Nuovo UniPack</string>
@@ -93,6 +94,18 @@
 	<string name="hideUI">Nascondi UI</string>
 	<string name="watermark">Filigrana</string>
 	<string name="proLightMode">Modalità Pro Light</string>
+	<string name="play_section_play_mode">Modalità di gioco</string>
+	<string name="play_section_performance">Esecuzione</string>
+	<string name="play_section_display">Visualizzazione</string>
+	<string name="play_section_tools">Strumenti</string>
+	<string name="autoMapping">Mappatura Automatica</string>
+	<string name="autoMappingRunning">Mappatura Automatica…</string>
+	<string name="play_info_untitled">Senza titolo</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d catena"</item>
+		<item quantity="many">"%1$d×%2$d  ·  %3$d catene"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d catene"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -255,6 +268,8 @@
 	<string name="backup_grant_access">Connetti cartella di backup</string>
 	<string name="backup_revoke">Disconnetti cartella di backup</string>
 	<string name="backup_invalid_folder">Seleziona la cartella Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad non è riuscito a mantenere l\'accesso a questa cartella. Scegli di nuovo Documents/Unipad.</string>
+	<string name="picker_unavailable">Nessuna app su questo dispositivo può scegliere file o cartelle.</string>
 	<string name="backup_backup_button">Backup</string>
 	<string name="backup_backup_description">Copia UniPacks nella cartella di backup</string>
 	<string name="backup_restore_button">Ripristina</string>

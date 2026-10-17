@@ -35,6 +35,7 @@
 	<string name="menu">Menü</string>
 	<string name="website">Web Sitesi</string>
 	<string name="measuring">Ölçülüyor…</string>
+	<string name="unknownCount">Bilinmiyor</string>
 	<string name="general">Genel</string>
 	<string name="notice">Bildirim</string>
 	<string name="newUniPack">Yeni UniPack</string>
@@ -93,6 +94,17 @@
 	<string name="hideUI">Arayüzü Gizle</string>
 	<string name="watermark">Filigran</string>
 	<string name="proLightMode">Pro Işık Modu</string>
+	<string name="play_section_play_mode">Çalma Modu</string>
+	<string name="play_section_performance">Performans</string>
+	<string name="play_section_display">Görünüm</string>
+	<string name="play_section_tools">Araçlar</string>
+	<string name="autoMapping">Otomatik Eşleme</string>
+	<string name="autoMappingRunning">Otomatik Eşleme…</string>
+	<string name="play_info_untitled">Başlıksız</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d zincir"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d zincir"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -255,6 +267,8 @@
 	<string name="backup_grant_access">Yedek Klasörü Bağla</string>
 	<string name="backup_revoke">Yedek Klasörü Bağlantısını Kes</string>
 	<string name="backup_invalid_folder">Lütfen Documents/Unipad klasörünü seçin</string>
+	<string name="backup_permission_refused">UniPad bu klasöre erişimi koruyamadı. Documents/Unipad klasörünü yeniden seçin.</string>
+	<string name="picker_unavailable">Bu cihazda dosya veya klasör seçebilen bir uygulama yok.</string>
 	<string name="backup_backup_button">Yedekle</string>
 	<string name="backup_backup_description">UniPack\'ları yedek klasörüne kopyala</string>
 	<string name="backup_restore_button">Geri Yükle</string>

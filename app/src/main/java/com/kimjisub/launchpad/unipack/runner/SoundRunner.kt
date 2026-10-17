@@ -27,6 +27,10 @@ class SoundRunner(
 ) {
 
 	private var stopKey: Array<Array<Array<Int>>>
+
+	// Stop key of the infinite loop the press of each held pad (x, y) started, 0 when none. Its release
+	// stops that voice even when the chain or the pad's next sound changed while it was held.
+	private val heldLoop = Array(unipack.buttonX) { IntArray(unipack.buttonY) }
 	@Volatile
 	private var engineStarted = false
 
@@ -181,15 +185,22 @@ class SoundRunner(
 	}
 
 	fun soundOn(x: Int, y: Int) {
-		engine.stopVoice(stopKey[chain.value][x][y])
+		val restarted = stopKey[chain.value][x][y]
+		engine.stopVoice(restarted)
+		// A press made on another chain while the pad is still held replaces its key below; stop
+		// that earlier loop now, as a press on the same chain does, or nothing could stop it.
+		if (heldLoop[x][y] != restarted) soundOff(x, y)
+		heldLoop[x][y] = 0
 		val sound: Sound? = unipack.soundGet(chain.value, x, y)
 		if (sound != null && sound.id >= 0) {
-			stopKey[chain.value][x][y] = engine.play(
+			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
 				volumeR = 1.0f,
 				loop = sound.loop,
 			)
+			stopKey[chain.value][x][y] = key
+			heldLoop[x][y] = if (sound.loop == -1) key else 0
 			unipack.soundPush(chain.value, x, y)
 			if (sound.wormhole != Sound.NO_WORMHOLE)
 				scope.launch(Dispatchers.Main) {
@@ -200,9 +211,10 @@ class SoundRunner(
 	}
 
 	fun soundOff(x: Int, y: Int) {
-		val sound = unipack.soundGet(chain.value, x, y)
-		if (sound != null && sound.loop == -1)
-			engine.stopVoice(stopKey[chain.value][x][y])
+		val key = heldLoop[x][y]
+		if (key == 0) return
+		heldLoop[x][y] = 0
+		engine.stopVoice(key)
 	}
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */

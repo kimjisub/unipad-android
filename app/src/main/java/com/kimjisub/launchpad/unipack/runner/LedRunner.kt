@@ -11,6 +11,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.PriorityQueue
 import kotlin.system.measureTimeMillis
 
 class LedRunner(
@@ -21,12 +22,18 @@ class LedRunner(
 ) {
 	companion object {
 		private const val CIRCULAR_LED_COUNT = 36
+
+		// How long a finished animation is kept for a press that reaches the runner after it finished but
+		// was placed before: autoplay's presses come by way of the main thread, a few milliseconds late.
+		private const val LATE_PRESS_MS = 1_000L
 	}
 
 	private val btnLed: Array<Array<Led?>> = Array(unipack.buttonX) { arrayOfNulls<Led>(unipack.buttonY) }
 	private val cirLed: Array<Led?> = arrayOfNulls<Led>(CIRCULAR_LED_COUNT)
 	private var ledAnimationStates: MutableList<LedAnimationState> = mutableListOf()
 	private val ledAnimationStatesAdd: MutableList<LedAnimationState> = mutableListOf()
+	// Numbers presses and releases, so steps due in the same millisecond play in the order they were asked for.
+	private var requests = 0L
 
 	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -85,133 +92,51 @@ class LedRunner(
 		val changes = ArrayList<LedChange>()
 		synchronized(this) {
 			val currTime = SystemClock.elapsedRealtime()
-			for (state in ledAnimationStates) {
-				if (state.isPlaying && !state.isShutdown) {
-					// Init if First
-					if (state.delay == 0L) state.delay = currTime
-					var processed = 0
-					while (true) {
-						// Counting Up Loop Progress
-						val ledEvents = state.ledAnimation?.ledEvents ?: break
-						// An empty keyLED file gives an animation with no events; with loop 0 the old code
-						// spun into ledEvents[0] on an empty list (Crashlytics a1376611).
-						if (ledEvents.isEmpty()) {
-							state.isPlaying = false
-							break
-						}
-						// An animation with no delay lines never pushes state.delay past currTime, so
-						// this loop would run forever while holding the monitor and the next padTouch
-						// would block into an ANR. One tick may consume at most one full pass per loop.
-						// Only endless (loop 0) animations reach the cap: they yield to the next tick and
-						// keep playing, so eventOff still shuts them down and turns their LEDs off. The
-						// backlog is dropped, otherwise a strobe shorter than a tick falls further behind
-						// real time every tick and a GC stall leaves it lagging for many ticks.
-						val loopCount = state.ledAnimation.loop.coerceAtLeast(1)
-						if (++processed > ledEvents.size * loopCount + 1) {
-							state.delay = currTime
-							break
-						}
-						if (state.index >= ledEvents.size) {
-							state.loopProgress++
-							state.index = 0
-						}
-						// Stop if Loop is Done
-						if (state.ledAnimation.loop != 0 && state.ledAnimation.loop <= state.loopProgress) {
-							state.isPlaying = false
-							break
-						}
-						if (state.delay <= currTime) {
-							try {
-								when (val event = state.ledAnimation.ledEvents[state.index]) {
-									is LedAnimation.LedEvent.On -> {
-										val x = event.x
-										val y = event.y
-										val color = event.color
-										val velocity = event.velocity
-
-										// Recorded after the table write, which rejects a coordinate outside the grid:
-										// the change is applied later, outside the catch below.
-										if (x != -1) {
-											btnLed[x][y] = Led(state.buttonX, state.buttonY, state.chainAtCreation)
-											changes.add(LedChange.PadOn(x, y, color, velocity))
-										} else {
-											cirLed[y] = Led(state.buttonX, state.buttonY, state.chainAtCreation)
-											changes.add(LedChange.ChainLedOn(y, color, velocity))
-										}
-									}
-
-									is LedAnimation.LedEvent.Off -> {
-										val x = event.x
-										val y = event.y
-
-										if (x != -1) {
-											if (btnLed[x][y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-												changes.add(LedChange.PadOff(x, y))
-												btnLed[x][y] = null
-											}
-										} else {
-											if (cirLed[y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-												changes.add(LedChange.ChainLedOff(y))
-												cirLed[y] = null
-											}
-										}
-									}
-
-									is LedAnimation.LedEvent.Delay -> {
-										state.delay += event.delay.toLong()
-									}
-
-									is LedAnimation.LedEvent.Chain -> {
-										// Not chain.value here: ChainObserver runs its observers synchronously and
-										// they touch UI state, so the listener applies the change on main.
-										changes.add(LedChange.ChainChange(event.chain))
-									}
-								}
-							} catch (ex: IndexOutOfBoundsException) {
-								Log.err("LED event index out of bounds", ex)
-							}
-						} else break
-						state.index++
-					}
-				} else if (state.isShutdown) {
-					for (x in 0 until unipack.buttonX) {
-						for (y in 0 until unipack.buttonY) {
-							if (btnLed[x][y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-								changes.add(LedChange.PadOff(x, y))
-								btnLed[x][y] = null
-							}
-						}
-					}
-					for (y in cirLed.indices) {
-						if (cirLed[y]?.equal(state.buttonX, state.buttonY, state.chainAtCreation) == true) {
-							changes.add(LedChange.ChainLedOff(y))
-							cirLed[y] = null
-						}
-					}
-					state.remove = true
-				} else {
-					state.remove = true
-				}
-			}
-			for (item in ledAnimationStatesAdd)
-				ledAnimationStates.add(item)
+			ledAnimationStates.addAll(ledAnimationStatesAdd)
 			ledAnimationStatesAdd.clear()
+			// Animations interleave in the order their steps fell due, so a late tick still gives an LED that
+			// two animations write a few milliseconds apart the colours in the pack's order.
+			val due = PriorityQueue<Step>()
+			for (state in ledAnimationStates) {
+				state.processed = 0
+				state.nextStep(currTime)?.let(due::add)
+			}
+			while (true) {
+				val step = due.poll() ?: break
+				if (step.isShutdown) step.state.shutDown(changes) else step.state.playEvent(step.at, changes)
+				step.state.nextStep(currTime)?.let(due::add)
+			}
 			ledAnimationStates.removeAll { it.remove }
 		}
 		if (changes.isNotEmpty()) listener.onLedChanges(changes)
 	}
 
+	/**
+	 * An animation's next event, or its shutdown, due [at]. Steps due in the same millisecond play the
+	 * events of animations already running, then the shutdowns the presses and releases of that
+	 * millisecond cause, then the first events of the animations those presses start; each group in the
+	 * order of the presses and releases ([order]).
+	 */
+	internal class Step(val state: LedAnimationState, val at: Long, val rank: Int, val order: Long, val isShutdown: Boolean) : Comparable<Step> {
+		override fun compareTo(other: Step): Int = compareValuesBy(this, other, Step::at, Step::rank, Step::order)
+
+		companion object {
+			const val RUNNING = 0
+			const val SHUTDOWN = 1
+			const val STARTING = 2
+		}
+	}
 
 	fun launch() {
 		Log.thread("[Led] 1. Request Coroutine")
 		if (job?.isActive != true) {
-			// Finite animations survive stop() (eventOffAll only shuts loop 0 down). Their `delay` is an
-			// absolute deadline, so it is pushed back by the paused time: resuming neither replays what was
-			// scheduled while stopped in one burst nor cuts short a wait that was still pending.
+			// Finite animations survive stop() (eventOffAll only shuts loop 0 down). Their times are absolute,
+			// so they are pushed back by the paused time: resuming neither replays what was scheduled while
+			// stopped in one burst nor cuts short a wait that was still pending.
 			synchronized(this) {
 				pausedAt?.let { since ->
 					val pausedFor = SystemClock.elapsedRealtime() - since
-					for (state in ledAnimationStates) if (state.delay != 0L) state.delay += pausedFor
+					for (state in ledAnimationStates) state.resume(since, pausedFor)
 				}
 				pausedAt = null
 			}
@@ -251,7 +176,7 @@ class LedRunner(
 	private fun searchEvent(x: Int, y: Int, chain: Int): LedAnimationState? {
 		synchronized(this) {
 			for (state in ledAnimationStates) {
-				if (state.equal(x, y, chain)) {
+				if (state.equal(x, y, chain) && state.isPlaying) {
 					return state
 				}
 			}
@@ -263,32 +188,39 @@ class LedRunner(
 
 	fun isEventExist(x: Int, y: Int): Boolean {
 		synchronized(this) {
-			return ledAnimationStates.any { it.buttonX == x && it.buttonY == y }
+			return ledAnimationStates.any { it.buttonX == x && it.buttonY == y && it.isPlaying }
 		}
 	}
 
-	fun eventOn(x: Int, y: Int) {
+	/**
+	 * A press of pad ([x], [y]) at [pressedAt] (SystemClock.elapsedRealtime): the pad's running animation
+	 * ends there and its new one starts there, however late the loop gets to them.
+	 */
+	fun eventOn(x: Int, y: Int, pressedAt: Long = SystemClock.elapsedRealtime()) {
 		if (active) {
 			synchronized(this) {
+				val order = ++requests
 				val currentChain = chain.value
-				for (state in ledAnimationStates) {
-					if (state.equal(x, y, currentChain)) {
-						state.isShutdown = true
+				for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+					for (state in states) {
+						if (state.equal(x, y, currentChain)) state.shutDownAt(pressedAt, order)
 					}
 				}
-				val state = LedAnimationState(x, y)
+				val state = LedAnimationState(x, y, pressedAt, order)
 				if (state.noError) ledAnimationStatesAdd.add(state)
 			}
 		}
 	}
 
-	fun eventOff(x: Int, y: Int) {
+	/** A release of pad ([x], [y]) at [releasedAt]: the pad's endless animation ends there. */
+	fun eventOff(x: Int, y: Int, releasedAt: Long = SystemClock.elapsedRealtime()) {
 		if (active) {
 			synchronized(this) {
+				val order = ++requests
 				val currentChain = chain.value
-				for (state in ledAnimationStates) {
-					if (state.equal(x, y, currentChain) && state.ledAnimation?.loop == 0) {
-						state.isShutdown = true
+				for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+					for (state in states) {
+						if (state.equal(x, y, currentChain) && state.ledAnimation?.loop == 0) state.shutDownAt(releasedAt, order)
 					}
 				}
 			}
@@ -299,9 +231,12 @@ class LedRunner(
 		// No `active` guard: ledInit() calls this right after stop() to shut the looping
 		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
 		synchronized(this) {
-			for (state in ledAnimationStates) {
-				if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
-					state.isShutdown = true
+			for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+				for (state in states) {
+					if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
+						// Before anything still due: nothing more of it plays.
+						state.shutDownAt(Long.MIN_VALUE, 0)
+					}
 				}
 			}
 		}
@@ -319,13 +254,22 @@ class LedRunner(
 	}
 
 	// Tracks the execution state of a LedAnimation (a collection of LED events).
-	inner class LedAnimationState(val buttonX: Int, val buttonY: Int) {
+	inner class LedAnimationState(val buttonX: Int, val buttonY: Int, startedAt: Long, private val order: Long) {
 		var index = 0
-		var delay: Long = 0
+		/** When the animation was pressed, on the SystemClock.elapsedRealtime clock. */
+		private var startedAt = startedAt
+		/** When the next event is due. */
+		private var delay: Long = startedAt
 		var isPlaying = true
-		var isShutdown = false
+		/** When a press or release ended the animation; what fell due before then still plays. */
+		private var shutdownAt: Long? = null
+		private var shutdownOrder = 0L
+		/** When the last event played; null until then, or for an animation with nothing to play. */
+		private var finishedAt: Long? = null
 		var remove = false
 		var loopProgress = 0
+		/** Events played in the current tick. */
+		var processed = 0
 
 		val chainAtCreation: Int = chain.value
 
@@ -342,6 +286,140 @@ class LedRunner(
 			unipack.ledPush(chain.value, buttonX, buttonY)
 
 			ledAnimation = animation
+			// An empty keyLED file gives an animation with no events; with loop 0 the old code
+			// spun into ledEvents[0] on an empty list (Crashlytics a1376611).
+			if (animation?.ledEvents?.isEmpty() == true) isPlaying = false else finishIfDone()
+		}
+
+		internal fun shutDownAt(at: Long, order: Long) {
+			if (shutdownAt.let { it == null || at < it }) {
+				shutdownAt = at
+				shutdownOrder = order
+			}
+		}
+
+		/** A shutdown asked for while stopped takes effect at the moment the runner stopped. */
+		internal fun resume(pausedSince: Long, pausedFor: Long) {
+			startedAt += pausedFor
+			delay += pausedFor
+			finishedAt = finishedAt?.let { it + pausedFor }
+			shutdownAt = shutdownAt?.let { minOf(it, pausedSince) + pausedFor }
+		}
+
+		/** The step due by [currTime], if any; marks the animation for removal once it has none left. */
+		internal fun nextStep(currTime: Long): Step? {
+			val animation = ledAnimation
+			if (remove || animation == null) {
+				remove = true
+				return null
+			}
+			val shutdown = shutdownAt?.let { Step(this, it, Step.SHUTDOWN, shutdownOrder, isShutdown = true) }
+			if (!isPlaying) {
+				// A press placed before the last event still ends the animation and turns its LEDs off.
+				val end = finishedAt
+				if (shutdown != null && end != null && shutdown.at < end) return shutdown
+				if (end == null || currTime - end > LATE_PRESS_MS) remove = true
+				return null
+			}
+			var event: Step? = Step(this, delay, if (delay == startedAt) Step.STARTING else Step.RUNNING, order, isShutdown = false)
+			// An animation with no delay lines never pushes delay past currTime, so it would play forever
+			// while holding the monitor and the next padTouch would block into an ANR. One tick may play at
+			// most one full pass per loop. Only endless (loop 0) animations reach the cap: they yield to the
+			// next tick and keep playing, so eventOff still shuts them down and turns their LEDs off. The
+			// backlog is dropped, otherwise a strobe shorter than a tick falls further behind real time every
+			// tick and a GC stall leaves it lagging for many ticks.
+			if (delay <= currTime && processed > animation.ledEvents.size * animation.loop.coerceAtLeast(1)) {
+				delay = currTime
+				event = null
+			}
+			val next = if (event == null || (shutdown != null && shutdown < event)) shutdown else event
+			return next?.takeIf { it.at <= currTime }
+		}
+
+		/** Plays the event due [at]. */
+		internal fun playEvent(at: Long, changes: MutableList<LedChange>) {
+			val ledEvents = ledAnimation?.ledEvents ?: return
+			processed++
+			try {
+				when (val event = ledEvents[index]) {
+					is LedAnimation.LedEvent.On -> {
+						val x = event.x
+						val y = event.y
+						val color = event.color
+						val velocity = event.velocity
+
+						// Recorded after the table write, which rejects a coordinate outside the grid:
+						// the change is applied later, outside the catch below.
+						if (x != -1) {
+							btnLed[x][y] = Led(buttonX, buttonY, chainAtCreation)
+							changes.add(LedChange.PadOn(x, y, color, velocity))
+						} else {
+							cirLed[y] = Led(buttonX, buttonY, chainAtCreation)
+							changes.add(LedChange.ChainLedOn(y, color, velocity))
+						}
+					}
+
+					is LedAnimation.LedEvent.Off -> {
+						val x = event.x
+						val y = event.y
+
+						if (x != -1) {
+							if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+								changes.add(LedChange.PadOff(x, y))
+								btnLed[x][y] = null
+							}
+						} else {
+							if (cirLed[y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+								changes.add(LedChange.ChainLedOff(y))
+								cirLed[y] = null
+							}
+						}
+					}
+
+					is LedAnimation.LedEvent.Delay -> {
+						delay += event.delay.toLong()
+					}
+
+					is LedAnimation.LedEvent.Chain -> {
+						// Not chain.value here: ChainObserver runs its observers synchronously and
+						// they touch UI state, so the listener applies the change on main.
+						changes.add(LedChange.ChainChange(event.chain))
+					}
+				}
+			} catch (ex: IndexOutOfBoundsException) {
+				Log.err("LED event index out of bounds", ex)
+			}
+			index++
+			finishIfDone()
+			if (!isPlaying) finishedAt = at
+		}
+
+		private fun finishIfDone() {
+			val animation = ledAnimation ?: return
+			if (index >= animation.ledEvents.size) {
+				loopProgress++
+				index = 0
+			}
+			if (animation.loop != 0 && animation.loop <= loopProgress) isPlaying = false
+		}
+
+		/** Turns off every LED this pad and chain lit last. */
+		internal fun shutDown(changes: MutableList<LedChange>) {
+			for (x in 0 until unipack.buttonX) {
+				for (y in 0 until unipack.buttonY) {
+					if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+						changes.add(LedChange.PadOff(x, y))
+						btnLed[x][y] = null
+					}
+				}
+			}
+			for (y in cirLed.indices) {
+				if (cirLed[y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
+					changes.add(LedChange.ChainLedOff(y))
+					cirLed[y] = null
+				}
+			}
+			remove = true
 		}
 	}
 }

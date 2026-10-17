@@ -1,7 +1,9 @@
 package com.kimjisub.design.touch
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PadTouchTrackerTest {
@@ -85,5 +87,55 @@ class PadTouchTrackerTest {
 		t.setGrid(4, 4)
 		t.up(0)
 		assertEquals(listOf(Event(2, 5, true), Event(2, 5, false)), events)
+	}
+
+	@Test
+	fun holds_isTrueOnlyForPadsAFingerIsOn() {
+		val t = tracker(slide = false)
+		t.down(0, 1, 2)
+		t.down(1, 3, 4)
+		assertTrue(t.holds(1, 2))
+		assertTrue(t.holds(3, 4))
+		assertFalse(t.holds(2, 1))
+		assertFalse(t.holds(-1, 2))
+		assertFalse(t.holds(8, 0))
+
+		t.up(0)
+		assertFalse(t.holds(1, 2))
+		assertTrue(t.holds(3, 4))
+	}
+
+	@Test
+	fun cancelReleasesHeldPadsAndTheirLiftReleasesNothingMore() {
+		val t = tracker(slide = false)
+		t.down(0, 1, 2)
+		t.down(1, 3, 4)
+		events.clear()
+		t.cancel()
+		assertEquals(setOf(Event(1, 2, false), Event(3, 4, false)), events.toSet())
+		assertFalse(t.holds(1, 2))
+		assertFalse(t.holds(3, 4))
+
+		events.clear()
+		t.up(0)
+		t.up(1)
+		assertEquals(emptyList<Event>(), events)
+	}
+
+	@Test
+	fun withSlide_aFingerDownAtCancelPressesNothingUntilItLifts() {
+		val t = tracker(slide = true)
+		t.down(0, 1, 2)
+		t.down(1, -1, 0)
+		t.cancel()
+		events.clear()
+		t.move(0, 1, 3)
+		t.move(1, 2, 2)
+		assertEquals(emptyList<Event>(), events)
+
+		t.up(0)
+		t.down(2, 1, 3)
+		t.move(2, 1, 4)
+		assertEquals(listOf(Event(1, 3, true), Event(1, 3, false), Event(1, 4, true)), events)
 	}
 }

@@ -65,6 +65,11 @@ keyPassword=dummy
 # Run one specific method; verify the report contains the intended checks
 ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.AppLaunchTest#testAppLaunch
 
+# Run several classes or methods; fails unless every selected test ran and passed
+# (do not pass a comma-separated class=A,B to Gradle: only A runs, and the build still succeeds)
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.AppLaunchTest com.kimjisub.launchpad.StoreTest#testStoreActivityNavigation
+
 # Run all tests (unit + UI)
 ./gradlew testDebugUnitTest connectedDebugAndroidTest
 ```

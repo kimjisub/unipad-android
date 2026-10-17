@@ -25,14 +25,21 @@ object TestUniPack {
     fun exists(context: Context): Boolean = File(folder(context), "info").isFile
 
     /** [rows] is the pack's `buttonX`, [columns] its `buttonY`; [chains] must be 2 or more for its autoPlay. */
-    fun install(context: Context, squareButton: Boolean = true, rows: Int = 8, columns: Int = 8, chains: Int = CHAINS): File {
+    fun install(
+        context: Context,
+        squareButton: Boolean = true,
+        rows: Int = 8,
+        columns: Int = 8,
+        chains: Int = CHAINS,
+        title: String = TITLE,
+    ): File {
         val root = folder(context)
         root.deleteRecursively()
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
+            "title=$title\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 

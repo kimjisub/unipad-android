@@ -17,16 +17,20 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
-For the deterministic 39-test release subset, coverage inventory, and signed-candidate limitations,
+For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
-## Run on a borrowed API 35 emulator
+## Run on an API 35 emulator
 
-Use JDK 21 and the Android SDK. For Paperclip runs on the maintenance Mac, load the machine
-environment before every shell command and borrow a device through the harness:
+Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using
+on a fixed port, so its serial is known, and wait until it has finished booting. The commands below
+write that serial (`emulator-5580` here) as `<serial>`:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" up-android
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-35-avd> -port 5580 -wipe-data -no-snapshot-load &
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 ```
 
 The complete suite requires an **API 35 Google APIs image without the Play Store**, with an
@@ -38,28 +42,41 @@ Before running, verify the following command lists at least one browser activity
 under that package name; a package path alone does not prove that the Play Store handles links:
 
 ```bash
-adb -s <printed-serial> shell cmd package query-activities --brief \
+adb -s <serial> shell cmd package query-activities --brief \
   -a android.intent.action.VIEW \
   -d https://play.google.com/store/apps/details?id=com.kimjisub.launchpad
 ```
 
-If either prerequisite is missing, borrow a suitable image through the harness before testing.
+If either prerequisite is missing, create a suitable AVD before testing.
 Do not count skips on an unsuitable image as a passing run. The fake Play update manager tests
 run without a Play Store install or network access; the browser check verifies the activity
 handoff without waiting for a network response. The missing-handler test restores every package
 it disables.
 
-Use only the printed serial as `ANDROID_SERIAL`. Run from this repository. Keep the APKs
+Use that serial as `ANDROID_SERIAL` so no other connected device is touched. Run from this repository. Keep the APKs
 installed after the check: uninstalling deletes every pack in the debug app's storage.
 
 ```bash
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest :design:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --console=plain
 
 # A focused check; the final verification must still run both complete suites.
-ANDROID_SERIAL=<printed-serial> ./gradlew :app:connectedDebugAndroidTest \
+ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
+```
+
+To check several classes or methods in one run, name them to the runner script. Gradle passes
+only the first class of a comma-separated `class=A,B` to the device and still reports success,
+so do not use that form. The script runs the selection as one anchored `tests_regex`, then
+fails unless the JUnit XML lists every `@Test` of each selected class (or each selected
+`Class#method`), no other test, and no failure, error or skip. It records per-selection counts
+and reasons in `.ci-results/ui-status.txt`. Like the complete run, it uninstalls both apps first.
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.UniPackLegacyArchiveDeviceTest \
+  com.kimjisub.launchpad.unipack.SoundNameCaseDeviceTest#internalStorageChoosesTheExactNameFirst
 ```
 
 Debug variants request AGP's device code preparation before execution using
@@ -72,40 +89,42 @@ before starting the timed app process. This functional suite is not a cold-start
 The property is also used by the [AndroidX benchmark plugin](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/benchmark/gradle-plugin/src/main/kotlin/androidx/benchmark/gradle/BenchmarkPlugin.kt).
 
 Repeat the exact complete-suite command three times. Each invocation must execute the connected
-tasks; reports must show zero failures and zero skips. In local verification, a comma-separated
-class selector executed only its first class; use one class/method per focused invocation and
-check the resulting names/counts. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
+tasks; reports must show zero failures and zero skips. A comma-separated class selector executes
+only its first class; run several focused classes through `scripts/ci-connected-tests.sh` as shown
+above. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
 between runs because the next invocation overwrites them. Gradle tasks marked `SKIPPED` are not
 skipped JUnit tests; use the test report totals. Do not add `@Ignore`, assumptions, class exclusion
 filters, or weaker assertions to make a failing screen test green.
 
 Reports for each module: `<module>/build/reports/androidTests/connected/debug/index.html`.
 Raw results and logcats: `<module>/build/outputs/androidTest-results/connected/debug/`.
-Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the borrowed device,
+Screenshots are kept in the shell-owned `/data/local/tmp/unipad_tests` on the emulator,
 which survives uninstalling both the target and test applications. `BaseUITest` uses the root;
 feature screens use `basefeatures-captures/`, readiness failures use
-`activity-readiness-captures/`, and Store cancellation uses `store-cancel-captures/<prefix>/`.
+`activity-readiness-captures/`, Store cancellation uses `store-cancel-captures/<prefix>/` and Store download progress uses
+`store-progress-captures/<prefix>/`.
 Clear this root before each run, then pull it with
-`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` after the complete run and before
-returning the device. The capture helper stages files in app-writable external storage, copies
+`adb -s <serial> pull /data/local/tmp/unipad_tests` after the complete run and before
+stopping the emulator. The capture helper stages files in app-writable external storage, copies
 them as shell and removes the staging file; it checks that each preserved file is nonempty
 and has the same byte count as its source. Keep the emulator offline so app startup cannot
 send test traffic;
-the catalogue fixture does not disable other application network clients. Restore the original
-network state and return the device when finished:
-
-```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh && python3 "$HARNESS/devices.py" down
-```
+the catalogue fixture does not disable other application network clients.
 
 After Gradle has uninstalled the debug app, check these files from that run still exist:
 
 ```bash
-adb -s <printed-serial> shell pm list packages com.kimjisub.launchpad.dev
+adb -s <serial> shell pm list packages com.kimjisub.launchpad.dev
 # The target and test packages must no longer be listed.
 for capture in settings-english-language-row file-import-result store-downloaded; do
-  adb -s <printed-serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
+  adb -s <serial> shell test -s "/data/local/tmp/unipad_tests/basefeatures-captures/$capture.png" || exit 1
 done
+```
+
+Only after these checks, restore the original network state and stop the emulator:
+
+```bash
+adb -s <serial> emu kill
 ```
 
 Debug verification configures without `keystore.properties`; never copy real signing
@@ -170,12 +189,14 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
+| `AppLaunchTest.testSplashFooterStaysAboveNavigationBar` | Splash copyright is above the navigation bar, then startup reaches Main. |
 | `AppLaunchTest.testMainScreenElements` | The seeded pack is present on Main. |
 | `AppLaunchTest.testNavigationFlow` | App remains running after taps in the lower screen area (smoke check). |
 | `AppLaunchTest.testPermissionHandling` | App remains usable after launch permissions are handled. |
 | `AppLaunchTest.testPlayActivityNavigation` | Select the pack, enter Play, Back opens options, Quit returns to Main. |
 | `MainActivityTest.testMainNavigationButtonsAndSettingsReturn` | Current Store/Import/Settings buttons exist; Settings opens and returns. |
 | `MainActivityTest.testMainScreenSorting` | Each sort method is saved/shown; order toggles and restores. |
+| `MainActivityTest.testSortNamesFollowAppLanguageChange` | Switching UniPad to Korean through the per-app language setting turns the sort bar and its list Korean at once and after a relaunch. API 33+ (per-app language); API 35 full runs do not skip it. |
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
@@ -184,12 +205,23 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
 | `SettingsTest.testInfoRowsFollowDeviceLanguage` | Language/push identifier hints use translated resources. |
+| `SettingsTest.testLanguageRowOpensSystemAppLanguageScreen` | On API 33+ the language row opens the system's language screen for UniPad, which lists Korean and stays open; Back returns to Settings. Below 33 tapping it leaves Settings open. |
 | `SettingsTest.testLinksWithoutHandlingAppKeepSettingsOpen` | Missing URL/mail handlers leave Settings open with an error. |
 | `SettingsTest.testOpenSourceLicenseRowOpensLicenseList` | The license row opens the library's current license screen, which shows the bundled list; Back returns to Settings. |
+| `BackupFolderTest.settingsAsksForTheFolderAgainWhenItsPermissionIsGone` | A saved backup folder whose permission is gone shows Connect again, not Disconnect. |
+| `BackupFolderTest.disconnectAfterThePermissionIsGoneKeepsSettingsOpen` | Connect Documents/Unipad through the system folder picker; Disconnect after its permission is gone forgets it and Settings stays open. |
+| `BackupFolderTest.restoreAsksForTheFolderAgainWhenItsPermissionIsGone` | Restore offers Grant Access again for a saved folder whose permission is gone. |
+| `BackupFolderTest.restoreRefusesAFolderOtherThanUnipad` | Choosing Documents itself from Restore is refused: nothing saved, no permission kept, Grant Access still offered. |
+| `BackupFolderTest.restoreAcceptsTheUnipadFolder` | Choosing Documents/Unipad from Restore saves it and lists the backed-up folder. |
+| `BackupFolderTest.settingsWithoutFolderPickerReportsIt` | With the folder picker disabled, Connect shows a message and Settings stays open; the picker is enabled again after. |
+| `BackupFolderTest.restoreWithoutFolderPickerStaysOpen` | With the folder picker disabled, Grant Access leaves Restore open. |
+| `BackupFolderTest.themeImportWithoutFilePickerStaysOpen` | With the file pickers disabled, theme ZIP import leaves the theme screen open. |
+| `BackupFolderTest.packImportWithoutFilePickerStaysOpen` | With the file picker disabled, Import leaves Main open. |
 | `ThemeTest.testThemeActivityNavigation` | Open themes, apply an available alternate theme, open Add, and return; restore original theme. Refetch Apply during preview recomposition and require the stored selection within the existing deadline. |
 | `StoreTest.testStoreActivityNavigation` | Real store activity opens and Back returns with the fixture installed. |
 | `StoreTest.testStoreUnipackBrowsing` | Scroll both ends, select a known row, verify its detail, close detail then Store. |
 | `StoreTest.testStoreLastRowClearOfSystemBars` | Final row is outside system bars/cutouts and opens the correct detail. |
+| `StoreTest.testStoreDetailHasNoWebsiteButton` | A store entry's detail offers no website button: entries carry only their download address. |
 | `StoreTest.testNoPermissionDialogBeforeDownload` | On API 24–29, only required storage permissions are granted as test setup. Real launcher starts Splash, then Main/Store/detail browsing without dismissing permission dialogs. On API 33+, the test first grants notification permission to reproduce a prior download, then revokes it without killing the test process before startup; permission remains denied after browsing. Lifecycle assertions prevent bypassing Splash. |
 | `PlayActivityTest.testPlayActivityControls` | Feedback/LED controls toggle; AutoPlay transport appears and Play/Pause changes. |
 | `PlayActivityTest.testPlayActivityChainSwitching` | Chain controls can switch while Play remains active. |
@@ -206,7 +238,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityRecordingClipboard` | Stopping recording copies chain and touch commands to the clipboard. |
 | `PlayActivityTest.testPlayScreenStaysClearOfSystemBarsAndCutout` | Pad grid, chains, Menu and Quit stay within the safe area. |
 | `PlayActivityTest.testPadGridStaysCentredWhenTheWindowChanges` | Under resizes and rotations (20:9 with a punch-hole camera on either side, 16:9, split screen, upright tablet), the pad grid stays within 1 dp of the window's centre line and pads, chains, Menu and logo stay in the safe area without covering each other. |
-| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). |
+| `PlayActivityTest.testStretchedPadsStayCentredWhenTheWindowChanges` | The same check for a pack with stretched pads (`squareButton=false`). Presses at each pad's edges and corners are checked by `basefeatures.PadEdgeTouchTest`. |
 | `PlayActivityTest.testEveryChainOfASmallPackWithManyChainsCanBeSelected` | A 4×3 pack with 24 chains shows every chain button inside the safe area, clear of the pads, in normal and Pro light mode; selecting chains 24, 5 and 18 and pressing the first pad is recorded. |
 | `PlayActivityTest.testRightOnlyChainsKeepTheirSizeInANarrowWindow` | A 4×4 pack with eight chains keeps pad-sized chain buttons in a narrow resizable window; all eight chains, pads, menu and logo stay clear. |
 | `PlayActivityTest.testBoundsOutsideTheResizedWindowNeverCountAsSettled` | Stale accessibility bounds outside the resized window never become a valid observation. |
@@ -215,6 +247,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testRotationMismatchRetriesTheWholeLayoutObservation` | Repeat the complete layout observation when the initial rotation is wrong but later correct; a persistently wrong rotation still fails after the bounded retries. |
 | `PlayActivityTest.testMenuOutsideTheWindowIsReportedAsALayoutFailure` | Move the real menu's parent outside the window after Play opens and require a layout failure, then restore the parent. |
 | `PlayOptionPanelSkinContrastTest.defaultSkin`, `darkSkin`, `midGreySkin`, `knownLimitGreySkin` | Actual screenshot text/icon contrast on each skin, including documented colour limits. |
+| `PlayInfoCardLanguageTest.koreanCardNamesAnUntitledPackAndItsChains`, `englishCardNamesAnUntitledPackAndItsChains` | In Korean and English, the option panel's pack info card names a pack without a title and, expanded, its pad grid and chain count in the app language. |
 | `DiagnosticTest.testDiagnoseUIHierarchy` | Diagnostic screen/tree capture; not a replacement for a behavioural assertion. |
 
 The expected number of tests is the count of `@Test` annotations in each module's
@@ -250,11 +283,18 @@ claimed here as audio or hardware proof.
 | `AppUpdateNoticeTest.restsAreKeptOnDisk` | Decline time and pending download state persist in preferences. |
 | `AppDatabaseMigrationTest` | `migrate1To2_keepsBookmarksAndPlayHistory`, `v1Database_opensThroughTheAppBuilder`, `newerDatabase_isWipedInsteadOfThrowing`: real SQLite upgrade/open/downgrade. |
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
+| `LeftoverDownloadNotificationTest` | `startupRemovesOnlyUnfinishedDownloadProgress`: the start-up cleanup removes a download progress notification left by a killed process and keeps finished downloads and other channels' notifications. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
 | `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
+| `PackFailureNotificationDeviceTest` | `missingDownloadShowsFailureWithoutProgressAndCanBeDismissed`, `connectionLostDuringFastDownloadShowsFailureWithoutProgress`, `invalidImportShowsFailureWithoutProgressAndCanBeDismissed`: real local HTTP 404, a connection reset right after fast progress (when Android drops further progress updates) and invalid ZIP failures leave only one notification, with the existing failure translation, no progress, and allow dismissal. API 29+ file-provider test APIs. Optional `notificationEvidence=<label>` saves notification shade screenshots. |
+| `StoreDownloadProgressDeviceTest` | Real store screen downloading from a local server. `topArrowWhileDownloadingKeepsTheStoreAndTheDownload`: the top arrow closes the detail, then refuses to leave mid-download and the pack still installs. `unknownSizeShowsTheReceivedAmountAndAnOpenEndedBar`: with no Content-Length the detail shows only the received MB and an indeterminate bar. `unpackingShowsAnOpenEndedBarInsteadOfStartingOver`: while unpacking the bar is indeterminate. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `UniPackLegacyArchiveDeviceTest` | `theDeviceReadsCp949`, `aKoreanWindowsArchiveWithAReadmeBesideThePackImports`: the device offers CP949 (not only EUC-KR), and the real importer opens an archive zipped on Korean Windows (CP949 entry names without the UTF-8 flag, CP949 text files) with a readme beside the pack folder. |
+| `basefeatures.AutoPlayTouchChainTest` | `autoplayTouchOnAPadThatMovesTheChainStaysOnTheNewChain`: autoplay `touch` on a pad whose sound moves the chain stays on the new chain and plays its sounds. Not in `BaseFeaturesSuite`. |
+| `SoundNameCaseDeviceTest` | `appStorageFindsTheStoredFile`, `internalStorageFindsTheStoredFile`, `internalStorageChoosesTheExactNameFirst`: a keySound name that differs from its file only in case (`End.wav` for `END.wav`, `FX/Sweep.wav` for `fx/sweep.wav`) finds the stored file under its stored name both in app storage, which ignores case, and in the case-sensitive internal folder. Where files differ only in case (`End.wav` and `END.wav`, `fx/a.wav` and `FX/a.wav`), the exactly named file wins, a name matching neither takes the first in path order (`end.wav` → `END.wav`), and a folder named like a sound (`dir.wav`, `DIR.wav`) is reported as a missing sound. |
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
+| `AudioFormatDecodeDeviceTest` | `decodesPcmWav`, `decodesMp3`, `decodesAacInM4a`, `decodesMp3NamedWavByItsContent`, `decodesTaggedMp3NamedWavByItsContent`: `OboeAudioEngine` decodes a 0.3 s 440 Hz tone in each format packs use (an MP3 under a `.wav` name, bare as official packs ship it and with an ID3v2 tag) with the device's codecs, to the right rate, length, level and pitch. No sound is played. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
 
 The startup permission fixture uses Android's test-only
@@ -306,7 +346,7 @@ and cancels only notifications carrying its unique ZIP name. It never uses the l
 plays sound, launches an activity, or contacts a pack server. Failure and cancellation preservation
 remain covered separately by `UniPackInstallOverlapTest`; this device test covers two successes.
 
-Borrow an emulator through the maintenance harness first and use only the printed serial:
+Start an emulator that nothing else is using and set `ANDROID_SERIAL` to its serial:
 
 ```bash
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
@@ -318,13 +358,13 @@ adb -s "$ANDROID_SERIAL" shell am instrument -w -r \
 ```
 
 Keep the device offline during this check so application startup cannot send test traffic.
-Restore its prior network state and return it through the harness afterward. Direct instrumentation
+Restore its prior network state afterward. Direct instrumentation
 avoids Gradle uninstalling existing app data. `adb` exits zero even for a JUnit failure: require
 `OK (1 test)` and status code `0` for the test, not just the shell exit code.
 
 For the before/after comparison, export parent `c7bb0af67578be3cea90ea812499a0f81aa336e3`
-of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate run-owned directory,
-copy this exact test there, build both APKs, and run the same command on the borrowed device.
+of fix merge `5a8bca8d5d6b3ac90786ef49857e86b52a3980af` into a separate temporary directory,
+copy this exact test there, build both APKs, and run the same command on the same emulator.
 That source selects the output path in each constructor before creating the folder, so this
 schedule deterministically completes both imports into the same folder and fails the distinct
 folder assertion; the final hashes also show the second pack replacing the first. Record the

@@ -36,6 +36,7 @@
 	<string name="menu">菜单</string>
 	<string name="website">网站</string>
 	<string name="measuring">测量中…</string>
+	<string name="unknownCount">未知</string>
 	<string name="general">常规</string>
 	<string name="notice">通知</string>
 	<string name="newUniPack">新 UniPack</string>
@@ -93,6 +94,16 @@
 	<string name="hideUI">隐藏UI</string>
 	<string name="watermark">UI灯光</string>
 	<string name="proLightMode">Pro灯光模式</string>
+	<string name="play_section_play_mode">演奏模式</string>
+	<string name="play_section_performance">效果</string>
+	<string name="play_section_display">显示</string>
+	<string name="play_section_tools">工具</string>
+	<string name="autoMapping">自动映射</string>
+	<string name="autoMappingRunning">自动映射…</string>
+	<string name="play_info_untitled">无标题</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d 页"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -257,6 +268,8 @@
 	<string name="backup_grant_access">连接备份文件夹</string>
 	<string name="backup_revoke">断开备份文件夹</string>
 	<string name="backup_invalid_folder">请选择 Documents/Unipad 文件夹</string>
+	<string name="backup_permission_refused">UniPad 无法保留此文件夹的访问权限。请重新选择 Documents/Unipad。</string>
+	<string name="picker_unavailable">此设备上没有可以选择文件或文件夹的应用。</string>
 	<string name="backup_backup_button">备份</string>
 	<string name="backup_backup_description">将 UniPacks 复制到备份文件夹</string>
 	<string name="backup_restore_button">恢复</string>
