@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,9 +34,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -108,6 +106,7 @@ import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -161,6 +160,10 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
+	// Set when a refresh is asked for while one is reading; that one may have read the folders too early.
+	private var refreshAgain = false
+	// Set from the first play press until the list is back, so a double press opens one play screen.
+	private var playOpening = false
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
 	private var scrollToCenterTrigger by mutableIntStateOf(0)
@@ -379,7 +382,11 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) return
+		if (listRefreshing) {
+			refreshAgain = true
+			return
+		}
+		refreshAgain = false
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
@@ -416,6 +423,7 @@ class MainActivity : BaseActivity() {
 
 				scrollToTopTrigger++
 				listRefreshing = false
+				if (refreshAgain) update()
 			}
 		}
 	}
@@ -446,6 +454,8 @@ class MainActivity : BaseActivity() {
 	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
 
 	private fun playUniPack(path: String) {
+		if (playOpening) return
+		playOpening = true
 		start<PlayActivity> {
 			putExtra("path", path)
 		}
@@ -608,6 +618,7 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		resumed = true
+		playOpening = false
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		update()
@@ -651,12 +662,11 @@ class MainActivity : BaseActivity() {
 			if (updateSafe) appUpdate?.onListReady()
 		}
 
-		// From API 35 the window is edge-to-edge: the navigation bar sits over the bottom (gesture handle)
-		// or a side (3-button bar in landscape), and a display cutout can take a side as well. Below API 35
-		// the window already fits the system bars, so these insets are zero there. The keyboard is left
-		// out: it covers the panels as it always has rather than squeezing them.
-		val barsAndCutout = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+		// The keyboard covers the panels rather than squeezing them, but the list's end takes it in so its
+		// last rows can still be scrolled above it.
+		val barsAndCutout = WindowInsets.barsAndCutout
 		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
+		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -695,11 +705,8 @@ class MainActivity : BaseActivity() {
 								checkingUpdate = updateState?.checking == true,
 							)
 						} else {
-							val packVM = remember(item.unipack.getPathString()) {
-								ViewModelProvider(
-									this@MainActivity,
-									MainPackPanelViewModel.Factory(application, item.unipack)
-								)["pack_${item.unipack.getPathString()}", MainPackPanelViewModel::class.java]
+							val packVM = remember(MainPackPanelViewModel.key(item.unipack)) {
+								MainPackPanelViewModel.of(this@MainActivity, application, item.unipack)
 							}
 
 							// Handle delete event from VM
@@ -731,6 +738,7 @@ class MainActivity : BaseActivity() {
 										.verticalScroll(rememberScrollState())
 										.fillMaxWidth()
 										.heightIn(min = maxHeight)
+										.windowInsetsPadding(listBottom)
 										.padding(horizontal = 16.dp, vertical = 16.dp),
 									horizontalAlignment = Alignment.CenterHorizontally,
 									verticalArrangement = Arrangement.Center,
@@ -776,13 +784,14 @@ class MainActivity : BaseActivity() {
 									NoSearchResults(
 										query = searchQuery,
 										onClearClick = { updateSearchQuery("") },
+										bottomInsets = listBottom,
 										modifier = Modifier.weight(1f),
 									)
 								} else LazyColumn(
 									state = listState,
 									contentPadding = PaddingValues(
 										top = 4.dp,
-										bottom = 6.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+										bottom = 6.dp + listBottom.asPaddingValues().calculateBottomPadding(),
 									),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
@@ -947,6 +956,7 @@ class MainActivity : BaseActivity() {
 	private fun NoSearchResults(
 		query: String,
 		onClearClick: () -> Unit,
+		bottomInsets: WindowInsets,
 		modifier: Modifier = Modifier,
 	) {
 		BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -955,6 +965,7 @@ class MainActivity : BaseActivity() {
 					.verticalScroll(rememberScrollState())
 					.fillMaxWidth()
 					.heightIn(min = maxHeight)
+					.windowInsetsPadding(bottomInsets)
 					.padding(16.dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center,

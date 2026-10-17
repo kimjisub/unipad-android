@@ -6,6 +6,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.PackImportReport
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.manager.PackArchive
 import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -13,7 +14,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.ZipFile
 import java.io.File
 
 class UniPackImporter(
@@ -55,9 +55,7 @@ class UniPackImporter(
 						inputStream.copyTo(output)
 					}
 				}
-				ZipFile(zipCopy).use { zip ->
-					zip.extractAll(stagedFolder.path)
-				}
+				PackArchive.extract(zipCopy, stagedFolder)
 				FileManager.removeDoubleFolder(stagedFolder.path)
 
 				val checked = UniPackFolder(stagedFolder).load()

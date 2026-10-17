@@ -99,6 +99,11 @@
 	<string name="play_section_tools">Werkzeuge</string>
 	<string name="autoMapping">Auto-Mapping</string>
 	<string name="autoMappingRunning">Auto-Mapping…</string>
+	<string name="play_info_untitled">Ohne Titel</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d Kette"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d Ketten"</item>
+	</plurals>
 
 	<!--Version-->
 

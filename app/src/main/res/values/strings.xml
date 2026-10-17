@@ -99,6 +99,11 @@
 	<string name="play_section_tools">Tools</string>
 	<string name="autoMapping">Auto Mapping</string>
 	<string name="autoMappingRunning">Auto Mapping…</string>
+	<string name="play_info_untitled">Untitled</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d chain"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d chains"</item>
+	</plurals>
 
 	<!--Version-->
 	<string name="update_check">Check for updates</string>
@@ -157,6 +162,7 @@
 	<string name="midi_lp_mini_mk3" translatable="false">Launchpad Mini MK3</string>
 	<string name="midi_lp_mk3" translatable="false">Launchpad Pro MK3</string>
 	<string name="midi_lp_pro_cfw" translatable="false">Launchpad Pro MK2 (CFW)</string>
+	<string name="midi_lp_core_fw" translatable="false">Launchpad (CoreFW)</string>
 	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
 	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>

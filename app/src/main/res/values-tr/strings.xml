@@ -99,6 +99,11 @@
 	<string name="play_section_tools">Araçlar</string>
 	<string name="autoMapping">Otomatik Eşleme</string>
 	<string name="autoMappingRunning">Otomatik Eşleme…</string>
+	<string name="play_info_untitled">Başlıksız</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d zincir"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d zincir"</item>
+	</plurals>
 
 	<!--Version-->
 

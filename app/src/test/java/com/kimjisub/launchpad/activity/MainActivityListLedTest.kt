@@ -11,6 +11,7 @@ import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -33,7 +34,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-/** Exercises the real refresh completion and navigation LED paths with a held folder read. */
+/** Exercises the real refresh completion, navigation LED and play-opening paths with a held folder read. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainActivityListLedTest {
 	private lateinit var activity: MainActivity
@@ -135,6 +136,51 @@ class MainActivityListLedTest {
 		verify { driver.sendFunctionKeyLed(0, 63) }
 		method("prev").invoke(activity)
 		assertEquals("one", (method("getSelectedItem").invoke(activity) as UniPackItem).unipack.title)
+	}
+
+	@Test
+	fun refreshRequestedDuringARefresh_runsOnceMoreAfterIt() = runTest {
+		Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+		val entered = CompletableDeferred<Unit>()
+		val release = CompletableDeferred<Unit>()
+		val before = pack("before")
+		val imported = pack("imported")
+		var reads = 0
+		coEvery { workspace.getUnipacks() } coAnswers {
+			if (++reads == 1) {
+				entered.complete(Unit)
+				release.await()
+				arrayListOf(before)
+			} else arrayListOf(before, imported)
+		}
+		method("update").invoke(activity)
+		entered.await()
+		// An import finishing while the resume refresh still reads the folders.
+		method("update").invoke(activity)
+		release.complete(Unit)
+		joinRefreshes()
+
+		coVerify(exactly = 2) { workspace.getUnipacks() }
+		assertEquals(listOf(before, imported), method("getVisibleList").invoke(activity))
+	}
+
+	@Test
+	fun playPressedTwiceBeforeTheListLeaves_opensThePlayScreenOnce() {
+		every { activity.startActivity(any()) } just Runs
+		val item = pack("one")
+
+		method("pressPlay", UniPackItem::class.java).invoke(activity, item)
+		method("pressPlay", UniPackItem::class.java).invoke(activity, item)
+
+		verify(exactly = 1) { activity.startActivity(any()) }
+	}
+
+	private suspend fun joinRefreshes() {
+		while (true) {
+			val running = activity.lifecycleScope.coroutineContext[Job]!!.children.toList()
+			if (running.isEmpty()) return
+			running.joinAll()
+		}
 	}
 
 	private fun pack(path: String): UniPackItem {

@@ -99,6 +99,10 @@
 	<string name="play_section_tools">ツール</string>
 	<string name="autoMapping">自動マッピング</string>
 	<string name="autoMappingRunning">自動マッピング…</string>
+	<string name="play_info_untitled">無題</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$dチェーン"</item>
+	</plurals>
 
 	<!--Version-->
 

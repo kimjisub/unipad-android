@@ -221,7 +221,8 @@ abstract class BaseUITest {
         return false
     }
 
-    protected fun str(resId: Int): String = context.getString(resId)
+    /** A string in the app language, as the screens show it. */
+    protected fun str(resId: Int): String = AppLanguage.localized(context).getString(resId)
 
     /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
     protected fun withoutHandlers(vararg queries: String, block: () -> Unit) {
@@ -342,12 +343,17 @@ abstract class BaseUITest {
 
     /** Select the test pack (unless already selected) and press its Play flag; returns once the play screen is ready. */
     protected fun openTestPackInPlay() {
+        pressTestPackPlayFlag()
+        assertTrue("Play screen did not open", waitForPlayScreen())
+    }
+
+    /** Select the test pack (unless already selected) and press its Play flag without waiting for the play screen. */
+    protected fun pressTestPackPlayFlag() {
         val row = selectTestPack()
         Thread.sleep(700) // Play flag slide-in animation (FLAG_ANIMATION_MS = 500)
         val bounds = row.visibleBounds
         val flagCenterX = bounds.left + (PLAY_FLAG_TAP_DP * context.resources.displayMetrics.density).toInt()
         device.click(flagCenterX, bounds.centerY())
-        assertTrue("Play screen did not open", waitForPlayScreen())
     }
 
     /** PlayActivity is ready when its menu button is shown (after the loading overlay). */
@@ -427,9 +433,19 @@ abstract class BaseUITest {
     protected fun isPlayOptionsOpen(): Boolean = try {
         val panel = device.findObject(By.res("play_options"))
         // The node exists while sliding in. Recomposition may also replace it during this query.
-        panel != null && panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+        panel != null && panel.visibleBounds.width() >= openPanelMinWidthPx()
     } catch (_: StaleObjectException) {
         false // The opening wait will refetch the current node; this is not a closing condition.
+    }
+
+    /**
+     * The panel is 280dp wide. Where no system bar pads its end (a tablet's bar is at the bottom),
+     * its visible bounds can end one pixel short of the screen edge (2559 of 2560 at 240dpi), so
+     * allow 1dp under its width; only the very end of the slide-in comes that close.
+     */
+    private fun openPanelMinWidthPx(): Int {
+        val density = context.resources.displayMetrics.density
+        return ((280 - 1) * density).toInt()
     }
 
     /** The play screen is shown: its Menu button, or its option panel when that is open. */

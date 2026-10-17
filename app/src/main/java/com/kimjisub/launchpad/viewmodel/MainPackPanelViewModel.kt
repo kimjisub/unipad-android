@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
@@ -87,6 +88,17 @@ class MainPackPanelViewModel(
 
 	fun clearDeleteRequest() {
 		deleteRequested = false
+	}
+
+	companion object {
+		/**
+		 * The panel for [unipack], kept in [owner] while the pack is unchanged. A pack deleted and
+		 * installed again under the same name keeps its path, so the folder's time is part of the key.
+		 */
+		fun of(owner: ViewModelStoreOwner, app: Application, unipack: UniPack): MainPackPanelViewModel =
+			ViewModelProvider(owner, Factory(app, unipack))[key(unipack), MainPackPanelViewModel::class.java]
+
+		fun key(unipack: UniPack) = "pack_${unipack.getPathString()}_${unipack.folderModified}"
 	}
 
 	class Factory(
