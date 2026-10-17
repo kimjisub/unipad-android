@@ -221,7 +221,8 @@ abstract class BaseUITest {
         return false
     }
 
-    protected fun str(resId: Int): String = context.getString(resId)
+    /** A string in the app language, as the screens show it. */
+    protected fun str(resId: Int): String = AppLanguage.localized(context).getString(resId)
 
     /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
     protected fun withoutHandlers(vararg queries: String, block: () -> Unit) {

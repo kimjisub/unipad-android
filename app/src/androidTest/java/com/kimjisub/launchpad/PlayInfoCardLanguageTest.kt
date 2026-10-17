@@ -1,12 +1,6 @@
 package com.kimjisub.launchpad
 
-import android.app.LocaleManager
-import android.os.Build
-import android.os.LocaleList
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
@@ -29,9 +23,9 @@ class PlayInfoCardLanguageTest : BaseUITest() {
 
     private fun checkCard(languageTag: String, label: String, untitled: String, size: String) {
         TestUniPack.install(context, title = "")
-        val original = appLanguages()
+        val original = AppLanguage.get()
         try {
-            setAppLanguages(languageTag)
+            AppLanguage.set(languageTag)
             launchToMainScreen()
             pressTestPackPlayFlag()
             // A pack without a title opens with a warning that names the missing field.
@@ -51,19 +45,10 @@ class PlayInfoCardLanguageTest : BaseUITest() {
             assertNotNull("Expanded info card does not show '$size'", expanded)
             quitPlayToMain()
         } finally {
-            setAppLanguages(original)
+            // Leave a play screen a failed check left open before the language change recreates it.
+            device.pressHome()
+            AppLanguage.set(original)
         }
-    }
-
-    private fun appLanguages(): String =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.getSystemService(LocaleManager::class.java).applicationLocales.toLanguageTags()
-        } else AppCompatDelegate.getApplicationLocales().toLanguageTags()
-
-    private fun setAppLanguages(tags: String) = InstrumentationRegistry.getInstrumentation().runOnMainSync {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(tags)
-        } else AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags))
     }
 
     private companion object {
