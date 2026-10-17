@@ -30,10 +30,11 @@ object UsageParam {
 	const val ORIENTATION = "orientation"
 	const val SCREEN_SHORT_SIDE = "screen_short_side"
 	const val WINDOW_MODE = "window_mode"
+	const val INPUT_SOURCE = "input_source"
 
 	val allowed: Set<String> = setOf(
 		RESULT, IMPORT_SOURCE, ERROR_TYPE, DURATION_BUCKET, TRIGGER,
-		ORIENTATION, SCREEN_SHORT_SIDE, WINDOW_MODE,
+		ORIENTATION, SCREEN_SHORT_SIDE, WINDOW_MODE, INPUT_SOURCE,
 	)
 }
 
@@ -58,6 +59,15 @@ enum class PackImportSource(val value: String) {
 enum class PlayTrigger(val value: String) {
 	PAD("pad"),
 	AUTOPLAY("autoplay"),
+}
+
+/**
+ * What the person pressed a pad on. Only the kind is sent, never the controller's name, model,
+ * maker, connection or how many presses. The web also has `keyboard`; Android maps no keys to pads.
+ */
+enum class InputSource(val value: String) {
+	SCREEN("screen"),
+	MIDI("midi"),
 }
 
 /** Which step of a pack import an error came from; the same I/O error means different things in each. */

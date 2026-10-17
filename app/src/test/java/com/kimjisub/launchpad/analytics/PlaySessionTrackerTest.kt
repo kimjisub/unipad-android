@@ -18,13 +18,43 @@ class PlaySessionTrackerTest {
 	private fun packLoad(vararg parameters: Pair<String, String>) = sink.pack(UsageEvent.PACK_LOAD, *parameters)
 	private fun playStart(trigger: String) = sink.pack(UsageEvent.PLAY_START, UsageParam.TRIGGER to trigger)
 	private fun playEnd(bucket: String) = sink.pack(UsageEvent.PLAY_END, UsageParam.DURATION_BUCKET to bucket)
+	private fun firstInput(source: String) =
+		sink.pack(UsageEvent.PLAY_FIRST_INPUT, UsageParam.TRIGGER to "pad", UsageParam.INPUT_SOURCE to source)
+
+	@Test
+	fun theFirstHumanInputCarriesWhatItWasPressedOnAndLaterPressesAddNothing() {
+		for ((first, later) in listOf(InputSource.SCREEN to InputSource.MIDI, InputSource.MIDI to InputSource.SCREEN)) {
+			val sink = RecordingUsageSink()
+			val session = sink.analytics.newPlaySession { nanos }
+			session.loadStarted()
+			session.loadSucceeded()
+			session.playTriggered(PlayTrigger.AUTOPLAY)
+			session.playTriggered(PlayTrigger.PAD, first)
+			session.playTriggered(PlayTrigger.PAD, later)
+			session.playTriggered(PlayTrigger.PAD, first)
+			session.ended()
+
+			assertEquals(
+				"$first",
+				listOf(sink.pack(UsageEvent.PLAY_FIRST_INPUT, UsageParam.TRIGGER to "pad", UsageParam.INPUT_SOURCE to first.value)),
+				sink.named(UsageEvent.PLAY_FIRST_INPUT),
+			)
+			assertEquals("$first", playStart("autoplay"), sink.named(UsageEvent.PLAY_START).single())
+			assertTrue("$first", sink.events.none { it.name != UsageEvent.PLAY_FIRST_INPUT && UsageParam.INPUT_SOURCE in it.parameters })
+		}
+	}
+
+	@Test
+	fun inputSourceValuesAreOnlyScreenAndMidi() {
+		assertEquals(listOf("screen", "midi"), InputSource.entries.map { it.value })
+	}
 
 	@Test
 	fun simultaneousHumanInputsAreCountedOnceAfterAutoPlay() {
 		session.loadStarted()
 		session.loadSucceeded()
 		session.playTriggered(PlayTrigger.AUTOPLAY)
-		val threads = List(16) { Thread { session.playTriggered(PlayTrigger.PAD) } }
+		val threads = List(16) { Thread { session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN) } }
 		threads.forEach { it.start() }
 		threads.forEach { it.join() }
 		session.ended()
@@ -40,12 +70,12 @@ class PlaySessionTrackerTest {
 		session.loadSucceeded()
 		session.playTriggered(PlayTrigger.AUTOPLAY)
 		assertTrue(sink.named(UsageEvent.PLAY_FIRST_INPUT).isEmpty())
-		repeat(3) { session.playTriggered(PlayTrigger.PAD) }
+		repeat(3) { session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN) }
 		session.ended()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 
 		assertEquals(1, sink.named(UsageEvent.PLAY_FIRST_INPUT).size)
-		assertEquals(mapOf(UsageParam.TRIGGER to "pad"), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters)
+		assertEquals(firstInput("screen"), sink.named(UsageEvent.PLAY_FIRST_INPUT).single())
 		assertEquals(listOf("autoplay"), sink.named(UsageEvent.PLAY_START).map { it.parameters[UsageParam.TRIGGER] })
 	}
 
@@ -54,7 +84,7 @@ class PlaySessionTrackerTest {
 		session.loadStarted()
 		advanceSeconds(2.0)
 		session.loadSucceeded()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		advanceSeconds(45.0)
 		session.ended()
 
@@ -62,7 +92,7 @@ class PlaySessionTrackerTest {
 			listOf(
 				packLoad(UsageParam.RESULT to "success", UsageParam.DURATION_BUCKET to "1s_3s"),
 				playStart("pad"),
-				sink.pack(UsageEvent.PLAY_FIRST_INPUT, UsageParam.TRIGGER to "pad"),
+				firstInput("screen"),
 				playEnd("30s_2m"),
 			),
 			sink.events,
@@ -77,7 +107,7 @@ class PlaySessionTrackerTest {
 		session.loadSucceeded()
 		session.loadFailed(UsageErrorType.SOUND_ENGINE)
 		session.playTriggered(PlayTrigger.AUTOPLAY)
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.playTriggered(PlayTrigger.AUTOPLAY)
 		session.ended()
 		session.ended()
@@ -90,7 +120,7 @@ class PlaySessionTrackerTest {
 	fun leavingBeforeThePackIsReadyIsACancelledLoadAndNothingElse() {
 		session.loadStarted()
 		session.ended()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.loadSucceeded()
 
 		assertEquals(listOf(packLoad(UsageParam.RESULT to "cancelled")), sink.events)
@@ -111,7 +141,7 @@ class PlaySessionTrackerTest {
 		session.loadStarted()
 		session.loadFailed(UsageErrorType.INVALID_PACK)
 		session.loadSucceeded()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.ended()
 
 		assertEquals(
@@ -122,9 +152,9 @@ class PlaySessionTrackerTest {
 
 	@Test
 	fun aPressBeforeTheLoadFinishedIsNotAPlayStart() {
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.loadStarted()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.loadSucceeded()
 		session.ended()
 
@@ -160,7 +190,7 @@ class PlaySessionTrackerTest {
 		session.loadStarted()
 		session.loadSucceeded()
 		advanceSeconds(1000.0)
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		advanceSeconds(0.5)
 		session.ended()
 
@@ -173,7 +203,7 @@ class PlaySessionTrackerTest {
 		session.loadStarted()
 		session.loadSucceeded()
 		session.screenLayoutChanged(ScreenLayout.of(700, 1_000, true))
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, false))
 		session.ended()
 
@@ -187,7 +217,7 @@ class PlaySessionTrackerTest {
 			),
 			sink.named(UsageEvent.PLAY_START).single(),
 		)
-		assertEquals(listOf(UsageParam.TRIGGER), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters.keys.toList())
+		assertEquals(listOf(UsageParam.TRIGGER, UsageParam.INPUT_SOURCE), sink.named(UsageEvent.PLAY_FIRST_INPUT).single().parameters.keys.toList())
 		assertEquals(listOf(UsageParam.DURATION_BUCKET), sink.named(UsageEvent.PLAY_END).single().parameters.keys.toList())
 		assertEquals(4, sink.events.size)
 	}

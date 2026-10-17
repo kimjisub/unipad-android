@@ -36,6 +36,13 @@ abstract class PlaybackScreenTest {
         }
     }
 
+    /** Taps a pad and waits until the app received it, which a pad press shows as one sound request. */
+    protected fun pressPad(index: Int) {
+        val plays = audio.plays.size
+        screen.tapPad(index)
+        screen.await("Pad ${index + 1} press was not received") { audio.plays.size == plays + 1 }
+    }
+
     /**
      * Opens the pack in the given pad input mode with the press light on. A pack with keyLED starts
      * with it off; the option is set on the screen's state rather than through the options panel,

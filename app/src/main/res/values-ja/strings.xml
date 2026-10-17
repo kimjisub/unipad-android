@@ -35,6 +35,7 @@
 	<string name="menu">メニュー</string>
 	<string name="website">ウェブサイト</string>
 	<string name="measuring">計測中…</string>
+	<string name="unknownCount">不明</string>
 	<string name="general">一般</string>
 	<string name="notice">お知らせ</string>
 	<string name="newUniPack">新しいUniPack</string>

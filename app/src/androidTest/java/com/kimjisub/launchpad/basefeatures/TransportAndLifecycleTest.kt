@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.TestUniPack
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -18,21 +19,45 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class TransportAndLifecycleTest : PlaybackScreenTest() {
     private fun hintedPad(): Int? = screen.onMain {
-        var result: Int? = null
-        for (index in 0 until 64) {
-            val item = screen.vm().channelManager.get(index / 8, index % 8)
-            if (item?.channel == ChannelManager.Channel.GUIDE && item.code > 0) {
-                result = index
-                break
-            }
+        val lights = screen.vm().channelManager
+        (0 until 64).firstOrNull { index ->
+            val item = lights.get(index / 8, index % 8)
+            item?.channel == ChannelManager.Channel.GUIDE && item.code > 0
         }
-        result
+    }
+
+    private fun guidedChain(): Int? = screen.onMain {
+        (0 until TestUniPack.CHAINS).firstOrNull {
+            screen.vm().channelManager.get(-1, PlayActivityViewModel.CHAIN_INDEX_OFFSET + it)?.channel == ChannelManager.Channel.GUIDE
+        }
+    }
+
+    private fun transportShown() = screen.has(By.desc(screen.text(R.string.cd_autoplay_play))) ||
+        screen.has(By.desc(screen.text(R.string.cd_autoplay_pause)))
+
+    private fun currentProgress() = screen.onMain { screen.vm().autoPlayProgress }
+
+    /** The runner lights the hint before it moves the progress on, so both are awaited together. */
+    private fun awaitHint(message: String, pad: Int?, chain: Int?, progress: Int) {
+        screen.await({ "$message: pad ${hintedPad()}, chain ${guidedChain()}, progress ${currentProgress()} (expected $pad, $chain, $progress)" }) {
+            hintedPad() == pad && guidedChain() == chain && currentProgress() == progress
+        }
+    }
+
+    /** Waits briefly so a press the runner should ignore has had its chance to advance practice. */
+    private fun assertStillPractising(progress: Int, context: String) {
+        SystemClock.sleep(300)
+        screen.onMain {
+            assertEquals("Practice ended $context", PlayMode.StepPractice, screen.vm().playMode)
+            assertTrue("Practice runner stopped $context", screen.vm().autoPlayRunner!!.active)
+            assertEquals("Practice moved $context", progress, screen.vm().autoPlayProgress)
+        }
+        assertTrue("Practice controls disappeared $context", transportShown())
     }
 
     @Test fun autoplayStartsPausesResumesAndStopsThroughScreenControls() {
         screen.openPlay()
-        screen.options()
-        screen.clickText(R.string.autoPlay)
+        screen.chooseOption(R.string.autoPlay)
         screen.await("Autoplay did not start") { screen.onMain { screen.vm().isAutoPlayPlaying } && audio.plays.isNotEmpty() }
         screen.clickDescription(R.string.cd_autoplay_pause)
         screen.await("Autoplay did not pause") { screen.onMain { !screen.vm().isAutoPlayPlaying } }
@@ -46,25 +71,21 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         assertEquals(requests, audio.plays.size)
         screen.clickDescription(R.string.cd_autoplay_play)
         screen.await("Autoplay did not resume") { screen.onMain { screen.vm().autoPlayProgress > paused } }
-        screen.options()
-        screen.clickText(R.string.autoPlay)
+        screen.chooseOption(R.string.autoPlay)
         screen.await("Selecting active mode did not stop autoplay") { screen.onMain { screen.vm().playMode == PlayMode.None && !screen.vm().autoPlayRunner!!.active } }
-        assertFalse(screen.device.hasObject(By.desc(screen.text(R.string.cd_autoplay_pause))))
+        assertFalse(screen.has(By.desc(screen.text(R.string.cd_autoplay_pause))))
         screen.capture("autoplay-stopped")
     }
 
     @Test fun guideAndStepPracticeShowHintsAndStepWaitsForPadInput() {
         screen.openPlay()
-        screen.options()
-        screen.clickText(R.string.guidePlay)
+        screen.chooseOption(R.string.guidePlay)
         screen.await("Guide mode did not start") { screen.onMain { screen.vm().playMode == PlayMode.GuidePlay } }
         screen.await("Guide did not illuminate a pad") { hintedPad() != null }
         screen.capture("guide-hint")
-        screen.options()
-        screen.clickText(R.string.guidePlay)
+        screen.chooseOption(R.string.guidePlay)
         screen.await("Guide did not stop") { screen.onMain { screen.vm().playMode == PlayMode.None } }
-        screen.options()
-        screen.clickText(R.string.stepPractice)
+        screen.chooseOption(R.string.stepPractice)
         screen.await("Step mode did not start") { screen.onMain { screen.vm().playMode == PlayMode.StepPractice } }
         screen.await("Step hint did not appear") { hintedPad() != null }
         val hint = hintedPad()!!
@@ -93,8 +114,7 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
             assertTrue(screen.device.wait(Until.gone(By.text(screen.text(R.string.accept))), 5000))
         }
         val lastChain = screen.onMain { screen.vm().unipack.chain } - 1
-        screen.options()
-        screen.clickText(R.string.stepPractice)
+        screen.chooseOption(R.string.stepPractice)
         screen.await("Step hint did not appear") { hintedPad() == 0 }
         screen.tapPad(0)
         screen.await({ "Step practice did not continue on the last chain, at 2 1: chain ${screen.onMain { screen.vm().chain.value }}, hint ${hintedPad()}" }) {
@@ -116,6 +136,59 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         (0 until PlayActivityViewModel.MAX_CHAIN_BUTTONS).firstOrNull { c ->
             screen.vm().channelManager.get(-1, PlayActivityViewModel.CHAIN_INDEX_OFFSET + c)?.channel == ChannelManager.Channel.CHAIN
         }
+    }
+
+    @Test fun stepPracticeFollowsHintsAcrossChainsAndEndsOnlyAfterTheLastPad() {
+        // Two pads on the first chain, then two on the second, one at a time.
+        val autoPlay = listOf("o 1 1", "o 1 2", "c 2", "o 2 1", "o 2 2").joinToString("") {
+            if (it.startsWith("c ")) "$it\n" else "$it\nd 200\nf ${it.substring(2)}\nd 200\n"
+        }
+        File(screen.pack(), "autoPlay").writeText(autoPlay)
+        val elements = autoPlay.lines().filter(String::isNotEmpty)
+        // Hinting a pad moves the progress past its press; a hint on another chain waits on that press.
+        fun hinted(press: String) = elements.indexOf(press) + 1
+        screen.openPlay()
+        screen.chooseOption(R.string.stepPractice)
+        screen.await("Step mode did not start") { screen.onMain { screen.vm().playMode == PlayMode.StepPractice } }
+        screen.await({ "The short practice sequence was not loaded: ${screen.onMain { screen.vm().autoPlayProgressMax }}" }) {
+            screen.onMain { screen.vm().autoPlayProgressMax } == elements.size
+        }
+        awaitHint("First hint was not the first pad", 0, null, hinted("o 1 1"))
+        screen.capture("step-practice-first")
+        pressPad(0)
+        awaitHint("Second hint was not the second pad", 1, null, hinted("o 1 2"))
+        assertStillPractising(hinted("o 1 2"), "after the first pad")
+
+        pressPad(1)
+        awaitHint("Second chain was not hinted", null, 1, hinted("o 2 1") - 1)
+        pressPad(8)
+        assertStillPractising(hinted("o 2 1") - 1, "after pressing the next pad on the wrong chain")
+        assertEquals("Pressing on the wrong chain hinted a pad", null, hintedPad())
+        assertEquals("Pressing on the wrong chain cleared the chain hint", 1, guidedChain())
+        screen.capture("step-practice-chain-hint")
+
+        val second = chainButton(1)
+        assertTrue(screen.device.click(second.x, second.y))
+        screen.await("Chain button did not switch chain") { screen.onMain { screen.vm().chain.value == 1 } }
+        awaitHint("Third hint was not the first pad of the second chain", 8, null, hinted("o 2 1"))
+        pressPad(8)
+        awaitHint("Last hint was not the second pad of the second chain", 9, null, hinted("o 2 2"))
+        pressPad(0)
+        assertStillPractising(hinted("o 2 2"), "after pressing an unhinted pad before the last one")
+        assertEquals("Pressing an unhinted pad moved the last hint", 9, hintedPad())
+        screen.capture("step-practice-last")
+
+        pressPad(9)
+        screen.await("Practice did not end after the last pad") {
+            screen.onMain {
+                val vm = screen.vm()
+                vm.playMode == PlayMode.None && !vm.autoPlayRunner!!.active && !vm.autoPlayControlVisible &&
+                    vm.autoPlayProgress == elements.size
+            }
+        }
+        screen.await("Practice controls stayed on screen") { !transportShown() }
+        assertEquals("A hint stayed lit after practice ended", null, hintedPad())
+        screen.capture("step-practice-complete")
     }
 
     @Test fun playingSurvivesHomeAndScreenLockWithoutLosingPackOrChain() {
@@ -150,9 +223,7 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         assertEquals(process, Process.myPid())
         assertSame(vm, screen.vm())
         assertEquals(1, screen.onMain { vm.chain.value })
-        val before = audio.plays.size
-        screen.tapPad(1)
-        screen.await("No sound request after returning") { audio.plays.size == before + 1 }
+        pressPad(1)
         screen.capture("play-after-home-and-lock")
     }
 }
