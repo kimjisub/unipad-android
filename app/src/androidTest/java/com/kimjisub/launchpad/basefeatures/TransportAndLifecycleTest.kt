@@ -130,24 +130,12 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         val silenceCount = audio.silences.get()
         val stopCount = audio.stops.get()
         val loadedSounds = audio.loaded.toMap()
-        // pressHome() waits only 1 second for an accessibility event, even if Home succeeded.
-        // Require actual key injection and the launcher/lifecycle result under the existing deadline.
-        // Resolve through the device shell: target package visibility can hide the real launcher
-        // and make UiDevice.launcherPackageName return Settings' fallback home activity.
-        val launcher = screen.device.executeShellCommand(
-            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
-        ).lineSequence().map(String::trim).lastOrNull { it.contains('/') }?.substringBefore('/')
-        assertNotNull("Default launcher missing", launcher)
-        assertTrue("Home key injection failed", screen.device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
-        screen.await("Home did not hide play and show the launcher") {
-            screen.onMain { !vm.screenVisible } && screen.device.currentPackageName == launcher
-        }
+        screen.goHome { screen.onMain { !vm.screenVisible } }
         screen.await("Leaving play did not silence voices") { audio.silences.get() > silenceCount }
         // Android 17 mutes, or with strict hardening aborts, an app whose stream stays open unseen.
         screen.await("Leaving play left the audio stream open") { audio.stops.get() > stopCount }
         val startCount = audio.starts.get()
-        screen.context.getSystemService(android.app.ActivityManager::class.java).appTasks
-            .single { it.taskInfo?.taskId == original.taskId }.moveToFront()
+        screen.bringToFront(original)
         screen.await("Play activity did not resume") { screen.onMain { vm.screenVisible } }
         screen.await("Returning did not reopen the audio stream") { audio.starts.get() > startCount }
         assertEquals("Sounds were reloaded on return", loadedSounds, audio.loaded.toMap())

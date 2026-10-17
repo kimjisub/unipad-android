@@ -16,6 +16,13 @@ if [[ "$($adb_bin -s "$serial" shell settings get global airplane_mode_on | tr -
   echo 'Disable network on the test device before running (see README).' >&2
   exit 2
 fi
+# The suite runs every @Test of the classes it lists; count them so the footer check keeps up with new tests.
+if ! counted="$(python3 scripts/check_connected_results.py \
+    --suite app/src/androidTest/java/com/kimjisub/launchpad/basefeatures/BaseFeaturesSuite.kt app)"; then
+  echo "$counted" >&2
+  exit 2
+fi
+expected="${counted#suite_expected=}"
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/debug/app-debug.apk
 "$adb_bin" -s "$serial" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
@@ -30,7 +37,7 @@ trap 'rm -f "$output"' EXIT
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer.
-if ! grep -Eq '^OK \(50 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
+if ! grep -Eq "^OK \\($expected tests\\)" "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
   exit 1
 fi

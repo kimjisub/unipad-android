@@ -98,7 +98,7 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, lifting or cancelling a finger after the chain changed (the shared chain-release cases), an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `HeldPadLeavingScreenTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, lifting or cancelling a finger after the chain changed (the shared chain-release cases), a held pad released when the play screen pauses behind another activity or Home hides it, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, and a pad whose sound moves to a chain the pack lacks. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -216,7 +216,7 @@ crossed the pads (Compose used to stop handing the embedded chain buttons that p
 
 ## A pad held while the screen changes or another pointer joins
 
-These two classes check what happens to a pad that is still held when something other than a
+These classes check what happens to a pad that is still held when something other than a
 plain lift ends it. `HeldPadTest` gives every first-chain pad its own endless loop (`loop` 0 in
 `keySound`, a copy of the silent WAV per pad), so each sound request names the pad that made it and
 a pad left playing shows as a loop nothing stopped (`RecordingAudio.ringingLoops`). Each case
@@ -242,6 +242,22 @@ agree, and no other pad may play. After the lift nothing is lit or looping, and 
 new layout plays and lights the pad under it. The play screen releases held pads when it lays the
 grid out again (`PadTouchTracker.setGrid`); on the API 35 and 37 emulators the system did not cancel
 the touch for any of the four changes.
+
+`HeldPadLeavingScreenTest` holds a pad with a finger, Slide Mode off and on, while the play screen
+leaves the front in two ways. `heldPadStopsWhenPlayScreenIsPaused` and
+`heldPadStopsWhenPlayScreenIsPausedInSlideMode` pause it behind a floating activity
+(`ActivityScenario.moveToState(STARTED)`) that leaves it visible, as the notification shade or a
+call screen does. `heldPadStopsWhenAppGoesHome` and `heldPadStopsWhenAppGoesHomeInSlideMode` press
+Home, as when switching apps. With the finger still down, the held pad's loop must stop and its
+press light go off. The play screen then comes back (`moveToState(RESUMED)`, or its task brought to
+the front as from recent apps); once its window is ready again the finger lifts (or the system's
+cancel, which is logged, stands for the lift), nothing is lit or looping, and pressing the same pad
+again plays, lights and loops it until it is lifted.
+
+On the API 35 emulator the system cancelled the held touch when Home hid the play window, so the
+Home cases pass through the shared cancellation handling. It did not cancel it when the play screen
+only paused; the paused cases are the ones that check the play screen lets go of the pad itself
+(`padTouch.cancel()` in `PlayActivity.onPause`).
 
 `MixedPointerInputTest` holds a pad with one pointer while the other presses and lifts from a
 second pad, then the first lifts: mouse first and finger first, each with Slide Mode off and on.
@@ -269,7 +285,7 @@ close the shell streams, ending `uinput` and removing its device. `InputToolsCle
 that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
 after registration removes the device while preserving the original failure. It also checks
 that cancelled-mouse teardown sends no new window event and a new mouse helper can hover. It runs separately
-from the 47-test release preflight. Layout-test cleanup waits within the existing 10-second checks
+from the release preflight. Layout-test cleanup waits within the existing 10-second checks
 for the display override to disappear and the play window's landscape orientation and original
 bounds to return before the next test starts.
 
@@ -277,8 +293,10 @@ bounds to return before the next test starts.
 |---|---|
 | Held pad through portrait/landscape and window shrink/grow, finger UP after the change | Pass; released at the relayout, no system cancel |
 | Mouse then finger, finger then mouse, Slide Mode off and on | Pass; Android cancelled the first device at the second device's press in all four |
+| Held pad while the play screen pauses, Slide Mode off and on (API 35 only) | Pass; no system cancel, the play screen released the pad |
+| Held pad while Home hides the play screen, Slide Mode off and on (API 35 only) | Pass; the system cancelled the touch |
 
-Both classes are in `BaseFeaturesSuite`. To run only them on the emulator:
+All three classes are in `BaseFeaturesSuite`. To run only one of them on the emulator:
 
 ```bash
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
