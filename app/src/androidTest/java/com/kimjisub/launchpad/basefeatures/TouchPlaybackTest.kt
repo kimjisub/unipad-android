@@ -46,6 +46,31 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         assertEquals(audio.loaded.getValue("silence2.wav"), audio.plays.last())
     }
 
+    /**
+     * The options window's dimmed backdrop fades out for 0.3 s after the window closes. A pad pressed
+     * then, such as the first step right after choosing step practice, must play rather than land on
+     * the backdrop. Animations are slowed tenfold so the press always falls inside the fade.
+     */
+    @Test fun padPressedWhileTheClosedOptionsWindowFadesOutPlays() {
+        val scale = "animator_duration_scale"
+        val previous = screen.device.executeShellCommand("settings get global $scale").trim()
+        screen.device.executeShellCommand("settings put global $scale 10")
+        try {
+            screen.openPlay()
+            screen.options()
+            val closed = SystemClock.elapsedRealtime()
+            assertTrue("Back key injection failed", screen.device.pressKeyCode(android.view.KeyEvent.KEYCODE_BACK))
+            screen.await("Back did not close the options window") { screen.onMain { !screen.vm().isOptionWindowVisible } }
+            screen.tapPad(0)
+            assertTrue("The press came after the fade had ended", SystemClock.elapsedRealtime() - closed < 3000)
+            screen.await("A pad pressed while the options window faded out did not play") { audio.plays.size == 1 }
+        } finally {
+            screen.device.executeShellCommand(
+                if (previous == "null") "settings delete global $scale" else "settings put global $scale $previous"
+            )
+        }
+    }
+
     @Test fun twoSimultaneousFingersPlayBothPadsAndReleaseBoth() {
         screen.openPlay()
         screen.options()
