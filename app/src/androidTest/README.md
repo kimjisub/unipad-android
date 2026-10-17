@@ -66,6 +66,19 @@ ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
 ```
 
+To check several classes or methods in one run, name them to the runner script. Gradle passes
+only the first class of a comma-separated `class=A,B` to the device and still reports success,
+so do not use that form. The script runs the selection as one anchored `tests_regex`, then
+fails unless the JUnit XML lists every `@Test` of each selected class (or each selected
+`Class#method`), no other test, and no failure, error or skip. It records per-selection counts
+and reasons in `.ci-results/ui-status.txt`. Like the complete run, it uninstalls both apps first.
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.UniPackLegacyArchiveDeviceTest \
+  com.kimjisub.launchpad.unipack.SoundNameCaseDeviceTest#internalStorageChoosesTheExactNameFirst
+```
+
 Debug variants request AGP's device code preparation before execution using
 `android.experimental.force-aot-compilation`. This retains a fresh Orchestrator process per
 test, the same APKs, all assertions, and normal release variant configuration. The offline
@@ -76,9 +89,9 @@ before starting the timed app process. This functional suite is not a cold-start
 The property is also used by the [AndroidX benchmark plugin](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/benchmark/gradle-plugin/src/main/kotlin/androidx/benchmark/gradle/BenchmarkPlugin.kt).
 
 Repeat the exact complete-suite command three times. Each invocation must execute the connected
-tasks; reports must show zero failures and zero skips. In local verification, a comma-separated
-class selector executed only its first class; use one class/method per focused invocation and
-check the resulting names/counts. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
+tasks; reports must show zero failures and zero skips. A comma-separated class selector executes
+only its first class; run several focused classes through `scripts/ci-connected-tests.sh` as shown
+above. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
 between runs because the next invocation overwrites them. Gradle tasks marked `SKIPPED` are not
 skipped JUnit tests; use the test report totals. Do not add `@Ignore`, assumptions, class exclusion
 filters, or weaker assertions to make a failing screen test green.

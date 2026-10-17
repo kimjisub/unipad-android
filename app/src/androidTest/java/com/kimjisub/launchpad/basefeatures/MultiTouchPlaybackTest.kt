@@ -205,15 +205,6 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         assertEquals("Chain buttons requested a sound $context", plays, audio.plays.size)
     }
 
-    /** Centre of the chain button that selects [chain], in screen coordinates. */
-    protected fun chainButton(chain: Int): Point {
-        val chains = screen.onMain {
-            screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().filter { it.width > 0 }.map(screen::bounds)
-        }
-        assertTrue("Chain button ${chain + 1} must be on screen", chain < chains.size)
-        return Point(chains[chain].centerX(), chains[chain].centerY())
-    }
-
     /**
      * A point on the left margin between the system back-gesture zone and the leftmost pad or
      * chain button, vertically level with the grid: where a palm rests when holding a tablet.

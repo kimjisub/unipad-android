@@ -134,20 +134,6 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			works.awaitAll().sum()
 		}
 
-	fun validateWorkspace() {
-		// Default download location to App Storage if not set or invalid
-		val downloadPath = preferenceManager.downloadStoragePath
-		val availablePaths = availableWorkspaces.map { it.file.path }.toSet()
-		if (downloadPath == null || !availablePaths.contains(downloadPath)) {
-			val appStorage = getAppStorageWorkspaceDir()
-			val appStorageWorkspace = availableWorkspaces.firstOrNull {
-				it.file.path == appStorage?.path
-			}
-			preferenceManager.downloadStoragePath =
-				appStorageWorkspace?.file?.path ?: availableWorkspaces[0].file.path
-		}
-	}
-
 	// Workspace used for downloads
 	val downloadWorkspace: Workspace
 		get() = downloadWorkspaceIn(availableWorkspaces.toList())
@@ -204,37 +190,11 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 		return packFolders(workspace.file).size
 	}
 
-	fun getDocumentsWorkspaceDir(): File? {
-		@Suppress("DEPRECATION")
-		val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-		val uniPackDir = File(documentsDir, "UniPack")
-		if (uniPackDir.exists() && uniPackDir.canRead()) return uniPackDir
-		val unipadDir = File(documentsDir, "Unipad")
-		return if (unipadDir.exists() && unipadDir.canRead()) unipadDir else null
-	}
-
-	fun getAppStorageWorkspaceDir(): File? {
-		val appExternalDir = context.getExternalFilesDir(null) ?: return null
-		val unipackDir = File(appExternalDir, "UniPack")
-		if (!unipackDir.exists()) unipackDir.mkdirs()
-		return unipackDir
-	}
-
-	fun getDocumentsUnipackFolders(): List<File> {
-		val dir = getDocumentsWorkspaceDir() ?: return emptyList()
-		return packFolders(dir)
-	}
-
 	/** Legacy UniPack directory: getExternalFilesDirs("UniPack") on internal storage */
 	fun getLegacyUniPackDir(): File? {
 		val dirs = context.getExternalFilesDirs("UniPack")
 		val internal = dirs.filterNotNull().firstOrNull { it.absolutePath.contains("/storage/emulated/0") }
 		return if (internal != null && internal.exists() && internal.canRead()) internal else null
-	}
-
-	fun getLegacyUniPackFolders(): List<File> {
-		val dir = getLegacyUniPackDir() ?: return emptyList()
-		return packFolders(dir)
 	}
 
 	suspend fun getUnipacks() =

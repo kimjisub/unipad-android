@@ -98,7 +98,7 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, lifting or cancelling a finger after the chain changed (the shared chain-release cases), an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, and a pad whose sound moves to a chain the pack lacks. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -148,6 +148,33 @@ Run the existing test entry, or run the full BaseFeaturesSuite as above:
 adb -s "$ANDROID_SERIAL" logcat -d -s TouchCancellation:I '*:S'
 ```
 
+## Lifting a finger after the chain changed (base feature 3)
+
+`fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted` plays the six cases of the shared
+`chain-release-v1` corpus (`app/src/sharedTest/assets/chain-release-v1`, a byte copy of
+unipad.io `meta/unipack-conformance/chain-release-v1`, checked against its manifest) with
+injected fingers on the play screen, Slide Mode off: a pad held while another finger taps a chain
+button, a pack that moves the chain 100 ms after a sound, two held pads with one lifted, a
+cancelled finger followed by a new press of the same pad, a pad cycling through infinite, once and
+three-times sounds, and a plain press and release. Each step checks the sound requests, which
+loops are still running, the chain and the press lights; lifting or cancelling a finger must stop
+only the infinite loop that finger started.
+
+The screen runs in real time, so it does not check when finite samples end, the instant before a
+pack's timer moves the chain, or a lift of a finger the system already ended (the system never
+delivers it). `ChainReleaseCorpusTest` replays the same cases through `PadTouchTracker`,
+`PlayActivityViewModel` and `SoundRunner` on a virtual clock and checks all of these. Both are
+request evidence only, not audible output. The `ChainRelease` log tag prints every step and the
+corpus files' SHA-256; captures are `chain-release-CR-001-<step>` and `chain-release-CR-003-<step>`.
+
+```bash
+./gradlew :app:testDebugUnitTest --tests 'com.kimjisub.launchpad.unipack.runner.ChainReleaseCorpusTest'
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.TouchPlaybackTest#fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted \
+  --no-daemon --console=plain
+adb -s "$ANDROID_SERIAL" logcat -d -s ChainRelease:I '*:S'
+```
+
 ## Several fingers on the play screen
 
 `Fingers` injects one multi-finger touchscreen gesture through `UiAutomation.injectInputEvent`
@@ -173,8 +200,8 @@ and on (dragging moves the press). The test sets the preference and restores it 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
 Case G cancellation is checked by the touch cancellation regression above in both modes.
-Leaving the screen while fingers remain held and case H, lifting a finger after the chain
-changed, remain separate checks.
+Case H, lifting a finger after the chain changed, is checked above. Leaving the screen while
+fingers remain held remains a separate check.
 Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## A mouse on the play screen

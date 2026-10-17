@@ -1,0 +1,1209 @@
+{
+  "suite": "chain-release-v1",
+  "schemaVersion": 1,
+  "evidenceLevel": "authored-expectations-not-platform-results",
+  "coordinates": "one-based chain,x,y; pad=[x,y]",
+  "isolation": "fresh pack, chain 1, empty playback and input state per case",
+  "clock": "logical milliseconds from first press; drain due timers before checkpoint; sample duration 100ms",
+  "legacyResults": "separate from canonical 124 cases, KS-003 and preserved 60 rows; never aggregate retrospectively",
+  "cases": [
+    {
+      "id": "CR-001",
+      "group": "manual-chain-change",
+      "pack": "manual",
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "A",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a",
+                "inputId": "A",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 20,
+          "input": {
+            "kind": "chain-button",
+            "inputId": "CHAIN",
+            "chain": 2
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 40,
+          "input": {
+            "kind": "press",
+            "inputId": "B",
+            "pad": [
+              2,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [
+              {
+                "playbackId": "b",
+                "inputId": "B",
+                "chain": 2,
+                "pad": [
+                  2,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a",
+              "b"
+            ],
+            "pressedInputs": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 60,
+          "input": {
+            "kind": "release",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "a"
+            ],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 80,
+          "input": {
+            "kind": "release",
+            "inputId": "B"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "b"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "CR-002",
+      "group": "pack-delayed-chain-change",
+      "pack": "delayed",
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "A",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a",
+                "inputId": "A",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 99,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 100,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 120,
+          "input": {
+            "kind": "press",
+            "inputId": "B",
+            "pad": [
+              2,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [
+              {
+                "playbackId": "b",
+                "inputId": "B",
+                "chain": 2,
+                "pad": [
+                  2,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a",
+              "b"
+            ],
+            "pressedInputs": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 140,
+          "input": {
+            "kind": "release",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "a"
+            ],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 160,
+          "input": {
+            "kind": "release",
+            "inputId": "B"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "b"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "CR-003",
+      "group": "two-pads-release-one",
+      "pack": "manual",
+      "simultaneousPressSteps": [
+        0,
+        1
+      ],
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "A",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a",
+                "inputId": "A",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "B",
+            "pad": [
+              2,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "b",
+                "inputId": "B",
+                "chain": 1,
+                "pad": [
+                  2,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a",
+              "b"
+            ],
+            "pressedInputs": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 20,
+          "input": {
+            "kind": "chain-button",
+            "inputId": "CHAIN",
+            "chain": 2
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a",
+              "b"
+            ],
+            "pressedInputs": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 40,
+          "input": {
+            "kind": "release",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "a"
+            ],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 60,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 80,
+          "input": {
+            "kind": "release",
+            "inputId": "B"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "b"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "CR-004",
+      "group": "cancel-duplicate-release-repress",
+      "pack": "manual",
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "A",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a",
+                "inputId": "A",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 20,
+          "input": {
+            "kind": "chain-button",
+            "inputId": "CHAIN",
+            "chain": 2
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 40,
+          "input": {
+            "kind": "press",
+            "inputId": "B",
+            "pad": [
+              2,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [
+              {
+                "playbackId": "b",
+                "inputId": "B",
+                "chain": 2,
+                "pad": [
+                  2,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a",
+              "b"
+            ],
+            "pressedInputs": [
+              "A",
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 60,
+          "input": {
+            "kind": "cancel",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [
+              "a"
+            ],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 80,
+          "input": {
+            "kind": "chain-button",
+            "inputId": "CHAIN2",
+            "chain": 1
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 100,
+          "input": {
+            "kind": "press",
+            "inputId": "A2",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a2",
+                "inputId": "A2",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "b",
+              "a2"
+            ],
+            "pressedInputs": [
+              "B",
+              "A2"
+            ]
+          }
+        },
+        {
+          "atMs": 120,
+          "input": {
+            "kind": "release",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "b",
+              "a2"
+            ],
+            "pressedInputs": [
+              "B",
+              "A2"
+            ]
+          }
+        },
+        {
+          "atMs": 140,
+          "input": {
+            "kind": "cancel",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "b",
+              "a2"
+            ],
+            "pressedInputs": [
+              "B",
+              "A2"
+            ]
+          }
+        },
+        {
+          "atMs": 160,
+          "input": {
+            "kind": "release",
+            "inputId": "A2"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [
+              "a2"
+            ],
+            "naturalEnds": [],
+            "active": [
+              "b"
+            ],
+            "pressedInputs": [
+              "B"
+            ]
+          }
+        },
+        {
+          "atMs": 180,
+          "input": {
+            "kind": "release",
+            "inputId": "B"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [
+              "b"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "CR-005",
+      "group": "finite-and-sound-sequence",
+      "pack": "manual",
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "S1",
+            "pad": [
+              3,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "s1",
+                "inputId": "S1",
+                "chain": 1,
+                "pad": [
+                  3,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s1"
+            ],
+            "pressedInputs": [
+              "S1"
+            ]
+          }
+        },
+        {
+          "atMs": 20,
+          "input": {
+            "kind": "release",
+            "inputId": "S1"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [
+              "s1"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 40,
+          "input": {
+            "kind": "press",
+            "inputId": "S2",
+            "pad": [
+              3,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "s2",
+                "inputId": "S2",
+                "chain": 1,
+                "pad": [
+                  3,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": 1
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s2"
+            ],
+            "pressedInputs": [
+              "S2"
+            ]
+          }
+        },
+        {
+          "atMs": 60,
+          "input": {
+            "kind": "release",
+            "inputId": "S2"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s2"
+            ],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 160,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [
+              "s2"
+            ],
+            "active": [],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 180,
+          "input": {
+            "kind": "press",
+            "inputId": "S3",
+            "pad": [
+              3,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "s3",
+                "inputId": "S3",
+                "chain": 1,
+                "pad": [
+                  3,
+                  1
+                ],
+                "file": "sounds/c.wav",
+                "plays": 3
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s3"
+            ],
+            "pressedInputs": [
+              "S3"
+            ]
+          }
+        },
+        {
+          "atMs": 200,
+          "input": {
+            "kind": "release",
+            "inputId": "S3"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s3"
+            ],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 500,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [
+              "s3"
+            ],
+            "active": [],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 520,
+          "input": {
+            "kind": "press",
+            "inputId": "S4",
+            "pad": [
+              3,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "s4",
+                "inputId": "S4",
+                "chain": 1,
+                "pad": [
+                  3,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "s4"
+            ],
+            "pressedInputs": [
+              "S4"
+            ]
+          }
+        },
+        {
+          "atMs": 540,
+          "input": {
+            "kind": "release",
+            "inputId": "S4"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [
+              "s4"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 560,
+          "input": {
+            "kind": "press",
+            "inputId": "O",
+            "pad": [
+              4,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "o",
+                "inputId": "O",
+                "chain": 1,
+                "pad": [
+                  4,
+                  1
+                ],
+                "file": "sounds/b.wav",
+                "plays": 1
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "o"
+            ],
+            "pressedInputs": [
+              "O"
+            ]
+          }
+        },
+        {
+          "atMs": 580,
+          "input": {
+            "kind": "press",
+            "inputId": "F",
+            "pad": [
+              5,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "f",
+                "inputId": "F",
+                "chain": 1,
+                "pad": [
+                  5,
+                  1
+                ],
+                "file": "sounds/c.wav",
+                "plays": 3
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "o",
+              "f"
+            ],
+            "pressedInputs": [
+              "O",
+              "F"
+            ]
+          }
+        },
+        {
+          "atMs": 600,
+          "input": {
+            "kind": "chain-button",
+            "inputId": "CHAIN",
+            "chain": 2
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "o",
+              "f"
+            ],
+            "pressedInputs": [
+              "O",
+              "F"
+            ]
+          }
+        },
+        {
+          "atMs": 620,
+          "input": {
+            "kind": "release",
+            "inputId": "O"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "o",
+              "f"
+            ],
+            "pressedInputs": [
+              "F"
+            ]
+          }
+        },
+        {
+          "atMs": 640,
+          "input": {
+            "kind": "release",
+            "inputId": "F"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "o",
+              "f"
+            ],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 680,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [
+              "o"
+            ],
+            "active": [
+              "f"
+            ],
+            "pressedInputs": []
+          }
+        },
+        {
+          "atMs": 900,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 2,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [
+              "f"
+            ],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "CR-006",
+      "group": "unchanged-chain-baseline",
+      "pack": "manual",
+      "steps": [
+        {
+          "atMs": 0,
+          "input": {
+            "kind": "press",
+            "inputId": "A",
+            "pad": [
+              1,
+              1
+            ]
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [
+              {
+                "playbackId": "a",
+                "inputId": "A",
+                "chain": 1,
+                "pad": [
+                  1,
+                  1
+                ],
+                "file": "sounds/a.wav",
+                "plays": "infinite"
+              }
+            ],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 20,
+          "input": {
+            "kind": "checkpoint"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [],
+            "naturalEnds": [],
+            "active": [
+              "a"
+            ],
+            "pressedInputs": [
+              "A"
+            ]
+          }
+        },
+        {
+          "atMs": 40,
+          "input": {
+            "kind": "release",
+            "inputId": "A"
+          },
+          "expected": {
+            "chain": 1,
+            "starts": [],
+            "releaseStops": [
+              "a"
+            ],
+            "naturalEnds": [],
+            "active": [],
+            "pressedInputs": []
+          }
+        }
+      ]
+    }
+  ]
+}
