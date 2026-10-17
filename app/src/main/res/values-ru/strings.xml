@@ -35,6 +35,7 @@
 	<string name="menu">Меню</string>
 	<string name="website">Веб-сайт</string>
 	<string name="measuring">Измерение…</string>
+	<string name="unknownCount">Неизвестно</string>
 	<string name="general">Общие</string>
 	<string name="notice">Уведомление</string>
 	<string name="newUniPack">Новый UniPack</string>

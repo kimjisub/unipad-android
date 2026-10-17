@@ -36,6 +36,7 @@
 	<string name="menu">菜单</string>
 	<string name="website">网站</string>
 	<string name="measuring">测量中…</string>
+	<string name="unknownCount">未知</string>
 	<string name="general">常规</string>
 	<string name="notice">通知</string>
 	<string name="newUniPack">新 UniPack</string>
