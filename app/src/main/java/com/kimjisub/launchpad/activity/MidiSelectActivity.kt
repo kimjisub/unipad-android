@@ -244,8 +244,8 @@ private fun MidiSelectScreen(
 			onClose = { helpOpen = false },
 		)
 	}
-	// The buttons stay clear of the system bars and the cutout; the device grid draws under a bottom
-	// navigation bar but ends above it.
+	// The buttons stay clear of the system bars and the cutout; the device grid's last row scrolls
+	// above a bottom navigation bar.
 	val barsAndCutout = WindowInsets.barsAndCutout
 	val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 	Row(

@@ -170,10 +170,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     @Test fun transferScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(TransferActivity::class.java) {
-                putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
-                putExtra(TransferActivity.EXTRA_SOURCE_PATH, screen.workspace.path)
-            }
+            launchTransfer(screen.workspace)
             assertControlsClearOfSideBarAndCutout("transfer") {
                 screen.node(By.text(FeatureScreen.PACK_ID))
                 screen.node(By.text(screen.text(R.string.transfer_start)))
@@ -315,7 +312,10 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 launchTransfer(source)
                 screen.node(By.text(transferFolderName(0)))
                 val keyboardTop = openSearchKeyboard { screen.click(By.clazz("android.widget.EditText")) }
-                assertScrollsAboveKeyboard("transfer-search-results", By.text(transferFolderName(TRANSFER_FOLDERS - 1)), keyboardTop)
+                // Ten of the packs match, still more than the strip above the keyboard shows.
+                screen.node(By.focused(true)).text = "${TRANSFER_FOLDER_PREFIX}1"
+                screen.await("Search did not filter the packs") { !screen.device.hasObject(By.text(transferFolderName(0))) }
+                assertScrollsAboveKeyboard("transfer-search-results", By.text(transferFolderName(19)), keyboardTop)
             }
         }
     }
@@ -410,16 +410,17 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      * (smallest width [TABLET_SMALLEST_WIDTH_DP]), held in landscape, where the bar, or the taskbar
      * holding its buttons, stays along the bottom. From API 36 a screen this large ignores the app's
      * landscape request and follows the display, so the display itself is turned. The density and
-     * rotation in place before are put back.
+     * rotation in place before are put back; a rotation that cannot be read is put back as free.
      */
     private fun <T> onTabletWithButtonBar(block: () -> T): T {
-        val physical = Regex("Physical size: (\\d+)x(\\d+)").find(screen.device.executeShellCommand("wm size"))!!
+        val sizes = screen.device.executeShellCommand("wm size")
+        val shortest = (Regex("Override size: (\\d+)x(\\d+)").find(sizes) ?: Regex("Physical size: (\\d+)x(\\d+)").find(sizes)!!)
             .destructured.let { (width, height) -> minOf(width.toInt(), height.toInt()) }
         val density = Regex("Override density: (\\d+)").find(screen.device.executeShellCommand("wm density"))?.groupValues?.get(1)
-        val rotation = screen.device.executeShellCommand("wm user-rotation").trim()
+        val rotation = screen.device.executeShellCommand("wm user-rotation").trim().takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"
         return DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION) {
             try {
-                screen.device.executeShellCommand("wm density ${physical * 160 / TABLET_SMALLEST_WIDTH_DP}")
+                screen.device.executeShellCommand("wm density ${shortest * 160 / TABLET_SMALLEST_WIDTH_DP}")
                 screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
                 block()
             } finally {
@@ -484,7 +485,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         putExtra(TransferActivity.EXTRA_SOURCE_PATH, source.path)
     }
 
-    private fun transferFolderName(index: Int) = "insets-pack-%02d".format(index)
+    private fun transferFolderName(index: Int) = "$TRANSFER_FOLDER_PREFIX%02d".format(index)
 
     /** The window's area on screen that neither a system bar nor the display cutout covers. */
     private fun freeArea(decor: android.view.View): android.graphics.Rect? {
@@ -498,6 +499,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         const val NO_MATCH = "zz-no-pack-matches"
         const val LARGEST_FONT_SCALE = "2.0"
         const val MAX_DRAGS = 20
+        const val TRANSFER_FOLDER_PREFIX = "insets-pack-"
         const val DRAG_MARGIN_PX = 8
         const val DRAG_STEPS = 20
         const val TABLET_SMALLEST_WIDTH_DP = 720
