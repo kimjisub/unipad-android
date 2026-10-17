@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -233,9 +234,9 @@ class MainActivityTest : BaseUITest() {
     /** A folder the app cannot empty: the error is shown and the history stays. */
     @Test
     fun testUnipackDeletionFailureKeepsHistory() {
-        val sounds = File(TestUniPack.folder(context), "sounds")
+        val unreachable = UnreachableFolder(File(TestUniPack.folder(context), "sounds"))
         try {
-            assertTrue("Failure fixture must make the sounds folder read-only", sounds.setWritable(false, false) && !sounds.canWrite())
+            assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
             seedHistory(TestUniPack.FOLDER_NAME)
             launchToMainScreen()
 
@@ -249,8 +250,33 @@ class MainActivityTest : BaseUITest() {
             assertTrue("Pack files are gone", TestUniPack.folder(context).exists())
             assertEquals("History was dropped although the files remain", 1L to true, history(TestUniPack.FOLDER_NAME))
             device.findObject(By.text(str(android.R.string.ok))).click()
+            assertTrue("Failure fixture left folders behind", unreachable.remove())
         } finally {
-            sounds.setWritable(true, false)
+            unreachable.remove()
+        }
+    }
+
+    /** A deletion failure run stopped before its cleanup must not break the next test's pack. */
+    @Test
+    fun testTestPackInstallClearsLeftoverDeletionFixture() {
+        val sounds = File(TestUniPack.folder(context), "sounds")
+        for (stranded in listOf(false, true)) {
+            val unreachable = UnreachableFolder(sounds)
+            try {
+                assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
+                if (stranded) assertTrue("Fixture could not be moved under its spare folder", unreachable.strandUnderSpare())
+                assertFalse("Fixture must survive a delete by path", TestUniPack.folder(context).deleteRecursively())
+
+                TestUniPack.install(context)
+
+                assertEquals(
+                    "Test pack install left part of the fixture (stranded=$stranded)",
+                    listOf("silence.wav"),
+                    sounds.list()?.sorted()
+                )
+            } finally {
+                unreachable.remove()
+            }
         }
     }
 
