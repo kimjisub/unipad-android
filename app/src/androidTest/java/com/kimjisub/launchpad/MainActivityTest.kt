@@ -1,9 +1,7 @@
 package com.kimjisub.launchpad
 
-import android.app.LocaleManager
 import android.content.res.Configuration
 import android.os.Build
-import android.os.LocaleList
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -135,14 +133,14 @@ class MainActivityTest : BaseUITest() {
         val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
         val english = sortRes.map { strIn(Locale.ENGLISH, it) }
         val korean = sortRes.map { strIn(Locale.KOREAN, it) }
-        val originalLocales = appLanguage()
+        val originalLocales = AppLanguage.get()
         try {
-            setAppLanguage(LocaleList.forLanguageTags("en"))
+            AppLanguage.set("en")
             prefs.sortMethod = 2
             launchToMainScreen()
             assertTrue("Sort bar does not show '${english[2]}'", device.wait(Until.hasObject(By.text(english[2])), 5000L))
 
-            setAppLanguage(LocaleList.forLanguageTags("ko"))
+            AppLanguage.set("ko")
             assertTrue(
                 "Sort bar still shows '${english[2]}' after switching to Korean",
                 device.wait(Until.hasObject(By.text(korean[2])), 10000L)
@@ -162,16 +160,8 @@ class MainActivityTest : BaseUITest() {
             )
             takeScreenshot("sort_names_korean_after_relaunch")
         } finally {
-            setAppLanguage(originalLocales)
+            AppLanguage.set(originalLocales)
             prefs.sortMethod = originalMethod
-        }
-    }
-
-    private fun appLanguage(): LocaleList = context.getSystemService(LocaleManager::class.java).applicationLocales
-
-    private fun setAppLanguage(locales: LocaleList) {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            context.getSystemService(LocaleManager::class.java).applicationLocales = locales
         }
     }
 

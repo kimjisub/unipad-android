@@ -99,6 +99,10 @@
 	<string name="play_section_tools">เครื่องมือ</string>
 	<string name="autoMapping">แมปอัตโนมัติ</string>
 	<string name="autoMappingRunning">แมปอัตโนมัติ…</string>
+	<string name="play_info_untitled">ไม่มีชื่อ</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d เชน"</item>
+	</plurals>
 
 	<!--Version-->
 

@@ -99,6 +99,10 @@
 	<string name="play_section_tools">Công cụ</string>
 	<string name="autoMapping">Tự Động Ánh Xạ</string>
 	<string name="autoMappingRunning">Tự Động Ánh Xạ…</string>
+	<string name="play_info_untitled">Không có tiêu đề</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d chuỗi"</item>
+	</plurals>
 
 	<!--Version-->
 

@@ -99,6 +99,13 @@
 	<string name="play_section_tools">Инструменты</string>
 	<string name="autoMapping">Авто-маппинг</string>
 	<string name="autoMappingRunning">Авто-маппинг…</string>
+	<string name="play_info_untitled">Без названия</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d цепочка"</item>
+		<item quantity="few">"%1$d×%2$d  ·  %3$d цепочки"</item>
+		<item quantity="many">"%1$d×%2$d  ·  %3$d цепочек"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d цепочки"</item>
+	</plurals>
 
 	<!--Version-->
 
