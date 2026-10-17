@@ -165,6 +165,27 @@ class PlayActivityViewModelUsageTest {
 	}
 
 	@Test
+	fun theFirstPressRecordsWhetherItCameFromTheScreenOrAController() {
+		val pressOn = mapOf<String, (PlayActivityViewModel) -> Unit>(
+			"screen" to { it.padTouch(0, 0, true); it.padTouch(0, 0, false) },
+			"midi" to { it.controllerPadTouch(0, 0, true); it.controllerPadTouch(0, 0, false) },
+		)
+		for ((source, press) in pressOn) {
+			val recorded = sink.events.size
+			val vm = newVm()
+			load(vm, createPack())
+			startPlayback(vm)
+			runUntil { sink.events.drop(recorded).any { it.name == UsageEvent.PACK_LOAD } }
+			press(vm)
+			pressOn.values.forEach { it(vm) }
+			leave(vm)
+
+			val firstInputs = sink.events.drop(recorded).filter { it.name == UsageEvent.PLAY_FIRST_INPUT }
+			assertEquals(source, listOf(mapOf(UsageParam.TRIGGER to "pad", UsageParam.INPUT_SOURCE to source)), firstInputs.map { it.parameters })
+		}
+	}
+
+	@Test
 	fun aPackIsNotCountedAsLoadedUntilItsSoundsAreReady() {
 		val vm = newVm()
 		load(vm, createPack())
@@ -366,7 +387,7 @@ class PlayActivityViewModelUsageTest {
 			val vm = newVm()
 			load(vm, createPack(autoPlay = LONG_AUTO_PLAY))
 			startPlayback(vm)
-			runUntil { sink.events.size > recorded }
+			runUntil { sink.events.drop(recorded).any { it.name == UsageEvent.PACK_LOAD } }
 
 			vm.switchPlayMode(mode)
 			runFor(AUTO_PLAY_NOTE_MS * 3)
