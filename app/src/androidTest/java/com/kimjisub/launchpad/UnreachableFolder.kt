@@ -26,15 +26,25 @@ class UnreachableFolder(parent: File) {
         return !File(top.absolutePath + "/$LEVEL".repeat(depth)).exists()
     }
 
-    /** True when nothing of the chain is left. */
+    /**
+     * True when nothing of the chain is left. Also takes apart a chain left under [spare] by a run
+     * stopped inside [create] or [remove].
+     */
     fun remove(): Boolean {
-        while (File(top, LEVEL).renameTo(spare)) {
+        spare.delete()
+        if (spare.exists()) {
             top.delete()
-            spare.renameTo(top)
+            if (!spare.renameTo(top)) return false
+        }
+        while (File(top, LEVEL).renameTo(spare)) {
+            if (!top.delete() || !spare.renameTo(top)) return false
         }
         top.delete()
         return !top.exists() && !spare.exists()
     }
+
+    /** Moves a built chain under [spare], as a run stopped inside [create] or [remove] leaves it. */
+    fun strandUnderSpare(): Boolean = top.renameTo(spare)
 
     private companion object {
         /** Linux PATH_MAX, terminating NUL included. */

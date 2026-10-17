@@ -201,6 +201,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
 | `MainActivityTest.testUnipackDeletionFailureKeepsHistory` | Deleting a pack the app cannot empty reports an error and keeps history; fixture failure is an assertion, not a skip. |
+| `MainActivityTest.testTestPackInstallClearsLeftoverDeletionFixture` | Installing the test pack removes a deletion failure fixture left by a stopped run, including one stranded mid-step. |
 | `SettingsTest.testSettingsActivityNavigation` | Settings opens and returns to Main. |
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
@@ -328,7 +329,8 @@ engine. They are now ordinary tests of the actual Import and Settings controls. 
 - The deletion failure fixture nests folders inside the pack until the innermost one is beyond the
   kernel's path length limit, so the app cannot empty the pack. Permission bits were not used
   because Android 10's emulated storage ignores them. If the fixture cannot be built, the test
-  fails explicitly instead of silently skipping, and it removes the folders afterwards.
+  fails explicitly instead of silently skipping, and it removes the folders afterwards. If a run
+  stops before that cleanup, the next test pack install takes the folders apart before deleting.
 
 ## Overlapping file imports (isolated device regression)
 

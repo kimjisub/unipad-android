@@ -13,6 +13,7 @@ import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -252,6 +253,30 @@ class MainActivityTest : BaseUITest() {
             assertTrue("Failure fixture left folders behind", unreachable.remove())
         } finally {
             unreachable.remove()
+        }
+    }
+
+    /** A deletion failure run stopped before its cleanup must not break the next test's pack. */
+    @Test
+    fun testTestPackInstallClearsLeftoverDeletionFixture() {
+        val sounds = File(TestUniPack.folder(context), "sounds")
+        for (stranded in listOf(false, true)) {
+            val unreachable = UnreachableFolder(sounds)
+            try {
+                assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
+                if (stranded) assertTrue("Fixture could not be moved under its spare folder", unreachable.strandUnderSpare())
+                assertFalse("Fixture must survive a delete by path", TestUniPack.folder(context).deleteRecursively())
+
+                TestUniPack.install(context)
+
+                assertEquals(
+                    "Test pack install left part of the fixture (stranded=$stranded)",
+                    listOf("silence.wav"),
+                    sounds.list()?.sorted()
+                )
+            } finally {
+                unreachable.remove()
+            }
         }
     }
 
