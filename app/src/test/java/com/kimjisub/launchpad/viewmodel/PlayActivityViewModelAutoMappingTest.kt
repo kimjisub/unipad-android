@@ -1,9 +1,13 @@
 package com.kimjisub.launchpad.viewmodel
 
-import com.kimjisub.launchpad.R.string
+import androidx.lifecycle.ViewModelStore
+import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.tool.SoundDurationReader
+import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.unipack.UniPackFolder
+import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
@@ -27,8 +31,8 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /**
- * Auto mapping rewrites the autoPlay file and then reads it back. Reading it back on the main thread
- * froze the play screen for packs whose autoPlay file has thousands of lines.
+ * The auto mapping button on the play screen: the user hears of a failure, leaving stops it, and the
+ * rewritten autoPlay is read back off the main thread (packs with thousands of lines froze the screen).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelAutoMappingTest {
@@ -37,9 +41,18 @@ class PlayActivityViewModelAutoMappingTest {
 	val tmp = TemporaryFolder()
 
 	private val main = FakeMainDispatcher()
+	private val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
+	private val store = ViewModelStore()
+	private val original = "t 1 1\nd 100\nt 1 1\nd 100\n"
+	private lateinit var root: File
 
 	@Volatile
 	private var reloadThread: Thread? = null
+
+	private object FixedLengths : SoundDurationReader {
+		override fun durationMs(file: File) = 400
+		override fun close() {}
+	}
 
 	@Before
 	fun setUp() {
@@ -53,63 +66,106 @@ class PlayActivityViewModelAutoMappingTest {
 
 	@After
 	fun tearDown() {
+		root.setWritable(true)
+		store.clear()
 		unmockkConstructor(UniPackFolder::class)
 		Dispatchers.resetMain()
 	}
 
-	private fun createPack(): File {
-		val root = tmp.newFolder("pack")
+	private fun openPack(): PlayActivityViewModel {
+		root = tmp.newFolder("pack")
 		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
-		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 2 a.wav\n")
+		File(root, "keySound").writeText("1 1 1 a.wav\n")
 		File(root, "sounds").mkdir()
 		File(root, "sounds/a.wav").writeText("")
-		File(root, "autoPlay").writeText("o 1 1\nd 100\nf 1 1\no 1 2\nf 1 2\n")
-		return root
+		File(root, "autoPlay").writeText(original)
+		val vm = PlayActivityViewModel(
+			mockk<UnipackRepository>(relaxed = true),
+			UsageAnalytics { _, _ -> },
+			autoMapper = { UniPackAutoMapper(it, { FixedLengths }) },
+		)
+		store.put("play", vm)
+		vm.uiCallback = ui
+		runBlocking { withTimeout(5_000) { vm.loadUnipackOnce(root.path).await() } }
+		return vm
+	}
+
+	/** Runs what reaches the main thread, as the looper would, until [done] or the timeout. */
+	private fun runUntil(timeoutMs: Long = 5_000, done: () -> Boolean) {
+		val deadline = System.nanoTime() + timeoutMs * 1_000_000
+		while (!done() && System.nanoTime() < deadline) {
+			main.runAll()
+			Thread.sleep(5)
+		}
+		main.runAll()
+	}
+
+	private fun files() = root.list()!!.sorted()
+
+	@Test
+	fun mapping_rewritesTheAutoPlayAndLoadsIt() {
+		val vm = openPack()
+
+		vm.autoMapping()
+		runUntil { !vm.autoMappingActive }
+
+		assertEquals("d 1000\nt 1 1\nd 400\nt 1 1\n", File(root, "autoPlay").readText())
+		assertEquals(2, vm.unipack.autoPlayTable!!.elements.count { it is AutoPlay.Element.Delay })
+		verify(exactly = 0) { ui.showToast(any()) }
 	}
 
 	@Test
-	fun autoMapping_readsTheRewrittenAutoPlayFileOffTheMainThread() {
-		val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
-		val pack = runBlocking { withTimeout(5_000) { vm.loadUnipackOnce(createPack().path).await() } }
+	fun mapping_readsTheRewrittenAutoPlayOffTheMainThread() {
+		val vm = openPack()
 
 		vm.autoMapping()
-		val deadline = System.currentTimeMillis() + 5_000
-		while (System.currentTimeMillis() < deadline) {
-			main.runAll()
-			if (reloadThread != null && !vm.autoMappingActive) break
-			Thread.sleep(5)
-		}
+		runUntil { reloadThread != null && !vm.autoMappingActive }
 
 		assertNotNull(reloadThread)
 		assertNotSame(main.mainThread, reloadThread)
 		assertFalse(vm.autoMappingActive)
-		// Rewritten as "d, t 1 1, d, t 1 2": each touch reads back as an on and an off.
-		assertEquals(6, pack.autoPlayTable?.elements?.size)
 	}
 
 	@Test
-	fun autoMapping_reportsAnyReadBackFailureInsteadOfCrashing() {
+	fun aReadBackFailure_showsTheFailureInsteadOfCrashing() {
 		every { anyConstructed<UniPackFolder>().reloadAutoPlay() } answers {
 			reloadThread = Thread.currentThread()
 			throw IllegalStateException("read back failed")
 		}
-		val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
-		val ui = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
-		vm.uiCallback = ui
-		runBlocking { withTimeout(5_000) { vm.loadUnipackOnce(createPack().path).await() } }
+		val vm = openPack()
 
 		vm.autoMapping()
-		val deadline = System.currentTimeMillis() + 5_000
-		while (System.currentTimeMillis() < deadline) {
-			main.runAll()
-			if (reloadThread != null && !vm.autoMappingActive) break
-			Thread.sleep(5)
-		}
-		main.runAll()
+		runUntil { reloadThread != null && !vm.autoMappingActive }
 
 		assertNotNull(reloadThread)
+		assertFalse(vm.autoMappingActive)
+		verify { ui.showToast(R.string.failed) }
+	}
+
+	@Test
+	fun aPackThatCannotBeWritten_showsTheFailure() {
+		val vm = openPack()
+		root.setWritable(false)
+		File(root, "autoPlay").setWritable(false)
+
+		vm.autoMapping()
+		runUntil { !vm.autoMappingActive }
+
+		verify { ui.showToast(R.string.failed) }
+		assertEquals(original, File(root, "autoPlay").readText())
+		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
+	}
+
+	@Test
+	fun leavingThePlayScreen_stopsTheMappingAndLeavesTheAutoPlay() {
+		val vm = openPack()
+
+		vm.autoMapping()
+		store.clear()
+		runUntil(1_000) { false }
 
 		assertFalse(vm.autoMappingActive)
-		verify { ui.showToast(string.failed) }
+		assertEquals(original, File(root, "autoPlay").readText())
+		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
 	}
 }
