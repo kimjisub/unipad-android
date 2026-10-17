@@ -10,6 +10,10 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
+import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
+import com.kimjisub.launchpad.chainrelease.ChainReleaseReplay
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
@@ -89,6 +93,98 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain()
         wholeTouchStreamCancellationReleasesBothPads()
         slideTouchCancellationStillReleasesBothPads()
+    }
+
+    /**
+     * Every case of the chain-release corpus with fingers injected on the play screen, Slide Mode
+     * off: lifting or cancelling a finger after the chain changed stops only the infinite loop that
+     * finger started, and keeps the chain, the other fingers' loops and their press lights.
+     */
+    @Test fun fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted() {
+        val corpus = ChainReleaseCorpus.load { InstrumentationRegistry.getInstrumentation().context.assets.open(it) }
+        android.util.Log.i(CHAIN_RELEASE, "suite=${ChainReleaseCorpus.SUITE} platform=android input=programmed-screen " +
+            "evidence=engine requests only, nothing heard ${corpus.sha256}")
+        val prefs = PreferenceManager(screen.context)
+        val original = prefs.slideMode
+        try {
+            for (case in corpus.cases) {
+                resetTouchFixture()
+                val pack = screen.pack()
+                pack.deleteRecursively()
+                corpus.unpack(case, pack)
+                openPlayWithPressLight(prefs, slide = false)
+                val driver = ScreenDriver(capture = case.id in setOf("CR-001", "CR-003"))
+                try {
+                    ChainReleaseReplay(driver).run(case).forEach { android.util.Log.i(CHAIN_RELEASE, it) }
+                } finally {
+                    driver.fingers.cancelRemaining()
+                }
+            }
+        } finally {
+            prefs.slideMode = original
+        }
+    }
+
+    /** The play screen as a [ChainReleaseReplay.Driver]: injected fingers, real time, recorded engine requests. */
+    private inner class ScreenDriver(private val capture: Boolean) : ChainReleaseReplay.Driver {
+        val fingers = Fingers(screen)
+        private val pointers = HashMap<String, Int>()
+        private var startedAt = -1L
+
+        override val virtualTime = false
+
+        override fun advanceTo(atMs: Long) {
+            if (startedAt < 0) startedAt = SystemClock.uptimeMillis()
+            val wait = startedAt + atMs - SystemClock.uptimeMillis()
+            if (wait > 0) SystemClock.sleep(wait)
+        }
+
+        override fun press(inputId: String, pad: Pad) {
+            pointers[inputId] = fingers.down(center(pad.x * GRID + pad.y))
+        }
+
+        // The system refuses events for a finger it already ended, so a stale release cannot reach the screen.
+        override fun release(inputId: String, cancelled: Boolean, stale: Boolean): Boolean {
+            if (stale) return false
+            val id = pointers.remove(inputId)!!
+            if (cancelled && pointers.isEmpty()) fingers.cancelRemaining() else fingers.up(id, cancelled)
+            return true
+        }
+
+        override fun tapChain(chain: Int) {
+            fingers.up(fingers.down(chainButton(chain)))
+        }
+
+        override fun await(problem: () -> String?) {
+            var last: String? = null
+            screen.await({ last ?: "" }) { problem().also { last = it } == null }
+        }
+
+        override fun settle() {
+            screen.instrumentation.waitForIdleSync()
+            SystemClock.sleep(SETTLE_MS)
+            screen.instrumentation.waitForIdleSync()
+        }
+
+        override fun chain() = screen.onMain { screen.vm().chain.value }
+
+        override fun pressedPads() = screen.onMain {
+            val channels = screen.vm().channelManager
+            (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Pad(x, y) } }
+                .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }
+                .toSet()
+        }
+
+        override fun plays(): List<Pair<String, Int>> {
+            val files = audio.loaded.entries.associate { (file, id) -> id to file }
+            return audio.plays.indices.map { files.getValue(audio.plays[it]) to audio.loops[it] }
+        }
+
+        override fun stops(): List<Int> = audio.stoppedVoices.toList()
+
+        override fun stepChecked(name: String) {
+            if (capture) captureAfterDraw("chain-release-$name")
+        }
     }
 
     private fun cancelledTouchesReleaseOnlyTheirPadsAndCanBePressedAgain() {
@@ -260,4 +356,9 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         audio.resetPlaybackRequests()
     }
 
+    private companion object {
+        const val GRID = 8
+        const val SETTLE_MS = 300L
+        const val CHAIN_RELEASE = "ChainRelease"
+    }
 }

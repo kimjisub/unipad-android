@@ -20,6 +20,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
@@ -392,16 +393,19 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = getString(string.outOfMemory)
-				finish()
+				closeOnLoadFailure(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = "${getString(string.exceptionOccurred)}\n${e.message}"
-				finish()
+				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
+	}
+
+	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
+	private fun closeOnLoadFailure(message: String) {
+		vm.unipackLoading = false
+		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+		finish()
 	}
 
 	private fun start() {
@@ -1377,6 +1381,8 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
+	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1385,6 +1391,7 @@ class PlayActivity : BaseActivity() {
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
 		releaseLaunchpadPads()
+		padTouch.cancel()
 	}
 
 	override fun onStart() {

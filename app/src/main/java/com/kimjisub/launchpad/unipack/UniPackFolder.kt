@@ -140,6 +140,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	}
 
 	override fun checkFile() {
+		folderModified = rootFolder.lastModified()
 		rootFolder.listFiles()?.forEach {
 			when (it.name.lowercase()) {
 				"info" -> infoFile = if (it.isFile) it else null
@@ -176,25 +177,27 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			criticalError = true
 			return
 		}
+		var buttonXValue: String? = null
+		var buttonYValue: String? = null
 		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			while (true) {
 				val s = reader.readLine()?.trimLine() ?: break
-				if (s.isEmpty()) continue
+				// A line without "=" (often a wrapped title or description) is skipped without a
+				// warning, as on iOS and the web (info.mdx).
+				val separator = s.indexOf('=')
+				if (separator < 0) continue
+				val key = s.substring(0, separator).trim()
+				val value = s.substring(separator + 1).trim()
 				try {
-					val split = s.split("=", limit = 2)
-					val key = split[0].trim()
-					val value = split[1].trim()
 					when (key) {
 						"title" -> title = value
 						"producerName" -> producerName = value
-						"buttonX" -> buttonX = value.toInt()
-						"buttonY" -> buttonY = value.toInt()
+						"buttonX" -> buttonXValue = value
+						"buttonY" -> buttonYValue = value
 						"chain" -> chain = value.toInt()
 						"squareButton" -> squareButton = value == "true"
 						"website" -> website = value
 					}
-				} catch (e: IndexOutOfBoundsException) {
-					addErr("info : [$s] format is not found")
 				} catch (e: NumberFormatException) {
 					// Used to propagate out of load(): the pack vanished from the library with no
 					// message (WorkspaceManager's catch). iOS/web record it and carry on.
@@ -202,10 +205,15 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 				}
 			}
 		}
+		val gridX = gridSize("buttonX", buttonXValue)
+		val gridY = gridSize("buttonY", buttonYValue)
+		buttonX = gridX ?: 0
+		buttonY = gridY ?: 0
 		if (title.isEmpty()) addErr("info : title was missing")
 		if (producerName.isEmpty()) addErr("info : producerName was missing")
-		if (buttonX == 0) addErr("info : buttonX was missing")
-		if (buttonY == 0) addErr("info : buttonY was missing")
+		if (gridX == 0) addErr("info : buttonX was missing")
+		if (gridY == 0) addErr("info : buttonY was missing")
+		if (gridX == null || gridY == null) criticalError = true
 		if (chain == 0) addErr("info : chain was missing")
 		if (chain !in 1..24) {
 			addErr("info : chain out of range")
@@ -216,6 +224,19 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		if (buttonX !in 0..MAX_GRID_SIZE || buttonY !in 0..MAX_GRID_SIZE) {
 			addErr("info : buttonX/buttonY out of range")
 			criticalError = true
+		}
+	}
+
+	/**
+	 * The last [value] given for [key], or 0 when the key is absent. A value that is not an integer
+	 * (`buttonX=abc`) refuses the pack (info.mdx) and gives null; it used to be read as 0 and opened
+	 * a pack with no pads.
+	 */
+	private fun gridSize(key: String, value: String?): Int? {
+		if (value == null) return 0
+		return value.toIntOrNull() ?: run {
+			addErr("info : $key is not a number")
+			null
 		}
 	}
 
@@ -265,11 +286,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					addErr("keySound : [$s] format is incorrect")
 					continue
 				}
-				// The sound still plays; only the move goes. A chain the pack lacks became autoPlay's
-				// current chain, and practice mode lit its button past the end of the round button table.
+				// A chain the pack lacks moves to the nearest chain it has, as on iOS and the web. Kept raw,
+				// it became autoPlay's current chain and practice mode lit a button past the round button table.
 				if (wormhole != Sound.NO_WORMHOLE && wormhole !in 0 until chain) {
 					addErr("keySound : [$s] wormhole is incorrect")
-					wormhole = Sound.NO_WORMHOLE
+					wormhole = wormhole.coerceIn(0, chain - 1)
 				}
 				if (c < 0 || c >= chain)
 					addErr("keySound : [$s] chain is incorrect")

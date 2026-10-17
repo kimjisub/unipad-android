@@ -11,13 +11,15 @@ Use a dedicated, disposable app installation on API 33 or newer with the system 
 English and no screen-lock PIN. The suite refuses an installation containing non-fixture packs.
 It only removes its named fixture folders/rows; it does not clear the whole database or app data.
 
-On the maintenance machine, borrow and return the device through the harness:
+Start a freshly wiped emulator that nothing else is using on a fixed port, so its serial is known,
+wait until it has finished booting, then turn its network off:
 
 ```bash
-. /Users/kimjisub/GitHub/unipad/project/paperclip/env.sh
-python3 "$HARNESS/devices.py" up-android --fresh
-# Set this to the serial printed above; never use another worker's device.
-export ANDROID_SERIAL='<printed serial>'
+"$ANDROID_HOME/emulator/emulator" -avd <your-api-33-or-newer-avd> -port 5580 -wipe-data -no-snapshot-load &
+# Every command names this emulator; never touch another device.
+export ANDROID_SERIAL=emulator-5580
+adb -s "$ANDROID_SERIAL" wait-for-device
+until [ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 2; done
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode enable
 adb -s "$ANDROID_SERIAL" shell svc wifi disable
 adb -s "$ANDROID_SERIAL" shell svc data disable
@@ -31,10 +33,11 @@ for run in 1 2 3; do ./scripts/run-base-features.sh "$ANDROID_SERIAL" || break; 
 adb -s "$ANDROID_SERIAL" shell cmd connectivity airplane-mode disable
 adb -s "$ANDROID_SERIAL" shell svc wifi enable
 adb -s "$ANDROID_SERIAL" shell svc data enable
-python3 "$HARNESS/devices.py" down
+adb -s "$ANDROID_SERIAL" emu kill
 ```
 
-For Gradle/Orchestrator on an exclusively borrowed device:
+For Gradle/Orchestrator, keep `ANDROID_SERIAL` set to this emulator (without it, Gradle runs on every
+connected device):
 
 ```bash
 ./gradlew :app:connectedDebugAndroidTest \
@@ -51,7 +54,7 @@ full optimization. Archive `dumpsys package dexopt` with the run output.
 No baseline fixture is downloaded. Screenshots are copied by the shell to
 `/data/local/tmp/unipad_tests/basefeatures-captures/`, so they survive the target and test
 applications being uninstalled at the end of a complete Gradle run. Pull them with
-`adb -s <printed-serial> pull /data/local/tmp/unipad_tests` before returning the device.
+`adb -s <serial> pull /data/local/tmp/unipad_tests` before stopping the emulator.
 Clear that shell-owned folder before a new run to avoid mistaking older captures for new ones.
 Readiness failure screenshots, activity state and hierarchy are kept under the same root.
 
@@ -95,7 +98,7 @@ sink; this suite does not change that file.
 |---|---|---|---|
 | 1. Start, empty/populated library, settings | `AppLaunchTest`, `MainActivityTest`, `SettingsTest`, `MainActivityListLedTest`, `PackSearchTest` | `launcherEmptyLibrarySettingsThenPopulatedLibrary` | Automatic for launcher, both library states and opening/closing settings. Fresh install permission flows remain a separate check. |
 | 2. ZIP import, result, opening pack; retired share links | `UniPackInstallOverlapTest`, `UniPackImportOverlapDeviceTest`, `PackImportUsageTest` check importer files/races/outcomes | `filePickerImportsZipShowsResultAndOpensImportedPack`, `sharedCodeLinkHasNoHandlingActivity`, `retiredScreenHasNoActivityRegistration` | Automatic for actual document picker/import/result/play, unchanged size display, no main-thread file access during import/result rendering, and absence of the retired share link/screen. |
-| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
+| 3. Sound request, keyLED, chains, simultaneous fingers and cancellation | `SoundRunnerTest`, `LedRunnerDeliveryTest`, `PlayActivityViewModelLedTest`, `PlayActivityTest` | `padTouchRequestsSoundFromLoadedPack`, `twoSimultaneousFingersPlayBothPadsAndReleaseBoth`, `fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted`, `MultiTouchPadModeTest`, `MultiTouchSlideModeTest`, `MouseInputTest`, `HeldPadLayoutChangeTest`, `MixedPointerInputTest`, `PadEdgeTouchTest` (see below) | Partial: automatic request IDs, displayed LED color/on/off, actual chain-button input, injected multi-finger touchscreen gestures in both pad input modes, per-pad and whole-gesture cancellation, repeat cancellation, re-press and finite-sample release rules, lifting or cancelling a finger after the chain changed (the shared chain-release cases), an injected mouse on pads and chains, and presses at every pad's edges and corners on square and stretched packs. Audible output/latency and real fingers need a real device/headphones. |
 | 4. AutoPlay start/pause/stop, practice hints | `AutoPlayRunnerTest`, `PlayActivityTest.testPlayActivityAutoPlayControls` | `autoplayStartsPausesResumesAndStopsThroughScreenControls`, `guideAndStepPracticeShowHintsAndStepWaitsForPadInput`, `stepPracticeContinuesPastAMoveToAChainThePackLacks` | Partial: automatic controls, frozen/resumed progress, sound requests, guide light, practice waiting/advancing, and a pad whose sound moves to a chain the pack lacks. Completing an entire practice sequence remains a separate candidate/device check; this suite checks entry and advancement. |
 | 5. MIDI discovery, input, output | `MidiConnectionLifecycleTest`, driver tests, logo/velocity tests | `virtualLaunchpadIsDiscoveredPadInputPlaysAndKeyLedSendsPackets` | Partial: synthetic app-layer connection/banner, real Launchpad S decoder, pad/chain input, sound request, encoded LED on/off output, detach. USB enumeration/permission, cable/electrical behavior and real MIDI service require hardware. |
 | 6. Store/download, delete/history/bookmark | `StoreTest` uses an offline `StoreCatalog`; `UniPackDownloadPathTest`, `MainActivityTest.testUnipackDeletion`, `UnipackRepositoryDeleteTest` | `offlineCatalogDownloadUpdatesResultAndLibrary`, `deletePackRemovesFilesHistoryAndBookmarkReinstallStartsFresh` | Automatic fake catalog → ZIP → downloaded state/library; delete removes files and only its record, reinstall starts without history/bookmark. Real catalog/server availability separate. |
@@ -145,6 +148,33 @@ Run the existing test entry, or run the full BaseFeaturesSuite as above:
 adb -s "$ANDROID_SERIAL" logcat -d -s TouchCancellation:I '*:S'
 ```
 
+## Lifting a finger after the chain changed (base feature 3)
+
+`fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted` plays the six cases of the shared
+`chain-release-v1` corpus (`app/src/sharedTest/assets/chain-release-v1`, a byte copy of
+unipad.io `meta/unipack-conformance/chain-release-v1`, checked against its manifest) with
+injected fingers on the play screen, Slide Mode off: a pad held while another finger taps a chain
+button, a pack that moves the chain 100 ms after a sound, two held pads with one lifted, a
+cancelled finger followed by a new press of the same pad, a pad cycling through infinite, once and
+three-times sounds, and a plain press and release. Each step checks the sound requests, which
+loops are still running, the chain and the press lights; lifting or cancelling a finger must stop
+only the infinite loop that finger started.
+
+The screen runs in real time, so it does not check when finite samples end, the instant before a
+pack's timer moves the chain, or a lift of a finger the system already ended (the system never
+delivers it). `ChainReleaseCorpusTest` replays the same cases through `PadTouchTracker`,
+`PlayActivityViewModel` and `SoundRunner` on a virtual clock and checks all of these. Both are
+request evidence only, not audible output. The `ChainRelease` log tag prints every step and the
+corpus files' SHA-256; captures are `chain-release-CR-001-<step>` and `chain-release-CR-003-<step>`.
+
+```bash
+./gradlew :app:testDebugUnitTest --tests 'com.kimjisub.launchpad.unipack.runner.ChainReleaseCorpusTest'
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.basefeatures.TouchPlaybackTest#fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted \
+  --no-daemon --console=plain
+adb -s "$ANDROID_SERIAL" logcat -d -s ChainRelease:I '*:S'
+```
+
 ## Several fingers on the play screen
 
 `Fingers` injects one multi-finger touchscreen gesture through `UiAutomation.injectInputEvent`
@@ -170,8 +200,8 @@ and on (dragging moves the press). The test sets the preference and restores it 
 The margin point lies between the system back-gesture zone and the leftmost pad or chain button.
 In J and K the chain buttons are tapped to the second chain and back, and must request no sound.
 Case G cancellation is checked by the touch cancellation regression above in both modes.
-Leaving the screen while fingers remain held and case H, lifting a finger after the chain
-changed, remain separate checks.
+Case H, lifting a finger after the chain changed, is checked above. Leaving the screen while
+fingers remain held remains a separate check.
 Injected touches do not prove how many fingers a given touchscreen recognises.
 
 ## A mouse on the play screen
@@ -248,7 +278,7 @@ bounds to return before the next test starts.
 | Held pad through portrait/landscape and window shrink/grow, finger UP after the change | Pass; released at the relayout, no system cancel |
 | Mouse then finger, finger then mouse, Slide Mode off and on | Pass; Android cancelled the first device at the second device's press in all four |
 
-Both classes are in `BaseFeaturesSuite`. To run only them on the borrowed device:
+Both classes are in `BaseFeaturesSuite`. To run only them on the emulator:
 
 ```bash
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
@@ -265,14 +295,14 @@ ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 `HeldPadLayoutChangeTest` resets the display size after each test; if a run is killed, run
-`adb -s "$ANDROID_SERIAL" shell wm size reset` before returning the device.
+`adb -s "$ANDROID_SERIAL" shell wm size reset` before using the device for anything else.
 
 Not established by these tests:
 
 - Both devices held at once in one window: needs an Android version or device that streams two
   devices to the same window; the API 35 and 37 emulators always took the cancel path.
 - Free-form or split-screen window resizing: the emulator's display size was changed instead;
-  freeform windows are not enabled on the borrowed emulator.
+  freeform windows are not enabled on the test emulator.
 - A real USB mouse, trackpad or finger, and the sound actually heard: a recorded play or stop
   request proves only that the app asked for it.
 
@@ -340,7 +370,7 @@ or re-signing it for this suite would change the artifact being verified.
 
 QA should run this suite on a debug build of the **same source commit**, record the commit and APK
 hashes, then separately install the exact signed candidate APK/splits from the approved build on a
-borrowed device. Drive the eight features with external UI automation/manual checks and attach
+test device. Drive the eight features with external UI automation/manual checks and attach
 candidate hashes, captures and results. The signed-candidate check must include startup, local ZIP
 import/playback, skin/rotation, Home/lock/return and real audible output. Real server/USB checks
 are separate and explicitly reported when hardware/network is unavailable. Do not replace the
@@ -359,6 +389,6 @@ requests or replace production repositories in an unchanged candidate.
   or conditional pass hides this limitation.
 - OEM process eviction, long locks, low-memory conditions, tablets and cutouts: run separate candidate
   checks on those devices/configurations. The rotation test asserts only insets actually present on
-  the borrowed device; a rectangular emulator cannot prove behavior around a notch.
+  the device under test; a rectangular emulator cannot prove behavior around a notch.
 - Live store servers: run read-only catalog availability checks separately and
   use an explicitly designated synthetic download if end-to-end server verification is needed.
