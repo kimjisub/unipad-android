@@ -509,6 +509,7 @@ private fun InfoContent(
 		modifier = Modifier
 			.fillMaxSize()
 			.verticalScroll(rememberScrollState())
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom))
 			.padding(24.dp),
 	) {
 		// -- Device section --
@@ -760,6 +761,7 @@ private fun StorageContent(
 			modifier = Modifier
 				.fillMaxSize()
 				.verticalScroll(rememberScrollState())
+				.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom))
 				.padding(24.dp),
 		) {
 			// -- Workspaces: radio (download target) --
@@ -852,7 +854,9 @@ private fun StorageContent(
 
 		SnackbarHost(
 			hostState = snackbarHostState,
-			modifier = Modifier.align(Alignment.BottomCenter),
+			modifier = Modifier
+				.align(Alignment.BottomCenter)
+				.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom)),
 		)
 	}
 }

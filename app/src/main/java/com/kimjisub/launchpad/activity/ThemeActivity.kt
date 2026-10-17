@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -268,6 +269,8 @@ private fun ThemeScreen(
 			label = "leftPanelWidth",
 		)
 
+		// The list draws under a bottom navigation bar but ends above it; the preview stays above it.
+		val safeBottom = WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom)
 		Row(
 			modifier = Modifier
 				.fillMaxSize()
@@ -310,7 +313,12 @@ private fun ThemeScreen(
 
 				LazyColumn(
 					modifier = Modifier.weight(1f),
-					contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+					contentPadding = PaddingValues(
+						start = 12.dp,
+						top = 4.dp,
+						end = 12.dp,
+						bottom = 4.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+					),
 				) {
 					itemsIndexed(themes) { index, theme ->
 						ThemeListItem(
@@ -338,7 +346,8 @@ private fun ThemeScreen(
 			Box(
 				modifier = Modifier
 					.weight(1f)
-					.fillMaxHeight(),
+					.fillMaxHeight()
+					.windowInsetsPadding(safeBottom),
 			) {
 				if (selectedIndex == themes.size) {
 					AddThemePanel(
