@@ -191,8 +191,10 @@ class SoundRunner(
 		// that earlier loop now, as a press on the same chain does, or nothing could stop it.
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
 		heldLoop[x][y] = 0
-		val sound: Sound? = unipack.soundGet(chain.value, x, y)
-		if (sound != null && sound.id >= 0) {
+		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
+		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
+		// moves on to its next sound and still follows the sound's chain move.
+		if (sound.id >= 0) {
 			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
@@ -201,13 +203,13 @@ class SoundRunner(
 			)
 			stopKey[chain.value][x][y] = key
 			heldLoop[x][y] = if (sound.loop == -1) key else 0
-			unipack.soundPush(chain.value, x, y)
-			if (sound.wormhole != Sound.NO_WORMHOLE)
-				scope.launch(Dispatchers.Main) {
-					delay(100)
-					chain.value = sound.wormhole
-				}
 		}
+		unipack.soundPush(chain.value, x, y)
+		if (sound.wormhole != Sound.NO_WORMHOLE)
+			scope.launch(Dispatchers.Main) {
+				delay(100)
+				chain.value = sound.wormhole
+			}
 	}
 
 	fun soundOff(x: Int, y: Int) {
