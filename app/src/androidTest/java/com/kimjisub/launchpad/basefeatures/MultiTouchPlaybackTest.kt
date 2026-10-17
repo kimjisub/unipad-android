@@ -9,6 +9,7 @@ import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -56,8 +57,9 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.await({ "$message (expected lit: $lit, lit: $last)" }) { litCells().also { last = it } == lit }
     }
 
-    protected fun litCells(): Set<Cell> = screen.onMain {
-        val channels = screen.vm().channelManager
+    /** Pads lit by a press. Pass [vm] while the play screen is not the resumed activity. */
+    protected fun litCells(vm: PlayActivityViewModel = screen.vm()): Set<Cell> = screen.onMain {
+        val channels = vm.channelManager
         (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }
             .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }
             .toSet()

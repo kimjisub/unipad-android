@@ -24,13 +24,19 @@ fi
 for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test; do
   "$adb_bin" -s "$serial" shell cmd package compile -f -m speed "$package"
 done
+# The suite runs every @Test of the classes it lists; count them so the footer check keeps up with new tests.
+suite=app/src/androidTest/java/com/kimjisub/launchpad/basefeatures
+expected=0
+for class in $(sed -n 's/^ *\([A-Za-z0-9_]*\)::class,$/\1/p' "$suite/BaseFeaturesSuite.kt"); do
+  expected=$((expected + $(grep -cE '^[[:space:]]*@Test([^A-Za-z]|$)' "$suite/$class.kt")))
+done
 output="$(mktemp "${TMPDIR:-/tmp}/basefeatures.XXXXXX")"
 trap 'rm -f "$output"' EXIT
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
 # adb/am can return zero even when instrumentation failed. Require the JUnit success footer.
-if ! grep -Eq '^OK \(50 tests\)' "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
+if ! grep -Eq "^OK \\($expected tests\\)" "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
   exit 1
 fi

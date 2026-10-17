@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
@@ -131,6 +132,25 @@ class FeatureScreen {
         launch(PlayActivity::class.java) { putExtra("path", folder.path) }
         await("Pack/audio loading did not finish") { onMain { !vm().unipackLoading && !vm().soundLoadingActive && vm().uiLoaded } }
         node(By.desc(text(R.string.menu)))
+    }
+    /**
+     * Presses Home and waits for the launcher. pressHome() waits only 1 second for an accessibility
+     * event, even if Home succeeded, so this requires the key injection and the launcher in front
+     * under the usual deadline. The launcher is resolved through the device shell: target package
+     * visibility can hide it and make UiDevice.launcherPackageName return Settings' fallback home.
+     */
+    fun goHome() {
+        val launcher = device.executeShellCommand(
+            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
+        ).lineSequence().map(String::trim).lastOrNull { it.contains('/') }?.substringBefore('/')
+        assertNotNull("Default launcher missing", launcher)
+        assertTrue("Home key injection failed", device.pressKeyCode(android.view.KeyEvent.KEYCODE_HOME))
+        await("Home did not show the launcher") { device.currentPackageName == launcher }
+    }
+    /** Brings [activity]'s task back in front, as choosing it in recent apps does. */
+    fun bringToFront(activity: Activity) {
+        context.getSystemService(ActivityManager::class.java).appTasks
+            .single { it.taskInfo?.taskId == activity.taskId }.moveToFront()
     }
     fun padBounds(): List<Rect> = onMain {
         views(resumed().window.decorView).filterIsInstance<PadView>().map(::bounds)
