@@ -2,22 +2,33 @@ package com.kimjisub.launchpad.basefeatures
 
 import android.util.Log
 import android.view.MotionEvent
+import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * A pad held by a finger while the play screen leaves the front, as when switching apps. With the
- * finger still down, the held pad's endless loop must stop and its press light go off; after the
- * screen comes back and the finger lifts, nothing plays or lights, and pressing the same pad again
- * plays it. Runs in both pad input modes.
+ * A pad held by a finger while the play screen leaves the front: paused behind another activity
+ * that keeps it visible, or stopped by Home. With the finger still down, the held pad's endless
+ * loop must stop and its press light go off; after the screen comes back and the finger lifts,
+ * nothing plays or lights, and pressing the same pad again plays it. Runs in both pad input modes.
  */
 @RunWith(AndroidJUnit4::class)
 class HeldPadLeavingScreenTest : HeldPadTest() {
+    @Test fun heldPadStopsWhenPlayScreenIsPaused() = holdWhilePaused(slide = false)
+
+    @Test fun heldPadStopsWhenPlayScreenIsPausedInSlideMode() = holdWhilePaused(slide = true)
+
     @Test fun heldPadStopsWhenAppGoesHome() = holdWhileHome(slide = false)
 
     @Test fun heldPadStopsWhenAppGoesHomeInSlideMode() = holdWhileHome(slide = true)
+
+    /** ActivityScenario pauses the play screen by opening a floating activity over it. */
+    private fun holdWhilePaused(slide: Boolean) = holdWhileLeaving("pausing the play screen", slide,
+        leave = { play.moveToState(Lifecycle.State.STARTED) },
+        back = { play.moveToState(Lifecycle.State.RESUMED) },
+    )
 
     private fun holdWhileHome(slide: Boolean) {
         lateinit var vm: PlayActivityViewModel

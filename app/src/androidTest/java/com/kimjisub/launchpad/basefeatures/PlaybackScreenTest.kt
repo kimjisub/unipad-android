@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.graphics.Point
+import androidx.test.core.app.ActivityScenario
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -40,13 +41,14 @@ abstract class PlaybackScreenTest {
      * with it off; the option is set on the screen's state rather than through the options panel,
      * whose open/close by Back is not what these tests check. The caller restores [prefs]' mode.
      */
-    protected fun openPlayWithPressLight(prefs: PreferenceManager, slide: Boolean) {
+    protected fun openPlayWithPressLight(prefs: PreferenceManager, slide: Boolean): ActivityScenario<PlayActivity> {
         prefs.slideMode = slide
-        screen.openPlay()
+        val scenario = screen.openPlay()
         screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
         assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
         val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
         assertEquals("Slide Mode applied on the play screen must match the mode under test", slide, applied)
+        return scenario
     }
 
     /** Centre of the chain button that selects [chain], in screen coordinates. */
