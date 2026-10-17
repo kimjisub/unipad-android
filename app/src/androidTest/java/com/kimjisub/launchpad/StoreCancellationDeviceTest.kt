@@ -24,6 +24,7 @@ import com.kimjisub.launchpad.activity.FBStoreActivity
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.api.file.FileApi
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.network.StoreCatalog
 import com.kimjisub.launchpad.network.fb.StoreVO
@@ -175,8 +176,8 @@ class StoreCancellationDeviceTest {
                 }
             }
             startDownloadWithoutChangingNotificationPermission()
-            val partial = File(workspace, "$id.zip")
-            await("partial chunk not written") { partial.length() == 4096L }
+            await("partial chunk not written") { receivedArchive(workspace)?.length() == 4096L }
+            val partial = requireNotNull(receivedArchive(workspace))
             await("download progress notification missing") {
                 progressNotifications().any { it.isOngoing }
             }
@@ -190,7 +191,7 @@ class StoreCancellationDeviceTest {
             assertNull(other.error)
             val otherFolder = requireNotNull(other.folder)
             val otherBefore = hashes(otherFolder)
-            // Closing the real Activity destroys the same lifecycleScope as the store's top arrow.
+            // Closing the real Activity destroys the lifecycleScope the download runs in.
             screen.close()
             screen = null
             val start = SystemClock.elapsedRealtime()
@@ -330,6 +331,12 @@ class StoreCancellationDeviceTest {
     private fun zip(title: String): ByteArray = ByteArrayOutputStream().also { bytes ->
         ZipOutputStream(bytes).use { zip -> files(title).forEach { (name, data) -> zip.putNextEntry(ZipEntry(name)); zip.write(data); zip.closeEntry() } }
     }.toByteArray()
+    /** The archive being received: downloads write it inside the app's staging folder. */
+    private fun receivedArchive(workspace: File): File? = workspace.listFiles().orEmpty()
+        .filter(PackStaging::isStagingFolder)
+        .flatMap { folder -> folder.walkTopDown().filter { it.isFile && it.extension == "zip" }.toList() }
+        .singleOrNull()
+
     private fun hashes(folder: File): Map<String, String> = hashesFrom(folder.walkTopDown().filter { it.isFile }.associate { it.relativeTo(folder).invariantSeparatorsPath to it.readBytes() })
     private fun hashesFrom(files: Map<String, ByteArray>) = files.mapValues { (_, bytes) -> MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) } }
 }
