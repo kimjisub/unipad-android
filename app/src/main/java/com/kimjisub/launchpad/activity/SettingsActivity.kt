@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,13 +24,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +64,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -80,11 +84,14 @@ import androidx.documentfile.provider.DocumentFile
 import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.google.firebase.messaging.FirebaseMessaging
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.manager.BackupFolderAccess
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.openAppLanguageSettings
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import org.koin.android.ext.android.inject
 import splitties.activities.start
@@ -122,6 +129,9 @@ class SettingsActivity : AppCompatActivity() {
 					onThemeClick = { start<ThemeActivity>() },
 					onGithubClick = { browse("https://github.com/kimjisub/unipad-android") },
 					onOssLicenseClick = { start<OssLicensesMenuActivity>() },
+					onLanguageClick = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+						{ openAppLanguageSettings() }
+					} else null,
 					onFcmTokenCopy = { copyFcmToken() },
 					onCommunityItemClick = { action, url ->
 						browse(url, action)
@@ -233,6 +243,7 @@ private fun SettingsScreen(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	onTransferClick: (sourcePath: String) -> Unit = {},
 	onBackupClick: () -> Unit = {},
@@ -245,7 +256,8 @@ private fun SettingsScreen(
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(ContentBg),
+			.background(ContentBg)
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left navigation rail
 		CategoryNav(
@@ -271,6 +283,7 @@ private fun SettingsScreen(
 					onOssLicenseClick = onOssLicenseClick,
 					onFcmTokenCopy = onFcmTokenCopy,
 					onCommunityItemClick = onCommunityItemClick,
+					onLanguageClick = onLanguageClick,
 					onReconnectClick = onReconnectClick,
 					traceLogClassic = traceLogClassic,
 					onTraceLogClassicChange = {
@@ -483,6 +496,7 @@ private fun InfoContent(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	traceLogClassic: Boolean = false,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
@@ -554,6 +568,7 @@ private fun InfoContent(
 			SettingsRow(
 				title = stringResource(R.string.language),
 				subtitle = stringResource(R.string.translated_by),
+				onClick = onLanguageClick,
 			)
 			CardDivider()
 			SettingsRow(
@@ -856,8 +871,11 @@ private fun BackupSection(
 	val scope = rememberCoroutineScope()
 	// Resolved in composition so the snackbar text follows configuration changes (lint LocalContextGetResourceValueCall)
 	val invalidFolderMessage = stringResource(R.string.backup_invalid_folder)
+	val permissionRefusedMessage = stringResource(R.string.backup_permission_refused)
+	val pickerUnavailableMessage = stringResource(R.string.picker_unavailable)
 
-	var backupUri by remember { mutableStateOf(prefManager.backupSafUri) }
+	val backupFolder = remember { BackupFolderAccess(context.contentResolver, prefManager) }
+	var backupUri by remember { mutableStateOf(backupFolder.usableUri) }
 	var unipackCount by remember { mutableIntStateOf(0) }
 	var isHighlighted by remember { mutableStateOf(highlightBackup) }
 	var showGuideDialog by remember { mutableStateOf(false) }
@@ -870,9 +888,12 @@ private fun BackupSection(
 	}
 
 	LaunchedEffect(backupUri, refreshKey) {
-		if (backupUri != null) {
+		// The permission can be taken away while UniPad is in the background.
+		val uri = backupFolder.usableUri
+		backupUri = uri
+		if (uri != null) {
 			unipackCount = withContext(Dispatchers.IO) {
-				val treeDoc = DocumentFile.fromTreeUri(context, backupUri!!.toUri())
+				val treeDoc = DocumentFile.fromTreeUri(context, uri.toUri())
 				treeDoc?.listFiles()?.count {
 					it.isDirectory || (it.name?.endsWith(".zip", ignoreCase = true) == true)
 				} ?: 0
@@ -884,13 +905,9 @@ private fun BackupSection(
 		contract = ActivityResultContracts.OpenDocumentTree()
 	) { uri ->
 		if (uri != null) {
-			val treeDoc = DocumentFile.fromTreeUri(context, uri)
-			if (treeDoc?.name.equals("Unipad", ignoreCase = true)) {
-				context.contentResolver.takePersistableUriPermission(
-					uri,
-					Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-				)
-				prefManager.backupSafUri = uri.toString()
+			val folderName = DocumentFile.fromTreeUri(context, uri)?.name
+			val result = backupFolder.connect(uri, folderName)
+			if (result == BackupFolderAccess.ConnectResult.CONNECTED) {
 				backupUri = uri.toString()
 				// After successful connection, count packs and show recovery dialog
 				scope.launch {
@@ -906,10 +923,20 @@ private fun BackupSection(
 					}
 				}
 			} else {
+				val message = when (result) {
+					BackupFolderAccess.ConnectResult.PERMISSION_REFUSED -> permissionRefusedMessage
+					else -> invalidFolderMessage
+				}
 				scope.launch {
-					snackbarHostState.showSnackbar(invalidFolderMessage)
+					snackbarHostState.showSnackbar(message)
 				}
 			}
+		}
+	}
+
+	fun launchPicker() {
+		if (!launcher.tryLaunch(BackupFolderAccess.pickerStartUri())) {
+			scope.launch { snackbarHostState.showSnackbar(pickerUnavailableMessage) }
 		}
 	}
 
@@ -969,12 +996,7 @@ private fun BackupSection(
 				titleColor = Danger,
 				onClick = {
 					isHighlighted = false
-					val uri = backupUri!!.toUri()
-					context.contentResolver.releasePersistableUriPermission(
-						uri,
-						Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-					)
-					prefManager.backupSafUri = null
+					backupFolder.disconnect()
 					backupUri = null
 					unipackCount = 0
 				},
@@ -988,11 +1010,7 @@ private fun BackupSection(
 					if (highlightBackup) {
 						showGuideDialog = true
 					} else {
-						val initialUri = DocumentsContract.buildDocumentUri(
-							"com.android.externalstorage.documents",
-							"primary:Documents"
-						)
-						launcher.launch(initialUri)
+						launchPicker()
 					}
 				},
 			)
@@ -1005,11 +1023,7 @@ private fun BackupSection(
 			onDismiss = { showGuideDialog = false },
 			onContinue = {
 				showGuideDialog = false
-				val initialUri = DocumentsContract.buildDocumentUri(
-					"com.android.externalstorage.documents",
-					"primary:Documents"
-				)
-				launcher.launch(initialUri)
+				launchPicker()
 			},
 		)
 	}

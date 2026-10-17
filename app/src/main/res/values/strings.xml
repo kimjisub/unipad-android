@@ -93,6 +93,12 @@
 	<string name="hideUI">Hide UI</string>
 	<string name="watermark">Watermark</string>
 	<string name="proLightMode">Pro Light Mode</string>
+	<string name="play_section_play_mode">Play Mode</string>
+	<string name="play_section_performance">Performance</string>
+	<string name="play_section_display">Display</string>
+	<string name="play_section_tools">Tools</string>
+	<string name="autoMapping">Auto Mapping</string>
+	<string name="autoMappingRunning">Auto Mapping…</string>
 
 	<!--Version-->
 	<string name="update_check">Check for updates</string>
@@ -151,6 +157,7 @@
 	<string name="midi_lp_mini_mk3" translatable="false">Launchpad Mini MK3</string>
 	<string name="midi_lp_mk3" translatable="false">Launchpad Pro MK3</string>
 	<string name="midi_lp_pro_cfw" translatable="false">Launchpad Pro MK2 (CFW)</string>
+	<string name="midi_lp_core_fw" translatable="false">Launchpad (CoreFW)</string>
 	<string name="midi_matrix" translatable="false">Matrix</string>
 	<string name="midi_midi_fighter" translatable="false">Midi Fighter</string>
 	<string name="midi_master_keyboard" translatable="false">Master Keyboard</string>
@@ -288,6 +295,7 @@
 	<string name="migration_grant_access">Grant Access</string>
 	<string name="migration_same_as_source">Same as source</string>
 	<string name="migration_result">Result</string>
+	<string name="picker_unavailable">No app on this device can pick files or folders.</string>
 
 	<!--Backup-->
 	<string name="backup_section">Backup</string>
@@ -295,6 +303,7 @@
 	<string name="backup_grant_access">Connect Backup Folder</string>
 	<string name="backup_revoke">Disconnect Backup Folder</string>
 	<string name="backup_invalid_folder">Please select the Documents/Unipad folder</string>
+	<string name="backup_permission_refused">UniPad could not keep access to this folder. Choose Documents/Unipad again.</string>
 	<string name="backup_backup_button">Backup</string>
 	<string name="backup_backup_description">Copy UniPacks to backup folder</string>
 	<string name="backup_restore_button">Restore</string>

@@ -1,9 +1,23 @@
 package com.kimjisub.launchpad
 
 import android.os.Build
+import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ViewRootForTest
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.SplashActivity
+import java.util.concurrent.atomic.AtomicReference
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +60,55 @@ class AppLaunchTest : BaseUITest() {
         // Final screen screenshot
         takeScreenshot("main_screen")
     }
+
+    @Test
+    fun testSplashFooterStaysAboveNavigationBar() {
+        // Splash moves to Main after a fixed delay, so the footer is measured on Splash's own
+        // main thread at each layout instead of being looked up on screen in time.
+        val copyright = str(R.string.copyright)
+        val lastLayout = AtomicReference<SplashFooterLayout>()
+        val callback = ActivityLifecycleCallback { activity, stage ->
+            if (stage == Stage.CREATED && activity is SplashActivity) {
+                val decor = activity.window.decorView
+                decor.viewTreeObserver.addOnPreDrawListener {
+                    splashFooterLayout(decor, copyright)?.let(lastLayout::set)
+                    true
+                }
+            }
+        }
+        withLifecycleCallback(callback) { launchToMainActivity() }
+        val layout = lastLayout.get()
+        assertNotNull("Splash copyright was never laid out", layout)
+        Log.i("SplashFooterInsets", layout.toString())
+        assertTrue(
+            "Copyright bottom ${layout.footerBottom} overlaps the navigation bar starting at ${layout.safeBottom}",
+            layout.footerBottom <= layout.safeBottom,
+        )
+        assertTrue("Did not transition to the main screen", waitForMainScreen())
+    }
+
+    /** Window coordinates of the copyright's bottom edge and of the top of the bottom navigation bar. */
+    private data class SplashFooterLayout(val footerBottom: Float, val safeBottom: Int)
+
+    private fun splashFooterLayout(decor: View, copyright: String): SplashFooterLayout? {
+        val insets = ViewCompat.getRootWindowInsets(decor) ?: return null
+        val navigationBottom = insets
+            .getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout())
+            .bottom
+        val root = findComposeRoot(decor) ?: return null
+        val footer = findText(root.semanticsOwner.unmergedRootSemanticsNode, copyright) ?: return null
+        return SplashFooterLayout(footer.boundsInWindow.bottom, decor.height - navigationBottom)
+    }
+
+    private fun findComposeRoot(view: View): ViewRootForTest? = when (view) {
+        is ViewRootForTest -> view
+        is ViewGroup -> (0 until view.childCount).firstNotNullOfOrNull { findComposeRoot(view.getChildAt(it)) }
+        else -> null
+    }
+
+    private fun findText(node: SemanticsNode, text: String): SemanticsNode? =
+        if (node.config.getOrNull(SemanticsProperties.Text)?.any { it.text == text } == true) node
+        else node.children.firstNotNullOfOrNull { findText(it, text) }
 
     @Test
     fun testMainScreenElements() {

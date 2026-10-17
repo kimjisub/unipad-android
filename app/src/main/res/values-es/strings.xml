@@ -93,6 +93,12 @@
 	<string name="hideUI">Ocultar UI</string>
 	<string name="watermark">Marca de agua</string>
 	<string name="proLightMode">Modo Pro Light</string>
+	<string name="play_section_play_mode">Modo de juego</string>
+	<string name="play_section_performance">Interpretación</string>
+	<string name="play_section_display">Pantalla</string>
+	<string name="play_section_tools">Herramientas</string>
+	<string name="autoMapping">Mapeo Automático</string>
+	<string name="autoMappingRunning">Mapeo Automático…</string>
 
 	<!--Version-->
 
@@ -261,6 +267,8 @@
 	<string name="backup_grant_access">Conectar Carpeta de Respaldo</string>
 	<string name="backup_revoke">Desconectar Carpeta de Respaldo</string>
 	<string name="backup_invalid_folder">Por favor selecciona la carpeta Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad no pudo conservar el acceso a esta carpeta. Vuelve a elegir Documents/Unipad.</string>
+	<string name="picker_unavailable">Ninguna app de este dispositivo puede elegir archivos o carpetas.</string>
 	<string name="backup_backup_button">Respaldar</string>
 	<string name="backup_backup_description">Copiar UniPacks a carpeta de respaldo</string>
 	<string name="backup_restore_button">Restaurar</string>
