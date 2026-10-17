@@ -14,6 +14,7 @@ import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.DisplayOverlays
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
 import com.kimjisub.launchpad.activity.TransferActivity
@@ -22,6 +23,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
@@ -179,6 +181,64 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
     }
 
+    @Test fun midiSelectScreenStaysClearOfSideNavigationBarAndCutout() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+            screen.launch(MidiSelectActivity::class.java)
+            assertControlsClearOfSideBarAndCutout("midi-select") {
+                screen.node(By.text(screen.text(R.string.midi_help_title)))
+                screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
+            }
+        }
+    }
+
+    @Test fun settingsScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(SettingsActivity::class.java)
+            assertControlsAboveBottomBar("settings-info") {
+                screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+            }
+            screen.clickText(R.string.settings_storage)
+            assertControlsAboveBottomBar("settings-storage") {
+                screen.node(By.text(screen.text(R.string.transfer_button)))
+            }
+        }
+    }
+
+    @Test fun themeScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(ThemeActivity::class.java)
+            assertControlsAboveBottomBar("theme") {
+                screen.node(By.desc(screen.text(R.string.theme_add_title)))
+            }
+        }
+    }
+
+    @Test fun transferScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        withTransferSource { source ->
+            onTabletWithButtonBar {
+                launchTransfer(source)
+                assertControlsAboveBottomBar("transfer") {
+                    screen.node(By.text(transferFolderName(0)))
+                    screen.node(By.text(screen.text(R.string.transfer_start)))
+                }
+            }
+        }
+    }
+
+    @Test fun midiSelectScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(MidiSelectActivity::class.java)
+            assertControlsAboveBottomBar("midi-select") {
+                screen.node(By.text(screen.text(R.string.midi_help_title)))
+            }
+        }
+    }
+
     @Test fun emptyLibraryGuideStaysClearOfGestureNavigation() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // At the largest font size the guide no longer fits a landscape phone and scrolls; its end must
@@ -246,9 +306,26 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         assertScrollsAboveKeyboard("main-no-search-results", By.text(screen.text(R.string.main_search_clear)), keyboardTop)
     }
 
-    /** Opens the main screen's search and waits for its keyboard to finish opening; returns the keyboard's top on screen. */
-    private fun openSearchKeyboard(): Int {
-        screen.clickDescription(R.string.transfer_search)
+    @Test fun transferScreenSearchResultsScrollAboveKeyboardOnTablet() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        // On a landscape phone the keyboard reaches up to the search field and leaves none of the list
+        // in view, so this is checked where some rows stay above it.
+        withTransferSource { source ->
+            onTabletWithButtonBar {
+                launchTransfer(source)
+                screen.node(By.text(transferFolderName(0)))
+                val keyboardTop = openSearchKeyboard { screen.click(By.clazz("android.widget.EditText")) }
+                assertScrollsAboveKeyboard("transfer-search-results", By.text(transferFolderName(TRANSFER_FOLDERS - 1)), keyboardTop)
+            }
+        }
+    }
+
+    /**
+     * Opens a search field with [open] (by default the main screen's) and waits for its keyboard to
+     * finish opening; returns the keyboard's top on screen.
+     */
+    private fun openSearchKeyboard(open: () -> Unit = { screen.clickDescription(R.string.transfer_search) }): Int {
+        open()
         var keyboard = -1 to 0L
         screen.await("Search keyboard did not finish opening") {
             val height = screen.onMain { keyboardHeight(screen.resumed().window.decorView) }
@@ -328,6 +405,87 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
     }
 
+    /**
+     * Runs [block] with three-button navigation on a display whose density makes it a tablet
+     * (smallest width [TABLET_SMALLEST_WIDTH_DP]), held in landscape, where the bar, or the taskbar
+     * holding its buttons, stays along the bottom. From API 36 a screen this large ignores the app's
+     * landscape request and follows the display, so the display itself is turned. The density and
+     * rotation in place before are put back.
+     */
+    private fun <T> onTabletWithButtonBar(block: () -> T): T {
+        val physical = Regex("Physical size: (\\d+)x(\\d+)").find(screen.device.executeShellCommand("wm size"))!!
+            .destructured.let { (width, height) -> minOf(width.toInt(), height.toInt()) }
+        val density = Regex("Override density: (\\d+)").find(screen.device.executeShellCommand("wm density"))?.groupValues?.get(1)
+        val rotation = screen.device.executeShellCommand("wm user-rotation").trim()
+        return DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION) {
+            try {
+                screen.device.executeShellCommand("wm density ${physical * 160 / TABLET_SMALLEST_WIDTH_DP}")
+                screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
+                block()
+            } finally {
+                screen.device.executeShellCommand("wm user-rotation $rotation")
+                screen.device.executeShellCommand(if (density != null) "wm density $density" else "wm density reset")
+            }
+        }
+    }
+
+    /**
+     * Waits until the resumed screen is laid out as a tablet with the navigation bar along its bottom,
+     * scrolls every scrollable list on it to its end and checks every control [ready] waited for, and
+     * every other one on screen, lies above the bar.
+     */
+    private fun assertControlsAboveBottomBar(name: String, ready: () -> Unit) {
+        screen.await("Tablet layout with a bottom navigation bar did not reach the window") {
+            screen.onMain {
+                val activity = screen.resumed()
+                val safe = freeArea(activity.window.decorView)
+                activity.resources.configuration.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP &&
+                    activity.display!!.rotation == android.view.Surface.ROTATION_90 &&
+                    safe != null && safe.bottom < activity.windowManager.maximumWindowMetrics.bounds.bottom
+            }
+        }
+        screen.instrumentation.waitForIdleSync()
+        ready()
+        // A Compose list can report it reached its end before it did, so drag until its rows stop moving.
+        screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach { list ->
+            var rows: List<android.graphics.Rect>? = null
+            for (drag in 1..MAX_DRAGS) {
+                list.scroll(Direction.DOWN, 1f)
+                screen.instrumentation.waitForIdleSync()
+                val moved = list.findObjects(By.clickable(true)).map { it.visibleBounds }
+                if (moved == rows) break
+                rows = moved
+            }
+        }
+        val controls = screen.freshControls()
+        val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
+        assertTrue("No $name controls found", controls.isNotEmpty())
+        screen.capture("$name-bottom-bar")
+        controls.forEach {
+            val bounds = it.visibleBounds
+            assertTrue("$name control ${it.contentDescription ?: it.resourceName ?: it.text} $bounds outside $safe", safe.contains(bounds))
+        }
+    }
+
+    /** A source folder holding more packs than one screen shows, removed afterwards. */
+    private fun withTransferSource(block: (File) -> Unit) {
+        val source = File(screen.context.cacheDir, "transfer-insets")
+        try {
+            source.deleteRecursively()
+            repeat(TRANSFER_FOLDERS) { assertTrue(File(source, transferFolderName(it)).mkdirs()) }
+            block(source)
+        } finally {
+            source.deleteRecursively()
+        }
+    }
+
+    private fun launchTransfer(source: File) = screen.launch(TransferActivity::class.java) {
+        putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
+        putExtra(TransferActivity.EXTRA_SOURCE_PATH, source.path)
+    }
+
+    private fun transferFolderName(index: Int) = "insets-pack-%02d".format(index)
+
     /** The window's area on screen that neither a system bar nor the display cutout covers. */
     private fun freeArea(decor: android.view.View): android.graphics.Rect? {
         val insets = ViewCompat.getRootWindowInsets(decor)
@@ -342,5 +500,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         const val MAX_DRAGS = 20
         const val DRAG_MARGIN_PX = 8
         const val DRAG_STEPS = 20
+        const val TABLET_SMALLEST_WIDTH_DP = 720
+        const val TRANSFER_FOLDERS = 30
     }
 }
