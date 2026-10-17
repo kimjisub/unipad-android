@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
+import com.kimjisub.launchpad.chainrelease.ChainReleaseLights
 import com.kimjisub.launchpad.chainrelease.ChainReleaseReplay
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
@@ -117,8 +118,9 @@ class TouchPlaybackTest : PlaybackScreenTest() {
 
     /**
      * Every case of the chain-release corpus with fingers injected on the play screen, Slide Mode
-     * off: lifting or cancelling a finger after the chain changed stops only the infinite loop that
-     * finger started, and keeps the chain, the other fingers' loops and their press lights.
+     * off: lifting or cancelling a finger after the chain changed stops only the infinite loop and the
+     * endless LED animation that finger started, and keeps the chain, the other fingers' loops and
+     * animations and their press lights. The pack gets one LED animation per sound ([ChainReleaseLights]).
      */
     @Test fun fingerLiftedAfterChainChangeStopsOnlyTheLoopItStarted() {
         val corpus = ChainReleaseCorpus.load { InstrumentationRegistry.getInstrumentation().context.assets.open(it) }
@@ -132,10 +134,12 @@ class TouchPlaybackTest : PlaybackScreenTest() {
                 val pack = screen.pack()
                 pack.deleteRecursively()
                 corpus.unpack(case, pack)
+                val lights = ChainReleaseLights.addTo(pack)
                 openPlayWithPressLight(prefs, slide = false)
+                assertTrue("LED option did not turn on for the pack's lights", screen.onMain { screen.vm().scbLed.isChecked() })
                 val driver = ScreenDriver(capture = case.id in setOf("CR-001", "CR-003"))
                 try {
-                    ChainReleaseReplay(driver).run(case).forEach { android.util.Log.i(CHAIN_RELEASE, it) }
+                    ChainReleaseReplay(driver, lights).run(case).forEach { android.util.Log.i(CHAIN_RELEASE, it) }
                 } finally {
                     driver.fingers.cancelRemaining()
                 }
@@ -150,6 +154,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         val fingers = Fingers(screen)
         private val pointers = HashMap<String, Int>()
         private var startedAt = -1L
+        private var lastChecked = "start"
 
         override val virtualTime = false
 
@@ -177,7 +182,13 @@ class TouchPlaybackTest : PlaybackScreenTest() {
 
         override fun await(problem: () -> String?) {
             var last: String? = null
-            screen.await({ last ?: "" }) { problem().also { last = it } == null }
+            try {
+                screen.await({ last ?: "" }) { problem().also { last = it } == null }
+            } catch (failure: AssertionError) {
+                // The screen as it stood when the step failed, next to the captures of the steps before it.
+                if (capture) captureAfterDraw("chain-release-$lastChecked-next-failed")
+                throw failure
+            }
         }
 
         override fun settle() {
@@ -195,6 +206,13 @@ class TouchPlaybackTest : PlaybackScreenTest() {
                 .toSet()
         }
 
+        override fun litCells() = screen.onMain {
+            val channels = screen.vm().channelManager
+            (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Pad(x, y) } }
+                .filter { channels.get(it.x, it.y)?.channel == Channel.LED }
+                .toSet()
+        }
+
         override fun plays(): List<Pair<String, Int>> {
             val files = audio.loaded.entries.associate { (file, id) -> id to file }
             return audio.plays.indices.map { files.getValue(audio.plays[it]) to audio.loops[it] }
@@ -203,6 +221,7 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         override fun stops(): List<Int> = audio.stoppedVoices.toList()
 
         override fun stepChecked(name: String) {
+            lastChecked = name
             if (capture) captureAfterDraw("chain-release-$name")
         }
     }
