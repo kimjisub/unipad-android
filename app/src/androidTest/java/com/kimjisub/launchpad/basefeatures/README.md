@@ -263,8 +263,9 @@ only paused; the paused cases are the ones that check the play screen lets go of
 second pad, then the first lifts: mouse first and finger first, each with Slide Mode off and on.
 The mouse is `Mouse`. The finger is `Touchscreen`, a second touchscreen created as a kernel input
 device with the platform `uinput` shell tool: events injected through UiAutomation all arrive as
-the same device (`-1`), and Android then ends the held mouse press as soon as an injected finger
-lands, which a real mouse and touchscreen (two devices) do not cause by themselves. Each case checks
+the same device (`-1`). With a held injected mouse press, the API 35 emulator ends that press as
+soon as an injected finger lands, and the API 37 emulator refuses the finger (`Invalid DOWN event -
+pointers already down for device DeviceId(-1)`); a real mouse and touchscreen are two devices. Each case checks
 one `TOOL_TYPE_MOUSE` pointer and one `TOOL_TYPE_FINGER` pointer from the touchscreen's device ID
 went down and ended.
 
@@ -284,7 +285,8 @@ sharing a port even when their names differ. Failed registration and failed fing
 close the shell streams, ending `uinput` and removing its device. `InputToolsCleanupTest` checks
 that overlapping devices resolve to different IDs, both disappear on close, and a lookup failure
 after registration removes the device while preserving the original failure. It also checks
-that cancelled-mouse teardown sends no new window event and a new mouse helper can hover. It runs separately
+that cancelled-mouse teardown sends no new window event and a new mouse helper can hover; its
+finger also comes from a `Touchscreen`. It runs separately
 from the release preflight. Layout-test cleanup waits within the existing 10-second checks
 for the display override to disappear and the play window's landscape orientation and original
 bounds to return before the next test starts.
