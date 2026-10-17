@@ -14,7 +14,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
 import com.kimjisub.launchpad.chainrelease.ChainReleaseReplay
-import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -40,12 +39,8 @@ class TouchPlaybackTest : PlaybackScreenTest() {
         assertEquals(com.kimjisub.launchpad.manager.LaunchpadColor.ARGB[5].toInt(), color)
         screen.capture("pad-keyled")
         screen.await("keyLED did not turn off") { screen.onMain { screen.vm().channelManager.get(0, 0)?.channel != Channel.LED } }
-        val chains = screen.onMain {
-            screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().filter { it.width > 0 }.map(screen::bounds)
-        }
-        assertTrue("Both chains must be on screen", chains.size >= 2)
-        val second = chains[1]
-        screen.device.click(second.centerX(), second.centerY())
+        val second = chainButton(1)
+        screen.device.click(second.x, second.y)
         screen.await("Chain button did not switch chain") { screen.onMain { screen.vm().chain.value == 1 } }
         screen.tapPad(0)
         assertEquals(audio.loaded.getValue("silence2.wav"), audio.plays.last())
