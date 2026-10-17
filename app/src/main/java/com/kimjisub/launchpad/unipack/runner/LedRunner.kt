@@ -32,6 +32,9 @@ class LedRunner(
 	private val cirLed: Array<Led?> = arrayOfNulls<Led>(CIRCULAR_LED_COUNT)
 	private var ledAnimationStates: MutableList<LedAnimationState> = mutableListOf()
 	private val ledAnimationStatesAdd: MutableList<LedAnimationState> = mutableListOf()
+	// The endless animation the press of each held pad (x, y) started, null when none. Its release ends
+	// that animation even when the chain changed while the pad was held.
+	private val heldLoop: Array<Array<LedAnimationState?>> = Array(unipack.buttonX) { arrayOfNulls<LedAnimationState>(unipack.buttonY) }
 	// Numbers presses and releases, so steps due in the same millisecond play in the order they were asked for.
 	private var requests = 0L
 
@@ -206,23 +209,23 @@ class LedRunner(
 						if (state.equal(x, y, currentChain)) state.shutDownAt(pressedAt, order)
 					}
 				}
+				// A press made on another chain while the pad is still held replaces its loop below; end
+				// that earlier loop now, as a press on the same chain does, or nothing could end it.
+				heldLoop[x][y]?.shutDownAt(pressedAt, order)
 				val state = LedAnimationState(x, y, pressedAt, order)
+				heldLoop[x][y] = state.takeIf { it.ledAnimation?.loop == 0 }
 				if (state.noError) ledAnimationStatesAdd.add(state)
 			}
 		}
 	}
 
-	/** A release of pad ([x], [y]) at [releasedAt]: the pad's endless animation ends there. */
+	/** A release of pad ([x], [y]) at [releasedAt]: the endless animation the pad's press started ends there. */
 	fun eventOff(x: Int, y: Int, releasedAt: Long = SystemClock.elapsedRealtime()) {
 		if (active) {
 			synchronized(this) {
-				val order = ++requests
-				val currentChain = chain.value
-				for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
-					for (state in states) {
-						if (state.equal(x, y, currentChain) && state.ledAnimation?.loop == 0) state.shutDownAt(releasedAt, order)
-					}
-				}
+				val loop = heldLoop[x][y] ?: return
+				heldLoop[x][y] = null
+				loop.shutDownAt(releasedAt, ++requests)
 			}
 		}
 	}
@@ -231,10 +234,12 @@ class LedRunner(
 		// No `active` guard: ledInit() calls this right after stop() to shut the looping
 		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
 		synchronized(this) {
-			for (state in ledAnimationStates) {
-				if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
-					// Before anything still due: nothing more of it plays.
-					state.shutDownAt(Long.MIN_VALUE, 0)
+			for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+				for (state in states) {
+					if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
+						// Before anything still due: nothing more of it plays.
+						state.shutDownAt(Long.MIN_VALUE, 0)
+					}
 				}
 			}
 		}

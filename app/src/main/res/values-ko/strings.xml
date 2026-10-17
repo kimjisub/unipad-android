@@ -35,6 +35,7 @@
 	<string name="menu">메뉴</string>
 	<string name="website">웹사이트</string>
 	<string name="measuring">측정중…</string>
+	<string name="unknownCount">알 수 없음</string>
 	<string name="general">일반</string>
 	<string name="notice">공지</string>
 	<string name="newUniPack">새로운 유니팩</string>
@@ -98,6 +99,10 @@
 	<string name="play_section_tools">도구</string>
 	<string name="autoMapping">자동 매핑</string>
 	<string name="autoMappingRunning">자동 매핑…</string>
+	<string name="play_info_untitled">제목 없음</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  체인 %3$d개"</item>
+	</plurals>
 
 	<!--Version-->
 	<string name="update_check">업데이트 확인</string>

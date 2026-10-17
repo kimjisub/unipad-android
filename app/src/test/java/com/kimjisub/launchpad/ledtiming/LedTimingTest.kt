@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.ledtiming
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -136,11 +137,8 @@ class LedTimingTest {
 
 		assertTrue("${timeline.peakPerSecond()} a second at peak", timeline.peakPerSecond() > 5_000)
 		assertTrue(measurement.describe(), measurement.deliveredAsHandedOver)
-		val result = measurement.packToDriver
-		assertEquals(result.differences.joinToString("\n"), 0, result.reordered)
-		assertEquals(result.differences.joinToString("\n"), 0, result.missing)
-		assertEquals(result.differences.joinToString("\n"), 0, result.extra)
-		assertEquals(timeline.commands.size, result.matched)
+		measurement.packToDriverFailure()?.let { fail(it) }
+		assertEquals(timeline.commands.size, measurement.packToDriver.matched)
 		assertEquals(0, recording.covered)
 	}
 }

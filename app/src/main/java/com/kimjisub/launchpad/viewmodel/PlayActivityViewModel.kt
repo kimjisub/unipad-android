@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.R.string
+import com.kimjisub.launchpad.analytics.InputSource
 import com.kimjisub.launchpad.analytics.PlayTrigger
 import com.kimjisub.launchpad.analytics.ScreenLayout
 import com.kimjisub.launchpad.analytics.UsageAnalytics
@@ -495,7 +496,7 @@ class PlayActivityViewModel(
 	private fun releaseAutoPlayPads() {
 		autoPlayInputGeneration++
 		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.toList()
-		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY)
+		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY, source = null)
 	}
 
 	/** Lets go of auto play's pads and clears the lights auto play left on. */
@@ -505,8 +506,8 @@ class PlayActivityViewModel(
 		ledInitInOrder()
 	}
 
-	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
-	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
+	/** A pad the person pressed or released on the screen. */
+	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN)
 
 	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
 	// unplugged or stops being the screen's controller, so these are let go then.
@@ -525,7 +526,7 @@ class PlayActivityViewModel(
 		} else if (!controllerHeldPads.remove(pad)) {
 			return
 		}
-		padTouch(x, y, upDown)
+		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
 	/**
@@ -535,17 +536,26 @@ class PlayActivityViewModel(
 	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
 		val pads = controllerHeldPads.toList()
 		controllerHeldPads.clear()
-		for ((x, y) in pads) if (!heldOnScreen(x, y)) padTouch(x, y, false)
+		for ((x, y) in pads) if (!heldOnScreen(x, y)) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
 	/** A pad auto play presses or releases, [atMs] (SystemClock.elapsedRealtime) being when the pack places it. */
-	internal fun autoPlayPadTouch(x: Int, y: Int, upDown: Boolean, atMs: Long) = padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, atMs)
+	internal fun autoPlayPadTouch(x: Int, y: Int, upDown: Boolean, atMs: Long) =
+		padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, source = null, atMs = atMs)
 
 	/**
-	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence.
-	 * The pad's LED animation runs from [atMs], however long the event took to get here.
+	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence;
+	 * [source] is what the person pressed it on. The pad's LED animation runs from [atMs], however
+	 * long the event took to get here.
 	 */
-	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger, atMs: Long = SystemClock.elapsedRealtime()) {
+	private fun padEvent(
+		x: Int,
+		y: Int,
+		upDown: Boolean,
+		pressedBy: PlayTrigger,
+		source: InputSource?,
+		atMs: Long = SystemClock.elapsedRealtime(),
+	) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -556,7 +566,7 @@ class PlayActivityViewModel(
 		try {
 			if (upDown) {
 				heldPads.getOrPut(x to y) { mutableSetOf() }.add(pressedBy)
-				playSession.playTriggered(pressedBy)
+				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
@@ -748,9 +758,9 @@ class PlayActivityViewModel(
 	private fun stopLoopingLeds(runner: LedRunner) {
 		for (i in 0 until unipack.buttonX)
 			for (j in 0 until unipack.buttonY)
-				if (runner.isEventExist(i, j)) runner.eventOffAll(i, j)
+				runner.eventOffAll(i, j)
 		for (i in 0 until FUNCTION_KEY_COUNT)
-			if (runner.isEventExist(-1, i)) runner.eventOffAll(-1, i)
+			runner.eventOffAll(-1, i)
 	}
 
 	private fun clearLeds() {

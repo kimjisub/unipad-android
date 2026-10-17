@@ -46,6 +46,7 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 	val soundCount = vm.soundCount
 	val ledCount = vm.ledCount
 	val fileSize = vm.fileSize
+	val countPending = stringResource(if (vm.countsUnknown) R.string.unknownCount else R.string.measuring)
 	val unipack = vm.unipack
 
 	Surface(
@@ -162,13 +163,13 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 					PropertyBlock(
 						icon = R.drawable.ic_music_note_24dp,
 						title = stringResource(R.string.MPP_soundFiles),
-						value = soundCount?.toString() ?: stringResource(R.string.measuring),
+						value = soundCount?.toString() ?: countPending,
 						modifier = Modifier.weight(1f),
 					)
 					PropertyBlock(
 						icon = R.drawable.ic_led_event_24dp,
 						title = stringResource(R.string.MPP_ledEvents),
-						value = ledCount?.toString() ?: stringResource(R.string.measuring),
+						value = ledCount?.toString() ?: countPending,
 						modifier = Modifier.weight(1f),
 					)
 				}

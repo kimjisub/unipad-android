@@ -152,13 +152,14 @@ platform :android do
     rescue ArgumentError, TypeError
       nil
     end
-    UI.user_error!("Pass fraction as a finite positive number (1 or greater = complete)") unless fraction && fraction.finite? && fraction > 0
+    # A percentage typed as a whole number (fraction:50) would otherwise complete the rollout for everyone.
+    UI.user_error!("Pass fraction as a decimal between 0 and 1 (e.g. 0.5 = 50%, 1 = complete), got #{options[:fraction].inspect}") unless fraction && fraction > 0 && fraction <= 1
     version_code = (options[:version_code] || current_version_code).to_s
     update_production_release(version_code) do |release, track|
       UI.user_error!("Production release #{version_code} must be inProgress or halted to widen or resume (was #{release.status})") unless %w[inProgress halted].include?(release.status)
       current_fraction = staged_rollout_fraction(release, version_code)
       UI.user_error!("Requested fraction #{fraction} is lower than the current fraction #{current_fraction}") if fraction < current_fraction
-      if fraction >= 1
+      if fraction == 1
         # Play allows one release per status on a track, so the new full release replaces the old one.
         track.releases = track.releases.reject { |item| !item.equal?(release) && item.status == "completed" }
         release.status = "completed"
@@ -168,7 +169,7 @@ platform :android do
         release.user_fraction = fraction
       end
     end
-    UI.success("production rollout #{version_code} -> #{fraction}")
+    UI.success("production rollout #{version_code} -> #{fraction == 1 ? "completed" : fraction}")
   end
 
   desc "Halt the current staged production rollout (keeps the release, stops new users getting it)."
