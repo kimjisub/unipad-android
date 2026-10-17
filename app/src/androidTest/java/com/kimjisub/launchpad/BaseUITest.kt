@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Build
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import androidx.test.runner.lifecycle.ActivityLifecycleCallback
@@ -11,6 +12,7 @@ import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
+import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.PlayActivity
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -22,6 +24,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.util.regex.Pattern
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -39,14 +42,20 @@ abstract class BaseUITest {
     protected lateinit var device: UiDevice
     protected lateinit var context: Context
     private var originalIdleTimeout: Long? = null
+    private var anrDialogWatcher: AnrDialogWatcher? = null
 
     companion object {
         const val LAUNCH_TIMEOUT = 10000L
         const val PACKAGE_NAME = "com.kimjisub.launchpad.dev" // debug build
         const val MAIN_TIMEOUT = 20000L
         const val PLAY_TIMEOUT = 20000L
+        const val ACTIVITY_START_TIMEOUT = 45000L
+        const val FILE_PICKER_TIMEOUT = 15000L
         private const val PLAY_FLAG_TAP_DP = 50
-        private const val SCREENSHOT_DIR = "/data/local/tmp/unipad_tests"
+        private const val SNACKBAR_TIMEOUT = 5000L
+        // The resource package differs between build types, so match the id alone.
+        private val SNACKBAR_TEXT = Pattern.compile(".*:id/snackbar_text")
+        private const val SCREENSHOT_DIR = TestCaptures.DIRECTORY
     }
 
     @Before
@@ -58,6 +67,7 @@ abstract class BaseUITest {
         val configurator = Configurator.getInstance()
         originalIdleTimeout = configurator.waitForIdleTimeout
         configurator.waitForIdleTimeout = 500L
+        anrDialogWatcher = AnrDialogWatcher()
 
         // Press Home button to start from a clean state
         device.pressHome()
@@ -75,6 +85,7 @@ abstract class BaseUITest {
 
     @After
     fun restoreIdleTimeout() {
+        anrDialogWatcher?.close()
         originalIdleTimeout?.let { Configurator.getInstance().waitForIdleTimeout = it }
     }
 
@@ -88,21 +99,30 @@ abstract class BaseUITest {
         assertNotNull("Could not find launch intent for the app", intent)
         // Await the requested activity's completed onCreate, rather than global queue idleness.
         // Splash can move to Main before startActivitySync's idle callback gets its turn.
-        // Retain that API's 45-second launch bound and each caller's screen assertions/timeouts.
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        // Retain that API's launch bound and each caller's screen assertions/timeouts.
         val created = CountDownLatch(1)
         val callback = ActivityLifecycleCallback { activity, stage ->
             if (stage == Stage.CREATED && activity.javaClass.name == intent!!.component!!.className) {
                 created.countDown()
             }
         }
+        withLifecycleCallback(callback) {
+            context.startActivity(intent!!)
+            if (!created.await(ACTIVITY_START_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                ActivityReadiness.capture(context, device, "missing-launch-${SystemClock.uptimeMillis()}")
+                fail("Requested launch activity did not finish creation")
+            }
+        }
+    }
+
+    protected fun withLifecycleCallback(callback: ActivityLifecycleCallback, action: () -> Unit) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
         instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
         try {
-            context.startActivity(intent!!)
-            assertTrue("Requested launch activity did not finish creation", created.await(45, TimeUnit.SECONDS))
+            action()
         } finally {
-            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { monitor.removeLifecycleCallback(callback) }
         }
     }
 
@@ -123,39 +143,21 @@ abstract class BaseUITest {
      * @return true if dialog was found and handled, false otherwise
      */
     protected fun handlePermissionDialog(vararg _keywords: String): Boolean {
-        // Find "Allow" button (supporting multiple languages)
-        val allowButtons = listOf(
-            "허용", "Allow", "ALLOW",
-            "앱 사용 중에만 허용", "While using the app",
-            "이번만 허용", "Only this time"
-        )
+        // Allow buttons are matched by id or by their exact label: a partial label match such as
+        // "Allow" also hits "Don't allow" / "허용 안함" and would deny the permission.
+        val allowSelectors = listOf(UiSelector().resourceIdMatches(".*:id/permission_allow.*")) +
+            listOf(
+                "허용", "Allow", "ALLOW",
+                "앱 사용 중에만 허용", "While using the app", "WHILE USING THE APP",
+                "이번만 허용", "Only this time", "ONLY THIS TIME"
+            ).map { UiSelector().text(it) }
 
-        for (buttonText in allowButtons) {
+        for (selector in allowSelectors) {
             try {
-                // Find button by text
-                val allowButton = device.findObject(
-                    UiSelector()
-                        .textMatches(".*${buttonText}.*")
-                        .clickable(true)
-                )
-
+                val allowButton = device.findObject(selector.clickable(true))
                 if (allowButton.exists()) {
-                    println("Permission dialog found: $buttonText")
+                    println("Permission dialog found: $selector")
                     allowButton.click()
-                    Thread.sleep(500)
-                    return true
-                }
-
-                // Also try by resource ID
-                val allowButtonById = device.findObject(
-                    UiSelector()
-                        .resourceIdMatches(".*permission_allow.*")
-                        .clickable(true)
-                )
-
-                if (allowButtonById.exists()) {
-                    println("Permission dialog found (by ID)")
-                    allowButtonById.click()
                     Thread.sleep(500)
                     return true
                 }
@@ -221,14 +223,61 @@ abstract class BaseUITest {
 
     protected fun str(resId: Int): String = context.getString(resId)
 
+    /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
+    protected fun withoutHandlers(vararg queries: String, block: () -> Unit) {
+        val packages = queries.flatMap { query ->
+            device.executeShellCommand("cmd package query-activities --brief $query")
+                .lines()
+                .mapNotNull { Regex("""^\s+([\w.]+)/\S+$""").find(it)?.groupValues?.get(1) }
+        }.distinct()
+        try {
+            packages.forEach { device.executeShellCommand("pm disable-user --user 0 $it") }
+            block()
+        } finally {
+            packages.forEach { device.executeShellCommand("pm enable --user 0 $it") }
+        }
+    }
+
+    protected fun openSettings() {
+        val settingsButton = device.wait(Until.findObject(By.desc(str(R.string.setting))), 5000L)
+        assertNotNull("Could not find the Settings button", settingsButton)
+        settingsButton!!.click()
+        assertTrue(
+            "Did not transition to the settings screen",
+            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+        )
+    }
+
+    /**
+     * Launch the app and wait until MainActivity has resumed and its window is shown.
+     * Splash finishes itself before starting MainActivity, so the app briefly has no window: waiting for
+     * a window straight after launch ends early on a busy device that is slow to start MainActivity.
+     * Below Android 11 Splash first asks for storage access, which is granted while waiting unless
+     * [answerStoragePermission] is false (a test that must see no permission dialog at all).
+     */
+    protected fun launchToMainActivity(answerStoragePermission: Boolean = true) {
+        val mainResumed = CountDownLatch(1)
+        val callback = ActivityLifecycleCallback { activity, stage ->
+            if (stage == Stage.RESUMED && activity is MainActivity) mainResumed.countDown()
+        }
+        withLifecycleCallback(callback) {
+            launchApp()
+            val deadline = SystemClock.uptimeMillis() + ACTIVITY_START_TIMEOUT
+            while (!mainResumed.await(500, TimeUnit.MILLISECONDS)) {
+                assertTrue("Main screen activity did not resume", SystemClock.uptimeMillis() < deadline)
+                if (answerStoragePermission && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) handlePermissionDialog()
+            }
+        }
+        ActivityReadiness.await(context, device, MAIN_TIMEOUT, MainActivity::class.java)
+    }
+
     /**
      * Launch the app and wait until MainActivity's Compose screen is shown.
      * The main screen has no view ids since the Compose rewrite, so it is recognised by the
      * store / settings content descriptions and the guide chip text.
      */
     protected fun launchToMainScreen() {
-        launchApp()
-        assertTrue("App did not start", device.wait(Until.hasObject(By.pkg(PACKAGE_NAME)), LAUNCH_TIMEOUT))
+        launchToMainActivity()
         handlePermissionDialogs()
         assertTrue("Main screen did not appear", waitForMainScreen())
     }
@@ -278,7 +327,7 @@ abstract class BaseUITest {
     protected fun selectTestPack(): UiObject2 {
         findTestPackRow() // Scroll the exact row into view before attempting to select it.
         val detail = By.res("main_detail_${TestUniPack.FOLDER_NAME}")
-        val opened = waitUntil(10000L) {
+        val opened = waitUntil(MAIN_TIMEOUT) {
             if (device.hasObject(detail)) true else {
                 // Main refresh can replace the list between lookup and tap. Refetch and retry
                 // only while our own detail is absent, so an already selected pack is not toggled off.
@@ -343,8 +392,13 @@ abstract class BaseUITest {
         return row!!
     }
 
-    /** Toggle a play option and return its new checked state. */
+    /**
+     * Toggle a play option and return its new checked state.
+     * A message bar (e.g. "Copied" after stopping a recording) covers the bottom rows of the panel
+     * and takes the tap, so wait for it to leave first.
+     */
     protected fun togglePlayOption(labelRes: Int): Boolean {
+        device.wait(Until.gone(By.res(SNACKBAR_TEXT)), SNACKBAR_TIMEOUT)
         val before = isPlayOptionChecked(labelRes)
         assertTrue("Play option '${str(labelRes)}' could not be tapped", clickFresh { playOption(labelRes) })
         assertTrue(
@@ -373,9 +427,19 @@ abstract class BaseUITest {
     protected fun isPlayOptionsOpen(): Boolean = try {
         val panel = device.findObject(By.res("play_options"))
         // The node exists while sliding in. Recomposition may also replace it during this query.
-        panel != null && panel.visibleBounds.width() >= (280 * context.resources.displayMetrics.density).toInt()
+        panel != null && panel.visibleBounds.width() >= openPanelMinWidthPx()
     } catch (_: StaleObjectException) {
         false // The opening wait will refetch the current node; this is not a closing condition.
+    }
+
+    /**
+     * The panel is 280dp wide. Where no system bar pads its end (a tablet's bar is at the bottom),
+     * its visible bounds can end one pixel short of the screen edge (2559 of 2560 at 240dpi), so
+     * allow 1dp under its width; only the very end of the slide-in comes that close.
+     */
+    private fun openPanelMinWidthPx(): Int {
+        val density = context.resources.displayMetrics.density
+        return ((280 - 1) * density).toInt()
     }
 
     /** The play screen is shown: its Menu button, or its option panel when that is open. */

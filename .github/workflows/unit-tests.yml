@@ -11,10 +11,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  fastlane-tests:
+    name: Play rollout lane checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_HIDE_TIMESTAMP: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: '3.4.8'
+      - name: Install the pinned fastlane version
+        run: gem install fastlane --version 2.240.1 --no-document
+      - name: Check lane parsing and offline Play edits
+        run: |
+          fastlane lanes
+          ruby fastlane/tests/halt_test.rb
+          ruby fastlane/tests/rollout_test.rb
+
   unit-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -22,6 +46,11 @@ jobs:
       - name: Run all app and design unit tests
         timeout-minutes: 12
         run: ./gradlew :app:testDebugUnitTest :design:testDebugUnitTest --no-daemon --console=plain
+      # The UI suite runs on the Mac before push; its pass/fail verdict script is checked here with fake adb and Gradle.
+      - name: Check the UI test runner verdict
+        if: ${{ !cancelled() }}
+        timeout-minutes: 3
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -40,18 +69,27 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-android
       - name: Build every debug module and compile both Kotlin variants
-        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+        run: ./gradlew assembleDebug :app:compileDebugKotlin :app:compileReleaseKotlin :app:processReleaseManifest :design:compileDebugKotlin :design:compileReleaseKotlin --no-daemon --console=plain
+      - name: Check debug builds send no Firebase reports and release builds are unchanged
+        run: >-
+          python3 scripts/check_debug_telemetry_manifest.py
+          app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+          app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 
   lint:
     name: Android lint
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
+      - name: Set the initial Git branch
+        run: git config --global init.defaultBranch main
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

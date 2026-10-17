@@ -12,6 +12,9 @@ import android.media.midi.MidiDevice
 import android.media.midi.MidiDeviceInfo
 import android.media.midi.MidiManager
 import com.kimjisub.launchpad.midi.controller.MidiController
+import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
+import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -71,6 +74,7 @@ class MidiConnectionLifecycleTest {
 	fun tearDown() {
 		MidiConnection.controller = null
 		MidiConnection.connectionObserver = null
+		MidiConnection.listener = null
 		Thread.setDefaultUncaughtExceptionHandler(previousUncaughtHandler)
 		Dispatchers.resetMain()
 		mainDispatcher.close()
@@ -78,7 +82,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_midiServiceEnumerationNpe_fallsBackToUsbClaim() {
-		every { midiManager.devices } throws NullPointerException("MidiManager.getDevices")
+		midiManager.stubDeviceList() throws NullPointerException("MidiManager.getDevices")
 		val (device, connection) = launchpad(deviceId = 1)
 
 		attach(device)
@@ -89,7 +93,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun init_midiServiceOpenDeviceNpe_fallsBackToUsbClaim() {
-		every { midiManager.devices } returns arrayOf(midiDeviceInfo())
+		midiManager.stubDeviceList() returns arrayOf(midiDeviceInfo())
 		every { midiManager.openDevice(any(), any(), any()) } throws NullPointerException("MidiManager.openDevice")
 		val (device, connection) = launchpad(deviceId = 1)
 
@@ -102,7 +106,7 @@ class MidiConnectionLifecycleTest {
 	@Test
 	fun init_openDeviceCallbackAfterDeviceReplaced_releasesMidiDeviceWithoutOpeningPorts() {
 		val info = midiDeviceInfo()
-		every { midiManager.devices } returns arrayOf(info)
+		midiManager.stubDeviceList() returns arrayOf(info)
 		val callback = slot<MidiManager.OnDeviceOpenedListener>()
 		every { midiManager.openDevice(info, capture(callback), any()) } returns Unit
 		val (first, firstConnection) = launchpad(deviceId = 1)
@@ -126,7 +130,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun receive_controllerThrowsOnAttach_tearsDownWithoutCrash() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val controller = mockk<MidiController>(relaxed = true)
 		every { controller.onAttach() } throws IllegalStateException("controller not ready")
 		MidiConnection.controller = controller
@@ -140,7 +144,7 @@ class MidiConnectionLifecycleTest {
 
 	@Test
 	fun receive_connectionReleasedMidTransfer_tearsDownWithoutCrash() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val observer = mockk<MidiConnection.ConnectionObserver>(relaxed = true)
 		MidiConnection.connectionObserver = observer
 		val (device, connection) = launchpad(deviceId = 1)
@@ -157,7 +161,7 @@ class MidiConnectionLifecycleTest {
 	/** Mini MK2 input through the actual USB receive loop, rather than calling a driver directly. */
 	@Test
 	fun receive_miniChord_keepsEveryPressAndReleaseAcrossBatchedPackets() {
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val events = Collections.synchronizedList(mutableListOf<String>())
 		val controller = mockk<MidiController>(relaxed = true)
 		every { controller.onPadTouch(any(), any(), any(), any()) } answers {
@@ -189,6 +193,58 @@ class MidiConnectionLifecycleTest {
 		)
 		verify(timeout = TIMEOUT_MS) { connection.close() }
 		assertNoCrash()
+	}
+
+	@Test
+	fun attach_coreFwSerialNumber_picksTheCoreFwDriver() {
+		midiManager.stubDeviceList() returns emptyArray()
+		val drivers = recordDrivers()
+		val connectedNames = recordConnectedNames()
+		val (device, _) = launchpad(deviceId = 1)
+		every { device.serialNumber } returns "COREFW-LPX"
+
+		attach(device)
+
+		assertEquals(LaunchpadCoreFW::class, drivers.last()::class)
+		assertEquals("Launchpad X (CoreFW)", connectedNames.last())
+		assertNoCrash()
+	}
+
+	/** Without the USB permission the serial number throws; the device keeps its official driver. */
+	@Test
+	fun attach_unreadableSerialNumber_keepsTheOfficialDriver() {
+		midiManager.stubDeviceList() returns emptyArray()
+		val drivers = recordDrivers()
+		val connectedNames = recordConnectedNames()
+		val (device, connection) = launchpad(deviceId = 1)
+		every { device.serialNumber } throws SecurityException("no permission for the serial number")
+
+		attach(device)
+
+		assertEquals(LaunchpadX::class, drivers.last()::class)
+		assertEquals("Launchpad X", connectedNames.last())
+		verify(timeout = TIMEOUT_MS) { connection.claimInterface(any(), true) }
+		assertNoCrash()
+	}
+
+	private fun recordDrivers(): List<DriverRef> {
+		val drivers = Collections.synchronizedList(mutableListOf<DriverRef>())
+		val listener = mockk<MidiConnection.Listener>(relaxed = true)
+		every { listener.onChangeDriver(any()) } answers { drivers.add(firstArg()) }
+		MidiConnection.listener = listener
+		return drivers
+	}
+
+	/**
+	 * The fake receive loop ends at once and the session clears `connectedDevice` on another
+	 * thread, so the name is read from the connect callback rather than from that field.
+	 */
+	private fun recordConnectedNames(): List<String> {
+		val names = Collections.synchronizedList(mutableListOf<String>())
+		val observer = mockk<MidiConnection.ConnectionObserver>(relaxed = true)
+		every { observer.onConnected(any()) } answers { names.add(firstArg<MidiConnection.ConnectedDeviceSnapshot>().name) }
+		MidiConnection.connectionObserver = observer
+		return names
 	}
 
 	private fun attach(device: UsbDevice) {

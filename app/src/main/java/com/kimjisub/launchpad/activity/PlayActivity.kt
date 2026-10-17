@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.view.children
+import androidx.core.view.isVisible
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -18,8 +20,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -59,6 +63,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,6 +73,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +85,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
@@ -88,12 +96,12 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.LayoutModifier
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -127,7 +135,9 @@ import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
+import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.TraceLogText
+import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.ui.theme.PlayPalette
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
@@ -169,12 +179,6 @@ class PlayActivity : BaseActivity() {
 	private var chainsBottomContainer: LinearLayout? = null
 	private var chainsLeftContainer: LinearLayout? = null
 
-	// UI - Layout dimensions (for relayout)
-	private var lastScreenWidth = 0
-	private var lastScreenHeight = 0
-	private var lastPaddingWidth = 0
-	private var lastPaddingHeight = 0
-
 	// UI - Pad/chain views
 	private lateinit var padViews: Array<Array<PadView?>>
 	private lateinit var chainViews: Array<ChainView?>
@@ -182,9 +186,11 @@ class PlayActivity : BaseActivity() {
 	// Pad touches of both input modes; internal so tests can check which mode is applied.
 	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
-	// though the retained ViewModel says the UI was loaded, and two onSizeChanged calls before
-	// the posted runnable ran used to queue initLayout twice.
-	private var layoutRequested = false
+	// though the retained ViewModel says the UI was loaded. The window can be resized, or turned
+	// to put the cutout on the other side, without recreating the activity, which rebuilds the
+	// pads for the new area; one posted layout serves every area requested before it runs.
+	private var layoutArea: PlayLayout.Area? = null
+	private var layoutPosted = false
 
 	// Classic trace log (numbers on pads): what is drawn right now, so one new tap only touches one pad.
 	private var classicTraceShown = false
@@ -279,10 +285,10 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun onRequestRelayout() {
-			if (lastScreenWidth > 0 && lastScreenHeight > 0) {
+			layoutArea?.let { area ->
 				vm.uiLoaded = false
 				vm.traceLogInit()
-				initLayout(lastScreenWidth, lastScreenHeight, lastPaddingWidth, lastPaddingHeight)
+				initLayout(area)
 			}
 		}
 	}
@@ -387,16 +393,19 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = getString(string.outOfMemory)
-				finish()
+				closeOnLoadFailure(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = "${getString(string.exceptionOccurred)}\n${e.message}"
-				finish()
+				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
+	}
+
+	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
+	private fun closeOnLoadFailure(message: String) {
+		vm.unipackLoading = false
+		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+		finish()
 	}
 
 	private fun start() {
@@ -486,8 +495,24 @@ class PlayActivity : BaseActivity() {
 	@Composable
 	private fun PlayScreen() {
 		val density = LocalDensity.current
-		val paddingPx = with(density) { 8.dp.toPx().toInt() }
-		val chromeStripPx = with(density) { 56.dp.roundToPx() }
+		val paddingPx = with(density) { PLAY_AREA_PADDING.toPx().toInt() }
+		val chromeStripPx = with(density) { CHROME_STRIP.roundToPx() }
+		// The play area spans the window's width so the pads centre on its centre line; the cutout
+		// and a 3-button bar, which take one side only, are kept clear through the side margin.
+		val safeDrawing = WindowInsets.safeDrawing
+		val layoutDirection = LocalLayoutDirection.current
+		val rightInsetPx = safeDrawing.getRight(density, layoutDirection)
+		val sideMarginPx = PlayLayout.sideMargin(safeDrawing.getLeft(density, layoutDirection), rightInsetPx, chromeStripPx)
+		val topInsetPx = safeDrawing.getTop(density)
+		var playAreaSize by remember { mutableStateOf(IntSize.Zero) }
+		LaunchedEffect(playAreaSize, sideMarginPx) {
+			requestPlayLayout(PlayLayout.Area(playAreaSize.width - 2 * paddingPx, playAreaSize.height - 2 * paddingPx, sideMarginPx))
+		}
+		val logoBitmap = theme?.customLogo?.takeIf { vm.optionViewVisible }?.let { logo ->
+			remember(logo) { logo.toBitmap().asImageBitmap() }
+		}
+		// The open menu covers the chain buttons, so Tab must not reach them behind it.
+		LaunchedEffect(vm.isOptionWindowVisible) { setChainsFocusable(!vm.isOptionWindowVisible) }
 
 		Box(modifier = Modifier.fillMaxSize().acceptEveryTouch()) {
 			// Background - always visible
@@ -502,35 +527,17 @@ class PlayActivity : BaseActivity() {
 					)
 				}
 			}
-			// "Hide UI" (optionViewVisible) was written by the view model and read nowhere: the
-			// switch only changed launchpad LEDs. It hides the logo and the chrome column, as web does.
-			if (vm.optionViewVisible) theme?.customLogo?.let { logo ->
-				val bitmap = remember(logo) { logo.toBitmap().asImageBitmap() }
-				Image(
-					bitmap = bitmap,
-					contentDescription = null,
-					contentScale = ContentScale.Fit,
-					modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).width(90.dp)
-				)
-			}
 
 			if (startReady) {
-				// Main play content, kept (and sized) inside the system bars and display cutout that
-				// edge-to-edge windows (targetSdk 35+) draw under; the background above still fills the screen.
+				// Main play content, kept clear of the system bars and display cutout that edge-to-edge
+				// windows (targetSdk 35+) draw under: by padding top and bottom, and by the side margin
+				// at the left and right. The background above still fills the screen.
 				Box(
 					modifier = Modifier
 						.fillMaxSize()
-						.windowInsetsPadding(WindowInsets.safeDrawing)
-						.onSizeChanged { size ->
-							if (!layoutRequested && size.width > 0 && size.height > 0) {
-								layoutRequested = true
-								Handler(Looper.getMainLooper()).post {
-									initLayout(size.width, size.height, size.width - 2 * paddingPx, size.height - 2 * paddingPx)
-									vm.initPlayback()
-								}
-							}
-						}
-						.padding(8.dp)
+						.windowInsetsPadding(safeDrawing.only(WindowInsetsSides.Vertical))
+						.onSizeChanged { playAreaSize = it }
+						.padding(PLAY_AREA_PADDING)
 				) {
 					// Custom layout that centers pads independently and positions chains relative to pads
 					Layout(
@@ -547,7 +554,7 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsLeftContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsLeftContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
@@ -561,14 +568,14 @@ class PlayActivity : BaseActivity() {
 									orientation = LinearLayout.VERTICAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsRightContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsRightContainer }
 							)
 							AndroidView(
 								factory = { ctx -> LinearLayout(ctx).apply {
 									orientation = LinearLayout.HORIZONTAL
 									layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 								}.also { chainsBottomContainer = it } },
-								modifier = Modifier.wrapContentSize()
+								modifier = Modifier.wrapContentSize().chainTouchInput { chainsBottomContainer }
 							)
 							AndroidView(
 								factory = { ctx -> TraceLogOverlayView(ctx).also { overlay ->
@@ -578,6 +585,18 @@ class PlayActivity : BaseActivity() {
 							)
 							if (!vm.isOptionWindowVisible && vm.optionViewVisible) {
 								ChromeColumn()
+							} else {
+								Spacer(modifier = Modifier.size(0.dp))
+							}
+							// "Hide UI" (optionViewVisible) was written by the view model and read nowhere: the
+							// switch only changed launchpad LEDs. It hides the logo and the chrome column, as web does.
+							if (logoBitmap != null) {
+								Image(
+									bitmap = logoBitmap,
+									contentDescription = null,
+									contentScale = ContentScale.Fit,
+									modifier = Modifier.testTag("play_logo").semantics { testTagsAsResourceId = true },
+								)
 							} else {
 								Spacer(modifier = Modifier.size(0.dp))
 							}
@@ -594,25 +613,62 @@ class PlayActivity : BaseActivity() {
 							Constraints.fixed(padPlaceable.width, padPlaceable.height)
 						)
 						val chromePlaceable = measurables[6].measure(unconstrained)
+						val placement = PlayLayout.place(
+							constraints.maxWidth, constraints.maxHeight,
+							pads = IntSize(padPlaceable.width, padPlaceable.height),
+							top = IntSize(topPlaceable.width, topPlaceable.height),
+							right = IntSize(rightPlaceable.width, rightPlaceable.height),
+							bottom = IntSize(bottomPlaceable.width, bottomPlaceable.height),
+							left = IntSize(leftPlaceable.width, leftPlaceable.height),
+						)
+						val (padX, padY) = placement.pads
+						val leftPos = placement.left
+						val rightPos = placement.right
+						val topPos = placement.top
+						val bottomPos = placement.bottom
+						// Chrome column on the right, inside the right inset, vertically centered on pads
+						val chromePos = IntOffset(
+							constraints.maxWidth - rightInsetPx - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2,
+							(padY + (padPlaceable.height - chromePlaceable.height) / 2).coerceAtLeast(0),
+						)
+						// The logo keeps its place in the window's top-right corner, outside this padded
+						// area, and gives up width only where chains or the menu would cover it.
+						val logoRight = constraints.maxWidth + paddingPx - LOGO_INSET.roundToPx()
+						val logoTop = LOGO_INSET.roundToPx() - topInsetPx - paddingPx
+						val logoPlaceable = logoBitmap?.let { bitmap ->
+							val aspect = bitmap.width.toFloat() / bitmap.height
+							val obstacles = listOf(
+								IntRect(IntOffset(padX, padY), IntSize(padPlaceable.width, padPlaceable.height)),
+								IntRect(leftPos, IntSize(leftPlaceable.width, leftPlaceable.height)),
+								IntRect(rightPos, IntSize(rightPlaceable.width, rightPlaceable.height)),
+								IntRect(topPos, IntSize(topPlaceable.width, topPlaceable.height)),
+								IntRect(bottomPos, IntSize(bottomPlaceable.width, bottomPlaceable.height)),
+								IntRect(chromePos, IntSize(chromePlaceable.width, chromePlaceable.height)),
+							).filter { it.width > 0 && it.height > 0 }
+							val width = PlayLayout.logoWidth(logoRight, logoTop, LOGO_WIDTH.roundToPx(), aspect, obstacles, LOGO_MARGIN.roundToPx())
+							if (width < LOGO_MIN_WIDTH.roundToPx()) null
+							else measurables[7].measure(Constraints.fixed(width, (width / aspect).toInt()))
+						}
 						layout(constraints.maxWidth, constraints.maxHeight) {
-							// Pads centered in the area excluding the right chrome strip
-							val padX = ((constraints.maxWidth - chromeStripPx) - padPlaceable.width) / 2
-							val padY = (constraints.maxHeight - padPlaceable.height) / 2
 							padPlaceable.place(padX, padY)
 							overlayPlaceable.place(padX, padY)
-							leftPlaceable.place(padX - leftPlaceable.width, padY + (padPlaceable.height - leftPlaceable.height) / 2)
-							rightPlaceable.place(padX + padPlaceable.width, padY + (padPlaceable.height - rightPlaceable.height) / 2)
-							topPlaceable.place(padX + (padPlaceable.width - topPlaceable.width) / 2, padY - topPlaceable.height)
-							bottomPlaceable.place(padX + (padPlaceable.width - bottomPlaceable.width) / 2, padY + padPlaceable.height)
-							// Chrome column on the right, vertically centered on pads
-							val chromeX = constraints.maxWidth - chromeStripPx + (chromeStripPx - chromePlaceable.width) / 2
-							val chromeY = padY + (padPlaceable.height - chromePlaceable.height) / 2
-							chromePlaceable.place(chromeX, chromeY.coerceAtLeast(0))
+							leftPlaceable.place(leftPos)
+							rightPlaceable.place(rightPos)
+							topPlaceable.place(topPos)
+							bottomPlaceable.place(bottomPos)
+							chromePlaceable.place(chromePos)
+							logoPlaceable?.place(logoRight - logoPlaceable.width, logoTop)
 						}
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
-					Box(modifier = Modifier.fillMaxSize().background(PlayPalette.optionScrim).clickable { vm.toggleOptionWindow(false) })
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(PlayPalette.optionScrim)
+							.focusProperties { canFocus = false }
+							.clickable { vm.toggleOptionWindow(false) }
+					)
 				}
 				AnimatedVisibility(
 					visible = vm.isOptionWindowVisible,
@@ -666,6 +722,32 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
+	/**
+	 * Chain buttons for every pointer, taken in Compose like the pads. Compose stops handing an
+	 * embedded view the press that follows a mouse hover across the screen, so the buttons' own
+	 * clicks never came with a mouse. A chain is selected when the pointer that pressed it is
+	 * released over it, as a tap; a cancelled gesture selects nothing.
+	 */
+	private fun Modifier.chainTouchInput(container: () -> ViewGroup?) = pointerInput(Unit) {
+		awaitPointerEventScope {
+			val pressed = HashMap<Long, ChainView>()
+			while (true) {
+				for (change in awaitPointerEvent().changes) {
+					val id = change.id.value
+					if (change.changedToDownIgnoreConsumed()) {
+						container()?.chainAt(change.position)?.let { pressed[id] = it }
+					} else if (change.changedToUpIgnoreConsumed()) {
+						val chain = pressed.remove(id) ?: continue
+						if (!change.isConsumed && container()?.chainAt(change.position) === chain) chain.click()
+					}
+				}
+			}
+		}
+	}
+
+	private fun ViewGroup.chainAt(position: Offset): ChainView? = children.filterIsInstance<ChainView>().firstOrNull { chain ->
+		chain.isVisible && position.x >= chain.left && position.x < chain.right && position.y >= chain.top && position.y < chain.bottom
+	}
 
 	@Composable
 	private fun ChromeColumn() {
@@ -680,7 +762,7 @@ class PlayActivity : BaseActivity() {
 			verticalArrangement = Arrangement.spacedBy(4.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.size(36.dp)) {
+			IconButton(onClick = { vm.toggleOptionWindow(true) }, modifier = Modifier.focusRing(CircleShape).size(36.dp)) {
 				Icon(
 					imageVector = Icons.Default.Menu,
 					contentDescription = stringResource(string.menu),
@@ -696,12 +778,12 @@ class PlayActivity : BaseActivity() {
 						.height(2.dp)
 						.background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(1.dp)),
 				)
-				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayPrev() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipPrevious, stringResource(string.cd_autoplay_prev), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				IconButton(
 					onClick = { if (vm.autoPlayRunner?.playmode == true) vm.autoPlayPause() else vm.autoPlayResume() },
-					modifier = Modifier.size(40.dp),
+					modifier = Modifier.focusRing(CircleShape).size(40.dp),
 				) {
 					Icon(
 						imageVector = if (vm.isAutoPlayPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -710,7 +792,7 @@ class PlayActivity : BaseActivity() {
 						modifier = Modifier.size(26.dp),
 					)
 				}
-				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.size(32.dp)) {
+				IconButton(onClick = { vm.autoPlayNext() }, modifier = Modifier.focusRing(CircleShape).size(32.dp)) {
 					Icon(Icons.Default.SkipNext, stringResource(string.cd_autoplay_next), tint = Color.White, modifier = Modifier.size(20.dp))
 				}
 				Box(
@@ -783,7 +865,7 @@ class PlayActivity : BaseActivity() {
 					painter = painterResource(R.drawable.ic_exit),
 					contentDescription = stringResource(string.quit),
 					tint = quitTint,
-					modifier = Modifier.size(24.dp).clickable { finish() },
+					modifier = Modifier.focusRing(CircleShape, outset = 6.dp).clickable { finish() }.size(24.dp),
 				)
 			}
 
@@ -795,6 +877,7 @@ class PlayActivity : BaseActivity() {
 					.fillMaxWidth()
 					.padding(horizontal = 24.dp)
 					.background(tint.copy(alpha = cardFill.alpha), shape = RoundedCornerShape(12.dp))
+					.focusRing(RoundedCornerShape(12.dp))
 					.clickable { infoExpanded = !infoExpanded }
 					.padding(horizontal = 14.dp, vertical = 10.dp),
 			) {
@@ -832,7 +915,7 @@ class PlayActivity : BaseActivity() {
 
 			// PLAY MODE — top of Performance (most frequently changed during a session)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
-				SectionTitle("Play Mode", sectionColor)
+				SectionTitle(string.play_section_play_mode, sectionColor)
 				PlayModeSegmented(playModeFill.text.primary, tint.copy(alpha = playModeFill.alpha))
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
@@ -841,7 +924,7 @@ class PlayActivity : BaseActivity() {
 				Spacer(modifier = Modifier.height(16.dp))
 			}
 
-			SectionTitle("Performance", sectionColor)
+			SectionTitle(string.play_section_performance, sectionColor)
 			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, tint, accentColor)
 			OptionSwitch(vm.scbLed, string.led, textColor, tint, accentColor)
 			// NOTE: AutoPlay transport controls intentionally removed here — the chrome column
@@ -849,14 +932,14 @@ class PlayActivity : BaseActivity() {
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Display", sectionColor)
+			SectionTitle(string.play_section_display, sectionColor)
 			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, tint, accentColor)
 			OptionSwitch(vm.scbWatermark, string.watermark, textColor, tint, accentColor)
 			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Tools", sectionColor)
+			SectionTitle(string.play_section_tools, sectionColor)
 			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
 			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
@@ -886,6 +969,7 @@ class PlayActivity : BaseActivity() {
 					modifier = Modifier
 						.weight(1f)
 						.background(if (active) color else Color.Transparent, RoundedCornerShape(8.dp))
+						.focusRing()
 						.clickable {
 							vm.switchPlayMode(mode)
 							vm.toggleOptionWindow(false)
@@ -911,7 +995,7 @@ class PlayActivity : BaseActivity() {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-				Text("Auto Mapping…", color = textColor, fontSize = 13.sp)
+				Text(stringResource(string.autoMappingRunning), color = textColor, fontSize = 13.sp)
 				Spacer(modifier = Modifier.height(4.dp))
 				androidx.compose.material3.LinearProgressIndicator(
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
@@ -924,20 +1008,21 @@ class PlayActivity : BaseActivity() {
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
+					.focusRing()
 					.clickable { vm.autoMapping() }
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				Text("Auto Mapping", color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
+				Text(stringResource(string.autoMapping), color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
 				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
 	}
 
 	@Composable
-	private fun SectionTitle(title: String, color: Color) {
+	private fun SectionTitle(@StringRes titleRes: Int, color: Color) {
 		Text(
-			text = title.uppercase(),
+			text = stringResource(titleRes).uppercase(),
 			color = color,
 			fontSize = 11.sp,
 			letterSpacing = 1.sp,
@@ -954,6 +1039,7 @@ class PlayActivity : BaseActivity() {
 			modifier = Modifier.testTag("play_option_$textResId")
 				.fillMaxWidth()
 				.alpha(alpha)
+				.focusRing()
 				.then(
 					if (!state.locked) {
 						if (hasLongClick && state.onLongClick != null)
@@ -974,6 +1060,7 @@ class PlayActivity : BaseActivity() {
 			Switch(
 				checked = state.checked,
 				onCheckedChange = if (!state.locked) { { state.setChecked(it) } } else null,
+				modifier = Modifier.focusProperties { canFocus = false },
 				colors = SwitchDefaults.colors(
 					checkedThumbColor = Color.White,
 					checkedTrackColor = accentColor,
@@ -982,15 +1069,6 @@ class PlayActivity : BaseActivity() {
 					uncheckedBorderColor = tint.copy(alpha = 0.2f),
 				),
 			)
-		}
-	}
-
-	private fun scaleLayoutModifier(scale: Float): Modifier = object : LayoutModifier {
-		override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
-			val placeable = measurable.measure(constraints)
-			return layout((placeable.width * scale).toInt(), (placeable.height * scale).toInt()) {
-				placeable.place(0, 0)
-			}
 		}
 	}
 
@@ -1004,30 +1082,31 @@ class PlayActivity : BaseActivity() {
 
 	// region Layout initialization
 
-	private fun initLayout(screenWidth: Int, screenHeight: Int, paddingWidth: Int, paddingHeight: Int) {
-		lastScreenWidth = screenWidth
-		lastScreenHeight = screenHeight
-		lastPaddingWidth = paddingWidth
-		lastPaddingHeight = paddingHeight
+	/** Lays the pads out for [area] once the current frame is done, unless that area is already laid out. */
+	private fun requestPlayLayout(area: PlayLayout.Area) {
+		if (area.width <= 0 || area.height <= 0 || area == layoutArea) return
+		layoutArea = area
+		if (layoutPosted) return
+		layoutPosted = true
+		Handler(Looper.getMainLooper()).post {
+			layoutPosted = false
+			initLayout(layoutArea ?: return@post)
+			vm.initPlayback()
+		}
+	}
+
+	private fun initLayout(area: PlayLayout.Area) {
 		try {
 			log("[05] Set Button Layout (squareButton = ${vm.unipack.squareButton})")
 			vm.setupCheckBoxVisibility()
 
-			val buttonSizeX: Int
-			val buttonSizeY: Int
-			// Reserve right-side chrome strip (Menu + AutoPlay transport + vertical progress)
-			val chromeStripPx = (56 * resources.displayMetrics.density).toInt()
-			if (vm.unipack.squareButton) {
-				val chainColumns = 2
-				val chainRows = if (vm.scbProLightMode.isChecked()) 2 else 0
-				val availW = (paddingWidth - chromeStripPx).coerceAtLeast(0)
-				val s = (availW / (vm.unipack.buttonX + chainColumns)).coerceAtMost(paddingHeight / (vm.unipack.buttonY + chainRows))
-				buttonSizeX = s; buttonSizeY = s
-			} else {
-				buttonSizeX = (screenWidth - chromeStripPx).coerceAtLeast(0) / vm.unipack.buttonY
-				buttonSizeY = screenHeight / vm.unipack.buttonX
-			}
-			val buttonSizeMin = buttonSizeX.coerceAtMost(buttonSizeY)
+			val buttonSize = PlayLayout.buttonSize(
+				area = area,
+				rows = vm.unipack.buttonX,
+				columns = vm.unipack.buttonY,
+				square = vm.unipack.squareButton,
+				sides = PlayLayout.chainSides(vm.scbProLightMode.isChecked(), vm.unipack.chain),
+			)
 
 			vm.setupCheckBoxListeners()
 			padsContainer?.removeAllViews()
@@ -1035,8 +1114,8 @@ class PlayActivity : BaseActivity() {
 			chainsRightContainer?.removeAllViews()
 			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
-			setupPads(buttonSizeX, buttonSizeY)
-			setupChains(buttonSizeMin)
+			setupPads(buttonSize.x, buttonSize.y)
+			setupChains(buttonSize.chain)
 			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
 			padTouch.slide = p.slideMode
 			theme?.traceLog?.let { traceLogOverlayView?.setTraceColor(it) }
@@ -1113,18 +1192,26 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun setupChains(buttonSizeMin: Int) {
+	private fun setChainsFocusable(focusable: Boolean) {
+		val mode = if (focusable) ViewGroup.FOCUS_AFTER_DESCENDANTS else ViewGroup.FOCUS_BLOCK_DESCENDANTS
+		listOf(chainsTopContainer, chainsRightContainer, chainsBottomContainer, chainsLeftContainer)
+			.forEach { it?.descendantFocusability = mode }
+	}
+
+	private fun setupChains(chainSize: Int) {
 		for (i in 0 until CIRCLE_ARRAY_SIZE) {
 			val c = i - CHAIN_INDEX_OFFSET
 			val view = ChainView(this)
-			view.layoutParams = RelativeLayout.LayoutParams(buttonSizeMin, buttonSizeMin)
+			view.layoutParams = RelativeLayout.LayoutParams(chainSize, chainSize)
 			if (theme?.isChainLed == true) { view.setBackgroundImageDrawable(theme?.btn); view.setPhantomImageDrawable(theme?.chainled) }
 			else { view.setPhantomImageDrawable(theme?.chain); view.setLedVisibility(View.GONE) }
 			chainViews[i] = view
-			if (i in 0..7) { chainsTopContainer?.addView(view) }
-			if (i in 8..15) { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-			if (i in 16..23) { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-			if (i in 24..31) { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			when (i / PlayLayout.CHAINS_PER_SIDE) {
+				0 -> chainsTopContainer?.addView(view)
+				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+			}
 		}
 	}
 
@@ -1209,10 +1296,8 @@ class PlayActivity : BaseActivity() {
 
 	private var midiController: MidiController? = object : MidiController() {
 		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
-		override fun onDetach() {}
-		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
-			if (!vm.isOptionWindowVisible) vm.padTouch(x, y, upDown)
-		}
+		override fun onDetach() = releaseLaunchpadPads()
+		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 			if (upDown) {
 				if (!vm.isOptionWindowVisible) {
@@ -1246,6 +1331,8 @@ class PlayActivity : BaseActivity() {
 			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chain.refresh(); vm.refreshWatermark() }
 		}
 	}
+
+	private fun releaseLaunchpadPads() = vm.releaseControllerPads(padTouch::holds)
 
 	// endregion
 
@@ -1301,6 +1388,7 @@ class PlayActivity : BaseActivity() {
 		launchpadOutputEnabled = false
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
+		releaseLaunchpadPads()
 	}
 
 	override fun onStart() {
@@ -1311,7 +1399,7 @@ class PlayActivity : BaseActivity() {
 	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
 	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
 	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
-	// asks for it again. The LED runner stops until onStart.
+	// asks for it again. The LED runner and the audio stream stop until onStart; loaded sounds stay.
 	override fun onStop() {
 		super.onStop()
 		audioFocus.abandon()
@@ -1330,6 +1418,14 @@ class PlayActivity : BaseActivity() {
 
 	// endregion
 }
+
+private val PLAY_AREA_PADDING = 8.dp
+// Right-hand column for Menu, the AutoPlay transport and its vertical progress.
+private val CHROME_STRIP = 56.dp
+private val LOGO_WIDTH = 90.dp
+private val LOGO_INSET = 16.dp
+private val LOGO_MARGIN = 4.dp
+private val LOGO_MIN_WIDTH = 24.dp
 
 /** Auto Mapping row colours, each kept readable on the option panel. */
 private data class AutoMappingColors(val label: Color, val arrow: Color, val progress: Color)

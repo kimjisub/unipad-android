@@ -1,14 +1,14 @@
 package com.kimjisub.launchpad.activity
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -63,11 +67,14 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.manager.BackupFolderAccess
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.SafMigrationHelper
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.ui.theme.Red
@@ -91,6 +98,7 @@ class TransferActivity : AppCompatActivity() {
 
 	private val workspaceManager: WorkspaceManager by inject()
 	private val prefManager: PreferenceManager by inject()
+	private val backupFolder by lazy { BackupFolderAccess(contentResolver, prefManager) }
 
 	private var screenState by mutableStateOf<TransferState>(TransferState.Loading)
 	private var customTitle by mutableStateOf<String?>(null)
@@ -99,13 +107,12 @@ class TransferActivity : AppCompatActivity() {
 		ActivityResultContracts.OpenDocumentTree()
 	) { uri ->
 		if (uri != null) {
-			contentResolver.takePersistableUriPermission(
-				uri,
-				Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-			)
-			prefManager.backupSafUri = uri.toString()
-			// Re-scan to pick up the new SAF uri
-			loadConfiguration()
+			when (backupFolder.connect(uri, DocumentFile.fromTreeUri(this, uri)?.name)) {
+				// Re-scan to pick up the new SAF uri
+				BackupFolderAccess.ConnectResult.CONNECTED -> loadConfiguration()
+				BackupFolderAccess.ConnectResult.WRONG_FOLDER -> toast(R.string.backup_invalid_folder)
+				BackupFolderAccess.ConnectResult.PERMISSION_REFUSED -> toast(R.string.backup_permission_refused)
+			}
 		}
 	}
 
@@ -166,12 +173,10 @@ class TransferActivity : AppCompatActivity() {
 	}
 
 	private fun launchSafPicker() {
-		val initialUri = DocumentsContract.buildDocumentUri(
-			"com.android.externalstorage.documents",
-			"primary:Documents"
-		)
-		safPickerLauncher.launch(initialUri)
+		if (!safPickerLauncher.tryLaunch(BackupFolderAccess.pickerStartUri())) toast(R.string.picker_unavailable)
 	}
+
+	private fun toast(@StringRes message: Int) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
 	private fun loadConfiguration() {
 		screenState = TransferState.Loading
@@ -187,41 +192,9 @@ class TransferActivity : AppCompatActivity() {
 				else -> TransferMode.COPY
 			}
 
-			val workspaces = workspaceManager.availableWorkspaces.toList()
-			val backupSafUri = prefManager.backupSafUri
-
-			// Build targets
-			val targets = mutableListOf<TransferTarget>()
-			workspaces.forEach { ws ->
-				targets.add(
-					TransferTarget(
-						id = "ws:${ws.file.path}",
-						name = ws.name,
-						description = getWorkspaceDescription(ws),
-						file = ws.file,
-					)
-				)
-			}
-
-			if (backupSafUri != null) {
-				targets.add(
-					TransferTarget(
-						id = "backup",
-						name = getString(R.string.workspace_backup_documents),
-						description = getString(R.string.backup_backup_description),
-						safUri = backupSafUri,
-					)
-				)
-			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-				targets.add(
-					TransferTarget(
-						id = "backup",
-						name = getString(R.string.workspace_backup_documents),
-						description = getString(R.string.backup_backup_description),
-						needsSaf = true,
-					)
-				)
-			}
+			val workspaces = loadWorkspaces()
+			val backupSafUri = backupFolder.usableUri
+			val targets = buildAllTargets(workspaces, backupSafUri)
 
 			// Determine source and items
 			when {
@@ -324,7 +297,7 @@ class TransferActivity : AppCompatActivity() {
 				// Target is fixed (e.g. backup mode) - keep existing targets
 				current.targets
 			} else {
-				buildAllTargets().filter { it.id != sourceId }
+				buildAllTargets(loadWorkspaces()).filter { it.id != sourceId }
 			}
 			screenState = current.copy(
 				sourceName = sourceTarget.name,
@@ -335,9 +308,16 @@ class TransferActivity : AppCompatActivity() {
 		}
 	}
 
-	private fun buildAllTargets(): List<TransferTarget> {
+	// Listing workspaces creates folders, which froze the screen on a slow card.
+	private suspend fun loadWorkspaces(): List<WorkspaceManager.Workspace> =
+		withContext(Dispatchers.IO) { workspaceManager.availableWorkspaces.toList() }
+
+	private fun buildAllTargets(
+		workspaces: List<WorkspaceManager.Workspace>,
+		backupSafUri: String? = backupFolder.usableUri,
+	): List<TransferTarget> {
 		val targets = mutableListOf<TransferTarget>()
-		workspaceManager.availableWorkspaces.forEach { ws ->
+		workspaces.forEach { ws ->
 			targets.add(
 				TransferTarget(
 					id = "ws:${ws.file.path}",
@@ -347,7 +327,6 @@ class TransferActivity : AppCompatActivity() {
 				)
 			)
 		}
-		val backupSafUri = prefManager.backupSafUri
 		if (backupSafUri != null) {
 			targets.add(
 				TransferTarget(
@@ -372,10 +351,7 @@ class TransferActivity : AppCompatActivity() {
 
 	private fun scanWorkspaceItems(dir: File): List<TransferItem> {
 		if (!dir.exists() || !dir.canRead()) return emptyList()
-		return dir.listFiles()
-			?.filter { it.isDirectory && it.name != ".nomedia" }
-			?.map { TransferItem(name = it.name, file = it) }
-			?: emptyList()
+		return WorkspaceManager.packFolders(dir).map { TransferItem(name = it.name, file = it) }
 	}
 
 	private fun scanBackupItems(safUri: String): List<TransferItem> {
@@ -580,7 +556,8 @@ private fun TransferScreen(
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(ContentBg),
+			.background(ContentBg)
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		TopBar(
 			state = state,

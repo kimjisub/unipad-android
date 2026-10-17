@@ -32,12 +32,12 @@ class UniPackColorLengthDeviceTest {
         configurator.waitForIdleTimeout = 500L
         val label = InstrumentationRegistry.getArguments().getString("captureLabel") ?: "after"
         fun capture(name: String) {
-            val path = "/data/local/tmp/jis73/$name.png"
-            screen.device.executeShellCommand("mkdir -p /data/local/tmp/jis73")
+            val path = "/data/local/tmp/color-length/$name.png"
+            screen.device.executeShellCommand("mkdir -p /data/local/tmp/color-length")
             screen.device.executeShellCommand("screencap -p $path")
             assertTrue("Screenshot missing: $path", screen.device.executeShellCommand("ls -l $path").contains(name))
         }
-        val root = kotlin.io.path.createTempDirectory(screen.context.cacheDir.toPath(), "jis73-").toFile()
+        val root = kotlin.io.path.createTempDirectory(screen.context.cacheDir.toPath(), "color-length-").toFile()
         val audio = RecordingAudio()
         val doubles = module { single<SoundRunner.Engine> { audio } }
         loadKoinModules(doubles)
@@ -58,7 +58,7 @@ class UniPackColorLengthDeviceTest {
             screen.await("Pack did not load") { screen.ready() }
             if (screen.onMain { screen.vm().unipack.errorDetail != null }) {
                 screen.node(By.text(screen.text(R.string.accept)))
-                capture("jis73-$label-warning")
+                capture("color-length-$label-warning")
                 screen.clickText(R.string.accept)
                 assertTrue(screen.device.wait(Until.gone(By.text(screen.text(R.string.accept))), 5000))
             }
@@ -70,7 +70,7 @@ class UniPackColorLengthDeviceTest {
                 screen.vm().channelManager.get(0, 0)?.color == 0xff00ff00.toInt()
             } }
             SystemClock.sleep(5500)
-            capture("jis73-$label-light")
+            capture("color-length-$label-light")
             try {
                 assertEquals(1, audio.plays.size)
                 assertEquals("Overlong pad color replaced the valid light", 0xff00ff00.toInt(), screen.onMain {
@@ -82,7 +82,7 @@ class UniPackColorLengthDeviceTest {
                 screen.clickDescription(R.string.menu)
                 screen.clickDescription(R.string.quit)
                 screen.await("Quit did not close the pack") { screen.onMain { activity.isFinishing || activity.isDestroyed } }
-                capture("jis73-$label-exit")
+                capture("color-length-$label-exit")
 
             }
         } finally {

@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Aceptar</string>
@@ -22,13 +21,11 @@
 	<string name="loading_phase_audio">Cargando audio…</string>
 	<string name="download">Descargar</string>
 	<string name="downloadWaiting">Esperando Descarga</string>
-	<string name="downloading">Descargando</string>
 	<string name="downloaded">Descargado</string>
 	<string name="success">Éxito</string>
 	<string name="failed">Falló</string>
 	<string name="delete">Eliminar</string>
 	<string name="edit">Editar</string>
-	<string name="update">Actualizar</string>
 	<string name="ignore">Ignorar</string>
 	<string name="apply">Aplicar</string>
 	<string name="restart">Reiniciar</string>
@@ -86,7 +83,6 @@
 	<!--UniPack Function-->
 	<string name="led">Led</string>
 	<string name="autoPlay">Reproducción Automática</string>
-	<string name="practiceMode">Práctica</string>
 	<string name="guidePlay">Guía</string>
 	<string name="stepPractice">Paso</string>
 	<string name="option_indicator_format">%s ●</string>
@@ -97,15 +93,17 @@
 	<string name="hideUI">Ocultar UI</string>
 	<string name="watermark">Marca de agua</string>
 	<string name="proLightMode">Modo Pro Light</string>
+	<string name="play_section_play_mode">Modo de juego</string>
+	<string name="play_section_performance">Interpretación</string>
+	<string name="play_section_display">Pantalla</string>
+	<string name="play_section_tools">Herramientas</string>
+	<string name="autoMapping">Mapeo Automático</string>
+	<string name="autoMappingRunning">Mapeo Automático…</string>
 
 	<!--Version-->
-	<string name="newVersionFound">Se detectó una nueva versión.</string>
-	<string name="update_available">Actualización disponible</string>
 
 	<string name="permissionRequire">Se requiere acceso al almacenamiento externo para guardar archivos del proyecto.\nObtener permiso para este privilegio.</string>
 	<string name="permissionDenied">La app requiere acceso al almacenamiento externo.\nPor favor active los permisos en [Configuración] > [Permisos]</string>
-	<string name="unipackNotFound">UniPack no encontrado.</string>
-	<string name="clickToAddUniPack">Haz clic para agregar UniPacks.</string>
 	<string name="guide_download_new">Descargar nuevos packs</string>
 	<string name="guide_import_external">Importar packs descargados</string>
 	<string name="guide_restore_packs">Recuperar packs faltantes</string>
@@ -116,8 +114,6 @@
 	<string name="guide_empty_link">Guía de inicio</string>
 	<string name="unipack_play">Reproducir</string>
 	<string name="doYouWantToDeleteUniPack">¿Deseas eliminar este proyecto?</string>
-	<string name="remapDone">El remapeo de AutoPlay se ha completado exitosamente.</string>
-	<string name="remapFail">AutoPlay no existe</string>
 	<string name="importComplete">¡Pack importado!</string>
 	<string name="importPlayNow">Tocar ahora</string>
 	<string name="importFailed">Error al importar</string>
@@ -132,10 +128,7 @@
 	<string name="launchpadConnecting">Conectando launchpad…</string>
 	<string name="midiDevicesNotDetected">No se detectaron dispositivos MIDI</string>
 	<string name="midi_open_panel">Abrir</string>
-	<string name="midi_connected_banner">MIDI conectado: %1$s</string>
 	<string name="midi_disconnected">Desconectado</string>
-	<string name="signal_SpeedFirst">Velocidad primero</string>
-	<string name="signal_avoidAfterimage">Evitar imagen residual</string>
 
 	<!--Store-->
 	<string name="canNotQuitWhileDownloading">No se puede salir mientras se descarga el pack</string>
@@ -143,11 +136,9 @@
 
 	<!--Theme-->
 	<string name="theme">Tema</string>
-	<string name="themeDownload">Descargar Temas</string>
 	<string name="requireRestart">Requiere reiniciar la app.</string>
 	<string name="doYouWantToRestartApp">¿Deseas reiniciar la app?</string>
 
-	<string name="theme_import">Importar Tema</string>
 	<string name="theme_import_success">Tema importado exitosamente.</string>
 	<string name="theme_import_failed">Error al importar el tema.</string>
 	<string name="theme_import_invalid">Archivo de tema no válido.</string>
@@ -164,7 +155,6 @@
 
 	<!--ThemePack-->
 	<string name="theme_name">Default Theme</string>
-	<string name="theme_description">This is Default UniPad Theme</string>
 	<string name="theme_author">UniPad dev.</string>
 	<string name="settings_info">Información</string>
 	<string name="settings_storage">Almacenamiento</string>
@@ -225,7 +215,6 @@
 	<string name="workspace_documents_android10">Documentos (Android 10)</string>
 	<string name="workspace_app_storage">Almacenamiento de App (Recomendado)</string>
 	<string name="workspace_internal_storage">Almacenamiento Interno</string>
-	<string name="workspace_internal_sd_card">Tarjeta SD Interna</string>
 	<string name="workspace_external_sd_card_format">Tarjeta SD Externa %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -254,13 +243,11 @@
 	<string name="transfer_selected_count">%d seleccionados</string>
 	<string name="transfer_start">Iniciar</string>
 	<string name="transfer_copying">Copiando: %s</string>
-	<string name="transfer_moving">Moviendo: %s</string>
 	<string name="transfer_result_transferred">Transferido</string>
 	<string name="transfer_result_skipped">Omitido (ya existe)</string>
 	<string name="transfer_result_failed">Falló</string>
 	<string name="transfer_done">Listo</string>
 	<string name="transfer_no_items">No hay UniPacks seleccionados</string>
-	<string name="transfer_select_target">Selecciona un destino</string>
 	<string name="transfer_select_source">Selecciona un origen</string>
 	<string name="transfer_format_label">Formato</string>
 	<string name="transfer_format_folder">Carpeta</string>
@@ -272,11 +259,6 @@
 	<string name="restore_title">Restaurar</string>
 
 	<!--Format-->
-	<string name="countdown_format">%d</string>
-	<string name="import_pack_code_format">#%s</string>
-	<string name="import_pack_title_format">%1$s #%2$s</string>
-	<string name="import_pack_info_format">#%1$s\n%2$s\n%3$s</string>
-	<string name="server_error_format">error del servidor\n%s</string>
 	<string name="download_progress_format">%1$d%%\n%2$s / %3$s MB</string>
 
 	<!--Backup-->
@@ -285,6 +267,8 @@
 	<string name="backup_grant_access">Conectar Carpeta de Respaldo</string>
 	<string name="backup_revoke">Desconectar Carpeta de Respaldo</string>
 	<string name="backup_invalid_folder">Por favor selecciona la carpeta Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad no pudo conservar el acceso a esta carpeta. Vuelve a elegir Documents/Unipad.</string>
+	<string name="picker_unavailable">Ninguna app de este dispositivo puede elegir archivos o carpetas.</string>
 	<string name="backup_backup_button">Respaldar</string>
 	<string name="backup_backup_description">Copiar UniPacks a carpeta de respaldo</string>
 	<string name="backup_restore_button">Restaurar</string>

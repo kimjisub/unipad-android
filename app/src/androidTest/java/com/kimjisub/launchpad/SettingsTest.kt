@@ -1,11 +1,19 @@
 package com.kimjisub.launchpad
 
-import android.content.Intent
+import android.app.Activity
+import android.os.Build
+import android.provider.Settings
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -25,6 +33,10 @@ import org.junit.runner.RunWith
 class SettingsTest : BaseUITest() {
 
     private val prefs by lazy { PreferenceManager(context) }
+
+    private companion object {
+        const val SYSTEM_SETTINGS_PACKAGE = "com.android.settings"
+    }
 
     @Test
     fun testSettingsActivityNavigation() {
@@ -107,12 +119,7 @@ class SettingsTest : BaseUITest() {
             device.wait(Until.gone(By.pkg(PACKAGE_NAME)), 5000L)
             takeScreenshot("settings_persistence_app_killed")
 
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(PACKAGE_NAME)
-            assertNotNull("Could not find launch intent", launchIntent)
-            launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            context.startActivity(launchIntent)
-            handlePermissionDialogs()
-            assertTrue("Did not transition to main screen after restart", waitForMainScreen())
+            launchToMainScreen()
             takeScreenshot("settings_persistence_app_restarted")
 
             openSettings()
@@ -159,6 +166,66 @@ class SettingsTest : BaseUITest() {
     }
 
     /**
+     * From Android 13 the language row opens the system's language screen for UniPad, which lists
+     * UniPad's translations and stays open; going back returns to UniPad's settings even while the
+     * Settings app keeps another screen open behind it. Below 13 the row only names the translators
+     * and tapping it leaves Settings as it was.
+     */
+    @Test
+    fun testLanguageRowOpensSystemAppLanguageScreen() {
+        val modern = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        try {
+            if (modern) openOtherSystemSettingsScreen()
+            launchToMainScreen()
+            openSettings()
+
+            val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+            assertNotNull("Settings content is not scrollable", content)
+            val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.language))))
+            assertNotNull("Language row not found", row)
+            row!!.click()
+
+            if (!modern) {
+                assertSettingsStillOpen("language")
+                takeScreenshot("settings_language_row_without_system_screen")
+                return
+            }
+            val korean = By.pkg(SYSTEM_SETTINGS_PACKAGE).text("한국어")
+            val list = device.wait(Until.findObject(By.pkg(SYSTEM_SETTINGS_PACKAGE).scrollable(true)), 10000L)
+            assertNotNull("The system language screen for UniPad did not open", list)
+            assertNotNull(
+                "The system language screen does not list Korean",
+                list!!.scrollUntil(Direction.DOWN, Until.findObject(korean))
+            )
+            Thread.sleep(1500L)
+            assertTrue("The system language screen closed by itself", device.hasObject(korean))
+            takeScreenshot("settings_language_system_screen")
+
+            device.pressBack()
+            assertTrue(
+                "Did not return to settings from the system language screen",
+                device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage))), 5000L)
+            )
+        } finally {
+            if (modern) device.executeShellCommand("am force-stop $SYSTEM_SETTINGS_PACKAGE")
+        }
+    }
+
+    /** Leaves the Settings app on its Wi-Fi screen in the background, as after a user visited it. */
+    private fun openOtherSystemSettingsScreen() {
+        device.executeShellCommand("am start -a ${Settings.ACTION_WIFI_SETTINGS}")
+        assertTrue(
+            "The Settings app did not open",
+            device.wait(Until.hasObject(By.pkg(SYSTEM_SETTINGS_PACKAGE)), 10000L)
+        )
+        device.pressHome()
+        assertTrue(
+            "The Settings app stayed in front after Home",
+            device.wait(Until.gone(By.pkg(SYSTEM_SETTINGS_PACKAGE)), 5000L)
+        )
+    }
+
+    /**
      * With no app on the device for a link (no browser, no mail app), the GitHub row and a community
      * item report it and leave Settings open instead of crashing the app.
      *
@@ -196,37 +263,69 @@ class SettingsTest : BaseUITest() {
         }
     }
 
+    /**
+     * The license row opens the library's current license screen (the older one is deprecated), and
+     * that screen reads the bundled license list instead of failing. A debug build bundles a
+     * single "Debug License Info" entry; a release build bundles the full list. The screen takes the
+     * app's window theme, so its status bar is shown or hidden the same way as on Settings.
+     */
+    @Test
+    fun testOpenSourceLicenseRowOpensLicenseList() {
+        launchToMainScreen()
+        openSettings()
+
+        val content = device.wait(Until.findObject(By.scrollable(true)), 5000L)
+        assertNotNull("Settings content is not scrollable", content)
+        val settingsStatusBarVisible = resumedActivityStatusBarVisible()
+        val row = content!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.openSourceLicense))))
+        assertNotNull("Open source license row not found", row)
+        row!!.click()
+
+        assertTrue(
+            "The license screen did not open",
+            waitUntil(5000L) { resumedActivity() is OssLicensesMenuActivity }
+        )
+        assertTrue(
+            "The license list was not shown",
+            device.wait(Until.hasObject(By.pkg(PACKAGE_NAME).text("Debug License Info")), 5000L)
+        )
+        assertEquals(
+            "The license screen shows the status bar differently from Settings",
+            settingsStatusBarVisible,
+            resumedActivityStatusBarVisible()
+        )
+        takeScreenshot("settings_open_source_licenses")
+
+        device.pressBack()
+        assertTrue(
+            "Did not return to settings from the license screen",
+            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
+        )
+    }
+
+    private fun resumedActivity(): Activity? {
+        var activity: Activity? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).firstOrNull()
+        }
+        return activity
+    }
+
+    private fun resumedActivityStatusBarVisible(): Boolean? {
+        val decorView = resumedActivity()?.window?.decorView ?: return null
+        var visible: Boolean? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            visible = ViewCompat.getRootWindowInsets(decorView)?.isVisible(WindowInsetsCompat.Type.statusBars())
+        }
+        return visible
+    }
+
     private fun assertSettingsStillOpen(link: String) {
         device.waitForIdle()
         Thread.sleep(1500L)
         assertTrue(
             "Settings did not stay open after tapping the $link link",
             device.hasObject(By.pkg(PACKAGE_NAME).text(str(R.string.settings_storage)))
-        )
-    }
-
-    /** Runs [block] with every app that resolves the given `cmd package query-activities` arguments disabled. */
-    private fun withoutHandlers(vararg queries: String, block: () -> Unit) {
-        val packages = queries.flatMap { query ->
-            device.executeShellCommand("cmd package query-activities --brief $query")
-                .lines()
-                .mapNotNull { Regex("""^\s+([\w.]+)/\S+$""").find(it)?.groupValues?.get(1) }
-        }.distinct()
-        try {
-            packages.forEach { device.executeShellCommand("pm disable-user --user 0 $it") }
-            block()
-        } finally {
-            packages.forEach { device.executeShellCommand("pm enable --user 0 $it") }
-        }
-    }
-
-    private fun openSettings() {
-        val settingsButton = device.wait(Until.findObject(By.desc(str(R.string.setting))), 5000L)
-        assertNotNull("Could not find the Settings button", settingsButton)
-        settingsButton!!.click()
-        assertTrue(
-            "Did not transition to the settings screen",
-            device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L)
         )
     }
 

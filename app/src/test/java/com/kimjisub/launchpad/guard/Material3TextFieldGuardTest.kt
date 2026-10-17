@@ -32,8 +32,9 @@ class Material3TextFieldGuardTest {
 			Material3TextFieldScanner.scan(file.readText()).map { "${file.canonicalPath}:${it.line} ${it.reference}" }
 		}
 		assertTrue(
-			"Material3 text fields crash with this dependency set (material3 1.5.0-alpha17 on foundation " +
-				"1.12.0); use BasicTextField instead:\n" + found.joinToString("\n"),
+			"Material3 text fields crashed when a dependency lifted material3 to 1.5.0-alpha17 on " +
+				"foundation 1.12.0 and would again with such a prerelease; use BasicTextField instead:\n" +
+				found.joinToString("\n"),
 			found.isEmpty(),
 		)
 	}

@@ -59,7 +59,7 @@ class MidiConnectionLogoOrderTest {
 		every { usbManager.hasPermission(any<UsbDevice>()) } returns true
 		every { usbManager.deviceList } returns HashMap()
 		val midiManager = mockk<MidiManager>(relaxed = true)
-		every { midiManager.devices } returns emptyArray()
+		midiManager.stubDeviceList() returns emptyArray()
 		val prefs = mockk<SharedPreferences>(relaxed = true)
 		every { prefs.getBoolean(any(), any()) } answers { dualPadMode }
 		context = mockk(relaxed = true)

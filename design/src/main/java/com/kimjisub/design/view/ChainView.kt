@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.widget.RelativeLayout
 import com.kimjisub.design.databinding.ViewChainBinding
 
@@ -17,13 +18,23 @@ class ChainView
 		ViewChainBinding.inflate(LayoutInflater.from(context), this, true)
 
 
+	// Only chains that switch something are reached by Tab; the top row is LED-only.
 	override fun setOnClickListener(listener: OnClickListener?) {
 		b.touchSpace.setOnClickListener(listener)
+		b.touchSpace.isFocusable = listener != null
 	}
 
-	override fun setOnTouchListener(listener: OnTouchListener) {
-		b.touchSpace.setOnTouchListener(listener)
-	}
+	/*
+	 * Pointers (fingers and mice) select a chain through the play screen's own input handling,
+	 * which calls [click]: Compose stops handing an embedded view the press that follows a mouse
+	 * hover, so a click from the view's own touch handling never came with a mouse. Touches stop
+	 * here; the click stays for the keyboard and accessibility services.
+	 */
+	override fun onInterceptTouchEvent(ev: MotionEvent): Boolean = true
+
+	/** Runs the click listener, as a tap on the chain does. False when the chain has none. */
+	fun click(): Boolean = b.touchSpace.performClick()
+
 	//========================================================================================= Background
 
 

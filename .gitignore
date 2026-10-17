@@ -73,3 +73,6 @@ fastlane/README.md
 
 # CI diagnostic output
 .ci-results/
+
+# Python bytecode from running scripts/tests
+__pycache__/

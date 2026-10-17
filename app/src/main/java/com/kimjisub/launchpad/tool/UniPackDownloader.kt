@@ -1,18 +1,15 @@
 package com.kimjisub.launchpad.tool
 
-import android.app.PendingIntent
 import android.os.SystemClock
 import android.content.Context
-import android.content.Intent
-import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.analytics.FailureStage
 import com.kimjisub.launchpad.analytics.PackImportReport
-import com.kimjisub.launchpad.activity.SplashActivity
 import com.kimjisub.launchpad.api.file.FileApi
 import com.kimjisub.launchpad.manager.FileManager
-import com.kimjisub.launchpad.manager.NotificationManager
+import com.kimjisub.launchpad.manager.PackArchive
+import com.kimjisub.launchpad.manager.PackStaging
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +22,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -34,7 +30,8 @@ class UniPackDownloader(
 	private val context: Context,
 	private val title: String,
 	private val url: String,
-	private val workspace: File,
+	/** Resolved on the download's IO thread: listing workspaces creates folders. */
+	workspace: () -> File,
 	private val folderName: String,
 	preKnownFileSize: Long = 0,
 	private var listener: Listener,
@@ -45,6 +42,11 @@ class UniPackDownloader(
 		private const val DOWNLOAD_BUFFER_SIZE = 1024
 		private const val PROGRESS_UPDATE_INTERVAL_MS = 20
 		private const val PERCENT_MULTIPLIER = 100
+		private const val ARCHIVE_NAME = "download.zip"
+
+		/** Share of [fileSize] received, or null when the server did not say how large the file is. */
+		fun fraction(downloadedSize: Long, fileSize: Long): Float? =
+			if (fileSize > 0) (downloadedSize.toFloat() / fileSize).coerceIn(0f, 1f) else null
 	}
 
 	interface Listener {
@@ -58,29 +60,7 @@ class UniPackDownloader(
 		fun onException(throwable: Throwable)
 	}
 
-	private val notificationId = kotlin.random.Random.nextInt(Int.MAX_VALUE)
-	private val notificationManager = NotificationManager.getManager(context)
-	private val notificationBuilder: NotificationCompat.Builder by lazy {
-		val builder = NotificationCompat.Builder(context, NotificationManager.Channel.Download.name)
-		builder.apply {
-			setAutoCancel(true)
-			setSmallIcon(R.mipmap.ic_launcher)
-
-			val intent = Intent(context, SplashActivity::class.java)
-			intent.action = Intent.ACTION_MAIN
-			intent.addCategory(Intent.CATEGORY_LAUNCHER)
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			val pIntent: PendingIntent =
-				PendingIntent.getActivity(
-					context,
-					1,
-					intent,
-					PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-				)
-			setContentIntent(pIntent)
-		}
-		builder
-	}
+	private val notification = PackInstallNotification(context)
 
 	val contentResolver: android.content.ContentResolver = context.contentResolver
 
@@ -88,8 +68,11 @@ class UniPackDownloader(
 	init {
 		scope.launch(Dispatchers.IO) {
 			// Another download of the same name may run at the same time, so only paths claimed here
-			// are written to or deleted.
-			var claimedZip: File? = null
+			// are written to or deleted. The archive is received and the pack unpacked and checked in
+			// staging folders of their own, which the next start clears if the app is killed meanwhile,
+			// and the pack appears in the list only once complete.
+			var download: File? = null
+			var staged: File? = null
 			var claimedFolder: File? = null
 			var cancellationWatcher: Job? = null
 			// What the download was doing when it failed: the same I/O error is a broken connection while
@@ -98,8 +81,10 @@ class UniPackDownloader(
 			try {
 				withContext(Dispatchers.Main) { onInstallStart() }
 
-				val unipackFile = FileManager.claimNextFile(workspace, folderName, ".zip")
-				claimedZip = unipackFile
+				val workspace = workspace()
+				val downloadFolder = PackStaging.create(workspace)
+				download = downloadFolder
+				val unipackFile = File(downloadFolder, ARCHIVE_NAME)
 
 				stage = FailureStage.NETWORK
 				val call = FileApi.service.download(url)
@@ -158,7 +143,7 @@ class UniPackDownloader(
 									downloadedSize += n.toLong()
 									val millis = SystemClock.elapsedRealtime()
 									if (millis - prevMillis > PROGRESS_UPDATE_INTERVAL_MS) {
-										val percent = if (fileSize > 0) (downloadedSize.toFloat() / fileSize * PERCENT_MULTIPLIER).toInt() else -1
+										val percent = fraction(downloadedSize, fileSize)?.let { (it * PERCENT_MULTIPLIER).toInt() } ?: -1
 										withContext(Dispatchers.Main) {
 											onDownloadProgress(
 												percent,
@@ -187,29 +172,32 @@ class UniPackDownloader(
 
 				withContext(Dispatchers.Main) { onImportStart(unipackFile) }
 
-				val folder = FileManager.claimNextFolder(workspace, folderName)
-				claimedFolder = folder
-				ZipFile(unipackFile).use { zip ->
-					zip.extractAll(folder.path)
-				}
-				FileManager.removeDoubleFolder(folder.path)
+				val stagedFolder = PackStaging.create(workspace)
+				staged = stagedFolder
+				PackArchive.extract(unipackFile, stagedFolder)
+				FileManager.removeDoubleFolder(stagedFolder.path)
 				// load() runs checkFile + info; without it every parser returned early and criticalError
 				// was always false, so any archive installed as a pack.
-				val unipack = UniPackFolder(folder).load().loadDetail()
-				if (unipack.criticalError) {
-					val errorMsg = unipack.errorDetail ?: "Unknown error"
+				val checked = UniPackFolder(stagedFolder).load().loadDetail()
+				if (checked.criticalError) {
+					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
 					throw UniPackCriticalErrorException(errorMsg)
 				}
+
+				ensureActive()
+				val folder = FileManager.moveToNextFolder(stagedFolder, workspace, folderName)
+				claimedFolder = folder
+				val unipack = UniPackFolder(folder).load()
 
 				// Whether the pack stays is settled on the main thread, where the hosting screen
 				// closes. A screen already gone never runs this block and the download is discarded
 				// below; a pack that was announced is released from cleanup and counted, so closing
 				// the screen right after cannot delete a pack recorded as imported.
 				withContext(Dispatchers.Main) {
-					onInstallComplete(folder, unipack)
+					// Transfer ownership before a completion listener can close the screen or throw.
 					claimedFolder = null
-					usage.succeeded()
+					onInstallComplete(folder, unipack)
 				}
 
 			} catch (e: CancellationException) {
@@ -227,22 +215,18 @@ class UniPackDownloader(
 				withContext(Dispatchers.Main) { onException(e) }
 			} finally {
 				cancellationWatcher?.cancel()
+				notification.cancelProgress()
 				// No suspending callbacks here: cancellation or a failing listener cannot skip
 				// cleanup. Successful installation already released its folder above.
 				claimedFolder?.let(FileManager::deleteDirectory)
-				claimedZip?.let(FileManager::deleteDirectory)
+				staged?.let(PackStaging::discard)
+				download?.let(PackStaging::discard)
 			}
 		}
 	}
 
 	private fun onInstallStart() {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.downloadWaiting))
-			setProgress(100, 0, true)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(title, R.string.downloadWaiting, 0, indeterminate = true)
 
 		listener.onInstallStart()
 	}
@@ -256,57 +240,31 @@ class UniPackDownloader(
 	}
 
 	private fun onDownloadProgressPercent(percent: Int, downloadedSize: Long, fileSize: Long) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(
-				"${FileManager.byteToMB(downloadedSize)} / ${
-					FileManager.byteToMB(
-						fileSize
-					)
-				} MB"
-			)
-			setProgress(100, percent, false)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(
+			title,
+			"${FileManager.byteToMB(downloadedSize)} / ${FileManager.byteToMB(fileSize)} MB",
+			percent,
+			indeterminate = false
+		)
 
 		listener.onDownloadProgressPercent(percent, downloadedSize, fileSize)
 	}
 
 	private fun onImportStart(zip: File) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.importing))
-			setProgress(100, 0, true)
-			setOngoing(true)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
+		notification.showProgress(title, R.string.importing, 0, indeterminate = true)
 
 		listener.onImportStart(zip)
 	}
 
 	private fun onInstallComplete(folder: File, unipack: UniPack) {
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.success))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
-
+		notification.showResult(title, R.string.success)
+		usage.succeeded()
 		listener.onInstallComplete(folder, unipack)
 	}
 
 	private fun onException(throwable: Throwable) {
 		Log.err("Download exception", throwable)
-		notificationBuilder.apply {
-			setContentTitle(title)
-			setContentText(context.getString(R.string.downloadWaiting))
-			setProgress(0, 0, false)
-			setOngoing(false)
-		}
-		notificationManager.notify(notificationId, notificationBuilder.build())
-
+		notification.showResult(title, R.string.failed)
 		listener.onException(throwable)
 	}
 

@@ -37,8 +37,8 @@ android {
 		applicationId = "com.kimjisub.launchpad"
 		minSdkVersion 24
 		targetSdkVersion 37
-		versionCode = 116
-		versionName = "4.1.9"
+		versionCode = 119
+		versionName = "4.2.0"
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 		vectorDrawables.useSupportLibrary = true
 		// renderscriptTargetApi 19
@@ -54,7 +54,7 @@ android {
 	externalNativeBuild {
 		cmake {
 			path 'src/main/cpp/CMakeLists.txt'
-			version '3.22.1'
+			version = '3.22.1'
 		}
 	}
 	buildTypes {
@@ -67,6 +67,11 @@ android {
 			ndk {
 				debugSymbolLevel = 'FULL'
 			}
+			// Lets Crashlytics name the frames of native crashes. The symbols are sent only by
+			// uploadCrashlyticsSymbolFileRelease, which the Play deploy lane runs after the bundle.
+			firebaseCrashlytics {
+				nativeSymbolUploadEnabled = true
+			}
 
 			minifyEnabled = true
 			shrinkResources = true
@@ -78,13 +83,30 @@ android {
 			proguardFile 'proguard-retrofit2.pro'
 		}
 		debug {
-			manifestPlaceholders = [appName: "@string/app_name_test"]
+			// -PanalyticsServerCheck builds a debug app whose analytics reach Firebase (see UsageEventRouting).
+			// -PcrashReportCheck builds a debug app that sends crash reports, for checking what a report carries.
+			manifestPlaceholders = [
+				appName: "@string/app_name_test",
+				analyticsCollectionDeactivated: project.hasProperty('analyticsServerCheck') ? 'false' : 'true',
+				crashlyticsCollectionEnabled: project.hasProperty('crashReportCheck') ? 'true' : 'false'
+			]
 			applicationIdSuffix = ".dev"
 			signingConfig = signingConfigs.debug
 			debuggable = true
 
 			minifyEnabled = false
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
+	// Lists the translated languages for the system's per-app language screen (Android 13+).
+	androidResources {
+		generateLocaleConfig = true
+	}
+	// Play would otherwise install only the phone's language, so a language picked for UniPad
+	// alone would have no strings and stay in English.
+	bundle {
+		language {
+			enableSplit = false
 		}
 	}
 	buildFeatures {
@@ -101,15 +123,20 @@ android {
 	tasks.withType(KotlinCompile).configureEach {
 		compilerOptions {
 			jvmTarget = JvmTarget.JVM_21
+			allWarningsAsErrors = true
 		}
 	}
 	namespace = 'com.kimjisub.launchpad'
 
-	// Disable lint check that crashes with Kotlin 2.x (known bug in lifecycle-lint)
 	lint {
+		// NullSafeMutableLiveData crashes with Kotlin 2.x (known bug in lifecycle-lint)
 		disable += ['NullSafeMutableLiveData', 'IconXmlAndPng', 'QueryAllPackagesPermission']
+		// "A newer version is available" checks change result as releases come out, not as the code changes
+		disable += ['AndroidGradlePluginVersion', 'GradleDependency', 'NewerVersionAvailable']
 		// Community-translated strings arrive after features ship; missing ones fall back to English (#57)
-		warning += ['MissingTranslation']
+		informational += ['MissingTranslation']
+		warningsAsErrors = true
+		lintConfig = file('lint.xml')
 	}
 
 	// Test reporting configuration
@@ -117,6 +144,19 @@ android {
 		unitTests {
 			includeAndroidResources = true
 			returnDefaultValues = true
+			all {
+				// MockK appends to the bootstrap classpath, which is incompatible with class sharing.
+				jvmArgs '-Xshare:off'
+				// Store packs stay out of the repository; their LED timing runs only when given a folder of them.
+				def ledTimingPacks = project.findProperty('ledTimingPacks')
+				if (ledTimingPacks) {
+					systemProperty 'ledTiming.packs', rootProject.file(ledTimingPacks).absolutePath
+					systemProperty 'ledTiming.measure', project.findProperty('ledTimingMeasure') ?: ''
+					outputs.upToDateWhen { false }
+				} else {
+					exclude '**/StorePackLedTimingTest*'
+				}
+			}
 		}
 		animationsDisabled = true
 		execution = 'ANDROIDX_TEST_ORCHESTRATOR'
@@ -174,6 +214,11 @@ ksp {
 	arg("room.schemaLocation", "$projectDir/schemas")
 }
 android.sourceSets.androidTest.assets.srcDirs += files("$projectDir/schemas")
+// Code and data both test layers share: the chain-release corpus every UniPad app checks against.
+android.sourceSets.test.kotlin.srcDir("$projectDir/src/sharedTest/java")
+android.sourceSets.test.resources.srcDirs += files("$projectDir/src/sharedTest/assets")
+android.sourceSets.androidTest.kotlin.srcDir("$projectDir/src/sharedTest/java")
+android.sourceSets.androidTest.assets.srcDirs += files("$projectDir/src/sharedTest/assets")
 
 jacoco {
 	toolVersion = "0.8.12"
@@ -218,8 +263,7 @@ dependencies {
 
 	implementation 'androidx.appcompat:appcompat:1.8.0'
 	implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
-	implementation 'androidx.core:core-ktx:1.19.0'
-	implementation 'androidx.preference:preference-ktx:1.2.1'
+	implementation 'androidx.core:core-ktx:1.19.1'
 	implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0'
 	implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
 	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.11.0'
@@ -241,10 +285,10 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'io.mockk:mockk:1.14.11'
 	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0'
-	testImplementation "io.insert-koin:koin-test:$koin_version"
+	testImplementation "io.insert-koin:koin-test:${rootProject.koin_version}"
 	// Real SQLite on the JVM, so database migrations run in unit tests without a device
 	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
-	androidTestImplementation "androidx.room:room-testing:$room_version"
+	androidTestImplementation "androidx.room:room-testing:${rootProject.room_version}"
 	androidTestImplementation 'androidx.test:runner:1.7.0'
 	androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.4.0'
 	androidTestImplementation 'androidx.test.ext:junit:1.3.0'
@@ -255,14 +299,14 @@ dependencies {
 	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
 	// splitties
-	implementation("com.louiscad.splitties:splitties-activities:$splitties_version")
-	implementation("com.louiscad.splitties:splitties-alertdialog:$splitties_version")
+	implementation("com.louiscad.splitties:splitties-activities:${rootProject.splitties_version}")
+	implementation("com.louiscad.splitties:splitties-alertdialog:${rootProject.splitties_version}")
 
 	// Room
-	implementation "androidx.room:room-ktx:$room_version"
-	implementation "androidx.room:room-runtime:$room_version"
-	ksp "androidx.room:room-compiler:$room_version"
-	implementation "io.insert-koin:koin-android:$koin_version"
+	implementation "androidx.room:room-ktx:${rootProject.room_version}"
+	implementation "androidx.room:room-runtime:${rootProject.room_version}"
+	ksp "androidx.room:room-compiler:${rootProject.room_version}"
+	implementation "io.insert-koin:koin-android:${rootProject.koin_version}"
 
 
 	// Firebase (using BOM for version management)
@@ -271,8 +315,9 @@ dependencies {
 	implementation 'com.google.firebase:firebase-database'
 	implementation 'com.google.firebase:firebase-messaging'
 	implementation 'com.google.firebase:firebase-perf'
-	implementation 'com.google.firebase:firebase-config'
 	implementation 'com.google.firebase:firebase-crashlytics'
+	// Native crashes (Android's drawing thread, the Oboe audio engine) with the same keys and logs.
+	implementation 'com.google.firebase:firebase-crashlytics-ndk'
 	implementation 'com.google.firebase:firebase-analytics'
 
 	// Retrofit 2
@@ -288,7 +333,9 @@ dependencies {
 	implementation 'net.lingala.zip4j:zip4j:2.11.6'
 	implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 	//noinspection GradleDependency
-	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.1'
+	implementation 'com.google.android.gms:play-services-oss-licenses:17.5.2'
+	// Lets the pack list fetch a newer Play build in the background and install it when asked
+	implementation 'com.google.android.play:app-update:2.1.0'
 	api project(':design')
 }
 

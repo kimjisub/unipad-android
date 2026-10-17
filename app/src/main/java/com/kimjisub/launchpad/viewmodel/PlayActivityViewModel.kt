@@ -20,6 +20,7 @@ import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
+import com.kimjisub.launchpad.tool.PlayLayout
 import com.kimjisub.launchpad.tool.UniPackAutoMapper
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -33,6 +34,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 enum class PlayMode {
@@ -156,7 +158,6 @@ class PlayActivityViewModel(
 
 	// Unipack loading state
 	var unipackLoading by mutableStateOf(true)
-	var unipackLoadError by mutableStateOf<String?>(null)
 	var loadingPhase by mutableStateOf("")
 	var loadingPhaseIndex by mutableIntStateOf(0)
 	var loadingPhaseTotal by mutableIntStateOf(1)
@@ -231,12 +232,18 @@ class PlayActivityViewModel(
 	}
 
 	// Mirrors PlayActivity's onStart/onStop. Loading can finish, and turn the LED option on, while the
-	// screen is in the background; the LED runner must not start until the screen is back.
+	// screen is in the background; the LED runner must not start until the screen is back. The audio
+	// stream is open only while the screen is visible, including beside another app in split screen.
 	var screenVisible = false
 		set(value) {
 			field = value
 			syncLedRunner()
+			syncSoundStream()
 		}
+
+	private fun syncSoundStream() {
+		if (screenVisible) soundRunner?.resumeStream() else soundRunner?.pauseStream()
+	}
 
 	private fun syncLedRunner() {
 		if (screenVisible && scbLed.isChecked()) ledRunner?.launch() else ledRunner?.stop()
@@ -441,6 +448,7 @@ class PlayActivityViewModel(
 					}
 				}
 			})
+		syncSoundStream()
 
 		chain.addObserver { curr: Int, _: Int ->
 			try {
@@ -482,8 +490,44 @@ class PlayActivityViewModel(
 	/** A pad the person pressed or released, on the screen or on a MIDI controller. */
 	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD)
 
-	/** [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence. */
-	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger) {
+	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
+	// unplugged or stops being the screen's controller, so these are let go then.
+	private val controllerHeldPads = LinkedHashSet<Pair<Int, Int>>()
+
+	/**
+	 * A pad pressed or released on the MIDI controller. Presses are ignored while the option window
+	 * is open, where the controller's buttons change settings; the release of a pad that was played
+	 * still goes through so it does not stay held.
+	 */
+	fun controllerPadTouch(x: Int, y: Int, upDown: Boolean) {
+		val pad = x to y
+		if (upDown) {
+			if (isOptionWindowVisible) return
+			controllerHeldPads += pad
+		} else if (!controllerHeldPads.remove(pad)) {
+			return
+		}
+		padTouch(x, y, upDown)
+	}
+
+	/**
+	 * Lets go of every pad still held on the MIDI controller, except the ones [heldOnScreen] says a
+	 * finger on the screen is still pressing.
+	 */
+	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
+		val pads = controllerHeldPads.toList()
+		controllerHeldPads.clear()
+		for ((x, y) in pads) if (!heldOnScreen(x, y)) padTouch(x, y, false)
+	}
+
+	/** A pad auto play presses or releases, [atMs] (SystemClock.elapsedRealtime) being when the pack places it. */
+	internal fun autoPlayPadTouch(x: Int, y: Int, upDown: Boolean, atMs: Long) = padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, atMs)
+
+	/**
+	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence.
+	 * The pad's LED animation runs from [atMs], however long the event took to get here.
+	 */
+	private fun padEvent(x: Int, y: Int, upDown: Boolean, pressedBy: PlayTrigger, atMs: Long = SystemClock.elapsedRealtime()) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
 		if (!::unipack.isInitialized || x !in 0 until unipack.buttonX || y !in 0 until unipack.buttonY) {
@@ -510,12 +554,12 @@ class PlayActivityViewModel(
 					channelManager.add(x, y, Channel.PRESSED, ChannelManager.NO_COLOR, LED_RED)
 					uiCallback?.setLedPad(x, y)
 				}
-				ledRunner?.eventOn(x, y)
+				ledRunner?.eventOn(x, y, atMs)
 			} else {
 				soundRunner?.soundOff(x, y)
 				channelManager.remove(x, y, Channel.PRESSED)
 				uiCallback?.setLedPad(x, y)
-				ledRunner?.eventOff(x, y)
+				ledRunner?.eventOff(x, y, atMs)
 			}
 		} catch (e: ArrayIndexOutOfBoundsException) {
 			Log.err("padTouch ArrayIndexOutOfBounds", e)
@@ -614,19 +658,11 @@ class PlayActivityViewModel(
 	}
 
 	fun proLightMode(bool: Boolean) {
-		if (bool) {
-			for (i in 0 until CIRCLE_ARRAY_SIZE) {
-				uiCallback?.setChainViewVisibility(i, View.VISIBLE)
-			}
-		} else {
-			val chainRange = 0 until (if (unipack.chain > 1) unipack.chain else 0)
-			for (i in 0 until CIRCLE_ARRAY_SIZE) {
-				val c = i - CHAIN_INDEX_OFFSET
-				uiCallback?.setChainViewVisibility(
-					i,
-					if (c in chainRange) View.VISIBLE else View.INVISIBLE
-				)
-			}
+		for (i in 0 until CIRCLE_ARRAY_SIZE) {
+			uiCallback?.setChainViewVisibility(
+				i,
+				if (PlayLayout.chainButtonVisible(i, bool, unipack.chain)) View.VISIBLE else View.INVISIBLE,
+			)
 		}
 		if (isChannelManagerInitialized) channelManager.setCirIgnore(Channel.LED, !bool)
 		chainBtnsRefresh()
@@ -906,12 +942,12 @@ class PlayActivityViewModel(
 					}
 				}
 
-				override fun onPadTouchOn(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, true, PlayTrigger.AUTOPLAY) }
+				override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
+					viewModelScope.launch { autoPlayPadTouch(x, y, true, atMs) }
 				}
 
-				override fun onPadTouchOff(x: Int, y: Int) {
-					viewModelScope.launch { padEvent(x, y, false, PlayTrigger.AUTOPLAY) }
+				override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
+					viewModelScope.launch { autoPlayPadTouch(x, y, false, atMs) }
 				}
 
 				override fun onChainChange(c: Int) {
@@ -996,10 +1032,19 @@ class PlayActivityViewModel(
 			}
 
 			override fun onDone() {
-				autoMappingActive = false
-				folder.reloadAutoPlay()
-				initAutoPlayRunner()
-				log("AutoMapping complete")
+				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
+				viewModelScope.launch {
+					try {
+						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
+						autoMappingActive = false
+						initAutoPlayRunner()
+						log("AutoMapping complete")
+					} catch (e: CancellationException) {
+						throw e
+					} catch (e: Exception) {
+						onException(e)
+					}
+				}
 			}
 
 			override fun onException(throwable: Throwable) {
@@ -1012,7 +1057,6 @@ class PlayActivityViewModel(
 	}
 
 	override fun onCleared() {
-		super.onCleared()
 		playSession.ended()
 		autoPlayRunner?.stop()
 		ledRunner?.stop()
