@@ -69,7 +69,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 1) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 1) { sound.soundOff(2, 3) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -81,13 +81,13 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 0) { sound.soundOff(2, 3, 0) }
-		verify(exactly = 1) { sound.soundOff(5, 5, 0) }
+		verify(exactly = 0) { sound.soundOff(2, 3) }
+		verify(exactly = 1) { sound.soundOff(5, 5) }
 		assertEquals(Channel.PRESSED, pressedLight(2, 3))
 		assertNull(pressedLight(5, 5))
 
 		screen.up(0)
-		verify(exactly = 1) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 1) { sound.soundOff(2, 3) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -101,7 +101,7 @@ class PlayActivityViewModelControllerDetachTest {
 		assertEquals(Channel.PRESSED, pressedLight(2, 3))
 
 		vm.controllerPadTouch(2, 3, false)
-		verify(exactly = 2) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 2) { sound.soundOff(2, 3) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -112,7 +112,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 		unplug()
 
-		verify(exactly = 1) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 1) { sound.soundOff(2, 3) }
 	}
 
 	@Test
@@ -122,7 +122,7 @@ class PlayActivityViewModelControllerDetachTest {
 
 		vm.controllerPadTouch(2, 3, false)
 
-		verify(exactly = 1) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 1) { sound.soundOff(2, 3) }
 		assertNull(pressedLight(2, 3))
 	}
 
@@ -135,6 +135,6 @@ class PlayActivityViewModelControllerDetachTest {
 		unplug()
 
 		verify(exactly = 0) { sound.soundOn(2, 3) }
-		verify(exactly = 0) { sound.soundOff(2, 3, 0) }
+		verify(exactly = 0) { sound.soundOff(2, 3) }
 	}
 }

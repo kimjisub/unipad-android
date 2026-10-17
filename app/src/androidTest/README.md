@@ -66,6 +66,19 @@ ANDROID_SERIAL=<serial> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.kimjisub.launchpad.StoreTest --console=plain
 ```
 
+To check several classes or methods in one run, name them to the runner script. Gradle passes
+only the first class of a comma-separated `class=A,B` to the device and still reports success,
+so do not use that form. The script runs the selection as one anchored `tests_regex`, then
+fails unless the JUnit XML lists every `@Test` of each selected class (or each selected
+`Class#method`), no other test, and no failure, error or skip. It records per-selection counts
+and reasons in `.ci-results/ui-status.txt`. Like the complete run, it uninstalls both apps first.
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.UniPackLegacyArchiveDeviceTest \
+  com.kimjisub.launchpad.unipack.SoundNameCaseDeviceTest#internalStorageChoosesTheExactNameFirst
+```
+
 Debug variants request AGP's device code preparation before execution using
 `android.experimental.force-aot-compilation`. This retains a fresh Orchestrator process per
 test, the same APKs, all assertions, and normal release variant configuration. The offline
@@ -76,9 +89,9 @@ before starting the timed app process. This functional suite is not a cold-start
 The property is also used by the [AndroidX benchmark plugin](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/benchmark/gradle-plugin/src/main/kotlin/androidx/benchmark/gradle/BenchmarkPlugin.kt).
 
 Repeat the exact complete-suite command three times. Each invocation must execute the connected
-tasks; reports must show zero failures and zero skips. In local verification, a comma-separated
-class selector executed only its first class; use one class/method per focused invocation and
-check the resulting names/counts. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
+tasks; reports must show zero failures and zero skips. A comma-separated class selector executes
+only its first class; run several focused classes through `scripts/ci-connected-tests.sh` as shown
+above. The complete-suite command deliberately has no selector. Archive the XML and raw runner output
 between runs because the next invocation overwrites them. Gradle tasks marked `SKIPPED` are not
 skipped JUnit tests; use the test report totals. Do not add `@Ignore`, assumptions, class exclusion
 filters, or weaker assertions to make a failing screen test green.
@@ -280,6 +293,7 @@ claimed here as audio or hardware proof.
 | `SoundNameCaseDeviceTest` | `appStorageFindsTheStoredFile`, `internalStorageFindsTheStoredFile`, `internalStorageChoosesTheExactNameFirst`: a keySound name that differs from its file only in case (`End.wav` for `END.wav`, `FX/Sweep.wav` for `fx/sweep.wav`) finds the stored file under its stored name both in app storage, which ignores case, and in the case-sensitive internal folder. Where files differ only in case (`End.wav` and `END.wav`, `fx/a.wav` and `FX/a.wav`), the exactly named file wins, a name matching neither takes the first in path order (`end.wav` → `END.wav`), and a folder named like a sound (`dir.wav`, `DIR.wav`) is reported as a missing sound. |
 | `MainThreadFileAccessTest` | `startupCleanupListsWorkspacesOffTheMainThread`, `mainScreenMovesTheOldUnipadFolderOffTheMainThread`, `storageSettingsAndTransferListWorkspacesOffTheMainThread`, `deletingAZipThemeRemovesItsFolderOffTheMainThread`, `autoMappingReadsTheAutoPlayFileOffTheMainThread`: StrictMode sees no disk access on the main thread from startup staging cleanup, workspace listing, pack counting, the old "Unipad" folder move, theme deletion or the autoPlay re-read. API 28+ (`penaltyListener`); API 35 full runs do not skip it. |
 | `MidiConnectionHelpTest` | `requiredButtonsStayVisible`, `readingHelpDoesNotChangeDriversSettingsOrSendCommands`, `miniHelpRequiresExplicitSelectionAndSurvivesRecreationAndBackground`, `koreanLabelsAndHelpAreReadable`, `manufacturerLinkReturnsToOpenHelp`, `missingBrowserKeepsHelpOpen`, `helpNamesNoModelWhenTheDriverIsNotInTheList`: device selection keeps OK and Help on screen; the connection help opens and closes (Close, Back, Escape) without changing drivers, settings or sending commands; Mini MK3 text needs an explicit choice; with no known model the help names none and shows the no-substitute note; Korean labels; manufacturer link return and missing browser. No USB device is connected. |
+| `AudioFormatDecodeDeviceTest` | `decodesPcmWav`, `decodesMp3`, `decodesAacInM4a`, `decodesMp3NamedWavByItsContent`, `decodesTaggedMp3NamedWavByItsContent`: `OboeAudioEngine` decodes a 0.3 s 440 Hz tone in each format packs use (an MP3 under a `.wav` name, bare as official packs ship it and with an ID3v2 tag) with the device's codecs, to the right rate, length, level and pitch. No sound is played. |
 | design `ExampleInstrumentedTest.useAppContext` | Design module instrumentation uses the expected target package. |
 
 The startup permission fixture uses Android's test-only

@@ -158,7 +158,6 @@ class PlayActivityViewModel(
 
 	// Unipack loading state
 	var unipackLoading by mutableStateOf(true)
-	var unipackLoadError by mutableStateOf<String?>(null)
 	var loadingPhase by mutableStateOf("")
 	var loadingPhaseIndex by mutableIntStateOf(0)
 	var loadingPhaseTotal by mutableIntStateOf(1)
@@ -488,14 +487,14 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	private data class HeldPad(val chain: Int, val x: Int, val y: Int)
-	// Main-thread input ownership: releasing one source must not release the other source's hold.
-	private val heldPads = mutableMapOf<HeldPad, MutableSet<PlayTrigger>>()
+	// Main-thread input ownership of each held pad (x, y): releasing one source must not release
+	// the other source's hold.
+	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PlayTrigger>>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
 		autoPlayInputGeneration++
-		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.map { it.x to it.y }.distinct()
+		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.toList()
 		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY)
 	}
 
@@ -556,7 +555,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				heldPads.getOrPut(HeldPad(chain.value, x, y)) { mutableSetOf() }.add(pressedBy)
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(pressedBy)
 				playSession.playTriggered(pressedBy)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -576,17 +575,15 @@ class PlayActivityViewModel(
 				}
 				ledRunner?.eventOn(x, y, atMs)
 			} else {
-				for (pad in heldPads.keys.filter { it.x == x && it.y == y }) {
-					val sources = heldPads.getValue(pad)
-					// A hand letting go releases the pad even while auto play holds it; auto play
-					// letting go keeps a pad a hand still holds.
+				val sources = heldPads[x to y]
+				// A hand letting go releases the pad even while auto play holds it; auto play
+				// letting go keeps a pad a hand still holds.
+				if (sources != null) {
 					if (pressedBy == PlayTrigger.PAD) sources.clear() else sources.remove(pressedBy)
-					if (sources.isEmpty()) {
-						soundRunner?.soundOff(x, y, pad.chain)
-						heldPads.remove(pad)
-					}
+					if (sources.isNotEmpty()) return
+					heldPads.remove(x to y)
 				}
-				if (heldPads.keys.any { it.x == x && it.y == y }) return
+				soundRunner?.soundOff(x, y)
 				channelManager.remove(x, y, Channel.PRESSED)
 				uiCallback?.setLedPad(x, y)
 				ledRunner?.eventOff(x, y, atMs)
@@ -602,7 +599,7 @@ class PlayActivityViewModel(
 		log("padInit")
 		if (!isChannelManagerInitialized) return
 		for (i in 0 until unipack.buttonX) for (j in 0 until unipack.buttonY) {
-			if (heldPads.keys.none { it.x == i && it.y == j }) {
+			if (i to j !in heldPads) {
 				channelManager.remove(i, j, Channel.PRESSED)
 				ledRunner?.eventOff(i, j)
 			}
