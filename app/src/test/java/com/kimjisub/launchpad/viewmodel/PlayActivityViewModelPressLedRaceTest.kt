@@ -49,7 +49,7 @@ class PlayActivityViewModelPressLedRaceTest {
 
 	// Every wait inside a trial is bounded, so only a deadlock outside them should reach this limit. JUnit then
 	// interrupts the test thread but does not wait for it, and its tearDown would reset Dispatchers.Main and the
-	// clock mock under the next test; waiting here lets the interrupted trial unwind first.
+	// clock mock under the next test; waiting here lets a trial that the interrupt wakes unwind first.
 	@get:Rule
 	val timeout = TestRule { base, description ->
 		val limited = Timeout.seconds(HANG_TIMEOUT_SECONDS).apply(object : Statement() {
@@ -76,7 +76,9 @@ class PlayActivityViewModelPressLedRaceTest {
 		const val PAD = 3
 		const val LED_VELOCITY = 45
 		const val TICK_PAUSE_NANOS = 20_000L
-		const val HANG_TIMEOUT_SECONDS = 900L
+		// Well above the slowest loaded run seen (187 s), and with the unwind wait and the rest of the unit tests
+		// still inside CI's 12-minute step limit, so a hang reports its stack instead of the step being killed.
+		const val HANG_TIMEOUT_SECONDS = 300L
 		const val UNWIND_SECONDS = 30L
 	}
 
