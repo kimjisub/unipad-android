@@ -20,20 +20,30 @@ class PadTouchTracker(
 	// pointerId -> packed cell (row * cols + col) currently held by that pointer
 	private val held = HashMap<Long, Int>()
 
+	// Every pointer down, on the grid or off it
+	private val pointers = HashSet<Long>()
+
+	// Pointers that were down at the last cancel(); they press nothing until they lift
+	private val cancelled = HashSet<Long>()
+
 	fun setGrid(rows: Int, cols: Int) {
 		releaseAll()
 		this.rows = rows
 		this.cols = cols
 	}
 
-	fun down(pointerId: Long, px: Float, py: Float, width: Int, height: Int) =
+	fun down(pointerId: Long, px: Float, py: Float, width: Int, height: Int) {
+		pointers += pointerId
 		press(pointerId, cellAt(px, py, width, height, rows, cols))
+	}
 
 	fun move(pointerId: Long, px: Float, py: Float, width: Int, height: Int) {
-		if (slide) press(pointerId, cellAt(px, py, width, height, rows, cols))
+		if (slide && pointerId !in cancelled) press(pointerId, cellAt(px, py, width, height, rows, cols))
 	}
 
 	fun up(pointerId: Long) {
+		pointers -= pointerId
+		cancelled -= pointerId
 		val cell = held.remove(pointerId) ?: return
 		listener(cell / cols, cell % cols, false)
 	}
@@ -41,6 +51,16 @@ class PadTouchTracker(
 	/** Whether a finger is holding pad (x, y). */
 	fun holds(x: Int, y: Int): Boolean =
 		x in 0 until rows && y in 0 until cols && held.containsValue(x * cols + y)
+
+	/**
+	 * Releases every held pad, and the fingers still down press nothing more until they lift: a
+	 * screen that stops taking part in play while a finger rests on it gets no release from the
+	 * system, only the finger's later moves and lift.
+	 */
+	fun cancel() {
+		cancelled += pointers
+		releaseAll()
+	}
 
 	fun releaseAll() {
 		val cells = held.values.toList()
