@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.BuildConfig
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
@@ -83,7 +83,7 @@ class SplashActivity : BaseActivity() {
 			SplashScreen()
 
 			if (showPermissionDialog) {
-				AlertDialog(
+				AppAlertDialog(
 					onDismissRequest = {},
 					title = { Text(stringResource(string.permissionRequire)) },
 					text = { Text(stringResource(string.permissionDenied)) },

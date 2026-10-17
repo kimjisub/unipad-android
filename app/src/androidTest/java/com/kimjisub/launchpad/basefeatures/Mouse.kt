@@ -33,6 +33,12 @@ class Mouse(private val screen: FeatureScreen) {
     /** Moves to [at] with the button still held. */
     fun drag(at: Point, steps: Int = 5) = stroke(at, steps, MotionEvent.ACTION_MOVE)
 
+    /** Presses and releases [button] at [at]. */
+    fun click(at: Point, button: Int = MotionEvent.BUTTON_PRIMARY) {
+        press(at, button)
+        release()
+    }
+
     fun release() {
         val button = buttons
         buttons = 0
