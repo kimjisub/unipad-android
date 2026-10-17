@@ -144,23 +144,17 @@ class SoundRunner(
 						async(Dispatchers.IO) {
 							semaphore.withPermit {
 								val decoded = engine.decode(File(filePath))
-								if (decoded == null) {
-									Log.err("Failed to decode: $filePath")
-								} else {
-									ensureActive()
-									synchronized(engineLock) {
-										if (destroyed) {
-											Log.play("SoundRunner destroyed while loading; skipped $filePath")
-											return@withPermit
-										}
-										val soundId = engine.load(decoded)
-										if (soundId < 0) {
-											Log.err("Failed to load into engine: $filePath")
-										} else {
-											for (sound in sounds) {
-												sound.id = soundId
-											}
-										}
+								if (decoded == null) Log.err("Failed to decode: $filePath")
+								ensureActive()
+								synchronized(engineLock) {
+									if (destroyed) {
+										Log.play("SoundRunner destroyed while loading; skipped $filePath")
+										return@withPermit
+									}
+									val soundId = decoded?.let(engine::load) ?: Sound.UNDECODABLE
+									if (decoded != null && soundId < 0) Log.err("Failed to load into engine: $filePath")
+									for (sound in sounds) {
+										sound.id = if (soundId < 0) Sound.UNDECODABLE else soundId
 									}
 								}
 								// Report progress for all sounds sharing this file
@@ -192,9 +186,11 @@ class SoundRunner(
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
 		heldLoop[x][y] = 0
 		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
+		// A press made before this sound finished loading leaves the pad and the chain as they are.
+		if (sound.id == Sound.NOT_LOADED) return
 		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
 		// moves on to its next sound and still follows the sound's chain move.
-		if (sound.id >= 0) {
+		if (sound.id != Sound.UNDECODABLE) {
 			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
@@ -266,7 +262,7 @@ class SoundRunner(
 										}
 									}
 									// The engine reuses freed slots for the next pack's sounds.
-									sound.id = -1
+									sound.id = Sound.NOT_LOADED
 								}
 							}
 						}

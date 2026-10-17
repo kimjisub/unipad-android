@@ -14,6 +14,7 @@ import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
+import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
@@ -364,7 +365,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		pressX = x
 		pressY = y
 		if (down) {
-			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id >= 0 }?.wormhole
+			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id != Sound.NOT_LOADED }?.wormhole
 			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole, chainLog.size))
 		}
 		vm.padTouch(x, y, down)

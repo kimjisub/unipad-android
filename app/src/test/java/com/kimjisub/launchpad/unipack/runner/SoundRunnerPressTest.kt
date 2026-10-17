@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit
 /**
  * Presses and releases one pad holding several sounds, and checks what the engine is asked to play
  * and stop. A sound that could not be decoded silences only its own turn, and a release stops the
- * infinite loop the press started, whatever the pad's next sound is.
+ * infinite loop the press started, whatever the pad's next sound is. A press made before the sounds
+ * finish loading changes nothing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SoundRunnerPressTest {
@@ -63,6 +64,27 @@ class SoundRunnerPressTest {
 
 		assertEquals(1, chain.value)
 		assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
+	}
+
+	@Test
+	fun pressBeforeTheSoundsLoad_leavesThePadAndTheChainAsTheyAre() {
+		val gate = CountDownLatch(1)
+		val loaded = start(
+			listOf(Sound(File("a.wav"), loop = 0, wormhole = 1), Sound(File("b.wav"), loop = 0)),
+			RecordingSoundEngine(decodeGate = gate),
+		)
+
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+		assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
+
+		gate.countDown()
+		loaded.await()
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals("the pad must still start from its first sound", listOf("a.wav" to 0), engine.plays)
+		assertEquals(1, chain.value)
 	}
 
 	@Test
@@ -109,25 +131,36 @@ class SoundRunnerPressTest {
 	}
 
 	/** Loads a pack whose pad ([X], [Y]) on chain 0 holds [sounds] in order; every other pad is empty. */
-	private fun load(sounds: List<Sound>, undecodable: Set<String> = emptySet()) {
+	private fun load(sounds: List<Sound>, undecodable: Set<String> = emptySet()) =
+		start(sounds, RecordingSoundEngine(undecodable)).await()
+
+	/** Starts loading the pack [load] describes into [engine] without waiting for it. */
+	private fun start(sounds: List<Sound>, engine: RecordingSoundEngine): Loading {
 		sounds.forEachIndexed { i, sound -> sound.num = i }
 		val table = Array(CHAINS) { Array(SIZE) { arrayOfNulls<ArrayDeque<Sound>>(SIZE) } }
 		table[0][X][Y] = ArrayDeque(sounds)
-		val pack = OnePadPack(table)
-		engine = RecordingSoundEngine(undecodable)
-		val loaded = CountDownLatch(1)
-		var failure: Throwable? = null
-		runner = SoundRunner(pack, chain, object : SoundRunner.LoadingListener {
-			override fun onStart(soundCount: Int) {}
-			override fun onProgressTick() {}
-			override fun onEnd() = loaded.countDown()
-			override fun onException(throwable: Throwable) {
-				failure = throwable
-				loaded.countDown()
-			}
-		}, loadScope, engine)
-		assertTrue("Sounds did not finish loading", loaded.await(10, TimeUnit.SECONDS))
-		failure?.let { throw AssertionError("Sound loading failed", it) }
+		this.engine = engine
+		val loading = Loading()
+		runner = SoundRunner(OnePadPack(table), chain, loading, loadScope, engine)
+		return loading
+	}
+
+	private class Loading : SoundRunner.LoadingListener {
+		private val done = CountDownLatch(1)
+		@Volatile private var failure: Throwable? = null
+
+		override fun onStart(soundCount: Int) {}
+		override fun onProgressTick() {}
+		override fun onEnd() = done.countDown()
+		override fun onException(throwable: Throwable) {
+			failure = throwable
+			done.countDown()
+		}
+
+		fun await() {
+			assertTrue("Sounds did not finish loading", done.await(10, TimeUnit.SECONDS))
+			failure?.let { throw AssertionError("Sound loading failed", it) }
+		}
 	}
 
 	private class OnePadPack(table: Array<Array<Array<ArrayDeque<Sound>?>>>) : UniPack() {
