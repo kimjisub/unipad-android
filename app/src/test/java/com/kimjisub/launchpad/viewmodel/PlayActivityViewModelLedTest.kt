@@ -117,10 +117,7 @@ class PlayActivityViewModelLedTest {
 
 	@Test
 	fun largeBacklog_reachesMainInFewTasks_withEveryCommandInOrder() {
-		val pass = ArrayList<LedEvent>()
-		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.On(x, y, velocity = 5)
-		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.Off(x, y)
-		setUpRunner(LedAnimation(pass, 3000, 0))
+		setUpRunner(allPadsFlash(3000))
 		pressOnRunnerThread(0, 0)
 		tickOnRunnerThread(1004)
 
@@ -174,8 +171,13 @@ class PlayActivityViewModelLedTest {
 		val pass = ArrayList<LedEvent>()
 		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.On(x, y, velocity = 5)
 		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.Off(x, y)
-		return LedAnimation(pass, loop, 0)
+		return backlogAnimation(pass, loop)
 	}
+
+	/** Explicit file commands keep the backlog large even when zero-duration repeat counts collapse. */
+	private fun backlogAnimation(pass: List<LedEvent>, count: Int) = LedAnimation(
+		ArrayList<LedEvent>().apply { repeat(count) { addAll(pass) } }, 1, 0,
+	)
 
 	private val flashPass = (0 until 8).flatMap { x -> (0 until 8).map { y -> "$x,$y=5" } } +
 		(0 until 8).flatMap { x -> (0 until 8).map { y -> "$x,$y=0" } }
@@ -441,7 +443,7 @@ class PlayActivityViewModelLedTest {
 	 */
 	private fun setUpChainBacklogRunner(loop: Int): MutableList<Int> {
 		val flash = allPadsFlash(1).ledEvents
-		val chainBacklog = LedAnimation(ArrayList(flash + LedEvent.Chain(1) + flash + LedEvent.Chain(3)), loop, 0)
+		val chainBacklog = backlogAnimation(flash + LedEvent.Chain(1) + flash + LedEvent.Chain(3), loop)
 		setUpRunner { x, y -> if (x == 0 && y == 0) chainBacklog else allPadsFlash(30) }
 		val chainsSelected = mutableListOf<Int>()
 		vm.chain.addObserver { curr, _ -> chainsSelected += curr }

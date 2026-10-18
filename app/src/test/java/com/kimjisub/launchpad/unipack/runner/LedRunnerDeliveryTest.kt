@@ -197,8 +197,11 @@ class LedRunnerDeliveryTest {
 	}
 
 	@Test
-	fun largeFiniteLoop_deliversEveryChangeInPlayOrder() {
-		setUpRunner { _, _ -> allPadsFlash(loop = 3000) }
+	fun largeFiniteAnimation_deliversEveryChangeInPlayOrder() {
+		// A large file still delivers every command; zero-duration repeat counts collapse to one pass.
+		val pass = allPadsFlash(loop = 1).ledEvents
+		val commands = ArrayList<LedEvent>().apply { repeat(3000) { addAll(pass) } }
+		setUpRunner { _, _ -> LedAnimation(commands, 1, 0) }
 		press()
 		tick(1004)
 		tick(1008)
