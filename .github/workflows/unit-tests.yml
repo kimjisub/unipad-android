@@ -32,6 +32,7 @@ jobs:
           fastlane lanes
           ruby fastlane/tests/halt_test.rb
           ruby fastlane/tests/rollout_test.rb
+          ruby fastlane/tests/deploy_promote_test.rb
 
   unit-tests:
     runs-on: ubuntu-24.04
