@@ -166,12 +166,12 @@ class PlayActivityViewModelLedTest {
 		assertEquals(listOf("1,1=4", "2,2=4"), sent)
 	}
 
-	/** Every pad on at velocity 5, then every pad off, [loop] times in one tick. */
-	private fun allPadsFlash(loop: Int): LedAnimation {
+	/** Explicit copies of every pad on at velocity 5 followed by every pad off, all in one tick. */
+	private fun allPadsFlash(copies: Int): LedAnimation {
 		val pass = ArrayList<LedEvent>()
 		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.On(x, y, velocity = 5)
 		for (x in 0 until 8) for (y in 0 until 8) pass += LedEvent.Off(x, y)
-		return backlogAnimation(pass, loop)
+		return backlogAnimation(pass, copies)
 	}
 
 	/** Explicit file commands keep the backlog large even when zero-duration repeat counts collapse. */

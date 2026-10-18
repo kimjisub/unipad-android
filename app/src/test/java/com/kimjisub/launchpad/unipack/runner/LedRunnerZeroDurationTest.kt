@@ -67,6 +67,34 @@ class LedRunnerZeroDurationTest {
     }
 
     @Test
+    fun maximumFiniteRepeatWithNegativeDelayFinishesWithFinalPadAndChainLights() {
+        val state = state(Int.MAX_VALUE, LedEvent.On(0, 0, velocity = 5), LedEvent.Delay(-1),
+            LedEvent.Off(0, 0), LedEvent.On(-1, 0, velocity = 9), LedEvent.On(1, 1, velocity = 13))
+        assertEquals(listOf(LedRunner.LedChange.PadOn(0, 0, -1, 5), LedRunner.LedChange.PadOff(0, 0),
+            LedRunner.LedChange.ChainLedOn(0, -1, 9), LedRunner.LedChange.PadOn(1, 1, -1, 13)), play(state, 5))
+        assertFalse(state.isPlaying)
+        assertNull(state.nextStep(1000))
+    }
+
+    @Test
+    fun maximumFiniteRepeatWithOnlyNegativeDelayFinishesAfterOnePass() {
+        val state = state(Int.MAX_VALUE, LedEvent.Delay(-1))
+        assertTrue(play(state, 1).isEmpty())
+        assertFalse(state.isPlaying)
+        assertNull(state.nextStep(1000))
+    }
+
+    @Test
+    fun negativePassWithAPositiveDelayStillFinishesWhenTheTickIsLate() {
+        val state = state(Int.MAX_VALUE, LedEvent.On(0, 0, velocity = 5), LedEvent.Delay(10),
+            LedEvent.Off(0, 0), LedEvent.Delay(-11))
+        assertEquals(listOf(LedRunner.LedChange.PadOn(0, 0, -1, 5), LedRunner.LedChange.PadOff(0, 0)),
+            play(state, 4, now = 2000))
+        assertFalse(state.isPlaying)
+        assertNull(state.nextStep(2000))
+    }
+
+    @Test
     fun maximumFiniteRepeatWithOnlyZeroDelaysFinishesAfterOnePass() {
         val state = state(Int.MAX_VALUE, LedEvent.Delay(0))
         assertTrue(play(state, 1).isEmpty())
@@ -107,6 +135,19 @@ class LedRunnerZeroDurationTest {
         assertEquals(listOf(LedRunner.LedChange.PadOff(0, 0)), play(state, 1, now = 6000))
         assertFalse(state.isPlaying)
         assertNull(state.nextStep(6000))
+    }
+
+    @Test
+    fun endlessNegativeDurationRepeatStillYieldsAndCanBeReleased() {
+        val state = state(0, LedEvent.On(0, 0), LedEvent.Delay(-1))
+        assertEquals(2, play(state, 3).size)
+        assertTrue(state.isPlaying)
+        assertNull(state.nextStep(1000))
+        state.shutDownAt(1000, 2)
+        assertTrue(requireNotNull(state.nextStep(1000)).isShutdown)
+        val changes = mutableListOf<LedRunner.LedChange>()
+        state.shutDown(changes)
+        assertEquals(listOf(LedRunner.LedChange.PadOff(0, 0)), changes)
     }
 
     @Test

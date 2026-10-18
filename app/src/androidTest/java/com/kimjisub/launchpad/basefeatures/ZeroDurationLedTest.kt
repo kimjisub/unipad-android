@@ -21,6 +21,8 @@ class ZeroDurationLedTest : PlaybackScreenTest() {
 
     @Test fun maximumRepeatWithZeroDelayFinishesAndAnotherPadStillPlays() = checkPack("o 1 1 a 5\nd 0\nf 1 1\n")
 
+    @Test fun maximumRepeatWithNegativeDelayFinishesAndAnotherPadStillPlays() = checkPack("o 1 1 a 5\nd -1\nf 1 1\n")
+
     private fun checkPack(script: String) {
         File(screen.pack(), "keyLED").deleteRecursively()
         File(screen.pack(), "keyLED").mkdirs()
@@ -31,11 +33,14 @@ class ZeroDurationLedTest : PlaybackScreenTest() {
         } }
         val pads = screen.padBounds()
         val label = InstrumentationRegistry.getArguments().getString("captureLabel") ?: "after"
-        val variant = if (script.contains("d 0")) "zero-delay" else "no-delay"
+        val variant = when {
+            script.contains("d -1") -> "negative-delay"
+            script.contains("d 0") -> "zero-delay"
+            else -> "no-delay"
+        }
         fun capture(stage: String) {
-            val folder = "${TestCaptures.DIRECTORY}/zero-duration"
-            screen.device.executeShellCommand("mkdir -p $folder")
-            screen.device.executeShellCommand("screencap -p $folder/$label-$variant-$stage.png")
+            assertTrue("Screenshot was not saved", TestCaptures.screenshot(
+                screen.device, "zero-duration/$label-$variant-$stage.png"))
         }
         capture("ready")
         val start = SystemClock.uptimeMillis()
