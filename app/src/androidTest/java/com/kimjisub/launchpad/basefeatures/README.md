@@ -46,7 +46,10 @@ connected device):
 ```
 
 The shell runner uses an explicit serial for every device action and checks the JUnit footer:
-`adb shell am instrument` alone can exit zero after a failed test. It does not start a device. Before instrumentation it prepares both installed debug packages
+`adb shell am instrument` alone can exit zero after a failed test. The footer must count exactly
+the `@Test` methods declared by the classes `BaseFeaturesSuite` lists
+(`scripts/check_connected_results.py --suite`), and no test may be skipped.
+It does not start a device. Before instrumentation it prepares both installed debug packages
 with `cmd package compile -f -m speed`, matching the merged Gradle debug test preparation.
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
