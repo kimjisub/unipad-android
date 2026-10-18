@@ -36,6 +36,7 @@
 	<string name="menu">菜单</string>
 	<string name="website">网站</string>
 	<string name="measuring">测量中…</string>
+	<string name="unknownCount">未知</string>
 	<string name="general">常规</string>
 	<string name="notice">通知</string>
 	<string name="newUniPack">新 UniPack</string>
@@ -93,6 +94,16 @@
 	<string name="hideUI">隐藏UI</string>
 	<string name="watermark">UI灯光</string>
 	<string name="proLightMode">Pro灯光模式</string>
+	<string name="play_section_play_mode">演奏模式</string>
+	<string name="play_section_performance">效果</string>
+	<string name="play_section_display">显示</string>
+	<string name="play_section_tools">工具</string>
+	<string name="autoMapping">自动映射</string>
+	<string name="autoMappingRunning">自动映射…</string>
+	<string name="play_info_untitled">无标题</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d 页"</item>
+	</plurals>
 
 	<!--Version-->
 

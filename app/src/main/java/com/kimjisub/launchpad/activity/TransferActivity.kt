@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -70,6 +74,7 @@ import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.SafMigrationHelper
 import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.Green
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.ui.theme.Red
@@ -551,7 +556,8 @@ private fun TransferScreen(
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(ContentBg),
+			.background(ContentBg)
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		TopBar(
 			state = state,

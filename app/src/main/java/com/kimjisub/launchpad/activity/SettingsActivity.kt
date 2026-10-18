@@ -24,13 +24,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,7 +42,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Icon
@@ -60,6 +63,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -85,6 +90,7 @@ import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.openAppLanguageSettings
 import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import org.koin.android.ext.android.inject
@@ -123,6 +129,9 @@ class SettingsActivity : AppCompatActivity() {
 					onThemeClick = { start<ThemeActivity>() },
 					onGithubClick = { browse("https://github.com/kimjisub/unipad-android") },
 					onOssLicenseClick = { start<OssLicensesMenuActivity>() },
+					onLanguageClick = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+						{ openAppLanguageSettings() }
+					} else null,
 					onFcmTokenCopy = { copyFcmToken() },
 					onCommunityItemClick = { action, url ->
 						browse(url, action)
@@ -234,6 +243,7 @@ private fun SettingsScreen(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	onTransferClick: (sourcePath: String) -> Unit = {},
 	onBackupClick: () -> Unit = {},
@@ -246,7 +256,8 @@ private fun SettingsScreen(
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(ContentBg),
+			.background(ContentBg)
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left navigation rail
 		CategoryNav(
@@ -272,6 +283,7 @@ private fun SettingsScreen(
 					onOssLicenseClick = onOssLicenseClick,
 					onFcmTokenCopy = onFcmTokenCopy,
 					onCommunityItemClick = onCommunityItemClick,
+					onLanguageClick = onLanguageClick,
 					onReconnectClick = onReconnectClick,
 					traceLogClassic = traceLogClassic,
 					onTraceLogClassicChange = {
@@ -484,6 +496,7 @@ private fun InfoContent(
 	onOssLicenseClick: () -> Unit,
 	onFcmTokenCopy: () -> Unit,
 	onCommunityItemClick: (action: String, url: String) -> Unit,
+	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
 	traceLogClassic: Boolean = false,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
@@ -555,6 +568,7 @@ private fun InfoContent(
 			SettingsRow(
 				title = stringResource(R.string.language),
 				subtitle = stringResource(R.string.translated_by),
+				onClick = onLanguageClick,
 			)
 			CardDivider()
 			SettingsRow(
@@ -646,7 +660,7 @@ private fun CommunityDialog(
 	onDismiss: () -> Unit,
 	onItemClick: (action: String, url: String) -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,
@@ -1036,7 +1050,7 @@ private fun BackupGuideDialog(
 	onDismiss: () -> Unit,
 	onContinue: () -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,
@@ -1098,7 +1112,7 @@ private fun RecoveryDialog(
 	onRestore: () -> Unit,
 	onDismiss: () -> Unit,
 ) {
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = onDismiss,
 		containerColor = CardBg,
 		titleContentColor = TextPrimary,

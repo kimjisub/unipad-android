@@ -35,6 +35,7 @@
 	<string name="menu">Menu</string>
 	<string name="website">Laman Web</string>
 	<string name="measuring">Mengukur…</string>
+	<string name="unknownCount">Tidak diketahui</string>
 	<string name="general">Umum</string>
 	<string name="notice">Notis</string>
 	<string name="newUniPack">UniPack Baharu</string>
@@ -93,6 +94,16 @@
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tera Air</string>
 	<string name="proLightMode">Mod Pro Light</string>
+	<string name="play_section_play_mode">Mod Bermain</string>
+	<string name="play_section_performance">Persembahan</string>
+	<string name="play_section_display">Paparan</string>
+	<string name="play_section_tools">Alatan</string>
+	<string name="autoMapping">Pemetaan Automatik</string>
+	<string name="autoMappingRunning">Pemetaan Automatik…</string>
+	<string name="play_info_untitled">Tanpa tajuk</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d rantai"</item>
+	</plurals>
 
 	<!--Version-->
 

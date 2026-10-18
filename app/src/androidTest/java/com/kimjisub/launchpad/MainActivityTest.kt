@@ -1,6 +1,9 @@
 package com.kimjisub.launchpad
 
+import android.content.res.Configuration
+import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -8,11 +11,13 @@ import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.Locale
 
 /**
  * MainActivity Tests
@@ -105,6 +110,67 @@ class MainActivityTest : BaseUITest() {
         }
     }
 
+    /**
+     * Choosing UniPad's language in the system settings (Android 13+) changes the sort bar and its
+     * list right away, while the main screen's view model survives the change, and after a relaunch.
+     * Below Android 13 there is no per-app language; the sort bar shows the device language.
+     */
+    @Test
+    fun testSortNamesFollowAppLanguageChange() {
+        val originalMethod = prefs.sortMethod
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            try {
+                prefs.sortMethod = 2
+                launchToMainScreen()
+                assertTrue(
+                    "Sort bar does not show '${str(R.string.sort_download_date)}'",
+                    device.wait(Until.hasObject(By.text(str(R.string.sort_download_date))), 5000L)
+                )
+            } finally {
+                prefs.sortMethod = originalMethod
+            }
+            return
+        }
+        val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
+        val english = sortRes.map { strIn(Locale.ENGLISH, it) }
+        val korean = sortRes.map { strIn(Locale.KOREAN, it) }
+        val originalLocales = AppLanguage.get()
+        try {
+            AppLanguage.set("en")
+            prefs.sortMethod = 2
+            launchToMainScreen()
+            assertTrue("Sort bar does not show '${english[2]}'", device.wait(Until.hasObject(By.text(english[2])), 5000L))
+
+            AppLanguage.set("ko")
+            assertTrue(
+                "Sort bar still shows '${english[2]}' after switching to Korean",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            sortAnchor(korean).click()
+            assertTrue(
+                "Sort list is not in Korean",
+                waitUntil(3000L) { korean.all { device.hasObject(By.text(it)) } }
+            )
+            takeScreenshot("sort_names_korean_without_relaunch")
+            device.pressBack()
+
+            launchToMainActivity()
+            assertTrue(
+                "Sort bar is not Korean after a relaunch",
+                device.wait(Until.hasObject(By.text(korean[2])), 10000L)
+            )
+            takeScreenshot("sort_names_korean_after_relaunch")
+        } finally {
+            AppLanguage.set(originalLocales)
+            prefs.sortMethod = originalMethod
+        }
+    }
+
+    private fun strIn(locale: Locale, resId: Int): String {
+        val configuration = Configuration(context.resources.configuration).apply { setLocale(locale) }
+        return context.createConfigurationContext(configuration).getString(resId)
+    }
+
     @Test
     fun testUnipackDeletion() {
         seedHistory(TestUniPack.FOLDER_NAME)
@@ -158,9 +224,9 @@ class MainActivityTest : BaseUITest() {
     /** A folder the app cannot empty: the error is shown and the history stays. */
     @Test
     fun testUnipackDeletionFailureKeepsHistory() {
-        val sounds = File(TestUniPack.folder(context), "sounds")
+        val unreachable = UnreachableFolder(File(TestUniPack.folder(context), "sounds"))
         try {
-            assertTrue("Failure fixture must make the sounds folder read-only", sounds.setWritable(false, false) && !sounds.canWrite())
+            assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
             seedHistory(TestUniPack.FOLDER_NAME)
             launchToMainScreen()
 
@@ -174,8 +240,33 @@ class MainActivityTest : BaseUITest() {
             assertTrue("Pack files are gone", TestUniPack.folder(context).exists())
             assertEquals("History was dropped although the files remain", 1L to true, history(TestUniPack.FOLDER_NAME))
             device.findObject(By.text(str(android.R.string.ok))).click()
+            assertTrue("Failure fixture left folders behind", unreachable.remove())
         } finally {
-            sounds.setWritable(true, false)
+            unreachable.remove()
+        }
+    }
+
+    /** A deletion failure run stopped before its cleanup must not break the next test's pack. */
+    @Test
+    fun testTestPackInstallClearsLeftoverDeletionFixture() {
+        val sounds = File(TestUniPack.folder(context), "sounds")
+        for (stranded in listOf(false, true)) {
+            val unreachable = UnreachableFolder(sounds)
+            try {
+                assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
+                if (stranded) assertTrue("Fixture could not be moved under its spare folder", unreachable.strandUnderSpare())
+                assertFalse("Fixture must survive a delete by path", TestUniPack.folder(context).deleteRecursively())
+
+                TestUniPack.install(context)
+
+                assertEquals(
+                    "Test pack install left part of the fixture (stranded=$stranded)",
+                    listOf("silence.wav"),
+                    sounds.list()?.sorted()
+                )
+            } finally {
+                unreachable.remove()
+            }
         }
     }
 

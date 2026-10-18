@@ -23,7 +23,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
 import org.junit.rules.Timeout
+import org.junit.runners.model.Statement
+import org.junit.runners.model.TestTimedOutException
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
@@ -42,10 +45,30 @@ import kotlin.concurrent.thread
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlayActivityViewModelPressLedRaceTest {
-	// Only a deadlock should reach this: JUnit abandons a timed-out test on a thread that keeps running and
-	// later resets Dispatchers.Main under the next test. Slowness is caught first by TRIALS_DEADLINE_SECONDS.
+	@Volatile private var testThread: Thread? = null
+
+	// Every wait inside a trial is bounded, so only a deadlock outside them should reach this limit. JUnit then
+	// interrupts the test thread but does not wait for it, and its tearDown would reset Dispatchers.Main and the
+	// clock mock under the next test; waiting here lets a trial that the interrupt wakes unwind first.
 	@get:Rule
-	val timeout: Timeout = Timeout.seconds(180)
+	val timeout = TestRule { base, description ->
+		val limited = Timeout.seconds(HANG_TIMEOUT_SECONDS).apply(object : Statement() {
+			override fun evaluate() {
+				testThread = Thread.currentThread()
+				base.evaluate()
+			}
+		}, description)
+		object : Statement() {
+			override fun evaluate() {
+				try {
+					limited.evaluate()
+				} catch (timedOut: TestTimedOutException) {
+					testThread?.join(TimeUnit.SECONDS.toMillis(UNWIND_SECONDS))
+					throw timedOut
+				}
+			}
+		}
+	}
 
 	private companion object {
 		const val TRIALS = 3000
@@ -53,7 +76,10 @@ class PlayActivityViewModelPressLedRaceTest {
 		const val PAD = 3
 		const val LED_VELOCITY = 45
 		const val TICK_PAUSE_NANOS = 20_000L
-		const val TRIALS_DEADLINE_SECONDS = 120L
+		// Well above the slowest loaded run seen (187 s), and with the unwind wait and the rest of the unit tests
+		// still inside CI's 12-minute step limit, so a hang reports its stack instead of the step being killed.
+		const val HANG_TIMEOUT_SECONDS = 300L
+		const val UNWIND_SECONDS = 30L
 	}
 
 	/** A plain pack whose only animation is the blink on (0,0), so each press costs what it costs in the app. */
@@ -159,11 +185,8 @@ class PlayActivityViewModelPressLedRaceTest {
 		var mismatches = 0
 		var firstMismatch: String? = null
 		val started = System.nanoTime()
-		val deadline = started + TimeUnit.SECONDS.toNanos(TRIALS_DEADLINE_SECONDS)
 		try {
 			repeat(TRIALS) { trial ->
-				// Fails on this thread, after the trial's worker has stopped, so tearDown runs before the next test.
-				assertTrue("only $trial of $TRIALS trials ran in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
 				sentToPad.clear()
 				runner.eventOn(0, 0)
 				val barrier = CyclicBarrier(2)
@@ -192,7 +215,7 @@ class PlayActivityViewModelPressLedRaceTest {
 							// The first tick may only add the new animation; the second emits its light.
 							if (++tickCount == 2) blinkDuringRead.countDown()
 							if (expectFiniteEnd && tickCount >= 2 && !runner.isEventExist(0, 0)) blinkEnded.countDown()
-							// Parking this short wait can oversleep enough to miss the trial deadline.
+							// Parking this short wait can oversleep far past the gap and slow every trial.
 							// Keep the same minimum gap without an OS timer on every tick.
 							val nextTick = System.nanoTime() + TICK_PAUSE_NANOS
 							while (System.nanoTime() < nextTick) Thread.onSpinWait()
@@ -233,7 +256,10 @@ class PlayActivityViewModelPressLedRaceTest {
 				}
 				completed++
 			}
-			assertTrue("all $TRIALS trials must finish in ${TRIALS_DEADLINE_SECONDS}s", System.nanoTime() < deadline)
+			assertEquals("trials whose LED ticks overlap the pad read", TRIALS, overlaps)
+			if (expectFiniteEnd) {
+				assertEquals("trials whose finite blink ends during a press", TRIALS, finiteEnds)
+			}
 		} finally {
 			println(
 				"PRESS_LED_RACE trials=$completed overlaps=$overlaps finiteEnds=$finiteEnds " +

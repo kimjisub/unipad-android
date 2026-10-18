@@ -35,6 +35,7 @@
 	<string name="menu">मेनू</string>
 	<string name="website">वेबसाइट</string>
 	<string name="measuring">माप रहा है…</string>
+	<string name="unknownCount">अज्ञात</string>
 	<string name="general">सामान्य</string>
 	<string name="notice">सूचना</string>
 	<string name="newUniPack">नया UniPack</string>
@@ -93,6 +94,17 @@
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
 	<string name="proLightMode">प्रो लाइट मोड</string>
+	<string name="play_section_play_mode">प्ले मोड</string>
+	<string name="play_section_performance">प्रदर्शन</string>
+	<string name="play_section_display">डिस्प्ले</string>
+	<string name="play_section_tools">टूल्स</string>
+	<string name="autoMapping">स्वचालित मैपिंग</string>
+	<string name="autoMappingRunning">स्वचालित मैपिंग…</string>
+	<string name="play_info_untitled">शीर्षकहीन</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d चेन"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d चेन"</item>
+	</plurals>
 
 	<!--Version-->
 

@@ -290,6 +290,22 @@ class WorkspaceManagerTest {
 		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
 	}
 
+	// A killed install's leftovers are still being deleted when the first screen counts the size.
+	@Test
+	fun getAvailableWorkspacesSize_skipsInstallsInProgressAndLeftovers() {
+		val sdCardDir = createSdCardWithPack()
+		File(sdCardDir, "to import later.zip").writeBytes(ByteArray(300))
+		val expected = sdCardDir.walk().filter { it.isFile }.sumOf { it.length() }
+		runBlocking {
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(4000))
+			PackStaging.setAsideLeftovers(sdCardDir)
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(2000))
+		}
+		val manager = managerWithExternalDirs(sdCardDir)
+
+		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
 	// The total panel calls this from the main thread; listing workspaces there created folders on it.
 	@Test
 	fun getAvailableWorkspacesSize_listsWorkspacesOffTheCallingThread() {

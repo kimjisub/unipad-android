@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -109,7 +108,7 @@ fun AppUpdateDialog(dialog: Dialog, actions: AppUpdateActions) {
 		Dialog.StoreUnavailable -> R.string.update_store_unavailable to null
 	}
 	val dismissText = if (dialog == Dialog.StoreNotice) R.string.cancel else R.string.update_close
-	AlertDialog(
+	AppAlertDialog(
 		onDismissRequest = actions.dismissDialog,
 		modifier = Modifier.testTag("app_update_dialog"),
 		text = { Text(stringResource(message)) },

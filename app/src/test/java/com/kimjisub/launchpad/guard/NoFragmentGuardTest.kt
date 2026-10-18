@@ -13,15 +13,16 @@ import java.util.jar.JarFile
  * so a fragment that takes constructor arguments closes the app on return from the background.
  * Lint's ValidFragment check only looks at `android.app.Fragment` and the support-library
  * fragment, not `androidx.fragment.app.Fragment`, so it does not catch this. The test inspects
- * the compiled main classes instead, which also covers subclasses such as DialogFragment and
- * PreferenceFragmentCompat.
+ * the compiled Kotlin main classes instead, which also covers subclasses such as DialogFragment
+ * and PreferenceFragmentCompat. Java sources compile to a separate output that is not scanned;
+ * the app has none.
  */
 class NoFragmentGuardTest {
 
 	@Suppress("DEPRECATION")
 	private val fragmentTypes = listOf(androidx.fragment.app.Fragment::class.java, android.app.Fragment::class.java)
 
-	/** Class names in the app's main output, which reaches unit tests as a jar or a directory. */
+	/** Class names in the app's Kotlin main output, which reaches unit tests as a jar or a directory. */
 	private fun mainClassNames(): List<String> {
 		val root = File(checkNotNull(BaseApplication::class.java.protectionDomain).codeSource.location.toURI())
 		val paths = if (root.isDirectory) {
@@ -37,8 +38,8 @@ class NoFragmentGuardTest {
 	fun appDefinesNoFragments() {
 		val names = mainClassNames()
 		assertTrue(
-			"Scan did not reach SettingsActivity; class output moved?",
-			"com.kimjisub.launchpad.activity.SettingsActivity" in names,
+			"Scan did not reach BaseApplication; class output moved?",
+			BaseApplication::class.java.name in names,
 		)
 		val loader = javaClass.classLoader
 		val fragments = names.filter { name ->

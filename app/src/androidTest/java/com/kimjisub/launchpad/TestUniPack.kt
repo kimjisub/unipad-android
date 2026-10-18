@@ -25,14 +25,21 @@ object TestUniPack {
     fun exists(context: Context): Boolean = File(folder(context), "info").isFile
 
     /** [rows] is the pack's `buttonX`, [columns] its `buttonY`; [chains] must be 2 or more for its autoPlay. */
-    fun install(context: Context, squareButton: Boolean = true, rows: Int = 8, columns: Int = 8, chains: Int = CHAINS): File {
+    fun install(
+        context: Context,
+        squareButton: Boolean = true,
+        rows: Int = 8,
+        columns: Int = 8,
+        chains: Int = CHAINS,
+        title: String = TITLE,
+    ): File {
         val root = folder(context)
-        root.deleteRecursively()
+        clear(root)
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
+            "title=$title\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 
@@ -49,7 +56,16 @@ object TestUniPack {
     }
 
     fun remove(context: Context) {
-        folder(context).deleteRecursively()
+        clear(folder(context))
+    }
+
+    /**
+     * A deletion failure run stopped before its cleanup leaves an [UnreachableFolder] in the pack,
+     * which a delete by path cannot remove; take it apart first.
+     */
+    private fun clear(root: File) {
+        UnreachableFolder(File(root, "sounds")).remove()
+        root.deleteRecursively()
     }
 
     /** About 60 s of presses across chains 1 and 2, long enough for transport checks. */

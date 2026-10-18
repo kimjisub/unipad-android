@@ -35,6 +35,7 @@
 	<string name="menu">メニュー</string>
 	<string name="website">ウェブサイト</string>
 	<string name="measuring">計測中…</string>
+	<string name="unknownCount">不明</string>
 	<string name="general">一般</string>
 	<string name="notice">お知らせ</string>
 	<string name="newUniPack">新しいUniPack</string>
@@ -93,6 +94,16 @@
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
 	<string name="proLightMode">Proライトモード</string>
+	<string name="play_section_play_mode">プレイモード</string>
+	<string name="play_section_performance">演奏</string>
+	<string name="play_section_display">表示</string>
+	<string name="play_section_tools">ツール</string>
+	<string name="autoMapping">自動マッピング</string>
+	<string name="autoMappingRunning">自動マッピング…</string>
+	<string name="play_info_untitled">無題</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$dチェーン"</item>
+	</plurals>
 
 	<!--Version-->
 

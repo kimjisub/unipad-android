@@ -122,10 +122,13 @@ class WorkspaceManager(val context: Context) : KoinComponent {
 			return uniPackWorkspaces.toTypedArray()
 		}
 
+	/** Everything in the workspaces except installs in progress and what a killed one left behind. */
 	suspend fun getAvailableWorkspacesSize() =
 		withContext(Dispatchers.IO) {
-			val works = availableWorkspaces.map {
-				async { FileManager.getFolderSize(it.file) }
+			val works = availableWorkspaces.flatMap { workspace ->
+				workspace.file.listFiles().orEmpty()
+					.filterNot(PackStaging::isStagingFolder)
+					.map { async { FileManager.getFolderSize(it) } }
 			}
 
 			works.awaitAll().sum()

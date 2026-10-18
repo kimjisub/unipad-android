@@ -22,6 +22,9 @@ class LaunchpadS : DriverRef() {
 			intArrayOf(9, -112, 104),
 			intArrayOf(9, -112, 120)
 		)
+
+		/** The red/green code the Launchpad S shows for pack LED code [velocity]; SCode has 128 entries. */
+		fun sCode(velocity: Int): Int = LaunchpadColor.SCode[velocity.coerceIn(0, LaunchpadColor.SCode.lastIndex)]
 	}
 
 	override fun getSignal(cmd: Int, sig: Int, note: Int, velocity: Int) {
@@ -47,9 +50,6 @@ class LaunchpadS : DriverRef() {
 		if (x !in 0..7 || y !in 0..7) return
 		sendSignal(9, -112, x * 16 + y, sCode(velocity))
 	}
-
-	// velocity is a LED code read out of a pack; SCode has 128 entries.
-	private fun sCode(velocity: Int): Int = LaunchpadColor.SCode[velocity.coerceIn(0, LaunchpadColor.SCode.lastIndex)]
 
 	override fun sendChainLed(c: Int, velocity: Int) {
 		if (c in 0..7)

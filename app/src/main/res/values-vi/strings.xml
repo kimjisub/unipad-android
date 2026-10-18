@@ -35,6 +35,7 @@
 	<string name="menu">Menu</string>
 	<string name="website">Trang web</string>
 	<string name="measuring">Đang đo…</string>
+	<string name="unknownCount">Không rõ</string>
 	<string name="general">Chung</string>
 	<string name="notice">Thông báo</string>
 	<string name="newUniPack">UniPack Mới</string>
@@ -93,6 +94,16 @@
 	<string name="hideUI">Ẩn UI</string>
 	<string name="watermark">Hình mờ</string>
 	<string name="proLightMode">Chế độ Pro Light</string>
+	<string name="play_section_play_mode">Chế độ chơi</string>
+	<string name="play_section_performance">Biểu diễn</string>
+	<string name="play_section_display">Hiển thị</string>
+	<string name="play_section_tools">Công cụ</string>
+	<string name="autoMapping">Tự Động Ánh Xạ</string>
+	<string name="autoMappingRunning">Tự Động Ánh Xạ…</string>
+	<string name="play_info_untitled">Không có tiêu đề</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="other">"%1$d×%2$d  ·  %3$d chuỗi"</item>
+	</plurals>
 
 	<!--Version-->
 
