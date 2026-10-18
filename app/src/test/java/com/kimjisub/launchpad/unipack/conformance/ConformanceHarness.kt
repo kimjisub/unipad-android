@@ -159,16 +159,18 @@ private fun event(vararg parts: Any): JsonElement = buildJsonArray {
 }
 
 /**
- * Stands in for the native audio engine and reports which file each `play` call started. It has no
- * output stream: opening and closing one (start, stop) are accepted and not checked.
+ * Stands in for the native audio engine and reports which file each `play` call started and which
+ * endless voices have not been stopped. It has no output stream, so audible output is not checked.
  */
-private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Unit) : SoundRunner.Engine {
+private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Pair<Int, Int>) : SoundRunner.Engine {
 	private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, File>()
 	private val fileById = HashMap<Int, File>()
 	private var nextId = 0
+	private var nextVoice = 0
+	private val endless = HashMap<Int, Pair<Int, Int>>()
 
 	override fun start() = true
-	override fun stop() {}
+	override fun stop() = stopAllVoices()
 
 	override fun decode(file: File): OboeAudioEngine.DecodedAudio =
 		OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file } }
@@ -178,15 +180,21 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
 	}
 
 	override fun unloadSound(soundId: Int) {}
-	override fun unloadAll() {}
+	override fun unloadAll() = stopAllVoices()
 
-	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-		onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
-		return 0
+	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int = synchronized(this) {
+		val pad = onPlay(fileById.getValue(soundId), loop)
+		val key = ++nextVoice
+		if (loop == -1) endless[key] = pad
+		key
 	}
 
-	override fun stopVoice(stopKey: Int) {}
-	override fun stopAllVoices() {}
+	override fun stopVoice(stopKey: Int) { synchronized(this) { endless.remove(stopKey) } }
+	override fun stopAllVoices() { synchronized(this) { endless.clear() } }
+
+	fun looping(): List<Pair<Int, Int>> = synchronized(this) {
+		endless.values.sortedWith(compareBy({ it.first }, { it.second }))
+	}
 }
 
 /**
@@ -217,10 +225,12 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private val chainTag = ThreadLocal<String?>()
 
 	private val main = FakeMainDispatcher()
-	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, RecordingEngine { file, loop ->
+	private val engine = RecordingEngine { file, loop ->
 		val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
 		events.add(event("sound", pressChain, pressX, pressY, name, loop))
-	})
+		pressX to pressY
+	}
+	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 	private val listenerField = AutoPlayRunner::class.java.getDeclaredField("listener").apply { isAccessible = true }
 	private val lit = HashMap<String, Pair<Int, Int>>()
@@ -253,6 +263,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
+					"autoplayOff" -> afterAutoPlayPass("auto play to stop") { vm.switchPlayMode(PlayMode.None) }
+					"looping" -> engine.looping().forEach { (px, py) -> events.add(event("looping", px, py)) }
 					"stop" -> stop()
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
