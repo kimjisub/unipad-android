@@ -201,9 +201,9 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * returning to the screen are PlayActivity's onStop and onStart/onResume calls into the view model.
  *
  * Where this run still differs from the play screen: the auto-play listener's other calls (start,
- * progress, guides, chain lights) are not passed on; its chain changes run on the runner's thread, not
- * posted to the main thread; "start" expects a "stop" before it; returning to the screen is checked up to
- * the sounds' play calls, not whether the audio stream was opened again.
+ * progress, guides, chain lights) are not passed on; unless auto play plays the pads, its chain changes
+ * run on the runner's thread, not posted to the main thread; "start" expects a "stop" before it; returning
+ * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
@@ -360,7 +360,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		override fun onRequestRelayout() {}
 	}
 
-	private fun press(x: Int, y: Int, down: Boolean) {
+	/** A press or release of (x, y), by a person unless [touch] hands it to the view model another way. */
+	private fun press(x: Int, y: Int, down: Boolean, touch: () -> Unit = { vm.padTouch(x, y, down) }) {
 		pressChain = vm.chain.value
 		pressX = x
 		pressY = y
@@ -368,13 +369,13 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id != Sound.NOT_LOADED }?.wormhole
 			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole, chainLog.size))
 		}
-		vm.padTouch(x, y, down)
+		touch()
 		main.runAll()
 	}
 
 	/**
-	 * [toPads]: each press and release also reaches the pads the way PlayActivityViewModel's own
-	 * auto-play listener sends it, posted to the main thread and handled like a pad touch.
+	 * [toPads]: each press, release and chain change also reaches the screen the way PlayActivityViewModel's
+	 * own auto-play listener sends it, posted to the main thread and handed to the view model's auto-play calls.
 	 */
 	private fun startAutoPlay(toPads: Boolean) {
 		val runner = checkNotNull(vm.autoPlayRunner) { "${c.id}: the play screen has no auto play" }
@@ -385,16 +386,25 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	/** The screen's auto-play listener, recording pad presses and releases instead of passing them on. */
 	private fun recording(screen: AutoPlayRunner.Listener, toPads: Boolean): AutoPlayRunner.Listener {
-		fun forward(x: Int, y: Int, down: Boolean) {
-			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down) })
+		fun forward(x: Int, y: Int, down: Boolean, touch: () -> Unit) {
+			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down, touch) })
+		}
+		fun changeChain(c: Int) {
+			chainTag.set("autoChain")
+			try { vm.chain.value = c } finally { chainTag.set(null) }
 		}
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
-			override fun onPadTouchOn(x: Int, y: Int, atMs: Long) { events.add(event("autoOn", x, y)); forward(x, y, true) }
-			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) { events.add(event("autoOff", x, y)); forward(x, y, false) }
+			override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
+				events.add(event("autoOn", x, y))
+				forward(x, y, true) { vm.autoPlayPadOn(x, y, c, num, atMs) }
+			}
+			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
+				events.add(event("autoOff", x, y))
+				forward(x, y, false) { vm.autoPlayPadTouch(x, y, false, atMs) }
+			}
 			override fun onChainChange(c: Int) {
-				chainTag.set("autoChain")
-				try { vm.chain.value = c } finally { chainTag.set(null) }
+				if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { changeChain(c) }) else changeChain(c)
 			}
 			override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {}
 			override fun onGuidePadOff(x: Int, y: Int) {}
