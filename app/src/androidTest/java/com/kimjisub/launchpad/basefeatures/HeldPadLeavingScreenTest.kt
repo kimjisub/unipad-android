@@ -76,7 +76,7 @@ class HeldPadLeavingScreenTest : HeldPadTest() {
 
         back()
         screen.awaitActivity(PlayActivity::class.java)
-        if (cancelled) fingers.forgetCancelled() else fingers.up(finger)
+        if (cancelled) forgetCancelledFingers("After $context in $mode") else fingers.up(finger)
         assertHeldStill("After $context in $mode and lifting the finger", listOf(held), emptySet())
 
         val again = fingers.down(center(held))
