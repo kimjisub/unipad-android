@@ -23,36 +23,56 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class HeldPadLayoutChangeTest : HeldPadTest() {
     private var resized = false
+    private var originalBounds: Rect? = null
 
     @After fun restoreScreen() {
-        if (resized) screen.device.executeShellCommand("wm size reset")
-        // Play's own orientation from the manifest; a failed check may have left no screen to turn.
-        runCatching { screen.onMain { screen.resumed().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE } }
+        if (resized) {
+            screen.device.executeShellCommand("wm size reset")
+            screen.await("Display size override remained after cleanup") {
+                !screen.device.executeShellCommand("wm size").contains("Override size")
+            }
+        }
+        // A failed launch may have left no activity; the next launch uses the manifest orientation.
+        val activity = runCatching { screen.resumed() }.getOrNull() ?: return
+        screen.onMain { activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE }
+        screen.await("Play screen did not finish restoring its orientation and size after cleanup") {
+            screen.onMain {
+                activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                    (originalBounds == null || screen.bounds(activity.window.decorView) == originalBounds)
+            }
+        }
+        screen.instrumentation.waitForIdleSync()
+        resized = false
     }
 
     @Test fun heldPadStopsWhenScreenTurnsToPortrait() {
-        startHeld()
+        startLayoutTest()
         holdThrough("turning to portrait") { turn(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT) }
     }
 
     @Test fun heldPadStopsWhenScreenTurnsBackToLandscape() {
-        startHeld()
+        startLayoutTest()
         turn(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT)
         holdThrough("turning back to landscape") { turn(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, Configuration.ORIENTATION_LANDSCAPE) }
     }
 
     @Test fun heldPadStopsWhenWindowShrinks() {
-        startHeld()
+        startLayoutTest()
         val original = windowBounds()
         holdThrough("shrinking the window") { shrink() }
         restoreSize(original)
     }
 
     @Test fun heldPadStopsWhenWindowGrowsBack() {
-        startHeld()
+        startLayoutTest()
         val original = windowBounds()
         shrink()
         holdThrough("growing the window back") { restoreSize(original) }
+    }
+
+    private fun startLayoutTest() {
+        startHeld()
+        originalBounds = windowBounds()
     }
 
     /**
@@ -75,7 +95,7 @@ class HeldPadLayoutChangeTest : HeldPadTest() {
                 listOf(MotionEvent.TOOL_TYPE_FINGER), cancels.map { it.actor.toolType })
             // The cancel is the end of the touch: the pad must already be dark and silent.
             assertHeldStill("After the system cancelled the touch at $context", listOf(held), emptySet())
-            fingers.forgetCancelled()
+            forgetCancelledFingers("After the system cancelled the touch at $context")
         } else {
             val lit = litCells()
             val looping = loopingCells().toSet()

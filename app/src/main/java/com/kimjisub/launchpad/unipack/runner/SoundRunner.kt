@@ -27,6 +27,10 @@ class SoundRunner(
 ) {
 
 	private var stopKey: Array<Array<Array<Int>>>
+
+	// Stop key of the infinite loop the press of each held pad (x, y) started, 0 when none. Its release
+	// stops that voice even when the chain or the pad's next sound changed while it was held.
+	private val heldLoop = Array(unipack.buttonX) { IntArray(unipack.buttonY) }
 	@Volatile
 	private var engineStarted = false
 
@@ -140,23 +144,17 @@ class SoundRunner(
 						async(Dispatchers.IO) {
 							semaphore.withPermit {
 								val decoded = engine.decode(File(filePath))
-								if (decoded == null) {
-									Log.err("Failed to decode: $filePath")
-								} else {
-									ensureActive()
-									synchronized(engineLock) {
-										if (destroyed) {
-											Log.play("SoundRunner destroyed while loading; skipped $filePath")
-											return@withPermit
-										}
-										val soundId = engine.load(decoded)
-										if (soundId < 0) {
-											Log.err("Failed to load into engine: $filePath")
-										} else {
-											for (sound in sounds) {
-												sound.id = soundId
-											}
-										}
+								if (decoded == null) Log.err("Failed to decode: $filePath")
+								ensureActive()
+								synchronized(engineLock) {
+									if (destroyed) {
+										Log.play("SoundRunner destroyed while loading; skipped $filePath")
+										return@withPermit
+									}
+									val soundId = decoded?.let(engine::load) ?: Sound.UNDECODABLE
+									if (decoded != null && soundId < 0) Log.err("Failed to load into engine: $filePath")
+									for (sound in sounds) {
+										sound.id = if (soundId < 0) Sound.UNDECODABLE else soundId
 									}
 								}
 								// Report progress for all sounds sharing this file
@@ -181,28 +179,40 @@ class SoundRunner(
 	}
 
 	fun soundOn(x: Int, y: Int) {
-		engine.stopVoice(stopKey[chain.value][x][y])
-		val sound: Sound? = unipack.soundGet(chain.value, x, y)
-		if (sound != null && sound.id >= 0) {
-			stopKey[chain.value][x][y] = engine.play(
+		val restarted = stopKey[chain.value][x][y]
+		engine.stopVoice(restarted)
+		// A press made on another chain while the pad is still held replaces its key below; stop
+		// that earlier loop now, as a press on the same chain does, or nothing could stop it.
+		if (heldLoop[x][y] != restarted) soundOff(x, y)
+		heldLoop[x][y] = 0
+		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
+		// A press made before this sound finished loading leaves the pad and the chain as they are.
+		if (sound.id == Sound.NOT_LOADED) return
+		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
+		// moves on to its next sound and still follows the sound's chain move.
+		if (sound.id != Sound.UNDECODABLE) {
+			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
 				volumeR = 1.0f,
 				loop = sound.loop,
 			)
-			unipack.soundPush(chain.value, x, y)
-			if (sound.wormhole != Sound.NO_WORMHOLE)
-				scope.launch(Dispatchers.Main) {
-					delay(100)
-					chain.value = sound.wormhole
-				}
+			stopKey[chain.value][x][y] = key
+			heldLoop[x][y] = if (sound.loop == -1) key else 0
 		}
+		unipack.soundPush(chain.value, x, y)
+		if (sound.wormhole != Sound.NO_WORMHOLE)
+			scope.launch(Dispatchers.Main) {
+				delay(100)
+				chain.value = sound.wormhole
+			}
 	}
 
 	fun soundOff(x: Int, y: Int) {
-		val sound = unipack.soundGet(chain.value, x, y)
-		if (sound != null && sound.loop == -1)
-			engine.stopVoice(stopKey[chain.value][x][y])
+		val key = heldLoop[x][y]
+		if (key == 0) return
+		heldLoop[x][y] = 0
+		engine.stopVoice(key)
 	}
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
@@ -252,7 +262,7 @@ class SoundRunner(
 										}
 									}
 									// The engine reuses freed slots for the next pack's sounds.
-									sound.id = -1
+									sound.id = Sound.NOT_LOADED
 								}
 							}
 						}

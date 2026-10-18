@@ -7,7 +7,9 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.Process
 import android.util.Log
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -149,6 +151,19 @@ class StoreTest : BaseUITest() {
         last.performClick()
         assertDetailOf(packs.lastIndex)
         takeScreenshot("store_list_end_selected")
+    }
+
+    /** Store entries carry only their download address, so the detail offers no website button. */
+    @Test
+    fun testStoreDetailHasNoWebsiteButton() {
+        launchMain()
+        openStore()
+        composeTestRule.onNodeWithTag(rowTag(0)).performClick()
+        assertDetailOf(0)
+        composeTestRule.onAllNodes(
+            hasContentDescription(str(R.string.cd_website)) and hasAnyAncestor(hasTestTag("store_detail")),
+            useUnmergedTree = true,
+        ).assertCountEquals(0)
     }
 
     /** Actual app startup and browsing must not request notification permission or download. */

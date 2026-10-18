@@ -20,8 +20,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -103,6 +105,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -130,6 +133,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
@@ -325,7 +329,7 @@ class PlayActivity : BaseActivity() {
 				PlayScreen()
 
 				unipackErrorDialog?.let { (title, message) ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(title) },
 						text = { Text(message) },
@@ -341,7 +345,7 @@ class PlayActivity : BaseActivity() {
 				}
 
 				if (showRestartDialog) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(stringResource(string.requireRestart)) },
 						text = { Text(stringResource(string.doYouWantToRestartApp)) },
@@ -391,16 +395,19 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = getString(string.outOfMemory)
-				finish()
+				closeOnLoadFailure(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = "${getString(string.exceptionOccurred)}\n${e.message}"
-				finish()
+				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
+	}
+
+	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
+	private fun closeOnLoadFailure(message: String) {
+		vm.unipackLoading = false
+		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+		finish()
 	}
 
 	private fun start() {
@@ -657,12 +664,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+					// While the scrim fades out of a closed window, a pad pressed under it plays.
 					Box(
 						modifier = Modifier
 							.fillMaxSize()
 							.background(PlayPalette.optionScrim)
 							.focusProperties { canFocus = false }
-							.clickable { vm.toggleOptionWindow(false) }
+							.then(if (vm.isOptionWindowVisible) Modifier.clickable { vm.toggleOptionWindow(false) } else Modifier)
 					)
 				}
 				AnimatedVisibility(
@@ -878,7 +886,7 @@ class PlayActivity : BaseActivity() {
 			) {
 				Row(verticalAlignment = Alignment.CenterVertically) {
 					Text(
-						text = vm.unipack.title.ifEmpty { "Untitled" },
+						text = vm.unipack.title.ifEmpty { stringResource(string.play_info_untitled) },
 						color = cardText.primary,
 						fontSize = 14.sp,
 						fontWeight = FontWeight.SemiBold,
@@ -899,7 +907,7 @@ class PlayActivity : BaseActivity() {
 						Text(vm.unipack.producerName, color = cardText.secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
 					}
 					Text(
-						text = "${vm.unipack.buttonX}×${vm.unipack.buttonY}  ·  ${vm.unipack.chain} chain",
+						text = pluralStringResource(R.plurals.play_info_size_chains, vm.unipack.chain, vm.unipack.buttonX, vm.unipack.buttonY, vm.unipack.chain),
 						color = cardText.secondary,
 						fontSize = 12.sp,
 					)
@@ -910,7 +918,7 @@ class PlayActivity : BaseActivity() {
 
 			// PLAY MODE — top of Performance (most frequently changed during a session)
 			if (vm.scbAutoPlay.visible && !vm.scbAutoPlay.locked) {
-				SectionTitle("Play Mode", sectionColor)
+				SectionTitle(string.play_section_play_mode, sectionColor)
 				PlayModeSegmented(playModeFill.text.primary, tint.copy(alpha = playModeFill.alpha))
 				// AutoMapping sits next to Play Mode: it is an AutoPlay-context tool (moved out of Tools section)
 				if (vm.unipack.autoPlayExist) {
@@ -919,7 +927,7 @@ class PlayActivity : BaseActivity() {
 				Spacer(modifier = Modifier.height(16.dp))
 			}
 
-			SectionTitle("Performance", sectionColor)
+			SectionTitle(string.play_section_performance, sectionColor)
 			OptionSwitch(vm.scbFeedbackLight, string.feedbackLight, textColor, tint, accentColor)
 			OptionSwitch(vm.scbLed, string.led, textColor, tint, accentColor)
 			// NOTE: AutoPlay transport controls intentionally removed here — the chrome column
@@ -927,14 +935,14 @@ class PlayActivity : BaseActivity() {
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Display", sectionColor)
+			SectionTitle(string.play_section_display, sectionColor)
 			OptionSwitch(vm.scbHideUI, string.hideUI, textColor, tint, accentColor)
 			OptionSwitch(vm.scbWatermark, string.watermark, textColor, tint, accentColor)
 			OptionSwitch(vm.scbProLightMode, string.proLightMode, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.height(16.dp))
 
-			SectionTitle("Tools", sectionColor)
+			SectionTitle(string.play_section_tools, sectionColor)
 			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
 			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
@@ -990,7 +998,7 @@ class PlayActivity : BaseActivity() {
 		Spacer(modifier = Modifier.height(6.dp))
 		if (vm.autoMappingActive) {
 			Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-				Text("Auto Mapping…", color = textColor, fontSize = 13.sp)
+				Text(stringResource(string.autoMappingRunning), color = textColor, fontSize = 13.sp)
 				Spacer(modifier = Modifier.height(4.dp))
 				androidx.compose.material3.LinearProgressIndicator(
 					progress = { if (vm.autoMappingMax > 0) vm.autoMappingProgress.toFloat() / vm.autoMappingMax else 0f },
@@ -1008,16 +1016,16 @@ class PlayActivity : BaseActivity() {
 					.padding(horizontal = 24.dp, vertical = 10.dp),
 				verticalAlignment = Alignment.CenterVertically,
 			) {
-				Text("Auto Mapping", color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
+				Text(stringResource(string.autoMapping), color = colors.label, fontSize = 13.sp, modifier = Modifier.weight(1f))
 				Text("→", color = colors.arrow, fontSize = 13.sp)
 			}
 		}
 	}
 
 	@Composable
-	private fun SectionTitle(title: String, color: Color) {
+	private fun SectionTitle(@StringRes titleRes: Int, color: Color) {
 		Text(
-			text = title.uppercase(),
+			text = stringResource(titleRes).uppercase(),
 			color = color,
 			fontSize = 11.sp,
 			letterSpacing = 1.sp,
@@ -1291,10 +1299,8 @@ class PlayActivity : BaseActivity() {
 
 	private var midiController: MidiController? = object : MidiController() {
 		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
-		override fun onDetach() {}
-		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) {
-			if (!vm.isOptionWindowVisible) vm.padTouch(x, y, upDown)
-		}
+		override fun onDetach() = releaseLaunchpadPads()
+		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
 			if (upDown) {
 				if (!vm.isOptionWindowVisible) {
@@ -1328,6 +1334,8 @@ class PlayActivity : BaseActivity() {
 			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chain.refresh(); vm.refreshWatermark() }
 		}
 	}
+
+	private fun releaseLaunchpadPads() = vm.releaseControllerPads(padTouch::holds)
 
 	// endregion
 
@@ -1376,6 +1384,8 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
+	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1383,6 +1393,8 @@ class PlayActivity : BaseActivity() {
 		launchpadOutputEnabled = false
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
+		releaseLaunchpadPads()
+		padTouch.cancel()
 	}
 
 	override fun onStart() {

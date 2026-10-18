@@ -35,6 +35,7 @@
 	<string name="menu">मेनू</string>
 	<string name="website">वेबसाइट</string>
 	<string name="measuring">माप रहा है…</string>
+	<string name="unknownCount">अज्ञात</string>
 	<string name="general">सामान्य</string>
 	<string name="notice">सूचना</string>
 	<string name="newUniPack">नया UniPack</string>
@@ -93,6 +94,17 @@
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
 	<string name="proLightMode">प्रो लाइट मोड</string>
+	<string name="play_section_play_mode">प्ले मोड</string>
+	<string name="play_section_performance">प्रदर्शन</string>
+	<string name="play_section_display">डिस्प्ले</string>
+	<string name="play_section_tools">टूल्स</string>
+	<string name="autoMapping">स्वचालित मैपिंग</string>
+	<string name="autoMappingRunning">स्वचालित मैपिंग…</string>
+	<string name="play_info_untitled">शीर्षकहीन</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d चेन"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d चेन"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -255,6 +267,8 @@
 	<string name="backup_grant_access">बैकअप फ़ोल्डर कनेक्ट करें</string>
 	<string name="backup_revoke">बैकअप फ़ोल्डर डिस्कनेक्ट करें</string>
 	<string name="backup_invalid_folder">कृपया Documents/Unipad फ़ोल्डर चुनें</string>
+	<string name="backup_permission_refused">UniPad इस फ़ोल्डर तक पहुँच बनाए नहीं रख सका। Documents/Unipad को फिर से चुनें।</string>
+	<string name="picker_unavailable">इस डिवाइस पर कोई भी ऐप फ़ाइलें या फ़ोल्डर नहीं चुन सकता।</string>
 	<string name="backup_backup_button">बैकअप</string>
 	<string name="backup_backup_description">UniPacks को बैकअप फ़ोल्डर में कॉपी करें</string>
 	<string name="backup_restore_button">पुनर्स्थापित</string>

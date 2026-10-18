@@ -5,11 +5,13 @@ import android.graphics.Rect
 import android.os.SystemClock
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.test.core.app.ActivityScenario
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.PreferenceManager
+import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -27,6 +29,7 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
     protected data class Cell(val x: Int, val y: Int)
 
     protected lateinit var fingers: Fingers
+    protected lateinit var play: ActivityScenario<PlayActivity>
     private lateinit var prefs: PreferenceManager
     private var savedSlideMode = false
 
@@ -44,18 +47,9 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         }
     }
 
-    /**
-     * Opens the pack with the press light on. A pack with keyLED starts with it off; the option is
-     * set on the screen's state rather than through the options panel, whose open/close by Back is
-     * not what these tests check. [slide] overrides the class's pad input mode for one test.
-     */
+    /** Opens the pack with the press light on. [slide] overrides the class's pad input mode for one test. */
     protected fun start(slide: Boolean = slideMode) {
-        prefs.slideMode = slide
-        screen.openPlay()
-        screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
-        assertTrue("Press light option did not turn on", screen.onMain { screen.vm().scbFeedbackLight.isChecked() })
-        val applied = screen.onMain { (screen.resumed() as PlayActivity).padTouch.slide }
-        assertEquals("Slide Mode applied on the play screen must match the mode under test", slide, applied)
+        play = openPlayWithPressLight(prefs, slide)
         fingers = Fingers(screen)
     }
 
@@ -66,8 +60,9 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
         screen.await({ "$message (expected lit: $lit, lit: $last)" }) { litCells().also { last = it } == lit }
     }
 
-    protected fun litCells(): Set<Cell> = screen.onMain {
-        val channels = screen.vm().channelManager
+    /** Pads lit by a press. Pass [vm] while the play screen is not the resumed activity. */
+    protected fun litCells(vm: PlayActivityViewModel = screen.vm()): Set<Cell> = screen.onMain {
+        val channels = vm.channelManager
         (0 until GRID).flatMap { x -> (0 until GRID).map { y -> Cell(x, y) } }
             .filter { channels.get(it.x, it.y)?.channel == Channel.PRESSED }
             .toSet()
@@ -213,15 +208,6 @@ abstract class MultiTouchPlaybackTest(private val slideMode: Boolean) : Playback
             screen.await("Chain button ${chain + 1} did not switch chain $context") { screen.onMain { screen.vm().chain.value == chain } }
         }
         assertEquals("Chain buttons requested a sound $context", plays, audio.plays.size)
-    }
-
-    /** Centre of the chain button that selects [chain], in screen coordinates. */
-    protected fun chainButton(chain: Int): Point {
-        val chains = screen.onMain {
-            screen.views(screen.resumed().window.decorView).filterIsInstance<ChainView>().filter { it.width > 0 }.map(screen::bounds)
-        }
-        assertTrue("Chain button ${chain + 1} must be on screen", chain < chains.size)
-        return Point(chains[chain].centerX(), chains[chain].centerY())
     }
 
     /**

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,11 +48,11 @@ fun StorePackPanelContent(
 	isAutoPlay: Boolean,
 	isDownloaded: Boolean,
 	isDownloading: Boolean,
-	downloadProgress: Float,
+	/** Null draws an open-ended bar: the size is unknown or the pack is being unpacked. */
+	downloadProgress: Float?,
 	downloadStatusText: String,
 	onDownloadClick: () -> Unit,
 	onYoutubeClick: () -> Unit,
-	onWebsiteClick: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	Surface(
@@ -77,7 +78,7 @@ fun StorePackPanelContent(
 					.basicMarquee(),
 			)
 
-			// Subtitle + YouTube/Website buttons
+			// Subtitle + YouTube button. Store entries carry only their download address, no website.
 			Row(
 				modifier = Modifier.fillMaxWidth(),
 				verticalAlignment = Alignment.CenterVertically,
@@ -94,9 +95,6 @@ fun StorePackPanelContent(
 				)
 				IconButton(onClick = onYoutubeClick, modifier = Modifier.size(32.dp)) {
 					Icon(painterResource(R.drawable.ic_youtube_24dp), contentDescription = stringResource(R.string.cd_youtube), tint = Color(0xFF555555))
-				}
-				IconButton(onClick = onWebsiteClick, modifier = Modifier.size(32.dp)) {
-					Icon(painterResource(R.drawable.ic_web_24dp), contentDescription = stringResource(R.string.cd_website), tint = Color(0xFF555555))
 				}
 			}
 
@@ -192,31 +190,40 @@ fun StorePackPanelContent(
 
 @Composable
 private fun DownloadProgressSection(
-	progress: Float,
+	progress: Float?,
 	statusText: String,
 ) {
-	val animatedProgress by animateFloatAsState(
-		targetValue = progress,
-		animationSpec = tween(300),
-		label = "downloadProgress",
-	)
+	val barModifier = Modifier
+		.fillMaxWidth()
+		.height(6.dp)
+		.clip(RoundedCornerShape(3.dp))
+		.testTag("store_download_progress")
+	val barColor = Color(0xFF4283E6)
+	val trackColor = Color(0xFFE0E0E0)
 
 	Column(modifier = Modifier.fillMaxWidth()) {
-		LinearProgressIndicator(
-			progress = { if (animatedProgress > 0f) animatedProgress else 0f },
-			modifier = Modifier
-				.fillMaxWidth()
-				.height(6.dp)
-				.clip(RoundedCornerShape(3.dp)),
-			color = Color(0xFF4283E6),
-			trackColor = Color(0xFFE0E0E0),
-		drawStopIndicator = {},
-		)
+		if (progress == null) {
+			LinearProgressIndicator(modifier = barModifier, color = barColor, trackColor = trackColor)
+		} else {
+			val animatedProgress by animateFloatAsState(
+				targetValue = progress,
+				animationSpec = tween(300),
+				label = "downloadProgress",
+			)
+			LinearProgressIndicator(
+				progress = { animatedProgress },
+				modifier = barModifier,
+				color = barColor,
+				trackColor = trackColor,
+				drawStopIndicator = {},
+			)
+		}
 		Spacer(Modifier.height(4.dp))
 		Text(
 			text = statusText,
 			fontSize = 11.sp,
 			color = Color(0xFF888888),
+			modifier = Modifier.testTag("store_download_status"),
 		)
 	}
 }

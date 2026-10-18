@@ -43,7 +43,7 @@ class UsageEventRoutingTest {
 		analytics.newPlaySession().run {
 			loadStarted()
 			loadSucceeded()
-			playTriggered(PlayTrigger.PAD)
+			playTriggered(PlayTrigger.PAD, InputSource.MIDI)
 			ended()
 		}
 	}

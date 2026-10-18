@@ -987,26 +987,24 @@ class PlayActivityTest : BaseUITest() {
 
     /** Layout problems in every window of the resize sequence; screenshots are named with [prefix]. */
     private fun playLayoutProblemsAcrossWindows(prefix: String = ""): List<String> {
-        val holeWasOn = device.executeShellCommand("cmd overlay list").lines()
-            .any { it.startsWith("[x]") && it.endsWith(HOLE_CUTOUT) }
         val ignoredOrientation = device.executeShellCommand("wm get-ignore-orientation-request").contains("true")
         val problems = mutableListOf<String>()
-        try {
-            problems += playLayoutProblems("${prefix}initial")
-            device.executeShellCommand("cmd overlay enable $HOLE_CUTOUT")
-            device.executeShellCommand("wm set-ignore-orientation-request true")
-            for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
-                device.executeShellCommand("wm size $size")
-                problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
-                problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
+        problems += playLayoutProblems("${prefix}initial")
+        DisplayOverlays.with(device, DisplayOverlays.HOLE_CUTOUT) {
+            try {
+                device.executeShellCommand("wm set-ignore-orientation-request true")
+                for ((name, size) in listOf("20x9_hole" to "1080x2460", "16x9" to "1080x1920", "split_800x637dp" to "1672x2100", "16x9_again" to "1080x1920")) {
+                    device.executeShellCommand("wm size $size")
+                    problems += playLayoutProblems("$prefix${name}_rot90", Surface.ROTATION_90)
+                    problems += playLayoutProblems("$prefix${name}_rot270", Surface.ROTATION_270)
+                }
+                device.executeShellCommand("wm size 1600x2560")
+                problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
+            } finally {
+                device.executeShellCommand("wm size reset")
+                device.unfreezeRotation()
+                device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
             }
-            device.executeShellCommand("wm size 1600x2560")
-            problems += playLayoutProblems("${prefix}tablet_upright_letterboxed", Surface.ROTATION_0)
-        } finally {
-            device.executeShellCommand("wm size reset")
-            if (!holeWasOn) device.executeShellCommand("cmd overlay disable $HOLE_CUTOUT")
-            device.unfreezeRotation()
-            device.executeShellCommand("wm set-ignore-orientation-request $ignoredOrientation")
         }
         // Resetting size, cutout and sensor orientation queues several separate layouts.
         problems += playLayoutProblems("${prefix}restored", layoutTimeoutMs = 30000L)
@@ -1132,7 +1130,6 @@ class PlayActivityTest : BaseUITest() {
     }
 
     private companion object {
-        const val HOLE_CUTOUT = "com.android.internal.display.cutout.emulation.hole"
         const val CENTRE_TOLERANCE_DP = 1f
     }
 }
