@@ -3,6 +3,7 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,20 +30,22 @@ class MainTotalPanelViewModel(
 ) : AndroidViewModel(app) {
 	private val repo: UnipackRepository by app.inject()
 
+	// Names stay resource ids: this view model outlives a language change, so text read here
+	// would keep the old language until the app restarts.
 	private val sortMethodList = arrayOf(
-		SortMethod(app.getString(R.string.sort_title), false) { a, b ->
+		SortMethod(R.string.sort_title, false) { a, b ->
 			-a.unipack.title.compareTo(b.unipack.title)
 		},
-		SortMethod(app.getString(R.string.sort_producer), false) { a, b ->
+		SortMethod(R.string.sort_producer, false) { a, b ->
 			-a.unipack.producerName.compareTo(b.unipack.producerName)
 		},
-		SortMethod(app.getString(R.string.sort_download_date), true) { a, b ->
+		SortMethod(R.string.sort_download_date, true) { a, b ->
 			val aDate = a.unipack.lastModified()
 			val bDate = b.unipack.lastModified()
 			-aDate.compareTo(bDate)
 		}
 	)
-	val sortMethodTitleList = sortMethodList.map { it.name }
+	val sortMethodTitleResList = sortMethodList.map { it.nameRes }
 
 	var version by mutableStateOf("")
 		private set
@@ -118,7 +121,7 @@ class MainTotalPanelViewModel(
 	}
 
 	data class SortMethod(
-		val name: String,
+		@param:StringRes val nameRes: Int,
 		val defaultOrder: Boolean,
 		val comparator: Comparator<UniPackItem>,
 	)

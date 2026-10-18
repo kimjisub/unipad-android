@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -23,13 +24,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -93,12 +100,14 @@ import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.ui.compose.AppUpdateActions
 import com.kimjisub.launchpad.ui.compose.AppUpdateCard
 import com.kimjisub.launchpad.ui.compose.AppUpdateDialog
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -118,6 +127,7 @@ import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.tool.splitties.openPlayStorePage
+import com.kimjisub.launchpad.tool.tryLaunch
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.ui.theme.Red
 import com.kimjisub.launchpad.ui.theme.SkyBlue
@@ -151,6 +161,10 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
+	// Set when a refresh is asked for while one is reading; that one may have read the folders too early.
+	private var refreshAgain = false
+	// Set from the first play press until the list is back, so a double press opens one play screen.
+	private var playOpening = false
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
 	private var scrollToCenterTrigger by mutableIntStateOf(0)
@@ -263,7 +277,7 @@ class MainActivity : BaseActivity() {
 				source = source,
 				schedule = AppUpdateSchedule(PreferenceAppUpdateStore(applicationContext)),
 				scope = lifecycleScope,
-				isSafe = { listInFront() && appUpdate?.state?.value?.dialog == null },
+				isSafe = { canShowAppUpdate() },
 				openStore = { openPlayStorePage(STORE_APP_ID) },
 			)
 		}
@@ -282,7 +296,12 @@ class MainActivity : BaseActivity() {
 						)
 					},
 					// Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j.
-					onLoadUniPackClick = { filePick.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+					onLoadUniPackClick = {
+						val zipTypes = arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")
+						if (!filePick.tryLaunch(zipTypes)) {
+							Toast.makeText(this@MainActivity, string.picker_unavailable, Toast.LENGTH_LONG).show()
+						}
+					},
 					onRestoreClick = {
 						settingsActivityResultLauncher.launch(
 							Intent(applicationContext, SettingsActivity::class.java).apply {
@@ -316,7 +335,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				deleteTargetItem?.let { item ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteTargetItem = null },
 						title = { Text(stringResource(string.warning)) },
 						text = { Text(stringResource(string.doYouWantToDeleteUniPack)) },
@@ -346,7 +365,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				if (deleteFailed) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteFailed = false },
 						title = { Text(stringResource(string.error)) },
 						text = { Text(stringResource(string.errOccur)) },
@@ -364,7 +383,11 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) return
+		if (listRefreshing) {
+			refreshAgain = true
+			return
+		}
+		refreshAgain = false
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
@@ -401,6 +424,7 @@ class MainActivity : BaseActivity() {
 
 				scrollToTopTrigger++
 				listRefreshing = false
+				if (refreshAgain) update()
 			}
 		}
 	}
@@ -431,6 +455,8 @@ class MainActivity : BaseActivity() {
 	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
 
 	private fun playUniPack(path: String) {
+		if (playOpening) return
+		playOpening = true
 		start<PlayActivity> {
 			putExtra("path", path)
 		}
@@ -539,6 +565,9 @@ class MainActivity : BaseActivity() {
 	private fun listInFront(): Boolean =
 		listIdle() && resumed && !listRefreshing && otherScreens?.anyAlive != true
 
+	private fun canShowAppUpdate(state: AppUpdatePrompter.State? = appUpdate?.state?.value): Boolean =
+		listInFront() && state?.dialog == null
+
 	private fun appUpdateActions(prompter: AppUpdatePrompter) = AppUpdateActions(
 		download = prompter::download,
 		later = prompter::later,
@@ -590,6 +619,7 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		resumed = true
+		playOpening = false
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		update()
@@ -628,11 +658,16 @@ class MainActivity : BaseActivity() {
 		}
 
 		val updateState = appUpdate?.state?.collectAsState()?.value
-		val updateSafe = listInFront() && updateState?.dialog == null
+		val updateSafe = canShowAppUpdate(updateState)
 		LaunchedEffect(updateSafe) {
 			if (updateSafe) appUpdate?.onListReady()
 		}
 
+		// The keyboard covers the panels rather than squeezing them, but the list's end takes it in so its
+		// last rows can still be scrolled above it.
+		val barsAndCutout = WindowInsets.barsAndCutout
+		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
+		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -640,13 +675,19 @@ class MainActivity : BaseActivity() {
 				.semantics { testTagsAsResourceId = true },
 		) {
 			// Main two-panel layout
-			Row(modifier = Modifier.fillMaxSize()) {
+			Row(
+				modifier = Modifier
+					.fillMaxSize()
+					.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
+			) {
 				// Left panel (weight 2 = 40%)
 				Box(
 					modifier = Modifier
 						.weight(2f)
 						.fillMaxHeight()
-						.padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
+						.windowInsetsPadding(safeBottom)
+						.padding(start = 16.dp, top = 16.dp, bottom = 16.dp)
+						.testTag("main_left_panel"),
 				) {
 					Crossfade(
 						targetState = selectedItem,
@@ -665,11 +706,8 @@ class MainActivity : BaseActivity() {
 								checkingUpdate = updateState?.checking == true,
 							)
 						} else {
-							val packVM = remember(item.unipack.getPathString()) {
-								ViewModelProvider(
-									this@MainActivity,
-									MainPackPanelViewModel.Factory(application, item.unipack)
-								)["pack_${item.unipack.getPathString()}", MainPackPanelViewModel::class.java]
+							val packVM = remember(MainPackPanelViewModel.key(item.unipack)) {
+								MainPackPanelViewModel.of(this@MainActivity, application, item.unipack)
 							}
 
 							// Handle delete event from VM
@@ -701,6 +739,7 @@ class MainActivity : BaseActivity() {
 										.verticalScroll(rememberScrollState())
 										.fillMaxWidth()
 										.heightIn(min = maxHeight)
+										.windowInsetsPadding(listBottom)
 										.padding(horizontal = 16.dp, vertical = 16.dp),
 									horizontalAlignment = Alignment.CenterHorizontally,
 									verticalArrangement = Arrangement.Center,
@@ -746,11 +785,15 @@ class MainActivity : BaseActivity() {
 									NoSearchResults(
 										query = searchQuery,
 										onClearClick = { updateSearchQuery("") },
+										bottomInsets = listBottom,
 										modifier = Modifier.weight(1f),
 									)
 								} else LazyColumn(
 									state = listState,
-									contentPadding = PaddingValues(top = 4.dp, bottom = 6.dp),
+									contentPadding = PaddingValues(
+										top = 4.dp,
+										bottom = 6.dp + listBottom.asPaddingValues().calculateBottomPadding(),
+									),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
 								) {
@@ -824,7 +867,7 @@ class MainActivity : BaseActivity() {
 						.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
 				) {
 					Text(
-						text = vm.sortMethodTitleList.getOrElse(sortMethod) { "" },
+						text = vm.sortMethodTitleResList.getOrNull(sortMethod)?.let { stringResource(it) }.orEmpty(),
 						fontSize = 12.sp,
 						color = Gray1,
 					)
@@ -842,9 +885,9 @@ class MainActivity : BaseActivity() {
 					expanded = expanded,
 					onDismissRequest = { expanded = false },
 				) {
-					vm.sortMethodTitleList.forEachIndexed { index, title ->
+					vm.sortMethodTitleResList.forEachIndexed { index, titleRes ->
 						DropdownMenuItem(
-							text = { Text(title, fontSize = 13.sp) },
+							text = { Text(stringResource(titleRes), fontSize = 13.sp) },
 							onClick = {
 								vm.updateSortMethod(index)
 								expanded = false
@@ -914,6 +957,7 @@ class MainActivity : BaseActivity() {
 	private fun NoSearchResults(
 		query: String,
 		onClearClick: () -> Unit,
+		bottomInsets: WindowInsets,
 		modifier: Modifier = Modifier,
 	) {
 		BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -922,6 +966,7 @@ class MainActivity : BaseActivity() {
 					.verticalScroll(rememberScrollState())
 					.fillMaxWidth()
 					.heightIn(min = maxHeight)
+					.windowInsetsPadding(bottomInsets)
 					.padding(16.dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center,

@@ -12,10 +12,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.BuildConfig
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.theme.Gray1
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.R.string
@@ -78,7 +83,7 @@ class SplashActivity : BaseActivity() {
 			SplashScreen()
 
 			if (showPermissionDialog) {
-				AlertDialog(
+				AppAlertDialog(
 					onDismissRequest = {},
 					title = { Text(stringResource(string.permissionRequire)) },
 					text = { Text(stringResource(string.permissionDenied)) },
@@ -160,6 +165,7 @@ private fun SplashScreen() {
 		Column(
 			modifier = Modifier
 				.align(Alignment.BottomCenter)
+				.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
 				.padding(bottom = 10.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.Center,

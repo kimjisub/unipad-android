@@ -2,8 +2,10 @@ package com.kimjisub.launchpad.manager
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.database.sqlite.SQLiteFullException
 import android.os.Environment
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.db.dao.UnipackDao
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import io.mockk.*
@@ -12,6 +14,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -40,7 +43,6 @@ class WorkspaceManagerTest {
 		every { mockContext.getString(R.string.workspace_documents_android10) } returns "Documents (Android 10)"
 		every { mockContext.getString(R.string.workspace_app_storage) } returns "App Storage (Recommended)"
 		every { mockContext.getString(R.string.workspace_internal_storage) } returns "Internal Storage"
-		every { mockContext.getString(R.string.workspace_internal_sd_card) } returns "Internal SD Card"
 		every { mockContext.getString(R.string.workspace_external_sd_card_format, *anyVararg()) } answers {
 			val args = secondArg<Array<out Any?>>()
 			"External SD Card ${args[0]}"
@@ -171,16 +173,30 @@ class WorkspaceManagerTest {
 	}
 
 	@Test
-	fun availableWorkspaces_doesNotAddInternalStorageWhenAppExternalDirExists() {
+	fun availableWorkspaces_doesNotAddEmptyInternalStorageWhenAppExternalDirExists() {
 		val appDir = File(tempDir, "app_external")
 		appDir.mkdirs()
+		File(tempDir, "internal/UniPack").mkdirs()
 
 		every { mockContext.getExternalFilesDir(null) } returns appDir
+		every { mockContext.filesDir } returns File(tempDir, "internal")
 		every { mockContext.getExternalFilesDirs("UniPack") } returns arrayOf()
 
 		val manager = WorkspaceManager(mockContext)
 
 		assertTrue(manager.availableWorkspaces.none { it.name == "Internal Storage" })
+	}
+
+	@Test
+	fun availableWorkspaces_keepsInternalStorageWithPacksWhenAppExternalDirIsBack() {
+		val manager = managerWithExternalDirs()
+		writePack(internalWorkspace())
+
+		assertEquals(
+			listOf("App Storage (Recommended)", "Internal Storage"),
+			manager.availableWorkspaces.map { it.name }.take(2)
+		)
+		assertEquals(internalWorkspace(), manager.availableWorkspaces[1].file)
 	}
 
 	@Test
@@ -274,6 +290,22 @@ class WorkspaceManagerTest {
 		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
 	}
 
+	// A killed install's leftovers are still being deleted when the first screen counts the size.
+	@Test
+	fun getAvailableWorkspacesSize_skipsInstallsInProgressAndLeftovers() {
+		val sdCardDir = createSdCardWithPack()
+		File(sdCardDir, "to import later.zip").writeBytes(ByteArray(300))
+		val expected = sdCardDir.walk().filter { it.isFile }.sumOf { it.length() }
+		runBlocking {
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(4000))
+			PackStaging.setAsideLeftovers(sdCardDir)
+			File(PackStaging.create(sdCardDir), "download.zip").writeBytes(ByteArray(2000))
+		}
+		val manager = managerWithExternalDirs(sdCardDir)
+
+		assertEquals(expected, runBlocking { manager.getAvailableWorkspacesSize() })
+	}
+
 	// The total panel calls this from the main thread; listing workspaces there created folders on it.
 	@Test
 	fun getAvailableWorkspacesSize_listsWorkspacesOffTheCallingThread() {
@@ -309,6 +341,42 @@ class WorkspaceManagerTest {
 		assertEquals(listOf("Test"), runBlocking { manager.getUnipacks() }.map { it.unipack.title })
 	}
 
+	@Test
+	fun getUnipacks_listsPacksSavedToInternalStorageWhileAppExternalDirWasMissing() {
+		val manager = managerWithExternalDirs()
+		writePack(appWorkspace(), "app")
+		writePack(internalWorkspace(), "internal")
+
+		assertEquals(
+			listOf("app", "internal"),
+			runBlocking { manager.getUnipacks() }.map { it.unipack.id }.sorted()
+		)
+	}
+
+	@Test
+	fun getUnipacks_keepsPacksWhoseRecordCannotBeWritten() {
+		val dao = mockk<UnipackDao>(relaxed = true)
+		every { dao.exists(any()) } returns false
+		every { dao.insert(any()) } throws SQLiteFullException("database or disk is full")
+		loadKoinModules(module { single { UnipackRepository(dao) {} } })
+		val manager = managerWithExternalDirs()
+		writePack(appWorkspace())
+
+		assertEquals(listOf("pack"), runBlocking { manager.getUnipacks() }.map { it.unipack.id })
+	}
+
+	@Test
+	fun deleteUnipack_removesPackLeftInInternalStorage() {
+		val manager = managerWithExternalDirs()
+		val pack = writePack(internalWorkspace())
+		every { mockRepo.delete("pack") } returns true
+		val listed = runBlocking { manager.getUnipacks() }.single().unipack
+
+		assertEquals(WorkspaceManager.DeleteResult.DELETED, manager.deleteUnipack(listed))
+		assertFalse(pack.exists())
+		assertTrue(runBlocking { manager.getUnipacks() }.isEmpty())
+	}
+
 	// === deleteUnipack: files first, then the saved row ===
 
 	private fun writePack(workspace: File, name: String = "pack"): File {
@@ -321,6 +389,8 @@ class WorkspaceManagerTest {
 	}
 
 	private fun appWorkspace() = File(tempDir, "app_external/UniPack")
+
+	private fun internalWorkspace() = File(tempDir, "internal/UniPack")
 
 	@Test
 	fun deleteUnipack_removesFilesThenRow() {

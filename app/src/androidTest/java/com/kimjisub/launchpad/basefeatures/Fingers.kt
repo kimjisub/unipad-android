@@ -9,14 +9,18 @@ import org.junit.Assert.assertTrue
 /**
  * One multi-finger touchscreen gesture injected through UiAutomation, so it reaches the app
  * through the same window dispatch as a real screen: ACTION_DOWN / POINTER_DOWN / MOVE /
- * POINTER_UP / UP. Pointer ids are reused lowest-first and kept in id order, as touchscreen
- * drivers do.
+ * POINTER_UP / UP / CANCEL. Pointer ids are reused lowest-first and kept in id order, as
+ * touchscreen drivers do.
  */
 class Fingers(private val screen: FeatureScreen) {
     private class Finger(val id: Int, var x: Float, var y: Float)
 
+    /** The last lift or cancel, with the fingers it carried, kept for [redeliverEnd]. */
+    private class Ended(val action: Int, val flags: Int, val fingers: List<Finger>)
+
     private var downAt = 0L
     private val fingers = mutableListOf<Finger>()
+    private var ended: Ended? = null
 
     /** Puts a new finger down and returns its pointer id. */
     fun down(at: Point): Int {
@@ -43,29 +47,74 @@ class Fingers(private val screen: FeatureScreen) {
         }
     }
 
-    fun up(id: Int) {
+    /**
+     * Lifts one finger. [cancelled] marks it FLAG_CANCELED, as Android 13+ reports a single
+     * finger the system cancelled while others stay down.
+     */
+    fun up(id: Int, cancelled: Boolean = false) {
         val index = fingers.indexOf(finger(id))
-        inject(if (fingers.size == 1) MotionEvent.ACTION_UP else pointerAction(MotionEvent.ACTION_POINTER_UP, index))
+        end(if (fingers.size == 1) MotionEvent.ACTION_UP else pointerAction(MotionEvent.ACTION_POINTER_UP, index),
+            if (cancelled) MotionEvent.FLAG_CANCELED else 0)
         fingers.removeAt(index)
     }
 
-    /** Ends the gesture if a failed assertion left fingers down, so the next test starts clean. */
+    /**
+     * Cancels every finger still down, as the system does when it takes the gesture away. Also
+     * ends a gesture a failed assertion left down, so the next test starts clean.
+     */
     fun cancelRemaining() {
         if (fingers.isEmpty()) return
-        inject(MotionEvent.ACTION_CANCEL)
+        end(MotionEvent.ACTION_CANCEL)
         fingers.clear()
+    }
+
+    /**
+     * Forgets the fingers of a gesture the system already ended in the window with its own cancel.
+     * Android 17 still counts an injected gesture as down after such a cancel and refuses the next
+     * ACTION_DOWN, so a cancel is injected to end it there too. It may be refused where the gesture
+     * already ended, and the window, whose touch already ended, gets nothing from it.
+     */
+    fun forgetCancelled() {
+        if (fingers.isEmpty()) return
+        inject(MotionEvent.ACTION_CANCEL, requireDelivery = false)
+        fingers.clear()
+    }
+
+    /**
+     * Delivers the last lift or cancel once more, straight to the resumed activity's window, with
+     * [action], [flags] or only the first [pointers] fingers when given. The system refuses events
+     * for fingers it already ended, so a duplicate end can only reach the app this way.
+     */
+    fun redeliverEnd(action: Int? = null, flags: Int? = null, pointers: Int? = null) {
+        val last = checkNotNull(ended) { "No finger has lifted or been cancelled yet" }
+        val event = obtain(action ?: last.action, flags ?: last.flags, last.fingers.take(pointers ?: last.fingers.size))
+        try { screen.onMain { screen.resumed().dispatchTouchEvent(event) } }
+        finally { event.recycle() }
     }
 
     private fun finger(id: Int) = fingers.first { it.id == id }
 
     private fun pointerAction(action: Int, index: Int) = action or (index shl MotionEvent.ACTION_POINTER_INDEX_SHIFT)
 
-    private fun inject(action: Int) {
-        val properties = fingers.map { MotionEvent.PointerProperties().apply { id = it.id; toolType = MotionEvent.TOOL_TYPE_FINGER } }
-        val coordinates = fingers.map { MotionEvent.PointerCoords().apply { x = it.x; y = it.y; pressure = 1f; size = 1f } }
-        val event = MotionEvent.obtain(downAt, SystemClock.uptimeMillis(), action, fingers.size,
-            properties.toTypedArray(), coordinates.toTypedArray(), 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0)
-        try { assertTrue("Touch injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true)) }
-        finally { event.recycle() }
+    private fun end(action: Int, flags: Int = 0) {
+        ended = Ended(action, flags, fingers.map { Finger(it.id, it.x, it.y) })
+        inject(action, flags)
+    }
+
+    private fun inject(action: Int, flags: Int = 0, requireDelivery: Boolean = true) {
+        val event = obtain(action, flags, fingers)
+        try {
+            val delivered = screen.instrumentation.uiAutomation.injectInputEvent(event, true)
+            if (requireDelivery) assertTrue("Touch injection failed", delivered)
+        } finally {
+            event.recycle()
+        }
+    }
+
+    private fun obtain(action: Int, flags: Int, pointers: List<Finger>): MotionEvent {
+        val properties = pointers.map { MotionEvent.PointerProperties().apply { id = it.id; toolType = MotionEvent.TOOL_TYPE_FINGER } }
+        val coordinates = pointers.map { MotionEvent.PointerCoords().apply { x = it.x; y = it.y; pressure = 1f; size = 1f } }
+        return MotionEvent.obtain(downAt, SystemClock.uptimeMillis(), action, pointers.size,
+            properties.toTypedArray(), coordinates.toTypedArray(), 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, flags)
     }
 }

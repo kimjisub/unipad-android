@@ -11,6 +11,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  fastlane-tests:
+    name: Play rollout lane checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: '1'
+      FASTLANE_HIDE_TIMESTAMP: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: '3.4.8'
+      - name: Install the pinned fastlane version
+        run: gem install fastlane --version 2.240.1 --no-document
+      - name: Check lane parsing and offline Play edits
+        run: |
+          fastlane lanes
+          ruby fastlane/tests/halt_test.rb
+          ruby fastlane/tests/rollout_test.rb
+          ruby fastlane/tests/deploy_promote_test.rb
+
   unit-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -72,14 +95,16 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-android
-      - name: Check every debug module
-        run: ./gradlew lintDebug --no-daemon --console=plain
+      - name: Check every debug module and the release app
+        run: ./gradlew lintDebug :app:lintRelease --no-daemon --console=plain
       - name: Upload lint reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: android-lint-results
-          path: '**/build/reports/lint-results-debug.*'
+          path: |
+            **/build/reports/lint-results-debug.*
+            app/build/reports/lint-results-release.*
           if-no-files-found: warn
           retention-days: 7
 

@@ -18,7 +18,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -76,7 +75,7 @@ class UniPackConformanceChecksTest {
 	fun aLedRunnerWhoseEventOnDoesNothingFailsARunCase() {
 		val c = byId("RUN-L-001")
 		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
-		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any()) } just Runs } })
+		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any(), any()) } just Runs } })
 		assertEquals("fail", classify(c, actualFor(c, corpus, silent)).status)
 	}
 
@@ -104,6 +103,14 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
+	fun autoPlayLeftOnFailsTheEndlessSoundReleaseCase() {
+		val c = byId("RUN-RP-005")
+		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
+		val leftOn = c.copy(scenario = c.scenario.filter { it.getValue("do").jsonPrimitive.content != "autoplayOff" })
+		assertEquals("fail", classify(c, actualFor(leftOn, corpus)).status)
+	}
+
+	@Test
 	fun aPinnedDifferenceThatStopsHappeningOrChangesIsUnexpected() {
 		val c = byId("KS-001")
 		val pinned = c.copy(known = mapOf(PLATFORM to Known("fail", buildJsonObject { put("loaded", false) }, "pinned")))
@@ -114,9 +121,12 @@ class UniPackConformanceChecksTest {
 
 	@Test
 	fun anUndeterminedCaseIsNeverCountedAsAPass() {
-		val c = corpus.cases.firstOrNull { !it.determined }
-		assertNotNull(c)
-		assertEquals("unverified", classify(c!!, actualFor(c, corpus)).status)
+		// The corpus may have no undetermined case, so one is made from a determined one.
+		val determined = byId("KS-001")
+		val c = determined.copy(determined = false, expected = null, question = "still open?")
+		val actual = actualFor(c, corpus)
+		assertEquals(determined.expected, actual)
+		assertEquals("unverified", classify(c, actual).status)
 	}
 
 	@Test

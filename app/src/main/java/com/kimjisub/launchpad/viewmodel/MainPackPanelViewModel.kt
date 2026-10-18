@@ -9,11 +9,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
+import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.unipack.UniPack
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,6 +36,10 @@ class MainPackPanelViewModel(
 	var fileSize by mutableStateOf<String?>(null)
 		private set
 
+	/** Reading the pack to count its sounds and LEDs failed, so the counts will not arrive. */
+	var countsUnknown by mutableStateOf(false)
+		private set
+
 	val unipackEnt = repo.find(unipack.id)
 
 	var deleteRequested by mutableStateOf(false)
@@ -44,8 +51,8 @@ class MainPackPanelViewModel(
 		}
 
 		viewModelScope.launch(Dispatchers.IO) {
-			val fileSizeString =
-				FileManager.byteToMB(unipack.getByteSize()) + " MB"
+			val byteSize = readOrNull("UniPack size read failed") { unipack.getByteSize() } ?: return@launch
+			val fileSizeString = FileManager.byteToMB(byteSize) + " MB"
 			withContext(Dispatchers.Main) {
 				fileSize = fileSizeString
 			}
@@ -58,13 +65,33 @@ class MainPackPanelViewModel(
 			soundCount = null
 			ledCount = null
 			viewModelScope.launch(Dispatchers.IO) {
-				unipack.loadDetail()
+				val loaded = readOrNull("UniPack detail read failed") { unipack.loadDetail() } != null
 				withContext(Dispatchers.Main) {
-					soundCount = unipack.soundCount
-					ledCount = unipack.ledTableCount
+					if (loaded) {
+						soundCount = unipack.soundCount
+						ledCount = unipack.ledTableCount
+					} else {
+						countsUnknown = true
+					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * [read] or null when it fails. The play screen catches the same failures and closes; here the
+	 * pack is only being shown, so a pack too large or unreadable must not take the app down.
+	 */
+	private inline fun <T : Any> readOrNull(what: String, read: () -> T): T? = try {
+		read()
+	} catch (e: CancellationException) {
+		throw e
+	} catch (e: OutOfMemoryError) {
+		Log.err("$what (OOM): ${unipack.getPathString()}", e)
+		null
+	} catch (e: Exception) {
+		Log.err("$what: ${unipack.getPathString()}", e)
+		null
 	}
 
 	fun bookmarkToggle() {
@@ -87,6 +114,17 @@ class MainPackPanelViewModel(
 
 	fun clearDeleteRequest() {
 		deleteRequested = false
+	}
+
+	companion object {
+		/**
+		 * The panel for [unipack], kept in [owner] while the pack is unchanged. A pack deleted and
+		 * installed again under the same name keeps its path, so the folder's time is part of the key.
+		 */
+		fun of(owner: ViewModelStoreOwner, app: Application, unipack: UniPack): MainPackPanelViewModel =
+			ViewModelProvider(owner, Factory(app, unipack))[key(unipack), MainPackPanelViewModel::class.java]
+
+		fun key(unipack: UniPack) = "pack_${unipack.getPathString()}_${unipack.folderModified}"
 	}
 
 	class Factory(

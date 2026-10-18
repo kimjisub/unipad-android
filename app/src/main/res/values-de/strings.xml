@@ -4,7 +4,6 @@
 	<string name="translated_by">Translated by AI</string>
 
 	<string name="app_name">UniPad</string>
-	<string name="app_name_test">UniPad Test</string>
 
 	<!--Word-->
 	<string name="accept">Akzeptieren</string>
@@ -36,6 +35,7 @@
 	<string name="menu">Menü</string>
 	<string name="website">Webseite</string>
 	<string name="measuring">Messen…</string>
+	<string name="unknownCount">Unbekannt</string>
 	<string name="general">Allgemein</string>
 	<string name="notice">Hinweis</string>
 	<string name="newUniPack">Neues UniPack</string>
@@ -94,6 +94,17 @@
 	<string name="hideUI">UI ausblenden</string>
 	<string name="watermark">Wasserzeichen</string>
 	<string name="proLightMode">Pro-Licht-Modus</string>
+	<string name="play_section_play_mode">Spielmodus</string>
+	<string name="play_section_performance">Effekte</string>
+	<string name="play_section_display">Anzeige</string>
+	<string name="play_section_tools">Werkzeuge</string>
+	<string name="autoMapping">Auto-Mapping</string>
+	<string name="autoMappingRunning">Auto-Mapping…</string>
+	<string name="play_info_untitled">Ohne Titel</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d Kette"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d Ketten"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -204,7 +215,6 @@
 	<string name="workspace_documents_android10">Dokumente (Android 10)</string>
 	<string name="workspace_app_storage">App-Speicher (Empfohlen)</string>
 	<string name="workspace_internal_storage">Interner Speicher</string>
-	<string name="workspace_internal_sd_card">Interne SD-Karte</string>
 	<string name="workspace_external_sd_card_format">Externe SD-Karte %d</string>
 	<string name="workspace_unipack_count">%d UniPacks</string>
 
@@ -257,6 +267,8 @@
 	<string name="backup_grant_access">Backup-Ordner verbinden</string>
 	<string name="backup_revoke">Backup-Ordner trennen</string>
 	<string name="backup_invalid_folder">Bitte wählen Sie den Documents/Unipad-Ordner</string>
+	<string name="backup_permission_refused">UniPad konnte den Zugriff auf diesen Ordner nicht behalten. Wählen Sie Documents/Unipad erneut.</string>
+	<string name="picker_unavailable">Auf diesem Gerät gibt es keine App, die Dateien oder Ordner auswählen kann.</string>
 	<string name="backup_backup_button">Sichern</string>
 	<string name="backup_backup_description">UniPacks in Backup-Ordner kopieren</string>
 	<string name="backup_restore_button">Wiederherstellen</string>
