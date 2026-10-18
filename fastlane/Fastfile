@@ -107,6 +107,7 @@ platform :android do
   lane :deploy do |options|
     track = options[:track] || "internal"
     rollout = rollout_fraction(options[:rollout]) if track == "production" || options.key?(:rollout)
+    UI.user_error!("Pass rollout only for the production track") if track != "production" && options.key?(:rollout)
     status = track == "production" ? (rollout == 1 ? "completed" : "inProgress") : "draft"
     UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
 
@@ -125,7 +126,7 @@ platform :android do
       mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
       version_name: current_version_name,
       release_status: status,
-      rollout: rollout,
+      rollout: rollout&.to_s,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
@@ -147,7 +148,7 @@ platform :android do
       track_promote_release_status: fraction == 1 ? "completed" : "inProgress",
       version_code: options[:version_code] || current_version_code,
       version_name: options[:version_name] || current_version_name,
-      rollout: fraction,
+      rollout: fraction.to_s,
       skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
       skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
     )
