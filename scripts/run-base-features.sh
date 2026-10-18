@@ -36,8 +36,17 @@ trap 'rm -f "$output"' EXIT
 "$adb_bin" -s "$serial" shell am instrument -w -r \
   -e class com.kimjisub.launchpad.basefeatures.BaseFeaturesSuite \
   com.kimjisub.launchpad.dev.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
-# adb/am can return zero even when instrumentation failed. Require the JUnit success footer.
-if ! grep -Eq "^OK \\($expected tests\\)" "$output" || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
+# adb/am can return zero even when instrumentation failed. Require the JUnit success footer
+# for every test the suite's classes declare; a skipped test (status -4) still counts as run.
+if grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed' "$output"; then
   echo 'Base features failed; inspect the instrumentation output above.' >&2
+  exit 1
+fi
+if grep -q 'INSTRUMENTATION_STATUS_CODE: -4' "$output"; then
+  echo 'A base feature test was skipped; the suite must run every test.' >&2
+  exit 1
+fi
+if ! grep -Eq "^OK \\($expected tests\\)" "$output"; then
+  echo "Base features did not pass all $expected tests declared by the classes in BaseFeaturesSuite; inspect the instrumentation output above." >&2
   exit 1
 fi
