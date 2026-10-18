@@ -53,6 +53,15 @@ abstract class HeldPadTest : MultiTouchPlaybackTest(slideMode = false) {
         assertEquals("$message: pads still looping\n$received", held, loopingCells().toSet())
     }
 
+    /** Forgets fingers the system cancelled; the window, whose touch already ended, must receive nothing more. */
+    protected fun forgetCancelledFingers(message: String) {
+        val before = received.events.size
+        fingers.forgetCancelled()
+        settle()
+        assertEquals("$message: the window received input after its touch was cancelled\n$received",
+            emptyList<ReceivedInput.Event>(), received.events.drop(before))
+    }
+
     protected fun loopingCells(): List<Cell> = audio.ringingLoops().map { checkNotNull(cellOf(it)) { "Sound $it loops but is no pad's loop" } }
 
     private fun cellOf(soundId: Int): Cell? {

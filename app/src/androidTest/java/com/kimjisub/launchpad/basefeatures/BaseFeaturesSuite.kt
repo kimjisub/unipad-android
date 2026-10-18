@@ -15,6 +15,7 @@ import org.junit.runners.Suite
     MouseInputTest::class,
     MixedPointerInputTest::class,
     HeldPadLayoutChangeTest::class,
+    HeldPadLeavingScreenTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
     StoreDownloadTest::class,

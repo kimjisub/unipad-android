@@ -10,13 +10,13 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Decodes the real fixture WAVs, records the actual runner requests, and never opens a speaker. */
 class RecordingAudio : SoundRunner.Engine {
     val plays = CopyOnWriteArrayList<Int>()
+    val loops = CopyOnWriteArrayList<Int>()
+    val stoppedVoices = CopyOnWriteArrayList<Int>()
     val loaded = ConcurrentHashMap<String, Int>()
     val silences = AtomicInteger()
     val stops = AtomicInteger()
     val starts = AtomicInteger()
     private val nextId = AtomicInteger()
-    private val loops = mutableListOf<Int>()
-    private val stoppedVoices = mutableSetOf<Int>()
     private var silencedThrough = 0
     private val decodedFiles = ConcurrentHashMap<OboeAudioEngine.DecodedAudio, String>()
     override fun start(): Boolean {
@@ -34,14 +34,22 @@ class RecordingAudio : SoundRunner.Engine {
     override fun unloadAll() = Unit
     /** The stop key of a voice is its 1-based position in [plays]. */
     @Synchronized override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-        plays += soundId
         loops += loop
+        plays += soundId
         return plays.size
     }
     @Synchronized override fun stopVoice(stopKey: Int) { stoppedVoices += stopKey }
     @Synchronized override fun stopAllVoices() {
         silencedThrough = plays.size
         silences.incrementAndGet()
+    }
+
+    /** Clears request history after the previous play screen has closed. */
+    @Synchronized fun resetPlaybackRequests() {
+        plays.clear()
+        loops.clear()
+        stoppedVoices.clear()
+        silencedThrough = 0
     }
 
     /** Sound IDs of the infinite loops (`loop == -1`) started and not stopped since. */

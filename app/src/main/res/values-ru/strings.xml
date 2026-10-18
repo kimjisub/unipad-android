@@ -35,6 +35,7 @@
 	<string name="menu">Меню</string>
 	<string name="website">Веб-сайт</string>
 	<string name="measuring">Измерение…</string>
+	<string name="unknownCount">Неизвестно</string>
 	<string name="general">Общие</string>
 	<string name="notice">Уведомление</string>
 	<string name="newUniPack">Новый UniPack</string>
@@ -93,6 +94,19 @@
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
 	<string name="proLightMode">Режим Pro Light</string>
+	<string name="play_section_play_mode">Режим игры</string>
+	<string name="play_section_performance">Исполнение</string>
+	<string name="play_section_display">Экран</string>
+	<string name="play_section_tools">Инструменты</string>
+	<string name="autoMapping">Авто-маппинг</string>
+	<string name="autoMappingRunning">Авто-маппинг…</string>
+	<string name="play_info_untitled">Без названия</string>
+	<plurals name="play_info_size_chains">
+		<item quantity="one">"%1$d×%2$d  ·  %3$d цепочка"</item>
+		<item quantity="few">"%1$d×%2$d  ·  %3$d цепочки"</item>
+		<item quantity="many">"%1$d×%2$d  ·  %3$d цепочек"</item>
+		<item quantity="other">"%1$d×%2$d  ·  %3$d цепочки"</item>
+	</plurals>
 
 	<!--Version-->
 
@@ -255,6 +269,8 @@
 	<string name="backup_grant_access">Подключить папку резервного копирования</string>
 	<string name="backup_revoke">Отключить папку резервного копирования</string>
 	<string name="backup_invalid_folder">Выберите папку Documents/Unipad</string>
+	<string name="backup_permission_refused">UniPad не удалось сохранить доступ к этой папке. Выберите Documents/Unipad ещё раз.</string>
+	<string name="picker_unavailable">На этом устройстве нет приложения для выбора файлов или папок.</string>
 	<string name="backup_backup_button">Резервное копирование</string>
 	<string name="backup_backup_description">Копировать UniPacks в папку резервного копирования</string>
 	<string name="backup_restore_button">Восстановить</string>

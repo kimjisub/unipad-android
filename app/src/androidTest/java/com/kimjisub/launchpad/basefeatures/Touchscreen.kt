@@ -5,21 +5,31 @@ import android.hardware.input.InputManager
 import android.os.ParcelFileDescriptor
 import android.view.Surface
 import java.io.OutputStream
+import java.util.UUID
 
 /**
  * A second touchscreen, created as a kernel input device with the platform `uinput` shell tool, for
  * a finger that must come from another device than the [Mouse]. Events injected through
- * UiAutomation all arrive as one device, so the system ends a held injected mouse press as soon as
- * an injected finger lands; a real mouse and touchscreen are two devices. Positions are in screen
+ * UiAutomation all arrive as one device (`-1`). With a held injected mouse press, API 35 ends that
+ * press as soon as an injected finger lands, and API 37 refuses the finger ("Invalid DOWN event -
+ * pointers already down"); a real mouse and touchscreen are two devices. Positions are in screen
  * coordinates, as with [Fingers]; the device reports them in the display's natural orientation.
  */
-class Touchscreen(private val screen: FeatureScreen) : AutoCloseable {
-    private val streams: Array<ParcelFileDescriptor> = screen.instrumentation.uiAutomation.executeShellCommandRwe("uinput -")
-    private val commands: OutputStream = ParcelFileDescriptor.AutoCloseOutputStream(streams[1])
+class Touchscreen(
+    private val screen: FeatureScreen,
+    private val findDevice: (InputManager, String) -> Int? = { inputs, name ->
+        inputs.inputDeviceIds.firstOrNull { inputs.getInputDevice(it)?.name == name }
+    },
+) : AutoCloseable {
     private val natural: Point = screen.onMain {
         val mode = screen.resumed().display!!.mode
         Point(mode.physicalWidth, mode.physicalHeight)
     }
+    // Android groups input nodes sharing a physical port, even if their names differ.
+    private val name = "UniPad test touchscreen ${UUID.randomUUID()}"
+    private val streams: Array<ParcelFileDescriptor> = screen.instrumentation.uiAutomation.executeShellCommandRwe("uinput -")
+    private val commands: OutputStream = ParcelFileDescriptor.AutoCloseOutputStream(streams[1])
+    private var closed = false
     private val slots = mutableListOf<Int>()
     private var nextTrackingId = 1
 
@@ -27,22 +37,27 @@ class Touchscreen(private val screen: FeatureScreen) : AutoCloseable {
     val deviceId: Int
 
     init {
-        val abs = listOf(ABS_X to natural.x, ABS_Y to natural.y, ABS_MT_SLOT to SLOTS, ABS_MT_POSITION_X to natural.x,
-            ABS_MT_POSITION_Y to natural.y, ABS_MT_TRACKING_ID to 65536)
-        send("""{"id":1,"command":"register","name":"$NAME","vid":6353,"pid":45057,"bus":"usb","configuration":[""" +
-            """{"type":$UI_SET_EVBIT,"data":[$EV_KEY,$EV_ABS]},{"type":$UI_SET_KEYBIT,"data":[$BTN_TOUCH]},""" +
-            """{"type":$UI_SET_ABSBIT,"data":[${abs.joinToString(",") { it.first.toString() }}]},""" +
-            """{"type":$UI_SET_PROPBIT,"data":[$INPUT_PROP_DIRECT]}],"abs_info":[""" +
-            abs.joinToString(",") { (code, size) ->
-                """{"code":$code,"info":{"value":0,"minimum":0,"maximum":${size - 1},"fuzz":0,"flat":0,"resolution":0}}"""
-            } + "]}")
-        val inputs = screen.context.getSystemService(InputManager::class.java)
-        var found: Int? = null
-        screen.await("Virtual touchscreen did not appear") {
-            found = inputs.inputDeviceIds.firstOrNull { inputs.getInputDevice(it)?.name == NAME }
-            found != null
+        try {
+            val abs = listOf(ABS_X to natural.x, ABS_Y to natural.y, ABS_MT_SLOT to SLOTS, ABS_MT_POSITION_X to natural.x,
+                ABS_MT_POSITION_Y to natural.y, ABS_MT_TRACKING_ID to 65536)
+            send("""{"id":1,"command":"register","name":"$name","port":"$name","vid":6353,"pid":45057,"bus":"usb","configuration":[""" +
+                """{"type":$UI_SET_EVBIT,"data":[$EV_KEY,$EV_ABS]},{"type":$UI_SET_KEYBIT,"data":[$BTN_TOUCH]},""" +
+                """{"type":$UI_SET_ABSBIT,"data":[${abs.joinToString(",") { it.first.toString() }}]},""" +
+                """{"type":$UI_SET_PROPBIT,"data":[$INPUT_PROP_DIRECT]}],"abs_info":[""" +
+                abs.joinToString(",") { (code, size) ->
+                    """{"code":$code,"info":{"value":0,"minimum":0,"maximum":${size - 1},"fuzz":0,"flat":0,"resolution":0}}"""
+                } + "]}")
+            val inputs = screen.context.getSystemService(InputManager::class.java)
+            var found: Int? = null
+            screen.await("Virtual touchscreen did not appear") {
+                found = findDevice(inputs, name)
+                found != null
+            }
+            deviceId = found!!
+        } catch (failure: Throwable) {
+            try { closeStreams() } catch (cleanup: Throwable) { failure.addSuppressed(cleanup) }
+            throw failure
         }
-        deviceId = found!!
     }
 
     /** Puts a finger down and returns its slot, which the app sees as its pointer ID. */
@@ -64,10 +79,22 @@ class Touchscreen(private val screen: FeatureScreen) : AutoCloseable {
 
     /** Lifts any finger left down and removes the device. */
     override fun close() {
-        slots.toList().forEach(::up)
-        commands.close()
-        streams[0].close()
-        streams[2].close()
+        if (closed) return
+        try {
+            slots.toList().forEach(::up)
+        } finally {
+            closeStreams()
+        }
+    }
+
+    /** Closing stdin ends uinput and removes its device, including failed registration. */
+    private fun closeStreams() {
+        closed = true
+        try {
+            commands.close()
+        } finally {
+            try { streams[0].close() } finally { streams[2].close() }
+        }
     }
 
     private fun raw(at: Point): Pair<Int, Int> = when (val rotation = screen.onMain { screen.resumed().display!!.rotation }) {
@@ -86,7 +113,6 @@ class Touchscreen(private val screen: FeatureScreen) : AutoCloseable {
     }
 
     private companion object {
-        const val NAME = "UniPad test touchscreen"
         const val SLOTS = 10
         // linux/uinput.h, linux/input.h and linux/input-event-codes.h
         const val UI_SET_EVBIT = 100

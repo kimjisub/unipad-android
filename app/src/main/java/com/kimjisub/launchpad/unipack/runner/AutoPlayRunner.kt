@@ -82,8 +82,13 @@ class AutoPlayRunner(
 
 	interface Listener {
 		fun onStart()
-		fun onPadTouchOn(x: Int, y: Int)
-		fun onPadTouchOff(x: Int, y: Int)
+		/**
+		 * Presses (x, y) with the pad's [num]th sound and light of chain [c]. [atMs] is when the pack places
+		 * the press, on the SystemClock.elapsedRealtime clock. The order is set where the press is handled,
+		 * after any chain change sent before it, whose reset would otherwise undo it.
+		 */
+		fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long)
+		fun onPadTouchOff(x: Int, y: Int, atMs: Long)
 		fun onChainChange(c: Int)
 		fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long)
 		fun onGuidePadOff(x: Int, y: Int)
@@ -122,6 +127,9 @@ class AutoPlayRunner(
 	}
 
 	private fun guideKey(x: Int, y: Int) = x * 256 + y
+
+	/** A guide pad on a chain the user cannot select would be waited for forever, so it is passed over. */
+	private fun isSelectable(c: Int) = c in chain.range
 
 	private fun buildGuideTimeline(autoPlay: AutoPlay): List<GuideEvent> {
 		val events = mutableListOf<GuideEvent>()
@@ -218,6 +226,10 @@ class AutoPlayRunner(
 									while (guideIndex < guideTimeline.size) {
 										val event = guideTimeline[guideIndex]
 										if (event.timeMs <= elapsed + GUIDE_LOOKAHEAD_MS) {
+											if (!isSelectable(event.chain)) {
+												guideIndex++
+												continue
+											}
 											if (event.chain != chain.value) {
 												// Chain mismatch — pause and show chain indicator
 												waitingForChain = event.chain
@@ -271,16 +283,14 @@ class AutoPlayRunner(
 										is AutoPlay.Element.On -> {
 											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												unipack.soundPush(element.currChain, element.x, element.y, element.num)
-												unipack.ledPush(element.currChain, element.x, element.y, element.num)
-												listener.onPadTouchOn(element.x, element.y)
+												listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
 											}
 										}
 
 										is AutoPlay.Element.Off -> {
 											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												listener.onPadTouchOff(element.x, element.y)
+												listener.onPadTouchOff(element.x, element.y, startTime + delayAccum)
 											}
 										}
 										is AutoPlay.Element.Delay -> {
@@ -440,6 +450,10 @@ class AutoPlayRunner(
 			val (index, element) = elementAtProgress(autoPlay) ?: break
 			when (element) {
 				is AutoPlay.Element.On -> {
+					if (!isSelectable(element.currChain)) {
+						advanceProgressFrom(index)
+						continue@scanLoop
+					}
 					if (chain.value != element.currChain) {
 						if (newPending.isEmpty()) {
 							waitingForChain = element.currChain

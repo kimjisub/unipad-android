@@ -111,11 +111,15 @@ class UsageAnalyticsTest {
 		ScreenOrientation.entries.mapTo(values) { it.value }
 		ScreenShortSide.entries.mapTo(values) { it.value }
 		WindowMode.entries.mapTo(values) { it.value }
+		InputSource.entries.mapTo(values) { it.value }
 
 		sink.analytics.packImport(PackImportSource.STORE).failed(UsageErrorType.NOT_FOUND)
-		val session = sink.analytics.newPlaySession()
-		session.screenLayoutChanged(ScreenLayout.of(1_280, 800, true))
-		session.loadStarted(); session.loadSucceeded(); session.playTriggered(PlayTrigger.PAD); session.ended()
+		for (source in InputSource.entries) {
+			val session = sink.analytics.newPlaySession()
+			session.screenLayoutChanged(ScreenLayout.of(1_280, 800, true))
+			session.loadStarted(); session.loadSucceeded(); session.playTriggered(PlayTrigger.PAD, source); session.ended()
+		}
+		assertEquals(listOf("screen", "midi"), sink.named(UsageEvent.PLAY_FIRST_INPUT).map { it.parameters[UsageParam.INPUT_SOURCE] })
 
 		for (event in sink.events) {
 			assertTrue("$event", event.parameters.keys.all { it in UsageParam.allowed })
@@ -124,7 +128,7 @@ class UsageAnalyticsTest {
 		assertEquals(
 			setOf(
 				"result", "import_source", "error_type", "duration_bucket", "trigger",
-				"orientation", "screen_short_side", "window_mode",
+				"orientation", "screen_short_side", "window_mode", "input_source",
 			),
 			UsageParam.allowed,
 		)
@@ -142,7 +146,7 @@ class UsageAnalyticsTest {
 		val session = analytics.newPlaySession()
 		session.loadStarted()
 		session.loadSucceeded()
-		session.playTriggered(PlayTrigger.PAD)
+		session.playTriggered(PlayTrigger.PAD, InputSource.SCREEN)
 		session.ended()
 
 		assertEquals(listOf(UsageEvent.PACK_IMPORT, UsageEvent.PACK_LOAD, UsageEvent.PLAY_START, UsageEvent.PLAY_FIRST_INPUT, UsageEvent.PLAY_END), calls)

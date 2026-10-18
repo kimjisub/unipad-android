@@ -15,6 +15,7 @@ import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.Reader
+import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -30,8 +31,8 @@ private fun String.trimLine(): String = trim { it.isWhitespace() || it == '\uFEF
 
 /**
  * A reader that honours a BOM: UTF-16 (FE FF / FF FE) as iOS does, UTF-8 with the BOM skipped,
- * otherwise UTF-8 (Android's platform default). A UTF-16 info used to decode to garbage and reject
- * the pack here while it played on iOS.
+ * otherwise UTF-8 or, for text that is not valid UTF-8, CP949 ([LegacyText]). A UTF-16 info used to
+ * decode to garbage and reject the pack here while it played on iOS.
  */
 private fun bomAwareReader(input: InputStream): Reader {
 	val buffered = BufferedInputStream(input)
@@ -44,7 +45,10 @@ private fun bomAwareReader(input: InputStream): Reader {
 		n >= 2 && b[0] == 0xFE.toByte() && b[1] == 0xFF.toByte() -> { charset = StandardCharsets.UTF_16BE; skip = 2 }
 		n >= 2 && b[0] == 0xFF.toByte() && b[1] == 0xFE.toByte() -> { charset = StandardCharsets.UTF_16LE; skip = 2 }
 		n >= 3 && b[0] == 0xEF.toByte() && b[1] == 0xBB.toByte() && b[2] == 0xBF.toByte() -> { charset = StandardCharsets.UTF_8; skip = 3 }
-		else -> { charset = StandardCharsets.UTF_8; skip = 0 }
+		else -> {
+			buffered.reset()
+			return StringReader(LegacyText.decode(buffered.use { it.readBytes() }))
+		}
 	}
 	buffered.reset()
 	var toSkip = skip.toLong()
@@ -136,6 +140,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	}
 
 	override fun checkFile() {
+		folderModified = rootFolder.lastModified()
 		rootFolder.listFiles()?.forEach {
 			when (it.name.lowercase()) {
 				"info" -> infoFile = if (it.isFile) it else null
@@ -172,25 +177,27 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 			criticalError = true
 			return
 		}
+		var buttonXValue: String? = null
+		var buttonYValue: String? = null
 		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			while (true) {
 				val s = reader.readLine()?.trimLine() ?: break
-				if (s.isEmpty()) continue
+				// A line without "=" (often a wrapped title or description) is skipped without a
+				// warning, as on iOS and the web (info.mdx).
+				val separator = s.indexOf('=')
+				if (separator < 0) continue
+				val key = s.substring(0, separator).trim()
+				val value = s.substring(separator + 1).trim()
 				try {
-					val split = s.split("=", limit = 2)
-					val key = split[0].trim()
-					val value = split[1].trim()
 					when (key) {
 						"title" -> title = value
 						"producerName" -> producerName = value
-						"buttonX" -> buttonX = value.toInt()
-						"buttonY" -> buttonY = value.toInt()
+						"buttonX" -> buttonXValue = value
+						"buttonY" -> buttonYValue = value
 						"chain" -> chain = value.toInt()
 						"squareButton" -> squareButton = value == "true"
 						"website" -> website = value
 					}
-				} catch (e: IndexOutOfBoundsException) {
-					addErr("info : [$s] format is not found")
 				} catch (e: NumberFormatException) {
 					// Used to propagate out of load(): the pack vanished from the library with no
 					// message (WorkspaceManager's catch). iOS/web record it and carry on.
@@ -198,10 +205,15 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 				}
 			}
 		}
+		val gridX = gridSize("buttonX", buttonXValue)
+		val gridY = gridSize("buttonY", buttonYValue)
+		buttonX = gridX ?: 0
+		buttonY = gridY ?: 0
 		if (title.isEmpty()) addErr("info : title was missing")
 		if (producerName.isEmpty()) addErr("info : producerName was missing")
-		if (buttonX == 0) addErr("info : buttonX was missing")
-		if (buttonY == 0) addErr("info : buttonY was missing")
+		if (gridX == 0) addErr("info : buttonX was missing")
+		if (gridY == 0) addErr("info : buttonY was missing")
+		if (gridX == null || gridY == null) criticalError = true
 		if (chain == 0) addErr("info : chain was missing")
 		if (chain !in 1..24) {
 			addErr("info : chain out of range")
@@ -215,9 +227,22 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		}
 	}
 
+	/**
+	 * The last [value] given for [key], or 0 when the key is absent. A value that is not an integer
+	 * (`buttonX=abc`) refuses the pack (info.mdx) and gives null; it used to be read as 0 and opened
+	 * a pack with no pads.
+	 */
+	private fun gridSize(key: String, value: String?): Int? {
+		if (value == null) return 0
+		return value.toIntOrNull() ?: run {
+			addErr("info : $key is not a number")
+			null
+		}
+	}
+
 	private fun keySound() {
 		val keySoundFile = keySoundFile ?: return
-		val soundsDir = soundsDir
+		val soundFiles = soundsDir?.let(::SoundFileIndex)
 		val table = Array(chain) {
 			Array(buttonX) {
 				arrayOfNulls<ArrayDeque<Sound>>(buttonY)
@@ -261,6 +286,12 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					addErr("keySound : [$s] format is incorrect")
 					continue
 				}
+				// A chain the pack lacks moves to the nearest chain it has, as on iOS and the web. Kept raw,
+				// it became autoPlay's current chain and practice mode lit a button past the round button table.
+				if (wormhole != Sound.NO_WORMHOLE && wormhole !in 0 until chain) {
+					addErr("keySound : [$s] wormhole is incorrect")
+					wormhole = wormhole.coerceIn(0, chain - 1)
+				}
 				if (c < 0 || c >= chain)
 					addErr("keySound : [$s] chain is incorrect")
 				else if (x < 0 || x >= buttonX)
@@ -269,16 +300,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					"keySound : [$s] y is incorrect"
 				) else {
 					try {
-						if (soundsDir == null) {
+						if (soundFiles == null) {
 							addErr("keySound : [$s] sounds directory not found")
 							continue
 						}
-						val soundFile = File(soundsDir, soundURL)
-						val sound = Sound(soundFile, loop, wormhole)
-						if (!sound.file.isFile) {
+						val soundFile = soundFiles.find(soundURL)
+						if (soundFile == null) {
 							addErr("keySound : [$s] sound was not found")
 							continue
 						}
+						val sound = Sound(soundFile, loop, wormhole)
 						if (table[c][x][y] == null)
 							table[c][x][y] = ArrayDeque()
 						sound.num = table[c][x][y]?.size ?: 0
@@ -472,6 +503,22 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	private fun readAutoPlay(autoPlayFile: File, autoPlay: AutoPlay) {
 		val map = Array(buttonX) { IntArray(buttonY) }
 		var currChain = 0
+
+		// `touch` is `on` + `off` in one line: it releases the pad on the chain it pressed, then follows
+		// the sound's wormhole as `on` does.
+		fun press(x: Int, y: Int, release: Boolean) {
+			autoPlay.elements.add(AutoPlay.Element.On(x, y, currChain, map[x][y]))
+			if (release) autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
+			val sound = soundGet(currChain, x, y, map[x][y])
+			map[x][y]++
+			if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
+				autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
+					currChain = it
+				}))
+				map.forEach { row -> row.fill(0) }
+			}
+		}
+
 		val inputStream = try {
 			FileInputStream(autoPlayFile)
 		} catch (e: FileNotFoundException) {
@@ -550,24 +597,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					continue
 				}
 				when (option) {
-					"on", "o" -> {
-						autoPlay.elements.add(
-							AutoPlay.Element.On(
-								x,
-								y,
-								currChain,
-								map[x][y]
-							)
-						)
-						val sound = soundGet(currChain, x, y, map[x][y])
-						map[x][y]++
-						if (sound != null && sound.wormhole != Sound.NO_WORMHOLE) {
-							autoPlay.elements.add(AutoPlay.Element.Chain(sound.wormhole.also {
-								currChain = it
-							}))
-							map.forEach { row -> row.fill(0) }
-						}
-					}
+					"on", "o" -> press(x, y, release = false)
 
 					"off", "f" -> autoPlay.elements.add(
 						AutoPlay.Element.Off(
@@ -577,18 +607,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						)
 					)
 
-					"touch", "t" -> {
-						autoPlay.elements.add(
-							AutoPlay.Element.On(
-								x,
-								y,
-								currChain,
-								map[x][y]
-							)
-						)
-						autoPlay.elements.add(AutoPlay.Element.Off(x, y, currChain))
-						map[x][y]++
-					}
+					"touch", "t" -> press(x, y, release = true)
 
 					"chain", "c" -> {
 						autoPlay.elements.add(AutoPlay.Element.Chain(chain.also {
