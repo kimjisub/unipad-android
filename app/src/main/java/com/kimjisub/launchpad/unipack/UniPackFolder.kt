@@ -70,11 +70,18 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		}
 
 		/**
+		 * A 1-based number of a pack as a 0-based one. A number outside 32 bits throws
+		 * NumberFormatException, a format error. The smallest one stays itself: 1 less would wrap to the
+		 * largest, so a chain move to it went to the last chain and a loop count to it never ended.
+		 */
+		fun zeroBased(token: String): Int = token.toInt().let { if (it == Int.MIN_VALUE) it else it - 1 }
+
+		/**
 		 * `mc 1`..`mc 32` as a round LED index. Anything else is dropped without a warning, as the drivers
 		 * dropped it before; index 32 would otherwise light the logo.
 		 */
 		fun roundLedIndex(token: String): Int? =
-			(token.toInt() - 1).takeIf { it in 0 until DriverRef.ROUND_BUTTON_COUNT }
+			zeroBased(token).takeIf { it in 0 until DriverRef.ROUND_BUTTON_COUNT }
 
 		/**
 		 * The colour tokens of a logo line, read as iOS reads them: `o l color`, `o l auto velocity`, and the
@@ -270,14 +277,14 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 				var wormhole = Sound.NO_WORMHOLE
 				try {
 					if (split.size <= 2) continue
-					c = split[0].toInt() - 1
-					x = split[1].toInt() - 1
-					y = split[2].toInt() - 1
+					c = zeroBased(split[0])
+					x = zeroBased(split[1])
+					y = zeroBased(split[2])
 					soundURL = split[3]
-					if (split.size >= 5) loop = split[4].toInt() - 1
+					if (split.size >= 5) loop = zeroBased(split[4])
 					if (split.size >= 6) {
-						loop = split[4].toInt() - 1
-						wormhole = split[5].toInt() - 1
+						loop = zeroBased(split[4])
+						wormhole = zeroBased(split[5])
 					}
 				} catch (e: NumberFormatException) {
 					addErr("keySound : [$s] format is incorrect")
@@ -346,9 +353,9 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					var loop = 1
 					try {
 						if (split1.size <= 2) continue
-						c = split1[0].toInt() - 1
-						x = split1[1].toInt() - 1
-						y = split1[2].toInt() - 1
+						c = zeroBased(split1[0])
+						x = zeroBased(split1[1])
+						y = zeroBased(split1[2])
 						if (split1.size >= 4) loop = split1[3].toInt()
 						if (c < 0 || c >= chain) {
 							addErr("keyLed : [$fileName] chain is incorrect")
@@ -404,8 +411,8 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 											ledY = DriverRef.LOGO_FUNCTION_KEY
 											colorTokens = logoColorTokens(split2)
 										} else {
-											ledX = xToken.toInt() - 1
-											ledY = split2[2].toInt() - 1
+											ledX = zeroBased(xToken)
+											ledY = zeroBased(split2[2])
 											colorTokens = split2.drop(3)
 										}
 										when (colorTokens.size) {
@@ -431,14 +438,14 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 											ledX = -1
 											ledY = DriverRef.LOGO_FUNCTION_KEY
 										} else {
-											ledX = xToken.toInt() - 1
-											ledY = split2[2].toInt() - 1
+											ledX = zeroBased(xToken)
+											ledY = zeroBased(split2[2])
 										}
 									}
 
 									"delay", "d" -> ledDelay = split2[1].toInt()
 									"chain", "c" -> {
-										val chainValue = split2[1].toInt() - 1
+										val chainValue = zeroBased(split2[1])
 										ledList.add(LedAnimation.LedEvent.Chain(chainValue))
 										continue@loop
 									}
@@ -539,8 +546,8 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					option = split[0]
 					when (option) {
 						"on", "o" -> {
-							x = split[1].toInt() - 1
-							y = split[2].toInt() - 1
+							x = zeroBased(split[1])
+							y = zeroBased(split[2])
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -552,8 +559,8 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						}
 
 						"off", "f" -> {
-							x = split[1].toInt() - 1
-							y = split[2].toInt() - 1
+							x = zeroBased(split[1])
+							y = zeroBased(split[2])
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -564,8 +571,8 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						}
 
 						"touch", "t" -> {
-							x = split[1].toInt() - 1
-							y = split[2].toInt() - 1
+							x = zeroBased(split[1])
+							y = zeroBased(split[2])
 							if (x < 0 || x >= buttonX) {
 								addErr("autoPlay : [$s] x is incorrect")
 								continue@loop
@@ -576,7 +583,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						}
 
 						"chain", "c" -> {
-							chain = split[1].toInt() - 1
+							chain = zeroBased(split[1])
 							if (chain < 0 || chain >= this.chain) {
 								addErr("autoPlay : [$s] chain is incorrect")
 								continue@loop
