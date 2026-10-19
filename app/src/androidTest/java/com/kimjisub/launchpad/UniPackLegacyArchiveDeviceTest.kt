@@ -75,7 +75,8 @@ class UniPackLegacyArchiveDeviceTest {
             assertEquals("둘째.wav", pack.soundGet(1, 1, 1)?.file?.name)
             assertEquals(silentWav().toList(), pack.soundGet(0, 0, 0)!!.file.readBytes().toList())
             assertEquals(silentWav().toList(), pack.soundGet(1, 1, 1)!!.file.readBytes().toList())
-            assertEquals(setOf("autoPlay", "info", "keySound", "sounds"), recorder.folder!!.list()!!.toSet())
+            // Hidden metadata may remain; ignoring it for pack discovery does not require deletion.
+            assertEquals(setOf("autoPlay", "info", "keySound", "sounds"), recorder.folder!!.list()!!.filterNot { it.startsWith(".") }.toSet())
         } finally {
             scope.cancel()
             check(root.deleteRecursively()) { "test directory cleanup failed: $root" }

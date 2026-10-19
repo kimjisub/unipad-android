@@ -49,7 +49,7 @@ All tones derive from the existing 0.3-second, 44.1 kHz, half-scale 440 Hz PCM W
 The OGG fixture is stereo (the other fixtures are mono), generated using:
 
 ```sh
-ffmpeg -i tone.wav -ac 2 -c:a vorbis -strict experimental -b:a 128k tone.ogg
+ffmpeg -i tone.wav -af 'pan=stereo|c0=c0|c1=c0' -c:a vorbis -strict experimental -b:a 128k tone.ogg
 ```
 
 Both channels are sourced from the same mono tone. Decoder assertions check the channel
