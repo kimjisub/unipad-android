@@ -103,13 +103,13 @@ class PackValidationMemoryDeviceTest {
         assertTrue("import did not finish", result.finished.await(TIMEOUT_MS, TimeUnit.MILLISECONDS))
         awaitCleanup(scope)
         assertNull(result.error)
-        assertEquals(KEY_SOUND_BYTES, File(requireNotNull(result.folder), "keySound").length())
+        assertEquals(OVERSIZED_LINE_BYTES, File(requireNotNull(result.folder), "keySound").length())
         assertEquals(1, workspace.list()!!.size)
         println("400 MiB keySound: file import retained its metadata-only validation, no staging files")
     }
 
-    @Test
     @SdkSuppress(minSdkVersion = 29) // ContentResolver.wrap for the read-only file provider.
+    @Test
     fun oversizedImportedInfoFailsWithoutCrashingOrLeavingFiles() = withPack("info") { archive, workspace, scope ->
         val label = InstrumentationRegistry.getArguments().getString("memoryEvidence")
         if (label != null) assertTrue(TestCaptures.screenshot(device, "pack-memory/$label-import-start.png"))
@@ -184,7 +184,7 @@ class PackValidationMemoryDeviceTest {
                 zip.write(byteArrayOf(0))
                 zip.closeEntry()
             }
-            println("Fixture: $oversizedEntry=$KEY_SOUND_BYTES bytes in one line, zip=${archive.length()} bytes")
+            println("Fixture: $oversizedEntry=$OVERSIZED_LINE_BYTES bytes in one line, zip=${archive.length()} bytes")
             verify(archive, workspace, scope)
         } finally {
             scope.cancel()
@@ -218,7 +218,7 @@ class PackValidationMemoryDeviceTest {
 
     private companion object {
         const val TIMEOUT_MS = 120_000L
-        const val KEY_SOUND_BYTES = 400L * 1024 * 1024
+        const val OVERSIZED_LINE_BYTES = 400L * 1024 * 1024
         const val TITLE = "Large pack.zip"
     }
 }
