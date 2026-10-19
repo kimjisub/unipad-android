@@ -3,9 +3,18 @@ package com.kimjisub.launchpad
 import android.Manifest
 import android.app.Notification
 import android.app.NotificationManager
+import android.content.ContentProvider
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.content.ContextWrapper
+import android.database.Cursor
+import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
+import android.provider.OpenableColumns
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.By
@@ -82,24 +91,7 @@ class PackValidationMemoryDeviceTest {
         assertTrue("${result.error?.cause}", result.error?.cause is OutOfMemoryError)
         assertNull(result.folder)
         assertEquals(emptyList<String>(), workspace.list()!!.toList())
-        val manager = context.getSystemService(NotificationManager::class.java)
-        val end = System.currentTimeMillis() + TIMEOUT_MS
-        var failure: Notification?
-        do {
-            failure = manager.activeNotifications.map { it.notification }.singleOrNull {
-                it.extras.getString(Notification.EXTRA_TITLE) == TITLE &&
-                    it.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() == context.getString(R.string.failed)
-            }
-            if (failure == null) Thread.sleep(100)
-        } while (failure == null && System.currentTimeMillis() < end)
-        assertNotNull("failure notification missing", failure)
-        assertEquals(0, failure!!.flags and Notification.FLAG_ONGOING_EVENT)
-        if (label != null) {
-            assertTrue(device.openNotification())
-            assertTrue(device.wait(Until.hasObject(By.text(TITLE)), TIMEOUT_MS))
-            assertTrue(TestCaptures.screenshot(device, "pack-memory/$label-failed.png"))
-            device.pressBack()
-        }
+        assertFailureNotification(TITLE, label)
         println("400 MiB keySound: failure callback, finished failure notification, empty workspace, process survived")
     }
 
@@ -116,7 +108,63 @@ class PackValidationMemoryDeviceTest {
         println("400 MiB keySound: file import retained its metadata-only validation, no staging files")
     }
 
-    private fun withPack(verify: (File, File, CoroutineScope) -> Unit) {
+    @Test
+    @SdkSuppress(minSdkVersion = 29) // ContentResolver.wrap for the read-only file provider.
+    fun oversizedImportedInfoFailsWithoutCrashingOrLeavingFiles() = withPack("info") { archive, workspace, scope ->
+        val label = InstrumentationRegistry.getArguments().getString("memoryEvidence")
+        if (label != null) assertTrue(TestCaptures.screenshot(device, "pack-memory/$label-import-start.png"))
+        val provider = object : ContentProvider() {
+            override fun onCreate() = true
+            override fun getType(uri: Uri) = "application/zip"
+            override fun query(uri: Uri, projection: Array<out String>?, selection: String?,
+                               selectionArgs: Array<out String>?, sortOrder: String?): Cursor =
+                MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)).apply {
+                    addRow(arrayOf<Any>(TITLE, archive.length()))
+                }
+            override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor =
+                ParcelFileDescriptor.open(archive, ParcelFileDescriptor.MODE_READ_ONLY)
+            override fun insert(uri: Uri, values: ContentValues?): Uri = error("read only")
+            override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = error("read only")
+            override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int = error("read only")
+        }
+        val importContext = object : ContextWrapper(context) {
+            override fun getContentResolver(): ContentResolver = ContentResolver.wrap(provider)
+        }
+        val result = Result()
+        UniPackImporter(importContext, Uri.parse("content://pack-memory/large-pack.zip"), { workspace }, result,
+            UsageAnalytics { _, _ -> }.packImport(PackImportSource.FILE), scope)
+        assertTrue("import did not finish", result.finished.await(TIMEOUT_MS, TimeUnit.MILLISECONDS))
+        awaitCleanup(scope)
+        assertTrue("${result.error}", result.error is UniPackImporter.UniPackCriticalErrorException)
+        assertTrue("${result.error?.cause}", result.error?.cause is OutOfMemoryError)
+        assertNull(result.folder)
+        assertEquals(emptyList<String>(), workspace.list()!!.toList())
+        assertFailureNotification(TITLE, label?.let { "$it-import" })
+        println("400 MiB info: failure callback, finished failure notification, empty workspace, process survived")
+    }
+
+    private fun assertFailureNotification(title: String, label: String?) {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        val end = System.currentTimeMillis() + TIMEOUT_MS
+        var failure: Notification?
+        do {
+            failure = manager.activeNotifications.map { it.notification }.singleOrNull {
+                it.extras.getString(Notification.EXTRA_TITLE) == title &&
+                    it.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() == context.getString(R.string.failed)
+            }
+            if (failure == null) Thread.sleep(100)
+        } while (failure == null && System.currentTimeMillis() < end)
+        assertNotNull("failure notification missing", failure)
+        assertEquals(0, failure!!.flags and Notification.FLAG_ONGOING_EVENT)
+        if (label != null) {
+            assertTrue(device.openNotification())
+            assertTrue(device.wait(Until.hasObject(By.text(title)), TIMEOUT_MS))
+            assertTrue(TestCaptures.screenshot(device, "pack-memory/$label-failed.png"))
+            device.pressBack()
+        }
+    }
+
+    private fun withPack(oversizedEntry: String = "keySound", verify: (File, File, CoroutineScope) -> Unit) {
         val root = File(context.cacheDir, "pack-memory").apply { deleteRecursively(); check(mkdirs()) }
         val workspace = File(root, "workspace").apply { check(mkdir()) }
         val archive = File(root, "large-pack.zip")
@@ -124,17 +172,19 @@ class PackValidationMemoryDeviceTest {
         try {
             ZipOutputStream(archive.outputStream().buffered()).use { zip ->
                 zip.putNextEntry(ZipEntry("info"))
-                zip.write("title=Large pack\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray())
+                val chunk = ByteArray(1024 * 1024) { 'a'.code.toByte() }
+                if (oversizedEntry == "info") repeat(400) { zip.write(chunk) }
+                else zip.write("title=Large pack\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n".toByteArray())
                 zip.closeEntry()
                 zip.putNextEntry(ZipEntry("keySound"))
-                val chunk = ByteArray(1024 * 1024) { 'a'.code.toByte() }
-                repeat(400) { zip.write(chunk) }
+                if (oversizedEntry == "keySound") repeat(400) { zip.write(chunk) }
+                else zip.write("1 1 1 a.wav\n".toByteArray())
                 zip.closeEntry()
                 zip.putNextEntry(ZipEntry("sounds/a.wav"))
                 zip.write(byteArrayOf(0))
                 zip.closeEntry()
             }
-            println("Fixture: keySound=$KEY_SOUND_BYTES bytes in one line, zip=${archive.length()} bytes")
+            println("Fixture: $oversizedEntry=$KEY_SOUND_BYTES bytes in one line, zip=${archive.length()} bytes")
             verify(archive, workspace, scope)
         } finally {
             scope.cancel()
