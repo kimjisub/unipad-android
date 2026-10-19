@@ -152,10 +152,17 @@ def main():
             if item['status'] == 'passed':
                 item['status'] = 'unverified'
             item['reasons'].append('A test command failed; see its exit code and original output')
+    logcat = args.output / 'diagnostics/logcat.txt'
+    probes = [line for line in logcat.read_text(errors='replace').splitlines()
+              if 'case-sensitive probe passed at ' in line] if logcat.exists() else []
+    if len(probes) < 3 and items['F-01']['status'] == 'passed':
+        items['F-01']['status'] = 'unverified'
+        items['F-01']['reasons'].append('Original case-sensitivity probe log is missing')
     fixtures = Path('app/src/androidTest/assets/audio-formats')
     report = {
         'schemaVersion': 1, 'platform': 'android', 'repositoryCommit': revision,
         'sourceDirty': bool(dirty), 'environment': environment,
+        'caseSensitivityProbeLog': probes,
         'grammar': {'version': args.grammar_version, 'revision': args.grammar_revision},
         'commonCorpus': {'sha256': None, 'reason': 'Standalone native fixtures; no shared corpus consumed'},
         'fixtureSha256': {path.name: sha256(path) for path in sorted(fixtures.iterdir()) if path.is_file()},
