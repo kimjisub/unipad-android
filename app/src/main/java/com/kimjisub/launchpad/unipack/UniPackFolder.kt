@@ -486,7 +486,9 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						)
 					)
 					ledTableCount++
-				} else addErr("keyLed : ${file.name} is not file")
+				} else if (!file.isDirectory) {
+					addErr("keyLed : ${file.name} is not file")
+				}
 			}
 		}
 	}
