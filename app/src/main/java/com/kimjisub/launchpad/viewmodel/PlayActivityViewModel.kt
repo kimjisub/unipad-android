@@ -488,8 +488,8 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	// Main-thread input ownership of each held pad (x, y): releasing one source must not release
-	// the other source's hold.
+	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
+	// independent; a manual release also clears auto play's hold.
 	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
 	@Volatile private var autoPlayInputGeneration = 0L

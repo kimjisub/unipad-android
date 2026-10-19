@@ -1,13 +1,7 @@
 package com.kimjisub.launchpad.basefeatures
 
-import android.content.Context
-import android.content.Intent
-import android.hardware.usb.UsbManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kimjisub.launchpad.midi.MidiConnection
-import com.kimjisub.launchpad.midi.driver.DriverRef
-import com.kimjisub.launchpad.midi.driver.LaunchpadS
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,21 +15,11 @@ class SharedMidiPadTest : HeldPadTest() {
 
     private fun sharedPad(controllerFirst: Boolean) {
         startHeld()
-        val driver = LaunchpadS()
-        val packets = java.util.concurrent.CopyOnWriteArrayList<List<Int>>()
-        val output = object : DriverRef.OnSendSignalListener {
-            override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
-                packets += listOf(cmd, sig, note, velocity).map { it.toInt() and 0xff }
-            }
-            override fun onSendRaw(messages: List<ByteArray>, cableNumber: Int) = Unit
-        }
-        val connection = screen.onMain {
-            MidiConnection.initConnection(Intent(), screen.context.getSystemService(Context.USB_SERVICE) as UsbManager, screen.context)
-            MidiConnection.attachTransport("Virtual Launchpad", driver, output)
-        }
+        val launchpad = VirtualLaunchpad(screen)
+        val packets = launchpad.packets
         val pad = Cell(2, 2)
         // Launchpad S note: row * 16 + column (the driver converts it to the grid coordinate).
-        fun midi(down: Boolean) = screen.onMain { driver.getSignal(9, -112, 34, if (down) 127 else 0) }
+        fun midi(down: Boolean) = screen.onMain { launchpad.driver.getSignal(9, -112, 34, if (down) 127 else 0) }
         val label = InstrumentationRegistry.getArguments().getString("captureLabel") ?: "after"
         val order = if (controllerFirst) "controller-first" else "screen-first"
         fun capture(stage: String) = screen.capture("shared-midi-$label-$order-$stage")
@@ -62,7 +46,7 @@ class SharedMidiPadTest : HeldPadTest() {
             capture("both-released")
         } finally {
             fingers.cancelRemaining()
-            screen.onMain { connection.close() }
+            launchpad.close()
         }
     }
 }
