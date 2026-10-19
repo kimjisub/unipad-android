@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
+import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
@@ -18,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -70,7 +72,7 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertTrue("Condition did not become true", check())
 	}
 
-	private fun start(keySound: String = "1 1 1 a.wav 0\n", sequence: String = "o 1 1\nd 60000\nf 1 1\n") {
+	private fun start(keySound: String = "1 1 1 a.wav 0\n", sequence: String = "o 1 1\nd 60000\nf 1 1\n", autoplay: Boolean = true) {
 		val folder = tmp.newFolder()
 		File(folder, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=2\nsquareButton=true\n")
 		File(folder, "sounds").mkdir()
@@ -82,9 +84,40 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		vm.initState()
 		vm.initPlayback()
 		await { !vm.soundLoadingActive && vm.unipack.soundGet(0, 0, 0)?.id == 1 }
-		vm.switchPlayMode(PlayMode.AutoPlay)
-		await { engine.playCount > 0 }
+		if (autoplay) {
+			vm.switchPlayMode(PlayMode.AutoPlay)
+			await { engine.playCount > 0 }
+		}
 	}
+
+	private fun sharedPadRelease(controllerFirst: Boolean, autoplay: Boolean) {
+		start(autoplay = autoplay)
+		vm.scbFeedbackLight.setChecked(true)
+		vm.padTouch(0, 0, true)
+		vm.controllerPadTouch(0, 0, true)
+		val held = engine.voices.toMap()
+		assertEquals(1, held.size)
+
+		if (controllerFirst) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
+		assertEquals("Releasing one input must keep the shared loop", held, engine.voices)
+		assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
+
+		if (controllerFirst) vm.padTouch(0, 0, false) else vm.controllerPadTouch(0, 0, false)
+		assertEquals(emptyMap<Int, Int>(), engine.voices)
+		assertNull(vm.channelManager.get(0, 0)?.channel)
+		if (autoplay) {
+			vm.autoPlayPause()
+			assertEquals(emptyMap<Int, Int>(), engine.voices)
+		}
+	}
+
+	@Test fun controllerReleaseKeepsThePadHeldOnScreen() = sharedPadRelease(controllerFirst = true, autoplay = false)
+
+	@Test fun screenReleaseKeepsThePadHeldOnController() = sharedPadRelease(controllerFirst = false, autoplay = false)
+
+	@Test fun lastScreenReleaseOverridesAutoplayAfterControllerRelease() = sharedPadRelease(controllerFirst = true, autoplay = true)
+
+	@Test fun lastControllerReleaseOverridesAutoplayAfterScreenRelease() = sharedPadRelease(controllerFirst = false, autoplay = true)
 
 	@Test fun disablingAutoplayStopsTheLoopItPressed() {
 		start()
