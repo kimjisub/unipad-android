@@ -17,7 +17,10 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-/** Keeps Main installed until cancelled view models finish, and fails on uncaught coroutines. */
+/**
+ * Keeps Main installed until cancelled view models finish, and fails on uncaught coroutines.
+ * UncaughtExceptionsBeforeTest can identify leaked work from an earlier test in the same JVM.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModelRule : TestRule, ViewModelStoreOwner {
 
@@ -35,9 +38,13 @@ class MainViewModelRule : TestRule, ViewModelStoreOwner {
 				base.evaluate()
 			} finally {
 				try {
-					viewModelStore.clear()
-					jobs.forEach { it.cancel() }
-					jobs.toList().joinAll()
+					try {
+						viewModelStore.clear()
+					} finally {
+						// A throwing onCleared must not leave other tracked scopes running.
+						jobs.forEach { it.cancel() }
+						jobs.toList().joinAll()
+					}
 				} finally {
 					Dispatchers.resetMain()
 				}
