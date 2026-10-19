@@ -232,6 +232,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityPadViewPatterns` | Corners, lines, diagonals, ring, rapid, grid, spiral and zigzag input keep Play active. |
 | `PlayActivityTest.testImportOpensPickerAndCancelReturnsToMain` | Current Import opens the system picker; cancel returns to Main. No longer ignored. |
 | `PlayActivityTest.testReconnectOpensDeviceSelectionFromSettings` | Settings reconnect opens device selection and returns. No longer ignored. |
+| `ZeroDurationLedTest` | Maximum finite repeats with no delay, zero delay or negative delay finish with their final lights and allow the next pad to play. |
 | `PlayActivityTest.testPlayActivityLEDAnimation` | LED/feedback options and repeated pad input keep Play active. |
 | `PlayActivityTest.testPlayActivityTraceLogFeature` | Trace Log toggles through input and chain changes. |
 | `PlayActivityTest.testTapOrderNumbersNeedTraceLogSwitch` | Exact tap order numbers occur on the expected pads only with Trace Log enabled. |
