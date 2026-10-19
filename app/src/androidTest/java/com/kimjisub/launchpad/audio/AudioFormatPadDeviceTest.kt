@@ -90,8 +90,8 @@ class AudioFormatPadDeviceTest {
         }
         override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
             played.add(soundId)
-            assertEquals(1f, volumeL)
-            assertEquals(1f, volumeR)
+            assertEquals(1f, volumeL, 0f)
+            assertEquals(1f, volumeR, 0f)
             assertEquals(0, loop)
             return SoundRunner.OboeEngine.play(soundId, volumeL, volumeR, loop).also { voice = it }
         }
