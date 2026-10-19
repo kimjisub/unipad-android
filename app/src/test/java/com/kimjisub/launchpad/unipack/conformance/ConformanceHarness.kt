@@ -14,6 +14,7 @@ import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
+import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
@@ -158,16 +159,18 @@ private fun event(vararg parts: Any): JsonElement = buildJsonArray {
 }
 
 /**
- * Stands in for the native audio engine and reports which file each `play` call started. It has no
- * output stream: opening and closing one (start, stop) are accepted and not checked.
+ * Stands in for the native audio engine and reports which file each `play` call started and which
+ * endless voices have not been stopped. It has no output stream, so audible output is not checked.
  */
-private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Unit) : SoundRunner.Engine {
+private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Pair<Int, Int>) : SoundRunner.Engine {
 	private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, File>()
 	private val fileById = HashMap<Int, File>()
 	private var nextId = 0
+	private var nextVoice = 0
+	private val endless = HashMap<Int, Pair<Int, Int>>()
 
 	override fun start() = true
-	override fun stop() {}
+	override fun stop() = stopAllVoices()
 
 	override fun decode(file: File): OboeAudioEngine.DecodedAudio =
 		OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file } }
@@ -177,15 +180,21 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
 	}
 
 	override fun unloadSound(soundId: Int) {}
-	override fun unloadAll() {}
+	override fun unloadAll() = stopAllVoices()
 
-	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-		onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
-		return 0
+	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int = synchronized(this) {
+		val pad = onPlay(fileById.getValue(soundId), loop)
+		val key = ++nextVoice
+		if (loop == -1) endless[key] = pad
+		key
 	}
 
-	override fun stopVoice(stopKey: Int) {}
-	override fun stopAllVoices() {}
+	override fun stopVoice(stopKey: Int) { synchronized(this) { endless.remove(stopKey) } }
+	override fun stopAllVoices() { synchronized(this) { endless.clear() } }
+
+	fun looping(): List<Pair<Int, Int>> = synchronized(this) {
+		endless.values.sortedWith(compareBy({ it.first }, { it.second }))
+	}
 }
 
 /**
@@ -200,9 +209,9 @@ private class RecordingEngine(private val onPlay: (file: File, loop: Int) -> Uni
  * returning to the screen are PlayActivity's onStop and onStart/onResume calls into the view model.
  *
  * Where this run still differs from the play screen: the auto-play listener's other calls (start,
- * progress, guides, chain lights) are not passed on; its chain changes run on the runner's thread, not
- * posted to the main thread; "start" expects a "stop" before it; returning to the screen is checked up to
- * the sounds' play calls, not whether the audio stream was opened again.
+ * progress, guides, chain lights) are not passed on; unless auto play plays the pads, its chain changes
+ * run on the runner's thread, not posted to the main thread; "start" expects a "stop" before it; returning
+ * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
@@ -216,10 +225,12 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private val chainTag = ThreadLocal<String?>()
 
 	private val main = FakeMainDispatcher()
-	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, RecordingEngine { file, loop ->
+	private val engine = RecordingEngine { file, loop ->
 		val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
 		events.add(event("sound", pressChain, pressX, pressY, name, loop))
-	})
+		pressX to pressY
+	}
+	private val vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> }, engine)
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 	private val listenerField = AutoPlayRunner::class.java.getDeclaredField("listener").apply { isAccessible = true }
 	private val lit = HashMap<String, Pair<Int, Int>>()
@@ -252,6 +263,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
+					"autoplayOff" -> afterAutoPlayPass("auto play to stop") { vm.switchPlayMode(PlayMode.None) }
+					"looping" -> engine.looping().forEach { (px, py) -> events.add(event("looping", px, py)) }
 					"stop" -> stop()
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
@@ -359,21 +372,22 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		override fun onRequestRelayout() {}
 	}
 
-	private fun press(x: Int, y: Int, down: Boolean) {
+	/** A press or release of (x, y), by a person unless [touch] hands it to the view model another way. */
+	private fun press(x: Int, y: Int, down: Boolean, touch: () -> Unit = { vm.padTouch(x, y, down) }) {
 		pressChain = vm.chain.value
 		pressX = x
 		pressY = y
 		if (down) {
-			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id >= 0 }?.wormhole
+			val wormhole = pack.soundGet(pressChain, x, y)?.takeIf { it.id != Sound.NOT_LOADED }?.wormhole
 			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole, chainLog.size))
 		}
-		vm.padTouch(x, y, down)
+		touch()
 		main.runAll()
 	}
 
 	/**
-	 * [toPads]: each press and release also reaches the pads the way PlayActivityViewModel's own
-	 * auto-play listener sends it, posted to the main thread and handled like a pad touch.
+	 * [toPads]: each press, release and chain change also reaches the screen the way PlayActivityViewModel's
+	 * own auto-play listener sends it, posted to the main thread and handed to the view model's auto-play calls.
 	 */
 	private fun startAutoPlay(toPads: Boolean) {
 		val runner = checkNotNull(vm.autoPlayRunner) { "${c.id}: the play screen has no auto play" }
@@ -384,16 +398,25 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	/** The screen's auto-play listener, recording pad presses and releases instead of passing them on. */
 	private fun recording(screen: AutoPlayRunner.Listener, toPads: Boolean): AutoPlayRunner.Listener {
-		fun forward(x: Int, y: Int, down: Boolean) {
-			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down) })
+		fun forward(x: Int, y: Int, down: Boolean, touch: () -> Unit) {
+			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down, touch) })
+		}
+		fun changeChain(c: Int) {
+			chainTag.set("autoChain")
+			try { vm.chain.value = c } finally { chainTag.set(null) }
 		}
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
-			override fun onPadTouchOn(x: Int, y: Int) { events.add(event("autoOn", x, y)); forward(x, y, true) }
-			override fun onPadTouchOff(x: Int, y: Int) { events.add(event("autoOff", x, y)); forward(x, y, false) }
+			override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
+				events.add(event("autoOn", x, y))
+				forward(x, y, true) { vm.autoPlayPadOn(x, y, c, num, atMs) }
+			}
+			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
+				events.add(event("autoOff", x, y))
+				forward(x, y, false) { vm.autoPlayPadTouch(x, y, false, atMs) }
+			}
 			override fun onChainChange(c: Int) {
-				chainTag.set("autoChain")
-				try { vm.chain.value = c } finally { chainTag.set(null) }
+				if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { changeChain(c) }) else changeChain(c)
 			}
 			override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {}
 			override fun onGuidePadOff(x: Int, y: Int) {}

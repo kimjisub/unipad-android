@@ -68,8 +68,17 @@ class Fingers(private val screen: FeatureScreen) {
         fingers.clear()
     }
 
-    /** Forgets the fingers of a gesture the system already ended with its own cancel; injecting more would be refused. */
-    fun forgetCancelled() = fingers.clear()
+    /**
+     * Forgets the fingers of a gesture the system already ended in the window with its own cancel.
+     * Android 17 still counts an injected gesture as down after such a cancel and refuses the next
+     * ACTION_DOWN, so a cancel is injected to end it there too. It may be refused where the gesture
+     * already ended, and the window, whose touch already ended, gets nothing from it.
+     */
+    fun forgetCancelled() {
+        if (fingers.isEmpty()) return
+        inject(MotionEvent.ACTION_CANCEL, requireDelivery = false)
+        fingers.clear()
+    }
 
     /**
      * Delivers the last lift or cancel once more, straight to the resumed activity's window, with
@@ -92,10 +101,14 @@ class Fingers(private val screen: FeatureScreen) {
         inject(action, flags)
     }
 
-    private fun inject(action: Int, flags: Int = 0) {
+    private fun inject(action: Int, flags: Int = 0, requireDelivery: Boolean = true) {
         val event = obtain(action, flags, fingers)
-        try { assertTrue("Touch injection failed", screen.instrumentation.uiAutomation.injectInputEvent(event, true)) }
-        finally { event.recycle() }
+        try {
+            val delivered = screen.instrumentation.uiAutomation.injectInputEvent(event, true)
+            if (requireDelivery) assertTrue("Touch injection failed", delivered)
+        } finally {
+            event.recycle()
+        }
     }
 
     private fun obtain(action: Int, flags: Int, pointers: List<Finger>): MotionEvent {

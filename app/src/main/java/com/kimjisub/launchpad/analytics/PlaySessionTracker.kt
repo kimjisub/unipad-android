@@ -3,7 +3,8 @@ package com.kimjisub.launchpad.analytics
 /**
  * One visit to the play screen: `pack_load` once it is read and its sounds are ready (or failed, or
  * the person left first), then `play_start` at the first accepted pad press (human or auto play) and `play_end` on leaving.
- * `play_first_input` records the first human press independently, including after auto play. Every call
+ * `play_first_input` records the first human press independently, including after auto play, and what it
+ * was pressed on ([InputSource]). Every call
  * outside the expected order is ignored, so repeated callbacks, a screen that is rebuilt around the
  * same session, or auto play repeating cannot count twice, and leaving before the first sound sends
  * neither `play_start` nor `play_end`.
@@ -69,7 +70,8 @@ class PlaySessionTracker internal constructor(
 		)
 	}
 
-	fun playTriggered(trigger: PlayTrigger) {
+	/** [source] is what a person's press ([PlayTrigger.PAD]) came from; auto play has none. */
+	fun playTriggered(trigger: PlayTrigger, source: InputSource? = null) {
 		val events = synchronized(lock) {
 			if (state !is State.Loaded && state !is State.Playing) return
 			if (state is State.Playing && (trigger != PlayTrigger.PAD || humanInputRecorded)) return
@@ -80,7 +82,9 @@ class PlaySessionTracker internal constructor(
 				}
 				if (trigger == PlayTrigger.PAD && !humanInputRecorded) {
 					humanInputRecorded = true
-					add(Event(UsageEvent.PLAY_FIRST_INPUT, mapOf(UsageParam.TRIGGER to trigger.value)))
+					val parameters = mapOf(UsageParam.TRIGGER to trigger.value) +
+						listOfNotNull(source?.let { UsageParam.INPUT_SOURCE to it.value })
+					add(Event(UsageEvent.PLAY_FIRST_INPUT, parameters))
 				}
 			}
 		}

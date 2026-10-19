@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,9 +34,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -88,8 +86,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.database.DataSnapshot
@@ -104,12 +100,14 @@ import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.ui.compose.AppUpdateActions
 import com.kimjisub.launchpad.ui.compose.AppUpdateCard
 import com.kimjisub.launchpad.ui.compose.AppUpdateDialog
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
 import com.kimjisub.launchpad.ui.compose.ImportResult
 import com.kimjisub.launchpad.ui.compose.ImportResultDialog
 import com.kimjisub.launchpad.ui.compose.MainPackPanelScreen
 import com.kimjisub.launchpad.ui.compose.MainTotalPanelScreen
 import com.kimjisub.launchpad.ui.compose.SearchField
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.compose.focusRing
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -125,7 +123,6 @@ import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.WorkspaceManager
 import com.kimjisub.launchpad.tool.ListCursor
 import com.kimjisub.launchpad.tool.Log
-import com.kimjisub.launchpad.tool.PackStorageChanges
 import com.kimjisub.launchpad.tool.PackSearch
 import com.kimjisub.launchpad.tool.UniPackImporter
 import com.kimjisub.launchpad.tool.splitties.browse
@@ -164,7 +161,12 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
-	private var refreshPending = false
+	private var deletingPack by mutableStateOf(false)
+	private val listBusy get() = listRefreshing || deletingPack
+	// Set when a refresh is asked for while one is reading; that one may have read the folders too early.
+	private var refreshAgain = false
+	// Set from the first play press until the list is back, so a double press opens one play screen.
+	private var playOpening = false
 	private var scrollToTopTrigger by mutableIntStateOf(0)
 	private var scrollToCenterIndex by mutableIntStateOf(-1)
 	private var scrollToCenterTrigger by mutableIntStateOf(0)
@@ -249,15 +251,10 @@ class MainActivity : BaseActivity() {
 			MainTotalPanelViewModel.Factory(application, p, ws)
 		)[MainTotalPanelViewModel::class.java]
 
+		// The saved sort arrives while attaching; onResume reads the list with it.
 		totalPanelVM.onSortChanged = { sort, order ->
 			currentSort = Pair(sort, order)
-			update()
-		}
-
-		lifecycleScope.launch {
-			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				PackStorageChanges.changes.collect { update() }
-			}
+			if (resumed) update()
 		}
 
 		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -327,7 +324,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				deleteTargetItem?.let { item ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteTargetItem = null },
 						title = { Text(stringResource(string.warning)) },
 						text = { Text(stringResource(string.doYouWantToDeleteUniPack)) },
@@ -335,11 +332,11 @@ class MainActivity : BaseActivity() {
 							TextButton(onClick = {
 								deleteTargetItem = null
 								selectedItem = null
-								listRefreshing = true
+								deletingPack = true
 								lifecycleScope.launch(Dispatchers.IO) {
 									val result = ws.deleteUnipack(item.unipack)
 									withContext(Dispatchers.Main) {
-										listRefreshing = false
+										deletingPack = false
 										deleteFailed = result != WorkspaceManager.DeleteResult.DELETED
 										update()
 									}
@@ -357,7 +354,7 @@ class MainActivity : BaseActivity() {
 				}
 
 				if (deleteFailed) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = { deleteFailed = false },
 						title = { Text(stringResource(string.error)) },
 						text = { Text(stringResource(string.errOccur)) },
@@ -375,11 +372,11 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) {
-			refreshPending = true
+		if (listBusy) {
+			refreshAgain = true
 			return
 		}
-		refreshPending = false
+		refreshAgain = false
 		listRefreshing = true
 
 		lifecycleScope.launch(Dispatchers.IO) {
@@ -416,7 +413,7 @@ class MainActivity : BaseActivity() {
 
 				scrollToTopTrigger++
 				listRefreshing = false
-				if (refreshPending) update()
+				if (refreshAgain) update()
 			}
 		}
 	}
@@ -447,6 +444,8 @@ class MainActivity : BaseActivity() {
 	private fun pressPlay(item: UniPackItem) = playUniPack(item.unipack.getPathString())
 
 	private fun playUniPack(path: String) {
+		if (playOpening) return
+		playOpening = true
 		start<PlayActivity> {
 			putExtra("path", path)
 		}
@@ -553,7 +552,7 @@ class MainActivity : BaseActivity() {
 
 	/** The list is in front and nothing else of the app (play screen, file work) is alive. */
 	private fun listInFront(): Boolean =
-		listIdle() && resumed && !listRefreshing && otherScreens?.anyAlive != true
+		listIdle() && resumed && !listBusy && otherScreens?.anyAlive != true
 
 	private fun canShowAppUpdate(state: AppUpdatePrompter.State? = appUpdate?.state?.value): Boolean =
 		listInFront() && state?.dialog == null
@@ -609,6 +608,7 @@ class MainActivity : BaseActivity() {
 	override fun onResume() {
 		super.onResume()
 		resumed = true
+		playOpening = false
 		controller = midiController
 		fbStoreCount.attachEventListener(true)
 		update()
@@ -652,12 +652,11 @@ class MainActivity : BaseActivity() {
 			if (updateSafe) appUpdate?.onListReady()
 		}
 
-		// From API 35 the window is edge-to-edge: the navigation bar sits over the bottom (gesture handle)
-		// or a side (3-button bar in landscape), and a display cutout can take a side as well. Below API 35
-		// the window already fits the system bars, so these insets are zero there. The keyboard is left
-		// out: it covers the panels as it always has rather than squeezing them.
-		val barsAndCutout = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+		// The keyboard covers the panels rather than squeezing them, but the list's end takes it in so its
+		// last rows can still be scrolled above it.
+		val barsAndCutout = WindowInsets.barsAndCutout
 		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
+		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -696,11 +695,8 @@ class MainActivity : BaseActivity() {
 								checkingUpdate = updateState?.checking == true,
 							)
 						} else {
-							val packVM = remember(item.unipack.getPathString()) {
-								ViewModelProvider(
-									this@MainActivity,
-									MainPackPanelViewModel.Factory(application, item.unipack)
-								)["pack_${item.unipack.getPathString()}", MainPackPanelViewModel::class.java]
+							val packVM = remember(MainPackPanelViewModel.key(item.unipack)) {
+								MainPackPanelViewModel.of(this@MainActivity, application, item.unipack)
 							}
 
 							// Handle delete event from VM
@@ -721,10 +717,10 @@ class MainActivity : BaseActivity() {
 						.fillMaxHeight(),
 				) {
 					PullToRefreshBox(
-						isRefreshing = listRefreshing,
+						isRefreshing = listBusy,
 						onRefresh = { update() },
 					) {
-						if (unipackList.isEmpty() && !listRefreshing) {
+						if (unipackList.isEmpty() && !listBusy) {
 							// Empty state; scrolls so the guide stays reachable on short screens
 							BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
 								Column(
@@ -732,6 +728,7 @@ class MainActivity : BaseActivity() {
 										.verticalScroll(rememberScrollState())
 										.fillMaxWidth()
 										.heightIn(min = maxHeight)
+										.windowInsetsPadding(listBottom)
 										.padding(horizontal = 16.dp, vertical = 16.dp),
 									horizontalAlignment = Alignment.CenterHorizontally,
 									verticalArrangement = Arrangement.Center,
@@ -777,13 +774,14 @@ class MainActivity : BaseActivity() {
 									NoSearchResults(
 										query = searchQuery,
 										onClearClick = { updateSearchQuery("") },
+										bottomInsets = listBottom,
 										modifier = Modifier.weight(1f),
 									)
 								} else LazyColumn(
 									state = listState,
 									contentPadding = PaddingValues(
 										top = 4.dp,
-										bottom = 6.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+										bottom = 6.dp + listBottom.asPaddingValues().calculateBottomPadding(),
 									),
 									verticalArrangement = Arrangement.spacedBy(8.dp),
 									modifier = Modifier.weight(1f),
@@ -948,6 +946,7 @@ class MainActivity : BaseActivity() {
 	private fun NoSearchResults(
 		query: String,
 		onClearClick: () -> Unit,
+		bottomInsets: WindowInsets,
 		modifier: Modifier = Modifier,
 	) {
 		BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -956,6 +955,7 @@ class MainActivity : BaseActivity() {
 					.verticalScroll(rememberScrollState())
 					.fillMaxWidth()
 					.heightIn(min = maxHeight)
+					.windowInsetsPadding(bottomInsets)
 					.padding(16.dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center,

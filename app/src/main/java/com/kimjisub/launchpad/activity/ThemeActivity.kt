@@ -22,14 +22,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +45,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -83,6 +86,8 @@ import com.kimjisub.launchpad.manager.loadTheme
 import com.kimjisub.launchpad.tool.ZipThemeImporter
 import com.kimjisub.launchpad.tool.splitties.browse
 import com.kimjisub.launchpad.tool.tryLaunch
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.theme.Orange
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -230,7 +235,7 @@ private fun ThemeScreen(
 
 	// Delete confirmation dialog
 	deleteTarget?.let { theme ->
-		AlertDialog(
+		AppAlertDialog(
 			onDismissRequest = { deleteTarget = null },
 			title = { Text(stringResource(R.string.theme_delete_title)) },
 			text = { Text(stringResource(R.string.theme_delete_confirm, theme.name)) },
@@ -263,7 +268,11 @@ private fun ThemeScreen(
 			label = "leftPanelWidth",
 		)
 
-		Row(modifier = Modifier.fillMaxSize()) {
+		Row(
+			modifier = Modifier
+				.fillMaxSize()
+				.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Horizontal)),
+		) {
 			// Left panel: theme list (animated slide)
 			Column(
 				modifier = Modifier

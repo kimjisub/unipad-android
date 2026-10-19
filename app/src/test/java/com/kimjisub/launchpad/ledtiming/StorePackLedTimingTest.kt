@@ -17,7 +17,8 @@ import java.nio.file.Files
  * [rankPacks] lists every pack with autoplay and keyLED by LED commands a second at peak.
  * [measurePacks] plays each pack named in ledTimingMeasure in real time (as long as its autoplay) and
  * fails when the driver does not receive exactly what LedRunner handed over, or receives the pack's
- * commands reordered, incomplete or with extra ones. Reports go to build/reports/led-timing/.
+ * commands reordered, incomplete or with extra ones, telling a loss from lag as
+ * [LedTimingMeasurement.packToDriverFailure] does. Reports go to build/reports/led-timing/.
  */
 class StorePackLedTimingTest {
 
@@ -69,20 +70,26 @@ class StorePackLedTimingTest {
 			withPack(source) { root ->
 				val timeline = timelineFor(loadPack(root))
 				val releaseAll = timeline.autoPlayLengthMs + TAIL_MS
-				val recording = LedPathRun(loadPack(root)).run(releaseAllAtMs = releaseAll, giveUpAtMs = timeline.lastT0 + GIVE_UP_AFTER_MS)
+				val recording = LedPathRun(loadPack(root)).run(releaseAllAtMs = releaseAll, giveUpAtMs = releaseAll + GIVE_UP_AFTER_MS)
 				val measurement = LedTimingMeasurement(name, timeline, recording)
 				val text = measurement.describe()
 				File(reports, "$name.txt").writeText(text)
 				println(text)
-				if (!measurement.deliveredAsHandedOver || !measurement.packToDriver.orderedAndComplete) failed += name
+				if (!measurement.deliveredAsHandedOver) failed += "$name: not delivered as LedRunner handed it over"
+				measurement.packToDriverFailure()?.let { failed += "$name: ${it.lineSequence().first()}" }
 			}
 		}
-		assertTrue("reordered, missing or extra commands: $failed", failed.isEmpty())
+		assertTrue(failed.joinToString("\n"), failed.isEmpty())
 	}
 
-	/** The timeline [LedPathRun] is compared with: every pad released [TAIL_MS] after autoplay ends. */
-	private fun timelineFor(pack: UniPack): IntendedTimeline =
-		intendedTimeline(pack, releaseAllAtMs = pack.autoPlayLengthMs() + TAIL_MS)
+	/**
+	 * The timeline [LedPathRun] is compared with: every pad released [TAIL_MS] after autoplay ends, and
+	 * nothing recorded [GIVE_UP_AFTER_MS] after that.
+	 */
+	private fun timelineFor(pack: UniPack): IntendedTimeline {
+		val releaseAll = pack.autoPlayLengthMs() + TAIL_MS
+		return intendedTimeline(pack, releaseAllAtMs = releaseAll, giveUpAtMs = releaseAll + GIVE_UP_AFTER_MS)
+	}
 
 	private fun packSources(): List<File> =
 		(packs.listFiles() ?: emptyArray()).filter { it.isDirectory || it.extension.equals("zip", true) }.sortedBy { it.name }

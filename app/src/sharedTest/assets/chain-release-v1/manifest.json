@@ -1,0 +1,46 @@
+{
+  "suite": "chain-release-v1",
+  "hash": "sha256",
+  "files": {
+    "expectations.json": {
+      "bytes": 26350,
+      "sha256": "3aa66349d27c751938e6f86267b5ad0ac653828288d25a3777b7c4f0fbdf7fe0"
+    },
+    "packs/delayed.uni": {
+      "bytes": 27321,
+      "sha256": "7f8647fc894b4226df180061d94febaa9306c0a2c1a3d019299b47a6c56c7236"
+    },
+    "packs/manual.uni": {
+      "bytes": 27318,
+      "sha256": "31b158622efea7d779b673ecea3c72906c3764a7fbae16408060eb4e0f50931d"
+    },
+    "sources/delayed/info": {
+      "bytes": 103,
+      "sha256": "fc11289aa0b46a538363af040596397f6cc7197e6bec86f13e61630361f4200a"
+    },
+    "sources/delayed/keySound": {
+      "bytes": 128,
+      "sha256": "24e9684d232624538d863eaac85945ecde756670ae910f1efcbc3c83db458508"
+    },
+    "sources/manual/info": {
+      "bytes": 102,
+      "sha256": "d57dcddd32a656ba3c5314a04f20c0dc49946bc7d13a71c8fb5077cb90ee1f96"
+    },
+    "sources/manual/keySound": {
+      "bytes": 126,
+      "sha256": "5c3eaa206ae196b69a41bec2730465a7cffa40ef929cdbf04c316a3f7b3ba2aa"
+    },
+    "sources/sounds/a.wav": {
+      "bytes": 8864,
+      "sha256": "5c2826e1f20688fe03f056364163ea7f986db52e56fb8ba14e4a5f8ac8723a8e"
+    },
+    "sources/sounds/b.wav": {
+      "bytes": 8864,
+      "sha256": "e7a2b5054dc955dc3031e15dd808a5b6c8bd03e58df8157c6bb94be65d42755d"
+    },
+    "sources/sounds/c.wav": {
+      "bytes": 8864,
+      "sha256": "9a34d805babe9d0ef7d9b1d4700089bb72bed6c4a7f75083c1cc075cc4c41526"
+    }
+  }
+}

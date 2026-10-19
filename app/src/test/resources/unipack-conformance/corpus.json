@@ -550,43 +550,6 @@
         "leds": [],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format"
-            ]
-          },
-          "note": "Android records a format warning (`info: … format is incorrect`) for the line without `=`; the pack opens and plays the same."
-        }
       }
     },
     {
@@ -757,32 +720,6 @@
       "fingerprint": "f95645a1225af7ea7686dfc26cfba32aae24f7dcf223dff8389a76802351b64e",
       "expected": {
         "loaded": false
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 0,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format",
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "Android reads `abc` as 0 and opens the pack without a pad column: a format warning, buttonX missing, and the keySound line out of range."
-        }
       }
     },
     {
@@ -1051,32 +988,6 @@
       "fingerprint": "c4ecfd7ba4cf87f6b1ec0059da35a5677ecc800b320105023907de2de385d695",
       "expected": {
         "loaded": false
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 0,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "info:format",
-              "info:missing-field",
-              "keySound:range"
-            ]
-          },
-          "note": "Android reads `abc` as 0 and opens the pack without a pad row: a format warning, buttonY missing, and the keySound line out of range."
-        }
       }
     },
     {
@@ -2752,6 +2663,224 @@
         "leds": [],
         "autoPlay": null,
         "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-019",
+      "area": "keySound",
+      "title": "a sound name that differs from its file only in case plays the stored file",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "If no file has exactly that path, the player uses a file whose path differs only in upper and lower case. A folder is never a sound."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/parser.ts findSoundFile (5721b4c)",
+          "note": "the whole path under sounds/ is compared without case, so official store packs that list End.wav for a file stored as END.wav play"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 A.wav\n1 1 2 End.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/END.wav",
+          "asset": "tone-660"
+        }
+      ],
+      "fingerprint": "23479aa81f57acac5a3694c1afed24cd3831f6805ad810ee50a4ec0d658324ec",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "END.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-020",
+      "area": "keySound",
+      "title": "the sub folder name may differ in case too",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "If no file has exactly that path, the player uses a file whose path differs only in upper and lower case. A folder is never a sound."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/parser.ts findSoundFile (5721b4c)",
+          "note": "the whole path under sounds/ is compared without case, so official store packs that list End.wav for a file stored as END.wav play"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 FX/S.wav"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "e70f28f1a34519d920f9eb5c35982bd3e52abf8cbed2fe78de7e95499a77c84b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "fx/s.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-021",
+      "area": "keySound",
+      "title": "a name that matches only a file name in another folder, or a folder, is still missing",
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "If no file has exactly that path, the player uses a file whose path differs only in upper and lower case. A folder is never a sound."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/parser.ts findSoundFile (5721b4c)",
+          "note": "the whole path under sounds/ is compared without case, so official store packs that list End.wav for a file stored as END.wav play"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "A warning is logged if the referenced sound file is not found in the sounds/ folder"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 fx/A.wav\n1 1 2 FX\n1 1 3 S.wav\n1 2 1 A.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "bc749366b104b60d76c0e8d177a84a06dfe685d01a92ea097046fef879264ebd",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 1,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:missing-file",
+          "keySound:missing-file",
+          "keySound:missing-file"
+        ]
       }
     },
     {
@@ -9827,6 +9956,91 @@
       }
     },
     {
+      "id": "RUN-S-006",
+      "layer": "run",
+      "area": "sound",
+      "title": "a pad whose sound name differs from its file only in case plays that file",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/sounds.mdx",
+          "note": "If no file has exactly that path, the player uses a file whose path differs only in upper and lower case. A folder is never a sound."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/parser.ts findSoundFile (5721b4c)",
+          "note": "the whole path under sounds/ is compared without case, so official store packs that list End.wav for a file stored as END.wav play"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 End.wav\n1 1 2 FX/S.wav"
+        },
+        {
+          "path": "sounds/END.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "c8c9f6dea1d4033401d3b1b0fe52e76bf8756d9c5d272f7ee671867c811301ca",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "END.wav",
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              1,
+              "fx/s.wav",
+              0
+            ]
+          ]
+        ]
+      }
+    },
+    {
       "id": "RUN-L-001",
       "layer": "run",
       "area": "led",
@@ -11657,6 +11871,143 @@
             [
               "ledOff",
               0,
+              0
+            ]
+          ],
+          [],
+          []
+        ]
+      }
+    },
+    {
+      "id": "RUN-RP-005",
+      "layer": "run",
+      "area": "realPack",
+      "title": "turning autoPlay off releases the endless sound it held, not the one the user holds",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "autoplayOff"
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 400
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "Loop Values: 0 loops indefinitely"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io LedRunner.test.ts \"turns a looping animation off on release and stays dark\", unipad-android LedRunnerToggleTest",
+          "note": "an endless loop lasts while its pad is held and ends when the pad is released (RUN-L-003)"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/PlayerHolds.test.ts",
+          "note": "a pad autoPlay holds counts as released when autoPlay is turned off, as any input that goes away counts as a release, so its endless sound stops; a pad the user still holds keeps sounding until the user lets go"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0\n1 2 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\ndelay 300\noff 1 1"
+        }
+      ],
+      "fingerprint": "b652c8b74d33fb541196c70a7c67fda2fa29b07f967358eb262798b809ab1b54",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              1,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "looping",
+              0,
+              0
+            ],
+            [
+              "looping",
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              "looping",
+              1,
               0
             ]
           ],

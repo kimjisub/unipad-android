@@ -54,6 +54,10 @@ abstract class UniPack {
 
 	abstract fun lastModified(): Long
 
+	/** The pack folder's own time when it was read; a pack replaced under the same name gets a new one. */
+	var folderModified: Long = 0
+		internal set
+
 	var detailLoaded: Boolean = false
 		internal set
 	abstract fun loadInfo(): UniPack

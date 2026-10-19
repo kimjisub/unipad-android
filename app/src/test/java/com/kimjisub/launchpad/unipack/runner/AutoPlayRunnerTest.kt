@@ -74,8 +74,8 @@ class AutoPlayRunnerTest {
 
 		val listener = object : AutoPlayRunner.Listener {
 			override fun onStart() {}
-			override fun onPadTouchOn(x: Int, y: Int) {}
-			override fun onPadTouchOff(x: Int, y: Int) {}
+			override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {}
+			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {}
 			override fun onChainChange(c: Int) {}
 			override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {
 				guidesOn.countDown()

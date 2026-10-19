@@ -535,4 +535,24 @@ class PlayActivityViewModelLedTest {
 			assertEveryLedOff()
 		}
 	}
+
+	/**
+	 * An autoplay control stops every endless keyLED, including those of pads a finger still holds. One
+	 * pressed just before it, still waiting for the runner's next tick, stops with the rest instead of
+	 * starting afterwards and looping until the finger lets go.
+	 */
+	@Test
+	fun autoPlayControl_stopsAnEndlessLedPressedBeforeItsFirstTick() {
+		setUpRunner(LedAnimation(arrayListOf(LedEvent.On(0, 0, velocity = 5), LedEvent.Delay(100), LedEvent.Off(0, 0), LedEvent.Delay(100)), 0, 0))
+		vm.autoPlayRunner = mockk<AutoPlayRunner>(relaxed = true)
+		vm.padTouch(0, 0, true)
+
+		vm.autoPlayPause()
+		for (t in 1000L..2000L step 10) tickOnRunnerThread(t)
+		runMainTasks()
+
+		assertEquals(emptyList<String>(), sent.filter { it.endsWith("=5") })
+		assertFalse(runner.isEventExist(0, 0))
+		assertEveryLedOff()
+	}
 }

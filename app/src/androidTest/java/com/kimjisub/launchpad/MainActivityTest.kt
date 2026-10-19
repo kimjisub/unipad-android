@@ -1,9 +1,7 @@
 package com.kimjisub.launchpad
 
-import android.app.LocaleManager
 import android.content.res.Configuration
 import android.os.Build
-import android.os.LocaleList
 import android.os.SystemClock
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
@@ -15,17 +13,23 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
-import com.kimjisub.launchpad.tool.PackStorageChanges
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * MainActivity Tests
@@ -142,14 +146,14 @@ class MainActivityTest : BaseUITest() {
         val sortRes = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
         val english = sortRes.map { strIn(Locale.ENGLISH, it) }
         val korean = sortRes.map { strIn(Locale.KOREAN, it) }
-        val originalLocales = appLanguage()
+        val originalLocales = AppLanguage.get()
         try {
-            setAppLanguage(LocaleList.forLanguageTags("en"))
+            AppLanguage.set("en")
             prefs.sortMethod = 2
             launchToMainScreen()
             assertTrue("Sort bar does not show '${english[2]}'", device.wait(Until.hasObject(By.text(english[2])), 5000L))
 
-            setAppLanguage(LocaleList.forLanguageTags("ko"))
+            AppLanguage.set("ko")
             assertTrue(
                 "Sort bar still shows '${english[2]}' after switching to Korean",
                 device.wait(Until.hasObject(By.text(korean[2])), 10000L)
@@ -169,16 +173,8 @@ class MainActivityTest : BaseUITest() {
             )
             takeScreenshot("sort_names_korean_after_relaunch")
         } finally {
-            setAppLanguage(originalLocales)
+            AppLanguage.set(originalLocales)
             prefs.sortMethod = originalMethod
-        }
-    }
-
-    private fun appLanguage(): LocaleList = context.getSystemService(LocaleManager::class.java).applicationLocales
-
-    private fun setAppLanguage(locales: LocaleList) {
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            context.getSystemService(LocaleManager::class.java).applicationLocales = locales
         }
     }
 
@@ -240,9 +236,9 @@ class MainActivityTest : BaseUITest() {
     /** A folder the app cannot empty: the error is shown and the history stays. */
     @Test
     fun testUnipackDeletionFailureKeepsHistory() {
-        val sounds = File(TestUniPack.folder(context), "sounds")
+        val unreachable = UnreachableFolder(File(TestUniPack.folder(context), "sounds"))
         try {
-            assertTrue("Failure fixture must make the sounds folder read-only", sounds.setWritable(false, false) && !sounds.canWrite())
+            assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
             seedHistory(TestUniPack.FOLDER_NAME)
             launchToMainScreen()
 
@@ -256,8 +252,33 @@ class MainActivityTest : BaseUITest() {
             assertTrue("Pack files are gone", TestUniPack.folder(context).exists())
             assertEquals("History was dropped although the files remain", 1L to true, history(TestUniPack.FOLDER_NAME))
             device.findObject(By.text(str(android.R.string.ok))).click()
+            assertTrue("Failure fixture left folders behind", unreachable.remove())
         } finally {
-            sounds.setWritable(true, false)
+            unreachable.remove()
+        }
+    }
+
+    /** A deletion failure run stopped before its cleanup must not break the next test's pack. */
+    @Test
+    fun testTestPackInstallClearsLeftoverDeletionFixture() {
+        val sounds = File(TestUniPack.folder(context), "sounds")
+        for (stranded in listOf(false, true)) {
+            val unreachable = UnreachableFolder(sounds)
+            try {
+                assertTrue("Failure fixture must nest a folder beyond the path limit", unreachable.create())
+                if (stranded) assertTrue("Fixture could not be moved under its spare folder", unreachable.strandUnderSpare())
+                assertFalse("Fixture must survive a delete by path", TestUniPack.folder(context).deleteRecursively())
+
+                TestUniPack.install(context)
+
+                assertEquals(
+                    "Test pack install left part of the fixture (stranded=$stranded)",
+                    listOf("silence.wav"),
+                    sounds.list()?.sorted()
+                )
+            } finally {
+                unreachable.remove()
+            }
         }
     }
 
@@ -303,30 +324,113 @@ class MainActivityTest : BaseUITest() {
         takeScreenshot("back_from_store")
     }
 
-    /**
-     * Coming back to Main re-reads the pack list once, also after a download announced a storage
-     * change earlier; a change announced while Main is shown is one more read.
-     */
+    /** Coming back from Store or Settings reads the pack list once. */
     @Test
     fun testReturningToMainReadsThePackListOnce() {
         launchToMainScreen()
         val start = settledListRefreshes()
-
-        InstrumentationRegistry.getInstrumentation().runOnMainSync { PackStorageChanges.notifyChanged() }
-        val afterChange = settledListRefreshes()
-        assertEquals("a storage change on the shown main screen must re-read the list once", start + 1, afterChange)
 
         device.findObject(By.desc(str(R.string.store))).click()
         assertTrue("Did not transition to the store screen", waitForStoreScreen())
         device.pressBack()
         assertTrue("Could not return to the main screen", waitForMainScreen())
         val afterStore = settledListRefreshes()
-        assertEquals("returning from the store must re-read the list once", afterChange + 1, afterStore)
+        assertEquals("returning from the store must re-read the list once", start + 1, afterStore)
 
         openSettings()
         device.pressBack()
         assertTrue("Could not return to the main screen", waitForMainScreen())
         assertEquals("returning from settings must re-read the list once", afterStore + 1, settledListRefreshes())
+    }
+
+    /** Opening Main and recreating it (rotation, language or dark mode) read the pack list once each. */
+    @Test
+    fun testLaunchAndRecreateReadThePackListOnce() {
+        launchToMainScreen()
+        assertEquals("opening the main screen must read the list once", 1, settledListRefreshes())
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<MainActivity>().single().recreate()
+        }
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        assertEquals("a recreated main screen must read the list once", 1, settledListRefreshes())
+    }
+
+    /** An old scan may finish during deletion; queued scans must still wait for the files to be gone. */
+    @Test
+    fun testRefreshWaitsForDeletionEvenWhenAnEarlierReadFinishes() {
+        val scanStarted = CountDownLatch(1)
+        val allowScan = CountDownLatch(1)
+        val deleteStarted = CountDownLatch(1)
+        val allowDelete = CountDownLatch(1)
+        val firstComparison = AtomicBoolean(true)
+        val secondFolder = File(TestUniPack.folder(context).parentFile, OTHER_PACK_ID)
+        try {
+            assertTrue("Could not create a second sortable pack", TestUniPack.folder(context).copyRecursively(secondFolder))
+            launchToMainScreen()
+            val start = settledListRefreshes()
+            lateinit var main: MainActivity
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                main = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().single()
+                @Suppress("UNCHECKED_CAST")
+                val items = MainActivity::class.java.getDeclaredField("unipackList")
+                    .apply { isAccessible = true }.get(main) as List<UniPackItem>
+                val item = items.single { it.unipack.id == TestUniPack.FOLDER_NAME }
+                val pack = item.unipack
+                // Hold only the real deletion's file step; WorkspaceManager still removes its saved row.
+                val heldPack = object : UniPack() {
+                    override val id = pack.id
+                    override fun lastModified() = pack.lastModified()
+                    override fun loadInfo() = this
+                    override fun loadDetail() = this
+                    override fun checkFile() = pack.checkFile()
+                    override fun getPathString() = pack.getPathString()
+                    override fun getByteSize() = pack.getByteSize()
+                    override fun delete(): Boolean {
+                        deleteStarted.countDown()
+                        check(allowDelete.await(15, TimeUnit.SECONDS)) { "Deletion gate was not released" }
+                        return pack.delete()
+                    }
+                }
+                @Suppress("UNCHECKED_CAST")
+                val sort = delegate(main, "currentSort") as MutableState<Pair<MainTotalPanelViewModel.SortMethod, Boolean>?>
+                val original = sort.value!!
+                sort.value = original.first.copy(comparator = Comparator { a, b ->
+                    if (firstComparison.compareAndSet(true, false)) {
+                        scanStarted.countDown()
+                        check(allowScan.await(15, TimeUnit.SECONDS)) { "List scan gate was not released" }
+                    }
+                    original.first.comparator.compare(a, b)
+                }) to original.second
+                requestRefresh(main)
+                @Suppress("UNCHECKED_CAST")
+                val target = delegate(main, "deleteTargetItem") as MutableState<UniPackItem?>
+                target.value = item.copy(unipack = heldPack)
+            }
+            assertTrue("List scan never reached sorting", scanStarted.await(5, TimeUnit.SECONDS))
+            assertTrue("Delete confirmation did not open", device.wait(Until.hasObject(By.text(str(R.string.accept))), 5000L))
+            device.findObject(By.text(str(R.string.accept))).click()
+            assertTrue("Deletion never started", deleteStarted.await(5, TimeUnit.SECONDS))
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { requestRefresh(main) }
+            allowScan.countDown()
+            assertEquals("a queued read must wait while files are being deleted", start + 1, settledListRefreshes())
+            assertTrue("Pack files must remain behind the deletion gate", TestUniPack.exists(context))
+            allowDelete.countDown()
+            assertTrue("Pack files were not deleted", waitUntil(10000L) { !TestUniPack.exists(context) })
+            assertEquals("all queued reads must coalesce into one after deletion", start + 2, settledListRefreshes())
+            assertEquals("Deleted pack history remains", null, history(TestUniPack.FOLDER_NAME))
+        } finally {
+            allowScan.countDown()
+            allowDelete.countDown()
+            secondFolder.deleteRecursively()
+            unipackDao.delete(OTHER_PACK_ID)
+        }
+    }
+
+    private fun requestRefresh(main: MainActivity) {
+        MainActivity::class.java.getDeclaredMethod("update").apply { isAccessible = true }.invoke(main)
     }
 
     /** Completed list reads of the resumed main screen, once no read is running or starts for a while. */

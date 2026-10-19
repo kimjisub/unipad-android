@@ -20,6 +20,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
@@ -104,6 +105,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -131,6 +133,7 @@ import com.kimjisub.launchpad.midi.MidiConnection.driver
 import com.kimjisub.launchpad.midi.MidiConnection.removeController
 import com.kimjisub.launchpad.midi.controller.MidiController
 import com.kimjisub.launchpad.midi.driver.DriverRef
+import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
@@ -326,7 +329,7 @@ class PlayActivity : BaseActivity() {
 				PlayScreen()
 
 				unipackErrorDialog?.let { (title, message) ->
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(title) },
 						text = { Text(message) },
@@ -342,7 +345,7 @@ class PlayActivity : BaseActivity() {
 				}
 
 				if (showRestartDialog) {
-					androidx.compose.material3.AlertDialog(
+					AppAlertDialog(
 						onDismissRequest = {},
 						title = { Text(stringResource(string.requireRestart)) },
 						text = { Text(stringResource(string.doYouWantToRestartApp)) },
@@ -392,16 +395,19 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = getString(string.outOfMemory)
-				finish()
+				closeOnLoadFailure(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				vm.unipackLoading = false
-				vm.unipackLoadError = "${getString(string.exceptionOccurred)}\n${e.message}"
-				finish()
+				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
+	}
+
+	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
+	private fun closeOnLoadFailure(message: String) {
+		vm.unipackLoading = false
+		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+		finish()
 	}
 
 	private fun start() {
@@ -658,12 +664,13 @@ class PlayActivity : BaseActivity() {
 					}
 				}
 				AnimatedVisibility(visible = vm.isOptionWindowVisible, enter = fadeIn(tween(200)), exit = fadeOut(tween(300))) {
+					// While the scrim fades out of a closed window, a pad pressed under it plays.
 					Box(
 						modifier = Modifier
 							.fillMaxSize()
 							.background(PlayPalette.optionScrim)
 							.focusProperties { canFocus = false }
-							.clickable { vm.toggleOptionWindow(false) }
+							.then(if (vm.isOptionWindowVisible) Modifier.clickable { vm.toggleOptionWindow(false) } else Modifier)
 					)
 				}
 				AnimatedVisibility(
@@ -879,7 +886,7 @@ class PlayActivity : BaseActivity() {
 			) {
 				Row(verticalAlignment = Alignment.CenterVertically) {
 					Text(
-						text = vm.unipack.title.ifEmpty { "Untitled" },
+						text = vm.unipack.title.ifEmpty { stringResource(string.play_info_untitled) },
 						color = cardText.primary,
 						fontSize = 14.sp,
 						fontWeight = FontWeight.SemiBold,
@@ -900,7 +907,7 @@ class PlayActivity : BaseActivity() {
 						Text(vm.unipack.producerName, color = cardText.secondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
 					}
 					Text(
-						text = "${vm.unipack.buttonX}×${vm.unipack.buttonY}  ·  ${vm.unipack.chain} chain",
+						text = pluralStringResource(R.plurals.play_info_size_chains, vm.unipack.chain, vm.unipack.buttonX, vm.unipack.buttonY, vm.unipack.chain),
 						color = cardText.secondary,
 						fontSize = 12.sp,
 					)
@@ -1377,6 +1384,8 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
+	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -1385,6 +1394,7 @@ class PlayActivity : BaseActivity() {
 		driver.sendClearLed()
 		midiController?.let { removeController(it) }
 		releaseLaunchpadPads()
+		padTouch.cancel()
 	}
 
 	override fun onStart() {

@@ -75,7 +75,7 @@ class UniPackConformanceChecksTest {
 	fun aLedRunnerWhoseEventOnDoesNothingFailsARunCase() {
 		val c = byId("RUN-L-001")
 		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
-		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any()) } just Runs } })
+		val silent = Deps(wrapLedRunner = { real -> spyk(real).also { every { it.eventOn(any(), any(), any()) } just Runs } })
 		assertEquals("fail", classify(c, actualFor(c, corpus, silent)).status)
 	}
 
@@ -100,6 +100,14 @@ class UniPackConformanceChecksTest {
 			if (it.getValue("do").jsonPrimitive.content == "autoplay") buildJsonObject { put("do", "autoplay") } else it
 		})
 		assertEquals("fail", classify(c, actualFor(notForwarded, corpus)).status)
+	}
+
+	@Test
+	fun autoPlayLeftOnFailsTheEndlessSoundReleaseCase() {
+		val c = byId("RUN-RP-005")
+		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
+		val leftOn = c.copy(scenario = c.scenario.filter { it.getValue("do").jsonPrimitive.content != "autoplayOff" })
+		assertEquals("fail", classify(c, actualFor(leftOn, corpus)).status)
 	}
 
 	@Test
