@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-checks-${{ github.event_name }}-${{ github.sha }}
+  group: android-checks-${{ github.event_name }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
