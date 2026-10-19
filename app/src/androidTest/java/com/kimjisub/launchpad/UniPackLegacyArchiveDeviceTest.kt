@@ -46,12 +46,16 @@ class UniPackLegacyArchiveDeviceTest {
             val cp949 = LegacyText.CP949
             val archive = File(root, "pack.zip").apply {
                 writeBytes(zip(cp949, linkedMapOf(
+                    ".DS_Store" to byteArrayOf(1),
+                    "__MACOSX/._info" to byteArrayOf(2),
+                    "바깥/notes.txt" to byteArrayOf(3),
+                    "바깥/.hidden" to byteArrayOf(4),
                     "읽어 주세요.txt" to "연주 안내".toByteArray(cp949),
-                    "봄날/info" to "title=봄날 연주\nproducerName=지은이\nbuttonX=8\nbuttonY=8\nchain=2\n".toByteArray(cp949),
-                    "봄날/keySound" to "1 1 1 첫소리.wav 1 2\n2 2 2 둘째.wav\n".toByteArray(cp949),
-                    "봄날/autoPlay" to "t 1 1\nd 100\nt 2 2\n".toByteArray(cp949),
-                    "봄날/sounds/첫소리.wav" to silentWav(),
-                    "봄날/sounds/둘째.wav" to silentWav(),
+                    "바깥/봄날/info" to "title=봄날 연주\nproducerName=지은이\nbuttonX=8\nbuttonY=8\nchain=2\n".toByteArray(cp949),
+                    "바깥/봄날/keySound" to "1 1 1 첫소리.wav 1 2\n2 2 2 둘째.wav\n".toByteArray(cp949),
+                    "바깥/봄날/autoPlay" to "t 1 1\nd 100\nt 2 2\n".toByteArray(cp949),
+                    "바깥/봄날/sounds/첫소리.wav" to silentWav(),
+                    "바깥/봄날/sounds/둘째.wav" to silentWav(),
                 )))
             }
             val recorder = Recorder()
@@ -68,6 +72,9 @@ class UniPackLegacyArchiveDeviceTest {
             assertEquals("지은이", pack.producerName)
             assertEquals(2, pack.soundCount)
             assertEquals("첫소리.wav", pack.soundGet(0, 0, 0)?.file?.name)
+            assertEquals("둘째.wav", pack.soundGet(1, 1, 1)?.file?.name)
+            assertEquals(silentWav().toList(), pack.soundGet(0, 0, 0)!!.file.readBytes().toList())
+            assertEquals(silentWav().toList(), pack.soundGet(1, 1, 1)!!.file.readBytes().toList())
             assertEquals(setOf("autoPlay", "info", "keySound", "sounds"), recorder.folder!!.list()!!.toSet())
         } finally {
             scope.cancel()

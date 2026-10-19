@@ -15,8 +15,9 @@ import kotlin.math.abs
 /**
  * Decodes each sound format packs use with the device's own codecs.
  *
- * Every fixture in `assets/audio-formats` is the same 0.3 s, 440 Hz, half-scale mono tone at
+ * Every fixture in `assets/audio-formats` is the same 0.3 s, 440 Hz, half-scale tone at
  * 44.1 kHz, so a decoder that returns silence, noise or the wrong rate fails the same checks.
+ * OGG is stereo; the other fixtures are mono.
  * `mp3-named.wav` is a bare MP3 (frames from the first byte, no tag) under a `.wav` name, as
  * some official packs ship; `mp3-id3-named.wav` is the same with an ID3v2 tag in front.
  */
@@ -42,6 +43,9 @@ class AudioFormatDecodeDeviceTest {
     fun decodesMp3() = assertTone("tone.mp3")
 
     @Test
+    fun decodesOggVorbis() = assertTone("tone.ogg")
+
+    @Test
     fun decodesAacInM4a() = assertTone("tone.m4a")
 
     @Test
@@ -56,12 +60,13 @@ class AudioFormatDecodeDeviceTest {
         val decoded = OboeAudioEngine.decodeOnly(file) ?: throw AssertionError("$name did not decode")
 
         assertEquals("$name sample rate", SAMPLE_RATE, decoded.sampleRate)
-        assertEquals("$name channels", 1, decoded.channels)
+        assertEquals("$name channels", if (name == "tone.ogg") 2 else 1, decoded.channels)
         val seconds = decoded.numFrames.toDouble() / decoded.sampleRate
         assertTrue("$name lasts $seconds s", seconds in 0.28..0.40)
 
         // The middle half skips the encoder delay and padding lossy formats add at the ends.
-        val middle = decoded.pcm.copyOfRange(decoded.numFrames / 4, decoded.numFrames * 3 / 4)
+        val middle = (decoded.numFrames / 4 until decoded.numFrames * 3 / 4)
+            .map { decoded.pcm[it * decoded.channels] }
         val peak = middle.maxOf { abs(it.toInt()) }
         assertTrue("$name peak $peak is not the half-scale tone", peak in 12_000..20_000)
         val crossings = middle.indices.drop(1).count { (middle[it - 1] < 0) != (middle[it] < 0) }
