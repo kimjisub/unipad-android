@@ -82,8 +82,12 @@ class AutoPlayRunner(
 
 	interface Listener {
 		fun onStart()
-		/** [atMs] is when the pack places the press, on the SystemClock.elapsedRealtime clock. */
-		fun onPadTouchOn(x: Int, y: Int, atMs: Long)
+		/**
+		 * Presses (x, y) with the pad's [num]th sound and light of chain [c]. [atMs] is when the pack places
+		 * the press, on the SystemClock.elapsedRealtime clock. The order is set where the press is handled,
+		 * after any chain change sent before it, whose reset would otherwise undo it.
+		 */
+		fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long)
 		fun onPadTouchOff(x: Int, y: Int, atMs: Long)
 		fun onChainChange(c: Int)
 		fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long)
@@ -279,9 +283,7 @@ class AutoPlayRunner(
 										is AutoPlay.Element.On -> {
 											if (!practiceGuide) {
 												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												unipack.soundPush(element.currChain, element.x, element.y, element.num)
-												unipack.ledPush(element.currChain, element.x, element.y, element.num)
-												listener.onPadTouchOn(element.x, element.y, startTime + delayAccum)
+												listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
 											}
 										}
 

@@ -32,6 +32,9 @@ class LedRunner(
 	private val cirLed: Array<Led?> = arrayOfNulls<Led>(CIRCULAR_LED_COUNT)
 	private var ledAnimationStates: MutableList<LedAnimationState> = mutableListOf()
 	private val ledAnimationStatesAdd: MutableList<LedAnimationState> = mutableListOf()
+	// The endless animation the press of each held pad (x, y) started, null when none. Its release ends
+	// that animation even when the chain changed while the pad was held.
+	private val heldLoop: Array<Array<LedAnimationState?>> = Array(unipack.buttonX) { arrayOfNulls<LedAnimationState>(unipack.buttonY) }
 	// Numbers presses and releases, so steps due in the same millisecond play in the order they were asked for.
 	private var requests = 0L
 
@@ -206,23 +209,23 @@ class LedRunner(
 						if (state.equal(x, y, currentChain)) state.shutDownAt(pressedAt, order)
 					}
 				}
+				// A press made on another chain while the pad is still held replaces its loop below; end
+				// that earlier loop now, as a press on the same chain does, or nothing could end it.
+				heldLoop[x][y]?.shutDownAt(pressedAt, order)
 				val state = LedAnimationState(x, y, pressedAt, order)
+				heldLoop[x][y] = state.takeIf { it.ledAnimation?.loop == 0 }
 				if (state.noError) ledAnimationStatesAdd.add(state)
 			}
 		}
 	}
 
-	/** A release of pad ([x], [y]) at [releasedAt]: the pad's endless animation ends there. */
+	/** A release of pad ([x], [y]) at [releasedAt]: the endless animation the pad's press started ends there. */
 	fun eventOff(x: Int, y: Int, releasedAt: Long = SystemClock.elapsedRealtime()) {
 		if (active) {
 			synchronized(this) {
-				val order = ++requests
-				val currentChain = chain.value
-				for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
-					for (state in states) {
-						if (state.equal(x, y, currentChain) && state.ledAnimation?.loop == 0) state.shutDownAt(releasedAt, order)
-					}
-				}
+				val loop = heldLoop[x][y] ?: return
+				heldLoop[x][y] = null
+				loop.shutDownAt(releasedAt, ++requests)
 			}
 		}
 	}
@@ -231,10 +234,12 @@ class LedRunner(
 		// No `active` guard: ledInit() calls this right after stop() to shut the looping
 		// animations down; with the guard they stayed isPlaying and replayed in a burst on relaunch.
 		synchronized(this) {
-			for (state in ledAnimationStates) {
-				if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
-					// Before anything still due: nothing more of it plays.
-					state.shutDownAt(Long.MIN_VALUE, 0)
+			for (states in arrayOf(ledAnimationStates, ledAnimationStatesAdd)) {
+				for (state in states) {
+					if (state.buttonX == x && state.buttonY == y && state.ledAnimation?.loop == 0) {
+						// Before anything still due: nothing more of it plays.
+						state.shutDownAt(Long.MIN_VALUE, 0)
+					}
 				}
 			}
 		}
@@ -258,6 +263,8 @@ class LedRunner(
 		private var startedAt = startedAt
 		/** When the next event is due. */
 		private var delay: Long = startedAt
+		/** Scheduled start of the current pass, used to detect a pass with no elapsed time. */
+		private var loopStartedAt: Long = startedAt
 		var isPlaying = true
 		/** When a press or release ended the animation; what fell due before then still plays. */
 		private var shutdownAt: Long? = null
@@ -300,6 +307,7 @@ class LedRunner(
 		internal fun resume(pausedSince: Long, pausedFor: Long) {
 			startedAt += pausedFor
 			delay += pausedFor
+			loopStartedAt += pausedFor
 			finishedAt = finishedAt?.let { it + pausedFor }
 			shutdownAt = shutdownAt?.let { minOf(it, pausedSince) + pausedFor }
 		}
@@ -320,13 +328,10 @@ class LedRunner(
 				return null
 			}
 			var event: Step? = Step(this, delay, if (delay == startedAt) Step.STARTING else Step.RUNNING, order, isShutdown = false)
-			// An animation with no delay lines never pushes delay past currTime, so it would play forever
-			// while holding the monitor and the next padTouch would block into an ANR. One tick may play at
-			// most one full pass per loop. Only endless (loop 0) animations reach the cap: they yield to the
-			// next tick and keep playing, so eventOff still shuts them down and turns their LEDs off. The
-			// backlog is dropped, otherwise a strobe shorter than a tick falls further behind real time every
-			// tick and a GC stall leaves it lagging for many ticks.
-			if (delay <= currTime && processed > animation.ledEvents.size * animation.loop.coerceAtLeast(1)) {
+			// Endless (loop 0) animations yield at the event cap so eventOff can still stop them.
+			// Drop their backlog so a strobe shorter than a tick does not fall further behind every tick.
+			// Finite animations whose passes do not advance time finish in finishIfDone().
+			if (animation.loop == 0 && delay <= currTime && processed > animation.ledEvents.size) {
 				delay = currTime
 				event = null
 			}
@@ -397,6 +402,9 @@ class LedRunner(
 			if (index >= animation.ledEvents.size) {
 				loopProgress++
 				index = 0
+				// A pass that does not advance time repeats within this tick with the same final lights and chain.
+				if (animation.loop != 0 && delay <= loopStartedAt) loopProgress = animation.loop
+				loopStartedAt = delay
 			}
 			if (animation.loop != 0 && animation.loop <= loopProgress) isPlaying = false
 		}

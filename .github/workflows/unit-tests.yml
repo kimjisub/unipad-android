@@ -2,12 +2,14 @@ name: Android checks
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-checks-${{ github.event.pull_request.number }}
+  group: android-checks-${{ github.event_name }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -32,6 +34,7 @@ jobs:
           fastlane lanes
           ruby fastlane/tests/halt_test.rb
           ruby fastlane/tests/rollout_test.rb
+          ruby fastlane/tests/deploy_promote_test.rb
 
   unit-tests:
     runs-on: ubuntu-24.04
@@ -68,6 +71,9 @@ jobs:
     name: Android debug build
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      # A clean D8 dependency merge can exceed the project's 2 GiB daemon heap.
+      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
     steps:
       - name: Set the initial Git branch
         run: git config --global init.defaultBranch main
@@ -94,14 +100,16 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-android
-      - name: Check every debug module
-        run: ./gradlew lintDebug --no-daemon --console=plain
+      - name: Check every debug module and the release app
+        run: ./gradlew lintDebug :app:lintRelease --no-daemon --console=plain
       - name: Upload lint reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: android-lint-results
-          path: '**/build/reports/lint-results-debug.*'
+          path: |
+            **/build/reports/lint-results-debug.*
+            app/build/reports/lint-results-release.*
           if-no-files-found: warn
           retention-days: 7
 

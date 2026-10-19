@@ -544,6 +544,17 @@ class PlayActivityViewModel(
 		padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, source = null, atMs = atMs)
 
 	/**
+	 * Auto play pressing (x, y) with the pad's [num]th sound and light of chain [c]. Set here, on the main
+	 * thread, the order follows any chain change auto play sent before the press, whose reset returns the
+	 * chain's pads to their first sound and light.
+	 */
+	internal fun autoPlayPadOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
+		unipack.soundPush(c, x, y, num)
+		unipack.ledPush(c, x, y, num)
+		autoPlayPadTouch(x, y, true, atMs)
+	}
+
+	/**
 	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence;
 	 * [source] is what the person pressed it on. The pad's LED animation runs from [atMs], however
 	 * long the event took to get here.
@@ -758,9 +769,9 @@ class PlayActivityViewModel(
 	private fun stopLoopingLeds(runner: LedRunner) {
 		for (i in 0 until unipack.buttonX)
 			for (j in 0 until unipack.buttonY)
-				if (runner.isEventExist(i, j)) runner.eventOffAll(i, j)
+				runner.eventOffAll(i, j)
 		for (i in 0 until FUNCTION_KEY_COUNT)
-			if (runner.isEventExist(-1, i)) runner.eventOffAll(-1, i)
+			runner.eventOffAll(-1, i)
 	}
 
 	private fun clearLeds() {
@@ -983,12 +994,12 @@ class PlayActivityViewModel(
 					}
 				}
 
-				override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
+				override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
 					val generation = autoPlayInputGeneration
 					viewModelScope.launch {
 						if (created === autoPlayRunner && generation == autoPlayInputGeneration &&
 							playMode == PlayMode.AutoPlay && created?.playmode == true)
-							autoPlayPadTouch(x, y, true, atMs)
+							autoPlayPadOn(x, y, c, num, atMs)
 					}
 				}
 

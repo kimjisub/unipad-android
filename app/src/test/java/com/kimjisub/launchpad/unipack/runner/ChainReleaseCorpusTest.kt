@@ -1,17 +1,21 @@
 package com.kimjisub.launchpad.unipack.runner
 
+import android.os.SystemClock
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
-import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus
 import com.kimjisub.launchpad.chainrelease.ChainReleaseCorpus.Pad
+import com.kimjisub.launchpad.chainrelease.ChainReleaseLights
 import com.kimjisub.launchpad.chainrelease.ChainReleaseReplay
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,16 +32,15 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
-import java.util.IdentityHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
  * Plays every case of the chain-release corpus through the pad touch tracker, the view model and the
- * sound runner, on a virtual clock, and checks each step's engine requests, chain and press lights.
- * A release must stop the infinite loop its own press started, whatever the chain or the pad's next
- * sound is by then. No audio is decoded or heard: the engine records requests only.
+ * sound and LED runners, on a virtual clock, and checks each step's engine requests, chain, press lights
+ * and the cells the pack's LED animations light ([ChainReleaseLights] gives each sound one). A release
+ * must stop the infinite loop and the endless animation its own press started, whatever the chain or
+ * the pad's next sound is by then. No audio is decoded or heard: the engine records requests only.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(Parameterized::class)
@@ -46,14 +49,21 @@ class ChainReleaseCorpusTest(private val id: String) {
 	private val loadScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	private val root: File = Files.createTempDirectory("chain-release").toFile()
 	private lateinit var sound: SoundRunner
+	private lateinit var led: LedRunner
 
 	@Before
-	fun setUp() = Dispatchers.setMain(StandardTestDispatcher(scheduler))
+	fun setUp() {
+		Dispatchers.setMain(StandardTestDispatcher(scheduler))
+		mockkStatic(SystemClock::class)
+		every { SystemClock.elapsedRealtime() } answers { scheduler.currentTime }
+	}
 
 	@After
 	fun tearDown() {
+		if (::led.isInitialized) led.stop()
 		if (::sound.isInitialized) sound.destroy()
 		loadScope.cancel()
+		unmockkStatic(SystemClock::class)
 		Dispatchers.resetMain()
 		root.deleteRecursively()
 	}
@@ -62,41 +72,16 @@ class ChainReleaseCorpusTest(private val id: String) {
 	fun case() {
 		val case = corpus.cases.first { it.id == id }
 		corpus.unpack(case, root)
+		val lights = ChainReleaseLights.addTo(root)
 		val pack = UniPackFolder(root).load().loadDetail()
-		val record = ChainReleaseReplay(Driver(pack)).run(case)
-		println("suite=${ChainReleaseCorpus.SUITE} platform=android case=$id input=unit (PadTouchTracker, PlayActivityViewModel, SoundRunner)" +
-			" evidence=engine requests only, nothing decoded or heard; ${corpus.sha256}")
+		val record = ChainReleaseReplay(Driver(pack), lights).run(case)
+		println("suite=${ChainReleaseCorpus.SUITE} platform=android case=$id input=unit (PadTouchTracker, PlayActivityViewModel, SoundRunner, LedRunner)" +
+			" evidence=engine requests and LED cells only, nothing decoded or heard; lights are test-side keyLED; ${corpus.sha256}")
 		record.forEach(::println)
 	}
 
-	/** Stands in for the native engine; a voice's stop key is its 1-based position in [plays]. */
-	private class RecordingEngine : SoundRunner.Engine {
-		private val decoded = IdentityHashMap<OboeAudioEngine.DecodedAudio, String>()
-		private val names = HashMap<Int, String>()
-		val plays = CopyOnWriteArrayList<Pair<String, Int>>()
-		val stops = CopyOnWriteArrayList<Int>()
-
-		override fun start() = true
-		override fun stop() {}
-		override fun decode(file: File) =
-			OboeAudioEngine.DecodedAudio(ShortArray(1), 1, 1, 44_100).also { synchronized(this) { decoded[it] = file.name } }
-		override fun load(decoded: OboeAudioEngine.DecodedAudio): Int = synchronized(this) {
-			names.size.also { names[it] = this.decoded.getValue(decoded) }
-		}
-		override fun unloadSound(soundId: Int) {}
-		override fun unloadAll() {}
-		@Synchronized override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-			plays += names.getValue(soundId) to loop
-			return plays.size
-		}
-		override fun stopVoice(stopKey: Int) {
-			stops += stopKey
-		}
-		override fun stopAllVoices() {}
-	}
-
 	private inner class Driver(private val pack: UniPack) : ChainReleaseReplay.Driver {
-		private val engine = RecordingEngine()
+		private val engine = RecordingSoundEngine()
 		private val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
 		private val tracker = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
 		private val pointers = HashMap<String, Long>()
@@ -121,7 +106,18 @@ class ChainReleaseCorpusTest(private val id: String) {
 			check(loaded.await(10, TimeUnit.SECONDS)) { "Sounds did not finish loading" }
 			failure?.let { throw AssertionError("Sound loading failed", it) }
 			vm.soundRunner = sound
+			// Its coroutine ticks once right after launch and then waits for good, so the LEDs move when the
+			// test calls loop(). Should that first tick land late, it plays at the current virtual time like the test's own.
+			led = LedRunner(pack, vm.ledRunnerListener, vm.chain, loopDelay = Long.MAX_VALUE).also { it.launch() }
+			vm.ledRunner = led
 			tracker.setGrid(pack.buttonX, pack.buttonY)
+		}
+
+		/** Plays the LED steps due by now and applies them as the play screen would, on main. */
+		private fun tickLeds() {
+			scheduler.runCurrent()
+			loop.invoke(led)
+			scheduler.runCurrent()
 		}
 
 		override val virtualTime = true
@@ -129,7 +125,7 @@ class ChainReleaseCorpusTest(private val id: String) {
 		override fun advanceTo(atMs: Long) {
 			val due = atMs - scheduler.currentTime
 			if (due > 0) scheduler.advanceTimeBy(due)
-			scheduler.runCurrent()
+			tickLeds()
 		}
 
 		// One cell is CELL px square, so its centre lies inside it.
@@ -150,20 +146,25 @@ class ChainReleaseCorpusTest(private val id: String) {
 		}
 
 		override fun await(problem: () -> String?) {
+			tickLeds()
 			problem()?.let { throw AssertionError(it) }
 		}
 
-		override fun settle() = scheduler.runCurrent()
+		override fun settle() = tickLeds()
 		override fun chain() = vm.chain.value
 		override fun pressedPads() = (0 until pack.buttonX).flatMap { x -> (0 until pack.buttonY).map { y -> Pad(x, y) } }
 			.filter { vm.channelManager.get(it.x, it.y)?.channel == ChannelManager.Channel.PRESSED }
 			.toSet()
 		override fun plays(): List<Pair<String, Int>> = engine.plays.toList()
 		override fun stops(): List<Int> = engine.stops.toList()
+		override fun litCells() = (0 until pack.buttonX).flatMap { x -> (0 until pack.buttonY).map { y -> Pad(x, y) } }
+			.filter { vm.channelManager.get(it.x, it.y)?.channel == ChannelManager.Channel.LED }
+			.toSet()
 	}
 
 	companion object {
 		private const val CELL = 10
+		private val loop = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 
 		private val corpus = ChainReleaseCorpus.load { path ->
 			checkNotNull(ChainReleaseCorpusTest::class.java.classLoader!!.getResourceAsStream(path)) { "Missing $path" }

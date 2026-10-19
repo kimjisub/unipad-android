@@ -1,11 +1,6 @@
 package com.kimjisub.launchpad
 
 import android.content.Context
-import android.app.LocaleManager
-import android.os.Build
-import android.os.LocaleList
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
@@ -46,19 +41,9 @@ class MidiConnectionHelpTest {
         override fun apply(base: Statement, description: Description) = object : Statement() {
             override fun evaluate() {
                 val korean = description.methodName == "koreanLabelsAndHelpAreReadable"
-                val instrumentation = InstrumentationRegistry.getInstrumentation()
-                val original = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    instrumentation.targetContext.getSystemService(LocaleManager::class.java)
-                        .applicationLocales.toLanguageTags()
-                } else AppCompatDelegate.getApplicationLocales().toLanguageTags()
-                fun setLocales(tags: String) = instrumentation.runOnMainSync {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        instrumentation.targetContext.getSystemService(LocaleManager::class.java)
-                            .applicationLocales = LocaleList.forLanguageTags(tags)
-                    } else AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags))
-                }
-                if (korean) setLocales("ko-KR")
-                try { base.evaluate() } finally { if (korean) setLocales(original) }
+                val original = AppLanguage.get()
+                if (korean) AppLanguage.set("ko-KR")
+                try { base.evaluate() } finally { if (korean) AppLanguage.set(original) }
             }
         }
     }
