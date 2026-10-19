@@ -11,6 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Files
 
 class UniPackFolderMissingFileTest {
 
@@ -88,6 +89,26 @@ class UniPackFolderMissingFileTest {
 			assertEquals(0, off.x)
 			assertEquals(y, off.y)
 		}
+	}
+
+	@Test
+	fun keyLedBrokenSymbolicLink_isRecordedAsErrorAndDirectFilesStillLoad() {
+		val root = createStorePack()
+		val link = File(root, "keyLED/1 2 2 1").toPath()
+		Files.createSymbolicLink(link, root.toPath().resolve("missing-led"))
+		assertTrue(Files.isSymbolicLink(link))
+		assertFalse(link.toFile().isFile)
+		assertFalse(link.toFile().isDirectory)
+
+		val pack = UniPackFolder(root).load().loadDetail()
+
+		assertEquals("keyLed : 1 2 2 1 is not file", errors(pack))
+		assertFalse(pack.criticalError)
+		assertTrue(pack.detailLoaded)
+		assertEquals(2, pack.ledTableCount)
+		assertNotNull(pack.ledGet(0, 0, 0))
+		assertNotNull(pack.ledGet(0, 0, 1))
+		assertNull(pack.ledGet(0, 1, 1))
 	}
 
 	@Test
