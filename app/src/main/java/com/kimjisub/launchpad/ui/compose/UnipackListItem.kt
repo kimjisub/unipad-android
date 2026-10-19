@@ -4,11 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,7 +36,7 @@ import com.kimjisub.launchpad.ui.theme.TitleColor
 /**
  * Shared list item composable used by both MainActivity and FBStoreActivity.
  *
- * Layout: 60dp height, left flag area + right white content area with title/subtitle and LED/AutoPlay indicators.
+ * Layout: at least 60dp high, left flag area + right white content area with title/subtitle and LED/AutoPlay indicators.
  *
  * @param title Primary text (unipack title or error message)
  * @param subtitle Secondary text (producer name or path)
@@ -75,27 +76,31 @@ fun UnipackListItem(
 	Box(
 		modifier = modifier
 			.fillMaxWidth()
-			.height(60.dp)
+			.heightIn(min = 60.dp)
 			.padding(horizontal = 16.dp)
 			.focusRing(RoundedCornerShape(5.dp))
 			.clickable { onClick() },
 	) {
 		// Bottom layer: Flag area
-		Box(
-			modifier = Modifier
-				.width(flagWidth)
-				.fillMaxHeight()
-				.background(flagColor, RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp))
-				.then(if (flagClickable) Modifier.focusRing(RoundedCornerShape(5.dp)).clickable { onFlagClick() } else Modifier),
-			contentAlignment = Alignment.Center,
-		) {
-			flagContent()
+		Box(modifier = Modifier.matchParentSize()) {
+			Box(
+				modifier = Modifier
+					.width(flagWidth)
+					.fillMaxHeight()
+					.background(flagColor, RoundedCornerShape(topStart = 5.dp, bottomStart = 5.dp))
+					.then(if (flagClickable) Modifier.focusRing(RoundedCornerShape(5.dp)).clickable { onFlagClick() } else Modifier),
+				contentAlignment = Alignment.Center,
+			) {
+				flagContent()
+			}
 		}
 
 		// Top layer: Content area
 		Row(
 			modifier = Modifier
-				.fillMaxSize()
+				.fillMaxWidth()
+				.heightIn(min = 60.dp)
+				.height(IntrinsicSize.Min)
 				.padding(start = contentStartPadding),
 			verticalAlignment = Alignment.CenterVertically,
 		) {

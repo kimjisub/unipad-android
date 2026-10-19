@@ -32,6 +32,7 @@ object TestUniPack {
         columns: Int = 8,
         chains: Int = CHAINS,
         title: String = TITLE,
+        producer: String = PRODUCER,
     ): File {
         val root = folder(context)
         clear(root)
@@ -39,7 +40,7 @@ object TestUniPack {
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$title\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
+            "title=$title\nproducerName=$producer\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 
