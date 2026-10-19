@@ -71,6 +71,9 @@ jobs:
     name: Android debug build
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      # A clean D8 dependency merge can exceed the project's 2 GiB daemon heap.
+      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
     steps:
       - name: Set the initial Git branch
         run: git config --global init.defaultBranch main
