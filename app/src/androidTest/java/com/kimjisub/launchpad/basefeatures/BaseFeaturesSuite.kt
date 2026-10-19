@@ -19,6 +19,7 @@ import org.junit.runners.Suite
     HeldPadLeavingScreenTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
+    SharedMidiPadTest::class,
     StoreDownloadTest::class,
     AppearanceAndInsetsTest::class,
 )

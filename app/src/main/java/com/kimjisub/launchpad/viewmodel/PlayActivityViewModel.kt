@@ -488,14 +488,15 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	// Main-thread input ownership of each held pad (x, y): releasing one source must not release
-	// the other source's hold.
-	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PlayTrigger>>()
+	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
+	// independent; a manual release also clears auto play's hold.
+	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?)
+	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
 		autoPlayInputGeneration++
-		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.toList()
+		val pads = heldPads.filterValues { PadInput(PlayTrigger.AUTOPLAY, null) in it }.keys.toList()
 		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY, source = null)
 	}
 
@@ -529,14 +530,11 @@ class PlayActivityViewModel(
 		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
-	/**
-	 * Lets go of every pad still held on the MIDI controller, except the ones [heldOnScreen] says a
-	 * finger on the screen is still pressing.
-	 */
-	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
+	/** Lets go of the controller's holds, preserving any fingers still pressing on screen. */
+	fun releaseControllerPads() {
 		val pads = controllerHeldPads.toList()
 		controllerHeldPads.clear()
-		for ((x, y) in pads) if (!heldOnScreen(x, y)) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
+		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
 	/** A pad auto play presses or releases, [atMs] (SystemClock.elapsedRealtime) being when the pack places it. */
@@ -576,7 +574,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(pressedBy)
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source))
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -597,10 +595,11 @@ class PlayActivityViewModel(
 				ledRunner?.eventOn(x, y, atMs)
 			} else {
 				val sources = heldPads[x to y]
-				// A hand letting go releases the pad even while auto play holds it; auto play
-				// letting go keeps a pad a hand still holds.
+				// Screen and controller holds are independent. A person's release still overrides
+				// auto play, but only the last manual release stops the shared sound and light.
 				if (sources != null) {
-					if (pressedBy == PlayTrigger.PAD) sources.clear() else sources.remove(pressedBy)
+					sources.remove(PadInput(pressedBy, source))
+					if (pressedBy == PlayTrigger.PAD) sources.remove(PadInput(PlayTrigger.AUTOPLAY, null))
 					if (sources.isNotEmpty()) return
 					heldPads.remove(x to y)
 				}
