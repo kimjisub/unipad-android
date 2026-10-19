@@ -1335,7 +1335,7 @@ class PlayActivity : BaseActivity() {
 		}
 	}
 
-	private fun releaseLaunchpadPads() = vm.releaseControllerPads(padTouch::holds)
+	private fun releaseLaunchpadPads() = vm.releaseControllerPads()
 
 	// endregion
 

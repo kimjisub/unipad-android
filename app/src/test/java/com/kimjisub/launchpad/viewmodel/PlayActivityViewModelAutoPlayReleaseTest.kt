@@ -173,6 +173,15 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertEquals(emptyMap<Int, Int>(), engine.voices)
 	}
 
+	@Test fun controllerReleaseStopsTheLoopEvenWhileAutoplayHoldsThePad() {
+		start()
+		vm.controllerPadTouch(0, 0, true)
+		vm.controllerPadTouch(0, 0, false)
+		assertEquals(emptyMap<Int, Int>(), engine.voices)
+		vm.autoPlayPause()
+		assertEquals(emptyMap<Int, Int>(), engine.voices)
+	}
+
 	@Test fun manualReleaseStopsTheLoopAutoplayPressedAndNeverReleases() {
 		// A trailing delay is not waited for, so another press keeps the sequence running.
 		start(sequence = "o 1 1\nd 60000\no 1 2\n")
