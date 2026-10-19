@@ -2,11 +2,20 @@ package com.kimjisub.launchpad
 
 import android.content.res.Configuration
 import android.os.Build
+import android.os.SystemClock
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.adapter.UniPackItem
+import com.kimjisub.launchpad.unipack.UniPack
+import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 import com.kimjisub.launchpad.db.AppDatabase
 import com.kimjisub.launchpad.db.ent.Unipack
 import com.kimjisub.launchpad.manager.PreferenceManager
@@ -18,6 +27,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * MainActivity Tests
@@ -311,6 +323,143 @@ class MainActivityTest : BaseUITest() {
         assertTrue("Could not return to the main screen", waitForMainScreen())
         takeScreenshot("back_from_store")
     }
+
+    /** Coming back from Store or Settings reads the pack list once. */
+    @Test
+    fun testReturningToMainReadsThePackListOnce() {
+        launchToMainScreen()
+        val start = settledListRefreshes()
+
+        device.findObject(By.desc(str(R.string.store))).click()
+        assertTrue("Did not transition to the store screen", waitForStoreScreen())
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        val afterStore = settledListRefreshes()
+        assertEquals("returning from the store must re-read the list once", start + 1, afterStore)
+
+        openSettings()
+        device.pressBack()
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        assertEquals("returning from settings must re-read the list once", afterStore + 1, settledListRefreshes())
+    }
+
+    /** Opening Main and recreating it (rotation, language or dark mode) read the pack list once each. */
+    @Test
+    fun testLaunchAndRecreateReadThePackListOnce() {
+        launchToMainScreen()
+        assertEquals("opening the main screen must read the list once", 1, settledListRefreshes())
+
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<MainActivity>().single().recreate()
+        }
+        assertTrue("Could not return to the main screen", waitForMainScreen())
+        assertEquals("a recreated main screen must read the list once", 1, settledListRefreshes())
+    }
+
+    /** An old scan may finish during deletion; queued scans must still wait for the files to be gone. */
+    @Test
+    fun testRefreshWaitsForDeletionEvenWhenAnEarlierReadFinishes() {
+        val scanStarted = CountDownLatch(1)
+        val allowScan = CountDownLatch(1)
+        val deleteStarted = CountDownLatch(1)
+        val allowDelete = CountDownLatch(1)
+        val firstComparison = AtomicBoolean(true)
+        val secondFolder = File(TestUniPack.folder(context).parentFile, OTHER_PACK_ID)
+        try {
+            assertTrue("Could not create a second sortable pack", TestUniPack.folder(context).copyRecursively(secondFolder))
+            launchToMainScreen()
+            val start = settledListRefreshes()
+            lateinit var main: MainActivity
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                main = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().single()
+                @Suppress("UNCHECKED_CAST")
+                val items = MainActivity::class.java.getDeclaredField("unipackList")
+                    .apply { isAccessible = true }.get(main) as List<UniPackItem>
+                val item = items.single { it.unipack.id == TestUniPack.FOLDER_NAME }
+                val pack = item.unipack
+                // Hold only the real deletion's file step; WorkspaceManager still removes its saved row.
+                val heldPack = object : UniPack() {
+                    override val id = pack.id
+                    override fun lastModified() = pack.lastModified()
+                    override fun loadInfo() = this
+                    override fun loadDetail() = this
+                    override fun checkFile() = pack.checkFile()
+                    override fun getPathString() = pack.getPathString()
+                    override fun getByteSize() = pack.getByteSize()
+                    override fun delete(): Boolean {
+                        deleteStarted.countDown()
+                        check(allowDelete.await(15, TimeUnit.SECONDS)) { "Deletion gate was not released" }
+                        return pack.delete()
+                    }
+                }
+                @Suppress("UNCHECKED_CAST")
+                val sort = delegate(main, "currentSort") as MutableState<Pair<MainTotalPanelViewModel.SortMethod, Boolean>?>
+                val original = sort.value!!
+                sort.value = original.first.copy(comparator = Comparator { a, b ->
+                    if (firstComparison.compareAndSet(true, false)) {
+                        scanStarted.countDown()
+                        check(allowScan.await(15, TimeUnit.SECONDS)) { "List scan gate was not released" }
+                    }
+                    original.first.comparator.compare(a, b)
+                }) to original.second
+                requestRefresh(main)
+                @Suppress("UNCHECKED_CAST")
+                val target = delegate(main, "deleteTargetItem") as MutableState<UniPackItem?>
+                target.value = item.copy(unipack = heldPack)
+            }
+            assertTrue("List scan never reached sorting", scanStarted.await(5, TimeUnit.SECONDS))
+            assertTrue("Delete confirmation did not open", device.wait(Until.hasObject(By.text(str(R.string.accept))), 5000L))
+            device.findObject(By.text(str(R.string.accept))).click()
+            assertTrue("Deletion never started", deleteStarted.await(5, TimeUnit.SECONDS))
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { requestRefresh(main) }
+            allowScan.countDown()
+            assertEquals("a queued read must wait while files are being deleted", start + 1, settledListRefreshes())
+            assertTrue("Pack files must remain behind the deletion gate", TestUniPack.exists(context))
+            allowDelete.countDown()
+            assertTrue("Pack files were not deleted", waitUntil(10000L) { !TestUniPack.exists(context) })
+            assertEquals("all queued reads must coalesce into one after deletion", start + 2, settledListRefreshes())
+            assertEquals("Deleted pack history remains", null, history(TestUniPack.FOLDER_NAME))
+        } finally {
+            allowScan.countDown()
+            allowDelete.countDown()
+            secondFolder.deleteRecursively()
+            unipackDao.delete(OTHER_PACK_ID)
+        }
+    }
+
+    private fun requestRefresh(main: MainActivity) {
+        MainActivity::class.java.getDeclaredMethod("update").apply { isAccessible = true }.invoke(main)
+    }
+
+    /** Completed list reads of the resumed main screen, once no read is running or starts for a while. */
+    private fun settledListRefreshes(): Int {
+        val deadline = SystemClock.uptimeMillis() + 15_000
+        var last = -1
+        var stableSince = SystemClock.uptimeMillis()
+        while (SystemClock.uptimeMillis() < deadline) {
+            var count = -1
+            var refreshing = true
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                val main = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().singleOrNull() ?: return@runOnMainSync
+                count = (delegate(main, "scrollToTopTrigger") as MutableIntState).intValue
+                refreshing = (delegate(main, "listRefreshing") as MutableState<*>).value as Boolean
+            }
+            if (count != last || refreshing) {
+                last = count
+                stableSince = SystemClock.uptimeMillis()
+            } else if (SystemClock.uptimeMillis() - stableSince >= 2_000) {
+                return count
+            }
+            SystemClock.sleep(100)
+        }
+        throw AssertionError("main screen list did not settle (last count $last)")
+    }
+
+    private fun delegate(main: MainActivity, property: String): Any =
+        MainActivity::class.java.getDeclaredField("$property\$delegate").apply { isAccessible = true }.get(main)!!
 
     /**
      * Tapping the order arrow currently also expands the sort dropdown (reported separately as an

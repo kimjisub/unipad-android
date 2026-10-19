@@ -197,6 +197,9 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `MainActivityTest.testMainNavigationButtonsAndSettingsReturn` | Current Store/Import/Settings buttons exist; Settings opens and returns. |
 | `MainActivityTest.testMainScreenSorting` | Each sort method is saved/shown; order toggles and restores. |
 | `MainActivityTest.testSortNamesFollowAppLanguageChange` | Switching UniPad to Korean through the per-app language setting turns the sort bar and its list Korean at once and after a relaunch. API 33+ (per-app language); API 35 full runs do not skip it. |
+| `MainActivityTest.testRefreshWaitsForDeletionEvenWhenAnEarlierReadFinishes` | Hold a real list scan and deletion at file-operation gates; completing the old scan cannot start queued reads until deletion finishes. |
+| `MainActivityTest.testLaunchAndRecreateReadThePackListOnce` | Opening Main and recreating it read the pack list exactly once each. |
+| `MainActivityTest.testReturningToMainReadsThePackListOnce` | Each return from Store and Settings reads the pack list exactly once. |
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
