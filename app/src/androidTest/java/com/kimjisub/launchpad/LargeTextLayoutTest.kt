@@ -90,10 +90,10 @@ class LargeTextLayoutTest : BaseUITest() {
                 null
             }
         } finally {
-            AppLanguage.set(oldLanguage)
             device.executeShellCommand(if (oldScale == "null") "settings delete system font_scale"
                 else "settings put system font_scale $oldScale")
             device.executeShellCommand("wm density ${oldDensity ?: "reset"}")
+            AppLanguage.set(oldLanguage)
             TestUniPack.install(context)
         }
     }
