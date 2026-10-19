@@ -2,12 +2,14 @@ name: Android checks
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-checks-${{ github.event.pull_request.number }}
+  group: android-checks-${{ github.event_name }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
