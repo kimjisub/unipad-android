@@ -1,7 +1,5 @@
 package com.kimjisub.launchpad
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
@@ -25,7 +23,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ErrorCollector
 import org.junit.runner.RunWith
-import java.io.File
 
 /** Real screens at the phone's default and largest accessibility settings, restored after each case. */
 @RunWith(AndroidJUnit4::class)
@@ -42,38 +39,24 @@ class LargeTextLayoutTest : BaseUITest() {
 
     private fun checkScreens(language: String, scale: Float, density: Int) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
-        var oldLocales: LocaleListCompat? = null
+        val oldLanguage = AppLanguage.get()
         val oldScale = device.executeShellCommand("settings get system font_scale").trim()
         val oldDensity = device.executeShellCommand("wm density")
             .lineSequence().firstOrNull { it.startsWith("Override density:") }?.substringAfter(":")?.trim()
         val prefix = "large_text_${language}_${scale}_${density}"
         try {
-            val pack = TestUniPack.folder(context)
-            File(pack, "info").writeText(
-                "title=$TITLE\nproducerName=$PRODUCER\nbuttonX=8\nbuttonY=8\nchain=2\nsquareButton=true\n"
-            )
+            TestUniPack.install(context, title = TITLE, producer = PRODUCER)
             device.executeShellCommand("settings put system font_scale $scale")
             device.executeShellCommand("wm density $density")
+            AppLanguage.set(language)
             launchToMainScreen()
-            instrumentation.runOnMainSync {
-                oldLocales = AppCompatDelegate.getApplicationLocales()
-                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(language))
-            }
-            assertTrue("App language did not update", waitUntil(MAIN_TIMEOUT) {
-                var applied = false
-                instrumentation.runOnMainSync {
-                    applied = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
-                        .filterIsInstance<MainActivity>().singleOrNull()?.resources?.configuration?.locales?.get(0)?.language == language
-                }
-                applied
-            })
             instrumentation.runOnMainSync {
                 val config = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
                     .filterIsInstance<MainActivity>().single().resources.configuration
                 assertEquals("Font scale not applied", scale, config.fontScale, 0.01f)
                 assertEquals("Display density not applied", density, config.densityDpi)
                 assertEquals("Language not applied", language, config.locales[0].language)
-                println("Device API ${android.os.Build.VERSION.SDK_INT}, 1080x2400 landscape, language=$language, fontScale=${config.fontScale}, density=${config.densityDpi}")
+                println("Device API ${android.os.Build.VERSION.SDK_INT}, ${device.displayWidth}x${device.displayHeight}, language=$language, fontScale=${config.fontScale}, density=${config.densityDpi}")
             }
             findTestPackRow()
             takeScreenshot("${prefix}_main")
@@ -94,8 +77,7 @@ class LargeTextLayoutTest : BaseUITest() {
                 assertTrue("Producer's visible bounds clip its line", producer.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(0) - 1f)
                 null
             }
-            device.findObject(By.desc(str(R.string.setting))).click()
-            assertTrue("Settings did not open", device.wait(Until.hasObject(By.text(str(R.string.settings_storage))), 5000L))
+            openSettings()
             takeScreenshot("${prefix}_settings")
             errors.checkSucceeds {
                 val theme = compose.onNode(hasText(str(R.string.settings_theme)))
@@ -108,9 +90,7 @@ class LargeTextLayoutTest : BaseUITest() {
                 null
             }
         } finally {
-            oldLocales?.let { original ->
-                instrumentation.runOnMainSync { AppCompatDelegate.setApplicationLocales(original) }
-            }
+            AppLanguage.set(oldLanguage)
             device.executeShellCommand(if (oldScale == "null") "settings delete system font_scale"
                 else "settings put system font_scale $oldScale")
             device.executeShellCommand("wm density ${oldDensity ?: "reset"}")
