@@ -19,7 +19,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -30,12 +29,12 @@ import org.junit.runners.model.TestTimedOutException
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.concurrent.thread
 
 /**
  * The user presses a pad while an LED animation blinks the same pad. PlayActivity's setLedPad reads the
@@ -185,6 +184,11 @@ class PlayActivityViewModelPressLedRaceTest {
 		var mismatches = 0
 		var firstMismatch: String? = null
 		val started = System.nanoTime()
+		// Starting and joining 3,000 native threads adds scheduler work to every trial.
+		// Reuse one worker; each future must finish before the next trial starts.
+		val tickWorker = Executors.newSingleThreadExecutor { task ->
+			Thread(task, "press-led-ticks").apply { isDaemon = true }
+		}
 		try {
 			repeat(TRIALS) { trial ->
 				sentToPad.clear()
@@ -204,7 +208,7 @@ class PlayActivityViewModelPressLedRaceTest {
 				// Ticks alongside the presses until they end. The pause between
 				// ticks stands in for the runner's loop delay and lets presses take the runner's lock.
 				val tickFailure = AtomicReference<Throwable>()
-				val ticks = thread(isDaemon = true, name = "press-led-ticks-$trial") {
+				val ticks = tickWorker.submit {
 					try {
 						barrier.await(5, TimeUnit.SECONDS)
 						check(firstRead.await(5, TimeUnit.SECONDS)) { "pad read did not start in trial $trial" }
@@ -241,10 +245,8 @@ class PlayActivityViewModelPressLedRaceTest {
 					afterPadRead = null
 					pressing.set(false)
 					firstRead.countDown()
-					ticks.join(5_000)
-					if (ticks.isAlive) ticks.interrupt()
+					ticks.get(5, TimeUnit.SECONDS)
 				}
-				assertFalse("LED tick worker did not stop in trial $trial", ticks.isAlive)
 				tickFailure.get()?.let { throw AssertionError("LED tick worker failed in trial $trial", it) }
 				main.runAll()
 
@@ -261,6 +263,8 @@ class PlayActivityViewModelPressLedRaceTest {
 				assertEquals("trials whose finite blink ends during a press", TRIALS, finiteEnds)
 			}
 		} finally {
+			tickWorker.shutdownNow()
+			assertTrue("LED tick worker did not stop", tickWorker.awaitTermination(5, TimeUnit.SECONDS))
 			println(
 				"PRESS_LED_RACE trials=$completed overlaps=$overlaps finiteEnds=$finiteEnds " +
 					"mismatches=$mismatches sentOffMain=${sentOffMain.get()} first=$firstMismatch " +
