@@ -84,6 +84,17 @@ def staged_rollout_fraction(release, version_code)
   fraction
 end
 
+# Accept decimal fractions only; whole-number percentages would release to everyone.
+def rollout_fraction(value)
+  fraction = begin
+    Float(value.to_s)
+  rescue ArgumentError, TypeError
+    nil
+  end
+  UI.user_error!("Pass fraction as a decimal between 0 and 1 (e.g. 0.5 = 50%, 1 = complete), got #{value.inspect}") unless fraction && fraction > 0 && fraction <= 1
+  fraction
+end
+
 platform :android do
   desc "Build a signed release AAB without uploading (build/sign verification)."
   lane :build_only do
@@ -95,6 +106,9 @@ platform :android do
   desc "Build a signed AAB and upload to the given Play track. Pass track:internal|alpha|beta|production."
   lane :deploy do |options|
     track = options[:track] || "internal"
+    rollout = rollout_fraction(options[:rollout]) if track == "production" || options.key?(:rollout)
+    UI.user_error!("Pass rollout only for the production track") if track != "production" && options.key?(:rollout)
+    status = track == "production" ? (rollout == 1 ? "completed" : "inProgress") : "draft"
     UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
 
     bump_version_code! unless options[:no_bump]
@@ -103,11 +117,7 @@ platform :android do
     # Crashlytics names native crash frames only with these symbols; bundleRelease does not send them.
     gradle(task: "uploadCrashlyticsSymbolFile", build_type: "Release")
 
-    # rollout:0.1 stages a production release to 10% of users (status inProgress);
-    # omit it for the old behaviour (completed = everyone). Vitals showed the
-    # production build at 2.6-3.1% user-perceived crash rate, so stage first.
-    rollout = options[:rollout]&.to_s
-    status = if track == "production" then (rollout && rollout.to_f < 1.0 ? "inProgress" : "completed") else "draft" end
+    # Production requires an explicit rollout: 0.1 stages to 10%, 1 completes.
     upload_to_play_store(
       track: track,
       aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
@@ -116,7 +126,7 @@ platform :android do
       mapping: lane_context[SharedValues::GRADLE_MAPPING_TXT_OUTPUT_PATH],
       version_name: current_version_name,
       release_status: status,
-      rollout: rollout,
+      rollout: rollout&.to_s,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
@@ -127,18 +137,18 @@ platform :android do
 
   desc "Promote an already-uploaded build (e.g. from internal) into production as a staged release. Pass version_code:NNN and fraction:0.1 (1 = everyone)."
   lane :promote do |options|
+    fraction = rollout_fraction(options.fetch(:fraction, 0.1))
     UI.user_error!("PLAY_JSON_KEY_FILE not set — run op-bootstrap.sh android first") if ENV["PLAY_JSON_KEY_FILE"].to_s.empty?
-    fraction = (options[:fraction] || "0.1").to_s
     from = options[:from] || "internal"
     # `rollout` below only adjusts a release that is already on production; a build that
     # lives on internal has to be promoted first, which is a different supply call.
     upload_to_play_store(
       track: from,
       track_promote_to: "production",
-      track_promote_release_status: fraction.to_f >= 1.0 ? "completed" : "inProgress",
+      track_promote_release_status: fraction == 1 ? "completed" : "inProgress",
       version_code: options[:version_code] || current_version_code,
       version_name: options[:version_name] || current_version_name,
-      rollout: fraction,
+      rollout: fraction.to_s,
       skip_upload_aab: true, skip_upload_apk: true, skip_upload_metadata: true,
       skip_upload_images: true, skip_upload_screenshots: true, skip_upload_changelogs: true,
     )
@@ -147,13 +157,7 @@ platform :android do
 
   desc "Widen or resume a staged production rollout. Pass fraction:0.5 (1 = complete) and version_code:NNN."
   lane :rollout do |options|
-    fraction = begin
-      Float(options[:fraction].to_s)
-    rescue ArgumentError, TypeError
-      nil
-    end
-    # A percentage typed as a whole number (fraction:50) would otherwise complete the rollout for everyone.
-    UI.user_error!("Pass fraction as a decimal between 0 and 1 (e.g. 0.5 = 50%, 1 = complete), got #{options[:fraction].inspect}") unless fraction && fraction > 0 && fraction <= 1
+    fraction = rollout_fraction(options[:fraction])
     version_code = (options[:version_code] || current_version_code).to_s
     update_production_release(version_code) do |release, track|
       UI.user_error!("Production release #{version_code} must be inProgress or halted to widen or resume (was #{release.status})") unless %w[inProgress halted].include?(release.status)

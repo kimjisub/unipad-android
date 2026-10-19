@@ -11878,6 +11878,143 @@
           []
         ]
       }
+    },
+    {
+      "id": "RUN-RP-005",
+      "layer": "run",
+      "area": "realPack",
+      "title": "turning autoPlay off releases the endless sound it held, not the one the user holds",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "autoplayOff"
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 400
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "Loop Values: 0 loops indefinitely"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io LedRunner.test.ts \"turns a looping animation off on release and stays dark\", unipad-android LedRunnerToggleTest",
+          "note": "an endless loop lasts while its pad is held and ends when the pad is released (RUN-L-003)"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/PlayerHolds.test.ts",
+          "note": "a pad autoPlay holds counts as released when autoPlay is turned off, as any input that goes away counts as a release, so its endless sound stops; a pad the user still holds keeps sounding until the user lets go"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0\n1 2 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\ndelay 300\noff 1 1"
+        }
+      ],
+      "fingerprint": "b652c8b74d33fb541196c70a7c67fda2fa29b07f967358eb262798b809ab1b54",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              1,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "looping",
+              0,
+              0
+            ],
+            [
+              "looping",
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              "looping",
+              1,
+              0
+            ]
+          ],
+          [],
+          []
+        ]
+      }
     }
   ]
 }

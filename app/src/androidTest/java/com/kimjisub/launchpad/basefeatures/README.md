@@ -46,7 +46,10 @@ connected device):
 ```
 
 The shell runner uses an explicit serial for every device action and checks the JUnit footer:
-`adb shell am instrument` alone can exit zero after a failed test. It does not start a device. Before instrumentation it prepares both installed debug packages
+`adb shell am instrument` alone can exit zero after a failed test. The footer must count exactly
+the `@Test` methods declared by the classes `BaseFeaturesSuite` lists
+(`scripts/check_connected_results.py --suite`), and no test may be skipped.
+It does not start a device. Before instrumentation it prepares both installed debug packages
 with `cmd package compile -f -m speed`, matching the merged Gradle debug test preparation.
 This completes code verification outside the app startup deadline; it does not change app startup,
 assertions or timeouts. Debuggable packages may report a `verify` compiler filter rather than
@@ -240,8 +243,12 @@ quotes it in failure messages.
 | `heldPadStopsWhenWindowGrowsBack` | shrunk display returned with `wm size reset`; the window must match its original bounds and no override may remain |
 
 The pads must be laid out again. If the system cancels the touch at the change (one `ACTION_CANCEL`
-for the held finger), the held pad must already be dark and silent at that moment; the test sends
-nothing more for that finger, since Android refuses input for a gesture it ended. Without a cancel,
+for the held finger), the held pad must already be dark and silent at that moment. The test then
+injects one `ACTION_CANCEL` of its own for that finger (`Fingers.forgetCancelled()`), allowed to go
+undelivered: Android 17 still counts an injected gesture as down after the system cancelled it in
+the window, and refuses the next `ACTION_DOWN` ("pointers already down") until the injecting side
+ends it too. The window, whose touch already ended, must receive nothing from that cancel
+(`HeldPadTest.forgetCancelledFingers`). Without a cancel,
 the held pad is either released at the change or kept until the finger lifts; lit and looping must
 agree, and no other pad may play. After the lift nothing is lit or looping, and the first tap in the
 new layout plays and lights the pad under it. The play screen releases held pads when it lays the
@@ -259,8 +266,9 @@ the front as from recent apps); once its window is ready again the finger lifts 
 cancel, which is logged, stands for the lift), nothing is lit or looping, and pressing the same pad
 again plays, lights and loops it until it is lifted.
 
-On the API 35 emulator the system cancelled the held touch when Home hid the play window, so the
-Home cases pass through the shared cancellation handling. It did not cancel it when the play screen
+On the API 35 and 37 emulators the system cancelled the held touch when Home hid the play window, so
+the Home cases pass through the shared cancellation handling, including the injected cancel above
+that lets the same pad be pressed again on Android 17. It did not cancel it when the play screen
 only paused; the paused cases are the ones that check the play screen lets go of the pad itself
 (`padTouch.cancel()` in `PlayActivity.onPause`).
 

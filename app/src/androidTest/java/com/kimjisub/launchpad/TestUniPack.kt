@@ -34,7 +34,7 @@ object TestUniPack {
         title: String = TITLE,
     ): File {
         val root = folder(context)
-        root.deleteRecursively()
+        clear(root)
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
@@ -56,7 +56,16 @@ object TestUniPack {
     }
 
     fun remove(context: Context) {
-        folder(context).deleteRecursively()
+        clear(folder(context))
+    }
+
+    /**
+     * A deletion failure run stopped before its cleanup leaves an [UnreachableFolder] in the pack,
+     * which a delete by path cannot remove; take it apart first.
+     */
+    private fun clear(root: File) {
+        UnreachableFolder(File(root, "sounds")).remove()
+        root.deleteRecursively()
     }
 
     /** About 60 s of presses across chains 1 and 2, long enough for transport checks. */
