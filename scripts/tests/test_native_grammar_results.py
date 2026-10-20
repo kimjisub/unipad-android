@@ -8,6 +8,11 @@ import tempfile
 import unittest
 
 SPEC = importlib.util.spec_from_file_location('native_results', Path(__file__).parents[1] / 'native_grammar_results.py')
+MISSING_SOURCE_OUTPUTS = [
+    ('.ci-results', '.CI-RESULTS/round/nested'),
+    ('app/build/test-results/testDebugUnitTest', 'app/build/test-results/TESTdEBUGuNITtEST/round/nested'),
+    ('app/build/outputs/androidTest-results/connected', 'app/build/outputs/androidTest-results/CONNECTED/round/nested'),
+]
 
 
 class NativeGrammarResultsTest(unittest.TestCase):
@@ -15,6 +20,104 @@ class NativeGrammarResultsTest(unittest.TestCase):
         module = importlib.util.module_from_spec(SPEC)
         SPEC.loader.exec_module(module)
         return module
+
+    def case_aliases_share_directory(self, root):
+        with tempfile.TemporaryDirectory(dir=root) as probe:
+            lower = Path(probe) / 'case-probe'
+            upper = Path(probe) / 'CASE-PROBE'
+            lower.mkdir()
+            return upper.exists() and upper.samefile(lower)
+
+    def test_missing_source_case_alias_is_rejected_and_new_directories_are_removed(self):
+        for source, spelling in MISSING_SOURCE_OUTPUTS:
+            for absolute in [False, True]:
+                with self.subTest(source=source, absolute=absolute), \
+                        tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
+                    if not self.case_aliases_share_directory(directory):
+                        self.skipTest('Temporary filesystem distinguishes case; missing-source aliases are distinct')
+                    module = self.load()
+                    source_path = Path(source)
+                    source_path.parent.mkdir(parents=True, exist_ok=True)
+                    sentinel = source_path.parent / 'original.txt'
+                    if absolute:
+                        sentinel.write_text('keep existing evidence')
+                        (source_path.parent / 'empty-existing').mkdir()
+                    before = set(Path('.').rglob('*'))
+                    self.assertFalse(source_path.exists())
+                    output = Path(spelling).absolute() if absolute else Path(spelling)
+                    arguments = ['native_grammar_results.py', '--output', str(output),
+                                 '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                    errors = io.StringIO()
+                    with patch('sys.argv', arguments), \
+                            patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                            patch.object(module, 'capture', side_effect=AssertionError('External work started')), \
+                            patch.object(module, 'run', side_effect=AssertionError('Test command started')), \
+                            patch.object(module.shutil, 'rmtree', side_effect=AssertionError('Source removal started')), \
+                            patch.object(module.shutil, 'copytree', side_effect=AssertionError('Source copy started')), \
+                            contextlib.redirect_stderr(errors):
+                        with self.assertRaises(SystemExit) as raised:
+                            module.main()
+                    self.assertEqual(2, raised.exception.code)
+                    self.assertIn('overlap', errors.getvalue())
+                    self.assertFalse(output.exists())
+                    self.assertFalse(source_path.exists())
+                    self.assertTrue(Path(directory).is_dir())
+                    self.assertEqual(before, set(Path('.').rglob('*')))
+                    if absolute:
+                        self.assertEqual('keep existing evidence', sentinel.read_text())
+
+    def test_missing_source_different_case_is_admitted_on_case_sensitive_filesystem(self):
+        for source, spelling in MISSING_SOURCE_OUTPUTS:
+            with self.subTest(source=source), tempfile.TemporaryDirectory() as directory, \
+                    contextlib.chdir(directory):
+                if self.case_aliases_share_directory(directory):
+                    self.skipTest('Temporary filesystem aliases case; distinct-case paths require a case-sensitive disk')
+                module = self.load()
+                self.assertFalse(Path(source).exists())
+                output = Path(spelling)
+                arguments = ['native_grammar_results.py', '--output', str(output),
+                             '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                with patch('sys.argv', arguments), \
+                        patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                        patch.object(module, 'capture', side_effect=AssertionError('Admitted output')), \
+                        patch.object(module, 'run', side_effect=AssertionError('Test command started')):
+                    with self.assertRaisesRegex(AssertionError, 'Admitted output'):
+                        module.main()
+                self.assertTrue(output.is_dir())
+                self.assertFalse(Path(source).exists())
+
+    def test_rejected_missing_source_alias_preserves_new_directories_with_content(self):
+        for source, spelling in MISSING_SOURCE_OUTPUTS:
+            for populated in ['output', 'parent']:
+                with self.subTest(source=source, populated=populated), \
+                        tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
+                    if not self.case_aliases_share_directory(directory):
+                        self.skipTest('Temporary filesystem distinguishes case; missing-source aliases are distinct')
+                    module = self.load()
+                    self.assertFalse(Path(source).exists())
+                    output = Path(spelling)
+                    sentinel = (output if populated == 'output' else output.parent) / 'keep.txt'
+                    mkdir = Path.mkdir
+
+                    def create_with_content(path, *args, **kwargs):
+                        mkdir(path, *args, **kwargs)
+                        if path == output:
+                            sentinel.write_text('keep new content')
+
+                    arguments = ['native_grammar_results.py', '--output', str(output),
+                                 '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                    errors = io.StringIO()
+                    with patch('sys.argv', arguments), \
+                            patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                            patch.object(Path, 'mkdir', create_with_content), \
+                            patch.object(module, 'capture', side_effect=AssertionError('External work started')), \
+                            contextlib.redirect_stderr(errors):
+                        with self.assertRaises(SystemExit) as raised:
+                            module.main()
+                    self.assertEqual(2, raised.exception.code)
+                    self.assertIn('overlap', errors.getvalue())
+                    self.assertEqual('keep new content', sentinel.read_text())
+                    self.assertEqual(populated == 'output', output.exists())
 
     def test_missing_skipped_failed_and_duplicate_never_pass(self):
         module = self.load()

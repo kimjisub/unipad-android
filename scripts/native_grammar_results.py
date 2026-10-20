@@ -131,7 +131,22 @@ def main():
     serial = os.environ.get('ANDROID_SERIAL')
     if not serial:
         parser.error('ANDROID_SERIAL must identify the leased device')
+    existing_parent = output.parent
+    while not existing_parent.exists():
+        existing_parent = existing_parent.parent
     args.output.mkdir(parents=True)
+    # Creating the output can also create a previously missing source via a case alias.
+    for source in (unit, connected, diagnostics):
+        if source.exists() and any(os.path.samefile(ancestor, source)
+                                   for ancestor in (output, *output.parents)):
+            created = output
+            while created != existing_parent:
+                try:
+                    created.rmdir()
+                except OSError:
+                    break
+                created = created.parent
+            parser.error(f'Output must not overlap result source {source} (including symlinks)')
     revision = capture(['git', 'rev-parse', 'HEAD'])
     dirty = capture(['git', 'status', '--porcelain', '--untracked-files=all'])
     environment = {'host': platform.platform(), 'python': platform.python_version(), 'serial': serial}
