@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.UiObject2
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.DisplayOverlays
@@ -367,9 +368,22 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     /** Scrolls the list holding [content] to its end; a list that fits its viewport does not scroll. */
     private fun scrollToEnd(content: BySelector) {
         val list = screen.device.findObject(By.pkg(screen.context.packageName).scrollable(true).hasDescendant(content)) ?: return
-        var more = true
-        while (more) more = list.scroll(Direction.DOWN, 1f)
-        screen.instrumentation.waitForIdleSync()
+        scrollToEnd(list)
+    }
+
+    private fun scrollToEnd(list: UiObject2) {
+        // After switching navigation modes and rotating, the launcher's swipe-up monitor can still
+        // consume a drag near the bottom edge. Start in the middle and scroll to the same list end.
+        list.setGestureMarginsPercentage(0.1f, 0.1f, 0.1f, 0.5f)
+        // Compose may report no scroll event before reaching the end. Check the rendered rows instead.
+        var rows = list.findObjects(By.clickable(true)).map { it.visibleBounds }
+        for (drag in 1..MAX_DRAGS) {
+            list.scroll(Direction.DOWN, 1f)
+            screen.instrumentation.waitForIdleSync()
+            val moved = list.findObjects(By.clickable(true)).map { it.visibleBounds }
+            if (moved == rows) break
+            rows = moved
+        }
     }
 
     private fun keyboardHeight(decor: android.view.View) =
@@ -447,17 +461,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
         screen.instrumentation.waitForIdleSync()
         ready()
-        // A Compose list can report it reached its end before it did, so drag until its rows stop moving.
-        screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach { list ->
-            var rows: List<android.graphics.Rect>? = null
-            for (drag in 1..MAX_DRAGS) {
-                list.scroll(Direction.DOWN, 1f)
-                screen.instrumentation.waitForIdleSync()
-                val moved = list.findObjects(By.clickable(true)).map { it.visibleBounds }
-                if (moved == rows) break
-                rows = moved
-            }
-        }
+        screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach(::scrollToEnd)
         val controls = screen.freshControls()
         val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
         assertTrue("No $name controls found", controls.isNotEmpty())

@@ -344,7 +344,10 @@ Not established by these tests:
 `DisplayOverlays` switches the emulated navigation mode and display cutout,
 `emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size, and the tablet tests in
 `AppearanceAndInsetsTest` lower the display density and lock the display in landscape; each is
-restored in `finally`. If a run is
+restored in `finally`. The empty-library guide scroll starts in the middle of its viewport so the
+system cannot consume it as a swipe-up navigation gesture after a navigation-mode change and rotation.
+Like the tablet checks, it waits until the rendered rows stop moving rather than trusting a missing
+Compose scroll event. It still checks the same buttons against the actual system insets. If a run is
 killed in between, put the emulator back before returning it:
 
 ```bash
