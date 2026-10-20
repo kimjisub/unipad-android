@@ -114,6 +114,14 @@ def main():
     parser.add_argument('--grammar-version', required=True)
     parser.add_argument('--grammar-revision', required=True)
     args = parser.parse_args()
+    unit = Path('app/build/test-results/testDebugUnitTest')
+    connected = Path('app/build/outputs/androidTest-results/connected')
+    diagnostics = Path('.ci-results')
+    output = args.output.resolve()
+    for source in (unit, connected, diagnostics):
+        resolved_source = source.resolve()
+        if output.is_relative_to(resolved_source) or resolved_source.is_relative_to(output):
+            parser.error(f'Output must not overlap result source {source} (including symlinks)')
     serial = os.environ.get('ANDROID_SERIAL')
     if not serial:
         parser.error('ANDROID_SERIAL must identify the leased device')
@@ -126,7 +134,6 @@ def main():
     for prop in ['ro.build.fingerprint', 'ro.build.version.sdk', 'ro.product.cpu.abi']:
         environment[prop] = capture(['adb', '-s', serial, 'shell', 'getprop', prop])
     commands = []
-    unit = Path('app/build/test-results/testDebugUnitTest')
     if unit.exists():
         shutil.rmtree(unit)
     commands.append(run(['./gradlew', ':app:testDebugUnitTest', '--rerun', '--tests', PREFIX + 'manager.FileManagerTest',
@@ -136,11 +143,10 @@ def main():
         shutil.copytree(unit, args.output / 'raw/unit')
     commands.append(run(['bash', 'scripts/ci-connected-tests.sh', ROOT, ARCHIVE, DECODE, PAD],
                         args.output / 'device.log'))
-    connected = Path('app/build/outputs/androidTest-results/connected')
     if connected.exists():
         shutil.copytree(connected, args.output / 'raw/device')
-    if Path('.ci-results').exists():
-        shutil.copytree('.ci-results', args.output / 'diagnostics')
+    if diagnostics.exists():
+        shutil.copytree(diagnostics, args.output / 'diagnostics')
     raw = args.output / 'raw'
     results = read_results(raw)
     environment_verified = (not dirty and all(environment.values()) and

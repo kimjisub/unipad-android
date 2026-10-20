@@ -2,7 +2,13 @@
 
 Run on a device leased by your device manager, setting `ANDROID_SERIAL` to its exact
 serial. Use an output directory outside the checkout, or a Git-ignored directory,
-so generated evidence is not mistaken for a source change. Supply the grammar
+so generated evidence is not mistaken for a source change. The output must be
+separate from `.ci-results`, `app/build/test-results/testDebugUnitTest`, and
+`app/build/outputs/androidTest-results/connected`: it cannot equal, contain, or
+sit inside any of those result sources. Relative paths, absolute paths and
+symlink targets are checked before creating output or running any commands.
+For example, `.ci-results/round` is rejected even though Git ignores it; a new
+directory outside the checkout is recommended. Supply the grammar
 version and immutable revision that was reviewed:
 
 ```sh
