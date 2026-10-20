@@ -344,7 +344,12 @@ Not established by these tests:
 `DisplayOverlays` switches the emulated navigation mode and display cutout,
 `emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size, and the tablet tests in
 `AppearanceAndInsetsTest` lower the display density and lock the display in landscape; each is
-restored in `finally`. The empty-library guide scroll starts in the middle of its viewport so the
+restored in `finally`. The checks accept either landscape rotation: before API 36 an activity can
+retain reverse landscape despite the user rotation lock. Both still require a bottom navigation bar.
+After side-bar rotations on API 33, the test sends a subtree accessibility-change event before
+reading controls because that version has no public cache-clearing method. Window and control
+coordinates must still match the actual screen.
+The empty-library guide scroll starts in the middle of its viewport so the
 system cannot consume it as a swipe-up navigation gesture after a navigation-mode change and rotation.
 Like the tablet checks, it waits until the rendered rows stop moving rather than trusting a missing
 Compose scroll event. It still checks the same buttons against the actual system insets. If a run is
