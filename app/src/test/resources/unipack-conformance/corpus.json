@@ -15511,9 +15511,6 @@
           "note": "a release stops the endless sound its press started; a sound played once or N times plays to its end"
         }
       ],
-      "unobserved": {
-        "ios": "the iOS harness runs the real sound engine, which keeps no record a test can read of the voices it stops"
-      },
       "expectation": "determined",
       "files": [
         {
@@ -15622,9 +15619,6 @@
           "note": "the press owns the voice it started, whatever the chain is at the release"
         }
       ],
-      "unobserved": {
-        "ios": "the iOS harness runs the real sound engine, which keeps no record a test can read of the voices it stops"
-      },
       "expectation": "determined",
       "files": [
         {
@@ -15729,9 +15723,6 @@
           "note": "a press first stops the voice the pad started last"
         }
       ],
-      "unobserved": {
-        "ios": "the iOS harness runs the real sound engine, which keeps no record a test can read of the voices it stops"
-      },
       "expectation": "determined",
       "files": [
         {
@@ -15942,9 +15933,6 @@
           "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
         }
       ],
-      "unobserved": {
-        "ios": "the harness runs the sound engine and the LED runner without PlayViewModel, which resets the queues on a chain change"
-      },
       "expectation": "determined",
       "files": [
         {
@@ -16094,9 +16082,6 @@
           "note": "Every change of chain, even to the same chain, sets the queues of every pad of that chain back to their first sound and light, as the three play screens do."
         }
       ],
-      "unobserved": {
-        "ios": "the harness runs the sound engine and the LED runner without PlayViewModel, which resets the queues on a chain change"
-      },
       "expectation": "determined",
       "files": [
         {

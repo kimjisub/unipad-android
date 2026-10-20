@@ -9,11 +9,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.UiObject2
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.DisplayOverlays
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
+import com.kimjisub.launchpad.activity.MidiSelectActivity
 import com.kimjisub.launchpad.activity.SettingsActivity
 import com.kimjisub.launchpad.activity.ThemeActivity
 import com.kimjisub.launchpad.activity.TransferActivity
@@ -22,6 +24,7 @@ import com.kimjisub.launchpad.manager.PreferenceManager
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
@@ -168,13 +171,68 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     @Test fun transferScreenStaysClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
-            screen.launch(TransferActivity::class.java) {
-                putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
-                putExtra(TransferActivity.EXTRA_SOURCE_PATH, screen.workspace.path)
-            }
+            launchTransfer(screen.workspace)
             assertControlsClearOfSideBarAndCutout("transfer") {
                 screen.node(By.text(FeatureScreen.PACK_ID))
                 screen.node(By.text(screen.text(R.string.transfer_start)))
+            }
+        }
+    }
+
+    @Test fun midiSelectScreenStaysClearOfSideNavigationBarAndCutout() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
+            screen.launch(MidiSelectActivity::class.java)
+            assertControlsClearOfSideBarAndCutout("midi-select") {
+                screen.node(By.text(screen.text(R.string.midi_help_title)))
+                screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
+            }
+        }
+    }
+
+    @Test fun settingsScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(SettingsActivity::class.java)
+            assertControlsAboveBottomBar("settings-info") {
+                screen.node(By.text(screen.text(R.string.reconnect_launchpad)))
+            }
+            screen.clickText(R.string.settings_storage)
+            assertControlsAboveBottomBar("settings-storage") {
+                screen.node(By.text(screen.text(R.string.transfer_button)))
+            }
+        }
+    }
+
+    @Test fun themeScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(ThemeActivity::class.java)
+            assertControlsAboveBottomBar("theme") {
+                screen.node(By.desc(screen.text(R.string.theme_add_title)))
+            }
+        }
+    }
+
+    @Test fun transferScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        withTransferSource { source ->
+            onTabletWithButtonBar {
+                launchTransfer(source)
+                assertControlsAboveBottomBar("transfer") {
+                    screen.node(By.text(transferFolderName(0)))
+                    screen.node(By.text(screen.text(R.string.transfer_start)))
+                }
+            }
+        }
+    }
+
+    @Test fun midiSelectScreenEndsAboveTabletNavigationBar() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        onTabletWithButtonBar {
+            screen.launch(MidiSelectActivity::class.java)
+            assertControlsAboveBottomBar("midi-select") {
+                screen.node(By.text(screen.text(R.string.midi_help_title)))
             }
         }
     }
@@ -246,9 +304,29 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         assertScrollsAboveKeyboard("main-no-search-results", By.text(screen.text(R.string.main_search_clear)), keyboardTop)
     }
 
-    /** Opens the main screen's search and waits for its keyboard to finish opening; returns the keyboard's top on screen. */
-    private fun openSearchKeyboard(): Int {
-        screen.clickDescription(R.string.transfer_search)
+    @Test fun transferScreenSearchResultsScrollAboveKeyboardOnTablet() {
+        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
+        // On a landscape phone the keyboard reaches up to the search field and leaves none of the list
+        // in view, so this is checked where some rows stay above it.
+        withTransferSource { source ->
+            onTabletWithButtonBar {
+                launchTransfer(source)
+                screen.node(By.text(transferFolderName(0)))
+                val keyboardTop = openSearchKeyboard { screen.click(By.clazz("android.widget.EditText")) }
+                // Ten of the packs match, still more than the strip above the keyboard shows.
+                screen.node(By.focused(true)).text = "${TRANSFER_FOLDER_PREFIX}1"
+                screen.await("Search did not filter the packs") { !screen.device.hasObject(By.text(transferFolderName(0))) }
+                assertScrollsAboveKeyboard("transfer-search-results", By.text(transferFolderName(19)), keyboardTop)
+            }
+        }
+    }
+
+    /**
+     * Opens a search field with [open] (by default the main screen's) and waits for its keyboard to
+     * finish opening; returns the keyboard's top on screen.
+     */
+    private fun openSearchKeyboard(open: () -> Unit = { screen.clickDescription(R.string.transfer_search) }): Int {
+        open()
         var keyboard = -1 to 0L
         screen.await("Search keyboard did not finish opening") {
             val height = screen.onMain { keyboardHeight(screen.resumed().window.decorView) }
@@ -290,9 +368,22 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     /** Scrolls the list holding [content] to its end; a list that fits its viewport does not scroll. */
     private fun scrollToEnd(content: BySelector) {
         val list = screen.device.findObject(By.pkg(screen.context.packageName).scrollable(true).hasDescendant(content)) ?: return
-        var more = true
-        while (more) more = list.scroll(Direction.DOWN, 1f)
-        screen.instrumentation.waitForIdleSync()
+        scrollToEnd(list)
+    }
+
+    private fun scrollToEnd(list: UiObject2) {
+        // After switching navigation modes and rotating, the launcher's swipe-up monitor can still
+        // consume a drag near the bottom edge. Start in the middle and scroll to the same list end.
+        list.setGestureMarginsPercentage(0.1f, 0.1f, 0.1f, 0.5f)
+        // Compose may report no scroll event before reaching the end. Check the rendered rows instead.
+        var rows = list.findObjects(By.clickable(true)).map { it.visibleBounds }
+        for (drag in 1..MAX_DRAGS) {
+            list.scroll(Direction.DOWN, 1f)
+            screen.instrumentation.waitForIdleSync()
+            val moved = list.findObjects(By.clickable(true)).map { it.visibleBounds }
+            if (moved == rows) break
+            rows = moved
+        }
     }
 
     private fun keyboardHeight(decor: android.view.View) =
@@ -305,16 +396,14 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     private fun assertControlsClearOfSideBarAndCutout(name: String, ready: () -> Unit) {
         for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+            // Wait for rendered controls and the newly enabled overlays before forcing another
+            // window transition, including when the previous test left the screen reversed.
+            ready()
+            awaitSideBarAndCutout()
+            screen.freshControls()
             screen.onMain { screen.resumed().requestedOrientation = orientation }
             val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
-            screen.await("Side navigation bar and cutout did not reach the rotated window") {
-                screen.onMain {
-                    val activity = screen.resumed()
-                    val display = activity.windowManager.maximumWindowMetrics.bounds
-                    val safe = freeArea(activity.window.decorView)
-                    activity.display!!.rotation == expected && safe != null && safe.left > display.left && safe.right < display.right
-                }
-            }
+            awaitSideBarAndCutout(expected)
             screen.instrumentation.waitForIdleSync()
             ready()
             val controls = screen.freshControls()
@@ -328,6 +417,95 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
     }
 
+    private fun awaitSideBarAndCutout(expectedRotation: Int? = null) {
+        screen.await("Side navigation bar and cutout did not reach the window (rotation=$expectedRotation)") {
+            screen.onMain {
+                val activity = screen.resumed()
+                val rotation = activity.display!!.rotation
+                val landscape = rotation == android.view.Surface.ROTATION_90 || rotation == android.view.Surface.ROTATION_270
+                val display = activity.windowManager.maximumWindowMetrics.bounds
+                val safe = freeArea(activity.window.decorView)
+                landscape && (expectedRotation == null || rotation == expectedRotation) &&
+                    safe != null && safe.left > display.left && safe.right < display.right
+            }
+        }
+    }
+
+    /**
+     * Runs [block] with three-button navigation on a display whose density makes it a tablet
+     * (smallest width [TABLET_SMALLEST_WIDTH_DP]), held in landscape, where the bar, or the taskbar
+     * holding its buttons, stays along the bottom. From API 36 a screen this large ignores the app's
+     * landscape request and follows the display, so the display itself is turned. The density and
+     * rotation in place before are put back; a rotation that cannot be read is put back as free.
+     */
+    private fun <T> onTabletWithButtonBar(block: () -> T): T {
+        val sizes = screen.device.executeShellCommand("wm size")
+        val shortest = (Regex("Override size: (\\d+)x(\\d+)").find(sizes) ?: Regex("Physical size: (\\d+)x(\\d+)").find(sizes)!!)
+            .destructured.let { (width, height) -> minOf(width.toInt(), height.toInt()) }
+        val density = Regex("Override density: (\\d+)").find(screen.device.executeShellCommand("wm density"))?.groupValues?.get(1)
+        val rotation = screen.device.executeShellCommand("wm user-rotation").trim().takeIf { it.matches(Regex("free|lock [0-3]")) } ?: "free"
+        return DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION) {
+            try {
+                screen.device.executeShellCommand("wm density ${shortest * 160 / TABLET_SMALLEST_WIDTH_DP}")
+                screen.device.executeShellCommand("wm user-rotation lock ${android.view.Surface.ROTATION_90}")
+                block()
+            } finally {
+                screen.device.executeShellCommand("wm user-rotation $rotation")
+                screen.device.executeShellCommand(if (density != null) "wm density $density" else "wm density reset")
+            }
+        }
+    }
+
+    /**
+     * Waits until the resumed screen is laid out as a tablet with the navigation bar along its bottom,
+     * scrolls every scrollable list on it to its end and checks every control [ready] waited for, and
+     * every other one on screen, lies above the bar.
+     */
+    private fun assertControlsAboveBottomBar(name: String, ready: () -> Unit) {
+        screen.await("Tablet layout with a bottom navigation bar did not reach the window") {
+            screen.onMain {
+                val activity = screen.resumed()
+                val safe = freeArea(activity.window.decorView)
+                // Before API 36 an activity's landscape request can retain the reverse
+                // landscape orientation even when the user's rotation is locked to 90 degrees.
+                val rotation = activity.display!!.rotation
+                activity.resources.configuration.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP &&
+                    (rotation == android.view.Surface.ROTATION_90 || rotation == android.view.Surface.ROTATION_270) &&
+                    safe != null && safe.bottom < activity.windowManager.maximumWindowMetrics.bounds.bottom
+            }
+        }
+        screen.instrumentation.waitForIdleSync()
+        ready()
+        screen.device.findObjects(By.pkg(screen.context.packageName).scrollable(true)).forEach(::scrollToEnd)
+        val controls = screen.freshControls()
+        val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
+        assertTrue("No $name controls found", controls.isNotEmpty())
+        screen.capture("$name-bottom-bar")
+        controls.forEach {
+            val bounds = it.visibleBounds
+            assertTrue("$name control ${it.contentDescription ?: it.resourceName ?: it.text} $bounds outside $safe", safe.contains(bounds))
+        }
+    }
+
+    /** A source folder holding more packs than one screen shows, removed afterwards. */
+    private fun withTransferSource(block: (File) -> Unit) {
+        val source = File(screen.context.cacheDir, "transfer-insets")
+        try {
+            source.deleteRecursively()
+            repeat(TRANSFER_FOLDERS) { assertTrue(File(source, transferFolderName(it)).mkdirs()) }
+            block(source)
+        } finally {
+            source.deleteRecursively()
+        }
+    }
+
+    private fun launchTransfer(source: File) = screen.launch(TransferActivity::class.java) {
+        putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
+        putExtra(TransferActivity.EXTRA_SOURCE_PATH, source.path)
+    }
+
+    private fun transferFolderName(index: Int) = "$TRANSFER_FOLDER_PREFIX%02d".format(index)
+
     /** The window's area on screen that neither a system bar nor the display cutout covers. */
     private fun freeArea(decor: android.view.View): android.graphics.Rect? {
         val insets = ViewCompat.getRootWindowInsets(decor)
@@ -340,7 +518,10 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         const val NO_MATCH = "zz-no-pack-matches"
         const val LARGEST_FONT_SCALE = "2.0"
         const val MAX_DRAGS = 20
+        const val TRANSFER_FOLDER_PREFIX = "insets-pack-"
         const val DRAG_MARGIN_PX = 8
         const val DRAG_STEPS = 20
+        const val TABLET_SMALLEST_WIDTH_DP = 720
+        const val TRANSFER_FOLDERS = 30
     }
 }

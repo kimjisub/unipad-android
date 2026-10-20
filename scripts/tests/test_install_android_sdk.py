@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 INSTALLER = ROOT / "scripts/install-android-sdk.sh"
 DISCONNECTED = "Failed to read HTTP response: Peer disconnected"
+GZIP_DISCONNECTED = "gzip decompression failed: Peer disconnected"
 
 
 class AndroidSdkInstallTest(unittest.TestCase):
@@ -69,6 +70,31 @@ print('SDK packages installed')
         self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
         self.assertEqual(len(calls), 1)
         self.assertIn("Unsupported SDK package", result.stdout + result.stderr)
+
+    def test_gzip_disconnection_retries_the_same_install(self):
+        result, calls = self.install(
+            failures=1, message="Failed to write to file\n" + GZIP_DISCONNECTED)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0], calls[1])
+        self.assertIn(GZIP_DISCONNECTED, result.stdout + result.stderr)
+
+    def test_repeated_gzip_disconnection_keeps_failure_after_three_attempts(self):
+        result, calls = self.install(failures=10, message=GZIP_DISCONNECTED)
+        self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 3)
+        self.assertTrue(all(call == calls[0] for call in calls))
+
+    def test_other_gzip_failure_is_returned_without_retry(self):
+        result, calls = self.install(
+            failures=1, message="gzip decompression failed: Invalid gzip header")
+        self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 1)
+
+    def test_file_write_failure_is_returned_without_retry(self):
+        result, calls = self.install(failures=1, message="Failed to write to file")
+        self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+        self.assertEqual(len(calls), 1)
 
 
 if __name__ == "__main__":
