@@ -69,15 +69,23 @@ class FeatureScreen {
     fun freshControls(): List<UiObject2> {
         var controls = emptyList<UiObject2>()
         var seen = emptyList<Rect>()
+        var frames = emptyList<Rect>()
         var window = Rect()
-        await({ "Accessibility placed the window at $seen instead of $window" }) {
+        await({ "Window frames $frames and accessibility roots $seen must match view $window" }) {
             withResponsiveInput {
                 window = onMain { bounds(resumed().window.decorView) }
                 clearNodeCache()
-                seen = instrumentation.uiAutomation.windows.mapNotNull { it.root }
-                    .filter { it.packageName == context.packageName }
-                    .map { Rect().also(it::getBoundsInScreen) }
-                (window in seen).also { if (it) controls = device.findObjects(By.pkg(context.packageName).clickable(true)) }
+                val windows = instrumentation.uiAutomation.windows
+                val appWindows = windows.filter { it.root?.packageName == context.packageName }
+                frames = appWindows.map { Rect().also(it::getBoundsInScreen) }
+                seen = appWindows.mapNotNull { it.root }.filter { it.refresh() }.map { root ->
+                    // API 33 has no UiAutomation.clearCache(), but a node can refresh itself
+                    // from the view. Keep the native window and view geometry checks as well.
+                    Rect().also(root::getBoundsInScreen)
+                }
+                (window in frames && window in seen).also {
+                    if (it) controls = device.findObjects(By.pkg(context.packageName).clickable(true))
+                }
             }
         }
         return controls
@@ -228,6 +236,10 @@ class FeatureScreen {
         val folder = "basefeatures-captures"
         assertTrue("Screenshot was not saved", TestCaptures.screenshot(device, "$folder/$name.png"))
         if (name.startsWith("missing-")) {
+            TestCaptures.save(device, "$folder/$name-windows.txt") {
+                it.writeText(device.executeShellCommand("dumpsys window windows"))
+                true
+            }
             ActivityReadiness.captureState(context, device, folder, name)
         }
     }

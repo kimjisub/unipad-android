@@ -3,7 +3,6 @@ package com.kimjisub.launchpad.basefeatures
 import android.content.pm.ActivityInfo
 import androidx.core.graphics.drawable.toBitmap
 import android.os.LocaleList
-import android.view.accessibility.AccessibilityEvent
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -188,6 +187,19 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 screen.node(By.text(screen.text(R.string.midi_help_title)))
                 screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
             }
+        }
+    }
+
+    @Test fun midiSelectRotatesAfterReopeningFromReverseLandscape() {
+        // Repeat the preceding screen's reverse rotation and overlay teardown. Rotating MIDI
+        // before its first Compose frame intermittently left API 33's view wider than its window.
+        repeat(10) {
+            screen.install()
+            mainScreenButtonsStayClearOfSideNavigationBarAndCutout()
+            screen.close()
+            screen.install()
+            midiSelectScreenStaysClearOfSideNavigationBarAndCutout()
+            screen.close()
         }
     }
 
@@ -397,6 +409,10 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     private fun assertControlsClearOfSideBarAndCutout(name: String, ready: () -> Unit) {
         for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+            // Launch readiness precedes Compose's first frame. Finish opening the screen before
+            // forcing another window transition, including when the previous test left it reversed.
+            ready()
+            screen.freshControls()
             screen.onMain { screen.resumed().requestedOrientation = orientation }
             val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
             screen.await("Side navigation bar and cutout did not reach the rotated window") {
@@ -408,19 +424,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
                 }
             }
             screen.instrumentation.waitForIdleSync()
-            if (android.os.Build.VERSION.SDK_INT == 33) {
-                // API 33 cannot clear UiAutomation's cache. Invalidate the rotated subtree
-                // before reading coordinates, including when the activity handles rotation itself.
-                screen.instrumentation.uiAutomation.executeAndWaitForEvent({
-                    screen.onMain {
-                        val decor = screen.resumed().window.decorView
-                        val event = AccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
-                        event.contentChangeTypes = AccessibilityEvent.CONTENT_CHANGE_TYPE_SUBTREE
-                        decor.sendAccessibilityEventUnchecked(event)
-                    }
-                }, { it.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
-                    it.packageName == screen.context.packageName }, 10000)
-            }
             ready()
             val controls = screen.freshControls()
             val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
