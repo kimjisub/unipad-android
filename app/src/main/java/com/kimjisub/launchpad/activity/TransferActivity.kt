@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -678,6 +680,9 @@ private fun ConfigurationContent(
 	onGrantBackupAccess: () -> Unit,
 ) {
 	var searchQuery by remember { mutableStateOf("") }
+	// The lists draw under a bottom navigation bar and the keyboard but end above both, so their last
+	// rows can still be scrolled into view; the right column, which the keyboard covers, ends above the bar.
+	val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues()
 	Row(
 		modifier = Modifier.fillMaxSize(),
 		horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -691,7 +696,7 @@ private fun ConfigurationContent(
 			if (state.sourceSelectable && state.sourceId == null) {
 				// Source selection mode
 				SectionLabel(stringResource(R.string.transfer_select_source))
-				LazyColumn(modifier = Modifier.weight(1f)) {
+				LazyColumn(modifier = Modifier.weight(1f), contentPadding = listBottom) {
 					itemsIndexed(state.sourceOptions ?: emptyList()) { _, source ->
 						TransferCard(
 							modifier = Modifier
@@ -796,7 +801,7 @@ private fun ConfigurationContent(
 						)
 					}
 
-					LazyColumn(modifier = Modifier.weight(1f)) {
+					LazyColumn(modifier = Modifier.weight(1f), contentPadding = listBottom) {
 						itemsIndexed(filteredItems) { _, (originalIndex, item) ->
 							// Read selected state directly from snapshot state list
 							// to ensure LazyColumn items recompose on changes
@@ -860,7 +865,8 @@ private fun ConfigurationContent(
 			modifier = Modifier
 				.weight(1f)
 				.fillMaxHeight()
-				.verticalScroll(rememberScrollState()),
+				.verticalScroll(rememberScrollState())
+				.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom)),
 		) {
 			SectionLabel(stringResource(R.string.transfer_target))
 
@@ -1091,7 +1097,8 @@ private fun CompleteContent(
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.verticalScroll(rememberScrollState()),
+			.verticalScroll(rememberScrollState())
+			.windowInsetsPadding(WindowInsets.barsAndCutout.only(WindowInsetsSides.Bottom)),
 	) {
 		SectionLabel(stringResource(R.string.migration_result))
 		TransferCard {
