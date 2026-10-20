@@ -13,12 +13,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.saveable.listSaver
@@ -61,6 +66,7 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import kotlin.reflect.KClass
 
@@ -238,16 +244,22 @@ private fun MidiSelectScreen(
 			onClose = { helpOpen = false },
 		)
 	}
+	// The buttons stay clear of the system bars and the cutout; the device grid's last row scrolls
+	// above a bottom navigation bar.
+	val barsAndCutout = WindowInsets.barsAndCutout
+	val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.background),
+			.background(MaterialTheme.colorScheme.background)
+			.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left panel (~35%) - Selected device preview
 		Column(
 			modifier = Modifier
 				.weight(0.35f)
 				.fillMaxHeight()
+				.windowInsetsPadding(safeBottom)
 				.padding(12.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
@@ -434,7 +446,10 @@ private fun MidiSelectScreen(
 				.padding(16.dp),
 			horizontalArrangement = Arrangement.spacedBy(12.dp),
 			verticalArrangement = Arrangement.spacedBy(12.dp),
-			contentPadding = PaddingValues(vertical = 8.dp),
+			contentPadding = PaddingValues(
+				top = 8.dp,
+				bottom = 8.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+			),
 		) {
 			itemsIndexed(midiDevices) { index, device ->
 				DeviceCard(
