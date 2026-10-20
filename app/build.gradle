@@ -299,6 +299,8 @@ dependencies {
 	androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
 	// Compose UI tests pull Espresso 3.5, which looks up InputManager.getInstance and fails on Android 17
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+	// Self-signed server certificates for the on-device HTTPS certificate check
+	androidTestImplementation 'com.squareup.okhttp3:okhttp-tls:5.5.0'
 	androidTestUtil 'androidx.test:orchestrator:1.6.1'
 	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
