@@ -19,7 +19,8 @@ for attempt in 1 2 3; do
 
   # Retry the observed download interruption; package and configuration failures stay fatal.
   if (( attempt == 3 )) || ! grep -Fq \
-    'Failed to read HTTP response: Peer disconnected' "$attempt_log"; then
+    -e 'Failed to read HTTP response: Peer disconnected' \
+    -e 'gzip decompression failed: Peer disconnected' "$attempt_log"; then
     exit "$install_status"
   fi
   delay=$((attempt * 2))
