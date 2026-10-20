@@ -191,8 +191,8 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun midiSelectRotatesAfterReopeningFromReverseLandscape() {
-        // Repeat the preceding screen's reverse rotation and overlay teardown. Rotating MIDI
-        // before its first Compose frame intermittently left API 33's view wider than its window.
+        // Repeat the preceding screen's reverse rotation and overlay teardown. Overlapping the
+        // overlay changes and a forced rotation left API 33's view wider than its native window.
         repeat(10) {
             screen.install()
             mainScreenButtonsStayClearOfSideNavigationBarAndCutout()
@@ -409,20 +409,14 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
      */
     private fun assertControlsClearOfSideBarAndCutout(name: String, ready: () -> Unit) {
         for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
-            // Launch readiness precedes Compose's first frame. Finish opening the screen before
-            // forcing another window transition, including when the previous test left it reversed.
+            // Wait for rendered controls and the newly enabled overlays before forcing another
+            // window transition, including when the previous test left the screen reversed.
             ready()
+            awaitSideBarAndCutout()
             screen.freshControls()
             screen.onMain { screen.resumed().requestedOrientation = orientation }
             val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
-            screen.await("Side navigation bar and cutout did not reach the rotated window") {
-                screen.onMain {
-                    val activity = screen.resumed()
-                    val display = activity.windowManager.maximumWindowMetrics.bounds
-                    val safe = freeArea(activity.window.decorView)
-                    activity.display!!.rotation == expected && safe != null && safe.left > display.left && safe.right < display.right
-                }
-            }
+            awaitSideBarAndCutout(expected)
             screen.instrumentation.waitForIdleSync()
             ready()
             val controls = screen.freshControls()
@@ -432,6 +426,20 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             controls.forEach {
                 val bounds = it.visibleBounds
                 assertTrue("$name control ${it.contentDescription ?: it.resourceName ?: it.text} $bounds outside $safe", safe.contains(bounds))
+            }
+        }
+    }
+
+    private fun awaitSideBarAndCutout(expectedRotation: Int? = null) {
+        screen.await("Side navigation bar and cutout did not reach the window (rotation=$expectedRotation)") {
+            screen.onMain {
+                val activity = screen.resumed()
+                val rotation = activity.display!!.rotation
+                val landscape = rotation == android.view.Surface.ROTATION_90 || rotation == android.view.Surface.ROTATION_270
+                val display = activity.windowManager.maximumWindowMetrics.bounds
+                val safe = freeArea(activity.window.decorView)
+                landscape && (expectedRotation == null || rotation == expectedRotation) &&
+                    safe != null && safe.left > display.left && safe.right < display.right
             }
         }
     }
