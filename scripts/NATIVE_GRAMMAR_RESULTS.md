@@ -1,7 +1,9 @@
 # Native pack grammar evidence
 
 Run on a device leased by your device manager, setting `ANDROID_SERIAL` to its exact
-serial. Supply the grammar version and immutable revision that was reviewed:
+serial. Use an output directory outside the checkout, or a Git-ignored directory,
+so generated evidence is not mistaken for a source change. Supply the grammar
+version and immutable revision that was reviewed:
 
 ```sh
 python3 scripts/native_grammar_results.py \
