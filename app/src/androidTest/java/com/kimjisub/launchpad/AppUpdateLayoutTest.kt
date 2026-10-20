@@ -170,16 +170,21 @@ class AppUpdateLayoutTest : BaseUITest() {
                 // Compose exposes the name as a child of the actual action node.
                 val action = clickableAncestor(notice)
                 assertEquals("app_update_notice", action.resourceName?.substringAfterLast('/'))
-                assertTrue("notice must be enabled", action.isEnabled)
+                assertTrue("notice must become enabled", waitUntil(5000L) {
+                    device.findObject(By.res("app_update_notice"))?.isEnabled == true
+                })
                 assertTrue("notice target is too small", action.visibleBounds.height() >= 48 * context.resources.displayMetrics.density - 2)
                 TestCaptures.save(device, "notice-${language}-${scale}.xml") { file -> device.dumpWindowHierarchy(file); true }
-                action.click()
+                assertTrue("notice could not be tapped", clickFresh(5000L) {
+                    device.findObject(By.res("app_update_notice"))?.takeIf { it.isEnabled }
+                })
             }
+            assertTrue("update choices did not appear", device.wait(Until.hasObject(By.res("app_update_card")), 5000L))
             val download = By.text(str(R.string.update_download))
             if (!device.hasObject(download)) {
                 device.findObject(By.scrollable(true))?.scrollUntil(androidx.test.uiautomator.Direction.DOWN, Until.findObject(download))
             }
-            assertTrue("tap did not open download choices", device.hasObject(download))
+            assertTrue("tap did not open download choices", device.wait(Until.hasObject(download), 5000L))
             takeScreenshot("update_${language}_${scale}_choices")
             if (notice != null) device.pressBack()
             for ((status, title, suffix) in listOf(

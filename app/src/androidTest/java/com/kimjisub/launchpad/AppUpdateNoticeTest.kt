@@ -147,7 +147,7 @@ class AppUpdateNoticeTest : BaseUITest() {
 	@Test
 	fun failedInstallKeepsTheAppAndOffersRetryAndStore() {
 		reachInstallFailure()
-		assertNotNull(findText(R.string.update_retry))
+		assertTrue("retry choice did not appear", waitUntil(5000L) { findText(R.string.update_retry) != null })
 		assertNotNull(findText(R.string.update_check_in_store))
 		takeScreenshot("update_failed")
 		device.pressBack()
@@ -281,7 +281,10 @@ class AppUpdateNoticeTest : BaseUITest() {
 	}
 
 	private fun openNotice() {
-		assertTrue("compact notice missing", clickFresh(5000L) { device.findObject(By.res("app_update_notice")) })
+		assertTrue("compact notice not ready", clickFresh(5000L) {
+			device.findObject(By.res("app_update_notice"))?.takeIf { it.isEnabled }
+		})
+		assertTrue("update dialog did not appear", device.wait(Until.hasObject(By.res("app_update_dialog")), 5000L))
 	}
 
 	/** With large text the choices scroll inside the dialog. */
