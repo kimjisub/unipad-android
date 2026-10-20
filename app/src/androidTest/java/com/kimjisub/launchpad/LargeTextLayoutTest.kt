@@ -3,6 +3,8 @@ package com.kimjisub.launchpad
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -46,6 +48,11 @@ class LargeTextLayoutTest : BaseUITest() {
         val prefix = "large_text_${language}_${scale}_${density}"
         try {
             TestUniPack.install(context, title = TITLE, producer = PRODUCER)
+            seedPackHistory()
+            // A sparse file exercises a multi-digit capacity without allocating its contents.
+            java.io.RandomAccessFile(java.io.File(TestUniPack.folder(context), "capacity.bin"), "rw").use {
+                it.setLength(1234L * 1024 * 1024)
+            }
             device.executeShellCommand("settings put system font_scale $scale")
             device.executeShellCommand("wm density $density")
             AppLanguage.set(language)
@@ -59,6 +66,7 @@ class LargeTextLayoutTest : BaseUITest() {
                 println("Device API ${android.os.Build.VERSION.SDK_INT}, ${device.displayWidth}x${device.displayHeight}, language=$language, fontScale=${config.fontScale}, density=${config.densityDpi}")
             }
             findTestPackRow()
+            waitForCapacity("1234 ${str(R.string.mb)}")
             takeScreenshot("${prefix}_main")
             if (scale == 1f) {
                 assertEquals("Default pack row height changed", 60f * density / 160f,
@@ -77,6 +85,13 @@ class LargeTextLayoutTest : BaseUITest() {
                 assertTrue("Producer's visible bounds clip its line", producer.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(0) - 1f)
                 null
             }
+            checkTotalPanel(prefix, scale)
+            openDetailPanel()
+            takeScreenshot("${prefix}_detail")
+            checkDetailPanel(prefix)
+            compose.onNode(hasTestTag("main_pack_${TestUniPack.FOLDER_NAME}"))
+                .performScrollTo().performClick()
+            checkFooter(prefix)
             openSettings()
             takeScreenshot("${prefix}_settings")
             errors.checkSucceeds {
@@ -89,6 +104,18 @@ class LargeTextLayoutTest : BaseUITest() {
                 takeScreenshot("${prefix}_theme")
                 null
             }
+            if (scale == 1f) {
+                // Short metadata makes the default-screen pixel comparison independent of marquee timing.
+                TestUniPack.install(context)
+                seedPackHistory()
+                launchToMainScreen()
+                findTestPackRow()
+                waitForCapacity("0 ${str(R.string.mb)}")
+                takeScreenshot("${prefix}_comparison_main")
+                openDetailPanel()
+                compose.waitForIdle()
+                takeScreenshot("${prefix}_comparison_detail")
+            }
         } finally {
             device.executeShellCommand(if (oldScale == "null") "settings delete system font_scale"
                 else "settings put system font_scale $oldScale")
@@ -96,6 +123,137 @@ class LargeTextLayoutTest : BaseUITest() {
             AppLanguage.set(oldLanguage)
             TestUniPack.install(context)
         }
+    }
+
+    private fun openDetailPanel() {
+        compose.onNode(hasTestTag("main_pack_${TestUniPack.FOLDER_NAME}"))
+            .performScrollTo().performClick()
+        compose.onNode(hasTestTag("main_detail_${TestUniPack.FOLDER_NAME}"))
+            .assertIsDisplayed()
+        compose.waitUntil(10000L) {
+            compose.onAllNodes(hasText(str(R.string.measuring)), useUnmergedTree = true)
+                .fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    private fun waitForCapacity(value: String) {
+        compose.waitUntil(10000L) {
+            compose.onAllNodes(hasText(value), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun seedPackHistory() {
+        val dao = com.kimjisub.launchpad.db.AppDatabase.getInstance(context).unipackDAO()
+        dao.delete(TestUniPack.FOLDER_NAME)
+        dao.insert(com.kimjisub.launchpad.db.ent.Unipack(
+            TestUniPack.FOLDER_NAME, false, 0,
+            fixtureDate(2022), fixtureDate(2021),
+        ))
+    }
+
+    private fun fixtureDate(year: Int): java.util.Date = java.util.Date.from(
+        java.time.LocalDate.of(year, 1, 1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(),
+    )
+
+    private fun checkTotalPanel(prefix: String, scale: Float) {
+        errors.checkSucceeds {
+            val logo = compose.onNode(hasContentDescription(str(R.string.cd_logo)))
+            val version = compose.onNode(hasText(BuildConfig.VERSION_NAME), useUnmergedTree = true)
+            logo.assertIsDisplayed()
+            assertReadable(version)
+            if (scale > 1f) {
+                assertTrue("Version overlaps logo", version.fetchSemanticsNode().boundsInRoot.top >=
+                    logo.fetchSemanticsNode().boundsInRoot.bottom - 1f)
+            }
+            null
+        }
+        val labels = listOf(str(R.string.MPT_playCount), str(R.string.MTP_count), str(R.string.MTP_size),
+            "0", "1", "1234 ${str(R.string.mb)}")
+        for ((index, text) in labels.withIndex()) {
+            errors.checkSucceeds {
+                val node = compose.onNode(hasText(text), useUnmergedTree = true)
+                scrollIfNeeded(node)
+                takeScreenshot("${prefix}_total_$index")
+                assertReadable(node)
+                null
+            }
+        }
+    }
+
+    private fun checkFooter(prefix: String) {
+        for (label in listOf(R.string.guide_download_new, R.string.guide_import_external, R.string.guide_restore_packs)) {
+            errors.checkSucceeds {
+                val node = compose.onNode(hasText(str(label)), useUnmergedTree = true)
+                node.performScrollTo()
+                takeScreenshot("${prefix}_footer_${label}")
+                assertReadable(node)
+                null
+            }
+        }
+    }
+
+    private fun checkDetailPanel(prefix: String) {
+        val panel = hasAnyAncestor(hasTestTag("main_detail_${TestUniPack.FOLDER_NAME}"))
+        for (label in listOf(R.string.MPP_downloadedDate, R.string.MPP_lastPlayed,
+            R.string.MPP_padSize, R.string.MPP_chain, R.string.MPP_soundFiles, R.string.MPP_ledEvents)) {
+            errors.checkSucceeds {
+                val node = compose.onNode(hasText(str(label)) and panel, useUnmergedTree = true)
+                scrollIfNeeded(node)
+                takeScreenshot("${prefix}_detail_${label}")
+                assertReadable(node)
+                null
+            }
+        }
+        // Literal values come from the fixture's 8x8 pads, two chains, 128 sound mappings and one LED file.
+        for ((index, value) in listOf("8 × 8", "2", "128", "1", "0").withIndex()) {
+            errors.checkSucceeds {
+                val node = compose.onNode(hasText(value) and panel, useUnmergedTree = true)
+                scrollIfNeeded(node)
+                takeScreenshot("${prefix}_property_$index")
+                assertReadable(node)
+                null
+            }
+        }
+        for (date in listOf("01/01/2021", "01/01/2022")) {
+            errors.checkSucceeds {
+                val node = compose.onNode(hasText(date) and panel, useUnmergedTree = true)
+                scrollIfNeeded(node)
+                takeScreenshot("${prefix}_date_${date.replace('/', '_')}")
+                assertReadable(node)
+                val layouts = mutableListOf<TextLayoutResult>()
+                node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                assertEquals("Date wraps into fragments", 1, layouts.single().lineCount)
+                null
+            }
+        }
+    }
+
+    private fun scrollIfNeeded(node: SemanticsNodeInteraction) {
+        val scrollable = generateSequence(node.fetchSemanticsNode().parent) { it.parent }
+            .any { it.config.contains(SemanticsActions.ScrollBy) }
+        if (scrollable) node.performScrollTo()
+    }
+
+    private fun assertReadable(node: SemanticsNodeInteraction) {
+        node.assertIsDisplayed()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        println("Text '${layout.layoutInput.text}': size=${layout.size}, paragraph=${layout.multiParagraph.width}x${layout.multiParagraph.height}, overflow=${layout.hasVisualOverflow}")
+        assertTrue("Text has omitted lines: ${layout.layoutInput.text}", !layout.multiParagraph.didExceedMaxLines)
+        // Paragraph width can retain its wider constraint after Text measures to content width.
+        // The rendered line extents and visible bounds identify actual clipping.
+        for (line in 0 until layout.lineCount) {
+            assertTrue("Text line is clipped horizontally: ${layout.layoutInput.text}",
+                layout.getLineRight(line) - layout.getLineLeft(line) <= layout.size.width + 1f)
+            assertTrue("Visible bounds clip text horizontally: ${layout.layoutInput.text}",
+                node.fetchSemanticsNode().boundsInRoot.width >=
+                    layout.getLineRight(line) - layout.getLineLeft(line) - 1f)
+            assertTrue("Text line is clipped vertically: ${layout.layoutInput.text}",
+                layout.getLineBottom(line) <= layout.size.height + 1f)
+        }
+        assertTrue("Visible bounds clip text: ${layout.layoutInput.text}",
+            node.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(layout.lineCount - 1) - 1f)
     }
 
     companion object {
