@@ -9,9 +9,14 @@ import unittest
 
 SPEC = importlib.util.spec_from_file_location('native_results', Path(__file__).parents[1] / 'native_grammar_results.py')
 MISSING_SOURCE_OUTPUTS = [
-    ('.ci-results', '.CI-RESULTS/round/nested'),
-    ('app/build/test-results/testDebugUnitTest', 'app/build/test-results/TESTdEBUGuNITtEST/round/nested'),
-    ('app/build/outputs/androidTest-results/connected', 'app/build/outputs/androidTest-results/CONNECTED/round/nested'),
+    (source, variant)
+    for source, spelling in [
+        ('.ci-results', '.CI-RESULTS/round/nested'),
+        ('app/build/test-results/testDebugUnitTest', 'app/build/test-results/TESTdEBUGuNITtEST/round/nested'),
+        ('app/build/outputs/androidTest-results/connected', 'app/build/outputs/androidTest-results/CONNECTED/round/nested'),
+    ]
+    for variant in [spelling, spelling.replace('/round/', '/unused/../round/'),
+                    'unrelated/../' + spelling]
 ]
 
 
@@ -31,7 +36,7 @@ class NativeGrammarResultsTest(unittest.TestCase):
     def test_missing_source_case_alias_is_rejected_and_new_directories_are_removed(self):
         for source, spelling in MISSING_SOURCE_OUTPUTS:
             for absolute in [False, True]:
-                with self.subTest(source=source, absolute=absolute), \
+                with self.subTest(source=source, spelling=spelling, absolute=absolute), \
                         tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
                     if not self.case_aliases_share_directory(directory):
                         self.skipTest('Temporary filesystem distinguishes case; missing-source aliases are distinct')
@@ -68,7 +73,7 @@ class NativeGrammarResultsTest(unittest.TestCase):
 
     def test_missing_source_different_case_is_admitted_on_case_sensitive_filesystem(self):
         for source, spelling in MISSING_SOURCE_OUTPUTS:
-            with self.subTest(source=source), tempfile.TemporaryDirectory() as directory, \
+            with self.subTest(source=source, spelling=spelling), tempfile.TemporaryDirectory() as directory, \
                     contextlib.chdir(directory):
                 if self.case_aliases_share_directory(directory):
                     self.skipTest('Temporary filesystem aliases case; distinct-case paths require a case-sensitive disk')
@@ -83,25 +88,27 @@ class NativeGrammarResultsTest(unittest.TestCase):
                         patch.object(module, 'run', side_effect=AssertionError('Test command started')):
                     with self.assertRaisesRegex(AssertionError, 'Admitted output'):
                         module.main()
-                self.assertTrue(output.is_dir())
+                self.assertTrue(output.resolve().is_dir())
+                self.assertFalse(Path('unrelated').exists())
+                self.assertFalse((output.resolve().parents[1] / 'unused').exists())
                 self.assertFalse(Path(source).exists())
 
     def test_rejected_missing_source_alias_preserves_new_directories_with_content(self):
         for source, spelling in MISSING_SOURCE_OUTPUTS:
             for populated in ['output', 'parent']:
-                with self.subTest(source=source, populated=populated), \
+                with self.subTest(source=source, spelling=spelling, populated=populated), \
                         tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
                     if not self.case_aliases_share_directory(directory):
                         self.skipTest('Temporary filesystem distinguishes case; missing-source aliases are distinct')
                     module = self.load()
                     self.assertFalse(Path(source).exists())
                     output = Path(spelling)
-                    sentinel = (output if populated == 'output' else output.parent) / 'keep.txt'
+                    sentinel = (output if populated == 'output' else output.parent).resolve() / 'keep.txt'
                     mkdir = Path.mkdir
 
                     def create_with_content(path, *args, **kwargs):
                         mkdir(path, *args, **kwargs)
-                        if path == output:
+                        if path.resolve() == output.resolve():
                             sentinel.write_text('keep new content')
 
                     arguments = ['native_grammar_results.py', '--output', str(output),
@@ -117,7 +124,7 @@ class NativeGrammarResultsTest(unittest.TestCase):
                     self.assertEqual(2, raised.exception.code)
                     self.assertIn('overlap', errors.getvalue())
                     self.assertEqual('keep new content', sentinel.read_text())
-                    self.assertEqual(populated == 'output', output.exists())
+                    self.assertEqual(populated == 'output', output.resolve().exists())
 
     def test_missing_skipped_failed_and_duplicate_never_pass(self):
         module = self.load()
@@ -257,45 +264,48 @@ class NativeGrammarResultsTest(unittest.TestCase):
             self.assertEqual('keep previous round', sentinel.read_text())
 
     def test_cached_unit_results_cannot_be_attributed_to_the_current_commit(self):
-        module = self.load()
-        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as evidence, \
-                contextlib.chdir(directory):
-            output = Path(evidence) / 'round'
-            Path('app/src/androidTest/assets/audio-formats').mkdir(parents=True)
+        for spelling in ['round', 'unused/../round']:
+            module = self.load()
+            with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as evidence, \
+                    contextlib.chdir(directory):
+                output = Path(evidence) / spelling
+                Path('app/src/androidTest/assets/audio-formats').mkdir(parents=True)
 
-            def capture(command):
-                if command[:3] == ['git', 'rev-parse', 'HEAD']:
-                    return 'current-commit'
-                if command[:2] == ['git', 'status']:
-                    return ''
-                return 'device-property'
+                def capture(command):
+                    if command[:3] == ['git', 'rev-parse', 'HEAD']:
+                        return 'current-commit'
+                    if command[:2] == ['git', 'status']:
+                        return ''
+                    return 'device-property'
 
-            def run(command, log):
-                if command[0] == './gradlew':
-                    result = Path('app/build/test-results/testDebugUnitTest')
-                    result.mkdir(parents=True)
-                    forced = any(flag in command for flag in ('--rerun', '--rerun-tasks', '--no-build-cache'))
-                    origin = 'current-commit' if forced else 'older-commit'
-                    (result / 'TEST-Unit.xml').write_text(
-                        '<testsuite><testcase classname="Unit" name="check"/>'
-                        f'<system-out>{origin}</system-out></testsuite>')
-                else:
-                    result = Path('app/build/outputs/androidTest-results/connected')
-                    result.mkdir(parents=True)
-                    (result / 'TEST-Device.xml').write_text(
-                        '<testsuite><testcase classname="Device" name="probe"/></testsuite>')
-                    Path('.ci-results').mkdir()
-                    Path('.ci-results/logcat.txt').write_text('case-sensitive probe passed at fixture\n' * 3)
-                log.write_text('simulated Gradle execution\n')
-                return {'command': command, 'exitCode': 0, 'log': log.name}
+                def run(command, log):
+                    if command[0] == './gradlew':
+                        result = Path('app/build/test-results/testDebugUnitTest')
+                        result.mkdir(parents=True)
+                        forced = any(flag in command for flag in ('--rerun', '--rerun-tasks', '--no-build-cache'))
+                        origin = 'current-commit' if forced else 'older-commit'
+                        (result / 'TEST-Unit.xml').write_text(
+                            '<testsuite><testcase classname="Unit" name="check"/>'
+                            f'<system-out>{origin}</system-out></testsuite>')
+                    else:
+                        result = Path('app/build/outputs/androidTest-results/connected')
+                        result.mkdir(parents=True)
+                        (result / 'TEST-Device.xml').write_text(
+                            '<testsuite><testcase classname="Device" name="probe"/></testsuite>')
+                        Path('.ci-results').mkdir()
+                        Path('.ci-results/logcat.txt').write_text('case-sensitive probe passed at fixture\n' * 3)
+                    log.write_text('simulated Gradle execution\n')
+                    return {'command': command, 'exitCode': 0, 'log': log.name}
 
-            arguments = ['native_grammar_results.py', '--output', str(output),
-                         '--grammar-version', 'test', '--grammar-revision', 'test-revision']
-            with patch('sys.argv', arguments), patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
-                    patch.object(module, 'capture', side_effect=capture), patch.object(module, 'run', side_effect=run), \
-                    patch.object(module, 'REQUIRED', {'F-01': ['Device#probe'], 'F-05': ['Unit#check']}):
-                self.assertEqual(0, module.main())
-            report = json.loads((output / 'results.json').read_text())
-            self.assertEqual('current-commit', report['repositoryCommit'])
-            raw = (output / 'raw/unit/TEST-Unit.xml').read_text()
-            self.assertIn('current-commit', raw, 'A previous Gradle result must not be labelled as a fresh run')
+                arguments = ['native_grammar_results.py', '--output', str(output),
+                             '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                with patch('sys.argv', arguments), patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                        patch.object(module, 'capture', side_effect=capture), patch.object(module, 'run', side_effect=run), \
+                        patch.object(module, 'REQUIRED', {'F-01': ['Device#probe'], 'F-05': ['Unit#check']}):
+                    self.assertEqual(0, module.main())
+                self.assertFalse((Path(evidence) / 'unused').exists())
+                output = output.resolve()
+                report = json.loads((output / 'results.json').read_text())
+                self.assertEqual('current-commit', report['repositoryCommit'])
+                raw = (output / 'raw/unit/TEST-Unit.xml').read_text()
+                self.assertIn('current-commit', raw, 'A previous Gradle result must not be labelled as a fresh run')

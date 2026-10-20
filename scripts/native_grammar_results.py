@@ -134,6 +134,8 @@ def main():
     existing_parent = output.parent
     while not existing_parent.exists():
         existing_parent = existing_parent.parent
+    # Use the checked path for creation and all writes so '..' creates no extra directories.
+    args.output = output
     args.output.mkdir(parents=True)
     # Creating the output can also create a previously missing source via a case alias.
     for source in (unit, connected, diagnostics):
