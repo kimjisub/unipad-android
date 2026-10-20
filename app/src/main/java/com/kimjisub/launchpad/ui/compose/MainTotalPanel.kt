@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +30,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,7 +42,7 @@ import com.kimjisub.launchpad.ui.theme.Blue
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 
-/** The list side panel keeps the same geometry for every update state. */
+/** Update states keep one footer; large text retains scrollable, readable information. */
 @Composable
 fun MainTotalPanelScreen(
 	vm: MainTotalPanelViewModel,
@@ -48,13 +51,28 @@ fun MainTotalPanelScreen(
 	onCheckUpdateClick: (() -> Unit)? = null,
 	checkingUpdate: Boolean = false,
 ) {
+	val largeText = LocalDensity.current.fontScale > 1f
 	Surface(
 		modifier = Modifier.fillMaxSize(),
 		shape = RoundedCornerShape(8.dp),
 		color = MaterialTheme.colorScheme.surface,
 	) {
 		Box(modifier = Modifier.fillMaxSize()) {
-			Column(
+			if (largeText) {
+				Column(
+					modifier = Modifier.fillMaxSize()
+						.verticalScroll(rememberScrollState())
+						.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
+				) {
+					Row(verticalAlignment = Alignment.CenterVertically) {
+						LogoAndVersion(vm)
+						Spacer(Modifier.weight(1f))
+						SettingsButton(onSettingsClick)
+					}
+					Spacer(Modifier.height(12.dp))
+					Stats(vm)
+				}
+			} else Column(
 				modifier = Modifier
 					.fillMaxSize()
 					.padding(16.dp),
@@ -95,7 +113,7 @@ fun MainTotalPanelScreen(
 				}
 			}
 
-			SettingsButton(
+			if (!largeText) SettingsButton(
 				onSettingsClick,
 				modifier = Modifier
 					.align(Alignment.BottomEnd)
@@ -107,7 +125,7 @@ fun MainTotalPanelScreen(
 
 @Composable
 private fun LogoAndVersion(vm: MainTotalPanelViewModel) {
-	Box(contentAlignment = Alignment.BottomEnd) {
+	val logo: @Composable () -> Unit = {
 		Image(
 			painter = painterResource(R.drawable.custom_logo),
 			contentDescription = stringResource(R.string.cd_logo),
@@ -116,11 +134,24 @@ private fun LogoAndVersion(vm: MainTotalPanelViewModel) {
 				.height(50.dp),
 			contentScale = ContentScale.Inside,
 		)
+	}
+	val version: @Composable () -> Unit = {
 		Text(
 			text = vm.version,
 			fontSize = 10.sp,
 			color = if (vm.premium) Orange else MaterialTheme.colorScheme.onSurfaceVariant,
 		)
+	}
+	if (LocalDensity.current.fontScale > 1f) {
+		Column(horizontalAlignment = Alignment.End) {
+			logo()
+			version()
+		}
+	} else {
+		Box(contentAlignment = Alignment.BottomEnd) {
+			logo()
+			version()
+		}
 	}
 }
 
@@ -174,11 +205,7 @@ private fun StatRow(
 	label: String,
 	value: String,
 ) {
-	Row(
-		modifier = Modifier.fillMaxWidth(),
-		horizontalArrangement = Arrangement.SpaceBetween,
-		verticalAlignment = Alignment.CenterVertically,
-	) {
+	val content: @Composable () -> Unit = {
 		Text(
 			text = label,
 			fontSize = 12.sp,
@@ -190,5 +217,14 @@ private fun StatRow(
 			fontWeight = FontWeight.Bold,
 			color = MaterialTheme.colorScheme.onSurface,
 		)
+	}
+	if (LocalDensity.current.fontScale > 1f) {
+		Column(modifier = Modifier.fillMaxWidth()) { content() }
+	} else {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically,
+		) { content() }
 	}
 }
