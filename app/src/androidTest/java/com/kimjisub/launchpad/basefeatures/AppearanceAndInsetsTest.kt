@@ -184,7 +184,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
             screen.launch(MidiSelectActivity::class.java)
             assertControlsClearOfSideBarAndCutout("midi-select") {
-                screen.node(By.text(screen.text(R.string.midi_help_title)))
+                screen.node(By.text(screen.text(android.R.string.ok)))
                 screen.node(By.text(screen.text(R.string.midi_lp_mk2)))
             }
         }
@@ -232,7 +232,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         onTabletWithButtonBar {
             screen.launch(MidiSelectActivity::class.java)
             assertControlsAboveBottomBar("midi-select") {
-                screen.node(By.text(screen.text(R.string.midi_help_title)))
+                screen.node(By.text(screen.text(android.R.string.ok)))
             }
         }
     }
