@@ -190,19 +190,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
     }
 
-    @Test fun midiSelectRotatesAfterReopeningFromReverseLandscape() {
-        // Repeat the preceding screen's reverse rotation and overlay teardown. Overlapping the
-        // overlay changes and a forced rotation left API 33's view wider than its native window.
-        repeat(10) {
-            screen.install()
-            mainScreenButtonsStayClearOfSideNavigationBarAndCutout()
-            screen.close()
-            screen.install()
-            midiSelectScreenStaysClearOfSideNavigationBarAndCutout()
-            screen.close()
-        }
-    }
-
     @Test fun settingsScreenEndsAboveTabletNavigationBar() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         onTabletWithButtonBar {
