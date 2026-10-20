@@ -30,6 +30,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -42,8 +43,8 @@ import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 
 /**
- * The side panel when no pack is selected. With an [updateNotice] the logo, stats and settings
- * move up to make room for it and the panel scrolls, so large text never hides its buttons.
+ * The side panel when no pack is selected. Large text and [updateNotice] use a scrollable
+ * layout so the stats and actions remain reachable on short landscape screens.
  */
 @Composable
 fun MainTotalPanelScreen(
@@ -53,12 +54,13 @@ fun MainTotalPanelScreen(
 	onCheckUpdateClick: (() -> Unit)? = null,
 	checkingUpdate: Boolean = false,
 ) {
+	val largeText = LocalDensity.current.fontScale > 1f
 	Surface(
 		modifier = Modifier.fillMaxSize(),
 		shape = RoundedCornerShape(8.dp),
 		color = MaterialTheme.colorScheme.surface,
 	) {
-		if (updateNotice != null) {
+		if (updateNotice != null || largeText) {
 			Column(
 				modifier = Modifier
 					.fillMaxSize()
@@ -73,7 +75,10 @@ fun MainTotalPanelScreen(
 				Spacer(Modifier.height(12.dp))
 				Stats(vm)
 				Spacer(Modifier.height(12.dp))
-				updateNotice()
+				updateNotice?.invoke()
+				if (updateNotice == null && onCheckUpdateClick != null) {
+					CheckUpdateButton(onCheckUpdateClick, checkingUpdate)
+				}
 			}
 		} else Box(modifier = Modifier.fillMaxSize()) {
 			Column(
@@ -89,25 +94,11 @@ fun MainTotalPanelScreen(
 			}
 
 			if (onCheckUpdateClick != null) {
-				Row(
-					modifier = Modifier
-						.align(Alignment.BottomStart)
-						.focusRing()
-						.clickable(enabled = !checkingUpdate) { onCheckUpdateClick() }
-						.padding(12.dp)
-						.testTag("app_update_check"),
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					Text(
-						text = stringResource(R.string.update_check),
-						color = Blue,
-						fontSize = 11.sp,
-					)
-					if (checkingUpdate) {
-						Spacer(Modifier.width(6.dp))
-						CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Blue)
-					}
-				}
+				CheckUpdateButton(
+					onCheckUpdateClick,
+					checkingUpdate,
+					Modifier.align(Alignment.BottomStart),
+				)
 			}
 
 			SettingsButton(
@@ -121,8 +112,30 @@ fun MainTotalPanelScreen(
 }
 
 @Composable
+private fun CheckUpdateButton(onClick: () -> Unit, checkingUpdate: Boolean, modifier: Modifier = Modifier) {
+	Row(
+		modifier = modifier
+			.focusRing()
+			.clickable(enabled = !checkingUpdate) { onClick() }
+			.padding(12.dp)
+			.testTag("app_update_check"),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Text(
+			text = stringResource(R.string.update_check),
+			color = Blue,
+			fontSize = 11.sp,
+		)
+		if (checkingUpdate) {
+			Spacer(Modifier.width(6.dp))
+			CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Blue)
+		}
+	}
+}
+
+@Composable
 private fun LogoAndVersion(vm: MainTotalPanelViewModel) {
-	Box(contentAlignment = Alignment.BottomEnd) {
+	val logo: @Composable () -> Unit = {
 		Image(
 			painter = painterResource(R.drawable.custom_logo),
 			contentDescription = stringResource(R.string.cd_logo),
@@ -131,11 +144,24 @@ private fun LogoAndVersion(vm: MainTotalPanelViewModel) {
 				.height(50.dp),
 			contentScale = ContentScale.Inside,
 		)
+	}
+	val version: @Composable () -> Unit = {
 		Text(
 			text = vm.version,
 			fontSize = 10.sp,
 			color = if (vm.premium) Orange else MaterialTheme.colorScheme.onSurfaceVariant,
 		)
+	}
+	if (LocalDensity.current.fontScale > 1f) {
+		Column(horizontalAlignment = Alignment.End) {
+			logo()
+			version()
+		}
+	} else {
+		Box(contentAlignment = Alignment.BottomEnd) {
+			logo()
+			version()
+		}
 	}
 }
 
@@ -189,11 +215,7 @@ private fun StatRow(
 	label: String,
 	value: String,
 ) {
-	Row(
-		modifier = Modifier.fillMaxWidth(),
-		horizontalArrangement = Arrangement.SpaceBetween,
-		verticalAlignment = Alignment.CenterVertically,
-	) {
+	val content: @Composable () -> Unit = {
 		Text(
 			text = label,
 			fontSize = 12.sp,
@@ -205,5 +227,14 @@ private fun StatRow(
 			fontWeight = FontWeight.Bold,
 			color = MaterialTheme.colorScheme.onSurface,
 		)
+	}
+	if (LocalDensity.current.fontScale > 1f) {
+		Column(modifier = Modifier.fillMaxWidth()) { content() }
+	} else {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically,
+		) { content() }
 	}
 }

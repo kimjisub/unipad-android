@@ -1,6 +1,8 @@
 package com.kimjisub.launchpad.ui.compose
 
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +45,7 @@ fun formatDate(date: Date?): String =
 
 @Composable
 fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifier) {
+	val largeText = LocalDensity.current.fontScale > 1f
 	val unipackEnt by vm.unipackEnt.observeAsState()
 	val soundCount = vm.soundCount
 	val ledCount = vm.ledCount
@@ -57,6 +61,7 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
+				.then(if (largeText) Modifier.verticalScroll(rememberScrollState()) else Modifier)
 				.padding(16.dp),
 		) {
 			// Header: bookmark + action buttons
@@ -105,72 +110,56 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 
 			Spacer(Modifier.height(8.dp))
 
-			// Stats: play count + dates
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				verticalAlignment = Alignment.CenterVertically,
-			) {
-				// Play Count
-				Column(horizontalAlignment = Alignment.CenterHorizontally) {
-					Text(
-						text = stringResource(R.string.MPT_playCount),
-						fontSize = 10.sp,
-						color = Color(0xFF888888),
-					)
-					Text(
-						text = (unipackEnt?.openCount ?: 0).toString(),
-						fontWeight = FontWeight.Bold,
-						color = Color(0xFF1A1A1A),
-					)
+			// At large font sizes the history needs its own rows, above the property grid.
+			if (largeText) {
+				Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+					PlayCount(unipackEnt?.openCount ?: 0)
+					PackDates(unipackEnt?.createdAt, unipackEnt?.lastOpenedAt)
 				}
-
-				Spacer(Modifier.weight(1f))
-
-				// Dates
-				Column(horizontalAlignment = Alignment.End) {
-					DateRow(
-						label = stringResource(R.string.MPP_downloadedDate),
-						value = formatDate(unipackEnt?.createdAt),
-					)
-					DateRow(
-						label = stringResource(R.string.MPP_lastPlayed),
-						value = formatDate(unipackEnt?.lastOpenedAt),
-					)
+			} else {
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					verticalAlignment = Alignment.CenterVertically,
+				) {
+					PlayCount(unipackEnt?.openCount ?: 0)
+					Spacer(Modifier.weight(1f))
+					PackDates(unipackEnt?.createdAt, unipackEnt?.lastOpenedAt)
 				}
 			}
 
 			Spacer(Modifier.height(8.dp))
 
-			// 2x2 property grid
-			Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-				Row(modifier = Modifier
-					.fillMaxWidth()) {
+			// Two columns by default; larger text uses one column.
+			Column(
+				modifier = if (largeText) Modifier.fillMaxWidth() else Modifier.weight(1f),
+				verticalArrangement = Arrangement.Center,
+			) {
+				PropertyRow(largeText) { cellModifier ->
 					PropertyBlock(
 						icon = R.drawable.ic_pad_24dp,
 						title = stringResource(R.string.MPP_padSize),
 						value = "${unipack.buttonX} \u00D7 ${unipack.buttonY}",
-						modifier = Modifier.weight(1f),
+						modifier = cellModifier,
 					)
 					PropertyBlock(
 						icon = R.drawable.ic_chain_24dp,
 						title = stringResource(R.string.MPP_chain),
 						value = unipack.chain.toString(),
-						modifier = Modifier.weight(1f),
+						modifier = cellModifier,
 					)
 				}
-				Row(modifier = Modifier
-					.fillMaxWidth()) {
+				PropertyRow(largeText) { cellModifier ->
 					PropertyBlock(
 						icon = R.drawable.ic_music_note_24dp,
 						title = stringResource(R.string.MPP_soundFiles),
 						value = soundCount?.toString() ?: countPending,
-						modifier = Modifier.weight(1f),
+						modifier = cellModifier,
 					)
 					PropertyBlock(
 						icon = R.drawable.ic_led_event_24dp,
 						title = stringResource(R.string.MPP_ledEvents),
 						value = ledCount?.toString() ?: countPending,
-						modifier = Modifier.weight(1f),
+						modifier = cellModifier,
 					)
 				}
 			}
@@ -202,6 +191,39 @@ fun MainPackPanelScreen(vm: MainPackPanelViewModel, modifier: Modifier = Modifie
 }
 
 @Composable
+private fun PlayCount(value: Long) {
+	Column(horizontalAlignment = Alignment.CenterHorizontally) {
+		Text(
+			text = stringResource(R.string.MPT_playCount),
+			fontSize = 10.sp,
+			color = Color(0xFF888888),
+		)
+		Text(
+			text = value.toString(),
+			fontWeight = FontWeight.Bold,
+			color = Color(0xFF1A1A1A),
+		)
+	}
+}
+
+@Composable
+private fun PackDates(createdAt: Date?, lastOpenedAt: Date?) {
+	Column(horizontalAlignment = if (LocalDensity.current.fontScale > 1f) Alignment.Start else Alignment.End) {
+		DateRow(stringResource(R.string.MPP_downloadedDate), formatDate(createdAt))
+		DateRow(stringResource(R.string.MPP_lastPlayed), formatDate(lastOpenedAt))
+	}
+}
+
+@Composable
+private fun PropertyRow(largeText: Boolean, content: @Composable (Modifier) -> Unit) {
+	if (largeText) {
+		Column(modifier = Modifier.fillMaxWidth()) { content(Modifier.fillMaxWidth()) }
+	} else {
+		Row(modifier = Modifier.fillMaxWidth()) { content(Modifier.weight(1f)) }
+	}
+}
+
+@Composable
 fun HeaderRow(
 	isBookmarked: Boolean,
 	onBookmarkToggle: () -> Unit,
@@ -229,18 +251,25 @@ fun HeaderRow(
 
 @Composable
 fun DateRow(label: String, value: String) {
-	Row(verticalAlignment = Alignment.CenterVertically) {
-		Text(
-			text = label,
-			fontSize = 10.sp,
-			color = Color(0xFF888888),
-		)
-		Spacer(Modifier.width(8.dp))
-		Text(
-			text = value,
-			fontSize = 10.sp,
-			color = Color(0xFF333333),
-		)
+	if (LocalDensity.current.fontScale > 1f) {
+		Column {
+			Text(text = label, fontSize = 10.sp, color = Color(0xFF888888))
+			Text(text = value, fontSize = 10.sp, maxLines = 1, color = Color(0xFF333333))
+		}
+	} else {
+		Row(verticalAlignment = Alignment.CenterVertically) {
+			Text(
+				text = label,
+				fontSize = 10.sp,
+				color = Color(0xFF888888),
+			)
+			Spacer(Modifier.width(8.dp))
+			Text(
+				text = value,
+				fontSize = 10.sp,
+				color = Color(0xFF333333),
+			)
+		}
 	}
 }
 
