@@ -10,7 +10,8 @@ python3 scripts/native_grammar_results.py \
 ```
 
 The source must be committed and clean to verify an item. The runner executes the
-existing archive unit tests and the selected device tests, copies original XML
+existing archive unit tests with Gradle `--rerun` (bypassing up-to-date and cached
+results for that test task) and the selected device tests, copies original XML
 before the next command can overwrite it, and writes `results.json` automatically.
 The result includes the actual Git commit, fixture hashes, device fingerprint/API/ABI,
 command arguments and exit codes, timestamps, and hashes of the original results.

@@ -129,7 +129,7 @@ def main():
     unit = Path('app/build/test-results/testDebugUnitTest')
     if unit.exists():
         shutil.rmtree(unit)
-    commands.append(run(['./gradlew', ':app:testDebugUnitTest', '--tests', PREFIX + 'manager.FileManagerTest',
+    commands.append(run(['./gradlew', ':app:testDebugUnitTest', '--rerun', '--tests', PREFIX + 'manager.FileManagerTest',
                          '--tests', PREFIX + 'manager.PackArchiveTest', '--no-daemon', '--console=plain'],
                         args.output / 'unit.log'))
     if unit.exists():
