@@ -18209,6 +18209,101 @@
           ],
           []
         ]
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ]
+              ],
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "b.wav",
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "b.wav",
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "autoChain",
+                  1
+                ],
+                [
+                  "autoChain",
+                  1
+                ],
+                [
+                  "sound",
+                  1,
+                  0,
+                  0,
+                  "b.wav",
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOff",
+                  0,
+                  0
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "The Android harness records autoOn on the runner thread before the queued chain changes reach the main thread. A chain command followed by a press can request the same chain twice before either request is handled. The press then plays the correct sound in that chain, but the trace is autoOn, autoChain, autoChain, sound instead of autoChain, autoOn, sound. The expected timeline is unchanged; this pins an observation-order difference, not a claim of an audible playback difference."
+        }
       }
     },
     {
