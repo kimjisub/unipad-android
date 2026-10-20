@@ -5,6 +5,7 @@ import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
 class AutoPlayRunner(
@@ -20,6 +22,7 @@ class AutoPlayRunner(
 	private val listener: Listener,
 	private val chain: ChainObserver,
 	private val loopDelay: Long = 1L,
+	private val eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 	@Volatile
 	var playmode = true
@@ -279,26 +282,29 @@ class AutoPlayRunner(
 
 								while (waitingForChain < 0 && delayAccum <= currTime - startTime) {
 									val (index, element) = elementAtProgress(autoPlay) ?: break
-									when (element) {
-										is AutoPlay.Element.On -> {
-											if (!practiceGuide) {
-												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
+									// Check the chain where the listener handles it, before the next pad command.
+									withContext(eventDispatcher) {
+										when (element) {
+											is AutoPlay.Element.On -> {
+												if (!practiceGuide) {
+													if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+													listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
+												}
 											}
-										}
 
-										is AutoPlay.Element.Off -> {
-											if (!practiceGuide) {
-												if (chain.value != element.currChain) listener.onChainChange(element.currChain)
-												listener.onPadTouchOff(element.x, element.y, startTime + delayAccum)
+											is AutoPlay.Element.Off -> {
+												if (!practiceGuide) {
+													if (chain.value != element.currChain) listener.onChainChange(element.currChain)
+													listener.onPadTouchOff(element.x, element.y, startTime + delayAccum)
+												}
 											}
-										}
-										is AutoPlay.Element.Delay -> {
-											delayAccum += element.delay.toLong()
-										}
-										is AutoPlay.Element.Chain -> {
-											if (!practiceGuide) {
-												listener.onChainChange(element.c)
+											is AutoPlay.Element.Delay -> {
+												delayAccum += element.delay.toLong()
+											}
+											is AutoPlay.Element.Chain -> {
+												if (!practiceGuide) {
+													listener.onChainChange(element.c)
+												}
 											}
 										}
 									}

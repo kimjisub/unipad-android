@@ -45,7 +45,6 @@ import java.util.IdentityHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Runs a corpus case through Android's real parser and runners and reports what they did in the
@@ -249,8 +248,7 @@ private class RecordingEngine(
  * returning to the screen are PlayActivity's onStop and onStart/onResume calls into the view model.
  *
  * Where this run still differs from the play screen: the auto-play listener's other calls (start,
- * progress, guides, chain lights) are not passed on; unless auto play plays the pads, its chain changes
- * run on the runner's thread, not posted to the main thread; "start" expects a "stop" before it; returning
+ * progress, guides, chain lights) are not passed on; "start" expects a "stop" before it; returning
  * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -433,7 +431,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 	/**
 	 * [toPads]: each press, release and chain change also reaches the screen the way PlayActivityViewModel's
-	 * own auto-play listener sends it, posted to the main thread and handed to the view model's auto-play calls.
+	 * own auto-play listener sends it, delivered on the main thread and handed to the view model's auto-play calls.
 	 */
 	private fun startAutoPlay(toPads: Boolean) {
 		val runner = checkNotNull(vm.autoPlayRunner) { "${c.id}: the play screen has no auto play" }
@@ -445,7 +443,9 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	/** The screen's auto-play listener, recording pad presses and releases instead of passing them on. */
 	private fun recording(screen: AutoPlayRunner.Listener, toPads: Boolean): AutoPlayRunner.Listener {
 		fun forward(x: Int, y: Int, down: Boolean, touch: () -> Unit) {
-			if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { press(x, y, down, touch) })
+			// The screen's runner delivers commands on main, as its own immediate listener does.
+			events.add(event(if (down) "autoOn" else "autoOff", x, y))
+			if (toPads) press(x, y, down, touch)
 		}
 		fun changeChain(c: Int) {
 			chainTag.set("autoChain")
@@ -454,15 +454,13 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
 			override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
-				events.add(event("autoOn", x, y))
 				forward(x, y, true) { vm.autoPlayPadOn(x, y, c, num, atMs) }
 			}
 			override fun onPadTouchOff(x: Int, y: Int, atMs: Long) {
-				events.add(event("autoOff", x, y))
 				forward(x, y, false) { vm.autoPlayPadTouch(x, y, false, atMs) }
 			}
 			override fun onChainChange(c: Int) {
-				if (toPads) main.dispatch(EmptyCoroutineContext, Runnable { changeChain(c) }) else changeChain(c)
+				changeChain(c)
 			}
 			override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {}
 			override fun onGuidePadOff(x: Int, y: Int) {}
@@ -491,7 +489,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		watchFrom.set(0)
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
-			waitUntil(what) { watchReads.get() >= reads || !runner.active }
+			waitUntil(what) { main.runAll(); watchReads.get() >= reads || !runner.active }
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		main.runAll()
@@ -543,7 +541,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		watchReads.set(0)
 		watchFrom.set(now)
 		clock.set(now)
-		waitUntil("the auto-play runner to see $now") { watchReads.get() >= 2 || !runner.active }
+		waitUntil("the auto-play runner to see $now") { main.runAll(); watchReads.get() >= 2 || !runner.active }
 		watchFrom.set(Long.MAX_VALUE)
 	}
 

@@ -32,6 +32,12 @@ class ConformancePlayPathTest {
 	private fun json(text: String) = Json.parseToJsonElement(text)
 
 	@Test
+	fun autoPlayChainAndQueueNumberFollowTheSharedTimeline() {
+		val c = corpus.cases.first { it.id == "RUN-A-003" }
+		assertEquals(c.expected, actualFor(c, corpus))
+	}
+
+	@Test
 	fun returningToAChainStartsItsPadsFromTheFirstSoundAndLightAgain() {
 		val c = case(
 			mapOf(
@@ -70,7 +76,7 @@ class ConformancePlayPathTest {
 			json(
 				"""[
 					[["autoOn", 0, 0], ["sound", 0, 0, 0, "a.wav", 0], ["ledOn", 0, 0, "ffff0000", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]],
-					[["autoOn", 0, 0], ["autoChain", 0], ["sound", 0, 0, 0, "b.wav", 0], ["ledOn", 0, 0, "ff00ff00", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]]
+					[["autoChain", 0], ["autoOn", 0, 0], ["sound", 0, 0, 0, "b.wav", 0], ["ledOn", 0, 0, "ff00ff00", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]]
 				]"""
 			),
 			checkpoints(c),

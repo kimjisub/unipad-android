@@ -111,6 +111,17 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		}
 	}
 
+	@Test fun chainCommandBeforeAPressResetsTheChainOnlyOnce() {
+		start("1 1 1 a.wav\n2 1 1 a.wav\n", sequence = "chain 2\non 1 1\nd 60000\n", autoplay = false)
+		val chains = mutableListOf<Int>()
+		vm.chain.addObserver { curr, _ -> chains += curr }
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		// Leave the main queue undrained while the background runner reads the adjacent commands.
+		Thread.sleep(200)
+		await { engine.playCount == 1 }
+		assertEquals(listOf(1), chains)
+	}
+
 	@Test fun controllerReleaseKeepsThePadHeldOnScreen() = sharedPadRelease(controllerFirst = true, autoplay = false)
 
 	@Test fun screenReleaseKeepsThePadHeldOnController() = sharedPadRelease(controllerFirst = false, autoplay = false)
