@@ -12,6 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.PriorityQueue
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.system.measureTimeMillis
 
 class LedRunner(
@@ -42,8 +44,10 @@ class LedRunner(
 
 	// Held from a tick's first computation until the listener has its changes. It is separate from the
 	// runner lock so that eventOn/eventOff never wait for a delivery, while stop() and afterDelivery()
-	// can order themselves between whole ticks.
-	private val deliveryLock = Any()
+	// can order themselves between whole ticks. It is fair: the loop takes it again right after each tick,
+	// and when a tick outlasts the loop delay, an unfair lock let it win nearly every time, so stop() and
+	// afterDelivery() on the main thread waited for as many ticks as they lost the race.
+	private val deliveryLock = ReentrantLock(true)
 	private var job: Job? = null
 	private var pausedAt: Long? = null
 
@@ -91,7 +95,7 @@ class LedRunner(
 		}
 	}
 
-	private fun loop() = synchronized(deliveryLock) {
+	private fun loop() = deliveryLock.withLock {
 		val changes = ArrayList<LedChange>()
 		synchronized(this) {
 			val currTime = SystemClock.elapsedRealtime()
@@ -148,7 +152,7 @@ class LedRunner(
 				while (isActive) {
 					val millis = measureTimeMillis {
 						// stop() cancels under the delivery lock, so no tick starts after it returns.
-						synchronized(deliveryLock) { if (isActive) loop() }
+						deliveryLock.withLock { if (isActive) loop() }
 					}
 					delay((loopDelay - millis).coerceAtLeast(0))
 				}
@@ -160,7 +164,7 @@ class LedRunner(
 	/** Waits for a tick in progress to deliver its changes; once this returns, none are delivered until [launch]. */
 	fun stop() {
 		Log.thread("[Led] 3. Request Stop")
-		synchronized(deliveryLock) {
+		deliveryLock.withLock {
 			val wasActive = active
 			job?.cancel()
 			job = null
@@ -172,7 +176,7 @@ class LedRunner(
 	}
 
 	/** Runs [block] between ticks: every change computed before it has reached the listener, and none after it has. */
-	fun <T> afterDelivery(block: () -> T): T = synchronized(deliveryLock) { block() }
+	fun <T> afterDelivery(block: () -> T): T = deliveryLock.withLock(block)
 
 	// Functions
 
