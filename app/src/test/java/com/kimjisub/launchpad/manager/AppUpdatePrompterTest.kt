@@ -422,6 +422,136 @@ class AppUpdatePrompterTest {
 		assertEquals(1, storeOpens)
 	}
 
+	@Test
+	fun manualAvailableResultOpensDetailsWithoutStartingDownload() = runTest {
+		source.answer = UpdateStatus.Available
+		val prompter = prompter()
+		prompter.checkByHand()
+		advanceUntilIdle()
+		assertEquals(Card.Offer, prompter.card)
+		assertEquals(Dialog.Details, prompter.dialog)
+		assertEquals(0, source.downloads)
+		assertEquals(0, source.installs)
+	}
+
+	@Test
+	fun lateManualOfferAndDownloadCompletionDoNotOpenWindows() = runTest {
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		prompter.checkByHand()
+		runCurrent()
+		safe = false
+		answer.complete(UpdateStatus.Available)
+		advanceUntilIdle()
+		assertEquals(Card.Offer, prompter.card)
+		assertNull(prompter.dialog)
+		source.push(UpdateStatus.Downloaded)
+		safe = true
+		assertEquals(Card.Ready, prompter.card)
+		assertNull(prompter.dialog)
+		assertEquals(0, source.installs)
+	}
+
+	@Test
+	fun tappingAKnownNoticeOpensOnlyTheChoices() = runTest {
+		source.answer = UpdateStatus.Available
+		val prompter = prompter()
+		prompter.onListReady()
+		advanceUntilIdle()
+		prompter.openNotice()
+		assertEquals(Dialog.Details, prompter.dialog)
+		assertEquals(1, source.queries)
+		assertEquals(0, source.downloads)
+		prompter.dismissDialog()
+		source.push(UpdateStatus.Downloaded)
+		assertNull(prompter.dialog)
+		prompter.openNotice()
+		assertEquals(Dialog.Details, prompter.dialog)
+		assertEquals(Card.Ready, prompter.card)
+		assertEquals(0, source.installs)
+	}
+
+	@Test
+	fun latestDownloadEventWinsOverAnOlderAutoQuery() = runTest {
+		store.downloadRequested = true
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		prompter.onListReady()
+		runCurrent()
+		source.push(UpdateStatus.Downloaded)
+		answer.complete(UpdateStatus.Downloading(0.4f))
+		advanceUntilIdle()
+		assertEquals(Card.Ready, prompter.card)
+		assertNull(prompter.dialog)
+	}
+
+	@Test
+	fun aLiveDownloadResultEndsManualCheckingWithoutOpeningAWindow() = runTest {
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		prompter.checkByHand()
+		runCurrent()
+		source.push(UpdateStatus.Downloaded)
+		val checkingAfterEvent = prompter.state.value.checking
+		answer.complete(UpdateStatus.None)
+		advanceUntilIdle()
+		assertFalse(checkingAfterEvent)
+		assertNull(prompter.dialog)
+		assertEquals(Card.Ready, prompter.card)
+	}
+
+	@Test
+	fun canceledDownloadCannotBeRestartedByAnOlderQuery() = runTest {
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		prompter.download()
+		runCurrent()
+		source.push(UpdateStatus.Canceled)
+		answer.complete(UpdateStatus.Available)
+		advanceUntilIdle()
+		assertEquals(0, source.downloads)
+		assertNull(prompter.card)
+	}
+
+	@Test
+	fun openingKnownChoicesCancelsAnOlderAutomaticLookup() = runTest {
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		source.push(UpdateStatus.Downloaded)
+		prompter.onListReady()
+		runCurrent()
+		assertTrue(source.waiting)
+		prompter.openNotice()
+		assertEquals(Dialog.Details, prompter.dialog)
+		answer.complete(UpdateStatus.None)
+		advanceUntilIdle()
+		assertEquals(Dialog.Details, prompter.dialog)
+		assertEquals(Card.Ready, prompter.card)
+	}
+
+	@Test
+	fun tappingDuringAutomaticLookupStillOpensTheRequestedResult() = runTest {
+		val answer = CompletableDeferred<UpdateStatus>()
+		source.pending = answer
+		val prompter = prompter()
+		prompter.onListReady()
+		runCurrent()
+		assertTrue(source.waiting)
+		prompter.openNotice()
+		runCurrent()
+		answer.complete(UpdateStatus.Available)
+		advanceUntilIdle()
+		assertEquals(Dialog.Details, prompter.dialog)
+		assertEquals(Card.Offer, prompter.card)
+		assertEquals(2, source.queries)
+		assertEquals(0, source.downloads)
+	}
+
 	private class FakeSource : AppUpdateSource {
 		var answer: UpdateStatus = UpdateStatus.None
 		var error: Exception? = null

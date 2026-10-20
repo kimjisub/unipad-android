@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,10 +39,7 @@ import com.kimjisub.launchpad.ui.theme.Blue
 import com.kimjisub.launchpad.ui.theme.Orange
 import com.kimjisub.launchpad.viewmodel.MainTotalPanelViewModel
 
-/**
- * The side panel when no pack is selected. With an [updateNotice] the logo, stats and settings
- * move up to make room for it and the panel scrolls, so large text never hides its buttons.
- */
+/** The list side panel keeps the same geometry for every update state. */
 @Composable
 fun MainTotalPanelScreen(
 	vm: MainTotalPanelViewModel,
@@ -58,24 +53,7 @@ fun MainTotalPanelScreen(
 		shape = RoundedCornerShape(8.dp),
 		color = MaterialTheme.colorScheme.surface,
 	) {
-		if (updateNotice != null) {
-			Column(
-				modifier = Modifier
-					.fillMaxSize()
-					.verticalScroll(rememberScrollState())
-					.padding(16.dp),
-			) {
-				Row(verticalAlignment = Alignment.CenterVertically) {
-					LogoAndVersion(vm)
-					Spacer(Modifier.weight(1f))
-					SettingsButton(onSettingsClick)
-				}
-				Spacer(Modifier.height(12.dp))
-				Stats(vm)
-				Spacer(Modifier.height(12.dp))
-				updateNotice()
-			}
-		} else Box(modifier = Modifier.fillMaxSize()) {
+		Box(modifier = Modifier.fillMaxSize()) {
 			Column(
 				modifier = Modifier
 					.fillMaxSize()
@@ -88,10 +66,15 @@ fun MainTotalPanelScreen(
 				Stats(vm)
 			}
 
-			if (onCheckUpdateClick != null) {
+			if (updateNotice != null) {
+				Box(Modifier.align(Alignment.BottomStart).padding(start = 8.dp, end = 64.dp, bottom = 8.dp)) {
+					updateNotice()
+				}
+			} else if (onCheckUpdateClick != null) {
 				Row(
 					modifier = Modifier
 						.align(Alignment.BottomStart)
+						.padding(end = 64.dp)
 						.focusRing()
 						.clickable(enabled = !checkingUpdate) { onCheckUpdateClick() }
 						.padding(12.dp)
@@ -102,6 +85,8 @@ fun MainTotalPanelScreen(
 						text = stringResource(R.string.update_check),
 						color = Blue,
 						fontSize = 11.sp,
+						maxLines = 1,
+						overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
 					)
 					if (checkingUpdate) {
 						Spacer(Modifier.width(6.dp))

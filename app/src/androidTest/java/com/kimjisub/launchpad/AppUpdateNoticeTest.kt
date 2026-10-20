@@ -64,7 +64,10 @@ class AppUpdateNoticeTest : BaseUITest() {
 		}
 		assertTrue("download progress not shown", waitForText(R.string.update_downloading_title))
 		takeScreenshot("update_downloading")
+		openNotice()
 		assertTrue("download percentage not shown", waitUntil(5000L) { findText("40%") != null })
+		device.pressBack()
+		assertTrue(device.wait(Until.gone(By.res("app_update_dialog")), 5000L))
 
 		onMain { play.downloadCompletes() }
 		assertTrue("ready card did not appear", waitForText(R.string.update_ready_title))
@@ -147,7 +150,8 @@ class AppUpdateNoticeTest : BaseUITest() {
 		assertNotNull(findText(R.string.update_retry))
 		assertNotNull(findText(R.string.update_check_in_store))
 		takeScreenshot("update_failed")
-		assertTrue("the pack is still listed", device.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")))
+		device.pressBack()
+		assertTrue("the pack is still listed", device.wait(Until.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")), 5000L))
 	}
 
 	@Test
@@ -185,7 +189,7 @@ class AppUpdateNoticeTest : BaseUITest() {
 			assertTrue("no message that the store could not open", waitForText(R.string.update_store_unavailable))
 			takeScreenshot("update_store_unavailable")
 			click(R.string.update_close)
-			assertTrue("the pack is still listed", device.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")))
+			assertTrue("the pack is still listed", device.wait(Until.hasObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")), 5000L))
 		} finally {
 			apps.forEach { device.executeShellCommand("pm enable --user 0 $it") }
 		}
@@ -219,6 +223,9 @@ class AppUpdateNoticeTest : BaseUITest() {
 		val bounds = findTestPackRow().visibleBounds
 		device.click(bounds.left + (50 * context.resources.displayMetrics.density).toInt(), bounds.centerY())
 		assertTrue("Play screen did not open", waitForPlayScreen())
+		tapPad(0, 0)
+		assertTrue("first pad touch left the play screen", isOnPlayScreen())
+		takeScreenshot("update_play_first_pad")
 	}
 
 	private fun reachInstallFailure() {
@@ -233,7 +240,8 @@ class AppUpdateNoticeTest : BaseUITest() {
 		click(R.string.update_install)
 		assertTrue(waitUntil { onMain { play.isInstallSplashScreenVisible } })
 		onMain { play.installFails() }
-		assertTrue("failure card did not appear", waitForText(R.string.update_failed))
+		assertTrue("failure notice did not appear", waitForText(R.string.update_failed))
+		openNotice()
 	}
 
 	private fun openStoreFromFailure() {
@@ -268,16 +276,22 @@ class AppUpdateNoticeTest : BaseUITest() {
 		waitUntil(timeoutMs) { findText(res) != null }
 
 	private fun click(res: Int) {
+		if (findText(res) == null && device.hasObject(By.res("app_update_notice"))) openNotice()
 		assertTrue("'${str(res)}' not found", clickFresh(5000L) { findText(res) })
 	}
 
-	/** With large text the side panel scrolls; bring the text into view like a person would. */
+	private fun openNotice() {
+		assertTrue("compact notice missing", clickFresh(5000L) { device.findObject(By.res("app_update_notice")) })
+	}
+
+	/** With large text the choices scroll inside the dialog. */
 	private fun findText(res: Int): UiObject2? = findText(str(res))
 
 	private fun findText(value: String): UiObject2? {
 		val text = By.text(value)
 		device.findObject(text)?.let { return it }
-		return device.findObject(By.scrollable(true).hasDescendant(By.res("app_update_card"), 4))
+		device.findObject(By.desc(value))?.let { return it }
+		return device.findObject(By.scrollable(true))
 			?.scrollUntil(Direction.DOWN, Until.findObject(text))
 	}
 

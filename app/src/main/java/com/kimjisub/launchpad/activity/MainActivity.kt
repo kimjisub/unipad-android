@@ -98,7 +98,7 @@ import com.kimjisub.launchpad.R.string
 import com.kimjisub.launchpad.adapter.UniPackItem
 import com.kimjisub.launchpad.analytics.PackImportSource
 import com.kimjisub.launchpad.ui.compose.AppUpdateActions
-import com.kimjisub.launchpad.ui.compose.AppUpdateCard
+import com.kimjisub.launchpad.ui.compose.AppUpdateBadge
 import com.kimjisub.launchpad.ui.compose.AppUpdateDialog
 import com.kimjisub.launchpad.ui.compose.AppAlertDialog
 import com.kimjisub.launchpad.ui.compose.ImportProgressDialog
@@ -319,8 +319,9 @@ class MainActivity : BaseActivity() {
 				}
 
 				appUpdate?.let { prompter ->
-					val dialog = prompter.state.collectAsState().value.dialog
-					if (dialog != null) AppUpdateDialog(dialog, appUpdateActions(prompter))
+					val state = prompter.state.collectAsState().value
+					val dialog = state.dialog
+					if (dialog != null && listInFront()) AppUpdateDialog(dialog, appUpdateActions(prompter), state.card)
 				}
 
 				deleteTargetItem?.let { item ->
@@ -558,10 +559,10 @@ class MainActivity : BaseActivity() {
 		listInFront() && state?.dialog == null
 
 	private fun appUpdateActions(prompter: AppUpdatePrompter) = AppUpdateActions(
-		download = prompter::download,
-		later = prompter::later,
-		install = prompter::install,
-		retry = prompter::retry,
+		download = { prompter.dismissDialog(); prompter.download() },
+		later = { prompter.dismissDialog(); prompter.later() },
+		install = { prompter.dismissDialog(); prompter.install() },
+		retry = { prompter.dismissDialog(); prompter.retry() },
 		askStore = prompter::askStore,
 		openStore = prompter::openStore,
 		checkAgain = {
@@ -688,8 +689,11 @@ class MainActivity : BaseActivity() {
 							MainTotalPanelScreen(
 								vm = totalPanelVM,
 								onSettingsClick = onSettingsClick,
-								updateNotice = if (prompter != null && card != null) {
-									{ AppUpdateCard(card, enabled = updateSafe, actions = appUpdateActions(prompter)) }
+								updateNotice = if (prompter != null) {
+									{
+										AppUpdateBadge(card, enabled = updateSafe, onClick = prompter::openNotice,
+											checking = updateState?.checking == true)
+									}
 								} else null,
 								onCheckUpdateClick = prompter?.let { it::checkByHand },
 								checkingUpdate = updateState?.checking == true,
