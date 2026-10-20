@@ -203,6 +203,36 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
         }
     }
 
+    /** Uses the device's existing settings; no cutout/navigation overlay is changed during rotation. */
+    @Test fun midiSelectRotatesWithExistingNavigationSettings() {
+        repeat(10) { iteration ->
+            for (type in listOf(MainActivity::class.java, MidiSelectActivity::class.java)) {
+                screen.install()
+                screen.launch(type)
+                for (orientation in listOf(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
+                    val expected = if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) android.view.Surface.ROTATION_90 else android.view.Surface.ROTATION_270
+                    screen.onMain { screen.resumed().requestedOrientation = orientation }
+                    screen.await("Requested rotation did not reach window") {
+                        screen.onMain { screen.resumed().display!!.rotation == expected }
+                    }
+                    val controls = screen.freshControls()
+                    val safe = screen.onMain { freeArea(screen.resumed().window.decorView)!! }
+                    assertTrue("No controls on ${type.simpleName}", controls.isNotEmpty())
+                    val name = "existing-navigation-${iteration}-${type.simpleName}-${orientation}"
+                    screen.capture(name)
+                    com.kimjisub.launchpad.TestCaptures.save(screen.device, "basefeatures-captures/$name-windows.txt") {
+                        it.writeText(screen.device.executeShellCommand("dumpsys window windows"))
+                        true
+                    }
+                    controls.forEach {
+                        assertTrue("${type.simpleName} control ${it.visibleBounds} outside $safe", safe.contains(it.visibleBounds))
+                    }
+                }
+                screen.close()
+            }
+        }
+    }
+
     @Test fun settingsScreenEndsAboveTabletNavigationBar() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         onTabletWithButtonBar {
