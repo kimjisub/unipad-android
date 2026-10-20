@@ -15,6 +15,20 @@ import java.util.concurrent.CopyOnWriteArrayList
 /** `touch` is `on` + `off`: on a pad whose sound moves the chain, autoplay goes on in the new chain. */
 @RunWith(AndroidJUnit4::class)
 class AutoPlayTouchChainTest : PlaybackScreenTest() {
+    @Test fun seekingPastTheEndSkipsThePressWaitingForMain() {
+        File(screen.pack(), "autoPlay").writeText("on 1 1\nd 60000\n")
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain {
+            vm.switchPlayMode(PlayMode.AutoPlay)
+            SystemClock.sleep(200)
+            vm.autoPlayNext()
+        }
+        screen.await("Autoplay did not finish after seeking past the end") { vm.autoPlayRunner?.active == false }
+        screen.capture("autoplay-seek-past-end")
+        assertEquals("A press read before seeking must not play afterwards", emptyList<Int>(), audio.plays.toList())
+    }
+
     @Test fun chainCommandBeforeAPressChangesTheChainOnce() {
         val pack = screen.pack()
         File(pack, "autoPlay").writeText("chain 2\non 1 1\nd 60000\n")

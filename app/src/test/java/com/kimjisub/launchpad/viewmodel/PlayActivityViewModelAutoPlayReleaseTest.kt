@@ -111,6 +111,15 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		}
 	}
 
+	@Test fun seekingPastTheEndDoesNotPlayACommandWaitingForMain() {
+		start(autoplay = false)
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		Thread.sleep(200)
+		vm.autoPlayNext()
+		await { vm.autoPlayRunner?.active == false }
+		assertEquals("A command read before seeking must not play afterwards", 0, engine.playCount)
+	}
+
 	@Test fun chainCommandBeforeAPressResetsTheChainOnlyOnce() {
 		start("1 1 1 a.wav\n2 1 1 a.wav\n", sequence = "chain 2\non 1 1\nd 60000\n", autoplay = false)
 		val chains = mutableListOf<Int>()

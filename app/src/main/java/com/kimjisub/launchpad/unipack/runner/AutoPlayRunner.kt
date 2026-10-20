@@ -281,9 +281,9 @@ class AutoPlayRunner(
 								}
 
 								while (waitingForChain < 0 && delayAccum <= currTime - startTime) {
-									val (index, element) = elementAtProgress(autoPlay) ?: break
-									// Check the chain where the listener handles it, before the next pad command.
-									withContext(eventDispatcher) {
+									// Read progress here too: seeking may have moved it while delivery waited for main.
+									val handledIndex = withContext(eventDispatcher) {
+										val (index, element) = elementAtProgress(autoPlay) ?: return@withContext null
 										when (element) {
 											is AutoPlay.Element.On -> {
 												if (!practiceGuide) {
@@ -307,8 +307,9 @@ class AutoPlayRunner(
 												}
 											}
 										}
-									}
-									advanceProgressFrom(index)
+										index
+									} ?: break
+									advanceProgressFrom(handledIndex)
 								}
 							}
 						} else {
