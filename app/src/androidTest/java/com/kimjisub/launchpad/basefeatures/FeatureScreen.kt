@@ -71,7 +71,7 @@ class FeatureScreen {
         var seen = emptyList<Rect>()
         var frames = emptyList<Rect>()
         var window = Rect()
-        await({ "Window frames $frames and accessibility roots $seen must match view $window" }) {
+        await({ "Visible window regions $frames must lie inside view $window; accessibility roots $seen must match it" }) {
             withResponsiveInput {
                 window = onMain { bounds(resumed().window.decorView) }
                 clearNodeCache()
@@ -83,7 +83,9 @@ class FeatureScreen {
                     // from the view. Keep the native window and view geometry checks as well.
                     Rect().also(root::getBoundsInScreen)
                 }
-                (window in frames && window in seen).also {
+                // AccessibilityWindowInfo reports the visible region, which a tablet taskbar may clip.
+                // The refreshed root still has to match the entire view, including its bar insets.
+                (frames.any { !it.isEmpty && window.contains(it) } && window in seen).also {
                     if (it) controls = device.findObjects(By.pkg(context.packageName).clickable(true))
                 }
             }

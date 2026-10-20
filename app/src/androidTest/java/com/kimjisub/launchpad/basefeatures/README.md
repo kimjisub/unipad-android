@@ -346,14 +346,15 @@ Not established by these tests:
 `AppearanceAndInsetsTest` lower the display density and lock the display in landscape; each is
 restored in `finally`. The checks accept either landscape rotation: before API 36 an activity can
 retain reverse landscape despite the user rotation lock. Both still require a bottom navigation bar.
-The side-bar checks wait for the screen's controls and matching view, native window and
-accessibility-root bounds before requesting each rotation, then check them again afterwards.
+The side-bar checks wait for the screen's controls and matching view and refreshed accessibility-root bounds before requesting each rotation, then check them again afterwards.
 A resumed, focused activity can still be opening its first Compose frame: forcing a rotation then
 can leave API 33's view at the display width while the system window has already been narrowed
 for the cutout. This also reproduces on the unchanged app. The MIDI reopen regression repeats
 the preceding main-screen rotation and overlay teardown ten times, checking both MIDI landscape
 rotations each time. Nodes refresh themselves through the public accessibility API; no synthetic
-accessibility events are sent. A bounds mismatch remains a failure, and its screenshot, hierarchy,
+accessibility events are sent. The reported visible window region must lie inside the view; it
+can be shorter than the whole window where a tablet taskbar covers it. The whole refreshed root
+must still equal the view. A bounds mismatch remains a failure, and its screenshot, hierarchy,
 view state and native window dump are saved together.
 The empty-library guide scroll starts in the middle of its viewport so the
 system cannot consume it as a swipe-up navigation gesture after a navigation-mode change and rotation.
