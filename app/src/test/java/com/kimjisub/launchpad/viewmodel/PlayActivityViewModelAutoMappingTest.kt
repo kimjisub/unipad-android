@@ -24,11 +24,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * The auto mapping button on the play screen: the user hears of a failure, leaving stops it, and the
@@ -54,6 +57,18 @@ class PlayActivityViewModelAutoMappingTest {
 		override fun close() {}
 	}
 
+	/** Holds the first sound's reading until [release], so the screen can be left while it runs. */
+	private class HeldLengths : SoundDurationReader {
+		val reading = CountDownLatch(1)
+		val release = CountDownLatch(1)
+		override fun durationMs(file: File): Int {
+			reading.countDown()
+			release.await(5, TimeUnit.SECONDS)
+			return 400
+		}
+		override fun close() {}
+	}
+
 	@Before
 	fun setUp() {
 		Dispatchers.setMain(main)
@@ -72,7 +87,7 @@ class PlayActivityViewModelAutoMappingTest {
 		Dispatchers.resetMain()
 	}
 
-	private fun openPack(): PlayActivityViewModel {
+	private fun openPack(lengths: SoundDurationReader = FixedLengths): PlayActivityViewModel {
 		root = tmp.newFolder("pack")
 		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=1\n")
 		File(root, "keySound").writeText("1 1 1 a.wav\n")
@@ -82,7 +97,7 @@ class PlayActivityViewModelAutoMappingTest {
 		val vm = PlayActivityViewModel(
 			mockk<UnipackRepository>(relaxed = true),
 			UsageAnalytics { _, _ -> },
-			autoMapper = { UniPackAutoMapper(it, { FixedLengths }) },
+			autoMapper = { UniPackAutoMapper(it, { lengths }) },
 		)
 		store.put("play", vm)
 		vm.uiCallback = ui
@@ -158,10 +173,13 @@ class PlayActivityViewModelAutoMappingTest {
 
 	@Test
 	fun leavingThePlayScreen_stopsTheMappingAndLeavesTheAutoPlay() {
-		val vm = openPack()
+		val lengths = HeldLengths()
+		val vm = openPack(lengths)
 
 		vm.autoMapping()
+		assertTrue(lengths.reading.await(5, TimeUnit.SECONDS))
 		store.clear()
+		lengths.release.countDown()
 		runUntil(1_000) { false }
 
 		assertFalse(vm.autoMappingActive)
