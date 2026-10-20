@@ -285,6 +285,8 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'io.mockk:mockk:1.14.11'
 	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0'
+	// Self-signed server certificates for the HTTPS certificate check test
+	testImplementation 'com.squareup.okhttp3:okhttp-tls:5.5.0'
 	testImplementation "io.insert-koin:koin-test:${rootProject.koin_version}"
 	// Real SQLite on the JVM, so database migrations run in unit tests without a device
 	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
