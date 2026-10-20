@@ -1,6 +1,7 @@
 # Android pull request checks
 
-Every pull request runs these stable checks on Ubuntu 24.04:
+Every pull request runs these stable checks on Ubuntu 24.04.
+The same checks also run after changes are merged into `main`.
 
 | Check name | Command | Timeout |
 | --- | --- | --- |

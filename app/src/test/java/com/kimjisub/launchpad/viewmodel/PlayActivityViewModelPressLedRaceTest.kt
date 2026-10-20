@@ -19,7 +19,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -29,13 +28,13 @@ import org.junit.runners.model.Statement
 import org.junit.runners.model.TestTimedOutException
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.concurrent.thread
 
 /**
  * The user presses a pad while an LED animation blinks the same pad. PlayActivity's setLedPad reads the
@@ -75,7 +74,6 @@ class PlayActivityViewModelPressLedRaceTest {
 		const val OPS_PER_TRIAL = 200
 		const val PAD = 3
 		const val LED_VELOCITY = 45
-		const val TICK_PAUSE_NANOS = 20_000L
 		// Well above the slowest loaded run seen (187 s), and with the unwind wait and the rest of the unit tests
 		// still inside CI's 12-minute step limit, so a hang reports its stack instead of the step being killed.
 		const val HANG_TIMEOUT_SECONDS = 300L
@@ -185,11 +183,16 @@ class PlayActivityViewModelPressLedRaceTest {
 		var mismatches = 0
 		var firstMismatch: String? = null
 		val started = System.nanoTime()
+		// Starting and joining 3,000 native threads adds scheduler work to every trial.
+		// Reuse one worker; each future must finish before the next trial starts.
+		val tickWorker = Executors.newSingleThreadExecutor { task ->
+			Thread(task, "press-led-ticks").apply { isDaemon = true }
+		}
 		try {
 			repeat(TRIALS) { trial ->
 				sentToPad.clear()
 				runner.eventOn(0, 0)
-				val barrier = CyclicBarrier(2)
+				val tickBudget = Semaphore(0)
 				val pressing = AtomicBoolean(true)
 				val firstRead = CountDownLatch(1)
 				val blinkDuringRead = CountDownLatch(1)
@@ -198,35 +201,34 @@ class PlayActivityViewModelPressLedRaceTest {
 				// This guarantees the race window in every trial without yielding on every delivery.
 				afterPadRead = {
 					firstRead.countDown()
+					tickBudget.release(2)
 					assertTrue("LED ticks did not overlap the pad read in trial $trial", blinkDuringRead.await(5, TimeUnit.SECONDS))
 					overlaps++
 				}
-				// Ticks alongside the presses until they end. The pause between
-				// ticks stands in for the runner's loop delay and lets presses take the runner's lock.
+				// Pace ticks by press progress. A slow press must not let the producer run unbounded,
+				// spend time spinning or keep adding work while main.runAll() tries to empty the queue.
 				val tickFailure = AtomicReference<Throwable>()
-				val ticks = thread(isDaemon = true, name = "press-led-ticks-$trial") {
+				val ticks = tickWorker.submit {
 					try {
-						barrier.await(5, TimeUnit.SECONDS)
 						check(firstRead.await(5, TimeUnit.SECONDS)) { "pad read did not start in trial $trial" }
 						var tickCount = 0
 						while (pressing.get()) {
+							if (!tickBudget.tryAcquire(5, TimeUnit.SECONDS)) continue
+							if (!pressing.get()) break
 							clock.incrementAndGet()
 							loopMethod.invoke(runner)
 							// The first tick may only add the new animation; the second emits its light.
 							if (++tickCount == 2) blinkDuringRead.countDown()
 							if (expectFiniteEnd && tickCount >= 2 && !runner.isEventExist(0, 0)) blinkEnded.countDown()
-							// Parking this short wait can oversleep far past the gap and slow every trial.
-							// Keep the same minimum gap without an OS timer on every tick.
-							val nextTick = System.nanoTime() + TICK_PAUSE_NANOS
-							while (System.nanoTime() < nextTick) Thread.onSpinWait()
 						}
 					} catch (failure: Throwable) {
 						tickFailure.set(failure)
 					}
 				}
 				try {
-					barrier.await(5, TimeUnit.SECONDS)
 					repeat(OPS_PER_TRIAL) { i ->
+						// The first read allows two ticks; subsequent presses each allow one more.
+						if (i > 0) tickBudget.release()
 						if (expectFiniteEnd && i == OPS_PER_TRIAL / 2) {
 							// Keep the finite case: it must finish during a press, with later presses still to come.
 							afterPadRead = {
@@ -241,10 +243,9 @@ class PlayActivityViewModelPressLedRaceTest {
 					afterPadRead = null
 					pressing.set(false)
 					firstRead.countDown()
-					ticks.join(5_000)
-					if (ticks.isAlive) ticks.interrupt()
+					tickBudget.release()
+					ticks.get(5, TimeUnit.SECONDS)
 				}
-				assertFalse("LED tick worker did not stop in trial $trial", ticks.isAlive)
 				tickFailure.get()?.let { throw AssertionError("LED tick worker failed in trial $trial", it) }
 				main.runAll()
 
@@ -261,6 +262,8 @@ class PlayActivityViewModelPressLedRaceTest {
 				assertEquals("trials whose finite blink ends during a press", TRIALS, finiteEnds)
 			}
 		} finally {
+			tickWorker.shutdownNow()
+			assertTrue("LED tick worker did not stop", tickWorker.awaitTermination(5, TimeUnit.SECONDS))
 			println(
 				"PRESS_LED_RACE trials=$completed overlaps=$overlaps finiteEnds=$finiteEnds " +
 					"mismatches=$mismatches sentOffMain=${sentOffMain.get()} first=$firstMismatch " +

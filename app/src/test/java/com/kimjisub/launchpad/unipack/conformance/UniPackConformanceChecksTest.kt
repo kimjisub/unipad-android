@@ -103,6 +103,14 @@ class UniPackConformanceChecksTest {
 	}
 
 	@Test
+	fun autoPlayLeftOnFailsTheEndlessSoundReleaseCase() {
+		val c = byId("RUN-RP-005")
+		assertEquals("pass", classify(c, actualFor(c, corpus)).status)
+		val leftOn = c.copy(scenario = c.scenario.filter { it.getValue("do").jsonPrimitive.content != "autoplayOff" })
+		assertEquals("fail", classify(c, actualFor(leftOn, corpus)).status)
+	}
+
+	@Test
 	fun aPinnedDifferenceThatStopsHappeningOrChangesIsUnexpected() {
 		val c = byId("KS-001")
 		val pinned = c.copy(known = mapOf(PLATFORM to Known("fail", buildJsonObject { put("loaded", false) }, "pinned")))

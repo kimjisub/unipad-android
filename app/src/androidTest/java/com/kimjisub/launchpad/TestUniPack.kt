@@ -32,14 +32,15 @@ object TestUniPack {
         columns: Int = 8,
         chains: Int = CHAINS,
         title: String = TITLE,
+        producer: String = PRODUCER,
     ): File {
         val root = folder(context)
-        root.deleteRecursively()
+        clear(root)
         File(root, "sounds").mkdirs()
         File(root, "keyLED").mkdirs()
 
         File(root, "info").writeText(
-            "title=$title\nproducerName=$PRODUCER\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
+            "title=$title\nproducerName=$producer\nbuttonX=$rows\nbuttonY=$columns\nchain=$chains\nsquareButton=$squareButton\n"
         )
         File(root, "sounds/silence.wav").writeBytes(silentWav())
 
@@ -56,7 +57,16 @@ object TestUniPack {
     }
 
     fun remove(context: Context) {
-        folder(context).deleteRecursively()
+        clear(folder(context))
+    }
+
+    /**
+     * A deletion failure run stopped before its cleanup leaves an [UnreachableFolder] in the pack,
+     * which a delete by path cannot remove; take it apart first.
+     */
+    private fun clear(root: File) {
+        UnreachableFolder(File(root, "sounds")).remove()
+        root.deleteRecursively()
     }
 
     /** About 60 s of presses across chains 1 and 2, long enough for transport checks. */

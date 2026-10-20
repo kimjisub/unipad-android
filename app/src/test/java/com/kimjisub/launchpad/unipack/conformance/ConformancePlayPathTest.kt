@@ -50,6 +50,34 @@ class ConformancePlayPathTest {
 	}
 
 	@Test
+	fun autoPlayReturningToItsChainPlaysThePadsNextSoundAndLight() {
+		val c = case(
+			mapOf(
+				"keySound" to "1 1 1 a.wav\n1 1 1 b.wav",
+				"keyLed/1 1 1 1 a" to "o 1 1 FF0000\nd 5\nf 1 1",
+				"keyLed/1 1 1 1 b" to "o 1 1 00FF00\nd 5\nf 1 1",
+				"autoPlay" to "on 1 1\ndelay 10\noff 1 1\ndelay 100\non 1 1\ndelay 10\noff 1 1",
+			),
+			// The person moves to another chain while auto play waits; its next press is back on chain 1.
+			"""[
+				{"do": "autoplay", "toPads": true}, {"do": "advance", "ms": 50}, {"do": "observe"},
+				{"do": "chain", "c": 1}, {"do": "advance", "ms": 100}, {"do": "observe"}
+			]""",
+		)
+		// Coming back from chain 2 resets chain 1's pads to their first sound and light before the press;
+		// auto play's second press of the pad still plays its second ones.
+		assertEquals(
+			json(
+				"""[
+					[["autoOn", 0, 0], ["sound", 0, 0, 0, "a.wav", 0], ["ledOn", 0, 0, "ffff0000", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]],
+					[["autoOn", 0, 0], ["autoChain", 0], ["sound", 0, 0, 0, "b.wav", 0], ["ledOn", 0, 0, "ff00ff00", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]]
+				]"""
+			),
+			checkpoints(c),
+		)
+	}
+
+	@Test
 	fun padsStillSoundAfterLeavingAndReturningToTheScreen() {
 		val c = case(
 			mapOf("keySound" to "1 1 1 a.wav"),

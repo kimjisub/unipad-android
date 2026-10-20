@@ -178,7 +178,13 @@ class UniPackDownloader(
 				FileManager.removeDoubleFolder(stagedFolder.path)
 				// load() runs checkFile + info; without it every parser returned early and criticalError
 				// was always false, so any archive installed as a pack.
-				val checked = UniPackFolder(stagedFolder).load().loadDetail()
+				val checked = try {
+					UniPackFolder(stagedFolder).load().loadDetail()
+				} catch (e: OutOfMemoryError) {
+					// A very large pack can exhaust the heap while parsing. Use the normal failure
+					// path so the screen is notified and staging is discarded in finally.
+					throw UniPackCriticalErrorException("Not enough memory to validate this pack", e)
+				}
 				if (checked.criticalError) {
 					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
@@ -268,7 +274,7 @@ class UniPackDownloader(
 		listener.onException(throwable)
 	}
 
-	class UniPackCriticalErrorException(message: String) : Exception(message)
+	class UniPackCriticalErrorException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 	/** The server answered, but not with the pack. Keeps the status so usage analytics can tell a missing pack from a server error. */
 	class HttpStatusException(val status: Int, message: String) : IOException(message)

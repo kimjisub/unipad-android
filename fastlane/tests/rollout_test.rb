@@ -3,7 +3,7 @@ require_relative "test_helper"
 
 cases = []
 %w[halted inProgress].each do |status|
-  [0.1, 0.5, 1.0, 1.5].each do |fraction|
+  [0.1, 0.5, 1.0].each do |fraction|
     cases << ["#{status} to #{fraction}", release(status, 0.1), fraction, nil, nil]
   end
   cases << ["#{status} decrease", release(status, 0.5), 0.1, "lower", nil]
@@ -26,8 +26,9 @@ cases.concat([
   ["commit and cleanup error", release("halted", 0.1), 0.5, "commit failed", [:commit, :abort]],
   ["invalid release and cleanup error", release("draft"), 0.5, "inProgress or halted", :abort]
 ])
-[nil, "", "garbage", "0.5oops", 0, -0.1, "NaN", "Infinity"].each do |fraction|
-  cases << ["invalid requested fraction #{fraction.inspect}", release("halted", 0.1), fraction, "finite positive", nil]
+# A percentage typed as a whole number (10 for 10%) must not complete the rollout.
+[nil, "", "garbage", "0.5oops", 0, -0.1, "NaN", "Infinity", 1.5, "10", "50"].each do |fraction|
+  cases << ["invalid requested fraction #{fraction.inspect}", release("halted", 0.1), fraction, "decimal between 0 and 1 (e.g. 0.5 = 50%", nil]
 end
 
 failures = []
@@ -44,6 +45,7 @@ Tempfile.create(["fake-play", ".json"]) do |key|
       play = FakePlay.new(track, failure: failure)
       client = fake_client(play)
       TEST_WARNINGS.clear
+      TEST_SUCCESSES.clear
       error = nil
       begin
         TEST_FASTFILE.runner.lanes[:android][:rollout].call(version_code: "123", fraction: fraction)
@@ -61,6 +63,7 @@ Tempfile.create(["fake-play", ".json"]) do |key|
           assert(!steps.include?(:update) && !steps.include?(:commit), "Invalid release or fraction must not update or commit")
           assert(target&.to_h == target_before, "Rejected release was changed")
         end
+        assert(steps.empty?, "Invalid requested fraction must be refused before reading the track") if name.start_with?("invalid requested fraction")
         if steps.include?(:begin) && !Array(failure).include?(:begin)
           assert(steps.last == :abort, "Failed rollout must discard its edit")
         end
@@ -84,6 +87,8 @@ Tempfile.create(["fake-play", ".json"]) do |key|
         expected_releases = requested_fraction >= 1 ? [target] : [previous, target]
         assert(play.updated_track.releases == expected_releases, "Expected releases #{expected_releases.map(&:version_codes)}, got #{play.updated_track.releases.map(&:version_codes)}")
         assert(client.current_edit.nil?, "Successful commit left an edit open")
+        expected_result = requested_fraction >= 1 ? "completed" : requested_fraction.to_s
+        assert(TEST_SUCCESSES == ["production rollout 123 -> #{expected_result}"], "Unexpected success message #{TEST_SUCCESSES.inspect}")
       end
       assert(previous.to_h == previous_before, "Unrelated release changed")
       assert(play.calls.first[1] == "com.kimjisub.launchpad", "Wrong package") unless play.calls.empty?

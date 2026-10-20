@@ -161,6 +161,8 @@ class MainActivity : BaseActivity() {
 	private var selectedItem by mutableStateOf<UniPackItem?>(null)
 	private var lastPlayPath by mutableStateOf<String?>(null)
 	private var listRefreshing by mutableStateOf(false)
+	private var deletingPack by mutableStateOf(false)
+	private val listBusy get() = listRefreshing || deletingPack
 	// Set when a refresh is asked for while one is reading; that one may have read the folders too early.
 	private var refreshAgain = false
 	// Set from the first play press until the list is back, so a double press opens one play screen.
@@ -241,16 +243,6 @@ class MainActivity : BaseActivity() {
 		}
 	}
 
-	// Activity result launchers
-	private val settingsActivityResultLauncher =
-		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-			update()
-		}
-	private val storeActivityResultLauncher =
-		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-			update()
-		}
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
@@ -259,9 +251,10 @@ class MainActivity : BaseActivity() {
 			MainTotalPanelViewModel.Factory(application, p, ws)
 		)[MainTotalPanelViewModel::class.java]
 
+		// The saved sort arrives while attaching; onResume reads the list with it.
 		totalPanelVM.onSortChanged = { sort, order ->
 			currentSort = Pair(sort, order)
-			update()
+			if (resumed) update()
 		}
 
 		val filePick = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -286,14 +279,10 @@ class MainActivity : BaseActivity() {
 			UniPadTheme {
 				MainScreen(
 					onSettingsClick = {
-						settingsActivityResultLauncher.launch(
-							Intent(applicationContext, SettingsActivity::class.java)
-						)
+						startActivity(Intent(applicationContext, SettingsActivity::class.java))
 					},
 					onStoreClick = {
-						storeActivityResultLauncher.launch(
-							Intent(applicationContext, FBStoreActivity::class.java)
-						)
+						startActivity(Intent(applicationContext, FBStoreActivity::class.java))
 					},
 					// Same filter as iOS (.zip); picking an MP3 used to fail deep inside zip4j.
 					onLoadUniPackClick = {
@@ -303,7 +292,7 @@ class MainActivity : BaseActivity() {
 						}
 					},
 					onRestoreClick = {
-						settingsActivityResultLauncher.launch(
+						startActivity(
 							Intent(applicationContext, SettingsActivity::class.java).apply {
 								putExtra(SettingsActivity.EXTRA_INITIAL_CATEGORY, SettingsActivity.CATEGORY_STORAGE)
 								putExtra(SettingsActivity.EXTRA_HIGHLIGHT_BACKUP, true)
@@ -343,11 +332,11 @@ class MainActivity : BaseActivity() {
 							TextButton(onClick = {
 								deleteTargetItem = null
 								selectedItem = null
-								listRefreshing = true
+								deletingPack = true
 								lifecycleScope.launch(Dispatchers.IO) {
 									val result = ws.deleteUnipack(item.unipack)
 									withContext(Dispatchers.Main) {
-										listRefreshing = false
+										deletingPack = false
 										deleteFailed = result != WorkspaceManager.DeleteResult.DELETED
 										update()
 									}
@@ -383,7 +372,7 @@ class MainActivity : BaseActivity() {
 	// List management
 
 	private fun update() {
-		if (listRefreshing) {
+		if (listBusy) {
 			refreshAgain = true
 			return
 		}
@@ -563,7 +552,7 @@ class MainActivity : BaseActivity() {
 
 	/** The list is in front and nothing else of the app (play screen, file work) is alive. */
 	private fun listInFront(): Boolean =
-		listIdle() && resumed && !listRefreshing && otherScreens?.anyAlive != true
+		listIdle() && resumed && !listBusy && otherScreens?.anyAlive != true
 
 	private fun canShowAppUpdate(state: AppUpdatePrompter.State? = appUpdate?.state?.value): Boolean =
 		listInFront() && state?.dialog == null
@@ -728,10 +717,10 @@ class MainActivity : BaseActivity() {
 						.fillMaxHeight(),
 				) {
 					PullToRefreshBox(
-						isRefreshing = listRefreshing,
+						isRefreshing = listBusy,
 						onRefresh = { update() },
 					) {
-						if (unipackList.isEmpty() && !listRefreshing) {
+						if (unipackList.isEmpty() && !listBusy) {
 							// Empty state; scrolls so the guide stays reachable on short screens
 							BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
 								Column(

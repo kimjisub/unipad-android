@@ -48,10 +48,6 @@ class PadTouchTracker(
 		listener(cell / cols, cell % cols, false)
 	}
 
-	/** Whether a finger is holding pad (x, y). */
-	fun holds(x: Int, y: Int): Boolean =
-		x in 0 until rows && y in 0 until cols && held.containsValue(x * cols + y)
-
 	/**
 	 * Releases every held pad, and the fingers still down press nothing more until they lift: a
 	 * screen that stops taking part in play while a finger rests on it gets no release from the

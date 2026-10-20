@@ -1,7 +1,7 @@
 {
   "schema": "unipad-conformance/1",
   "generatedBy": "meta/unipack-conformance/build-corpus.mjs",
-  "grammar": "G1",
+  "grammar": "G3",
   "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence), and one of them encoded as MP3; the one file that stands for a sound that cannot be decoded is a line of text. No pack, song or third-party audio is included.",
   "assets": {
     "tone-440": {
@@ -4732,7 +4732,8 @@
         ],
         "autoPlay": null,
         "errors": []
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -4968,7 +4969,8 @@
           "keyLed:format",
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5433,7 +5435,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5898,7 +5901,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -5991,7 +5995,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -6084,7 +6089,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -6456,7 +6462,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -6549,7 +6556,8 @@
         "errors": [
           "keyLed:format"
         ]
-      }
+      },
+      "known": {}
     },
     {
       "layer": "parse",
@@ -9855,6 +9863,3520 @@
     },
     {
       "layer": "parse",
+      "id": "KS-B01",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: one past the largest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "2147483648 1 1 a.wav\n1 2147483648 1 a.wav\n1 1 2147483648 a.wav\n1 1 1 a.wav 2147483648\n1 1 1 a.wav 1 2147483648\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "38795c61947333e3d68ac088361239776ae8e21703baf35ff76518470e0faa44",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN01",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: one past the largest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/2147483648 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 2147483648 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 2147483648",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 2147483648",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "95eb43c7e4fbc4f375744fb4931e4b003cafc1b5e704bd0f4357b229ba82f9c7",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE01",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: one past the largest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 2147483648 1 a 5\no 1 2147483648 a 5\nf 2147483648 1\nf 1 2147483648\no mc 2147483648 a 5\nf mc 2147483648\no 1 1 FF0000 2147483648\no 1 1 a 2147483648\nd 2147483648\nc 2147483648\nf 1 1"
+        }
+      ],
+      "fingerprint": "70bc4b46c3750bf3b1645e34ff6d3911e15b595431cb2c39c1ef1a1103f78660",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B01",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: one past the largest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 2147483648 1\noff 1 2147483648\ntouch 2147483648 1\nchain 2147483648\ndelay 2147483648\non 1 1"
+        }
+      ],
+      "fingerprint": "a6bc89ec821b77eea10d9094b3f3feac4a17bc4113438d3a28f56b27c69fe223",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B02",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: one below the smallest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "-2147483649 1 1 a.wav\n1 -2147483649 1 a.wav\n1 1 -2147483649 a.wav\n1 1 1 a.wav -2147483649\n1 1 1 a.wav 1 -2147483649\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "0bc4e6cf48f8233b79e81e432ac72a83908509789940b90567c9568568b50b0c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN02",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: one below the smallest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/-2147483649 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 -2147483649 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 -2147483649",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 -2147483649",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "4b81521640bf126c89d3f3feacead9019e3510202d373139c53b3df683c10b8b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE02",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: one below the smallest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o -2147483649 1 a 5\no 1 -2147483649 a 5\nf -2147483649 1\nf 1 -2147483649\no mc -2147483649 a 5\nf mc -2147483649\no 1 1 FF0000 -2147483649\no 1 1 a -2147483649\nd -2147483649\nc -2147483649\nf 1 1"
+        }
+      ],
+      "fingerprint": "fb3d1e4eb4c1eb17355bf1ec3ab5da221f26fe52da1fdb11c73be9f488350a3f",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B02",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: one below the smallest 32-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on -2147483649 1\noff 1 -2147483649\ntouch -2147483649 1\nchain -2147483649\ndelay -2147483649\non 1 1"
+        }
+      ],
+      "fingerprint": "8eaa79fd6721b82eec845221560b5315774c1478232c92ef15692e7e3bfc24be",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B03",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: eleven digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "99999999999 1 1 a.wav\n1 99999999999 1 a.wav\n1 1 99999999999 a.wav\n1 1 1 a.wav 99999999999\n1 1 1 a.wav 1 99999999999\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "62684941efb3cbfb6ee4dc5963db8b8f7462024a64465e1c2c234c772d12ff8d",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN03",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: eleven digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/99999999999 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 99999999999 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 99999999999",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 99999999999",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "7fa65456a873ad067cd1c5fbd7af825f90902650a98729a1a8d3a705326f650e",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE03",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: eleven digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 99999999999 1 a 5\no 1 99999999999 a 5\nf 99999999999 1\nf 1 99999999999\no mc 99999999999 a 5\nf mc 99999999999\no 1 1 FF0000 99999999999\no 1 1 a 99999999999\nd 99999999999\nc 99999999999\nf 1 1"
+        }
+      ],
+      "fingerprint": "e7f58ca0c6305490c1346d2373849391709b493d681e8b585f449a6234128123",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B03",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: eleven digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 99999999999 1\noff 1 99999999999\ntouch 99999999999 1\nchain 99999999999\ndelay 99999999999\non 1 1"
+        }
+      ],
+      "fingerprint": "e184a9d832bc9ceb906b3fbed6263a79d654751a97daa995227f627c3b8dc039",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B04",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: past 2^53, where the web rounded",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "9007199254740993 1 1 a.wav\n1 9007199254740993 1 a.wav\n1 1 9007199254740993 a.wav\n1 1 1 a.wav 9007199254740993\n1 1 1 a.wav 1 9007199254740993\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "032f5392af3db614254290dae226d4a4af4a6bc8d5ac4e6e797997930d93c775",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN04",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: past 2^53, where the web rounded",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/9007199254740993 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 9007199254740993 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 9007199254740993",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 9007199254740993",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "4f78d3661791c0da11300788e18fd03c05ce7b8440fc99087fa85c9e51526a28",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE04",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: past 2^53, where the web rounded",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 9007199254740993 1 a 5\no 1 9007199254740993 a 5\nf 9007199254740993 1\nf 1 9007199254740993\no mc 9007199254740993 a 5\nf mc 9007199254740993\no 1 1 FF0000 9007199254740993\no 1 1 a 9007199254740993\nd 9007199254740993\nc 9007199254740993\nf 1 1"
+        }
+      ],
+      "fingerprint": "8e3e7348547558bd5a32fcb5094dfbf1d566448b7f4e545d0449a91f8381e137",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B04",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: past 2^53, where the web rounded",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 9007199254740993 1\noff 1 9007199254740993\ntouch 9007199254740993 1\nchain 9007199254740993\ndelay 9007199254740993\non 1 1"
+        }
+      ],
+      "fingerprint": "e705d4fd43dc83a1cb5c834695d2c77c9dc093b09a29ec7fe3c5c73b2facd328",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B05",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: one past the largest 64-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "9223372036854775808 1 1 a.wav\n1 9223372036854775808 1 a.wav\n1 1 9223372036854775808 a.wav\n1 1 1 a.wav 9223372036854775808\n1 1 1 a.wav 1 9223372036854775808\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "8db0603cbeb4e053c0939485ab14c061ac0a5ab4e55d58b49328e725800e9ada",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN05",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: one past the largest 64-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/9223372036854775808 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 9223372036854775808 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 9223372036854775808",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 9223372036854775808",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "90a2633a5cbb3ba201c94be6e6f6a8443c55b1684e22bea979556028526fd780",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE05",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: one past the largest 64-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 9223372036854775808 1 a 5\no 1 9223372036854775808 a 5\nf 9223372036854775808 1\nf 1 9223372036854775808\no mc 9223372036854775808 a 5\nf mc 9223372036854775808\no 1 1 FF0000 9223372036854775808\no 1 1 a 9223372036854775808\nd 9223372036854775808\nc 9223372036854775808\nf 1 1"
+        }
+      ],
+      "fingerprint": "26ec1a4001672f463c9f8c147edca54fc0465df1f88a295c6b108b4758651499",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B05",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: one past the largest 64-bit number",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 9223372036854775808 1\noff 1 9223372036854775808\ntouch 9223372036854775808 1\nchain 9223372036854775808\ndelay 9223372036854775808\non 1 1"
+        }
+      ],
+      "fingerprint": "e43ddaeb762ac9bbc50757b5508e6f3d6f7c84a53dddd51c77d0c6f0949cac76",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B06",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "a number past 32 bits is a format error in every field: 400 digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1 1 a.wav\n1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1 a.wav\n1 1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 a.wav\n1 1 1 a.wav 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\n1 1 1 a.wav 1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "5560f05f333e8e83525a4e25ab7e449b0d535850158e46af88fdcf0cb8a35e62",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format",
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN06",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "a file name number past 32 bits is a format error: 240 digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "31515eb0066b4aedbfa54ef09db0cfbb30dfb3f2699ea4b600a200f3f0d83382",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE06",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "an event number past 32 bits is a format error: 400 digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1 a 5\no 1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 a 5\nf 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1\nf 1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\no mc 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 a 5\nf mc 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\no 1 1 FF0000 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\no 1 1 a 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\nd 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\nc 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\nf 1 1"
+        }
+      ],
+      "fingerprint": "d8c3c71846db77c82791eb78cd974d85c61367155362e9e491d26f333535737f",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format",
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B06",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "a number past 32 bits is a format error: 400 digits",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1\noff 1 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\ntouch 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 1\nchain 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\ndelay 9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999\non 1 1"
+        }
+      ],
+      "fingerprint": "06c348913e6fc0296eba10e6a62597c3a39696cd0c8e9e92d438f6a361135990",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format",
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B07",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "the largest 32-bit number is a number: outside the pack, or a loop",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "Loop Values: the loop value is internally stored with 1 subtracted"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "2147483647 1 1 a.wav\n1 2147483647 1 a.wav\n1 1 2147483647 a.wav\n1 1 1 a.wav 2147483647\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "a3ee276d8b44b691317efcc52206b08793573acdf2cb2e7c6e66e84b70e353cc",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 2147483646,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:range",
+          "keySound:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN07",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the largest 32-bit number in a file name is a number: outside the pack, or a loop",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/2147483647 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 2147483647 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 2147483647",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 2147483647",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 2",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "c3b5ba48eff010ea7c8582e68f3f83cc3c0f0a83bff6b0b9b29e123a27cff7af",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 2147483647,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:range",
+          "keyLed:range",
+          "keyLed:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE07",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the largest 32-bit number in an event: kept as a velocity and a delay, a round LED of it dropped",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolderLogoLedTest, unipad.io logoLed.test.ts",
+          "note": "`mc`/`*` numbers outside 1..32 are dropped so that index 32 never lights the logo"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "velocity: MIDI velocity (0~127)"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o mc 2147483647 a 5\nf mc 2147483647\no 1 1 FF0000 2147483647\no 1 1 a 2147483647\nd 2147483647\nf 1 1"
+        }
+      ],
+      "fingerprint": "2172f3743526e03a8054da017a8c0456ccedb7693c8d47141c3f1bad400e2066",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ffff0000",
+                    2147483647
+                  ],
+                  [
+                    "delay",
+                    2147483647
+                  ],
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE09",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the largest 32-bit number as an event coordinate or chain is kept 1 less",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 2147483647 1 a 5\nf 1 2147483647\nc 2147483647\nf 1 1"
+        }
+      ],
+      "fingerprint": "161820a727f57d658c5c44751f264082365b180f22a40069482ba2f52bd983e1",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    2147483646,
+                    0,
+                    "ffef5350",
+                    5
+                  ],
+                  [
+                    "off",
+                    0,
+                    2147483646
+                  ],
+                  [
+                    "chain",
+                    2147483646
+                  ],
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B07",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "the largest 32-bit number is a number: outside the pack, or a delay",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 2147483647 1\noff 1 2147483647\ntouch 2147483647 1\nchain 2147483647\ndelay 2147483647\non 1 1"
+        }
+      ],
+      "fingerprint": "9925a3a6c4829ab03efb5b37f98e8a24267669eeace998da7f0eb00fc6fefc25",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "delay",
+            2147483647
+          ],
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-B08",
+      "items": [
+        "T-09"
+      ],
+      "area": "keySound",
+      "title": "the smallest 32-bit number is a number: outside the pack, or a loop",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "Loop Values: the loop value is internally stored with 1 subtracted"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "-2147483648 1 1 a.wav\n1 -2147483648 1 a.wav\n1 1 -2147483648 a.wav\n1 1 1 a.wav -2147483648\n1 1 2 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "85447bb66ffe1d4ee69167a3d4b8d241cdf6451654f183aca9ee8f8d07a60eae",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": -2147483649,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:range",
+          "keySound:range"
+        ]
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "file": "a.wav",
+                    "loop": -2147483648,
+                    "wormhole": -1
+                  }
+                ]
+              },
+              {
+                "c": 0,
+                "x": 0,
+                "y": 1,
+                "queue": [
+                  {
+                    "file": "b.wav",
+                    "loop": 0,
+                    "wormhole": -1
+                  }
+                ]
+              }
+            ],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:range",
+              "keySound:range",
+              "keySound:range"
+            ]
+          },
+          "note": "Android keeps a loop in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647, a repeat count that practically never ends). Both are below -1, so the sound is neither endless nor repeated; Android's engine and the web's play it once."
+        }
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BN08",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the smallest 32-bit number in a file name is a number: outside the pack, or a loop",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/-2147483648 1 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 -2147483648 1",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 -2147483648",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 1 -2147483648",
+          "text": "f 1 1"
+        },
+        {
+          "path": "keyLed/1 1 2",
+          "text": "f 1 1"
+        }
+      ],
+      "fingerprint": "a21080823ab6f8b3828945831716e789bbe9c76069a994a925bef9122fcc4b20",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:range",
+          "keyLed:range",
+          "keyLed:range",
+          "keyLed:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE08",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the smallest 32-bit number in an event: kept as a velocity and a delay, a round LED of it dropped",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolderLogoLedTest, unipad.io logoLed.test.ts",
+          "note": "`mc`/`*` numbers outside 1..32 are dropped so that index 32 never lights the logo"
+        },
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "velocity: MIDI velocity (0~127)"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o mc -2147483648 a 5\nf mc -2147483648\no 1 1 FF0000 -2147483648\no 1 1 a -2147483648\nd -2147483648\nf 1 1"
+        }
+      ],
+      "fingerprint": "d05b8583d9b9731ead30dbd52ffb3c102d6652bdd212734ec0ee9d94aa5d0f99",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ffff0000",
+                    -2147483648
+                  ],
+                  [
+                    "delay",
+                    -2147483648
+                  ],
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-BE10",
+      "items": [
+        "T-09"
+      ],
+      "area": "keyLed",
+      "title": "the smallest 32-bit number as an event coordinate or chain is kept 1 less",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o -2147483648 1 a 5\nf 1 -2147483648\nc -2147483648\nf 1 1"
+        }
+      ],
+      "fingerprint": "8a9d6a6bef6026d47c471b36566d2c94dd11ec97b4473bd77e66b25cddba2a01",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    -2147483649,
+                    0,
+                    "ffef5350",
+                    5
+                  ],
+                  [
+                    "off",
+                    0,
+                    -2147483649
+                  ],
+                  [
+                    "chain",
+                    -2147483649
+                  ],
+                  [
+                    "off",
+                    0,
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "android": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [
+              {
+                "c": 0,
+                "x": 3,
+                "y": 2,
+                "queue": [
+                  {
+                    "file": "c.wav",
+                    "loop": 0,
+                    "wormhole": -1
+                  }
+                ]
+              }
+            ],
+            "keyLedExist": true,
+            "leds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "loop": 1,
+                    "events": [
+                      [
+                        "on",
+                        -2147483648,
+                        0,
+                        "ffef5350",
+                        5
+                      ],
+                      [
+                        "off",
+                        0,
+                        -2147483648
+                      ],
+                      [
+                        "chain",
+                        -2147483648
+                      ],
+                      [
+                        "off",
+                        0,
+                        0
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            "autoPlay": null,
+            "errors": []
+          },
+          "note": "Android keeps a keyLED coordinate and chain in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647). Either way the light is outside the grid and the chain is not one the pack has."
+        }
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "AP-B08",
+      "items": [
+        "T-09"
+      ],
+      "area": "autoPlay",
+      "title": "the smallest 32-bit number is a number: outside the pack, or a delay",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "maintainers, 2026-10-17",
+          "note": "A number in a pack is a signed decimal integer from -2147483648 to 2147483647, as Android always read it. A larger one is a format error and only its line or file is skipped; one that fits but is outside the pack is a range error. The platforms differed: iOS read numbers up to 64 bits and the web any number, so the same value was a range error there, and the web rounded numbers past 2^53."
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on -2147483648 1\noff 1 -2147483648\ntouch -2147483648 1\nchain -2147483648\ndelay -2147483648\non 1 1"
+        }
+      ],
+      "fingerprint": "7ed94180dd8318701e820a768438927757bf2bac5d8688b057689b69f09f659a",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          },
+          {
+            "c": 1,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [
+          [
+            "delay",
+            -2147483648
+          ],
+          [
+            "on",
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "errors": [
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range",
+          "autoPlay:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
       "id": "AP-020",
       "items": [
         "P-08"
@@ -10439,63 +13961,6 @@
         ],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": [
-                      [
-                        "on",
-                        0,
-                        0,
-                        "ffff0000",
-                        4
-                      ]
-                    ]
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": [
-              "keyLed:other(keyLed : sub is not file)"
-            ]
-          },
-          "note": "Android takes the sub folder of keyLED for an LED file and records `keyLed : sub is not file`; the file inside it is not read."
-        }
       }
     },
     {
@@ -13584,7 +17049,7 @@
       ],
       "layer": "run",
       "area": "led",
-      "title": "delay 0 does not wait and a negative delay brings the next events forward",
+      "title": "delay 0 does not wait and a negative delay never brings an event before the one above it",
       "scenario": [
         {
           "do": "press",
@@ -13615,9 +17080,9 @@
       ],
       "basis": [
         {
-          "type": "intent",
-          "ref": "unipad-android LedRunner.kt, unipad-ios LedRunner.swift, unipad.io LedRunner.ts",
-          "note": "a delay is added to the animation's timeline as written, 0 and negative values included"
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "Waits the specified milliseconds before the next event"
         },
         {
           "type": "intent",
@@ -13671,6 +17136,7 @@
               4
             ]
           ],
+          [],
           [
             [
               "ledOff",
@@ -13682,122 +17148,145 @@
               1,
               0
             ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-L-014",
+      "items": [
+        "E-09"
+      ],
+      "layer": "run",
+      "area": "led",
+      "title": "negative delays shorten later waits without moving an event before the one above it",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 140
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-led.mdx",
+          "note": "Waits the specified milliseconds before the next event"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 1 1 FF0000\nd 100\nd -60\nf 1 1\nd 100\no 2 1 00FF00\nd 100\nd -150\no 3 1 0000FF\nd 100\no 4 1 FF0000"
+        }
+      ],
+      "fingerprint": "46ac533decccd7cd8cda8bda7fc7968321f8153d85dbd48bfbd3e745ff73a51a",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              "ledOn",
+              1,
+              0,
+              "ff00ff00",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOn",
+              2,
+              0,
+              "ff0000ff",
+              4
+            ],
+            [
+              "ledOn",
+              3,
+              0,
+              "ffff0000",
+              4
+            ]
           ],
           []
         ]
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ],
-                [
-                  "ledOn",
-                  1,
-                  0,
-                  "ff00ff00",
-                  4
-                ]
-              ],
-              [],
-              [
-                [
-                  "ledOff",
-                  0,
-                  0
-                ],
-                [
-                  "ledOff",
-                  1,
-                  0
-                ]
-              ]
-            ]
-          },
-          "note": "The LED runner reads a delay only once the time the delays before it add up to has come, so `d -60` after `d 100` is read 100 ms in and the offs come then instead of at 40 ms. `d 0` does not wait."
-        },
-        "ios": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ],
-                [
-                  "ledOn",
-                  1,
-                  0,
-                  "ff00ff00",
-                  4
-                ]
-              ],
-              [],
-              [
-                [
-                  "ledOff",
-                  0,
-                  0
-                ],
-                [
-                  "ledOff",
-                  1,
-                  0
-                ]
-              ]
-            ]
-          },
-          "note": "The LED runner reads a delay only once the time the delays before it add up to has come, so `d -60` after `d 100` is read 100 ms in and the offs come then instead of at 40 ms. `d 0` does not wait."
-        },
-        "web": {
-          "status": "fail",
-          "actual": {
-            "checkpoints": [
-              [
-                [
-                  "ledOn",
-                  0,
-                  0,
-                  "ffff0000",
-                  4
-                ],
-                [
-                  "ledOn",
-                  1,
-                  0,
-                  "ff00ff00",
-                  4
-                ]
-              ],
-              [],
-              [
-                [
-                  "ledOff",
-                  0,
-                  0
-                ],
-                [
-                  "ledOff",
-                  1,
-                  0
-                ]
-              ]
-            ]
-          },
-          "note": "The LED runner reads a delay only once the time the delays before it add up to has come, so `d -60` after `d 100` is read 100 ms in and the offs come then instead of at 40 ms. `d 0` does not wait."
-        }
       }
     },
     {
@@ -15637,6 +19126,147 @@
             [
               "ledOff",
               0,
+              0
+            ]
+          ],
+          [],
+          []
+        ]
+      }
+    },
+    {
+      "id": "RUN-RP-005",
+      "items": [
+        "RS-05",
+        "RA-02"
+      ],
+      "layer": "run",
+      "area": "realPack",
+      "title": "turning autoPlay off releases the endless sound it held, not the one the user holds",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "autoplayOff"
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 400
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "do": "looping"
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "doc",
+          "ref": "content/docs/en/unipack/key-sound.mdx",
+          "note": "Loop Values: 0 loops indefinitely"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io LedRunner.test.ts \"turns a looping animation off on release and stays dark\", unipad-android LedRunnerToggleTest",
+          "note": "an endless loop lasts while its pad is held and ends when the pad is released (RUN-L-003)"
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/PlayerHolds.test.ts",
+          "note": "a pad autoPlay holds counts as released when autoPlay is turned off, as any input that goes away counts as a release, so its endless sound stops; a pad the user still holds keeps sounding until the user lets go"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0\n1 2 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\ndelay 300\noff 1 1"
+        }
+      ],
+      "fingerprint": "b652c8b74d33fb541196c70a7c67fda2fa29b07f967358eb262798b809ab1b54",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              1,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "looping",
+              0,
+              0
+            ],
+            [
+              "looping",
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              "looping",
+              1,
               0
             ]
           ],

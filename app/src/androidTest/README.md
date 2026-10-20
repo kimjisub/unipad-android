@@ -186,6 +186,9 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 | Class and test | What it verifies |
 |---|---|
+| `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer line is fully drawn and Theme opens; real-screen screenshots for comparison. |
+| `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: producer line fits and Theme can be scrolled into view and opened. |
+| `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: same checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
@@ -197,10 +200,14 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `MainActivityTest.testMainNavigationButtonsAndSettingsReturn` | Current Store/Import/Settings buttons exist; Settings opens and returns. |
 | `MainActivityTest.testMainScreenSorting` | Each sort method is saved/shown; order toggles and restores. |
 | `MainActivityTest.testSortNamesFollowAppLanguageChange` | Switching UniPad to Korean through the per-app language setting turns the sort bar and its list Korean at once and after a relaunch. API 33+ (per-app language); API 35 full runs do not skip it. |
+| `MainActivityTest.testRefreshWaitsForDeletionEvenWhenAnEarlierReadFinishes` | Hold a real list scan and deletion at file-operation gates; completing the old scan cannot start queued reads until deletion finishes. |
+| `MainActivityTest.testLaunchAndRecreateReadThePackListOnce` | Opening Main and recreating it read the pack list exactly once each. |
+| `MainActivityTest.testReturningToMainReadsThePackListOnce` | Each return from Store and Settings reads the pack list exactly once. |
 | `MainActivityTest.testStoreActivityNavigation` | Store opens from Main and Back returns. |
 | `MainActivityTest.testUnipackDeletion` | Confirmed delete removes files/history, preserves another history, and reinstall resets history. |
 | `MainActivityTest.testUnipackDeletionCancel` | Cancel preserves files and history. |
-| `MainActivityTest.testUnipackDeletionFailureKeepsHistory` | Read-only pack deletion reports an error and keeps history; fixture failure is an assertion, not a skip. |
+| `MainActivityTest.testUnipackDeletionFailureKeepsHistory` | Deleting a pack the app cannot empty reports an error and keeps history; fixture failure is an assertion, not a skip. |
+| `MainActivityTest.testTestPackInstallClearsLeftoverDeletionFixture` | Installing the test pack removes a deletion failure fixture left by a stopped run, including one stranded mid-step. |
 | `SettingsTest.testSettingsActivityNavigation` | Settings opens and returns to Main. |
 | `SettingsTest.testSettingsModification` | Tap-order setting changes its switch and preference; category navigation works. |
 | `SettingsTest.testSettingsPersistence` | Changed slide setting survives cleared-task relaunch. |
@@ -231,6 +238,7 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 | `PlayActivityTest.testPlayActivityPadViewPatterns` | Corners, lines, diagonals, ring, rapid, grid, spiral and zigzag input keep Play active. |
 | `PlayActivityTest.testImportOpensPickerAndCancelReturnsToMain` | Current Import opens the system picker; cancel returns to Main. No longer ignored. |
 | `PlayActivityTest.testReconnectOpensDeviceSelectionFromSettings` | Settings reconnect opens device selection and returns. No longer ignored. |
+| `ZeroDurationLedTest` | Maximum finite repeats with no delay, zero delay or negative delay finish with their final lights and allow the next pad to play. |
 | `PlayActivityTest.testPlayActivityLEDAnimation` | LED/feedback options and repeated pad input keep Play active. |
 | `PlayActivityTest.testPlayActivityTraceLogFeature` | Trace Log toggles through input and chain changes. |
 | `PlayActivityTest.testTapOrderNumbersNeedTraceLogSwitch` | Exact tap order numbers occur on the expected pads only with Trace Log enabled. |
@@ -285,10 +293,12 @@ claimed here as audio or hardware proof.
 | `UnipackRepositoryDeleteTest` | `delete_removesOnlyThatPacksRow`, `reinstallAfterDelete_startsWithoutHistory`, `delete_missingRowCountsAsDeleted`: real Room delete history behaviour. |
 | `LeftoverDownloadNotificationTest` | `startupRemovesOnlyUnfinishedDownloadProgress`: the start-up cleanup removes a download progress notification left by a killed process and keeps finished downloads and other channels' notifications. |
 | `ZipThemeResourcesTest` | `zipTheme_loadsIconAndImages`, `zipTheme_acceptsTheAlternateStemsAndExtensions`: theme image resource loading. |
-| `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. |
+| `TransferConfigurationLifecycleTest` | `workspaceSourceSurvivesLifecycleAndEdits`, `sourceSelectionSurvivesLifecycle`: filtering, selection, recreation and background/foreground. `selectionReadWaitsForFilteredRow`: a temporarily absent filtered row is awaited before its checkbox state is read. |
+| `PackValidationMemoryDeviceTest` | Streamed ZIPs with one 400 MiB line: `oversizedDownloadedKeySoundFailsWithoutCrashingOrLeavingFiles` checks downloaded `keySound` validation; `oversizedImportedInfoFailsWithoutCrashingOrLeavingFiles` checks file-imported `info` validation through a read-only provider (API 29+). Both assert the real memory failure, finished failure notification and empty workspace. `fileImportKeepsItsMetadataOnlyCheckForTheSameLargeKeySound` preserves metadata-only file import. Optional `memoryEvidence=<label>` captures the start and failed notification. |
 | `PackFailureNotificationDeviceTest` | `missingDownloadShowsFailureWithoutProgressAndCanBeDismissed`, `connectionLostDuringFastDownloadShowsFailureWithoutProgress`, `invalidImportShowsFailureWithoutProgressAndCanBeDismissed`: real local HTTP 404, a connection reset right after fast progress (when Android drops further progress updates) and invalid ZIP failures leave only one notification, with the existing failure translation, no progress, and allow dismissal. API 29+ file-provider test APIs. Optional `notificationEvidence=<label>` saves notification shade screenshots. |
 | `StoreDownloadProgressDeviceTest` | Real store screen downloading from a local server. `topArrowWhileDownloadingKeepsTheStoreAndTheDownload`: the top arrow closes the detail, then refuses to leave mid-download and the pack still installs. `unknownSizeShowsTheReceivedAmountAndAnOpenEndedBar`: with no Content-Length the detail shows only the received MB and an indeterminate bar. `unpackingShowsAnOpenEndedBarInsteadOfStartingOver`: while unpacking the bar is indeterminate. |
 | `UniPackImportOverlapDeviceTest` | `overlappingImportsKeepBothResultsAndExistingPack`: simultaneous imports preserve both packs and the existing pack, and query their file names off the main thread. API 29+ platform APIs; API 35 full runs do not skip it. |
+| `basefeatures.KeyLedDirectoryTest.subdirectoriesDoNotShowWarningsOrPreventPlayback` | Direct `keyLED` files still light the pad and the pack exits without warnings when the directory also contains subfolders; nested files stay ignored. Not in `BaseFeaturesSuite`. |
 | `UniPackLegacyArchiveDeviceTest` | `theDeviceReadsCp949`, `aKoreanWindowsArchiveWithAReadmeBesideThePackImports`: the device offers CP949 (not only EUC-KR), and the real importer opens an archive zipped on Korean Windows (CP949 entry names without the UTF-8 flag, CP949 text files) with a readme beside the pack folder. |
 | `basefeatures.AutoPlayTouchChainTest` | `autoplayTouchOnAPadThatMovesTheChainStaysOnTheNewChain`: autoplay `touch` on a pad whose sound moves the chain stays on the new chain and plays its sounds. Not in `BaseFeaturesSuite`. |
 | `SoundNameCaseDeviceTest` | `appStorageFindsTheStoredFile`, `internalStorageFindsTheStoredFile`, `internalStorageChoosesTheExactNameFirst`: a keySound name that differs from its file only in case (`End.wav` for `END.wav`, `FX/Sweep.wav` for `fx/sweep.wav`) finds the stored file under its stored name both in app storage, which ignores case, and in the case-sensitive internal folder. Where files differ only in case (`End.wav` and `END.wav`, `fx/a.wav` and `FX/a.wav`), the exactly named file wins, a name matching neither takes the first in path order (`end.wav` → `END.wav`), and a folder named like a sound (`dir.wav`, `DIR.wav`) is reported as a missing sound. |
@@ -326,8 +336,11 @@ engine. They are now ordinary tests of the actual Import and Settings controls. 
 - The instrumentation lives in the app process. Settings persistence rebuilds the cleared task;
   it does not kill and restart that process.
 - Emulator checks do not prove real USB MIDI hardware behavior, audible output, or every OS/device.
-- The deletion failure fixture requires storage that honors permission bits. If it cannot be made
-  read-only, the test fails explicitly and restores permissions instead of silently skipping.
+- The deletion failure fixture nests folders inside the pack until the innermost one is beyond the
+  kernel's path length limit, so the app cannot empty the pack. Permission bits were not used
+  because Android 10's emulated storage ignores them. If the fixture cannot be built, the test
+  fails explicitly instead of silently skipping, and it removes the folders afterwards. If a run
+  stops before that cleanup, the next test pack install takes the folders apart before deleting.
 
 ## Overlapping file imports (isolated device regression)
 
