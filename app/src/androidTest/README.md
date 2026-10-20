@@ -186,9 +186,9 @@ all debug/release Kotlin compiles, `lint`, and both modules' available unit test
 
 | Class and test | What it verifies |
 |---|---|
-| `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer line is fully drawn and Theme opens; real-screen screenshots for comparison. |
-| `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: producer line fits and Theme can be scrolled into view and opened. |
-| `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: same checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
+| `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer, totals, pack history/properties and scrollable footer text remain readable and Theme opens. Fixed dates and short-metadata captures support pixel comparisons. |
+| `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: logo/version do not overlap, multi-digit capacity and pack dates/properties remain readable, footer actions are reachable and Theme opens. |
+| `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: the same line-bound and scroll checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |
