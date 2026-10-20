@@ -139,9 +139,14 @@ class LargeTextLayoutTest : BaseUITest() {
 
     /** Check the first UiAutomator bounds before later Compose assertions can change the layout. */
     private fun assertInitialPackLayout(prefix: String) {
+        val deadline = android.os.SystemClock.uptimeMillis() + 5000L
+        // Preserve the first bounds even if accessibility publishes the sort text later.
         val row = findTestPackRow().visibleBounds
-        val sort = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
-            .firstNotNullOfOrNull { device.findObject(By.text(str(it))) }
+        val sortLabels = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
+            .joinToString("|") { java.util.regex.Pattern.quote(str(it)) }
+        // Share the row lookup's existing budget rather than extending the initial read deadline.
+        val sort = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile(sortLabels))),
+            (deadline - android.os.SystemClock.uptimeMillis()).coerceAtLeast(0L))
         takeScreenshot("${prefix}_initial_pack_layout")
         assertNotNull("Pack row exists but the sort bar is missing: row=$row", sort)
         val sortBounds = sort!!.visibleBounds
