@@ -114,19 +114,23 @@ def main():
     parser.add_argument('--grammar-version', required=True)
     parser.add_argument('--grammar-revision', required=True)
     args = parser.parse_args()
+    if args.output.exists():
+        parser.error('Output already exists; preserve previous rounds in a different child directory')
     unit = Path('app/build/test-results/testDebugUnitTest')
     connected = Path('app/build/outputs/androidTest-results/connected')
     diagnostics = Path('.ci-results')
     output = args.output.resolve()
     for source in (unit, connected, diagnostics):
         resolved_source = source.resolve()
-        if output.is_relative_to(resolved_source) or resolved_source.is_relative_to(output):
+        # Existing ancestors also catch case aliases on case-insensitive disks.
+        same_source = source.exists() and any(
+            ancestor.exists() and os.path.samefile(ancestor, source)
+            for ancestor in (output, *output.parents))
+        if same_source or output.is_relative_to(resolved_source) or resolved_source.is_relative_to(output):
             parser.error(f'Output must not overlap result source {source} (including symlinks)')
     serial = os.environ.get('ANDROID_SERIAL')
     if not serial:
         parser.error('ANDROID_SERIAL must identify the leased device')
-    if args.output.exists():
-        parser.error('Output already exists; preserve previous rounds in a different child directory')
     args.output.mkdir(parents=True)
     revision = capture(['git', 'rev-parse', 'HEAD'])
     dirty = capture(['git', 'status', '--porcelain', '--untracked-files=all'])

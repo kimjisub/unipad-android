@@ -96,6 +96,63 @@ class NativeGrammarResultsTest(unittest.TestCase):
                 self.assertIn('overlap', errors.getvalue())
                 self.assertFalse(output.exists())
 
+    def test_case_alias_output_uses_actual_filesystem_identity(self):
+        sources = ['.ci-results', 'app/build/test-results/testDebugUnitTest',
+                   'app/build/outputs/androidTest-results/connected']
+        for source in sources:
+            for absolute in [False, True]:
+                for existing_output in [False, True]:
+                    with self.subTest(source=source, absolute=absolute, existing=existing_output), \
+                            tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
+                        module = self.load()
+                        source_path = Path(source)
+                        source_path.mkdir(parents=True)
+                        sentinel = source_path / 'original.txt'
+                        sentinel.write_text('keep original evidence')
+                        alias = source_path.with_name(source_path.name.swapcase())
+                        same_directory = alias.exists() and alias.samefile(source_path)
+                        output = alias / 'round' / 'nested'
+                        if existing_output:
+                            output.mkdir(parents=True)
+                        if absolute:
+                            output = Path(directory) / output
+                        arguments = ['native_grammar_results.py', '--output', str(output),
+                                     '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                        errors = io.StringIO()
+                        with patch('sys.argv', arguments), \
+                                patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                                patch.object(module, 'capture', side_effect=AssertionError('Admitted output')), \
+                                contextlib.redirect_stderr(errors):
+                            if existing_output or same_directory:
+                                with self.assertRaises(SystemExit) as raised:
+                                    module.main()
+                                self.assertEqual(2, raised.exception.code)
+                                self.assertEqual(existing_output, output.exists())
+                            else:
+                                # A distinct directory on a case-sensitive disk must be admitted.
+                                with self.assertRaisesRegex(AssertionError, 'Admitted output'):
+                                    module.main()
+                                self.assertTrue(output.is_dir())
+                        self.assertEqual('keep original evidence', sentinel.read_text())
+
+    def test_existing_output_is_rejected_before_device_or_source_checks(self):
+        module = self.load()
+        with tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
+            output = Path('existing')
+            output.mkdir()
+            sentinel = output / 'original.txt'
+            sentinel.write_text('keep previous round')
+            arguments = ['native_grammar_results.py', '--output', str(output),
+                         '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+            errors = io.StringIO()
+            with patch('sys.argv', arguments), patch.dict('os.environ', {}, clear=True), \
+                    contextlib.redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as raised:
+                    module.main()
+            self.assertEqual(2, raised.exception.code)
+            self.assertIn('Output already exists', errors.getvalue())
+            self.assertEqual('keep previous round', sentinel.read_text())
+
     def test_cached_unit_results_cannot_be_attributed_to_the_current_commit(self):
         module = self.load()
         with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as evidence, \
