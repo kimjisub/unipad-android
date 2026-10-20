@@ -2,12 +2,14 @@ name: Android checks
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-checks-${{ github.event.pull_request.number }}
+  group: android-checks-${{ github.event_name }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -69,6 +71,9 @@ jobs:
     name: Android debug build
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    env:
+      # A clean D8 dependency merge can exceed the project's 2 GiB daemon heap.
+      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
     steps:
       - name: Set the initial Git branch
         run: git config --global init.defaultBranch main
