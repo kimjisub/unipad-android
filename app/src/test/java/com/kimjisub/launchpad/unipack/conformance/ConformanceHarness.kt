@@ -103,7 +103,7 @@ fun caseSensitiveFileSystem(): Boolean {
 	}
 }
 
-private fun parseResult(pack: UniPack, root: File): JsonElement {
+internal fun parseResult(pack: UniPack, root: File): JsonElement {
 	val soundsDir = soundsDirOf(root)
 	return buildJsonObject {
 		put("loaded", true)
