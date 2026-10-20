@@ -19,7 +19,10 @@ const val PLATFORM = "android"
 
 class CorpusFile(val path: String, val text: String?, val base64: String?, val asset: String?)
 
-class Known(val status: String, val actual: JsonElement, val note: String)
+/** [otherActuals]: the same difference as the platform gives it elsewhere (another file system, say). */
+class Known(val status: String, val actual: JsonElement, val note: String, val otherActuals: List<JsonElement> = emptyList()) {
+	fun matches(result: JsonElement) = result == actual || result in otherActuals
+}
 
 data class CorpusCase(
 	val id: String,
@@ -86,7 +89,10 @@ private fun JsonObject.toCase(): CorpusCase = CorpusCase(
 	scenario = (this["scenario"] as? JsonArray)?.map { it.jsonObject } ?: emptyList(),
 	known = (this["known"] as? JsonObject)?.mapValues {
 		val k = it.value.jsonObject
-		Known(k.getValue("status").jsonPrimitive.content, k.getValue("actual"), k.getValue("note").jsonPrimitive.content)
+		Known(
+			k.getValue("status").jsonPrimitive.content, k.getValue("actual"), k.getValue("note").jsonPrimitive.content,
+			(k["otherActuals"] as? JsonArray)?.map { other -> other.jsonObject.getValue("actual") } ?: emptyList(),
+		)
 	} ?: emptyMap(),
 	unobserved = (this["unobserved"] as? JsonObject)?.mapValues { it.value.jsonPrimitive.content } ?: emptyMap(),
 )
@@ -159,7 +165,7 @@ fun classify(c: CorpusCase, actual: JsonElement, platform: String = PLATFORM): O
 		else Outcome("pass", false, "")
 	}
 	if (known != null) {
-		return if (actual == known.actual) Outcome(known.status, false, known.note)
+		return if (known.matches(actual)) Outcome(known.status, false, known.note)
 		else Outcome("fail", true, "the result changed from the pinned difference")
 	}
 	return Outcome("fail", true, "differs from the expected result and nothing in the corpus accounts for it")
