@@ -49,6 +49,7 @@ class PlayActivityViewModel(
 	private val unipackRepo: UnipackRepository,
 	usage: UsageAnalytics,
 	private val soundEngine: SoundRunner.Engine = SoundRunner.OboeEngine,
+	private val autoMapper: (UniPackFolder) -> UniPackAutoMapper = ::UniPackAutoMapper,
 ) : ViewModel() {
 
 	companion object {
@@ -488,14 +489,15 @@ class PlayActivityViewModel(
 
 	// pad, chain
 
-	// Main-thread input ownership of each held pad (x, y): releasing one source must not release
-	// the other source's hold.
-	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PlayTrigger>>()
+	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
+	// independent; a manual release also clears auto play's hold.
+	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?)
+	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
 		autoPlayInputGeneration++
-		val pads = heldPads.filterValues { PlayTrigger.AUTOPLAY in it }.keys.toList()
+		val pads = heldPads.filterValues { PadInput(PlayTrigger.AUTOPLAY, null) in it }.keys.toList()
 		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.AUTOPLAY, source = null)
 	}
 
@@ -529,19 +531,27 @@ class PlayActivityViewModel(
 		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
-	/**
-	 * Lets go of every pad still held on the MIDI controller, except the ones [heldOnScreen] says a
-	 * finger on the screen is still pressing.
-	 */
-	fun releaseControllerPads(heldOnScreen: (x: Int, y: Int) -> Boolean) {
+	/** Lets go of the controller's holds, preserving any fingers still pressing on screen. */
+	fun releaseControllerPads() {
 		val pads = controllerHeldPads.toList()
 		controllerHeldPads.clear()
-		for ((x, y) in pads) if (!heldOnScreen(x, y)) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
+		for ((x, y) in pads) padEvent(x, y, false, PlayTrigger.PAD, InputSource.MIDI)
 	}
 
 	/** A pad auto play presses or releases, [atMs] (SystemClock.elapsedRealtime) being when the pack places it. */
 	internal fun autoPlayPadTouch(x: Int, y: Int, upDown: Boolean, atMs: Long) =
 		padEvent(x, y, upDown, PlayTrigger.AUTOPLAY, source = null, atMs = atMs)
+
+	/**
+	 * Auto play pressing (x, y) with the pad's [num]th sound and light of chain [c]. Set here, on the main
+	 * thread, the order follows any chain change auto play sent before the press, whose reset returns the
+	 * chain's pads to their first sound and light.
+	 */
+	internal fun autoPlayPadOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
+		unipack.soundPush(c, x, y, num)
+		unipack.ledPush(c, x, y, num)
+		autoPlayPadTouch(x, y, true, atMs)
+	}
 
 	/**
 	 * [pressedBy] tells the person's own press from one auto play replays out of the pack's sequence;
@@ -565,7 +575,7 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(pressedBy)
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source))
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -586,10 +596,11 @@ class PlayActivityViewModel(
 				ledRunner?.eventOn(x, y, atMs)
 			} else {
 				val sources = heldPads[x to y]
-				// A hand letting go releases the pad even while auto play holds it; auto play
-				// letting go keeps a pad a hand still holds.
+				// Screen and controller holds are independent. A person's release still overrides
+				// auto play, but only the last manual release stops the shared sound and light.
 				if (sources != null) {
-					if (pressedBy == PlayTrigger.PAD) sources.clear() else sources.remove(pressedBy)
+					sources.remove(PadInput(pressedBy, source))
+					if (pressedBy == PlayTrigger.PAD) sources.remove(PadInput(PlayTrigger.AUTOPLAY, null))
 					if (sources.isNotEmpty()) return
 					heldPads.remove(x to y)
 				}
@@ -983,12 +994,12 @@ class PlayActivityViewModel(
 					}
 				}
 
-				override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
+				override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
 					val generation = autoPlayInputGeneration
 					viewModelScope.launch {
 						if (created === autoPlayRunner && generation == autoPlayInputGeneration &&
 							playMode == PlayMode.AutoPlay && created?.playmode == true)
-							autoPlayPadTouch(x, y, true, atMs)
+							autoPlayPadOn(x, y, c, num, atMs)
 					}
 				}
 
@@ -1069,43 +1080,34 @@ class PlayActivityViewModel(
 		scbAutoPlay.setCheckedSilently(false)
 		autoPlayControlVisible = false
 
-		UniPackAutoMapper(folder, object : UniPackAutoMapper.Listener {
-			override fun onStart() {
-				autoMappingActive = true
-				autoMappingProgress = 0
-			}
-
-			override fun onGetWorkSize(size: Int) {
-				autoMappingMax = size
-			}
-
-			override fun onProgress(progress: Int) {
-				autoMappingProgress = progress
-			}
-
-			override fun onDone() {
-				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
-				viewModelScope.launch {
-					try {
-						withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
-						autoMappingActive = false
-						initAutoPlayRunner()
-						log("AutoMapping complete")
-					} catch (e: CancellationException) {
-						throw e
-					} catch (e: Exception) {
-						onException(e)
+		autoMappingActive = true
+		autoMappingProgress = 0
+		// Leaving the play screen cancels it; left before the writing starts, the pack's autoPlay stays as it was.
+		viewModelScope.launch {
+			try {
+				autoMapper(folder).run(object : UniPackAutoMapper.Listener {
+					override fun onGetWorkSize(size: Int) {
+						autoMappingMax = size
 					}
-				}
-			}
 
-			override fun onException(throwable: Throwable) {
+					override fun onProgress(progress: Int) {
+						autoMappingProgress = progress
+					}
+				})
+				// A large autoPlay file takes long to read; the bar stays until the runner is rebuilt.
+				withContext(Dispatchers.IO) { folder.reloadAutoPlay() }
 				autoMappingActive = false
-				Log.err("AutoMapping failed", throwable)
-				// iOS tells the user; here the bar just disappeared.
-				viewModelScope.launch { uiCallback?.showToast(string.failed) }
+				initAutoPlayRunner()
+				log("AutoMapping complete")
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				Log.err("AutoMapping failed", e)
+				uiCallback?.showToast(string.failed)
+			} finally {
+				autoMappingActive = false
 			}
-		})
+		}
 	}
 
 	override fun onCleared() {

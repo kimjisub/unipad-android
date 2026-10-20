@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.unipack
 
+import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -10,6 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Files
 
 class UniPackFolderMissingFileTest {
 
@@ -57,6 +59,56 @@ class UniPackFolderMissingFileTest {
 		assertEquals(1, pack.soundCount)
 		assertEquals(1, pack.ledTableCount)
 		assertEquals(2, pack.autoPlayTable?.elements?.size)
+	}
+
+	@Test
+	fun keyLedSubdirectories_areIgnoredWithoutErrorsAndDirectFilesStillLoad() {
+		val root = createStorePack()
+		val nested = File(root, "keyLED/sub")
+		assertTrue(nested.mkdir())
+		File(nested, "1 2 2 1").writeText("o 2 2 a 9\n")
+		assertTrue(File(root, "keyLED/1 3 3 1").mkdir())
+
+		val pack = UniPackFolder(root).load().loadDetail()
+
+		assertNull(pack.errorDetail)
+		assertFalse(pack.criticalError)
+		assertEquals(2, pack.ledTableCount)
+		assertNull(pack.ledGet(0, 1, 1))
+		assertNull(pack.ledGet(0, 2, 2))
+		for (y in 0..1) {
+			val animation = pack.ledGet(0, 0, y)!!
+			assertEquals(1, animation.loop)
+			assertEquals(3, animation.ledEvents.size)
+			val on = animation.ledEvents[0] as LedEvent.On
+			assertEquals(0, on.x)
+			assertEquals(y, on.y)
+			assertEquals(5, on.velocity)
+			assertEquals(100, (animation.ledEvents[1] as LedEvent.Delay).delay)
+			val off = animation.ledEvents[2] as LedEvent.Off
+			assertEquals(0, off.x)
+			assertEquals(y, off.y)
+		}
+	}
+
+	@Test
+	fun keyLedBrokenSymbolicLink_isRecordedAsErrorAndDirectFilesStillLoad() {
+		val root = createStorePack()
+		val link = File(root, "keyLED/1 2 2 1").toPath()
+		Files.createSymbolicLink(link, root.toPath().resolve("missing-led"))
+		assertTrue(Files.isSymbolicLink(link))
+		assertFalse(link.toFile().isFile)
+		assertFalse(link.toFile().isDirectory)
+
+		val pack = UniPackFolder(root).load().loadDetail()
+
+		assertEquals("keyLed : 1 2 2 1 is not file", errors(pack))
+		assertFalse(pack.criticalError)
+		assertTrue(pack.detailLoaded)
+		assertEquals(2, pack.ledTableCount)
+		assertNotNull(pack.ledGet(0, 0, 0))
+		assertNotNull(pack.ledGet(0, 0, 1))
+		assertNull(pack.ledGet(0, 1, 1))
 	}
 
 	@Test

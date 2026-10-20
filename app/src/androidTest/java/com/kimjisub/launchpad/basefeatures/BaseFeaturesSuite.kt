@@ -9,6 +9,7 @@ import org.junit.runners.Suite
     LibraryAndFileTest::class,
     RetiredShareLinkTest::class,
     TouchPlaybackTest::class,
+    ZeroDurationLedTest::class,
     PadEdgeTouchTest::class,
     MultiTouchPadModeTest::class,
     MultiTouchSlideModeTest::class,
@@ -18,6 +19,7 @@ import org.junit.runners.Suite
     HeldPadLeavingScreenTest::class,
     TransportAndLifecycleTest::class,
     VirtualMidiTest::class,
+    SharedMidiPadTest::class,
     StoreDownloadTest::class,
     AppearanceAndInsetsTest::class,
 )

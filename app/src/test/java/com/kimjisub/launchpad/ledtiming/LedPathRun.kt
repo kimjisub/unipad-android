@@ -162,10 +162,10 @@ class LedPathRun(private val pack: UniPack) {
 			startNanos = System.nanoTime()
 		}
 
-		override fun onPadTouchOn(x: Int, y: Int, atMs: Long) {
+		override fun onPadTouchOn(x: Int, y: Int, c: Int, num: Int, atMs: Long) {
 			vm.viewModelScope.launch {
 				presses += now()
-				padEvent { vm.autoPlayPadTouch(x, y, true, atMs) }
+				padEvent { vm.autoPlayPadOn(x, y, c, num, atMs) }
 			}
 		}
 
