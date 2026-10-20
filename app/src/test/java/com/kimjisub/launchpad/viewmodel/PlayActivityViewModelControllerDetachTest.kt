@@ -55,7 +55,7 @@ class PlayActivityViewModelControllerDetachTest {
 		screen = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }.apply { setGrid(8, 8) }
 	}
 
-	private fun unplug() = vm.releaseControllerPads(screen::holds)
+	private fun unplug() = vm.releaseControllerPads()
 
 	private fun pressedLight(x: Int, y: Int) = vm.channelManager.get(x, y)?.channel
 

@@ -24,6 +24,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 /**
@@ -87,6 +89,31 @@ class TransferConfigurationLifecycleTest {
 		}
 	}
 
+	@Test
+	fun selectionReadWaitsForFilteredRow() {
+		val intent = transferIntent().putExtra(TransferActivity.EXTRA_SOURCE_TYPE, "workspace")
+			.putExtra(TransferActivity.EXTRA_SOURCE_PATH, workspaceDir.path)
+		ActivityScenario.launch<TransferActivity>(intent).use {
+			val target = packNames.first()
+			showAllPacks()
+			enterQuery("no_matching_transfer_pack")
+			assertTrue("The target row should leave before reading its state", device.wait(Until.gone(itemRow(target)), WAIT_MS))
+			val field = searchField()
+			val executor = Executors.newSingleThreadScheduledExecutor()
+			try {
+				// Publish the real filtered row after the state lookup starts, as during recomposition.
+				val queryUpdate = executor.schedule({ field.text = target }, 1, TimeUnit.SECONDS)
+				try {
+					assertTrue("A temporarily absent row must not be read as unchecked", isItemChecked(target))
+				} finally {
+					queryUpdate.get(WAIT_MS, TimeUnit.MILLISECONDS)
+				}
+			} finally {
+				executor.shutdownNow()
+			}
+		}
+	}
+
 	/** Filters the list down to one test pack through the search field, toggles it, then widens the query again. */
 	private fun searchAndSelect(round: Int) {
 		val target = "$PACK_PREFIX${round % PACK_COUNT}"
@@ -112,7 +139,7 @@ class TransferConfigurationLifecycleTest {
 
 	private fun toggleItem(name: String) {
 		val countBefore = selectedCount()
-		val wasChecked = device.hasObject(itemRow(name, checked = true))
+		val wasChecked = isItemChecked(name)
 		clickItemRow(name)
 
 		val expectedCount = if (wasChecked) countBefore - 1 else countBefore + 1
@@ -121,6 +148,14 @@ class TransferConfigurationLifecycleTest {
 			device.wait(Until.hasObject(By.text(context.getString(R.string.transfer_selected_count, expectedCount))), WAIT_MS),
 		)
 		assertTrue("$name checkbox should flip", device.wait(Until.hasObject(itemRow(name, checked = !wasChecked)), WAIT_MS))
+	}
+
+	private fun isItemChecked(name: String): Boolean = retryOnStale {
+		val row = device.wait(Until.findObject(itemRow(name)), WAIT_MS)
+		assertNotNull("$name row is not shown", row)
+		val checkbox = row.findObject(By.clazz(CHECK_BOX_CLASS))
+		assertNotNull("$name checkbox is not shown", checkbox)
+		checkbox.isChecked
 	}
 
 	private fun exerciseLifecycle(scenario: ActivityScenario<TransferActivity>, round: Int): Boolean {

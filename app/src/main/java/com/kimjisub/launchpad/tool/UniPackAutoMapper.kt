@@ -1,135 +1,97 @@
 package com.kimjisub.launchpad.tool
 
-import android.annotation.SuppressLint
-import android.media.MediaPlayer
-import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.unipack.UniPackFolder
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.*
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
+import java.io.FileNotFoundException
 
+/**
+ * Rewrites a pack's autoPlay so each wait matches the length of the sound pressed before it.
+ *
+ * [run] belongs to its caller's scope: cancelling it (the play screen is left) stops it before the
+ * file is written, and the file is only ever swapped whole (see [AutoPlayFileReplacer]).
+ */
 class UniPackAutoMapper(
 	private val unipack: UniPackFolder,
-	private val listener: Listener,
+	private val openDurationReader: () -> SoundDurationReader = ::MediaPlayerDurationReader,
+	private val replacer: AutoPlayFileReplacer = AutoPlayFileReplacer(),
 ) {
 	interface Listener {
-		fun onStart()
 		fun onGetWorkSize(size: Int)
 		fun onProgress(progress: Int)
-		fun onDone()
-		fun onException(throwable: Throwable)
 	}
 
-	init {
-		CoroutineScope(Dispatchers.IO).launch {
-			try {
-				withContext(Dispatchers.Main) { listener.onStart() }
+	/** Calls [listener] in the caller's context; throws when the pack cannot be read or written. */
+	suspend fun run(listener: Listener) {
+		val autoPlayFile = unipack.autoPlayFile ?: throw FileNotFoundException("autoPlay")
+		val autoPlay = unipack.autoPlayTable ?: throw IllegalStateException("autoPlay is not loaded")
+		val elements = mergeDelays(autoPlay.elements)
+		listener.onGetWorkSize(elements.size)
 
-				val filtered = ArrayList<AutoPlay.Element>()
-				for (e in unipack.autoPlayTable!!.elements) {
-					when (e) {
-						is AutoPlay.Element.On -> filtered.add(e)
-						is AutoPlay.Element.Off -> {}
-						is AutoPlay.Element.Chain -> filtered.add(e)
-						is AutoPlay.Element.Delay -> filtered.add(e)
+		val result = ArrayList<AutoPlay.Element>()
+		openDurationReader().use { reader ->
+			// null: the sound's length is unknown, so the pack's own wait is kept.
+			var nextDuration: Int? = FIRST_DELAY_MS
+			for ((i, e) in elements.withIndex()) {
+				when (e) {
+					is AutoPlay.Element.On -> {
+						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it) } }
+						result.add(e)
 					}
+					is AutoPlay.Element.Chain -> result.add(e)
+					is AutoPlay.Element.Delay ->
+						result.add(AutoPlay.Element.Delay(nextDuration?.plus(AUTOMAPPING_DELAY_OFFSET_MS) ?: e.delay))
+					is AutoPlay.Element.Off -> {}
 				}
-
-				// Merge consecutive delays
-				val merged = ArrayList<AutoPlay.Element>()
-				var prevDelay: AutoPlay.Element.Delay? = AutoPlay.Element.Delay(0)
-				for (e in filtered) {
-					when (e) {
-						is AutoPlay.Element.On -> {
-							if (prevDelay != null) {
-								merged.add(prevDelay)
-								prevDelay = null
-							}
-							merged.add(e)
-						}
-						is AutoPlay.Element.Chain -> merged.add(e)
-						is AutoPlay.Element.Delay -> {
-							if (prevDelay != null) prevDelay.delay += e.delay
-							else prevDelay = e
-						}
-						else -> {}
-					}
-				}
-
-				withContext(Dispatchers.Main) { listener.onGetWorkSize(merged.size) }
-
-				// Replace delays with actual sound duration
-				val result = ArrayList<AutoPlay.Element>()
-				var nextDuration = 1000
-				val mplayer = MediaPlayer()
-				for ((i, e) in merged.withIndex()) {
-					try {
-						when (e) {
-							is AutoPlay.Element.On -> {
-								val sounds = unipack.soundTable!![e.currChain][e.x][e.y]!!
-								val num = e.num % sounds.size
-								nextDuration = FileManager.wavDuration(mplayer, sounds.elementAt(num).file.path)
-								result.add(e)
-							}
-							is AutoPlay.Element.Chain -> result.add(e)
-							is AutoPlay.Element.Delay -> {
-								e.delay = nextDuration + AUTOMAPPING_DELAY_OFFSET_MS
-								result.add(e)
-							}
-							else -> {}
-						}
-					} catch (ee: Exception) {
-						ee.printStackTrace()
-					}
-					withContext(Dispatchers.Main) { listener.onProgress(i) }
-				}
-				mplayer.release()
-
-				// Build autoPlay file content
-				val sb = StringBuilder()
-				for (e in result) {
-					when (e) {
-						is AutoPlay.Element.On ->
-							sb.append("t ").append(e.x + 1).append(" ").append(e.y + 1).append("\n")
-						is AutoPlay.Element.Chain ->
-							sb.append("c ").append(e.c + 1).append("\n")
-						is AutoPlay.Element.Delay ->
-							sb.append("d ").append(e.delay).append("\n")
-						else -> {}
-					}
-				}
-
-				// Backup existing autoPlay file and write new one
-				try {
-					val autoPlayFile = unipack.autoPlayFile ?: File(unipack.rootFolder, "autoPlay")
-					val existingFile = File(unipack.rootFolder, "autoPlay")
-					if (existingFile.exists()) {
-						@SuppressLint("SimpleDateFormat")
-						val backupName = "autoPlay_" + SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(Date())
-						existingFile.renameTo(File(unipack.rootFolder, backupName))
-					}
-					BufferedWriter(OutputStreamWriter(FileOutputStream(autoPlayFile))).use { writer ->
-						writer.write(sb.toString())
-					}
-				} catch (e: IOException) {
-					e.printStackTrace()
-				}
-
-				withContext(Dispatchers.Main) { listener.onDone() }
-
-			} catch (e: Throwable) {
-				e.printStackTrace()
-				withContext(Dispatchers.Main) { listener.onException(e) }
+				listener.onProgress(i)
 			}
 		}
+
+		val content = render(result)
+		// withContext checks for cancellation before writing; the replacement itself is not interrupted.
+		withContext(Dispatchers.IO) { replacer.replace(autoPlayFile, content) }
+	}
+
+	private fun soundFile(e: AutoPlay.Element.On): File? {
+		val sounds = unipack.soundTable?.getOrNull(e.currChain)?.getOrNull(e.x)?.getOrNull(e.y)
+		if (sounds.isNullOrEmpty()) return null
+		return sounds.elementAt(e.num % sounds.size).file
 	}
 
 	companion object {
+		private const val FIRST_DELAY_MS = 1000
 		private const val AUTOMAPPING_DELAY_OFFSET_MS = 0
+
+		/** Drops pad releases and joins consecutive waits into one, placed before each press. */
+		internal fun mergeDelays(elements: List<AutoPlay.Element>): List<AutoPlay.Element> {
+			val merged = ArrayList<AutoPlay.Element>()
+			var pendingDelay: Int? = 0
+			for (e in elements) {
+				when (e) {
+					is AutoPlay.Element.On -> {
+						pendingDelay?.let { merged.add(AutoPlay.Element.Delay(it)) }
+						pendingDelay = null
+						merged.add(e)
+					}
+					is AutoPlay.Element.Chain -> merged.add(e)
+					is AutoPlay.Element.Delay -> pendingDelay = (pendingDelay ?: 0) + e.delay
+					is AutoPlay.Element.Off -> {}
+				}
+			}
+			return merged
+		}
+
+		internal fun render(elements: List<AutoPlay.Element>): String = buildString {
+			for (e in elements) {
+				when (e) {
+					is AutoPlay.Element.On -> append("t ").append(e.x + 1).append(' ').append(e.y + 1).append('\n')
+					is AutoPlay.Element.Chain -> append("c ").append(e.c + 1).append('\n')
+					is AutoPlay.Element.Delay -> append("d ").append(e.delay).append('\n')
+					is AutoPlay.Element.Off -> {}
+				}
+			}
+		}
 	}
 }

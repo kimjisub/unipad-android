@@ -58,7 +58,13 @@ class UniPackImporter(
 				PackArchive.extract(zipCopy, stagedFolder)
 				FileManager.removeDoubleFolder(stagedFolder.path)
 
-				val checked = UniPackFolder(stagedFolder).load()
+				val checked = try {
+					UniPackFolder(stagedFolder).load()
+				} catch (e: OutOfMemoryError) {
+					// Treat memory exhaustion while reading metadata as a validation failure so
+					// the screen is notified and staging is discarded in finally.
+					throw UniPackCriticalErrorException("Not enough memory to validate this pack", e)
+				}
 				if (checked.criticalError) {
 					val errorMsg = checked.errorDetail ?: "Unknown error"
 					Log.err(errorMsg)
@@ -111,7 +117,7 @@ class UniPackImporter(
 		fun onException(throwable: Throwable)
 	}
 
-	class UniPackCriticalErrorException(message: String) : Exception(message)
+	class UniPackCriticalErrorException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 	private companion object {
 		const val ARCHIVE_NAME = "import.zip"

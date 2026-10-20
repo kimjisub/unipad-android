@@ -1,61 +1,44 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPack
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.io.IOException
-import java.util.Collections
 
 /**
  * Selecting a pack reads all of it to count its sounds and LEDs. A pack too large for memory threw
  * OutOfMemoryError there, nothing caught it, and the whole app closed before the pack was played.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class MainPackPanelViewModelReadFailureTest {
 
+	@get:Rule
+	val models = MainViewModelRule()
 	private val app = mockk<Application>(relaxed = true)
-	private val owner = object : ViewModelStoreOwner {
-		override val viewModelStore = ViewModelStore()
-	}
-	private val uncaught: MutableList<Throwable> = Collections.synchronizedList(mutableListOf())
-	private var previousHandler: Thread.UncaughtExceptionHandler? = null
 
 	@Before
 	fun setUp() {
-		Dispatchers.setMain(UnconfinedTestDispatcher())
 		startKoin { modules(module { single { mockk<UnipackRepository>(relaxed = true) } }) }
-		previousHandler = Thread.getDefaultUncaughtExceptionHandler()
-		Thread.setDefaultUncaughtExceptionHandler { _, e -> uncaught += e }
 	}
 
 	@After
 	fun tearDown() {
-		Thread.setDefaultUncaughtExceptionHandler(previousHandler)
-		owner.viewModelStore.clear()
 		stopKoin()
-		Dispatchers.resetMain()
 	}
 
 	private class FailingPack(
@@ -80,7 +63,7 @@ class MainPackPanelViewModelReadFailureTest {
 
 	/** The panel with every read it started finished, including the handling of any failure. */
 	private fun openPanel(pack: UniPack): MainPackPanelViewModel {
-		val panel = MainPackPanelViewModel.of(owner, app, pack)
+		val panel = models.track(MainPackPanelViewModel.of(models, app, pack))
 		runBlocking { panel.viewModelScope.coroutineContext.job.children.toList().joinAll() }
 		return panel
 	}
@@ -88,22 +71,16 @@ class MainPackPanelViewModelReadFailureTest {
 	@Test
 	fun outOfMemoryWhileCountingSoundsAndLeds_doesNotCloseTheApp() {
 		openPanel(FailingPack(detailFailure = OutOfMemoryError("keySound")))
-
-		assertEquals(emptyList<Throwable>(), uncaught.toList())
 	}
 
 	@Test
 	fun readErrorWhileCountingSoundsAndLeds_doesNotCloseTheApp() {
 		openPanel(FailingPack(detailFailure = IllegalStateException("broken keyLed")))
-
-		assertEquals(emptyList<Throwable>(), uncaught.toList())
 	}
 
 	@Test
 	fun readErrorWhileMeasuringTheFolder_doesNotCloseTheApp() {
 		openPanel(FailingPack(sizeFailure = SecurityException("no access")))
-
-		assertEquals(emptyList<Throwable>(), uncaught.toList())
 	}
 
 	@Test
