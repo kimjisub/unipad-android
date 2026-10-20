@@ -57,12 +57,12 @@ fun MainTotalPanelScreen(
 		shape = RoundedCornerShape(8.dp),
 		color = MaterialTheme.colorScheme.surface,
 	) {
-		Box(modifier = Modifier.fillMaxSize()) {
-			if (largeText) {
+		if (largeText) {
+			Column(Modifier.fillMaxSize()) {
 				Column(
-					modifier = Modifier.fillMaxSize()
+					modifier = Modifier.weight(1f).fillMaxWidth()
 						.verticalScroll(rememberScrollState())
-						.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 80.dp),
+						.padding(16.dp),
 				) {
 					Row(verticalAlignment = Alignment.CenterVertically) {
 						LogoAndVersion(vm)
@@ -72,10 +72,11 @@ fun MainTotalPanelScreen(
 					Spacer(Modifier.height(12.dp))
 					Stats(vm)
 				}
-			} else Column(
-				modifier = Modifier
-					.fillMaxSize()
-					.padding(16.dp),
+				UpdateControl(updateNotice, onCheckUpdateClick, checkingUpdate)
+			}
+		} else Box(modifier = Modifier.fillMaxSize()) {
+			Column(
+				modifier = Modifier.fillMaxSize().padding(16.dp),
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center,
 			) {
@@ -83,42 +84,47 @@ fun MainTotalPanelScreen(
 				Spacer(Modifier.height(12.dp))
 				Stats(vm)
 			}
-
-			if (updateNotice != null) {
-				Box(Modifier.align(Alignment.BottomStart).padding(start = 8.dp, end = 64.dp, bottom = 8.dp)) {
-					updateNotice()
-				}
-			} else if (onCheckUpdateClick != null) {
-				Row(
-					modifier = Modifier
-						.align(Alignment.BottomStart)
-						.padding(end = 64.dp)
-						.focusRing()
-						.clickable(enabled = !checkingUpdate) { onCheckUpdateClick() }
-						.padding(12.dp)
-						.testTag("app_update_check"),
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					Text(
-						text = stringResource(R.string.update_check),
-						color = Blue,
-						fontSize = 11.sp,
-						maxLines = 1,
-						overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-					)
-					if (checkingUpdate) {
-						Spacer(Modifier.width(6.dp))
-						CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Blue)
-					}
-				}
-			}
-
-			if (!largeText) SettingsButton(
+			UpdateControl(updateNotice, onCheckUpdateClick, checkingUpdate, Modifier.align(Alignment.BottomStart))
+			SettingsButton(
 				onSettingsClick,
-				modifier = Modifier
-					.align(Alignment.BottomEnd)
-					.padding(8.dp),
+				modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
 			)
+		}
+	}
+}
+
+@Composable
+private fun UpdateControl(
+	updateNotice: (@Composable () -> Unit)?,
+	onCheckUpdateClick: (() -> Unit)?,
+	checkingUpdate: Boolean,
+	modifier: Modifier = Modifier,
+) {
+	if (updateNotice != null) {
+		Box(modifier.padding(start = 8.dp, end = 64.dp, bottom = 8.dp)) {
+			updateNotice()
+		}
+	} else if (onCheckUpdateClick != null) {
+		Row(
+			modifier = modifier
+				.padding(end = 64.dp)
+				.focusRing()
+				.clickable(enabled = !checkingUpdate) { onCheckUpdateClick() }
+				.padding(12.dp)
+				.testTag("app_update_check"),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Text(
+				text = stringResource(R.string.update_check),
+				color = Blue,
+				fontSize = 11.sp,
+				maxLines = 1,
+				overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+			)
+			if (checkingUpdate) {
+				Spacer(Modifier.width(6.dp))
+				CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Blue)
+			}
 		}
 	}
 }

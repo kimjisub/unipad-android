@@ -113,6 +113,30 @@ class AppUpdateLayoutTest : BaseUITest() {
         } finally { MainActivity.appUpdateSourceForTest = null }
     }
 
+    @Test fun largeTextInformationStaysAboveTheUpdateControl() {
+        val originalLanguage = AppLanguage.get()
+        val originalScale = device.executeShellCommand("settings get system font_scale").trim()
+        try {
+            device.executeShellCommand("settings put system font_scale 2.0")
+            AppLanguage.set("en")
+            MainActivity.appUpdateSourceForTest = { ControlledSource() }
+            launchToMainScreen()
+            val notice = device.wait(Until.findObject(By.res("app_update_notice")), 5000L)
+            assertNotNull("compact update control missing", notice)
+            val information = device.findObjects(By.scrollable(true))
+                .filter { it.visibleBounds.left < notice.visibleBounds.centerX() }
+                .minByOrNull { it.visibleBounds.left }
+            assertNotNull("large text information is not scrollable", information)
+            takeScreenshot("update_information_above_notice")
+            assertTrue("scrolling information extends behind the update control: ${information!!.visibleBounds}, ${notice.visibleBounds}",
+                information.visibleBounds.bottom <= notice.visibleBounds.top)
+        } finally {
+            MainActivity.appUpdateSourceForTest = null
+            device.executeShellCommand(if (originalScale == "null") "settings delete system font_scale" else "settings put system font_scale $originalScale")
+            AppLanguage.set(originalLanguage)
+        }
+    }
+
     private fun emit(source: ControlledSource, status: UpdateStatus) {
         androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync {
             source.answer = status
