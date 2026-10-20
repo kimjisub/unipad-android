@@ -79,3 +79,7 @@ __pycache__/
 
 # Kotlin compiler session files
 .kotlin/
+
+# Build and test output may be symlinked to a separate cache volume.
+/build
+/.ci-results

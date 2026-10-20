@@ -33,6 +33,7 @@ class LedRunnerDeliveryTest {
 	private val clock = AtomicLong(1000)
 	private val events = mutableListOf<String>()
 	private val callsUnderLock = AtomicLong()
+	private val ticksDelivered = AtomicLong()
 	private lateinit var runner: LedRunner
 	private val loopMethod = LedRunner::class.java.getDeclaredMethod("loop").apply { isAccessible = true }
 
@@ -63,6 +64,10 @@ class LedRunnerDeliveryTest {
 			override fun onChainLedTurnOn(c: Int, color: Int, velocity: Int) = record("con", -1, c)
 			override fun onChainLedTurnOff(c: Int) = record("coff", -1, c)
 			override fun onChainChange(c: Int) = record("chain", -1, c)
+			override fun onLedChanges(changes: List<LedRunner.LedChange>) {
+				ticksDelivered.incrementAndGet()
+				super.onLedChanges(changes)
+			}
 		}, ChainObserver(), loopDelay)
 		clock.set(1000)
 		runner.launch()
@@ -342,6 +347,55 @@ class LedRunnerDeliveryTest {
 		assertEquals(0L, deliveredAfterStop.get())
 		assertTrue(events.isNotEmpty())
 	}
+
+	/**
+	 * stop() and afterDelivery() run on the main thread while the loop may be running ticks back to back: a
+	 * tick that takes longer than the loop delay starts the next one at once. [call] is made while a tick is
+	 * held in delivery; once that tick is handed over, the call must go first, before any further tick.
+	 * [call] passes on the runner's work, which records how many ticks were delivered by the time it ran.
+	 * When the loop could take the lock straight back after each tick, the call waited for as many ticks
+	 * as it lost the race to it, for seconds or minutes on a busy machine.
+	 */
+	private fun assertWaitsOnlyForTheTickInDelivery(rounds: Int = 5, beforeRound: () -> Unit = {}, call: (work: () -> Unit) -> Unit) {
+		setUpRunner(loopDelay = 1) { _, _ -> LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Off(1, 1)), 0, 0) }
+		repeat(rounds) { round ->
+			beforeRound()
+			val holding = AtomicBoolean(true)
+			val held = CountDownLatch(1)
+			val releaseDelivery = CountDownLatch(1)
+			onDelivery = {
+				if (holding.getAndSet(false)) {
+					held.countDown()
+					releaseDelivery.await(5, TimeUnit.SECONDS)
+				}
+				Thread.sleep(1)
+			}
+			runner.eventOn(0, 0)
+			assertTrue("round $round: no tick reached the listener", held.await(2, TimeUnit.SECONDS))
+
+			val ticksWhenItRan = AtomicLong(-1)
+			val caller = Thread { call { ticksWhenItRan.set(ticksDelivered.get()) } }.apply { start() }
+			val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2)
+			while (caller.state != Thread.State.BLOCKED && caller.state != Thread.State.WAITING) {
+				assertTrue("round $round: the call did not wait for the tick in delivery", caller.isAlive && System.nanoTime() < deadline)
+				Thread.yield()
+			}
+			val ticksBefore = ticksDelivered.get()
+			releaseDelivery.countDown()
+			caller.join()
+			onDelivery = {}
+
+			assertEquals("round $round: ticks delivered before the call ran", ticksBefore, ticksWhenItRan.get())
+		}
+	}
+
+	@Test
+	fun stop_whileTicksRunBackToBack_waitsOnlyForTheTickInDelivery() =
+		assertWaitsOnlyForTheTickInDelivery(beforeRound = { runner.launch() }) { work -> runner.stop(); work() }
+
+	@Test
+	fun afterDelivery_whileTicksRunBackToBack_waitsOnlyForTheTickInDelivery() =
+		assertWaitsOnlyForTheTickInDelivery { work -> runner.afterDelivery(work) }
 
 	/**
 	 * The UI thread walks the runner's animation list (eventOn from a touch, isEventExist and eventOffAll
