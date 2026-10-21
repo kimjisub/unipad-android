@@ -17,7 +17,7 @@ class OutputVerdictTest(unittest.TestCase):
                 (0.4 + 0.6 * ((i // 173) % 3 != 0)) for i in range(self.rate)]
 
     def capture(self, signal, start=1):
-        return [0.] * int(start * self.rate) + signal + [0.] * self.rate
+        return [0.] * int(start * self.rate) + signal + [0.] * (2*self.rate)
 
     def verdict(self, captured, reference=None, **kw):
         return audio.compare([captured, captured], [reference or self.tone()] * 2,
@@ -35,9 +35,14 @@ class OutputVerdictTest(unittest.TestCase):
         for signal in (self.tone(673), self.tone()[:300] + [0.] * 5700):
             self.assertFalse(self.verdict(self.capture(signal))['passed'])
 
+    def test_a_fixed_pitch_cannot_replace_a_changing_reference(self):
+        reference = [.2 * math.sin(2*math.pi*(431*(i/self.rate)+37*(i/self.rate)**2))
+                     for i in range(self.rate)]
+        self.assertFalse(self.verdict(self.capture(self.tone()),reference)['passed'])
+
     def test_loud_background_is_not_twenty_decibels_quieter(self):
         signal = self.tone()
-        self.assertFalse(self.verdict(signal * 3)['passed'])
+        self.assertFalse(self.verdict(signal * 4)['passed'])
 
     def test_previous_buffer_cannot_pass(self):
         self.assertFalse(self.verdict(self.capture(self.tone(), 0.))['passed'])

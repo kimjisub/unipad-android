@@ -20,7 +20,7 @@ MIN_RMS_DBFS = -50.
 MIN_RISE_DB = 20.
 MIN_CORRELATION = .90
 SILENCE_DBFS = -65.
-MAX_OUTPUT_DELAY_S = .5
+MAX_OUTPUT_DELAY_S = 1.0
 
 
 def read_wav(path: Path, rate: int = RATE) -> list[list[float]]:

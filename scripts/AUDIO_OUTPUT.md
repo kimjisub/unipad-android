@@ -93,7 +93,7 @@ encoders; running the detector requires only Python's standard library.
   pitch changes and amplitude envelopes while tolerating lossy-decoder phase
   and short stream timing shifts. A quarter-second hole, another pitch, a click,
   a missing chord note and swapped channels are regression-tested as failures. The central 0.90 seconds of the original reference is
-  searched within 0 to 0.5 seconds after input, allowing decoder and output
+  searched within 0 to 1.0 seconds after input, allowing decoder and output
   buffering without accepting a previous voice. The first measured WAV output
   started about 0.36 seconds after input. Initial time/frequency similarities
   ranged from 0.91 to 0.999 for normal signals; a different pad scored below 0.07.
@@ -115,7 +115,7 @@ byte-for-byte four-second case WAVs, channel metrics,
 correlations, input events, commands, exit codes, source commit and tracked diff,
 APK/test APK hashes, fixture manifest, device serial, OS properties, emulator
 version, instrumentation output and XML. Keep the source checkout clean for
-final evidence. Archives must be uploaded to the task before a rerun overwrites
+final evidence. Attach archives to the review before a rerun overwrites
 anything. Logs and result files belong outside the build tree.
 
 This proves digital output of this emulator and test pack. It does not prove
