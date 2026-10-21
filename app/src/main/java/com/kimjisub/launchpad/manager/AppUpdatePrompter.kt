@@ -33,7 +33,7 @@ class AppUpdatePrompter(
 		data object Failed : Card
 	}
 
-	enum class Dialog { NoUpdate, CheckFailed, Unsupported, StoreNotice, StoreUnavailable }
+	enum class Dialog { Details, NoUpdate, CheckFailed, Unsupported, StoreNotice, StoreUnavailable }
 
 	data class State(
 		val card: Card? = null,
@@ -49,7 +49,12 @@ class AppUpdatePrompter(
 	private val busy get() = job?.isActive == true
 
 	init {
-		source.observe(::onStoreChange)
+		source.observe { status ->
+			// A live download event is newer than any query already in flight. Do not let an
+			// older answer replace it or start an action after the download was canceled.
+			cancelPendingAction()
+			onStoreChange(status)
+		}
 	}
 
 	/** The list just became safe: look at a download in progress, and once a day for a new version. */
@@ -64,6 +69,13 @@ class AppUpdatePrompter(
 			if (action != actionVersion) return@run
 			showAuto(status, offerNew)
 		}
+	}
+
+	/** Open the current choices only in response to a tap on the compact notice. */
+	fun openNotice() {
+		if (!isSafe()) return
+		cancelPendingAction()
+		if (_state.value.card != null) showDialog(Dialog.Details) else checkByHand()
 	}
 
 	fun checkByHand() {
@@ -213,9 +225,19 @@ class AppUpdatePrompter(
 	/** A result the person asked for; a dialog opens only while the list is still in front. */
 	private fun showRequested(status: UpdateStatus?) {
 		when (status) {
-			UpdateStatus.Available -> setCard(Card.Offer)
-			is UpdateStatus.Downloading, UpdateStatus.Downloaded, UpdateStatus.Canceled -> onStoreChange(status)
-			UpdateStatus.Failed -> failed()
+			UpdateStatus.Available -> {
+				setCard(Card.Offer)
+				showDialog(Dialog.Details)
+			}
+			is UpdateStatus.Downloading, UpdateStatus.Downloaded -> {
+				onStoreChange(status)
+				showDialog(Dialog.Details)
+			}
+			UpdateStatus.Canceled -> onStoreChange(status)
+			UpdateStatus.Failed -> {
+				failed()
+				showDialog(Dialog.Details)
+			}
 			UpdateStatus.None -> showDialog(Dialog.NoUpdate)
 			UpdateStatus.Unsupported -> showDialog(Dialog.Unsupported)
 			null -> showDialog(Dialog.CheckFailed)
@@ -256,7 +278,9 @@ class AppUpdatePrompter(
 	}
 
 	private fun setCard(card: Card?) {
-		_state.update { it.copy(card = card) }
+		_state.update {
+			it.copy(card = card, dialog = if (card == null && it.dialog == Dialog.Details) null else it.dialog)
+		}
 	}
 
 	companion object {

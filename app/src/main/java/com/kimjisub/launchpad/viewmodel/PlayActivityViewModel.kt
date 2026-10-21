@@ -985,6 +985,7 @@ class PlayActivityViewModel(
 		autoPlayRunner = AutoPlayRunner(
 			unipack = unipack,
 			chain = chain,
+			eventDispatcher = Dispatchers.Main.immediate,
 			listener = object : AutoPlayRunner.Listener {
 				override fun onStart() {
 					viewModelScope.launch {

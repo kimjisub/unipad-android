@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.activity
 
-import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.midi.MidiConnection.SessionSummary
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.midi.driver.LaunchpadCoreFW
@@ -44,7 +43,6 @@ class MidiModelIndexForTargetTest {
 		val coreFwPad = SessionSummary(3, "Launchpad X", LaunchpadCoreFW::class, isPrimary = true)
 		val index = midiModelIndexForTarget(listOf(coreFwPad, padB), 3, Noting::class)
 		assertEquals(10, index)
-		assertEquals(R.string.midi_lp_core_fw, midiHelpModelNameResId(index))
 		assertEquals(10, midiModelIndexForTarget(emptyList(), null, LaunchpadCoreFW::class))
 	}
 
@@ -73,9 +71,4 @@ class MidiModelIndexForTargetTest {
 		return sent
 	}
 
-	@Test fun helpNamesTheTargetedModelOrNoneWhenItIsUnknown() {
-		assertEquals(R.string.midi_lp_mini_mk3, midiHelpModelNameResId(5))
-		assertEquals(android.R.string.unknownName, midiHelpModelNameResId(null))
-		assertEquals(R.string.midi_help_other, midiHelpModelNote(midiHelpModelNameResId(null), true))
-	}
 }

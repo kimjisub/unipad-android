@@ -147,7 +147,7 @@ fun normalizeError(message: String): String {
 	val section = Regex("^([A-Za-z.]+)\\s*:").find(message)?.groupValues?.get(1) ?: "unknown"
 	val kind = when {
 		Regex("format is (incorrect|not found)").containsMatchIn(message) -> "format"
-		Regex("\\b(chain|x|y|loop|coordinate|delay) is incorrect\\b|out of range").containsMatchIn(message) -> "range"
+		Regex("\\b(chain|x|y|loop|wormhole|coordinate|delay) is incorrect\\b|out of range").containsMatchIn(message) -> "range"
 		Regex("was not found|directory not found|doesn't exist").containsMatchIn(message) -> "missing-file"
 		Regex("was missing").containsMatchIn(message) -> "missing-field"
 		else -> "other($message)"

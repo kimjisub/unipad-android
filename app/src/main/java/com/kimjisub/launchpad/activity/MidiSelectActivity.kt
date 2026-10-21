@@ -13,17 +13,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -61,6 +63,7 @@ import com.kimjisub.launchpad.midi.driver.LaunchpadX
 import com.kimjisub.launchpad.midi.driver.MasterKeyboard
 import com.kimjisub.launchpad.midi.driver.Matrix
 import com.kimjisub.launchpad.midi.driver.MidiFighter
+import com.kimjisub.launchpad.ui.compose.barsAndCutout
 import com.kimjisub.launchpad.ui.theme.UniPadTheme
 import kotlin.reflect.KClass
 
@@ -68,7 +71,6 @@ class MidiSelectActivity : BaseActivity() {
 
 	private val isConnected = mutableStateOf(false)
 	private val selectedIndex = mutableIntStateOf(0)
-	private val targetModelIndex = mutableStateOf<Int?>(null)
 	private val dualPadModeEnabled = mutableStateOf(false)
 	private val reflectedModeEnabled = mutableStateOf(false)
 	private val reflectedSwapSides = mutableStateOf(false)
@@ -87,7 +89,6 @@ class MidiSelectActivity : BaseActivity() {
 				MidiSelectScreen(
 					isConnected = isConnected.value,
 					selectedIndex = selectedIndex.intValue,
-					targetModelIndex = targetModelIndex.value,
 					dualPadModeEnabled = dualPadModeEnabled.value,
 					reflectedModeEnabled = reflectedModeEnabled.value,
 					reflectedSwapSides = reflectedSwapSides.value,
@@ -99,7 +100,6 @@ class MidiSelectActivity : BaseActivity() {
 					},
 					onDeviceSelect = { index ->
 						selectedIndex.intValue = index
-						targetModelIndex.value = index
 						val targetSessionId = selectedSessionId.value
 						if (targetSessionId != null && connectedSessions.value.size > 1) {
 							// More than one pad connected - target the specific device
@@ -155,9 +155,8 @@ class MidiSelectActivity : BaseActivity() {
 	}
 
 	private fun updateSelectedIndexForTarget() {
-		targetModelIndex.value =
-			midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
-		targetModelIndex.value?.let { selectedIndex.intValue = it }
+		midiModelIndexForTarget(connectedSessions.value, selectedSessionId.value, MidiConnection.driver::class)
+			?.let { selectedIndex.intValue = it }
 	}
 }
 
@@ -178,11 +177,6 @@ internal fun midiModelIndexForTarget(
 // survives a tap on its highlighted model.
 internal fun midiDriverForPick(index: Int, current: DriverRef?): DriverRef =
 	current?.takeIf { it::class == midiDevices[index].driverClass } ?: midiDevices[index].createDriver()
-
-// The help names the targeted pad's model; a driver outside the list (no pad yet) is unknown,
-// even though the grid keeps its last highlight.
-internal fun midiHelpModelNameResId(targetModelIndex: Int?): Int =
-	targetModelIndex?.let { midiDevices[it].nameResId } ?: android.R.string.unknownName
 
 private data class MidiDeviceData(
 	val iconResId: Int,
@@ -210,7 +204,6 @@ private val midiDevices = listOf(
 private fun MidiSelectScreen(
 	isConnected: Boolean,
 	selectedIndex: Int,
-	targetModelIndex: Int?,
 	dualPadModeEnabled: Boolean,
 	reflectedModeEnabled: Boolean,
 	reflectedSwapSides: Boolean,
@@ -223,31 +216,21 @@ private fun MidiSelectScreen(
 	onReflectedSwapSidesChange: (Boolean) -> Unit,
 	onClose: () -> Unit,
 ) {
-	var helpOpen by rememberSaveable { mutableStateOf(false) }
-	// Screen-only intent, separate from the driver (which can also be chosen by USB detection).
-	// Retain each target's explicit choice without adding a stored preference or a command.
-	var explicitChoices by rememberSaveable(
-		stateSaver = listSaver<List<String>, String>(save = { it }, restore = { it.toList() }),
-	) { mutableStateOf<List<String>>(emptyList()) }
-	val targetKey = "${selectedSessionId}:"
-	val explicitlySelected = "$targetKey$targetModelIndex" in explicitChoices
-	if (helpOpen) {
-		MidiConnectionHelpDialog(
-			modelNameResId = midiHelpModelNameResId(targetModelIndex),
-			explicitlySelected = explicitlySelected,
-			onClose = { helpOpen = false },
-		)
-	}
+	// Keep the confirmation button and final device row above the navigation bar.
+	val barsAndCutout = WindowInsets.barsAndCutout
+	val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 	Row(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.background),
+			.background(MaterialTheme.colorScheme.background)
+			.windowInsetsPadding(barsAndCutout.only(WindowInsetsSides.Horizontal)),
 	) {
 		// Left panel (~35%) - Selected device preview
 		Column(
 			modifier = Modifier
 				.weight(0.35f)
 				.fillMaxHeight()
+				.windowInsetsPadding(safeBottom)
 				.padding(12.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
@@ -410,12 +393,6 @@ private fun MidiSelectScreen(
 
 			}
 			Spacer(modifier = Modifier.height(8.dp))
-			Button(
-				onClick = { helpOpen = true },
-				modifier = Modifier.fillMaxWidth(),
-			) {
-				Text(text = stringResource(R.string.midi_help_title), textAlign = TextAlign.Center)
-			}
 
 			Button(
 				onClick = { onClose() },
@@ -434,16 +411,16 @@ private fun MidiSelectScreen(
 				.padding(16.dp),
 			horizontalArrangement = Arrangement.spacedBy(12.dp),
 			verticalArrangement = Arrangement.spacedBy(12.dp),
-			contentPadding = PaddingValues(vertical = 8.dp),
+			contentPadding = PaddingValues(
+				top = 8.dp,
+				bottom = 8.dp + safeBottom.asPaddingValues().calculateBottomPadding(),
+			),
 		) {
 			itemsIndexed(midiDevices) { index, device ->
 				DeviceCard(
 					device = device,
 					isSelected = index == selectedIndex,
-					onClick = {
-						explicitChoices = explicitChoices.filterNot { it.startsWith(targetKey) } + "$targetKey$index"
-						onDeviceSelect(index)
-					},
+					onClick = { onDeviceSelect(index) },
 				)
 			}
 		}
