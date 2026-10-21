@@ -18,6 +18,16 @@ MISSING_SOURCE_OUTPUTS = [
     for variant in [spelling, spelling.replace('/round/', '/unused/../round/'),
                     'unrelated/../' + spelling]
 ]
+# Outputs that would contain a missing source once a case alias creates the source's parents.
+MISSING_SOURCE_CONTAINERS = [
+    (source, variant)
+    for source, spelling in [
+        ('app/build/test-results/testDebugUnitTest', 'APP/BUILD/test-results'),
+        ('app/build/outputs/androidTest-results/connected', 'app/BUILD/outputs/androidTest-results'),
+        ('app/build/test-results/testDebugUnitTest', 'APP/BUILD'),
+    ]
+    for variant in [spelling, 'unrelated/../' + spelling]
+]
 
 
 class NativeGrammarResultsTest(unittest.TestCase):
@@ -71,8 +81,40 @@ class NativeGrammarResultsTest(unittest.TestCase):
                     if absolute:
                         self.assertEqual('keep existing evidence', sentinel.read_text())
 
+    def test_output_containing_a_missing_source_case_alias_is_rejected(self):
+        for source, spelling in MISSING_SOURCE_CONTAINERS:
+            for absolute in [False, True]:
+                for existing_app in [False, True]:
+                    with self.subTest(source=source, spelling=spelling, absolute=absolute, existing=existing_app), \
+                            tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
+                        if not self.case_aliases_share_directory(directory):
+                            self.skipTest('Temporary filesystem distinguishes case; missing-source aliases are distinct')
+                        module = self.load()
+                        if existing_app:
+                            Path('app').mkdir()
+                            Path('app/original.txt').write_text('keep existing evidence')
+                        before = set(Path('.').rglob('*'))
+                        self.assertFalse(Path(source).exists())
+                        output = Path(spelling).absolute() if absolute else Path(spelling)
+                        arguments = ['native_grammar_results.py', '--output', str(output),
+                                     '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                        errors = io.StringIO()
+                        with patch('sys.argv', arguments), \
+                                patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                                patch.object(module, 'capture', side_effect=AssertionError('External work started')), \
+                                patch.object(module, 'run', side_effect=AssertionError('Test command started')), \
+                                contextlib.redirect_stderr(errors):
+                            with self.assertRaises(SystemExit) as raised:
+                                module.main()
+                        self.assertEqual(2, raised.exception.code)
+                        self.assertIn('overlap', errors.getvalue())
+                        self.assertFalse(output.exists())
+                        self.assertEqual(before, set(Path('.').rglob('*')))
+                        if existing_app:
+                            self.assertEqual('keep existing evidence', Path('app/original.txt').read_text())
+
     def test_missing_source_different_case_is_admitted_on_case_sensitive_filesystem(self):
-        for source, spelling in MISSING_SOURCE_OUTPUTS:
+        for source, spelling in MISSING_SOURCE_OUTPUTS + MISSING_SOURCE_CONTAINERS:
             with self.subTest(source=source, spelling=spelling), tempfile.TemporaryDirectory() as directory, \
                     contextlib.chdir(directory):
                 if self.case_aliases_share_directory(directory):
@@ -246,22 +288,24 @@ class NativeGrammarResultsTest(unittest.TestCase):
                         self.assertEqual('keep original evidence', sentinel.read_text())
 
     def test_existing_output_is_rejected_before_device_or_source_checks(self):
-        module = self.load()
-        with tempfile.TemporaryDirectory() as directory, contextlib.chdir(directory):
-            output = Path('existing')
-            output.mkdir()
-            sentinel = output / 'original.txt'
-            sentinel.write_text('keep previous round')
-            arguments = ['native_grammar_results.py', '--output', str(output),
-                         '--grammar-version', 'test', '--grammar-revision', 'test-revision']
-            errors = io.StringIO()
-            with patch('sys.argv', arguments), patch.dict('os.environ', {}, clear=True), \
-                    contextlib.redirect_stderr(errors):
-                with self.assertRaises(SystemExit) as raised:
-                    module.main()
-            self.assertEqual(2, raised.exception.code)
-            self.assertIn('Output already exists', errors.getvalue())
-            self.assertEqual('keep previous round', sentinel.read_text())
+        for spelling in ['existing', 'unused/../existing']:
+            module = self.load()
+            with self.subTest(spelling=spelling), tempfile.TemporaryDirectory() as directory, \
+                    contextlib.chdir(directory):
+                Path('existing').mkdir()
+                sentinel = Path('existing/original.txt')
+                sentinel.write_text('keep previous round')
+                arguments = ['native_grammar_results.py', '--output', spelling,
+                             '--grammar-version', 'test', '--grammar-revision', 'test-revision']
+                errors = io.StringIO()
+                with patch('sys.argv', arguments), patch.dict('os.environ', {}, clear=True), \
+                        contextlib.redirect_stderr(errors):
+                    with self.assertRaises(SystemExit) as raised:
+                        module.main()
+                self.assertEqual(2, raised.exception.code)
+                self.assertIn('Output already exists', errors.getvalue())
+                self.assertEqual('keep previous round', sentinel.read_text())
+                self.assertFalse(Path('unused').exists())
 
     def test_cached_unit_results_cannot_be_attributed_to_the_current_commit(self):
         for spelling in ['round', 'unused/../round']:
