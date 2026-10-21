@@ -144,7 +144,10 @@ assuming that guest and host clocks agree.
 
 The original four-second PCM window starts 0.75 seconds before the earliest
 possible host press. The baseline ends at that earliest press; matching and
-silence postroll include the bounded input uncertainty (at most 50 ms). Loop
+silence postroll include the packet-mapped input uncertainty. The host clock interval is at most
+50 ms; its width in PCM can differ slightly with packet timestamp drift. The
+whole mapped uncertainty and postroll must fit in the original four-second
+window, otherwise the case is environmentally unconfirmed. Loop
 stop checks start from the latest possible release. Corrected bounds, offset
 and uncertainty remain in the capture record. No samples are shifted or resampled
 to align clocks.

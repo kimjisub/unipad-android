@@ -60,6 +60,15 @@ class OutputVerdictTest(unittest.TestCase):
         result = audio.compare([left,right],[self.tone(),[0.]*self.rate],self.rate,1.)
         self.assertFalse(result['passed'],result)
 
+    def test_packet_mapped_uncertainty_uses_full_pcm_postroll(self):
+        # A calibrated 49 ms host interval can span 52 ms of contiguous PCM
+        # when nearby packet timestamps run slightly ahead of written frames.
+        result=audio.compare([self.capture(self.tone())]*2,[self.tone()]*2,
+                             self.rate,1.,.052)
+        self.assertTrue(result['passed'],result)
+        short=[self.capture(self.tone())[:21240]]*2
+        self.assertIn('error',audio.compare(short,[self.tone()]*2,self.rate,1.,.052))
+
     def test_signal_below_absolute_floor_fails(self):
         self.assertFalse(self.verdict(self.capture([v * .001 for v in self.tone()]))['passed'])
 

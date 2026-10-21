@@ -115,7 +115,7 @@ def compare(captured: list[list[float]], reference: list[list[float]], rate: int
     result = {'version': VERSION, 'passed': False, 'channels': []}
     # Half a second before input, after discarded old buffers; half a second after
     # the full one-second sound, even at the maximum permitted output delay.
-    if (not math.isfinite(input_uncertainty_s) or not 0 <= input_uncertainty_s <= .051 or
+    if (not math.isfinite(input_uncertainty_s) or input_uncertainty_s < 0 or
             len(captured) != 2 or len(reference) != 2 or pressed-.5 < DISCARD_S or
             any(len(c) < int((pressed+OUTPUT_WINDOW_S+input_uncertainty_s)*rate) for c in captured)):
         result['error'] = 'missing baseline, full sound or postroll'
