@@ -47,23 +47,77 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def extract_case(source: Path, target: Path, first_epoch_us: int, pressed_epoch_ms: int) -> dict:
-    """Copy four seconds of original PCM; never pad a missing baseline/postroll."""
+def validate_timeline(log: dict) -> None:
+    """Require the managed recorder's complete sample-position audit trail."""
+    if log.get('sample_rate') != 48000 or log.get('channels') != 2:
+        raise ValueError('missing or unsupported packet timeline format')
+    packets, gaps = log.get('packets'), log.get('gaps')
+    if not isinstance(packets,list) or not packets or not isinstance(gaps,list):
+        raise ValueError('missing packet or gap records')
+    previous_time, end = 0, 0
+    gap_by_end = {}
+    for gap in gaps:
+        at, frames = gap.get('at_frame'), gap.get('frames')
+        if not isinstance(at,int) or not isinstance(frames,int) or at < 0 or frames <= 0:
+            raise ValueError('invalid inserted-gap position')
+        gap_by_end[at+frames] = (at,frames)
+    used = set()
+    for packet in packets:
+        timestamp, at, frames = (packet.get(k) for k in ('timestamp_us','at_frame','frames'))
+        if (not all(isinstance(v,int) for v in (timestamp,at,frames)) or
+                timestamp <= previous_time or at < end or frames <= 0):
+            raise ValueError('invalid packet timestamp, frame count or position')
+        if at != end:
+            if gap_by_end.get(at) != (end,at-end):
+                raise ValueError('packet positions contain an unexplained missing interval')
+            used.add(at)
+        previous_time, end = timestamp, at+frames
+    if len(used) != len(gaps):
+        raise ValueError('gap records disagree with written packet positions')
+
+
+def event_frame(log: dict, epoch_ms: int) -> float:
+    """Map against the closest packet, never the stream's first timestamp."""
+    validate_timeline(log)
+    epoch_us = epoch_ms*1000
+    packet = min(log['packets'],key=lambda p:abs(p['timestamp_us']-epoch_us))
+    offset = (epoch_us-packet['timestamp_us'])*log['sample_rate']/1_000_000
+    if abs(epoch_us-packet['timestamp_us']) > 100_000:
+        raise ValueError('screen input is outside confirmed nearby packet timestamps')
+    return packet['at_frame']+offset
+
+
+def overlapping_gaps(log: dict, start: int, end: int) -> list[dict]:
+    return [gap for gap in log['gaps']
+            if gap['at_frame'] < end and gap['at_frame']+gap['frames'] > start]
+
+
+def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
+    """Copy original PCM, retaining packet-mapped input and environmental errors."""
+    pressed = event_frame(log,event['pressed_epoch_ms'])
+    released = event_frame(log,event['released_epoch_ms'])
     with wave.open(str(source),'rb') as reader:
         rate = reader.getframerate()
-        if first_epoch_us <= 0 or reader.getnchannels() != 2 or reader.getsampwidth() != 2:
-            raise ValueError('recording timing or format is unconfirmed')
-        start = round(((pressed_epoch_ms/1000-first_epoch_us/1e6)-.75)*rate)
-        frames = 4*rate
-        if start < round(.2*rate) or start+frames > reader.getnframes():
+        if rate != log['sample_rate'] or reader.getnchannels() != 2 or reader.getsampwidth() != 2:
+            raise ValueError('recording and packet timeline formats disagree')
+        last = log['packets'][-1]
+        if last['at_frame']+last['frames'] != reader.getnframes():
+            raise ValueError('packet timeline does not cover the entire recording')
+        start, frames = round(pressed-.75*rate), 4*rate
+        if released < pressed or start < round(.2*rate) or start+frames > reader.getnframes():
             raise ValueError('four-second case baseline/postroll is outside recorded PCM')
+        gaps = overlapping_gaps(log,start,start+frames)
         reader.setpos(start)
         pcm = reader.readframes(frames)
         with wave.open(str(target),'wb') as writer:
             writer.setparams(reader.getparams())
             writer.writeframes(pcm)
-    return {'file':str(target),'first_sample_epoch_us':first_epoch_us+start*1_000_000/rate,
-            'seconds':4.,'source_frame_offset':start,'sample_rate':rate}
+    result = {'file':str(target),'seconds':4.,'source_frame_offset':start,'sample_rate':rate,
+              'pressed_s':(pressed-start)/rate,'released_s':(released-start)/rate,
+              'gaps':gaps}
+    if gaps:
+        result['environment_error'] = 'managed recorder inserted silence inside this case window'
+    return result
 
 
 def main():
@@ -166,6 +220,8 @@ def main():
                 recorder = None
                 capture_trace['exit'] = capture_exit
             capture = json.loads((out/'stream-capture.txt').read_text().strip().splitlines()[-1])
+            timeline_path = out/'stream.packets.json'
+            timeline = json.loads(timeline_path.read_text()) if timeline_path.exists() else {}
             for record in recordings:
                 record['capture_exit'] = capture_exit
                 record['capture'] = dict(capture)
@@ -177,14 +233,16 @@ def main():
                 try:
                     record['capture'].update(extract_case(
                         out/'stream.wav', out/(record['name']+'.wav'),
-                        capture['first_sample_epoch_us'],record['event']['pressed_epoch_ms']))
+                        timeline,record['event']))
+                    if record['capture'].get('environment_error'):
+                        record['environment_error'] = record['capture']['environment_error']
                 except (ValueError,KeyError,wave.Error) as error:
                     record['environment_error'] = str(error)
             (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
             adb('shell','run-as',PACKAGE,'sh','-c',
                 f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
             instrument_exit = instrument.wait(timeout=20)
-    except (RuntimeError,ValueError,TimeoutError,subprocess.TimeoutExpired) as error:
+    except (RuntimeError,ValueError,OSError,TimeoutError,subprocess.TimeoutExpired) as error:
         failure = str(error)
     finally:
         if recorder is not None and recorder.poll() is None:
@@ -205,8 +263,7 @@ def main():
             result.setdefault('environment_error','capture did not complete')
             results.append(result);continue
         try:
-            epoch = capture['first_sample_epoch_us']/1e6
-            pressed = record['event']['pressed_epoch_ms']/1000 - epoch
+            pressed = capture['pressed_s']
             case_path = out/(record['name']+'.wav')
             values = read_wav(case_path)
             result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
@@ -225,7 +282,7 @@ def main():
                     not verdict['passed'] if record['reject'] else verdict['passed'])
                 result['quiet_control'] = quiet
                 if record['action'] == '9':
-                    released = record['event']['released_epoch_ms']/1000-epoch
+                    released = capture['released_s']
                     tail = is_silent(values,RATE,released+.6,released+1.1)
                     active = [t/100 for t in range(int(released*100),len(values[0])*100//RATE-1)
                               if not is_silent(values,RATE,t/100,(t+1)/100)['passed']]

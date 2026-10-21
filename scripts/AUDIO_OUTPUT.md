@@ -67,14 +67,19 @@ before testing. MP3 filenames with and without ID3 tags are separate fixtures.
 Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
-## Verdict version 1
+## Verdict version 2
 
 - One external stream stays open for the round. Packet preparation takes at
   most ten seconds (the manager ends a no-packet request itself); each case
   copies exactly four seconds of original PCM, starting 0.75 seconds before
   its input. Missing samples are rejected, never padded. Verdicts discard the
-  first 0.2 seconds and require at least 0.5 seconds of baseline before input. The screen event and first output packet
-  use epoch timestamps. Missing/invalid timing or incomplete baseline/postroll
+  first 0.2 seconds and require at least 0.5 seconds of baseline before input. Screen events are mapped to sample positions using the closest packet
+  timestamp and its written frame position. A missing timeline, invalid timestamps
+  or an event farther than 100 ms from a packet is environment unconfirmed.
+  Both press and release use this mapping, avoiding accumulated first-packet drift.
+  Any recorder-inserted gap overlapping the four-second window, including
+  quiet baseline or postroll, is environment unconfirmed (exit 3). The original
+  samples are retained without removing or joining gaps. Missing/invalid timing or incomplete baseline/postroll
   means environment unconfirmed. A missing packet stream is never silence.
 - After two seconds of quiet preparation, the stream gets nine seconds to
   establish its packet connection, then screen commands run 2.5 seconds apart
@@ -111,7 +116,8 @@ screen/recorder environment was unconfirmed. Both nonzero exits fail automation;
 XML represents unconfirmed cases as errors, never skips or passes.
 
 Every round stores the original recorder stdout, continuous source WAV and
-byte-for-byte four-second case WAVs, channel metrics,
+byte-for-byte four-second case WAVs, `stream.packets.json`, per-case gap records,
+packet-mapped input/release positions, channel metrics,
 correlations, input events, commands, exit codes, source commit and tracked diff,
 APK/test APK hashes, fixture manifest, device serial, OS properties, emulator
 version, instrumentation output and XML. Keep the source checkout clean for
