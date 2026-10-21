@@ -239,12 +239,14 @@ def main():
     cases = [c for c in CASES if not args.case or c[0] in args.case]
     recordings = []
     instrument = recorder = None
+    instrument_trace = capture_trace = None
     instrument_exit = None
     failure = None
     try:
         with (out/'instrumentation.txt').open('w') as log:
             instrument = subprocess.Popen(instrument_command,stdout=log,stderr=subprocess.STDOUT)
-            command_log.append({'command':instrument_command})
+            instrument_trace = {'command':instrument_command}
+            command_log.append(instrument_trace)
             def wait_file(name, seconds):
                 deadline = time.monotonic()+seconds
                 while time.monotonic() < deadline:
@@ -312,11 +314,15 @@ def main():
             recorder.terminate()
             try: recorder.wait(timeout=10)
             except subprocess.TimeoutExpired: recorder.kill(); recorder.wait()
+        if recorder is not None:
+            capture_trace['exit'] = recorder.returncode
         if instrument is not None and instrument.poll() is None:
             adb('shell','am','force-stop',PACKAGE,check=False)
             instrument.terminate()
             try: instrument.wait(timeout=5)
             except subprocess.TimeoutExpired: instrument.kill(); instrument.wait()
+        if instrument is not None:
+            instrument_trace['exit'] = instrument.returncode
         (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
     results = []
     for record in recordings:

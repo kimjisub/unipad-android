@@ -2,7 +2,7 @@
 """Run the reviewed native pack checks and preserve their requirement-level evidence.
 
 Does not change the shared conformance reporter. Audio decoding and the real native
-voice path are recorded separately from an output waveform, which is not measured.
+voice path are recorded separately from optional external emulator output checks.
 """
 import argparse
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 PREFIX = 'com.kimjisub.launchpad.'
@@ -20,6 +21,7 @@ ROOT = PREFIX + 'unipack.PackRootNamesDeviceTest'
 ARCHIVE = PREFIX + 'UniPackLegacyArchiveDeviceTest'
 DECODE = PREFIX + 'audio.AudioFormatDecodeDeviceTest'
 PAD = PREFIX + 'audio.AudioFormatPadDeviceTest'
+OUTPUT = PREFIX + 'audio.EmulatorOutput'
 REQUIRED = {
     'F-01': [ROOT + '#' + name for name in [
         'uppercaseRootNamesLoadOnCaseSensitiveStorage', 'infoWithAnExtensionIsNotInfo',
@@ -37,16 +39,18 @@ REQUIRED = {
         'cp949NamesWithoutTheUtf8Flag_areReadAsCp949',
     ]] + [ARCHIVE + '#theDeviceReadsCp949', ARCHIVE + '#aKoreanWindowsArchiveWithAReadmeBesideThePackImports'],
 }
-for item, decode, pad in [
-    ('A-01', 'decodesPcmWav', 'wavReachesItsPad'),
-    ('A-02', 'decodesMp3', 'mp3ReachesItsPad'),
-    ('A-03', 'decodesOggVorbis', 'oggReachesItsPad'),
-    ('A-04', 'decodesAacInM4a', 'm4aReachesItsPad'),
+for item, decode, pad, output in [
+    ('A-01', 'decodesPcmWav', 'wavReachesItsPad', 'wavIsHeardAtTheEmulatorOutput'),
+    ('A-02', 'decodesMp3', 'mp3ReachesItsPad', 'mp3IsHeardAtTheEmulatorOutput'),
+    ('A-03', 'decodesOggVorbis', 'oggReachesItsPad', 'oggIsHeardAtTheEmulatorOutput'),
+    ('A-04', 'decodesAacInM4a', 'm4aReachesItsPad', 'm4aIsHeardAtTheEmulatorOutput'),
 ]:
-    REQUIRED[item] = [DECODE + '#' + decode, PAD + '#' + pad]
+    REQUIRED[item] = [DECODE + '#' + decode, PAD + '#' + pad, OUTPUT + '#' + output]
 REQUIRED['A-05'] = [DECODE + '#decodesMp3NamedWavByItsContent',
                     DECODE + '#decodesTaggedMp3NamedWavByItsContent',
-                    PAD + '#bareMp3NamedWavReachesItsPad', PAD + '#taggedMp3NamedWavReachesItsPad']
+                    PAD + '#bareMp3NamedWavReachesItsPad', PAD + '#taggedMp3NamedWavReachesItsPad',
+                    OUTPUT + '#bareMp3NamedWavIsHeardAtTheEmulatorOutput',
+                    OUTPUT + '#taggedMp3NamedWavIsHeardAtTheEmulatorOutput']
 
 
 def sha256(path):
@@ -80,15 +84,47 @@ def verdict(names, results):
     return 'passed'
 
 
-def item_results(results, environment_verified):
+def read_audio_results(directory, revision, serial):
+    """Read only this runner's external output round, retaining its original verdicts."""
+    results = read_results(directory)
+    results = {name: records for name, records in results.items() if name.startswith(OUTPUT + '#')}
+    try:
+        metadata = json.loads((directory / 'metadata.json').read_text())
+        report = json.loads((directory / 'results.json').read_text())
+        commands = json.loads((directory / 'commands.json').read_text())
+        verified = (metadata['source_commit'] == revision and metadata['serial'] == serial and
+                    metadata['source_diff'] == '' and metadata['status'] == '' and
+                    all(metadata[key] for key in ['os', 'emulator_version', 'apk_sha256', 'test_apk_sha256']) and
+                    report['exit_code'] == 0)
+        for command_type in ['instrument', 'record']:
+            traces = [trace for trace in commands if command_type in trace.get('command', [])]
+            verified = verified and len(traces) == 1 and traces[0].get('exit') == 0
+        for filename in ['stream.wav', 'stream.packets.json', 'recordings.json', 'commands.json',
+                         'instrumentation.txt', 'stream-capture.txt']:
+            verified = verified and (directory / filename).is_file() and (directory / filename).stat().st_size > 0
+        for name, records in results.items():
+            case_name = name.split('#', 1)[1]
+            originals = [case for case in report['results'] if case.get('name') == case_name]
+            waveform = directory / (case_name + '.wav')
+            if (len(originals) != 1 or originals[0].get('status') != 'passed' or
+                    not waveform.is_file() or waveform.stat().st_size == 0):
+                for record in records:
+                    if record['status'] == 'passed':
+                        record['status'] = 'unverified'
+    except (OSError, ValueError, KeyError, TypeError):
+        verified = False
+    return results, bool(verified)
+
+
+def item_results(results, environment_verified, output_verified=False):
     items = {}
     for item, names in REQUIRED.items():
         status = verdict(names, results)
         reasons = []
         if not environment_verified:
             reasons.append('Execution environment or clean source revision was not verified')
-        if item.startswith('A-'):
-            reasons.append('Output waveform is not captured; decoder PCM and native voice acceptance alone do not verify rendered output')
+        if item.startswith('A-') and not output_verified:
+            reasons.append('External output round, raw waveform, environment or clean source revision was not verified')
         if reasons and status == 'passed':
             status = 'unverified'
         items[item] = {'status': status, 'requiredTests': names, 'reasons': reasons,
@@ -131,7 +167,12 @@ def main():
     parser.add_argument('--output', required=True, type=Path, help='New immutable result directory')
     parser.add_argument('--grammar-version', required=True)
     parser.add_argument('--grammar-revision', required=True)
+    parser.add_argument('--with-audio-output', action='store_true',
+                        help='Also run the external output suite on the audio-enabled leased emulator')
+    parser.add_argument('--devices-tool', type=Path, help='Managed devices.py used for external recording')
     args = parser.parse_args()
+    if args.with_audio_output and (not args.devices_tool or not args.devices_tool.is_file()):
+        parser.error('--with-audio-output requires an existing --devices-tool')
     output = args.output.resolve()
     if output.exists():
         parser.error('Output already exists; preserve previous rounds in a different child directory')
@@ -181,12 +222,30 @@ def main():
         shutil.copytree(connected, args.output / 'raw/device')
     if diagnostics.exists():
         shutil.copytree(diagnostics, args.output / 'diagnostics')
-    raw = args.output / 'raw'
-    results = read_results(raw)
+    results = read_results(args.output / 'raw')
+    # Output names in unit/device XML cannot stand in for an external recording.
+    results = {name: records for name, records in results.items() if not name.startswith(OUTPUT + '#')}
+    output_verified = False
+    if args.with_audio_output:
+        commands.append(run(['./gradlew', ':app:assembleDebug', ':app:assembleDebugAndroidTest',
+                             '--no-daemon', '--console=plain'], args.output / 'audio-build.log'))
+        if commands[-1]['exitCode'] == 0:
+            audio_directory = args.output / 'raw/audio-output'
+            commands.append(run([sys.executable, 'scripts/run_audio_output.py', '--serial', serial,
+                                 '--devices-tool', str(args.devices_tool.resolve()),
+                                 '--apk', 'app/build/outputs/apk/debug/app-debug.apk',
+                                 '--test-apk', 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
+                                 '--output', str(audio_directory)], args.output / 'audio-output.log'))
+            audio_results, output_verified = read_audio_results(audio_directory, revision, serial)
+            for records in audio_results.values():
+                for record in records:
+                    record['raw'] = 'audio-output/' + record['raw']
+            results.update(audio_results)
+    final_revision = capture(['git', 'rev-parse', 'HEAD'])
+    final_dirty = capture(['git', 'status', '--porcelain', '--untracked-files=all'])
     environment_verified = (not dirty and all(environment.values()) and
-                            capture(['git', 'rev-parse', 'HEAD']) == revision and
-                            capture(['git', 'status', '--porcelain', '--untracked-files=all']) == dirty)
-    items = item_results(results, environment_verified)
+                            final_revision == revision and final_dirty == dirty)
+    items = item_results(results, environment_verified, output_verified)
     if any(command['exitCode'] != 0 for command in commands):
         for item in items.values():
             if item['status'] == 'passed':
@@ -202,6 +261,9 @@ def main():
     report = {
         'schemaVersion': 1, 'platform': 'android', 'repositoryCommit': revision,
         'sourceDirty': bool(dirty), 'environment': environment,
+        'sourceBefore': {'commit': revision, 'status': dirty},
+        'sourceAfter': {'commit': final_revision, 'status': final_dirty},
+        'audioOutput': {'requested': args.with_audio_output, 'verified': output_verified},
         'caseSensitivityProbeLog': probes,
         'grammar': {'version': args.grammar_version, 'revision': args.grammar_revision},
         'commonCorpus': {'sha256': None, 'reason': 'Standalone native fixtures; no shared corpus consumed'},
