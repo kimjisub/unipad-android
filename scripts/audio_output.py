@@ -14,13 +14,13 @@ import sys
 import wave
 
 VERSION = 1
-RATE = 6000
+RATE = 24000
 DISCARD_S = .2
 MIN_RMS_DBFS = -50.
 MIN_RISE_DB = 20.
 MIN_CORRELATION = .92
 SILENCE_DBFS = -65.
-MAX_OUTPUT_DELAY_S = .3
+MAX_OUTPUT_DELAY_S = .5
 
 
 def read_wav(path: Path, rate: int = RATE) -> list[list[float]]:

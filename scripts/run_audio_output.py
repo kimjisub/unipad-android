@@ -116,7 +116,7 @@ def main():
                     if instrument.poll() is not None:
                         raise RuntimeError('screen instrumentation exited before completing its commands')
                     text = adb('exec-out','run-as',PACKAGE,'cat',exchange+'/'+name,check=False)
-                    if text.strip(): return text
+                    if text.strip() == "ready" or text.lstrip().startswith("{"): return text
                     time.sleep(.05)
                 raise TimeoutError(f'screen did not publish {name} within {seconds}s')
             wait_file('ready',60)
@@ -130,7 +130,7 @@ def main():
                     # Discard .2s of old buffers, retain at least .5s before input.
                     time.sleep(1.05)
                     adb('shell','run-as',PACKAGE,'sh','-c',
-                        f'"cat > {exchange}/command-{number}"',input=(action+'\n').encode())
+                        f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',input=(action+'\n').encode())
                     event = json.loads(wait_file(f'event-{number}.json',4))
                     capture_exit = recorder.wait(timeout=max(.1,10-(time.monotonic()-started)))
                     recorder = None
@@ -146,7 +146,7 @@ def main():
                     record['environment_error'] = 'recording path unconfirmed; no usable packet stream'
                     break
             adb('shell','run-as',PACKAGE,'sh','-c',
-                f'"cat > {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
+                f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
             instrument_exit = instrument.wait(timeout=20)
     except (RuntimeError,ValueError,TimeoutError,subprocess.TimeoutExpired) as error:
         failure = str(error)
