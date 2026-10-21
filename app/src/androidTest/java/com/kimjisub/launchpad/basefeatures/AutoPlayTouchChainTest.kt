@@ -19,14 +19,18 @@ class AutoPlayTouchChainTest : PlaybackScreenTest() {
         File(screen.pack(), "autoPlay").writeText("on 1 1\nd 60000\n")
         screen.openPlay()
         val vm = screen.vm()
-        screen.onMain {
-            vm.switchPlayMode(PlayMode.AutoPlay)
-            SystemClock.sleep(200)
-            vm.autoPlayNext()
+        try {
+            screen.onMain {
+                vm.switchPlayMode(PlayMode.AutoPlay)
+                SystemClock.sleep(200)
+                vm.autoPlayNext()
+            }
+            screen.await("Autoplay did not finish after seeking past the end") { vm.autoPlayRunner?.active == false }
+            screen.capture("autoplay-seek-past-end")
+            assertEquals("A press read before seeking must not play afterwards", emptyList<Int>(), audio.plays.toList())
+        } finally {
+            screen.onMain { vm.switchPlayMode(PlayMode.None) }
         }
-        screen.await("Autoplay did not finish after seeking past the end") { vm.autoPlayRunner?.active == false }
-        screen.capture("autoplay-seek-past-end")
-        assertEquals("A press read before seeking must not play afterwards", emptyList<Int>(), audio.plays.toList())
     }
 
     @Test fun chainCommandBeforeAPressChangesTheChainOnce() {

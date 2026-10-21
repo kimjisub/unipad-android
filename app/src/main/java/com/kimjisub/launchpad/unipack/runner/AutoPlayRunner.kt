@@ -280,10 +280,13 @@ class AutoPlayRunner(
 									}
 								}
 
-								while (waitingForChain < 0 && delayAccum <= currTime - startTime) {
-									// Read progress here too: seeking may have moved it while delivery waited for main.
-									val handledIndex = withContext(eventDispatcher) {
-										val (index, element) = elementAtProgress(autoPlay) ?: return@withContext null
+								// Every command due now is handled in one pass on the event thread: presses placed
+								// together sound together, and a press sees the chain the command before it chose.
+								// Progress and playmode are read there, as seeking or pausing may have happened
+								// while delivery waited.
+								if (waitingForChain < 0 && delayAccum <= currTime - startTime) withContext(eventDispatcher) {
+									while (playmode && delayAccum <= currTime - startTime) {
+										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
 												if (!practiceGuide) {
@@ -307,9 +310,8 @@ class AutoPlayRunner(
 												}
 											}
 										}
-										index
-									} ?: break
-									advanceProgressFrom(handledIndex)
+										advanceProgressFrom(index)
+									}
 								}
 							}
 						} else {
