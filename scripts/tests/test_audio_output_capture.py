@@ -50,10 +50,14 @@ class CaptureWindowTest(unittest.TestCase):
             source,target = Path(temp)/'stream.wav',Path(temp)/'case.wav'
             with wave.open(str(source),'wb') as out:
                 out.setnchannels(2);out.setsampwidth(2);out.setframerate(48000);out.writeframes(bytes(48000*4*5))
+            clock=ClockAndControlTest.clock(offset=0,rtt=2)
+            clock['before'][0].update(host_before_us=499999,host_after_us=500001,guest_us=500000)
+            clock['after'][0].update(host_before_us=4499999,host_after_us=4500001,guest_us=4500000)
             for first,pressed in [(1_000_000,1100),(1_000_000,4000),(0,3000)]:
                 with self.subTest(first=first,pressed=pressed),self.assertRaises(ValueError):
                     runner.extract_case(source,target,PacketTimelineTest().timeline() if first else {},
-                                        {'pressed_epoch_ms':pressed,'released_epoch_ms':pressed+100})
+                                        {'pressed_epoch_ms':pressed,'released_epoch_ms':pressed+100,
+                                         'finished_epoch_ms':pressed+101,'clock':clock})
                 self.assertFalse(target.exists())
 
 
