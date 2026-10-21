@@ -3079,6 +3079,108 @@
     },
     {
       "layer": "parse",
+      "id": "KS-023",
+      "items": [
+        "S-07"
+      ],
+      "area": "keySound",
+      "title": "a wormhole to a chain the pack does not have keeps the sound, moved to the nearest chain, with a range warning",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolderWormholeTest, unipad-ios WormholeRangeTests, unipad.io parser.test.ts",
+          "note": "a wormhole outside 1..chain keeps its sound, moves to the first or the last chain and records \"wormhole is incorrect\""
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/conformance.test.ts",
+          "note": "\"wormhole is incorrect\" is a range warning, like a chain, x or y outside the pack"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 3\n1 1 2 a.wav 1 40\n1 1 3 a.wav 1 -2"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "486391b9c2994d84b14b06bd570f2f439e050c6fd96b57555552eec58d27b1e8",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 1
+              }
+            ]
+          },
+          {
+            "c": 0,
+            "x": 0,
+            "y": 2,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 0
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:range",
+          "keySound:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
       "id": "KS-019",
       "items": [
         "S-12"
