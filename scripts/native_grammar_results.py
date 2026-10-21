@@ -96,6 +96,24 @@ def item_results(results, environment_verified):
     return items
 
 
+def same_directory(first, second):
+    return first.exists() and second.exists() and os.path.samefile(first, second)
+
+
+def overlaps(source, output):
+    """Whether output is source, lies inside it, or contains it.
+
+    Besides the resolved paths, existing ancestors are compared by on-disk identity, which
+    also catches case aliases on case-insensitive disks.
+    """
+    resolved = source.resolve()
+    if output.is_relative_to(resolved) or resolved.is_relative_to(output):
+        return True
+    source = source.absolute()
+    return (any(same_directory(ancestor, source) for ancestor in (output, *output.parents)) or
+            any(same_directory(ancestor, output) for ancestor in (source, *source.parents)))
+
+
 def capture(command):
     return subprocess.check_output(command, text=True).strip()
 
@@ -114,24 +132,36 @@ def main():
     parser.add_argument('--grammar-version', required=True)
     parser.add_argument('--grammar-revision', required=True)
     args = parser.parse_args()
-    if args.output.exists():
+    output = args.output.resolve()
+    if output.exists():
         parser.error('Output already exists; preserve previous rounds in a different child directory')
     unit = Path('app/build/test-results/testDebugUnitTest')
     connected = Path('app/build/outputs/androidTest-results/connected')
     diagnostics = Path('.ci-results')
-    output = args.output.resolve()
-    for source in (unit, connected, diagnostics):
-        resolved_source = source.resolve()
-        # Existing ancestors also catch case aliases on case-insensitive disks.
-        same_source = source.exists() and any(
-            ancestor.exists() and os.path.samefile(ancestor, source)
-            for ancestor in (output, *output.parents))
-        if same_source or output.is_relative_to(resolved_source) or resolved_source.is_relative_to(output):
+    sources = (unit, connected, diagnostics)
+    for source in sources:
+        if overlaps(source, output):
             parser.error(f'Output must not overlap result source {source} (including symlinks)')
     serial = os.environ.get('ANDROID_SERIAL')
     if not serial:
         parser.error('ANDROID_SERIAL must identify the leased device')
+    existing_parent = output.parent
+    while not existing_parent.exists():
+        existing_parent = existing_parent.parent
+    # Use the checked path for creation and all writes so '..' creates no extra directories.
+    args.output = output
     args.output.mkdir(parents=True)
+    # Creating the output can also create a missing source, or its parents, via a case alias.
+    for source in sources:
+        if overlaps(source, output):
+            created = output
+            while created != existing_parent:
+                try:
+                    created.rmdir()
+                except OSError:
+                    break
+                created = created.parent
+            parser.error(f'Output must not overlap result source {source} (including symlinks)')
     revision = capture(['git', 'rev-parse', 'HEAD'])
     dirty = capture(['git', 'status', '--porcelain', '--untracked-files=all'])
     environment = {'host': platform.platform(), 'python': platform.python_version(), 'serial': serial}
