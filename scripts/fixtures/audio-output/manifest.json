@@ -239,5 +239,9 @@
       "mp3",
       "app/src/androidTest/assets/audio-output/tagged-named.wav"
     ]
-  ]
+  ],
+  "pack_files": {
+    "info": "cada7fe827128a60a53de9356eaac06dcae361ddc093958542906db556776b88",
+    "keySound": "88d0a2e850057e28347f044168394f8090f4c80375a80145cf4f1c57bab499d6"
+  }
 }

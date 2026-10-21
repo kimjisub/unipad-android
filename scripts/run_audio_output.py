@@ -26,22 +26,33 @@ from audio_output import RATE, VERSION, OUTPUT_WINDOW_S, compare, is_silent, lev
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = 'com.kimjisub.launchpad.dev'
 CLASS = 'com.kimjisub.launchpad.audio.EmulatorOutputScreenTest#drivesScreenForExternalOutput'
+# Input, references and control rules travel together; names are stable report IDs.
+def case(name, pads, references, rule='match', *, alternate_pad=None,
+         hold_ms=40, stop_window_s=None):
+    return dict(name=name, input_pads=pads, reference_pads=references, rule=rule,
+                alternate_pad=alternate_pad, hold_ms=hold_ms, stop_window_s=stop_window_s)
+
+
 CASES = [
-    ('wavIsHeardAtTheEmulatorOutput','0',[0],False),
-    ('mp3IsHeardAtTheEmulatorOutput','1',[1],False),
-    ('oggIsHeardAtTheEmulatorOutput','2',[2],False),
-    ('m4aIsHeardAtTheEmulatorOutput','3',[3],False),
-    ('bareMp3NamedWavIsHeardAtTheEmulatorOutput','4',[4],False),
-    ('taggedMp3NamedWavIsHeardAtTheEmulatorOutput','5',[5],False),
-    ('leftChannelIsHeardSeparately','6',[6],False),
-    ('rightChannelIsHeardSeparately','7',[7],False),
-    ('unpressedPadIsRejected','none',[0],True),
-    ('emptyPadIsRejected','empty',[0],True),
-    ('silentFileIsRejected','8',[0],True),
-    ('differentPadIsRejected','1',[0],True),
-    ('heldLoopStopsAfterRelease','9',[9],False),
-    ('twoPadsAreHeardTogether','chord',[0,1],False),
+    case('wavIsHeardAtTheEmulatorOutput',[0],[0]),
+    case('mp3IsHeardAtTheEmulatorOutput',[1],[1]),
+    case('oggIsHeardAtTheEmulatorOutput',[2],[2]),
+    case('m4aIsHeardAtTheEmulatorOutput',[3],[3]),
+    case('bareMp3NamedWavIsHeardAtTheEmulatorOutput',[4],[4]),
+    case('taggedMp3NamedWavIsHeardAtTheEmulatorOutput',[5],[5]),
+    case('leftChannelIsHeardSeparately',[6],[6]),
+    case('rightChannelIsHeardSeparately',[7],[7]),
+    case('unpressedPadIsRejected',[],[0],'silence'),
+    case('emptyPadIsRejected',[63],[0],'silence'),
+    case('silentFileIsRejected',[8],[0],'silence'),
+    case('differentPadIsRejected',[1],[0],'alternate',alternate_pad=1),
+    case('heldLoopStopsAfterRelease',[9],[9],hold_ms=1250,stop_window_s=[.6,1.1]),
+    case('twoPadsAreHeardTogether',[0,1],[0,1]),
 ]
+CASE_BY_NAME = {c['name']:c for c in CASES}
+# Observed stream timestamp jitter is up to 36 ms in either direction.
+PACKET_UNCERTAINTY_S = .036
+
 
 
 def sha(path):
@@ -111,11 +122,11 @@ def clock_bounds(event: dict) -> dict:
         upper=min(upper,guest-before+1000)
     if upper < lower or upper-lower > 50_000:
         raise ValueError('guest clock changed or clock uncertainty exceeds 50 ms')
-    pressed,released,finished=(event.get(k) for k in
-        ('pressed_epoch_ms','released_epoch_ms','finished_epoch_ms'))
-    if (not all(isinstance(v,(int,float)) and math.isfinite(v) for v in (pressed,released,finished)) or
-            not clock['before'][-1]['guest_us'] <= pressed*1000 <= released*1000 <=
-            finished*1000 <= clock['after'][0]['guest_us']):
+    pressed,pressed_end,released,released_end,finished=(event.get(k) for k in
+        ('pressed_epoch_ms','pressed_end_epoch_ms','released_epoch_ms','released_end_epoch_ms','finished_epoch_ms'))
+    if (not all(isinstance(v,(int,float)) and math.isfinite(v) for v in (pressed,pressed_end,released,released_end,finished)) or
+            not clock['before'][-1]['guest_us'] <= pressed*1000 <= pressed_end*1000 <= released*1000 <=
+            released_end*1000 <= finished*1000 <= clock['after'][0]['guest_us']):
         raise ValueError('clock measurements do not bracket the input')
     if clock['before'][-1]['host_after_us'] > clock['after'][0]['host_before_us']:
         raise ValueError('clock measurements are out of order')
@@ -131,9 +142,9 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
     """Copy original PCM, retaining packet-mapped input and environmental errors."""
     clock = clock_bounds(event)
     # Baseline ends at the earliest possible press; stop checks use latest release.
-    pressed = event_frame(log,event['pressed_epoch_ms']-clock['offset_upper_us']/1000)
-    latest_press = event_frame(log,event['pressed_epoch_ms']-clock['offset_lower_us']/1000)
-    released = event_frame(log,event['released_epoch_ms']-clock['offset_lower_us']/1000)
+    pressed = event_frame(log,event['pressed_epoch_ms']-clock['offset_upper_us']/1000) - PACKET_UNCERTAINTY_S*log['sample_rate']
+    latest_press = event_frame(log,event['pressed_end_epoch_ms']-clock['offset_lower_us']/1000) + PACKET_UNCERTAINTY_S*log['sample_rate']
+    released = event_frame(log,event['released_end_epoch_ms']-clock['offset_lower_us']/1000) + PACKET_UNCERTAINTY_S*log['sample_rate']
     with wave.open(str(source),'rb') as reader:
         rate = reader.getframerate()
         if rate != log['sample_rate'] or reader.getnchannels() != 2 or reader.getsampwidth() != 2:
@@ -152,7 +163,7 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
             writer.writeframes(pcm)
     result = {'file':str(target),'seconds':4.,'source_frame_offset':start,'sample_rate':rate,
               'pressed_s':(pressed-start)/rate,'released_s':(released-start)/rate,
-              'gaps':gaps,'clock':clock,'input_uncertainty_s':(latest_press-pressed)/rate}
+              'gaps':gaps,'clock':clock,'packet_uncertainty_s':PACKET_UNCERTAINTY_S,'input_uncertainty_s':(latest_press-pressed)/rate}
     if gaps:
         result['environment_error'] = 'managed recorder inserted silence inside this case window'
     return result
@@ -172,28 +183,111 @@ def main():
     parser.add_argument('--apk', required=True, type=Path)
     parser.add_argument('--test-apk', required=True, type=Path)
     parser.add_argument('--block-playback', action='store_true')
-    parser.add_argument('--case', action='append', choices=[c[0] for c in CASES])
+    parser.add_argument('--case', action='append', choices=[c['name'] for c in CASES])
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
         parser.error('output folder must be empty; preserve and attach the previous round first')
+    cases = [c for c in CASES if not args.case or c['name'] in args.case]
+    try:
+        results = execute_round(args,out,cases)
+    except Exception as error:
+        results = [{'name':c['name'],'status':'environment_unconfirmed',
+                    'environment_error':f'{type(error).__name__}: {error}'} for c in cases]
+    return write_report(out,results)
+
+
+def validate_fixtures(manifest, test_apk):
+    for pad in manifest['pads']:
+        if sha(ROOT/pad['reference']) != pad['reference_sha256']:
+            raise ValueError('reference hash changed')
+    with zipfile.ZipFile(test_apk) as apk:
+        for name,digest in manifest['pack_files'].items():
+            if hashlib.sha256(apk.read('assets/audio-output/'+name)).hexdigest() != digest:
+                raise ValueError(f'test APK pack mapping changed: {name}')
+        for pad in manifest['pads']:
+            if hashlib.sha256(apk.read('assets/audio-output/'+pad['file'])).hexdigest() != pad['sha256']:
+                raise ValueError('test APK does not contain the pinned fixtures')
+
+
+def judge_record(record, manifest, out):
+    result = {'name':record['name'], 'status':'environment_unconfirmed', **record}
+    capture = record.get('capture',{})
+    if record.get('environment_error') or not capture:
+        result.setdefault('environment_error','capture did not complete')
+        return result
+    try:
+        pressed = capture['pressed_s']
+        uncertainty = capture['input_uncertainty_s']
+        case_path = out/(record['name']+'.wav')
+        values = read_wav(case_path)
+        result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
+        rule = record.get('case') or CASE_BY_NAME[record['name']]
+        refs = [read_wav(ROOT/manifest['pads'][p]['reference']) for p in rule['reference_pads']]
+        # Compare the time/frequency pattern of both notes, irrespective of sample phase.
+        if len(refs) == 1:
+            verdict = compare(values,refs[0],RATE,pressed,uncertainty)
+        else:
+            combined = [[sum(samples) for samples in zip(*(r[ch] for r in refs))] for ch in range(2)]
+            verdict = compare(values,combined,RATE,pressed,uncertainty)
+        if verdict.get('error'):
+            result['environment_error'] = verdict['error'] + f'; input at {pressed:.3f}s'
+        else:
+            quiet = is_silent(values,RATE,pressed,pressed+OUTPUT_WINDOW_S+uncertainty)
+            passed = verdict['passed']
+            if rule['rule'] == 'silence':
+                passed = not verdict['passed'] and quiet['passed']
+            elif rule['rule'] == 'alternate':
+                actual = read_wav(ROOT/manifest['pads'][rule['alternate_pad']]['reference'])
+                result['actual_pad_verdict'] = compare(values,actual,RATE,pressed,uncertainty)
+                passed = not verdict['passed'] and result['actual_pad_verdict']['passed']
+            result['quiet_control'] = quiet
+            if rule['stop_window_s'] is not None:
+                released = capture['released_s']
+                start,end = [released+offset for offset in rule['stop_window_s']]
+                if any(len(channel) < math.ceil(end*RATE) for channel in values):
+                    raise ValueError('loop stop confirmation extends beyond recorded PCM')
+                tail = is_silent(values,RATE,start,end)
+                active = [t/100 for t in range(int(released*100),len(values[0])*100//RATE-1)
+                          if not is_silent(values,RATE,t/100,(t+1)/100)['passed']]
+                result['observed_stop_tail_s'] = max(0.,active[-1]+.01-released) if active else 0.
+                result['stop_tail'] = tail
+                passed = passed and tail['passed']
+            result.update({'verdict':verdict,'status':'passed' if passed else 'failed'})
+    except Exception as error:
+        result['environment_error'] = str(error)
+    return result
+
+
+def judge_records(records, manifest, out):
+    return [judge_record(record,manifest,out) for record in records]
+
+
+def execute_round(args, out, cases):
     command_log = []
 
     def run(command, *, timeout=30, check=True, input=None):
         started_us = time.time_ns()//1000
         started_mono = time.monotonic_ns()//1000
-        result = subprocess.run(list(map(str,command)), input=input, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, timeout=timeout)
-        finished_mono = time.monotonic_ns()//1000
-        finished_us = time.time_ns()//1000
-        command_log.append({'command':list(map(str,command)), 'epoch_s':started_us/1_000_000,
-                            'host_before_us':started_us,'host_after_us':finished_us,
-                            'monotonic_elapsed_us':finished_mono-started_mono,
-                            'exit':result.returncode, 'seconds':(finished_mono-started_mono)/1_000_000,
-                            'stdout':result.stdout.decode(errors='replace'),
-                            'stderr':result.stderr.decode(errors='replace')})
-        (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
+        trace = {'command':list(map(str,command)), 'epoch_s':started_us/1_000_000,
+                 'host_before_us':started_us}
+        try:
+            result = subprocess.run(trace['command'], input=input, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=timeout)
+            trace.update(exit=result.returncode,stdout=result.stdout.decode(errors='replace'),
+                         stderr=result.stderr.decode(errors='replace'))
+        except Exception as error:
+            trace.update(exit=None,error=f'{type(error).__name__}: {error}',
+                         stdout=(getattr(error,'stdout',None) or b'').decode(errors='replace'),
+                         stderr=(getattr(error,'stderr',None) or b'').decode(errors='replace'))
+            raise
+        finally:
+            elapsed = time.monotonic_ns()//1000-started_mono
+            trace.update(host_after_us=time.time_ns()//1000,monotonic_elapsed_us=elapsed,
+                         seconds=elapsed/1_000_000)
+            command_log.append(trace)
+            (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
         if check and result.returncode:
             raise RuntimeError(f'command failed ({result.returncode}): {command}')
         return result.stdout.decode(errors='replace')
@@ -214,13 +308,7 @@ def main():
         return samples
 
     manifest = json.loads((ROOT/'scripts/fixtures/audio-output/manifest.json').read_text())
-    for pad in manifest['pads']:
-        if sha(ROOT/pad['reference']) != pad['reference_sha256']:
-            raise ValueError('reference hash changed')
-    with zipfile.ZipFile(args.test_apk) as apk:
-        for pad in manifest['pads']:
-            if hashlib.sha256(apk.read('assets/audio-output/'+pad['file'])).hexdigest() != pad['sha256']:
-                raise ValueError('test APK does not contain the pinned fixtures')
+    validate_fixtures(manifest,args.test_apk)
     metadata = {'command':sys.argv, 'source_commit':run(['git','rev-parse','HEAD']).strip(),
                 'source_diff':run(['git','diff','HEAD']), 'status':run(['git','status','--porcelain']),
                 'apk_sha256':sha(args.apk), 'test_apk_sha256':sha(args.test_apk),
@@ -236,10 +324,10 @@ def main():
     instrument_command = ['adb','-s',args.serial,'shell','am','instrument','-w','-r','-e','class',CLASS,
                           '-e','audioOutputSession',session,'-e','audioBlockPlayback',str(args.block_playback).lower(),
                           PACKAGE+'.test/androidx.test.runner.AndroidJUnitRunner']
-    cases = [c for c in CASES if not args.case or c[0] in args.case]
     recordings = []
     instrument = recorder = None
     instrument_exit = None
+    capture_exit = None
     failure = None
     try:
         with (out/'instrumentation.txt').open('w') as log:
@@ -267,104 +355,90 @@ def main():
                 time.sleep(9.)
                 if recorder.poll() is not None:
                     raise RuntimeError('recorder ended during initial packet preparation')
-                for number,(name,action,pads,reject) in enumerate(cases):
-                    clock_before=measure_clock()
+                for number,rule in enumerate(cases):
+                    record = {'name':rule['name'],'case':rule}
+                    recordings.append(record)
+                    try: clock_before=measure_clock()
+                    except Exception as error:
+                        clock_before=[]
+                        record['environment_error']=f'clock before input: {error}'
                     adb('shell','run-as',PACKAGE,'sh','-c',
                         f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
-                        input=(action+'\n').encode())
-                    event = json.loads(wait_file(f'event-{number}.json',4))
-                    event['clock']={'before':clock_before,'after':measure_clock()}
-                    recordings.append({'name':name,'action':action,'pads':pads,'reject':reject,'event':event})
+                        input=(json.dumps({'pads':rule['input_pads'],'hold_ms':rule['hold_ms']})+'\n').encode())
+                    try:
+                        event = json.loads(wait_file(f'event-{number}.json',4))
+                        record['event'] = event
+                        event['clock']={'before':clock_before,'after':measure_clock()}
+                    except Exception as error:
+                        record['environment_error']=f'input event or clock: {error}'
                     (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
+                    if instrument.poll() is not None:
+                        raise RuntimeError('screen instrumentation ended during case collection')
                     time.sleep(2.5)  # previous one-second voice ends before the next baseline
                 time.sleep(1.)  # retain the last case's complete postroll
                 recorder.terminate()  # managed recorder flushes its WAV on SIGTERM
                 capture_exit = recorder.wait(timeout=10)
                 recorder = None
                 capture_trace['exit'] = capture_exit
-            capture = json.loads((out/'stream-capture.txt').read_text().strip().splitlines()[-1])
-            timeline_path = out/'stream.packets.json'
-            timeline = json.loads(timeline_path.read_text()) if timeline_path.exists() else {}
-            for record in recordings:
-                record['capture_exit'] = capture_exit
-                record['capture'] = dict(capture)
-                record['capture']['stream_levels'] = record['capture'].pop('levels',[])
-                record['capture']['stream_gap_seconds'] = record['capture'].pop('gap_seconds',0.)
-                if capture_exit or not capture.get('packets'):
-                    record['environment_error'] = 'recording path unconfirmed; no usable packet stream'
-                    continue
-                try:
-                    record['capture'].update(extract_case(
-                        out/'stream.wav', out/(record['name']+'.wav'),
-                        timeline,record['event']))
-                    if record['capture'].get('environment_error'):
-                        record['environment_error'] = record['capture']['environment_error']
-                except (ValueError,KeyError,wave.Error) as error:
-                    record['environment_error'] = str(error)
-            (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
             adb('shell','run-as',PACKAGE,'sh','-c',
                 f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
             instrument_exit = instrument.wait(timeout=20)
-    except (RuntimeError,ValueError,OSError,TimeoutError,subprocess.TimeoutExpired) as error:
+    except Exception as error:
         failure = str(error)
     finally:
-        if recorder is not None and recorder.poll() is None:
-            recorder.terminate()
-            try: recorder.wait(timeout=10)
-            except subprocess.TimeoutExpired: recorder.kill(); recorder.wait()
-        if instrument is not None and instrument.poll() is None:
-            adb('shell','am','force-stop',PACKAGE,check=False)
-            instrument.terminate()
-            try: instrument.wait(timeout=5)
-            except subprocess.TimeoutExpired: instrument.kill(); instrument.wait()
+        for process in (recorder,instrument):
+            if process is None or process.poll() is not None:
+                continue
+            if process is instrument:
+                try: adb('shell','am','force-stop',PACKAGE,check=False)
+                except Exception as error: failure = failure or f'cleanup: {error}'
+            try:
+                process.terminate()
+                try:
+                    code=process.wait(timeout=10)
+                    if process is recorder: capture_exit=code
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    code=process.wait(timeout=10)
+                    if process is recorder: capture_exit=code
+            except Exception as error:
+                failure = failure or f'cleanup: {error}'
         (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
-    results = []
-    for record in recordings:
-        result = {'name':record['name'], 'status':'environment_unconfirmed', **record}
-        capture = record.get('capture',{})
-        if record.get('environment_error') or not capture:
-            result.setdefault('environment_error','capture did not complete')
-            results.append(result);continue
-        try:
-            pressed = capture['pressed_s']
-            uncertainty = capture['input_uncertainty_s']
-            case_path = out/(record['name']+'.wav')
-            values = read_wav(case_path)
-            result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
-            refs = [read_wav(ROOT/manifest['pads'][p]['reference']) for p in record['pads']]
-            # Compare the time/frequency pattern of both notes, irrespective of sample phase.
-            if len(refs) == 1:
-                verdict = compare(values,refs[0],RATE,pressed,uncertainty)
-            else:
-                combined = [[sum(samples) for samples in zip(*(r[ch] for r in refs))] for ch in range(2)]
-                verdict = compare(values,combined,RATE,pressed,uncertainty)
-            if verdict.get('error'):
-                result['environment_error'] = verdict['error'] + f'; input at {pressed:.3f}s'
-            else:
-                quiet = is_silent(values,RATE,pressed,pressed+OUTPUT_WINDOW_S+uncertainty)
-                passed = (not verdict['passed'] and quiet['passed']) if record['reject'] and record['action'] != '1' else (
-                    different_pad_passed(values,refs[0],read_wav(ROOT/manifest['pads'][1]['reference']),pressed,uncertainty)
-                    if record['reject'] else verdict['passed'])
-                result['quiet_control'] = quiet
-                if record['name'] == 'differentPadIsRejected':
-                    result['actual_pad_verdict'] = compare(values,read_wav(
-                        ROOT/manifest['pads'][1]['reference']),RATE,pressed,uncertainty)
-                if record['action'] == '9':
-                    released = capture['released_s']
-                    tail = is_silent(values,RATE,released+.6,released+1.1)
-                    active = [t/100 for t in range(int(released*100),len(values[0])*100//RATE-1)
-                              if not is_silent(values,RATE,t/100,(t+1)/100)['passed']]
-                    result['observed_stop_tail_s'] = max(0.,active[-1]+.01-released) if active else 0.
-                    result['stop_tail'] = tail
-                    passed = passed and tail['passed']
-                result.update({'verdict':verdict,'status':'passed' if passed else 'failed'})
-        except (KeyError,ValueError,OSError) as error:
-            result['environment_error'] = str(error)
-        results.append(result)
+    # Finalize and analyze all completed inputs even if a later input failed.
+    try:
+        capture = json.loads((out/'stream-capture.txt').read_text().strip().splitlines()[-1])
+        timeline_path = out/'stream.packets.json'
+        timeline = json.loads(timeline_path.read_text()) if timeline_path.exists() else {}
+        for record in recordings:
+            record['capture_exit'] = capture_exit
+            record['capture'] = dict(capture)
+            record['capture']['stream_levels'] = record['capture'].pop('levels',[])
+            record['capture']['stream_gap_seconds'] = record['capture'].pop('gap_seconds',0.)
+            if record.get('environment_error'):
+                continue
+            if capture_exit != 0 or not capture.get('packets'):
+                record['environment_error'] = 'recording path unconfirmed; no usable packet stream'
+                continue
+            try:
+                record['capture'].update(extract_case(
+                    out/'stream.wav', out/(record['name']+'.wav'),
+                    timeline,record['event']))
+                if record['capture'].get('environment_error'):
+                    record['environment_error'] = record['capture']['environment_error']
+            except Exception as error:
+                record['environment_error'] = str(error)
+        (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
+    except Exception as error:
+        failure = failure or f'capture finalization: {type(error).__name__}: {error}'
+    results = judge_records(recordings,manifest,out)
     instrument_text = (out/'instrumentation.txt').read_text() if (out/'instrumentation.txt').exists() else ''
     if failure or instrument_exit != 0 or 'OK (1 test)' not in instrument_text or len(results) != len(cases):
         results.append({'name':'screenAndRecorderComplete','status':'environment_unconfirmed',
                         'error':failure or 'screen run did not finish all requested cases'})
+    return results
+
+
+def write_report(out, results):
     exit_code = 3 if any(r['status']=='environment_unconfirmed' for r in results) else (
         2 if any(r['status']=='failed' for r in results) else 0)
     report = {'version':VERSION,'exit_code':exit_code,'results':results}

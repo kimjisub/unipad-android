@@ -62,12 +62,12 @@ steady unrelated tone cannot match the complete reference.
 `scripts/fixtures/audio-output/manifest.json` records pad coordinates (row-major,
 zero-based), filenames, original reference WAVs, frequencies, hashes, exact
 encoding commands and ffmpeg version. The sounds and pack mapping live in the
-test APK's `assets/audio-output`. The host verifies reference and APK asset hashes
-before testing. MP3 filenames with and without ID3 tags are separate fixtures.
+test APK's `assets/audio-output`. The host verifies reference and APK asset hashes, including the exact `info`
+and `keySound` mapping bytes, before testing. MP3 filenames with and without ID3 tags are separate fixtures.
 Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
-## Verdict version 3
+## Verdict version 4
 
 - One external stream stays open for the round. Packet preparation takes at
   most ten seconds (the manager ends a no-packet request itself); each case
@@ -77,6 +77,10 @@ encoders; running the detector requires only Python's standard library.
   timestamp and its written frame position. A missing timeline, invalid timestamps
   or an event farther than 100 ms from a packet is environment unconfirmed.
   Both press and release use this mapping, avoiding accumulated first-packet drift.
+  Screen events bracket delivery with a timestamp before and after all injected
+  downs/ups. The earliest press uses the pre-delivery timestamp; the latest press
+  and release use post-delivery timestamps. A 36 ms allowance on each side of
+  the mapped event covers observed packet timestamp jitter.
   Any recorder-inserted gap overlapping the four-second window, including
   quiet baseline or postroll, is environment unconfirmed (exit 3). The original
   samples are retained without removing or joining gaps. Missing/invalid timing or incomplete baseline/postroll
@@ -107,7 +111,9 @@ encoders; running the detector requires only Python's standard library.
 - Silent channels and silence controls must stay below -65 dBFS through the
   whole possible output window: 2.5 seconds after input, including permitted
   output delay, the one-second signal and postroll. A loop must match its first second
-  and be below -65 dBFS for 0.5 seconds starting 0.6 seconds after release. The first measured stop tail was
+  and be below -65 dBFS for 0.5 seconds starting 0.6 seconds after the latest
+  possible release. If that complete interval extends beyond the four-second
+  recording, the case is environment unconfirmed, never an app failure. The first measured stop tail was
   0.46 seconds; every round also reports its last non-silent 10 ms window.
   The postroll must cover 0.5 seconds after the latest permitted end of a normal
   sound. Thresholds are versioned constants in `audio_output.py`.
@@ -115,7 +121,12 @@ encoders; running the detector requires only Python's standard library.
 Exit 0 means every requested case passed. Exit 2 means a confirmed recording
 rejected the expected signal or a negative control failed. Exit 3 means the
 screen/recorder environment was unconfirmed. Both nonzero exits fail automation;
-XML represents unconfirmed cases as errors, never skips or passes.
+XML represents unconfirmed cases as errors, never skips or passes. Preparation
+failures (including missing SDK variables or APKs), empty/malformed recorder
+output, and cleanup timeouts also leave both reports with exit 3. A corrupt
+case WAV or other per-case exception does not replace other case verdicts.
+An unwritable or nonempty evidence directory and invalid command-line options
+remain invocation errors; no previous evidence is overwritten.
 
 Every round stores the original recorder stdout, continuous source WAV and
 byte-for-byte four-second case WAVs, `stream.packets.json`, per-case gap records,
@@ -125,6 +136,10 @@ APK/test APK hashes, fixture manifest, device serial, OS properties, emulator
 version, instrumentation output and XML. Keep the source checkout clean for
 final evidence. Attach archives to the review before a rerun overwrites
 anything. Logs and result files belong outside the build tree.
+
+Case rules, input pad indices, reference pads, alternate-pad controls and loop
+stop windows are declared together in `CASES`. The screen accepts pad indices
+and hold duration as JSON; it does not infer test semantics from action strings.
 
 This proves digital output of this emulator and test pack. It does not prove
 physical speaker/headphone/Bluetooth delivery, sound quality, playing latency,

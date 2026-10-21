@@ -49,28 +49,29 @@ class EmulatorOutputScreenTest {
             screen.openPlay(pack)
             val pads = screen.padBounds()
             assertTrue("Expected 64 screen pads", pads.size == 64)
-            fun perform(action: String): JSONObject {
-                val indices = when (action) {
-                    "none" -> emptyList()
-                    "chord" -> listOf(0, 1)
-                    "empty" -> listOf(63)
-                    else -> listOf(action.toInt().also { require(it in 0..9) })
-                }
-                val event = JSONObject().put("action", action).put("blocked", blocked)
+            fun perform(command: JSONObject): JSONObject {
+                val inputs = command.getJSONArray("pads")
+                val indices = (0 until inputs.length()).map { inputs.getInt(it) }
+                require(indices.distinct().size == indices.size && indices.all { it in pads.indices })
+                val holdMs = command.getLong("hold_ms")
+                require(holdMs in 0..2000)
+                val event = JSONObject().put("input", command).put("blocked", blocked)
                     .put("pressed_epoch_ms", System.currentTimeMillis())
                 val ids = indices.map { index ->
                     val pad = pads[index]
                     fingers.down(Point(pad.centerX(), pad.centerY()))
                 }
-                SystemClock.sleep(if (action == "9") 1250 else 40)
+                event.put("pressed_end_epoch_ms", System.currentTimeMillis())
+                SystemClock.sleep(holdMs)
                 event.put("released_epoch_ms", System.currentTimeMillis())
                 ids.asReversed().forEach(fingers::up)
+                event.put("released_end_epoch_ms", System.currentTimeMillis())
                 return event.put("finished_epoch_ms", System.currentTimeMillis())
             }
             if (session == null) {
                 // Ordinary connected suite checks fixture loading and actual screen input.
                 // It makes no claim about external sound without the host recorder.
-                perform("0")
+                perform(JSONObject("""{"pads":[0],"hold_ms":40}"""))
                 return
             }
             val exchange = File(screen.context.filesDir, "audio-output/$session").apply { mkdirs() }
@@ -80,9 +81,9 @@ class EmulatorOutputScreenTest {
             while (SystemClock.elapsedRealtime() < deadline) {
                 val command = File(exchange, "command-$number")
                 if (!command.exists()) { SystemClock.sleep(10); continue }
-                val action = command.readText().trim()
-                if (action == "finish") return
-                val event = perform(action)
+                val input = command.readText().trim()
+                if (input == "finish") return
+                val event = perform(JSONObject(input))
                 // Publish atomically: the host never reads a half-written event.
                 val temp = File(exchange, "event-$number.tmp")
                 temp.writeText(event.toString())

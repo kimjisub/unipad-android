@@ -20,13 +20,13 @@ class CaptureWindowTest(unittest.TestCase):
             with wave.open(str(source),'wb') as out:
                 out.setnchannels(2);out.setsampwidth(2);out.setframerate(48000);out.writeframes(pcm)
             log=PacketTimelineTest().timeline()
-            result = runner.extract_case(source,target,log,{'pressed_epoch_ms':3000,'released_epoch_ms':3100,'finished_epoch_ms':3101,
+            result = runner.extract_case(source,target,log,{'pressed_epoch_ms':3000,'pressed_end_epoch_ms':3000,'released_epoch_ms':3100,'released_end_epoch_ms':3100,'finished_epoch_ms':3101,
                 'clock':ClockAndControlTest.clock(offset=0,rtt=2)})
             self.assertAlmostEqual(.75,result['pressed_s'],delta=1/48000)
-            self.assertAlmostEqual(.852,result['released_s'],delta=1/48000)
+            self.assertAlmostEqual(.924,result['released_s'],delta=1/48000)
             with wave.open(str(target),'rb') as recorded:
                 self.assertEqual(192000,recorded.getnframes())
-                self.assertEqual(pcm[59952*4:251952*4],recorded.readframes(192000))
+                self.assertEqual(pcm[58224*4:250224*4],recorded.readframes(192000))
 
     def test_preserves_gap_samples_and_marks_extracted_case_unconfirmed(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -38,12 +38,12 @@ class CaptureWindowTest(unittest.TestCase):
             pcm=b'\x01\x00'*2*120000+bytes(4800*4)+b'\x01\x00'*2*(384000-120000)
             with wave.open(str(source),'wb') as out:
                 out.setnchannels(2);out.setsampwidth(2);out.setframerate(48000);out.writeframes(pcm)
-            result=runner.extract_case(source,target,log,{'pressed_epoch_ms':3000,'released_epoch_ms':3100,'finished_epoch_ms':3101,
+            result=runner.extract_case(source,target,log,{'pressed_epoch_ms':3000,'pressed_end_epoch_ms':3000,'released_epoch_ms':3100,'released_end_epoch_ms':3100,'finished_epoch_ms':3101,
                 'clock':ClockAndControlTest.clock(offset=0,rtt=2)})
             self.assertIn('environment_error',result)
             self.assertEqual([gap],result['gaps'])
             with wave.open(str(target),'rb') as recorded:
-                self.assertEqual(pcm[59952*4:251952*4],recorded.readframes(192000))
+                self.assertEqual(pcm[58224*4:250224*4],recorded.readframes(192000))
 
     def test_refuses_missing_pre_input_postroll_and_zero_timestamp(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -56,7 +56,7 @@ class CaptureWindowTest(unittest.TestCase):
             for first,pressed in [(1_000_000,1100),(1_000_000,4000),(0,3000)]:
                 with self.subTest(first=first,pressed=pressed),self.assertRaises(ValueError):
                     runner.extract_case(source,target,PacketTimelineTest().timeline() if first else {},
-                                        {'pressed_epoch_ms':pressed,'released_epoch_ms':pressed+100,
+                                        {'pressed_epoch_ms':pressed,'pressed_end_epoch_ms':pressed,'released_epoch_ms':pressed+100,'released_end_epoch_ms':pressed+100,
                                          'finished_epoch_ms':pressed+101,'clock':clock})
                 self.assertFalse(target.exists())
 
@@ -76,10 +76,10 @@ class ClockAndControlTest(unittest.TestCase):
                 out.setnchannels(2);out.setsampwidth(2);out.setframerate(48000)
                 out.writeframes(bytes(384000*4))
             for offset in [300_000,-300_000]:
-                event={'pressed_epoch_ms':3000+offset/1000,'released_epoch_ms':3100+offset/1000,
+                event={'pressed_epoch_ms':3000+offset/1000,'pressed_end_epoch_ms':3000+offset/1000,'released_epoch_ms':3100+offset/1000,'released_end_epoch_ms':3100+offset/1000,
                        'finished_epoch_ms':3101+offset/1000,'clock':self.clock(offset)}
                 result=runner.extract_case(source,target,PacketTimelineTest().timeline(),event)
-                self.assertAlmostEqual(59904,result['source_frame_offset'],delta=1)
+                self.assertAlmostEqual(58176,result['source_frame_offset'],delta=1)
                 self.assertLessEqual(result['clock']['uncertainty_us'],4000)
 
     def test_clock_correction_keeps_normal_sound_out_of_baseline(self):
@@ -92,7 +92,7 @@ class ClockAndControlTest(unittest.TestCase):
                 wav.setnchannels(2);wav.setsampwidth(2);wav.setframerate(48000);wav.writeframes(pcm)
             # Actual press is host epoch 3s; guest clock is half a second ahead.
             result=runner.extract_case(source,target,PacketTimelineTest().timeline(),
-                {'pressed_epoch_ms':3500,'released_epoch_ms':3540,'finished_epoch_ms':3541,
+                {'pressed_epoch_ms':3500,'pressed_end_epoch_ms':3500,'released_epoch_ms':3540,'released_end_epoch_ms':3540,'finished_epoch_ms':3541,
                  'clock':self.clock(offset=500_000)})
             signal=runner.read_wav(source);expected=runner.read_wav(reference)
             self.assertFalse(runner.compare(signal,expected,runner.RATE,2.5)['passed'])
@@ -108,7 +108,7 @@ class ClockAndControlTest(unittest.TestCase):
             jumping=self.clock();jumping['after'][0]['guest_us']+=500_000
             changed_host=self.clock();changed_host['after'][0]['host_after_us']+=500_000
             for clock in [None,self.clock(rtt=200_000),jumping,changed_host]:
-                event={'pressed_epoch_ms':3300,'released_epoch_ms':3400,
+                event={'pressed_epoch_ms':3300,'pressed_end_epoch_ms':3300,'released_epoch_ms':3400,'released_end_epoch_ms':3400,
                        'finished_epoch_ms':3401,'clock':clock}
                 with self.subTest(clock=clock),self.assertRaises(ValueError):
                     runner.extract_case(source,target,PacketTimelineTest().timeline(),event)
