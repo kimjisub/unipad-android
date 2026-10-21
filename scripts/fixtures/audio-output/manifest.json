@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "sample_rate": 48000,
+  "seconds": 1,
+  "ffmpeg_version": "ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "pads": [
+    {
+      "pad": 0,
+      "file": "pcm.wav",
+      "reference": "scripts/fixtures/audio-output/pad-0.wav",
+      "frequencies_hz": [
+        331,
+        392
+      ],
+      "silent_channels": [],
+      "sha256": "9d9775536bdb119df0e86ff94460369421ea563c6e3b471dcebdec5fb8485661",
+      "reference_sha256": "9d9775536bdb119df0e86ff94460369421ea563c6e3b471dcebdec5fb8485661"
+    },
+    {
+      "pad": 1,
+      "file": "mpeg.mp3",
+      "reference": "scripts/fixtures/audio-output/pad-1.wav",
+      "frequencies_hz": [
+        468,
+        529
+      ],
+      "silent_channels": [],
+      "sha256": "b9641d87d733d9baf3df0b90ef934f747eee9b59510d66c71ba1ed2f7a9f703a",
+      "reference_sha256": "122cdd71140046e081f12a647c9d9ef46267e563dd11e3d45a5c780a63bb2672"
+    },
+    {
+      "pad": 2,
+      "file": "vorbis.ogg",
+      "reference": "scripts/fixtures/audio-output/pad-2.wav",
+      "frequencies_hz": [
+        605,
+        666
+      ],
+      "silent_channels": [],
+      "sha256": "8667bc913330ef112e1fbd8e66811702fe67419bab7a8e08cb4a1c5243410fa1",
+      "reference_sha256": "72c86d6f4251e5e69380e5e58ea1c64fe6879e1beac316c759f83ddd89998e9e"
+    },
+    {
+      "pad": 3,
+      "file": "aac.m4a",
+      "reference": "scripts/fixtures/audio-output/pad-3.wav",
+      "frequencies_hz": [
+        742,
+        803
+      ],
+      "silent_channels": [],
+      "sha256": "110c23d7056cfad5585ab05b4936760a047c1b1dc2bb21d5b31381f90e7fe32c",
+      "reference_sha256": "32359831225925cd9fb2391aafdb622d8ffe54612539c684d0063720bbae124f"
+    },
+    {
+      "pad": 4,
+      "file": "bare-named.wav",
+      "reference": "scripts/fixtures/audio-output/pad-4.wav",
+      "frequencies_hz": [
+        879,
+        940
+      ],
+      "silent_channels": [],
+      "sha256": "374b204c73988bf92141deac0ac6e262b84f25a0acebfe1ac47a6bfc26af88b0",
+      "reference_sha256": "78959a62df7ca7a1d9e46468b5233db9dfcbadc6858b3e3bdfde4b6322ce8385"
+    },
+    {
+      "pad": 5,
+      "file": "tagged-named.wav",
+      "reference": "scripts/fixtures/audio-output/pad-5.wav",
+      "frequencies_hz": [
+        1016,
+        1077
+      ],
+      "silent_channels": [],
+      "sha256": "19ea87d7c8785ce8d1cec34274048ac5d964dd330328feb66d0e21319c251b31",
+      "reference_sha256": "bc6633871362f323fe1ff9eb910627c30099c277158f3aa070981d2bac36594e"
+    },
+    {
+      "pad": 6,
+      "file": "left.wav",
+      "reference": "scripts/fixtures/audio-output/pad-6.wav",
+      "frequencies_hz": [
+        1153,
+        1214
+      ],
+      "silent_channels": [
+        1
+      ],
+      "sha256": "1db2b220440606e92a090b1625a51e0aeefb2e51dd3f03d326e7ee5fb581c304",
+      "reference_sha256": "1db2b220440606e92a090b1625a51e0aeefb2e51dd3f03d326e7ee5fb581c304"
+    },
+    {
+      "pad": 7,
+      "file": "right.wav",
+      "reference": "scripts/fixtures/audio-output/pad-7.wav",
+      "frequencies_hz": [
+        1290,
+        1351
+      ],
+      "silent_channels": [
+        0
+      ],
+      "sha256": "329916e40bb257aa40fef0fc081fb731f46ec6932ab9558019597c937cbc6fe2",
+      "reference_sha256": "329916e40bb257aa40fef0fc081fb731f46ec6932ab9558019597c937cbc6fe2"
+    },
+    {
+      "pad": 8,
+      "file": "silence.wav",
+      "reference": "scripts/fixtures/audio-output/pad-8.wav",
+      "frequencies_hz": [
+        1427,
+        1488
+      ],
+      "silent_channels": [
+        0,
+        1
+      ],
+      "sha256": "ede1f6dd33abfce7bb3a45ba79b0ab5f8baae692709dd32214a41da9af55ab13",
+      "reference_sha256": "ede1f6dd33abfce7bb3a45ba79b0ab5f8baae692709dd32214a41da9af55ab13"
+    },
+    {
+      "pad": 9,
+      "file": "loop.wav",
+      "reference": "scripts/fixtures/audio-output/pad-9.wav",
+      "frequencies_hz": [
+        1564,
+        1625
+      ],
+      "silent_channels": [],
+      "sha256": "a0ea77d54020aea3045c0b82d8d4b8aeedbc37b13d6d6920185a0a0058d4e680",
+      "reference_sha256": "a0ea77d54020aea3045c0b82d8d4b8aeedbc37b13d6d6920185a0a0058d4e680"
+    }
+  ],
+  "commands": [
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      "scripts/fixtures/audio-output/pad-1.wav",
+      "-map_metadata",
+      "-1",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "192k",
+      "-write_xing",
+      "0",
+      "-id3v2_version",
+      "0",
+      "-f",
+      "mp3",
+      "app/src/androidTest/assets/audio-output/mpeg.mp3"
+    ],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      "scripts/fixtures/audio-output/pad-2.wav",
+      "-map_metadata",
+      "-1",
+      "-c:a",
+      "vorbis",
+      "-strict",
+      "experimental",
+      "-q:a",
+      "6",
+      "-f",
+      "ogg",
+      "app/src/androidTest/assets/audio-output/vorbis.ogg"
+    ],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      "scripts/fixtures/audio-output/pad-3.wav",
+      "-map_metadata",
+      "-1",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
+      "-f",
+      "ipod",
+      "app/src/androidTest/assets/audio-output/aac.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      "scripts/fixtures/audio-output/pad-4.wav",
+      "-map_metadata",
+      "-1",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "192k",
+      "-write_xing",
+      "0",
+      "-id3v2_version",
+      "0",
+      "-f",
+      "mp3",
+      "app/src/androidTest/assets/audio-output/bare-named.wav"
+    ],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      "scripts/fixtures/audio-output/pad-5.wav",
+      "-map_metadata",
+      "-1",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "192k",
+      "-write_xing",
+      "0",
+      "-id3v2_version",
+      "3",
+      "-metadata",
+      "title=Original output fixture",
+      "-f",
+      "mp3",
+      "app/src/androidTest/assets/audio-output/tagged-named.wav"
+    ]
+  ]
+}

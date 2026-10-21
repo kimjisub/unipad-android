@@ -399,3 +399,10 @@ exported source, test hash, APK hashes, raw output, and exit codes. Do not switc
 - [The native evidence runner](../../../scripts/NATIVE_GRAMMAR_RESULTS.md) preserves
   requirement IDs, the reviewed fixed test manifest and original results. Audio output
   conformance stays unverified without an output waveform.
+
+### External audio output
+
+`EmulatorOutputScreenTest` loads an original fixed pack and injects real screen
+touches. With a host session it coordinates external emulator recording; only
+the host WAV verdict counts as an audio pass. See [the capture commands, stable
+result names and evidence contract](../../../scripts/AUDIO_OUTPUT.md).
