@@ -1,7 +1,7 @@
 {
   "schema": "unipad-conformance/1",
   "generatedBy": "meta/unipack-conformance/build-corpus.mjs",
-  "grammar": "G3",
+  "grammar": "G4",
   "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence), and one of them encoded as MP3; the one file that stands for a sound that cannot be decoded is a line of text. No pack, song or third-party audio is included.",
   "assets": {
     "tone-440": {
@@ -3871,6 +3871,526 @@
                     0,
                     "ff00ff00",
                     4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-026",
+      "items": [
+        "L-06",
+        "L-07"
+      ],
+      "area": "keyLed",
+      "title": "file name queue: decomposed Latin accent",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md L-07, edition G4",
+          "note": "NFC then lower-case UTF-16 comparison gives the same queue for composed and decomposed names; the original paths still identify the files"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 ñ",
+          "text": "d 20"
+        },
+        {
+          "path": "keyLed/1 1 1 1 o",
+          "text": "d 10"
+        }
+      ],
+      "fingerprint": "5ddd5300e4df4117c75cf0ec9240533564d4f3f3876a96493da580dcfaba43cb",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    10
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    20
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-027",
+      "items": [
+        "L-06",
+        "L-07"
+      ],
+      "area": "keyLed",
+      "title": "file name queue: composed Latin accent",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md L-07, edition G4",
+          "note": "NFC then lower-case UTF-16 comparison gives the same queue for composed and decomposed names; the original paths still identify the files"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 ñ",
+          "text": "d 20"
+        },
+        {
+          "path": "keyLed/1 1 1 1 o",
+          "text": "d 10"
+        }
+      ],
+      "fingerprint": "59b9ddb18708d523ab11f65f006f45e15c4ca238e1dc45f958479c6405315316",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    10
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    20
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-028",
+      "items": [
+        "L-06",
+        "L-07"
+      ],
+      "area": "keyLed",
+      "title": "file name queue: decomposed Hangul",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md L-07, edition G4",
+          "note": "NFC then lower-case UTF-16 comparison gives the same queue for composed and decomposed names; the original paths still identify the files"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 가",
+          "text": "d 20"
+        },
+        {
+          "path": "keyLed/1 1 1 1 ㄱ",
+          "text": "d 10"
+        }
+      ],
+      "fingerprint": "a36263a397ea50c4d53e1c5a373d438fe4b02d905cbd57b6eff8b3b48a025533",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    10
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    20
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-029",
+      "items": [
+        "L-06",
+        "L-07"
+      ],
+      "area": "keyLed",
+      "title": "file name queue: composed Hangul",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md L-07, edition G4",
+          "note": "NFC then lower-case UTF-16 comparison gives the same queue for composed and decomposed names; the original paths still identify the files"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 가",
+          "text": "d 20"
+        },
+        {
+          "path": "keyLed/1 1 1 1 ㄱ",
+          "text": "d 10"
+        }
+      ],
+      "fingerprint": "25265c3fe4694ce799c69d5d9153c65a17205ce8a6a3290fdcaadbc092b19cb0",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    10
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    20
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-030",
+      "items": [
+        "L-06",
+        "L-07"
+      ],
+      "area": "keyLed",
+      "title": "file name queue: UTF-16 code units rather than Unicode scalar order",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md L-07, edition G4",
+          "note": "NFC then lower-case UTF-16 comparison gives the same queue for composed and decomposed names; the original paths still identify the files"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 1 �",
+          "text": "d 20"
+        },
+        {
+          "path": "keyLed/1 1 1 1 😀",
+          "text": "d 10"
+        }
+      ],
+      "fingerprint": "a5d07be2943f65f3c49329e47742ff9d5c453610b2f6a3e3a5bcb064afdfeb66",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    10
+                  ]
+                ]
+              },
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "delay",
+                    20
                   ]
                 ]
               }
