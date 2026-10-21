@@ -16,10 +16,11 @@ import subprocess
 import sys
 import time
 import uuid
+import wave
 import xml.etree.ElementTree as ET
 import zipfile
 
-from audio_output import RATE, VERSION, compare, is_silent, read_wav
+from audio_output import RATE, VERSION, compare, is_silent, levels, read_wav
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = 'com.kimjisub.launchpad.dev'
@@ -44,6 +45,25 @@ CASES = [
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def extract_case(source: Path, target: Path, first_epoch_us: int, pressed_epoch_ms: int) -> dict:
+    """Copy four seconds of original PCM; never pad a missing baseline/postroll."""
+    with wave.open(str(source),'rb') as reader:
+        rate = reader.getframerate()
+        if first_epoch_us <= 0 or reader.getnchannels() != 2 or reader.getsampwidth() != 2:
+            raise ValueError('recording timing or format is unconfirmed')
+        start = round(((pressed_epoch_ms/1000-first_epoch_us/1e6)-.75)*rate)
+        frames = 4*rate
+        if start < round(.2*rate) or start+frames > reader.getnframes():
+            raise ValueError('four-second case baseline/postroll is outside recorded PCM')
+        reader.setpos(start)
+        pcm = reader.readframes(frames)
+        with wave.open(str(target),'wb') as writer:
+            writer.setparams(reader.getparams())
+            writer.writeframes(pcm)
+    return {'file':str(target),'first_sample_epoch_us':first_epoch_us+start*1_000_000/rate,
+            'seconds':4.,'source_frame_offset':start,'sample_rate':rate}
 
 
 def main():
@@ -120,31 +140,47 @@ def main():
                     time.sleep(.05)
                 raise TimeoutError(f'screen did not publish {name} within {seconds}s')
             wait_file('ready',60)
-            for number,(name,action,pads,reject) in enumerate(cases):
-                time.sleep(2.)  # drain the previous voice and warm the silent real output stream
-                wav = out/(name+'.wav')
-                capture_command = [sys.executable,str(args.devices_tool),'record',args.serial,str(wav),'4']
-                with (out/(name+'-capture.txt')).open('w') as capture_log:
-                    started = time.monotonic()
-                    recorder = subprocess.Popen(capture_command,stdout=capture_log,stderr=subprocess.STDOUT)
-                    # Discard .2s of old buffers, retain at least .5s before input.
-                    time.sleep(1.05)
+            time.sleep(2.)  # warm the open, silent Oboe stream once
+            capture_command = [sys.executable,str(args.devices_tool),'record',args.serial,str(out/'stream.wav'),'120']
+            capture_trace = {'command':capture_command}
+            command_log.append(capture_trace)
+            with (out/'stream-capture.txt').open('w') as capture_log:
+                recorder = subprocess.Popen(capture_command,stdout=capture_log,stderr=subprocess.STDOUT)
+                # The managed recorder stops within ten seconds when no packets arrive.
+                # Keep one connection for the round; per-case timestamps, not startup
+                # sleeps, decide whether baseline/postroll actually exist.
+                time.sleep(9.)
+                if recorder.poll() is not None:
+                    raise RuntimeError('recorder ended during initial packet preparation')
+                for number,(name,action,pads,reject) in enumerate(cases):
                     adb('shell','run-as',PACKAGE,'sh','-c',
-                        f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',input=(action+'\n').encode())
+                        f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
+                        input=(action+'\n').encode())
                     event = json.loads(wait_file(f'event-{number}.json',4))
-                    capture_exit = recorder.wait(timeout=max(.1,10-(time.monotonic()-started)))
-                    recorder = None
-                raw = (out/(name+'-capture.txt')).read_text()
-                command_log.append({'command':capture_command,'exit':capture_exit,
-                                    'seconds':time.monotonic()-started})
-                capture = json.loads(raw.strip().splitlines()[-1]) if raw.strip().startswith('{') else {}
-                record = {'name':name,'action':action,'pads':pads,'reject':reject,'event':event,
-                          'capture':capture,'capture_exit':capture_exit}
-                recordings.append(record)
-                (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
+                    recordings.append({'name':name,'action':action,'pads':pads,'reject':reject,'event':event})
+                    (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
+                    time.sleep(2.5)  # previous one-second voice ends before the next baseline
+                time.sleep(1.)  # retain the last case's complete postroll
+                recorder.terminate()  # managed recorder flushes its WAV on SIGTERM
+                capture_exit = recorder.wait(timeout=10)
+                recorder = None
+                capture_trace['exit'] = capture_exit
+            capture = json.loads((out/'stream-capture.txt').read_text().strip().splitlines()[-1])
+            for record in recordings:
+                record['capture_exit'] = capture_exit
+                record['capture'] = dict(capture)
+                record['capture']['stream_levels'] = record['capture'].pop('levels',[])
+                record['capture']['stream_gap_seconds'] = record['capture'].pop('gap_seconds',0.)
                 if capture_exit or not capture.get('packets'):
                     record['environment_error'] = 'recording path unconfirmed; no usable packet stream'
-                    break
+                    continue
+                try:
+                    record['capture'].update(extract_case(
+                        out/'stream.wav', out/(record['name']+'.wav'),
+                        capture['first_sample_epoch_us'],record['event']['pressed_epoch_ms']))
+                except (ValueError,KeyError,wave.Error) as error:
+                    record['environment_error'] = str(error)
+            (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
             adb('shell','run-as',PACKAGE,'sh','-c',
                 f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
             instrument_exit = instrument.wait(timeout=20)
@@ -164,16 +200,18 @@ def main():
     results = []
     for record in recordings:
         result = {'name':record['name'], 'status':'environment_unconfirmed', **record}
-        capture = record['capture']
-        if record.get('environment_error'):
+        capture = record.get('capture',{})
+        if record.get('environment_error') or not capture:
+            result.setdefault('environment_error','capture did not complete')
             results.append(result);continue
         try:
             epoch = capture['first_sample_epoch_us']/1e6
             pressed = record['event']['pressed_epoch_ms']/1000 - epoch
-            values = read_wav(out/(record['name']+'.wav'))
+            case_path = out/(record['name']+'.wav')
+            values = read_wav(case_path)
+            result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
             refs = [read_wav(ROOT/manifest['pads'][p]['reference']) for p in record['pads']]
-            # Real simultaneous input reaches the pads sequentially within one multi-touch
-            # gesture. Individual shifts are measured below rather than assuming exact mixing.
+            # Compare the time/frequency pattern of both notes, irrespective of sample phase.
             if len(refs) == 1:
                 verdict = compare(values,refs[0],RATE,pressed)
             else:
@@ -188,7 +226,10 @@ def main():
                 result['quiet_control'] = quiet
                 if record['action'] == '9':
                     released = record['event']['released_epoch_ms']/1000-epoch
-                    tail = is_silent(values,RATE,released+.2,released+.7)
+                    tail = is_silent(values,RATE,released+.6,released+1.1)
+                    active = [t/100 for t in range(int(released*100),len(values[0])*100//RATE-1)
+                              if not is_silent(values,RATE,t/100,(t+1)/100)['passed']]
+                    result['observed_stop_tail_s'] = max(0.,active[-1]+.01-released) if active else 0.
                     result['stop_tail'] = tail
                     passed = passed and tail['passed']
                 result.update({'verdict':verdict,'status':'passed' if passed else 'failed'})

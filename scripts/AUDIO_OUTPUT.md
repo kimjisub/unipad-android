@@ -69,26 +69,39 @@ encoders; running the detector requires only Python's standard library.
 
 ## Verdict version 1
 
-- Each capture requests four seconds, waits at most ten seconds, discards the
-  first 0.2 seconds for verdicts, and requires at least 0.5 seconds of baseline
-  before the recorded screen input. The screen event and first output packet
+- One external stream stays open for the round. Packet preparation takes at
+  most ten seconds (the manager ends a no-packet request itself); each case
+  copies exactly four seconds of original PCM, starting 0.75 seconds before
+  its input. Missing samples are rejected, never padded. Verdicts discard the
+  first 0.2 seconds and require at least 0.5 seconds of baseline before input. The screen event and first output packet
   use epoch timestamps. Missing/invalid timing or incomplete baseline/postroll
   means environment unconfirmed. A missing packet stream is never silence.
-- Input is issued about one second after starting recording, following two
-  seconds of quiet preparation. The recorder must report 16-bit stereo PCM.
+- After two seconds of quiet preparation, the stream gets nine seconds to
+  establish its packet connection, then screen commands run 2.5 seconds apart
+  after each completed gesture. The manager captures at most 120 seconds;
+  this runner stops it as soon as the last case has complete postroll. The
+  recorder must report 16-bit stereo PCM.
   Sample rate and output gaps are retained in its raw JSON. The reference and
-  capture are box-filtered and decimated to 24000 Hz; incompatible rates are
+  capture are box-filtered and decimated to 6000 Hz; incompatible rates are
   rejected explicitly.
 - RMS must be at least -50 dBFS and rise at least 20 dB over the 0.5-second
   baseline. For an exactly zero baseline only the absolute floor applies.
   Raw full-rate RMS and peak per channel are also retained by the recorder.
-- Normalized signed waveform correlation must reach 0.92 independently in
-  every active channel. The central 0.90 seconds of the original reference is
+- Normalized time/frequency magnitude correlation must reach 0.90 independently
+  in every active channel. Both reference and capture use 256-sample Hann windows
+  at 6000 Hz with a 120-sample hop (about 43 ms windows, 20 ms steps). This keeps
+  pitch changes and amplitude envelopes while tolerating lossy-decoder phase
+  and short stream timing shifts. A quarter-second hole, another pitch, a click,
+  a missing chord note and swapped channels are regression-tested as failures. The central 0.90 seconds of the original reference is
   searched within 0 to 0.5 seconds after input, allowing decoder and output
   buffering without accepting a previous voice. The first measured WAV output
-  started about 0.36 seconds after input and matched at approximately 0.99.
+  started about 0.36 seconds after input. Initial time/frequency similarities
+  ranged from 0.91 to 0.999 for normal signals; a different pad scored below 0.07.
+  Earlier sample-phase correlation rejected several normal recordings and its
+  failed rounds are retained in the evidence.
 - Silent channels must stay below -65 dBFS. A loop must match its first second
-  and be below -65 dBFS for 0.5 seconds starting 0.2 seconds after release.
+  and be below -65 dBFS for 0.5 seconds starting 0.6 seconds after release. The first measured stop tail was
+  0.46 seconds; every round also reports its last non-silent 10 ms window.
   The postroll must cover 0.5 seconds after the latest permitted end of a normal
   sound. Thresholds are versioned constants in `audio_output.py`.
 
@@ -97,7 +110,8 @@ rejected the expected signal or a negative control failed. Exit 3 means the
 screen/recorder environment was unconfirmed. Both nonzero exits fail automation;
 XML represents unconfirmed cases as errors, never skips or passes.
 
-Every round stores the original recorder stdout, WAVs, channel metrics,
+Every round stores the original recorder stdout, continuous source WAV and
+byte-for-byte four-second case WAVs, channel metrics,
 correlations, input events, commands, exit codes, source commit and tracked diff,
 APK/test APK hashes, fixture manifest, device serial, OS properties, emulator
 version, instrumentation output and XML. Keep the source checkout clean for

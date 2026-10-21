@@ -14,11 +14,11 @@ import sys
 import wave
 
 VERSION = 1
-RATE = 24000
+RATE = 6000
 DISCARD_S = .2
 MIN_RMS_DBFS = -50.
 MIN_RISE_DB = 20.
-MIN_CORRELATION = .92
+MIN_CORRELATION = .90
 SILENCE_DBFS = -65.
 MAX_OUTPUT_DELAY_S = .5
 
@@ -71,21 +71,33 @@ def _fft(values: list[complex], inverse: bool = False) -> list[complex]:
     return [v/n for v in out] if inverse else out
 
 
+def _spectrum(values: list[float]) -> list[list[float]]:
+    # 42.7 ms Hann windows, 20 ms hop: retain the changing pitch and envelope,
+    # without requiring a lossy decoder or streamed PCM to preserve sample phase.
+    width, hop = 256, 120
+    window = [.5-.5*math.cos(2*math.pi*i/(width-1)) for i in range(width)]
+    return [[abs(v) for v in _fft([a*b for a,b in zip(values[start:start+width],window)])[1:width//2]]
+            for start in range(0,len(values)-width+1,hop)]
+
+
 def _match(values: list[float], template: list[float], lo: int, hi: int) -> tuple[float, int]:
-    n = 1 << (len(values)+len(template)-1).bit_length()
-    left = _fft(values + [0.] * (n-len(values)))
-    right = _fft(template[::-1] + [0.] * (n-len(template)))
-    dots = _fft([a*b for a,b in zip(left,right)], inverse=True)
-    sums = [0.]
-    for v in values:
-        sums.append(sums[-1]+v*v)
-    energy = sum(v*v for v in template)
-    best = (0., lo)
-    for start in range(max(0, lo), min(hi, len(values)-len(template))+1):
-        denom = math.sqrt(max(0., sums[start+len(template)]-sums[start])*energy)
-        score = min(1., dots[start+len(template)-1].real/denom) if denom else 0.
-        if score > best[0]:
-            best = score, start
+    # Both sides use the same short-time Fourier magnitude representation. A gap
+    # in the middle, another pitch, a click, a missing chord note or swapped
+    # channels still disagrees across the full 0.9-second reference.
+    hop = 120
+    lo = max(0,lo)
+    last = min(hi,len(values)-len(template))
+    if last < lo: return 0.,lo
+    reference = _spectrum(template)
+    actual = _spectrum(values[lo:last+len(template)])
+    energy = sum(v*v for frame in reference for v in frame)
+    best = (0.,lo)
+    for offset in range((last-lo)//hop+1):
+        frames = actual[offset:offset+len(reference)]
+        observed = sum(v*v for frame in frames for v in frame)
+        dot = sum(a*b for ref,seen in zip(reference,frames) for a,b in zip(ref,seen))
+        score = min(1.,dot/math.sqrt(energy*observed)) if energy*observed else 0.
+        if score > best[0]: best = score,lo+offset*hop
     return best
 
 
