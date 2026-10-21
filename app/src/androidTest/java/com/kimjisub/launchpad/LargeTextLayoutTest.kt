@@ -1,5 +1,15 @@
 package com.kimjisub.launchpad
 
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.IntSize
+import org.junit.Assert.fail
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
@@ -89,8 +99,7 @@ class LargeTextLayoutTest : BaseUITest() {
             openDetailPanel()
             takeScreenshot("${prefix}_detail")
             checkDetailPanel(prefix)
-            compose.onNode(hasTestTag("main_pack_${TestUniPack.FOLDER_NAME}"))
-                .performScrollTo().performClick()
+            deselectTestPack(prefix)
             checkFooter(prefix)
             openSettings()
             takeScreenshot("${prefix}_settings")
@@ -133,6 +142,58 @@ class LargeTextLayoutTest : BaseUITest() {
         compose.waitUntil(10000L) {
             compose.onAllNodes(hasText(str(R.string.measuring)), useUnmergedTree = true)
                 .fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    /**
+     * Taps the selected pack again to close its detail panel and checks, straight after, that the panel
+     * closed while the main screen stayed in front. Once in a large-text run this tap opened the file
+     * picker instead, so a failure records where the tap landed and what was laid out at that moment.
+     */
+    private fun deselectTestPack(prefix: String) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        // Blocking keeps the picker from covering the main screen, so the layout below is what was tapped.
+        val picker = instrumentation.addMonitor(
+            IntentFilter(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                addDataType("*/*")
+            },
+            null, true,
+        )
+        try {
+            val row = compose.onNode(hasTestTag("main_pack_${TestUniPack.FOLDER_NAME}")).performScrollTo()
+            val rowBounds = row.fetchSemanticsNode().boundsInRoot
+            var tap = Offset.Unspecified
+            var tapArea = IntSize.Zero
+            row.performTouchInput {
+                tap = center
+                tapArea = visibleSize
+                click()
+            }
+            compose.waitForIdle()
+            val detailOpen = compose.onAllNodes(hasTestTag("main_detail_${TestUniPack.FOLDER_NAME}"))
+                .fetchSemanticsNodes().isNotEmpty()
+            var mainResumed = false
+            instrumentation.runOnMainSync {
+                mainResumed = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
+                    .any { it is MainActivity }
+            }
+            if (!detailOpen && mainResumed && picker.hits == 0) return
+            takeScreenshot("${prefix}_deselect_failure")
+            val layout = compose.onAllNodes(isRoot()).fetchSemanticsNodes()
+                .joinToString("\n") { root ->
+                    generateSequence(listOf(root)) { level -> level.flatMap { it.children }.ifEmpty { null } }
+                        .flatten()
+                        .filter { it.config.contains(SemanticsProperties.TestTag) || it.config.contains(SemanticsActions.OnClick) }
+                        .joinToString("\n") { "  ${it.config.getOrNull(SemanticsProperties.TestTag)} " +
+                            "${it.config.getOrNull(SemanticsProperties.Text) ?: it.config.getOrNull(SemanticsProperties.ContentDescription)} " +
+                            "${it.boundsInRoot}" }
+                }
+            fail("Tapping the selected pack did not return to the main list: detailOpen=$detailOpen, " +
+                "mainResumed=$mainResumed, filePickerStarts=${picker.hits}, rowBefore=$rowBounds, " +
+                "tap=${rowBounds.topLeft + tap} within $tapArea, laid out:\n$layout")
+        } finally {
+            instrumentation.removeMonitor(picker)
         }
     }
 
