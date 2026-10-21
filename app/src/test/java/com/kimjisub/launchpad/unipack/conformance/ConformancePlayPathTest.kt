@@ -70,7 +70,7 @@ class ConformancePlayPathTest {
 			json(
 				"""[
 					[["autoOn", 0, 0], ["sound", 0, 0, 0, "a.wav", 0], ["ledOn", 0, 0, "ffff0000", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]],
-					[["autoOn", 0, 0], ["autoChain", 0], ["sound", 0, 0, 0, "b.wav", 0], ["ledOn", 0, 0, "ff00ff00", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]]
+					[["autoChain", 0], ["autoOn", 0, 0], ["sound", 0, 0, 0, "b.wav", 0], ["ledOn", 0, 0, "ff00ff00", 4], ["ledOff", 0, 0], ["autoOff", 0, 0]]
 				]"""
 			),
 			checkpoints(c),

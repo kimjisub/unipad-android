@@ -111,6 +111,52 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		}
 	}
 
+	@Test fun seekingPastTheEndDoesNotPlayACommandWaitingForMain() {
+		start(autoplay = false)
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		Thread.sleep(200)
+		vm.autoPlayNext()
+		await { vm.autoPlayRunner?.active == false }
+		assertEquals("A command read before seeking must not play afterwards", 0, engine.playCount)
+	}
+
+	@Test fun chainCommandBeforeAPressResetsTheChainOnlyOnce() {
+		start("1 1 1 a.wav 1\n2 1 1 a.wav 3\n", sequence = "chain 2\non 1 1\nd 60000\n", autoplay = false)
+		val chains = mutableListOf<Int>()
+		val record: (Int, Int) -> Unit = { curr, _ -> chains += curr }
+		vm.chain.addObserver(record)
+		try {
+			vm.switchPlayMode(PlayMode.AutoPlay)
+			// Leave the main queue undrained while the background runner reads the adjacent commands.
+			Thread.sleep(200)
+			await { engine.playCount == 1 }
+			assertEquals(listOf(1), chains)
+			val chain2Loop = checkNotNull(vm.unipack.soundGet(1, 0, 0)).loop
+			assertTrue(chain2Loop != checkNotNull(vm.unipack.soundGet(0, 0, 0)).loop)
+			assertEquals("The press plays chain 2's mapping", listOf(chain2Loop), engine.voices.values.toList())
+		} finally {
+			vm.chain.removeObserver(record)
+		}
+	}
+
+	@Test fun padsPressedTogetherPlayInOneMainThreadTask() {
+		val pads = 1..8
+		start(pads.joinToString("") { "1 1 $it a.wav\n" }, sequence = pads.joinToString("") { "on 1 $it\n" } + "d 60000\n", autoplay = false)
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		val afterEachTask = mutableListOf<Int>()
+		val deadline = System.nanoTime() + 5_000_000_000L
+		while (engine.playCount < pads.count() && System.nanoTime() < deadline) {
+			main.runAll { afterEachTask += engine.playCount }
+			Thread.sleep(5)
+		}
+		assertEquals(pads.count(), engine.playCount)
+		assertEquals(
+			"Presses placed at the same time must sound together, not one main-thread task apart",
+			emptyList<Int>(),
+			afterEachTask.filter { it in 1 until pads.count() },
+		)
+	}
+
 	@Test fun controllerReleaseKeepsThePadHeldOnScreen() = sharedPadRelease(controllerFirst = true, autoplay = false)
 
 	@Test fun screenReleaseKeepsThePadHeldOnController() = sharedPadRelease(controllerFirst = false, autoplay = false)
