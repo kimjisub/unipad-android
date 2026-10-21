@@ -13,7 +13,7 @@ from pathlib import Path
 import sys
 import wave
 
-VERSION = 2
+VERSION = 3
 RATE = 6000
 DISCARD_S = .2
 MIN_RMS_DBFS = -50.
@@ -111,24 +111,25 @@ def is_silent(channels: list[list[float]], rate: int, start: float, end: float) 
 
 
 def compare(captured: list[list[float]], reference: list[list[float]], rate: int,
-            pressed: float) -> dict:
+            pressed: float, input_uncertainty_s: float = 0.) -> dict:
     result = {'version': VERSION, 'passed': False, 'channels': []}
     # Half a second before input, after discarded old buffers; half a second after
     # the full one-second sound, even at the maximum permitted output delay.
-    if (len(captured) != 2 or len(reference) != 2 or pressed-.5 < DISCARD_S or
-            any(len(c) < int((pressed+OUTPUT_WINDOW_S)*rate) for c in captured)):
+    if (not math.isfinite(input_uncertainty_s) or not 0 <= input_uncertainty_s <= .051 or
+            len(captured) != 2 or len(reference) != 2 or pressed-.5 < DISCARD_S or
+            any(len(c) < int((pressed+OUTPUT_WINDOW_S+input_uncertainty_s)*rate) for c in captured)):
         result['error'] = 'missing baseline, full sound or postroll'
         return result
     trim = int(.05*rate)
     for channel, (values, expected) in enumerate(zip(captured, reference)):
         before = levels(values[int((pressed-.5)*rate):int(pressed*rate)])
         if not any(expected):
-            quiet = is_silent([values], rate, pressed, pressed+OUTPUT_WINDOW_S)
+            quiet = is_silent([values], rate, pressed, pressed+OUTPUT_WINDOW_S+input_uncertainty_s)
             result['channels'].append({'channel': channel, 'silent_channel': True, **quiet})
             continue
         template = expected[trim:int(.95*rate)]
         score, start = _match(values, template, int(pressed*rate)+trim,
-                              int((pressed+MAX_OUTPUT_DELAY_S)*rate)+trim)
+                              int((pressed+MAX_OUTPUT_DELAY_S+input_uncertainty_s)*rate)+trim)
         signal = levels(values[start:start+len(template)])
         rms = signal['rms_dbfs']
         rise = None if before['rms_dbfs'] is None or rms is None else rms-before['rms_dbfs']

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -87,6 +88,40 @@ def event_frame(log: dict, epoch_ms: int) -> float:
     return packet['at_frame']+offset
 
 
+
+def clock_bounds(event: dict) -> dict:
+    """Bound guest-minus-host offset using round trips bracketing this input.
+
+    Intersect all measurements: a clock step/drift that cannot share an offset,
+    host wall-clock jump, or more than 50 ms unresolved timing is environmental.
+    Guest millisecond events/date output receive a 1 ms quantization allowance.
+    """
+    clock = event.get('clock')
+    if not isinstance(clock,dict) or not clock.get('before') or not clock.get('after'):
+        raise ValueError('missing per-input clock measurements')
+    lower, upper = -math.inf, math.inf
+    samples = clock['before']+clock['after']
+    for sample in samples:
+        before,after,guest,elapsed = (sample.get(k) for k in
+            ('host_before_us','host_after_us','guest_us','monotonic_elapsed_us'))
+        if (not all(isinstance(v,int) and v > 0 for v in (before,after,guest,elapsed)) or
+                after < before or abs(after-before-elapsed) > 5000):
+            raise ValueError('invalid measurement or host wall clock changed during sampling')
+        lower=max(lower,guest-after-1000)
+        upper=min(upper,guest-before+1000)
+    if upper < lower or upper-lower > 50_000:
+        raise ValueError('guest clock changed or clock uncertainty exceeds 50 ms')
+    pressed,released,finished=(event.get(k) for k in
+        ('pressed_epoch_ms','released_epoch_ms','finished_epoch_ms'))
+    if (not all(isinstance(v,(int,float)) and math.isfinite(v) for v in (pressed,released,finished)) or
+            not clock['before'][-1]['guest_us'] <= pressed*1000 <= released*1000 <=
+            finished*1000 <= clock['after'][0]['guest_us']):
+        raise ValueError('clock measurements do not bracket the input')
+    if clock['before'][-1]['host_after_us'] > clock['after'][0]['host_before_us']:
+        raise ValueError('clock measurements are out of order')
+    return {'offset_lower_us':lower,'offset_upper_us':upper,
+            'offset_midpoint_us':(lower+upper)/2,'uncertainty_us':upper-lower}
+
 def overlapping_gaps(log: dict, start: int, end: int) -> list[dict]:
     return [gap for gap in log['gaps']
             if gap['at_frame'] < end and gap['at_frame']+gap['frames'] > start]
@@ -94,8 +129,11 @@ def overlapping_gaps(log: dict, start: int, end: int) -> list[dict]:
 
 def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
     """Copy original PCM, retaining packet-mapped input and environmental errors."""
-    pressed = event_frame(log,event['pressed_epoch_ms'])
-    released = event_frame(log,event['released_epoch_ms'])
+    clock = clock_bounds(event)
+    # Baseline ends at the earliest possible press; stop checks use latest release.
+    pressed = event_frame(log,event['pressed_epoch_ms']-clock['offset_upper_us']/1000)
+    latest_press = event_frame(log,event['pressed_epoch_ms']-clock['offset_lower_us']/1000)
+    released = event_frame(log,event['released_epoch_ms']-clock['offset_lower_us']/1000)
     with wave.open(str(source),'rb') as reader:
         rate = reader.getframerate()
         if rate != log['sample_rate'] or reader.getnchannels() != 2 or reader.getsampwidth() != 2:
@@ -114,10 +152,16 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
             writer.writeframes(pcm)
     result = {'file':str(target),'seconds':4.,'source_frame_offset':start,'sample_rate':rate,
               'pressed_s':(pressed-start)/rate,'released_s':(released-start)/rate,
-              'gaps':gaps}
+              'gaps':gaps,'clock':clock,'input_uncertainty_s':(latest_press-pressed)/rate}
     if gaps:
         result['environment_error'] = 'managed recorder inserted silence inside this case window'
     return result
+
+
+def different_pad_passed(values, expected, actual, pressed, uncertainty=0.):
+    """Whether the output demonstrates rejection of the expected pad."""
+    return (not compare(values,expected,RATE,pressed,uncertainty)["passed"] and
+            compare(values,actual,RATE,pressed,uncertainty)["passed"])
 
 
 def main():
@@ -137,11 +181,16 @@ def main():
     command_log = []
 
     def run(command, *, timeout=30, check=True, input=None):
-        started = time.time()
+        started_us = time.time_ns()//1000
+        started_mono = time.monotonic_ns()//1000
         result = subprocess.run(list(map(str,command)), input=input, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, timeout=timeout)
-        command_log.append({'command':list(map(str,command)), 'epoch_s':started,
-                            'exit':result.returncode, 'seconds':time.time()-started,
+        finished_mono = time.monotonic_ns()//1000
+        finished_us = time.time_ns()//1000
+        command_log.append({'command':list(map(str,command)), 'epoch_s':started_us/1_000_000,
+                            'host_before_us':started_us,'host_after_us':finished_us,
+                            'monotonic_elapsed_us':finished_mono-started_mono,
+                            'exit':result.returncode, 'seconds':(finished_mono-started_mono)/1_000_000,
                             'stdout':result.stdout.decode(errors='replace'),
                             'stderr':result.stderr.decode(errors='replace')})
         (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
@@ -151,6 +200,18 @@ def main():
 
     def adb(*command, **kw):
         return run(['adb','-s',args.serial,*command],**kw)
+
+    def measure_clock():
+        samples=[]
+        for _ in range(3):
+            value=adb('shell','date','+%s%N').strip()
+            if not value.isdigit() or len(value) != 19:
+                raise ValueError('guest date did not provide an epoch nanosecond timestamp')
+            trace=command_log[-1]
+            samples.append({k:trace[k] for k in
+                ('host_before_us','host_after_us','monotonic_elapsed_us')})
+            samples[-1]['guest_us']=int(value)//1000
+        return samples
 
     manifest = json.loads((ROOT/'scripts/fixtures/audio-output/manifest.json').read_text())
     for pad in manifest['pads']:
@@ -207,10 +268,12 @@ def main():
                 if recorder.poll() is not None:
                     raise RuntimeError('recorder ended during initial packet preparation')
                 for number,(name,action,pads,reject) in enumerate(cases):
+                    clock_before=measure_clock()
                     adb('shell','run-as',PACKAGE,'sh','-c',
                         f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
                         input=(action+'\n').encode())
                     event = json.loads(wait_file(f'event-{number}.json',4))
+                    event['clock']={'before':clock_before,'after':measure_clock()}
                     recordings.append({'name':name,'action':action,'pads':pads,'reject':reject,'event':event})
                     (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
                     time.sleep(2.5)  # previous one-second voice ends before the next baseline
@@ -264,23 +327,28 @@ def main():
             results.append(result);continue
         try:
             pressed = capture['pressed_s']
+            uncertainty = capture['input_uncertainty_s']
             case_path = out/(record['name']+'.wav')
             values = read_wav(case_path)
             result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
             refs = [read_wav(ROOT/manifest['pads'][p]['reference']) for p in record['pads']]
             # Compare the time/frequency pattern of both notes, irrespective of sample phase.
             if len(refs) == 1:
-                verdict = compare(values,refs[0],RATE,pressed)
+                verdict = compare(values,refs[0],RATE,pressed,uncertainty)
             else:
                 combined = [[sum(samples) for samples in zip(*(r[ch] for r in refs))] for ch in range(2)]
-                verdict = compare(values,combined,RATE,pressed)
+                verdict = compare(values,combined,RATE,pressed,uncertainty)
             if verdict.get('error'):
                 result['environment_error'] = verdict['error'] + f'; input at {pressed:.3f}s'
             else:
-                quiet = is_silent(values,RATE,pressed,pressed+OUTPUT_WINDOW_S)
+                quiet = is_silent(values,RATE,pressed,pressed+OUTPUT_WINDOW_S+uncertainty)
                 passed = (not verdict['passed'] and quiet['passed']) if record['reject'] and record['action'] != '1' else (
-                    not verdict['passed'] if record['reject'] else verdict['passed'])
+                    different_pad_passed(values,refs[0],read_wav(ROOT/manifest['pads'][1]['reference']),pressed,uncertainty)
+                    if record['reject'] else verdict['passed'])
                 result['quiet_control'] = quiet
+                if record['name'] == 'differentPadIsRejected':
+                    result['actual_pad_verdict'] = compare(values,read_wav(
+                        ROOT/manifest['pads'][1]['reference']),RATE,pressed,uncertainty)
                 if record['action'] == '9':
                     released = capture['released_s']
                     tail = is_silent(values,RATE,released+.6,released+1.1)

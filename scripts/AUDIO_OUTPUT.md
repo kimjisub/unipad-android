@@ -67,7 +67,7 @@ before testing. MP3 filenames with and without ID3 tags are separate fixtures.
 Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
-## Verdict version 2
+## Verdict version 3
 
 - One external stream stays open for the round. Packet preparation takes at
   most ten seconds (the manager ends a no-packet request itself); each case
@@ -129,3 +129,26 @@ anything. Logs and result files belong outside the build tree.
 This proves digital output of this emulator and test pack. It does not prove
 physical speaker/headphone/Bluetooth delivery, sound quality, playing latency,
 the pre-API-29 path, all packs, or worldwide device coverage.
+
+
+### Host and guest clock alignment (verdict version 3)
+
+Each command is bracketed by three `adb shell date +%s%N` round trips before
+input and three after the event file arrives. `commands.json` retains the host
+wall-clock bounds and monotonic duration; the raw guest samples stay in each
+event's `clock`. The intersected guest-minus-host offset interval includes a
+1 ms guest timestamp quantization allowance. Empty intersections, unbracketed
+events, host clock steps or unresolved interval width above 50 ms are environment
+errors, not app failures. Large absolute offsets are corrected rather than
+assuming that guest and host clocks agree.
+
+The original four-second PCM window starts 0.75 seconds before the earliest
+possible host press. The baseline ends at that earliest press; matching and
+silence postroll include the bounded input uncertainty (at most 50 ms). Loop
+stop checks start from the latest possible release. Corrected bounds, offset
+and uncertainty remain in the capture record. No samples are shifted or resampled
+to align clocks.
+
+`differentPadIsRejected` requires both rejection of pad 0 and a positive match
+of the actual pad 1 signal, including its RMS floor and baseline rise. Silence,
+a third sound and an inaudibly quiet alternate cannot pass this control.
