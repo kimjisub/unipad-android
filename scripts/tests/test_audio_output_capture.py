@@ -66,7 +66,9 @@ class CommandEvidenceTest(unittest.TestCase):
                 arguments = ['run_audio_output.py', '--serial', 'leased-device', '--devices-tool', 'devices.py',
                              '--apk', str(apk), '--test-apk', str(test_apk), '--output', str(root / 'round'),
                              '--case', 'wavIsHeardAtTheEmulatorOutput']
-                with patch('sys.argv', arguments), patch.object(runner.subprocess, 'run', side_effect=run), \
+                with patch('sys.argv', arguments), \
+                        patch.dict('os.environ', {'ANDROID_HOME': str(root / 'mock-sdk')}), \
+                        patch.object(runner.subprocess, 'run', side_effect=run), \
                         patch.object(runner.subprocess, 'Popen', Process), patch.object(runner.time, 'sleep'), \
                         contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(3, runner.main())
