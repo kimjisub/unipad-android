@@ -21,6 +21,7 @@ MIN_RISE_DB = 20.
 MIN_CORRELATION = .90
 SILENCE_DBFS = -65.
 MAX_OUTPUT_DELAY_S = 1.0
+OUTPUT_WINDOW_S = 1.0 + MAX_OUTPUT_DELAY_S + .5
 
 
 def read_wav(path: Path, rate: int = RATE) -> list[list[float]]:
@@ -115,14 +116,14 @@ def compare(captured: list[list[float]], reference: list[list[float]], rate: int
     # Half a second before input, after discarded old buffers; half a second after
     # the full one-second sound, even at the maximum permitted output delay.
     if (len(captured) != 2 or len(reference) != 2 or pressed-.5 < DISCARD_S or
-            any(len(c) < int((pressed+1+MAX_OUTPUT_DELAY_S+.5)*rate) for c in captured)):
+            any(len(c) < int((pressed+OUTPUT_WINDOW_S)*rate) for c in captured)):
         result['error'] = 'missing baseline, full sound or postroll'
         return result
     trim = int(.05*rate)
     for channel, (values, expected) in enumerate(zip(captured, reference)):
         before = levels(values[int((pressed-.5)*rate):int(pressed*rate)])
         if not any(expected):
-            quiet = is_silent([values], rate, pressed, pressed+1.3)
+            quiet = is_silent([values], rate, pressed, pressed+OUTPUT_WINDOW_S)
             result['channels'].append({'channel': channel, 'silent_channel': True, **quiet})
             continue
         template = expected[trim:int(.95*rate)]

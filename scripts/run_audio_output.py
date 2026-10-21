@@ -20,7 +20,7 @@ import wave
 import xml.etree.ElementTree as ET
 import zipfile
 
-from audio_output import RATE, VERSION, compare, is_silent, levels, read_wav
+from audio_output import RATE, VERSION, OUTPUT_WINDOW_S, compare, is_silent, levels, read_wav
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = 'com.kimjisub.launchpad.dev'
@@ -277,7 +277,7 @@ def main():
             if verdict.get('error'):
                 result['environment_error'] = verdict['error'] + f'; input at {pressed:.3f}s'
             else:
-                quiet = is_silent(values,RATE,pressed,pressed+1.5)
+                quiet = is_silent(values,RATE,pressed,pressed+OUTPUT_WINDOW_S)
                 passed = (not verdict['passed'] and quiet['passed']) if record['reject'] and record['action'] != '1' else (
                     not verdict['passed'] if record['reject'] else verdict['passed'])
                 result['quiet_control'] = quiet

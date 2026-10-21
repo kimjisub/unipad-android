@@ -104,7 +104,9 @@ encoders; running the detector requires only Python's standard library.
   ranged from 0.91 to 0.999 for normal signals; a different pad scored below 0.07.
   Earlier sample-phase correlation rejected several normal recordings and its
   failed rounds are retained in the evidence.
-- Silent channels must stay below -65 dBFS. A loop must match its first second
+- Silent channels and silence controls must stay below -65 dBFS through the
+  whole possible output window: 2.5 seconds after input, including permitted
+  output delay, the one-second signal and postroll. A loop must match its first second
   and be below -65 dBFS for 0.5 seconds starting 0.6 seconds after release. The first measured stop tail was
   0.46 seconds; every round also reports its last non-silent 10 ms window.
   The postroll must cover 0.5 seconds after the latest permitted end of a normal

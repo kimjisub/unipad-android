@@ -54,6 +54,12 @@ class OutputVerdictTest(unittest.TestCase):
         self.assertTrue(audio.compare(captured, [tone, silence], self.rate, 1.)['passed'])
         self.assertFalse(audio.compare(captured[::-1], [tone, silence], self.rate, 1.)['passed'])
 
+    def test_silent_channel_must_stay_quiet_through_delayed_output_tail(self):
+        left = self.capture(self.tone())
+        right = [0.] * 15000 + [.1] * 600 + [0.] * 8400
+        result = audio.compare([left,right],[self.tone(),[0.]*self.rate],self.rate,1.)
+        self.assertFalse(result['passed'],result)
+
     def test_signal_below_absolute_floor_fails(self):
         self.assertFalse(self.verdict(self.capture([v * .001 for v in self.tone()]))['passed'])
 
