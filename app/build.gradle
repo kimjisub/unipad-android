@@ -285,6 +285,8 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation 'io.mockk:mockk:1.14.11'
 	testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0'
+	// Self-signed server certificates for the HTTPS certificate check test
+	testImplementation 'com.squareup.okhttp3:okhttp-tls:5.5.0'
 	testImplementation "io.insert-koin:koin-test:${rootProject.koin_version}"
 	// Real SQLite on the JVM, so database migrations run in unit tests without a device
 	testImplementation 'org.xerial:sqlite-jdbc:3.53.4.0'
@@ -297,6 +299,8 @@ dependencies {
 	androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
 	// Compose UI tests pull Espresso 3.5, which looks up InputManager.getInstance and fails on Android 17
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+	// Self-signed server certificates for the on-device HTTPS certificate check
+	androidTestImplementation 'com.squareup.okhttp3:okhttp-tls:5.5.0'
 	androidTestUtil 'androidx.test:orchestrator:1.6.1'
 	// debugImplementation 'com.amitshekhar.android:debug-db:1.0.6' // JCenter 종료로 주석 처리
 
