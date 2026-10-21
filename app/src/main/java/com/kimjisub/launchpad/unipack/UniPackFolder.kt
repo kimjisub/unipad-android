@@ -18,6 +18,7 @@ import java.io.Reader
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.text.Normalizer
 
 /**
  * Tokeniser shared by the text tables. `\s` in Java regex is ASCII-only, so a line separated by a
@@ -55,6 +56,15 @@ private fun bomAwareReader(input: InputStream): Reader {
 	while (toSkip > 0) toSkip -= buffered.skip(toSkip)
 	return InputStreamReader(buffered, charset)
 }
+
+/**
+ * keyLed files in the order their LEDs queue on a pad: by name in NFC, lower-cased, compared by UTF-16
+ * code units. A name stored decomposed (n + U+0303, or Hangul as separate jamo, as Android keeps it from
+ * an archive or a download) queues where its composed spelling does, as on iOS and web. Files whose
+ * keys are equal keep the listing order, and every file keeps its stored name.
+ */
+internal fun inKeyLedOrder(files: Array<out File>): List<File> =
+	files.sortedBy { Normalizer.normalize(it.name, Normalizer.Form.NFC).lowercase() }
 
 class UniPackFolder(val rootFolder: File) : UniPack() {
 	private companion object {
@@ -342,7 +352,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		ledAnimationTable = table
 		ledTableCount = 0
 		run {
-			val fileList = (keyLedDir.listFiles() ?: return).sortedBy { it.name.lowercase() }
+			val fileList = inKeyLedOrder(keyLedDir.listFiles() ?: return)
 			for (file in fileList) {
 				if (file.isFile) {
 					val fileName: String = file.name.trim()
