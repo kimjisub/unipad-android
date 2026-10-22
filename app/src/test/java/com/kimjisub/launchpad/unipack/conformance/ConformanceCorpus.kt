@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.boolean
 import java.io.File
 import java.security.MessageDigest
 import java.util.Base64
@@ -37,6 +38,8 @@ data class CorpusCase(
 	val known: Map<String, Known>,
 	/** Per platform, why its harness cannot observe this case; it is unverified there and not run. */
 	val unobserved: Map<String, String>,
+	val screenInputs: Boolean = false,
+	val requiresCaseSensitiveFiles: Boolean = false,
 )
 
 class Corpus(val assets: Map<String, String>, val cases: List<CorpusCase>, val sha256: String)
@@ -69,6 +72,7 @@ fun loadCorpus(): Corpus {
 	val root = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)).jsonObject
 	val assets = root.getValue("assets").jsonObject.mapValues { it.value.jsonObject.getValue("base64").jsonPrimitive.content }
 	val cases = root.getValue("cases").jsonArray.map { it.jsonObject.toCase() }
+	check(cases.map { it.id }.distinct().size == cases.size) { "corpus contains duplicate case IDs" }
 	return Corpus(assets, cases, sha256)
 }
 
@@ -95,6 +99,8 @@ private fun JsonObject.toCase(): CorpusCase = CorpusCase(
 		)
 	} ?: emptyMap(),
 	unobserved = (this["unobserved"] as? JsonObject)?.mapValues { it.value.jsonPrimitive.content } ?: emptyMap(),
+	screenInputs = this["screenInputs"]?.jsonPrimitive?.boolean == true,
+	requiresCaseSensitiveFiles = this["requiresCaseSensitiveFiles"]?.jsonPrimitive?.boolean == true,
 )
 
 fun CorpusFile.bytes(corpus: Corpus): ByteArray = when {
@@ -155,7 +161,7 @@ fun normalizeError(message: String): String {
 	return "$section:$kind"
 }
 
-data class Outcome(val status: String, val unexpected: Boolean, val detail: String)
+data class Outcome(val status: String, val unexpected: Boolean, val detail: String, val storedInputPaths: List<String>? = null)
 
 fun classify(c: CorpusCase, actual: JsonElement, platform: String = PLATFORM): Outcome {
 	if (!c.determined) return Outcome("unverified", false, "no doc or stated intent decides this: ${c.question}")

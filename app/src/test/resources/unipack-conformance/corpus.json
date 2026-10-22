@@ -1,7 +1,7 @@
 {
   "schema": "unipad-conformance/1",
   "generatedBy": "meta/unipack-conformance/build-corpus.mjs",
-  "grammar": "G5",
+  "grammar": "G6",
   "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence), and one of them encoded as MP3; the one file that stands for a sound that cannot be decoded is a line of text. No pack, song or third-party audio is included.",
   "assets": {
     "tone-440": {
@@ -13742,57 +13742,6 @@
           "keySound:range",
           "keySound:range"
         ]
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": -2147483648,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 0,
-                "x": 0,
-                "y": 1,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:range",
-              "keySound:range",
-              "keySound:range"
-            ]
-          },
-          "note": "Android keeps a loop in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647, a repeat count that practically never ends). Both are below -1, so the sound is neither endless nor repeated; Android's engine and the web's play it once."
-        }
       }
     },
     {
@@ -14126,75 +14075,6 @@
         ],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": [
-                      [
-                        "on",
-                        -2147483648,
-                        0,
-                        "ffef5350",
-                        5
-                      ],
-                      [
-                        "off",
-                        0,
-                        -2147483648
-                      ],
-                      [
-                        "chain",
-                        -2147483648
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ]
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Android keeps a keyLED coordinate and chain in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647). Either way the light is outside the grid and the chain is not one the pack has."
-        }
       }
     },
     {
@@ -20285,6 +20165,5255 @@
           [],
           []
         ]
+      }
+    },
+    {
+      "id": "KS-G601",
+      "items": [
+        "S-12"
+      ],
+      "title": "composed and decomposed sound names resolve to the stored path",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "composed and decomposed sound names resolve to the stored path"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 소리.wav"
+        },
+        {
+          "path": "sounds/소리.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "fe526b86c71d69a0a505704761665b77771c3bdbb5b122983c7183f3ef0dcf91",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "소리.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G602",
+      "items": [
+        "S-12"
+      ],
+      "title": "composed and decomposed sound names resolve to the stored path",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "composed and decomposed sound names resolve to the stored path"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 소리.wav"
+        },
+        {
+          "path": "sounds/소리.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "cac62e56b8810c7670ae5db6bf539e3cd93f5938cc95044999aa1e1ff46e7b20",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "소리.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G603",
+      "items": [
+        "S-12"
+      ],
+      "title": "composed and decomposed sound names resolve to the stored path",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "composed and decomposed sound names resolve to the stored path"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 café.wav"
+        },
+        {
+          "path": "sounds/café.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "7dcf61856f54bde57347153d7b6d5036bc8a1f83079ad0986a7568f4936da5cf",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "café.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G604",
+      "items": [
+        "S-12"
+      ],
+      "title": "composed and decomposed sound names resolve to the stored path",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "composed and decomposed sound names resolve to the stored path"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 CAFÉ.wav"
+        },
+        {
+          "path": "sounds/café.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "e0c84728909cc14cdf6baaa1cab72fb8fb63e88122531d08f743007b962b8976",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "café.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: composed and decomposed sound names resolve to the stored path. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "INF-G601",
+      "items": [
+        "I-04",
+        "T-09"
+      ],
+      "title": "info sizes and chains require ASCII digits",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 I-04, T-09",
+          "note": "info sizes and chains require ASCII digits"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=８\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "4278757e6461a5885a74af22612dc5bd5c197e2be9ed9ca7a4e5389940920b66",
+      "expected": {
+        "loaded": false
+      }
+    },
+    {
+      "id": "INF-G602",
+      "items": [
+        "I-04",
+        "T-09"
+      ],
+      "title": "info sizes and chains require ASCII digits",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 I-04, T-09",
+          "note": "info sizes and chains require ASCII digits"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=８\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "932656ea2b68bbe3c654a4858dcfb0c9abcb0f2297c76ec579fc00e3629d31d0",
+      "expected": {
+        "loaded": false
+      }
+    },
+    {
+      "id": "INF-G603",
+      "items": [
+        "I-07",
+        "T-09"
+      ],
+      "title": "info sizes and chains require ASCII digits",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 I-07, T-09",
+          "note": "info sizes and chains require ASCII digits"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=８\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "f5bfa4256b52dfc0c259c5b6c9b74c6cc64cd5a500d5d577d5ac4403d9834092",
+      "expected": {
+        "loaded": false
+      }
+    },
+    {
+      "id": "KS-G605",
+      "items": [
+        "T-09",
+        "S-04"
+      ],
+      "title": "non-ASCII keySound digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, S-04",
+          "note": "non-ASCII keySound digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "１ 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "3547457ce2a0d683c5da2b4b0cbbe68be8a5262342647afaa72737424db24132",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "id": "KS-G606",
+      "items": [
+        "T-09",
+        "S-04"
+      ],
+      "title": "non-ASCII keySound digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, S-04",
+          "note": "non-ASCII keySound digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 １ 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "ddced7990424e145d5ef90e55d650e0a85b4b2b7bd858a678e8a1026b4fcc96b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "id": "KS-G607",
+      "items": [
+        "T-09",
+        "S-04"
+      ],
+      "title": "non-ASCII keySound digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, S-04",
+          "note": "non-ASCII keySound digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 １ a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "146112ad031b2a0012e1a15eea11872e3e7d3fd0f205162c6b4c70a762bf8249",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "id": "KS-G608",
+      "items": [
+        "T-09",
+        "S-04"
+      ],
+      "title": "non-ASCII keySound digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, S-04",
+          "note": "non-ASCII keySound digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav １"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "000210fd1ea966f80d52cc4168ca7836686e5980eb9e28bd65b8fc879a6219c2",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "id": "KS-G609",
+      "items": [
+        "T-09",
+        "S-04"
+      ],
+      "title": "non-ASCII keySound digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, S-04",
+          "note": "non-ASCII keySound digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 １"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "35ad079bac1b1e621d697ea841ea84e45e66b7676ce4b2d958465a28e3666338",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:format"
+        ]
+      }
+    },
+    {
+      "id": "KL-G601",
+      "items": [
+        "T-09",
+        "L-05"
+      ],
+      "title": "non-ASCII digits in an LED file name are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, L-05",
+          "note": "non-ASCII digits in an LED file name are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/１ 1 1",
+          "text": "o 1 1 FF0000"
+        }
+      ],
+      "fingerprint": "68e0b88d42abb94541ae999de20942474f6182b445765a23d40cd1c9a097732b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "id": "KL-G602",
+      "items": [
+        "T-09",
+        "E-08"
+      ],
+      "title": "non-ASCII delay digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, E-08",
+          "note": "non-ASCII delay digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "d １００"
+        }
+      ],
+      "fingerprint": "c6829b4b19e3378ced718ca9e53ca6e7c663794c8a58f0c06990ac11437a0193",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": []
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "id": "KL-G603",
+      "items": [
+        "E-02"
+      ],
+      "title": "non-ASCII hex lookalikes are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 E-02",
+          "note": "non-ASCII hex lookalikes are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 1 1 ＦＦ0000"
+        }
+      ],
+      "fingerprint": "a2d3b7e2ff9537bb0159dfbd13856d4d3a4e3d8ce5df31a2c88c69c74debf2a5",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": []
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      }
+    },
+    {
+      "id": "AP-G601",
+      "items": [
+        "T-09",
+        "P-06"
+      ],
+      "title": "non-ASCII autoPlay digits are a format error",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 T-09, P-06",
+          "note": "non-ASCII autoPlay digits are a format error"
+        }
+      ],
+      "expectedFailing": [
+        "android"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "d １００"
+        }
+      ],
+      "fingerprint": "45837b8492d9e002c0fb9ffade5093bfb81abc85fadc6d5f053d39c454b61c54",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": [],
+        "errors": [
+          "autoPlay:format"
+        ]
+      }
+    },
+    {
+      "id": "KS-G610",
+      "items": [
+        "S-06",
+        "S-07"
+      ],
+      "title": "a written zero wormhole means no chain change and no warning",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-06, S-07",
+          "note": "a written zero wormhole means no chain change and no warning"
+        }
+      ],
+      "expectedFailing": [],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "656a9181fa249d1748b91dbb2e08365ae5e1583d1e6b8d1360e0a59333c2d691",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "id": "KS-G611",
+      "items": [
+        "S-06",
+        "S-07"
+      ],
+      "title": "a negative wormhole still clamps to chain one and warns",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-06, S-07",
+          "note": "a negative wormhole still clamps to chain one and warns"
+        }
+      ],
+      "expectedFailing": [],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 -1"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "68ea321051db5fc81cec919a7c8ea011452aab7b1315c7b65506e25b2f682cf5",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": 0
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range"
+        ]
+      }
+    },
+    {
+      "id": "INF-G604",
+      "items": [
+        "I-04"
+      ],
+      "title": "a missing size key refuses the pack rather than making a grid with no pads",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 I-04",
+          "note": "a missing size key refuses the pack rather than making a grid with no pads"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "37d1bff5059b2428818001617594903037bb0e1f948b05d5363e9c8a558e3a75",
+      "expected": {
+        "loaded": false
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 0,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "info:missing-field",
+              "keySound:range"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: a missing size key refuses the pack rather than making a grid with no pads. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "INF-G605",
+      "items": [
+        "I-04"
+      ],
+      "title": "a missing size key refuses the pack rather than making a grid with no pads",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 I-04",
+          "note": "a missing size key refuses the pack rather than making a grid with no pads"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "32bcab87769e015b9c501fd7852be615eeb53f75f1fa4e5171e5667fa1005074",
+      "expected": {
+        "loaded": false
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 0,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "info:missing-field",
+              "keySound:range"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: a missing size key refuses the pack rather than making a grid with no pads. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G612",
+      "items": [
+        "S-11"
+      ],
+      "title": "normalize a sound path relative to sounds before lookup",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-11",
+          "note": "normalize a sound path relative to sounds before lookup"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 fx\\s.wav"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "9fed613758c1cb146196ed7abc954239efff917f4bb6d767ca361afcf58e60a4",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "fx/s.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G613",
+      "items": [
+        "S-11"
+      ],
+      "title": "normalize a sound path relative to sounds before lookup",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-11",
+          "note": "normalize a sound path relative to sounds before lookup"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 ./a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "45ee4809fce00a2caa72145ee0b3a1043969b3c051fd76c9d3be62f642e0b13c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G614",
+      "items": [
+        "S-11"
+      ],
+      "title": "normalize a sound path relative to sounds before lookup",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-11",
+          "note": "normalize a sound path relative to sounds before lookup"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 /a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "d693f852bcb421ec1a636398f6b003e9af0864fe24614c96f997723169bd52ed",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G615",
+      "items": [
+        "S-11"
+      ],
+      "title": "normalize a sound path relative to sounds before lookup",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-11",
+          "note": "normalize a sound path relative to sounds before lookup"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 fx//s.wav"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "4da92977d96474f8829d654dde89df2e7092a6831c7d7b462d5da387b8a20e77",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "fx/s.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G616",
+      "items": [
+        "S-11"
+      ],
+      "title": "normalize a sound path relative to sounds before lookup",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-11",
+          "note": "normalize a sound path relative to sounds before lookup"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 fx/./s.wav"
+        },
+        {
+          "path": "sounds/fx/s.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "beabd4c3ef6544cec2c73b797418cc0b3123cc11cd5bea23921d531f9ca125c2",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "fx/s.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": [
+              "keySound:missing-file"
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: normalize a sound path relative to sounds before lookup. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G617",
+      "items": [
+        "S-12"
+      ],
+      "title": "case-insensitive candidates use UTF-16 full-path order, not archive order",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "case-insensitive candidates use UTF-16 full-path order, not archive order"
+        }
+      ],
+      "expectedFailing": [
+        "web"
+      ],
+      "requiresCaseSensitiveFiles": true,
+      "unobserved": {
+        "android": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case",
+        "ios": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case"
+      },
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 End.wav"
+        },
+        {
+          "path": "sounds/end.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/END.wav",
+          "asset": "tone-660"
+        }
+      ],
+      "fingerprint": "288d01234b3b63d40a42be4b1c0aa84d254352188bc808c3f82bda28511f136a",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "END.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "file": "end.wav",
+                    "loop": 0,
+                    "wormhole": -1
+                  }
+                ]
+              }
+            ],
+            "keyLedExist": false,
+            "leds": [],
+            "autoPlay": null,
+            "errors": []
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: case-insensitive candidates use UTF-16 full-path order, not archive order. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KS-G618",
+      "items": [
+        "S-12"
+      ],
+      "title": "case-insensitive lookup searches every full path instead of committing to one folder",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "case-insensitive lookup searches every full path instead of committing to one folder"
+        }
+      ],
+      "expectedFailing": [
+        "ios"
+      ],
+      "requiresCaseSensitiveFiles": true,
+      "unobserved": {
+        "android": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case",
+        "ios": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case"
+      },
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 Fx/b.wav"
+        },
+        {
+          "path": "sounds/FX/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/fx/b.wav",
+          "asset": "tone-660"
+        }
+      ],
+      "fingerprint": "fcf197dc11ff7cb3c49e787db9d77e3ec9b8e5d0f140d303014164f44d71059f",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "fx/b.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "id": "KS-G619",
+      "items": [
+        "S-12"
+      ],
+      "title": "an exact sound name wins over all case-insensitive candidates",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-12",
+          "note": "an exact sound name wins over all case-insensitive candidates"
+        }
+      ],
+      "expectedFailing": [],
+      "requiresCaseSensitiveFiles": true,
+      "unobserved": {
+        "android": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case",
+        "ios": "this host cannot store names differing only in letter case; run on a case-sensitive filesystem before confirming this case"
+      },
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 end.wav"
+        },
+        {
+          "path": "sounds/END.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/end.wav",
+          "asset": "tone-440"
+        }
+      ],
+      "fingerprint": "8671303bb77f5c910f88ddf5d207385b5ab59a7b212d9b03ea1fbd7a357943b0",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "file": "end.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "id": "KL-G604",
+      "items": [
+        "E-02",
+        "E-03",
+        "E-04"
+      ],
+      "title": "bare a is hex 00000A for pad, logo and round lights",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 E-02, E-03, E-04",
+          "note": "bare a is hex 00000A for pad, logo and round lights"
+        }
+      ],
+      "expectedFailing": [],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o 1 1 a\no l a\no * 1 a"
+        }
+      ],
+      "fingerprint": "97d947ae866ee81baae12f26c2e56f10d3879f2faf89ccf1c775ebad1a1c927f",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    0,
+                    0,
+                    "ff00000a",
+                    4
+                  ],
+                  [
+                    "on",
+                    -1,
+                    32,
+                    "ff00000a",
+                    4
+                  ],
+                  [
+                    "on",
+                    -1,
+                    0,
+                    "ff00000a",
+                    4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "id": "KL-G605",
+      "items": [
+        "E-05",
+        "E-11"
+      ],
+      "title": "wrong column count warns before checking round-light range",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 E-05, E-11",
+          "note": "wrong column count warns before checking round-light range"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o mc 99"
+        }
+      ],
+      "fingerprint": "92dffbb2a657d8fbeaead748ecbe9890769ff1fa09cdeb8e46bd14fdd38da16e",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": []
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": true,
+            "leds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "loop": 1,
+                    "events": []
+                  }
+                ]
+              }
+            ],
+            "autoPlay": null,
+            "errors": []
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: wrong column count warns before checking round-light range. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "KL-G606",
+      "items": [
+        "E-05",
+        "E-11"
+      ],
+      "title": "wrong column count warns before checking round-light range",
+      "area": "G6",
+      "layer": "parse",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 E-05, E-11",
+          "note": "wrong column count warns before checking round-light range"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "web"
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "o * 0 FF0000 5 6"
+        }
+      ],
+      "fingerprint": "ef409b772030af926caba7cd12fe89d0a779e940b1cb1a4d6328deefc6db811b",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": []
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": [
+          "keyLed:format"
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "loaded": true,
+            "info": {
+              "title": "Conformance",
+              "producerName": "UniPad Conformance",
+              "buttonX": 4,
+              "buttonY": 3,
+              "chain": 2,
+              "squareButton": true
+            },
+            "sounds": [],
+            "keyLedExist": true,
+            "leds": [
+              {
+                "c": 0,
+                "x": 0,
+                "y": 0,
+                "queue": [
+                  {
+                    "loop": 1,
+                    "events": []
+                  }
+                ]
+              }
+            ],
+            "autoPlay": null,
+            "errors": []
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: wrong column count warns before checking round-light range. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G601",
+      "items": [
+        "RL-03"
+      ],
+      "title": "release ends the original endless animation after a chain change",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RL-03",
+          "note": "release ends the original endless animation after a chain change"
+        }
+      ],
+      "expectedFailing": [
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "chain",
+          "c": 1
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "7dcadd4eb1d625d46fb3e96f307caf47601e710995a1a1e32741b676ae09fbb8",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: release ends the original endless animation after a chain change. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G602",
+      "items": [
+        "RL-03"
+      ],
+      "title": "release ends the original endless animation after a chain change",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RL-03",
+          "note": "release ends the original endless animation after a chain change"
+        }
+      ],
+      "expectedFailing": [
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "9cd9d96c7ad4c5c074a974c3661def386616d9e17a15a09465bd6b7535a1847f",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ],
+            [
+              "chain",
+              1
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ],
+                [
+                  "chain",
+                  1
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: release ends the original endless animation after a chain change. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G603",
+      "items": [
+        "RL-03"
+      ],
+      "title": "release ends the original endless animation after a chain change",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RL-03",
+          "note": "release ends the original endless animation after a chain change"
+        }
+      ],
+      "expectedFailing": [
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nc 2\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "f46c7eb69e94b27a3db7b583cc9f0ac7862f4498eb46f50b77523c8e33a32c91",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ],
+            [
+              "chain",
+              1
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ],
+                [
+                  "chain",
+                  1
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: release ends the original endless animation after a chain change. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G604",
+      "items": [
+        "RL-03",
+        "RA-02"
+      ],
+      "title": "autoPlay release ends its endless animation after a scripted chain change",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RL-03, RA-02",
+          "note": "autoPlay release ends its endless animation after a scripted chain change"
+        }
+      ],
+      "expectedFailing": [
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 50
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 100\nc 2\noff 1 1\nd 1000"
+        }
+      ],
+      "fingerprint": "9fb7564106c0dc381ae1995d8efaf2da029361ea37186f9fe926831e82ca8a9e",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "autoChain",
+              1
+            ],
+            [
+              "autoOff",
+              0,
+              0
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "autoChain",
+                  1
+                ],
+                [
+                  "autoOff",
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: autoPlay release ends its endless animation after a scripted chain change. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G605",
+      "items": [
+        "RA-04",
+        "RS-09"
+      ],
+      "title": "autoPlay applies a wormhole immediately without a delayed second switch",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RA-04, RS-09",
+          "note": "autoPlay applies a wormhole immediately without a delayed second switch"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=3\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 50\nc 3\nd 200"
+        }
+      ],
+      "fingerprint": "9632c733fb3460275175551e3e1912ceeb5b21bb9fd6937a58b7c044a8a0c733",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "autoChain",
+              1
+            ]
+          ],
+          [
+            [
+              "autoChain",
+              2
+            ]
+          ],
+          []
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ],
+                [
+                  "autoChain",
+                  1
+                ]
+              ],
+              [
+                [
+                  "autoChain",
+                  2
+                ]
+              ],
+              [
+                [
+                  "chain",
+                  1
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: autoPlay applies a wormhole immediately without a delayed second switch. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G606",
+      "items": [
+        "RS-09"
+      ],
+      "title": "manual chain selection does not cancel a pending manual wormhole",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-09",
+          "note": "manual chain selection does not cancel a pending manual wormhole"
+        }
+      ],
+      "expectedFailing": [
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 50
+        },
+        {
+          "do": "chain",
+          "c": 2
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 60
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=3\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "f936fc1764bb6efd266ebbfaca3f2c7e56d7a709a949260750aa1673419329c8",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ]
+          ],
+          [],
+          [
+            [
+              "chain",
+              1
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ]
+              ],
+              [],
+              []
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: manual chain selection does not cancel a pending manual wormhole. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G607",
+      "items": [
+        "RS-05",
+        "RL-03"
+      ],
+      "title": "the last player input release owns the current endless sound and light",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
+          "note": "the last player input release owns the current endless sound and light"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:2"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:2"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "eaf866f8c697f9cc3325d5d6e321f94ee85b1ceb7d3163b25818d9f46504dc21",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: the last player input release owns the current endless sound and light. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G608",
+      "items": [
+        "RS-05",
+        "RL-03"
+      ],
+      "title": "the last player input release owns the current endless sound and light",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
+          "note": "the last player input release owns the current endless sound and light"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "midi:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "midi:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "eaf866f8c697f9cc3325d5d6e321f94ee85b1ceb7d3163b25818d9f46504dc21",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: the last player input release owns the current endless sound and light. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G617",
+      "items": [
+        "RS-05",
+        "RL-03"
+      ],
+      "title": "releasing the later player input first still waits for the last held input",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
+          "note": "releasing the later player input first still waits for the last held input"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:2"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:2"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "eaf866f8c697f9cc3325d5d6e321f94ee85b1ceb7d3163b25818d9f46504dc21",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "Observed with the real play hook at 184c1e4b: releasing the later player input stops the current endless sound and light while the first input is still held. The G6 expectation waits for the last release."
+        }
+      }
+    },
+    {
+      "id": "RUN-G618",
+      "items": [
+        "RS-05",
+        "RL-03"
+      ],
+      "title": "releasing the later player input first still waits for the last held input",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03",
+          "note": "releasing the later player input first still waits for the last held input"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0,
+          "input": "midi:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "midi:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0,
+          "input": "pointer:1"
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        }
+      ],
+      "fingerprint": "eaf866f8c697f9cc3325d5d6e321f94ee85b1ceb7d3163b25818d9f46504dc21",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              []
+            ]
+          },
+          "note": "Observed with the real play hook at 184c1e4b: releasing the later player input stops the current endless sound and light while the first input is still held. The G6 expectation waits for the last release."
+        }
+      }
+    },
+    {
+      "id": "RUN-G609",
+      "items": [
+        "RS-05",
+        "RL-03",
+        "RA-02"
+      ],
+      "title": "a manual release does not end the sound and light now owned by autoPlay",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03, RA-02",
+          "note": "a manual release does not end the sound and light now owned by autoPlay"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 320
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 700
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        },
+        {
+          "path": "autoPlay",
+          "text": "d 300\non 1 1\nd 700\noff 1 1\nd 1000"
+        }
+      ],
+      "fingerprint": "621c984dab99382eef5b46123b27b4dfed5b93d029eeb61e7fe8d8cd68949b4d",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [],
+          [
+            [
+              "autoOff",
+              0,
+              0
+            ],
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "autoOff",
+                  0,
+                  0
+                ],
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: a manual release does not end the sound and light now owned by autoPlay. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G610",
+      "items": [
+        "RS-05",
+        "RL-03",
+        "RA-02"
+      ],
+      "title": "an autoPlay release does not end the sound and light now owned by the player",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-05, RL-03, RA-02",
+          "note": "an autoPlay release does not end the sound and light now owned by the player"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 300
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1 0",
+          "text": "o 1 1 FF0000\nd 1000\nf 1 1"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 300\noff 1 1\nd 1000"
+        }
+      ],
+      "fingerprint": "422c4126e13a99b3aca21baf7096f75a19c73c413a0cddaa661d6700b9af5dd6",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              -1
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ],
+            [
+              "ledOn",
+              0,
+              0,
+              "ffff0000",
+              4
+            ]
+          ],
+          [
+            [
+              "autoOff",
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              "soundStop",
+              0,
+              0,
+              0,
+              "a.wav"
+            ],
+            [
+              "ledOff",
+              0,
+              0
+            ]
+          ]
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  -1
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOn",
+                  0,
+                  0,
+                  "ffff0000",
+                  4
+                ]
+              ],
+              [
+                [
+                  "autoOff",
+                  0,
+                  0
+                ],
+                [
+                  "ledOff",
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  "soundStop",
+                  0,
+                  0,
+                  0,
+                  "a.wav"
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: an autoPlay release does not end the sound and light now owned by the player. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
+      }
+    },
+    {
+      "id": "RUN-G611",
+      "items": [
+        "S-06",
+        "RS-09"
+      ],
+      "title": "zero wormhole on chain two does not move to chain one",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-06, RS-09",
+          "note": "zero wormhole on chain two does not move to chain one"
+        }
+      ],
+      "expectedFailing": [],
+      "scenario": [
+        {
+          "do": "chain",
+          "c": 1
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 150
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "2 1 1 a.wav 1 0"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "c0ff4e0894a0fcd76209afcd9fa952551cd474a0ab6711259c8d15d53eb5dc53",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              1,
+              0,
+              0,
+              "a.wav",
+              0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-G612",
+      "items": [
+        "RS-07"
+      ],
+      "title": "sounds at the same coordinates in different chains overlap",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RS-07",
+          "note": "sounds at the same coordinates in different chains overlap"
+        }
+      ],
+      "expectedFailing": [],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2\n2 1 1 b.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "d30355fa4512a082d37eea1857133583f74a181b7acf3bc898b1c83628d13976",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "chain",
+              1
+            ]
+          ],
+          [
+            [
+              "sound",
+              1,
+              0,
+              0,
+              "b.wav",
+              0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-G613",
+      "items": [
+        "S-05",
+        "RS-04",
+        "RS-05"
+      ],
+      "title": "a negative repeat plays once and release does not stop it",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 S-05, RS-04, RS-05",
+          "note": "a negative repeat plays once and release does not stop it"
+        }
+      ],
+      "expectedFailing": [],
+      "scenario": [
+        {
+          "do": "watchStops"
+        },
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "release",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav -1"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "776790a9a9ec424ef5927a1ccb98e7a52386e5de5234857941403ca66ce6f3ef",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ]
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "id": "RUN-G614",
+      "items": [
+        "RA-04",
+        "RL-05"
+      ],
+      "title": "autoPlay restores its parsed chain after an LED chain event before its next press",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RA-04, RL-05",
+          "note": "autoPlay restores its parsed chain after an LED chain event before its next press"
+        }
+      ],
+      "expectedFailing": [],
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "c 2"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 100\non 2 1\nd 1000"
+        }
+      ],
+      "fingerprint": "1fcc3aec5f29827d76ea7d7fd066b6af9850be189ead1287b4ad0efee5f06a78",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "chain",
+              1
+            ]
+          ],
+          [
+            [
+              "autoChain",
+              0
+            ],
+            [
+              "autoOn",
+              1,
+              0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-G615",
+      "items": [
+        "RL-05"
+      ],
+      "title": "LED chain events clamp destinations below and above the pack range",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RL-05",
+          "note": "LED chain events clamp destinations below and above the pack range"
+        }
+      ],
+      "expectedFailing": [],
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 100
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": ""
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "c -1\nd 100\nc 99"
+        }
+      ],
+      "fingerprint": "1ba07defe846d482e84227426b73d60c410cbe31c993fbc0b9394d8b15b4e457",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "chain",
+              0
+            ]
+          ],
+          [
+            [
+              "chain",
+              1
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-G616",
+      "items": [
+        "RA-04",
+        "RS-09"
+      ],
+      "title": "stopping autoPlay cancels any delayed chain change from its sound",
+      "area": "G6",
+      "layer": "run",
+      "basis": [
+        {
+          "type": "decision",
+          "ref": "meta/unipack-conformance/GRAMMAR.md G6 RA-04, RS-09",
+          "note": "stopping autoPlay cancels any delayed chain change from its sound"
+        }
+      ],
+      "expectedFailing": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "scenario": [
+        {
+          "do": "autoplay",
+          "toPads": true
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "autoplayOff"
+        },
+        {
+          "do": "advance",
+          "ms": 150
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "screenInputs": true,
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=3\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 a.wav 1 2"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "autoPlay",
+          "text": "on 1 1\nd 1000"
+        }
+      ],
+      "fingerprint": "b1ceceb9ff70d40274b1f282ba16e25713d5200b4d457e019e11cd63f43b446d",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "autoOn",
+              0,
+              0
+            ],
+            [
+              "sound",
+              0,
+              0,
+              0,
+              "a.wav",
+              0
+            ],
+            [
+              "autoChain",
+              1
+            ]
+          ],
+          []
+        ]
+      },
+      "known": {
+        "web": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ],
+                [
+                  "autoChain",
+                  1
+                ]
+              ],
+              [
+                [
+                  "chain",
+                  1
+                ]
+              ]
+            ]
+          },
+          "note": "Observed with the parser and play hook at 184c1e4b: stopping autoPlay cancels any delayed chain change from its sound. The G6 expectation stays unchanged; remove this observation when the app implements it."
+        }
       }
     }
   ]

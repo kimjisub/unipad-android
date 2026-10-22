@@ -127,6 +127,8 @@ android {
 		}
 	}
 	namespace = 'com.kimjisub.launchpad'
+	// Device observations consume the exact same corpus bytes as the JVM conformance suite.
+	sourceSets.androidTest.assets.srcDir('src/test/resources')
 
 	lint {
 		// NullSafeMutableLiveData crashes with Kotlin 2.x (known bug in lifecycle-lint)

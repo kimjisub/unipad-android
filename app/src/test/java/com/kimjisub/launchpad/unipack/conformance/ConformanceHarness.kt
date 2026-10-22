@@ -61,21 +61,38 @@ private fun hex8(value: Int) = "%08x".format(value)
 
 class CaseResult(val actual: JsonElement, val outcome: Outcome)
 
+private class InputNamesNotPreserved(val paths: List<String>) : IllegalStateException("the filesystem changed the input file names")
+
 /** What Android reports for a case: its result and status, or why the corpus says it is not observed here. */
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
+	if (c.screenInputs) return CaseResult(JsonNull, Outcome("unverified", false,
+		"requires the real play screen's distinct pointer/MIDI inputs and auto-play listeners; the generic runner cannot observe it"))
+	if (c.requiresCaseSensitiveFiles && !caseSensitiveFileSystem()) return CaseResult(JsonNull, Outcome("unverified", false,
+		"this filesystem cannot preserve the case-distinct input files"))
 	val unobserved = c.unobserved[PLATFORM]
 	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
-	val actual = actualFor(c, corpus, deps)
+	val actual = try {
+		actualFor(c, corpus, deps)
+	} catch (changed: InputNamesNotPreserved) {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the filesystem changed the input file names before parsing; see storedInputPaths", changed.paths))
+	}
 	return CaseResult(actual, classify(c, actual))
 }
 
 fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
+	require(c.layer in setOf("parse", "run", "palette")) { "${c.id}: unregistered layer ${c.layer}" }
+	require(!c.screenInputs && c.scenario.none { "input" in it }) { "${c.id}: distinct screen inputs require a device recorder" }
+	require(!c.requiresCaseSensitiveFiles || caseSensitiveFileSystem()) { "${c.id}: case-sensitive files are required" }
 	if (c.layer == "palette") {
 		return buildJsonObject { putJsonArray("argb") { LaunchpadColor.ARGB.forEach { add(JsonPrimitive(hex8(it.toInt()))) } } }
 	}
 	val root = Files.createTempDirectory("unipack-conformance").toFile()
 	try {
 		c.writeTo(root, corpus)
+		val stored = root.walkTopDown().filter { it.isFile }
+			.map { it.relativeTo(root).invariantSeparatorsPath }.sorted().toList()
+		if (stored != c.files.map { it.path }.sorted()) throw InputNamesNotPreserved(stored)
 		val pack = deps.loadPack(root)
 		if (pack.criticalError) return buildJsonObject { put("loaded", false) }
 		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps)
@@ -219,7 +236,11 @@ private class RecordingEngine(
 	override fun unloadAll() = stopAllVoices()
 
 	override fun play(soundId: Int, volumeL: Float, volumeR: Float, loop: Int): Int {
-		val stopEvent = onPlay(synchronized(this) { fileById.getValue(soundId) }, loop)
+		// AudioEngine::onAudioReady repeats only -1 (forever) and positive counts. All other
+		// negative values finish after one play, just like 0. Report that playback behavior,
+		// rather than mistaking SoundRunner's raw engine argument for extra negative repeats.
+		val playbackLoop = if (loop < -1) 0 else loop
+		val stopEvent = onPlay(synchronized(this) { fileById.getValue(soundId) }, playbackLoop)
 		return synchronized(this) { nextStopKey++.also { key ->
 			stopEvents[key] = stopEvent
 			if (loop == -1) endless[key] = stopEvent.jsonArray[2].jsonPrimitive.int to stopEvent.jsonArray[3].jsonPrimitive.int
