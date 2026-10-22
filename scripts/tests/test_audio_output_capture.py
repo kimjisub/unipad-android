@@ -1,10 +1,16 @@
 """Case extraction must retain original samples and reject missing timing."""
 import importlib.util
+import contextlib
+import io
+import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import wave
+import zipfile
 
 sys.path.insert(0,str(Path(__file__).parents[1]))
 SPEC = importlib.util.spec_from_file_location('run_audio_output',Path(__file__).parents[1]/'run_audio_output.py')
@@ -12,6 +18,64 @@ runner = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runner)
 
 
+class CommandEvidenceTest(unittest.TestCase):
+    def test_instrumentation_exit_is_preserved_even_when_output_is_unconfirmed(self):
+        for instrument_exit in [0, 7]:
+            with self.subTest(exit=instrument_exit), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                apk, test_apk = root / 'app.apk', root / 'test.apk'
+                apk.write_bytes(b'test application')
+                manifest = json.loads((runner.ROOT / 'scripts/fixtures/audio-output/manifest.json').read_text())
+                with zipfile.ZipFile(test_apk, 'w') as archive:
+                    for asset in (runner.ROOT / 'app/src/androidTest/assets/audio-output').iterdir():
+                        archive.write(asset, 'assets/audio-output/' + asset.name)
+
+                class Process:
+                    def __init__(self, command, stdout, **kwargs):
+                        self.instrument = 'instrument' in command
+                        self.returncode = None
+                        stdout.write('OK (1 test)\n' if self.instrument else json.dumps({'packets': 1}) + '\n')
+
+                    def poll(self):
+                        return self.returncode
+
+                    def terminate(self):
+                        self.returncode = 0
+
+                    def wait(self, **kwargs):
+                        self.returncode = instrument_exit if self.instrument else 0
+                        return self.returncode
+
+                def run(command, **kwargs):
+                    if command[:3] == ['git', 'rev-parse', 'HEAD']:
+                        output = 'a' * 40
+                    elif command[0] == 'git':
+                        output = ''
+                    elif command[-1] == '+%s%N':
+                        output = str(runner.time.time_ns())
+                    elif str(command[-1]).endswith('/ready'):
+                        output = 'ready'
+                    elif str(command[-1]).endswith('/event-0.json'):
+                        output = json.dumps({'pressed_epoch_ms': 3000, 'released_epoch_ms': 3100,
+                                             'finished_epoch_ms': 3101})
+                    else:
+                        output = 'device properties'
+                    return subprocess.CompletedProcess(command, 0, stdout=output.encode(), stderr=b'')
+
+                arguments = ['run_audio_output.py', '--serial', 'leased-device', '--devices-tool', 'devices.py',
+                             '--apk', str(apk), '--test-apk', str(test_apk), '--output', str(root / 'round'),
+                             '--case', 'wavIsHeardAtTheEmulatorOutput']
+                with patch('sys.argv', arguments), \
+                        patch.dict('os.environ', {'ANDROID_HOME': str(root / 'mock-sdk')}), \
+                        patch.object(runner.subprocess, 'run', side_effect=run), \
+                        patch.object(runner.subprocess, 'Popen', Process), patch.object(runner.time, 'sleep'), \
+                        patch.object(runner, 'create_clock_session', return_value=FakeClockSession()), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(3, runner.main())
+                commands = json.loads((root / 'round/commands.json').read_text())
+                instrument = [trace for trace in commands if 'instrument' in trace['command']]
+                self.assertEqual(1, len(instrument))
+                self.assertEqual(instrument_exit, instrument[0]['exit'])
 class FakeClockSession:
     """Bounded clock transport stand-in for collection fault tests."""
     startup_elapsed_us = 200000

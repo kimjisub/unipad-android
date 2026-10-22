@@ -335,14 +335,15 @@ def execute_round(args, out, cases):
                           PACKAGE+'.test/androidx.test.runner.AndroidJUnitRunner']
     recordings = []
     instrument = recorder = clock = None
-    clock_trace = None
+    clock_trace = instrument_trace = None
     instrument_exit = None
     capture_exit = None
     failure = None
     try:
         with (out/'instrumentation.txt').open('w') as log:
             instrument = subprocess.Popen(instrument_command,stdout=log,stderr=subprocess.STDOUT)
-            command_log.append({'command':instrument_command})
+            instrument_trace = {'command':instrument_command}
+            command_log.append(instrument_trace)
             def wait_file(name, seconds):
                 deadline = time.monotonic()+seconds
                 while time.monotonic() < deadline:
@@ -435,6 +436,8 @@ def execute_round(args, out, cases):
                     except subprocess.TimeoutExpired:
                         process.kill()
                         code=process.wait(timeout=10)
+                if process is instrument:
+                    instrument_trace['exit']=code
                 if process is recorder:
                     capture_exit=code
                     capture_trace['exit']=code

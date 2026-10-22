@@ -7,6 +7,16 @@ from pathlib import Path
 import tempfile
 import unittest
 
+OUTPUT = 'com.kimjisub.launchpad.audio.EmulatorOutput#'
+OUTPUT_TESTS = {
+    'A-01': ['wavIsHeardAtTheEmulatorOutput'],
+    'A-02': ['mp3IsHeardAtTheEmulatorOutput'],
+    'A-03': ['oggIsHeardAtTheEmulatorOutput'],
+    'A-04': ['m4aIsHeardAtTheEmulatorOutput'],
+    'A-05': ['bareMp3NamedWavIsHeardAtTheEmulatorOutput',
+             'taggedMp3NamedWavIsHeardAtTheEmulatorOutput'],
+}
+
 SPEC = importlib.util.spec_from_file_location('native_results', Path(__file__).parents[1] / 'native_grammar_results.py')
 MISSING_SOURCE_OUTPUTS = [
     (source, variant)
@@ -190,6 +200,195 @@ class NativeGrammarResultsTest(unittest.TestCase):
         self.assertEqual(module.item_results(results, environment_verified=True)['A-01']['status'], 'unverified')
         self.assertEqual(module.item_results(results, environment_verified=True)['F-01']['status'], 'passed')
         self.assertEqual(module.item_results(results, environment_verified=False)['F-01']['status'], 'unverified')
+
+    def test_required_output_names_are_fixed_independently_of_results(self):
+        module = self.load()
+        for item, names in OUTPUT_TESTS.items():
+            self.assertEqual([OUTPUT + name for name in names],
+                             [name for name in module.REQUIRED[item] if name.startswith(OUTPUT)])
+
+    def make_output_round(self, root, missing=None, duplicate=None, status='passed'):
+        names = [name for tests in OUTPUT_TESTS.values() for name in tests if name != missing]
+        if duplicate:
+            names.append(duplicate)
+        cases = ''.join(f'<testcase classname="{OUTPUT[:-1]}" name="{name}">' +
+                        ('<failure/>' if status == 'failed' else
+                         '<error/>' if status == 'environment_unconfirmed' else '') +
+                        '</testcase>' for name in names)
+        (root / 'TEST-EmulatorOutput.xml').write_text('<testsuite>' + cases + '</testsuite>')
+        (root / 'results.json').write_text(json.dumps({'exit_code': 0 if status == 'passed' else 3,
+            'results': [{'name': name, 'status': status} for name in names]}))
+        (root / 'metadata.json').write_text(json.dumps({
+            'source_commit': 'current-commit', 'source_diff': '', 'status': '',
+            'serial': 'leased-device', 'os': 'device-properties', 'emulator_version': 'version',
+            'apk_sha256': 'a' * 64, 'test_apk_sha256': 'b' * 64}))
+        for filename in ['stream.wav', 'stream.packets.json', 'recordings.json', 'commands.json',
+                         'instrumentation.txt', 'stream-capture.txt'] + [name + '.wav' for name in names]:
+            (root / filename).write_text('original evidence')
+        (root / 'commands.json').write_text(json.dumps([
+            {'command': ['adb', '-s', 'leased-device', 'shell', 'am', 'instrument'], 'exit': 0},
+            {'command': ['python3', 'devices.py', 'record', 'leased-device', 'stream.wav', '120'], 'exit': 0},
+        ]))
+
+    def output_items(self, module, root, environment=True):
+        results = {name: [{'status': 'passed'}] for names in module.REQUIRED.values()
+                   for name in names if not name.startswith(OUTPUT)}
+        audio, verified = module.read_audio_results(root, 'current-commit', 'leased-device')
+        results.update(audio)
+        return module.item_results(results, environment, verified)
+
+    def test_complete_output_can_verify_all_five_audio_items(self):
+        module = self.load()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_output_round(root)
+            items = self.output_items(module, root)
+            self.assertEqual(['passed'] * 5, [items[item]['status'] for item in OUTPUT_TESTS])
+            self.assertEqual('unverified', self.output_items(module, root, False)['A-01']['status'])
+
+    def test_each_mp3_named_wav_output_is_required(self):
+        module = self.load()
+        for name in OUTPUT_TESTS['A-05']:
+            with self.subTest(missing=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, missing=name)
+                items = self.output_items(module, root)
+                self.assertEqual('unverified', items['A-05']['status'])
+                self.assertEqual('passed', items['A-01']['status'])
+
+    def test_failed_unconfirmed_and_duplicate_output_never_pass(self):
+        module = self.load()
+        for status, duplicate in [('failed', None), ('environment_unconfirmed', None),
+                                  ('passed', OUTPUT_TESTS['A-01'][0])]:
+            with self.subTest(status=status, duplicate=duplicate), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, status=status, duplicate=duplicate)
+                self.assertNotEqual('passed', self.output_items(module, root)['A-01']['status'])
+
+    def test_original_output_states_are_preserved(self):
+        module = self.load()
+        for original, expected in [('passed', 'passed'), ('failed', 'failed'),
+                                   ('environment_unconfirmed', 'unverified'), ('unknown', 'unverified')]:
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, status=original)
+                items = self.output_items(module, root)
+                self.assertEqual([expected] * 5, [items[item]['status'] for item in OUTPUT_TESTS])
+
+    def test_xml_error_cannot_turn_unconfirmed_or_missing_original_into_failure(self):
+        module = self.load()
+        for original in ['passed', 'environment_unconfirmed', None]:
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, status='environment_unconfirmed')
+                report = json.loads((root / 'results.json').read_text())
+                report['results'] = ([] if original is None else
+                                     [dict(case, status=original) for case in report['results']])
+                (root / 'results.json').write_text(json.dumps(report))
+                self.assertEqual(['unverified'] * 5,
+                                 [self.output_items(module, root)[item]['status'] for item in OUTPUT_TESTS])
+
+    def test_output_from_another_revision_dirty_source_or_device_never_passes(self):
+        module = self.load()
+        for key, value in [('source_commit', 'other-commit'), ('source_diff', 'tracked edit'),
+                           ('status', '?? untracked-file'), ('serial', 'other-device'), ('os', '')]:
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root)
+                metadata = json.loads((root / 'metadata.json').read_text())
+                metadata[key] = value
+                (root / 'metadata.json').write_text(json.dumps(metadata))
+                self.assertEqual('unverified', self.output_items(module, root)['A-01']['status'])
+
+    def test_missing_raw_waveform_clock_or_metadata_never_passes(self):
+        module = self.load()
+        for name in ['metadata.json', 'recordings.json', 'stream.packets.json', 'stream.wav',
+                     'commands.json', 'results.json', 'wavIsHeardAtTheEmulatorOutput.wav']:
+            with self.subTest(missing=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root)
+                (root / name).unlink()
+                self.assertEqual('unverified', self.output_items(module, root)['A-01']['status'])
+
+    def test_missing_or_failed_screen_and_recorder_exit_never_passes(self):
+        module = self.load()
+        for index in [0, 1]:
+            for exit_code in [None, 7]:
+                with self.subTest(command=index, exit=exit_code), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    self.make_output_round(root)
+                    commands = json.loads((root / 'commands.json').read_text())
+                    if exit_code is None:
+                        del commands[index]['exit']
+                    else:
+                        commands[index]['exit'] = exit_code
+                    (root / 'commands.json').write_text(json.dumps(commands))
+                    self.assertEqual('unverified', self.output_items(module, root)['A-01']['status'])
+
+    def test_selected_output_run_is_preserved_separately_and_hashed(self):
+        for selected, audio_exit in [(False, 0), (True, 0), (True, 3)]:
+            with self.subTest(selected=selected, exit=audio_exit), tempfile.TemporaryDirectory() as directory, \
+                    tempfile.TemporaryDirectory() as evidence, contextlib.chdir(directory):
+                module = self.load()
+                Path('app/src/androidTest/assets/audio-formats').mkdir(parents=True)
+                Path('devices.py').write_text('managed device tool')
+
+                def capture(command):
+                    if command == ['git', 'rev-parse', 'HEAD']:
+                        return 'current-commit'
+                    if command[:2] == ['git', 'status']:
+                        return ''
+                    return 'device-property'
+
+                def run(command, log):
+                    if 'scripts/run_audio_output.py' in command:
+                        self.assertIn('--devices-tool', command)
+                        self.assertEqual('leased-device', command[command.index('--serial') + 1])
+                        root = Path(command[command.index('--output') + 1])
+                        root.mkdir(parents=True)
+                        self.make_output_round(root, status='passed' if audio_exit == 0 else 'environment_unconfirmed')
+                        code = audio_exit
+                    elif command[0] == 'bash':
+                        root = Path('app/build/outputs/androidTest-results/connected')
+                        root.mkdir(parents=True)
+                        cases = ''.join(f'<testcase classname="{name.split("#")[0]}" name="{name.split("#")[1]}"/>'
+                                        for tests in module.REQUIRED.values() for name in tests)
+                        # Even forged output names in connected XML cannot replace host recordings.
+                        (root / 'TEST-Device.xml').write_text('<testsuite>' + cases + '</testsuite>')
+                        Path('.ci-results').mkdir()
+                        Path('.ci-results/logcat.txt').write_text('case-sensitive probe passed at fixture\n' * 3)
+                        code = 0
+                    else:
+                        self.assertEqual('./gradlew', command[0])
+                        code = 0
+                    log.write_text('original command output\n')
+                    return {'command': command, 'exitCode': code, 'log': log.name}
+
+                arguments = ['native_grammar_results.py', '--output', str(Path(evidence) / 'round'),
+                             '--grammar-version', 'G3', '--grammar-revision', 'grammar-sha']
+                if selected:
+                    arguments += ['--with-audio-output', '--devices-tool', 'devices.py']
+                with patch('sys.argv', arguments), patch.dict('os.environ', {'ANDROID_SERIAL': 'leased-device'}), \
+                        patch.object(module, 'capture', side_effect=capture), patch.object(module, 'run', side_effect=run):
+                    self.assertEqual(0 if audio_exit == 0 else 1, module.main())
+                root = Path(evidence) / 'round'
+                report = json.loads((root / 'results.json').read_text())
+                self.assertEqual(selected, report['audioOutput']['requested'])
+                self.assertEqual('unverified' if audio_exit else 'passed' if selected else 'unverified',
+                                 report['items']['A-01']['status'])
+                if audio_exit:
+                    self.assertNotEqual('passed', report['items']['A-01']['status'])
+                self.assertEqual({'commit': 'current-commit', 'status': ''}, report['sourceBefore'])
+                self.assertEqual(report['sourceBefore'], report['sourceAfter'])
+                if selected:
+                    self.assertEqual('original evidence', (root / 'raw/audio-output/stream.wav').read_text())
+                    for name in ['stream.wav', 'stream.packets.json', 'recordings.json', 'metadata.json',
+                                 'commands.json', 'TEST-EmulatorOutput.xml', 'results.json']:
+                        relative = 'raw/audio-output/' + name
+                        self.assertEqual(module.sha256(root / relative), report['rawFiles'][relative])
+                    self.assertEqual(1, len(report['items']['A-01']['tests'][OUTPUT + OUTPUT_TESTS['A-01'][0]]))
+                    self.assertEqual('audio-output/TEST-EmulatorOutput.xml',
+                        report['items']['A-01']['tests'][OUTPUT + OUTPUT_TESTS['A-01'][0]][0]['raw'])
 
     def test_overlapping_output_is_rejected_before_any_work(self):
         sources = ['.ci-results', 'app/build/test-results/testDebugUnitTest',
