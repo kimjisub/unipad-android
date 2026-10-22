@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -258,6 +259,19 @@ def judge_records(records, manifest, out):
     return [judge_record(record,manifest,out) for record in records]
 
 
+def create_clock_session(devices_tool, serial):
+    """Use the managed clock transport shipped alongside the recorder."""
+    path = devices_tool.resolve().with_name('android_clock.py')
+    spec = importlib.util.spec_from_file_location('audio_capture_clock',path)
+    if spec is None or spec.loader is None:
+        raise ValueError('managed clock tool cannot be loaded')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    session = module.ClockSession(serial)
+    session.source_sha256 = sha(path)
+    return session
+
+
 def execute_round(args, out, cases):
     command_log = []
 
@@ -290,16 +304,17 @@ def execute_round(args, out, cases):
         return run(['adb','-s',args.serial,*command],**kw)
 
     def measure_clock():
-        samples=[]
-        for _ in range(3):
-            value=adb('shell','date','+%s%N').strip()
-            if not value.isdigit() or len(value) != 19:
-                raise ValueError('guest date did not provide an epoch nanosecond timestamp')
-            trace=command_log[-1]
-            samples.append({k:trace[k] for k in
-                ('host_before_us','host_after_us','monotonic_elapsed_us')})
-            samples[-1]['guest_us']=int(value)//1000
-        return samples
+        trace = {'kind':'clock_measurement', 'command':['clock.measure', '3']}
+        try:
+            batch = clock.measure(3)
+            trace.update(batch)
+            return batch['samples']
+        except Exception as error:
+            trace['error'] = f'{type(error).__name__}: {error}'
+            raise
+        finally:
+            command_log.append(trace)
+            (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
 
     manifest = json.loads((ROOT/'scripts/fixtures/audio-output/manifest.json').read_text())
     validate_fixtures(manifest,args.test_apk)
@@ -319,7 +334,8 @@ def execute_round(args, out, cases):
                           '-e','audioOutputSession',session,'-e','audioBlockPlayback',str(args.block_playback).lower(),
                           PACKAGE+'.test/androidx.test.runner.AndroidJUnitRunner']
     recordings = []
-    instrument = recorder = None
+    instrument = recorder = clock = None
+    clock_trace = None
     instrument_exit = None
     capture_exit = None
     failure = None
@@ -337,6 +353,16 @@ def execute_round(args, out, cases):
                     time.sleep(.05)
                 raise TimeoutError(f'screen did not publish {name} within {seconds}s')
             wait_file('ready',60)
+            clock = create_clock_session(args.devices_tool,args.serial)
+            clock_trace = {'kind':'clock_session', 'command':['adb','-s',args.serial,'shell','-T'],
+                           'tool_sha256':clock.source_sha256}
+            command_log.append(clock_trace)
+            try:
+                clock.__enter__()
+                clock_trace['startup_elapsed_us'] = clock.startup_elapsed_us
+            except Exception as error:
+                clock_trace['error'] = f'{type(error).__name__}: {error}'
+                raise
             time.sleep(2.)  # warm the open, silent Oboe stream once
             capture_command = [sys.executable,str(args.devices_tool),'record',args.serial,str(out/'stream.wav'),'120']
             capture_trace = {'command':capture_command}
@@ -355,7 +381,7 @@ def execute_round(args, out, cases):
                     try: clock_before=measure_clock()
                     except Exception as error:
                         clock_before=[]
-                        record['environment_error']=f'clock before input: {error}'
+                        record['environment_error']=f'clock before input: {type(error).__name__}: {error}'
                     try:
                         adb('shell','run-as',PACKAGE,'sh','-c',
                             f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
@@ -387,6 +413,13 @@ def execute_round(args, out, cases):
     except Exception as error:
         failure = f'{type(error).__name__}: {error}'
     finally:
+        if clock is not None:
+            try:
+                clock.close()
+                if clock_trace is not None: clock_trace['exit'] = 0
+            except Exception as error:
+                if clock_trace is not None: clock_trace['error'] = f'{type(error).__name__}: {error}'
+                failure = failure or f'clock cleanup: {type(error).__name__}: {error}'
         for process in (recorder,instrument):
             if process is None:
                 continue

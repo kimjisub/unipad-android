@@ -30,12 +30,24 @@ class SequenceSafetyTest(unittest.TestCase):
             now = [0.]
             commands = []
             pending_at = [None]
+            class Clock(capture_tests.FakeClockSession):
+                def __enter__(self):
+                    if fault == 'clock_start':
+                        raise RuntimeError('clock readiness timeout')
+                    return self
+                def measure(self, count=3):
+                    if fault == 'clock_measure':
+                        raise RuntimeError('invalid clock response')
+                    return super().measure(count)
+            clock = Clock()
             names = ['wavIsHeardAtTheEmulatorOutput', 'mp3IsHeardAtTheEmulatorOutput', 'unpressedPadIsRejected']
             def sleep(seconds):
                 now[0] += seconds
             def run(command, **kwargs):
                 value = b''
                 if 'date' in command:
+                    if fault == 'persistent_clock':
+                        raise RuntimeError('one-shot clock startup must not be measured')
                     value = b'3000000000000000000'
                 if command[-1].endswith('/ready') and fault != 'ready':
                     value = b'ready'
@@ -93,8 +105,11 @@ class SequenceSafetyTest(unittest.TestCase):
                  patch.object(runner.time,'sleep',side_effect=sleep), \
                  patch.object(runner.subprocess,'run',side_effect=run), \
                  patch.object(runner.subprocess,'Popen',side_effect=popen), \
-                 patch.object(runner,'extract_case',side_effect=extract):
+                 patch.object(runner,'extract_case',side_effect=extract), \
+                 patch.object(runner,'create_clock_session',return_value=clock,create=True):
                 code = runner.main()
+            if fault in ('persistent_clock','clock_start','clock_measure'):
+                self.assertTrue(clock.closed, 'clock connection must close after collection stops')
             return code, json.loads((out/'results.json').read_text()), commands, \
                 json.loads((out/'commands.json').read_text()), (out/'TEST-EmulatorOutput.xml').read_text()
 
@@ -109,6 +124,34 @@ class SequenceSafetyTest(unittest.TestCase):
         self.assertIn('unpressedPadIsRejected',xml)
         recorder = next(t for t in traces if 'record' in t['command'])
         self.assertEqual(0,recorder['exit'])
+
+    def test_persistent_clock_is_used_and_closed_after_input_timeout(self):
+        code, report, commands, traces, xml = self.run_fault('persistent_clock')
+        results = {r['name']:r for r in report['results']}
+        self.assertEqual('passed',results['wavIsHeardAtTheEmulatorOutput']['status'],report)
+        self.assertEqual('environment_unconfirmed',results['unpressedPadIsRejected']['status'])
+        self.assertEqual(3,code)
+        self.assertEqual([0,1],commands)
+        self.assertFalse(any('date' in trace['command'] for trace in traces))
+        measured = [trace for trace in traces if trace.get('kind')=='clock_measurement']
+        self.assertEqual(3,len(measured))
+        self.assertTrue(all(len(trace['samples'])==3 for trace in measured))
+
+    def test_clock_startup_failure_is_unconfirmed_and_closes_the_connection(self):
+        code, report, commands, traces, xml = self.run_fault('clock_start')
+        self.assertEqual(3,code)
+        self.assertEqual([],commands)
+        self.assertTrue(all(r['status']=='environment_unconfirmed' for r in report['results']))
+        self.assertIn('clock readiness timeout',report['results'][0]['environment_error'])
+
+    def test_clock_response_failure_is_preserved_without_zero_offset_fallback(self):
+        code, report, commands, traces, xml = self.run_fault('clock_measure')
+        self.assertEqual(3,code)
+        self.assertTrue(all(r['status']=='environment_unconfirmed' for r in report['results']))
+        self.assertIn('invalid clock response',report['results'][0]['environment_error'])
+        self.assertFalse(any('date' in trace['command'] for trace in traces))
+        self.assertTrue(any(trace.get('kind')=='clock_measurement' and
+                            'invalid clock response' in trace.get('error','') for trace in traces))
 
     def test_ready_timeout_reports_every_requested_case(self):
         code, report, commands, traces, xml = self.run_fault('ready')

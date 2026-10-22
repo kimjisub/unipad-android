@@ -163,7 +163,8 @@ class StartupReportTest(unittest.TestCase):
             with patch.object(sys,'argv',argv),patch.dict(os.environ,env,clear=True), \
                  patch.object(runner.subprocess,'run',side_effect=run), \
                  patch.object(runner.subprocess,'Popen',return_value=Process()), \
-                 patch.object(runner.time,'sleep'):
+                 patch.object(runner.time,'sleep'), \
+                 patch.object(runner,'create_clock_session',return_value=capture_tests.FakeClockSession()):
                 code=runner.main()
             self.assertEqual(3,code)
             self.assertEqual(3,json.loads((out/'results.json').read_text())['exit_code'])
@@ -224,6 +225,7 @@ class StartupReportTest(unittest.TestCase):
                  patch.object(runner.subprocess,'run',side_effect=run), \
                  patch.object(runner.subprocess,'Popen',side_effect=popen), \
                  patch.object(runner.time,'sleep'), \
+                 patch.object(runner,'create_clock_session',return_value=capture_tests.FakeClockSession()), \
                  patch.object(runner,'clock_bounds',return_value={
                      'offset_upper_us':1000,'offset_lower_us':-1000}):
                 self.assertEqual(3,runner.main())

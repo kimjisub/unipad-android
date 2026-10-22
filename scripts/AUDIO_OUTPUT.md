@@ -67,6 +67,16 @@ and `keySound` mapping bytes, before testing. MP3 filenames with and without ID3
 Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
+The managed recorder directory must also provide `android_clock.py`. The runner
+loads its `ClockSession` for one persistent, non-PTY ADB connection per round.
+Readiness completes before timing requests, so connection startup is recorded
+separately rather than included in each clock sample. Three measurements on each
+side of every input still bound the guest/host offset; the existing 50 ms limit
+and 1 ms precision margin remain unchanged. A missing tool or broken clock
+connection is environment unconfirmed, with no zero-offset or one-shot fallback.
+`commands.json` retains the tool hash, startup duration, all samples and clock
+errors; the connection closes during cleanup on success and failure.
+
 ## Verdict version 4
 
 - One external stream stays open for the round. Packet preparation takes at

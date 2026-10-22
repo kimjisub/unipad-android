@@ -12,6 +12,19 @@ runner = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(runner)
 
 
+class FakeClockSession:
+    """Bounded clock transport stand-in for collection fault tests."""
+    startup_elapsed_us = 200000
+    source_sha256 = 'fake-clock-tool'
+    def __init__(self): self.closed = False
+    def __enter__(self): return self
+    def close(self): self.closed = True
+    def measure(self, count=3):
+        return {'method':'persistent_adb_shell', 'startup_elapsed_us':self.startup_elapsed_us,
+                'samples':[{'host_before_us':2000000+i*100, 'host_after_us':2000050+i*100,
+                            'guest_us':2000025+i*100, 'monotonic_elapsed_us':50} for i in range(count)]}
+
+
 class CaptureWindowTest(unittest.TestCase):
     def test_extracts_original_pcm_without_padding_or_rescaling(self):
         with tempfile.TemporaryDirectory() as temp:
