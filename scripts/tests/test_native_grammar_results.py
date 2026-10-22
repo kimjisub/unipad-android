@@ -265,6 +265,29 @@ class NativeGrammarResultsTest(unittest.TestCase):
                 self.make_output_round(root, status=status, duplicate=duplicate)
                 self.assertNotEqual('passed', self.output_items(module, root)['A-01']['status'])
 
+    def test_original_output_states_are_preserved(self):
+        module = self.load()
+        for original, expected in [('passed', 'passed'), ('failed', 'failed'),
+                                   ('environment_unconfirmed', 'unverified'), ('unknown', 'unverified')]:
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, status=original)
+                items = self.output_items(module, root)
+                self.assertEqual([expected] * 5, [items[item]['status'] for item in OUTPUT_TESTS])
+
+    def test_xml_error_cannot_turn_unconfirmed_or_missing_original_into_failure(self):
+        module = self.load()
+        for original in ['passed', 'environment_unconfirmed', None]:
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.make_output_round(root, status='environment_unconfirmed')
+                report = json.loads((root / 'results.json').read_text())
+                report['results'] = ([] if original is None else
+                                     [dict(case, status=original) for case in report['results']])
+                (root / 'results.json').write_text(json.dumps(report))
+                self.assertEqual(['unverified'] * 5,
+                                 [self.output_items(module, root)[item]['status'] for item in OUTPUT_TESTS])
+
     def test_output_from_another_revision_dirty_source_or_device_never_passes(self):
         module = self.load()
         for key, value in [('source_commit', 'other-commit'), ('source_diff', 'tracked edit'),
@@ -351,7 +374,7 @@ class NativeGrammarResultsTest(unittest.TestCase):
                 root = Path(evidence) / 'round'
                 report = json.loads((root / 'results.json').read_text())
                 self.assertEqual(selected, report['audioOutput']['requested'])
-                self.assertEqual('failed' if audio_exit else 'passed' if selected else 'unverified',
+                self.assertEqual('unverified' if audio_exit else 'passed' if selected else 'unverified',
                                  report['items']['A-01']['status'])
                 if audio_exit:
                     self.assertNotEqual('passed', report['items']['A-01']['status'])

@@ -51,6 +51,13 @@ duplicate required cases, failed or unconfirmed output, and nonzero command exit
 cannot produce a passing audio item. Output names found in ordinary unit/device
 XML are ignored; only the separately executed host round can supply them.
 
+The original JSON status determines whether output is failed or unverified:
+`failed` remains failed, while `environment_unconfirmed`, unknown or missing
+statuses remain unverified even when JUnit represents them as `<error>`. A passing
+JSON status also needs passing XML and the preserved raw evidence. Each result
+records its original status. If any executed command fails, the report conservatively
+leaves all otherwise passing items unverified, including the file/archive items.
+
 | Item | Same expected behavior | Required evidence |
 | --- | --- | --- |
 | F-01 | Find all five root names without regard to case; reject `info.txt` and `keySounds` | `PackRootNamesDeviceTest`: three tests, each first proving case sensitivity in the pack's own internal directory; uppercase names then load actual sound, LED and autoplay data |

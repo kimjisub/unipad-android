@@ -106,13 +106,19 @@ def read_audio_results(directory, revision, serial):
             case_name = name.split('#', 1)[1]
             originals = [case for case in report['results'] if case.get('name') == case_name]
             waveform = directory / (case_name + '.wav')
-            if (len(originals) != 1 or originals[0].get('status') != 'passed' or
-                    not waveform.is_file() or waveform.stat().st_size == 0):
-                for record in records:
-                    if record['status'] == 'passed':
-                        record['status'] = 'unverified'
+            original_status = originals[0].get('status') if len(originals) == 1 else None
+            for record in records:
+                record['originalStatus'] = original_status
+                if original_status == 'failed':
+                    record['status'] = 'failed'
+                elif (original_status != 'passed' or record['status'] != 'passed' or
+                      not waveform.is_file() or waveform.stat().st_size == 0):
+                    record['status'] = 'unverified'
     except (OSError, ValueError, KeyError, TypeError):
         verified = False
+        for records in results.values():
+            for record in records:
+                record['status'] = 'unverified'
     return results, bool(verified)
 
 
