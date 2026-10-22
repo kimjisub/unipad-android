@@ -1,7 +1,7 @@
 {
   "schema": "unipad-conformance/1",
   "generatedBy": "meta/unipack-conformance/build-corpus.mjs",
-  "grammar": "G4",
+  "grammar": "G5",
   "rights": "Every sound is a synthesized 10 ms signal made by lib.mjs (two sine tones and silence), and one of them encoded as MP3; the one file that stands for a sound that cannot be decoded is a line of text. No pack, song or third-party audio is included.",
   "assets": {
     "tone-440": {
@@ -3176,6 +3176,156 @@
           "keySound:range",
           "keySound:range",
           "keySound:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-024",
+      "items": [
+        "S-07",
+        "S-02"
+      ],
+      "area": "keySound",
+      "title": "a line with both its wormhole and its chain, x or y outside the pack warns for each",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolder.kt, unipad-ios UniPackFolder.swift, unipad.io parser.ts parseKeySound",
+          "note": "the wormhole is checked right after the numbers are read, before chain, x, y and the sound file, so a line skipped for another field still reports it"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "3 1 1 a.wav 1 9\n1 5 1 a.wav 1 9\n1 1 4 a.wav 1 9\n1 1 2 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "f178f25f7625f67ab8aa5f93ad6f18c931bd35248012f57b20f0a35f64b74d93",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-025",
+      "items": [
+        "S-07",
+        "S-10"
+      ],
+      "area": "keySound",
+      "title": "a line with its wormhole outside the pack and a missing sound warns for both, wormhole first",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolder.kt, unipad-ios UniPackFolder.swift, unipad.io parser.ts parseKeySound",
+          "note": "the wormhole is checked right after the numbers are read, before chain, x, y and the sound file, so a line skipped for another field still reports it"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 none.wav 1 9\n1 1 2 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "03483fa002ea6fda00d1daabe5736afd63eb0397615a70c82e33432f452af24c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:missing-file"
         ]
       }
     },
@@ -8571,6 +8721,158 @@
                     8,
                     "ffff0000",
                     4
+                  ]
+                ]
+              }
+            ]
+          }
+        ],
+        "autoPlay": null,
+        "errors": []
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KL-031",
+      "items": [
+        "E-05",
+        "E-14"
+      ],
+      "area": "keyLed",
+      "title": "numeric zero columns address circular lights but zero rows remain pad events",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "Android UniPackFolder.zeroBased and LedRunner; iOS UniPackFolder and LedRunner",
+          "note": "Both parsers subtract one from each numeric coordinate; only first coordinate -1 selects circular lights. Invalid coordinates are retained without warnings and skipped when lit."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "on 0 1 ffa726 61\no 0 32 FF0000\noff 0 1\nf 0 32\non 8 0 ffa726 61\noff 8 0\no 0 0 FF0000\nf 0 0\no 0 37 FF0000\nf 0 37"
+        }
+      ],
+      "fingerprint": "7c098fa5477a584d2dbc3f302710e286d18b842a05b9e61e0dc41ee9af62f307",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 3,
+            "y": 2,
+            "queue": [
+              {
+                "file": "c.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": true,
+        "leds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 0,
+            "queue": [
+              {
+                "loop": 1,
+                "events": [
+                  [
+                    "on",
+                    -1,
+                    0,
+                    "ffffa726",
+                    61
+                  ],
+                  [
+                    "on",
+                    -1,
+                    31,
+                    "ffff0000",
+                    4
+                  ],
+                  [
+                    "off",
+                    -1,
+                    0
+                  ],
+                  [
+                    "off",
+                    -1,
+                    31
+                  ],
+                  [
+                    "on",
+                    7,
+                    -1,
+                    "ffffa726",
+                    61
+                  ],
+                  [
+                    "off",
+                    7,
+                    -1
+                  ],
+                  [
+                    "on",
+                    -1,
+                    -1,
+                    "ffff0000",
+                    4
+                  ],
+                  [
+                    "off",
+                    -1,
+                    -1
+                  ],
+                  [
+                    "on",
+                    -1,
+                    36,
+                    "ffff0000",
+                    4
+                  ],
+                  [
+                    "off",
+                    -1,
+                    36
                   ]
                 ]
               }
@@ -18429,6 +18731,109 @@
               "ledOff",
               0,
               0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "RUN-L-015",
+      "items": [
+        "E-05",
+        "RL-12"
+      ],
+      "layer": "run",
+      "area": "led",
+      "title": "zero columns light the first and last round buttons while invalid zero coordinates stay dark",
+      "scenario": [
+        {
+          "do": "press",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "do": "advance",
+          "ms": 20
+        },
+        {
+          "do": "observe"
+        },
+        {
+          "do": "advance",
+          "ms": 40
+        },
+        {
+          "do": "observe"
+        }
+      ],
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "Android LedRunner and iOS LedRunner",
+          "note": "A numeric zero column uses the circular light table; a zero row alone stays outside the pad table. Both reject indices outside their 36 circular slots."
+        },
+        {
+          "type": "intent",
+          "ref": "unipad.io src/lib/unipack/logoLed.test.ts, unipad-android UniPackFolderLogoLedTest",
+          "note": "a hex-only `on` line carries velocity 4; the docs do not state the default"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 4 3 c.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        },
+        {
+          "path": "keyLed/1 1 1",
+          "text": "on 0 1 FF0000\no 0 32 00FF00\no 8 0 FF0000\no 0 0 FF0000\no 0 37 FF0000\nd 40\noff 0 1\nf 0 32\nf 8 0\nf 0 0\nf 0 37"
+        }
+      ],
+      "fingerprint": "30a4a25f3d27e10b3829a96195138198468bf4d1fc80862739790cc9848941f6",
+      "expected": {
+        "checkpoints": [
+          [
+            [
+              "ledOn",
+              -1,
+              0,
+              "ffff0000",
+              4
+            ],
+            [
+              "ledOn",
+              -1,
+              31,
+              "ff00ff00",
+              4
+            ]
+          ],
+          [
+            [
+              "ledOff",
+              -1,
+              0
+            ],
+            [
+              "ledOff",
+              -1,
+              31
             ]
           ]
         ]
