@@ -65,6 +65,8 @@ def main():
     (ASSETS/'info').write_text('title=Original output signals\nproducerName=UniPad tests\nbuttonX=8\nbuttonY=8\nchain=1\nsquareButton=true\n')
     (ASSETS/'keySound').write_text(''.join(f'1 {p//8+1} {p%8+1} {name}'+(' 0' if p==9 else '')+'\n'
                                           for p,name in enumerate(NAMES)))
+    manifest['pack_files'] = {name:hashlib.sha256((ASSETS/name).read_bytes()).hexdigest()
+                              for name in ('info','keySound')}
     (REFS/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 
 

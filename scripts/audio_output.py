@@ -13,7 +13,7 @@ from pathlib import Path
 import sys
 import wave
 
-VERSION = 3
+VERSION = 4
 RATE = 6000
 DISCARD_S = .2
 MIN_RMS_DBFS = -50.
