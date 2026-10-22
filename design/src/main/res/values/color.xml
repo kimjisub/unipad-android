@@ -20,6 +20,8 @@
 	<!--skin-->
 	<color name="checkbox">#a6b4c9</color>
 	<color name="trace_log">#161e2b</color>
+	<color name="trace_log_numbers">#E6E9ED</color>
+	<color name="trace_log_numbers_shadow">#161E2B</color>
 	<color name="option_window">#FFFFFF</color>
 	<color name="option_window_checkbox">#414F66</color>
 	<color name="option_window_btn">#d6d8d7</color>

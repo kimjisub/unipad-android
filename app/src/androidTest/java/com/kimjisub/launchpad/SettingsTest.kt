@@ -52,6 +52,48 @@ class SettingsTest : BaseUITest() {
     }
 
     @Test
+    fun testMissingTapOrderChoiceShowsNumbersWithoutSaving() {
+        withTapOrderChoice(null) {
+            repeat(2) {
+                launchToMainScreen()
+                openSettings()
+                takeScreenshot("tap_order_missing_choice_$it")
+                assertTrue("An absent choice should show numbers", settingChecked(R.string.trace_log_classic))
+                assertTrue("Opening settings saved a default", !context.getSharedPreferences("data", 0).contains("TraceLogClassic"))
+            }
+        }
+    }
+
+    @Test
+    fun testBothTapOrderChoicesSurviveSettingsReopening() {
+        for (stored in listOf(false, true)) withTapOrderChoice(stored) {
+            repeat(2) {
+                launchToMainScreen()
+                openSettings()
+                assertEquals("Stored tap order choice changed", stored, settingChecked(R.string.trace_log_classic))
+                assertEquals(stored, prefs.traceLogClassic)
+                takeScreenshot("tap_order_stored_${stored}_$it")
+            }
+        }
+    }
+
+    private fun withTapOrderChoice(value: Boolean?, action: () -> Unit) {
+        val data = context.getSharedPreferences("data", 0)
+        val original = if (data.contains("TraceLogClassic")) data.getBoolean("TraceLogClassic", false) else null
+        fun store(choice: Boolean?) {
+            val editor = data.edit()
+            if (choice == null) editor.remove("TraceLogClassic") else editor.putBoolean("TraceLogClassic", choice)
+            assertTrue("Could not store test preference", editor.commit())
+        }
+        try {
+            store(value)
+            action()
+        } finally {
+            store(original)
+        }
+    }
+
+    @Test
     fun testSettingsModification() {
         val original = prefs.traceLogClassic
         try {

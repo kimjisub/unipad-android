@@ -499,7 +499,7 @@ private fun InfoContent(
 	onCommunityItemClick: (action: String, url: String) -> Unit,
 	onLanguageClick: (() -> Unit)? = null,
 	onReconnectClick: () -> Unit = {},
-	traceLogClassic: Boolean = false,
+	traceLogClassic: Boolean = true,
 	onTraceLogClassicChange: (Boolean) -> Unit = {},
 	slideMode: Boolean = false,
 	onSlideModeChange: (Boolean) -> Unit = {},

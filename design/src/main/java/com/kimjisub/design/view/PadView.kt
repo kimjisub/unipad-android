@@ -1,6 +1,7 @@
 package com.kimjisub.design.view
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -82,8 +83,14 @@ class PadView
 		return this
 	}
 
-	fun setTraceLogTextColor(color: Int): PadView {
+	fun setTraceLogTextColor(color: Int, shadowColor: Int = Color.TRANSPARENT): PadView {
 		b.traceLog.setTextColor(color)
+		if (shadowColor == Color.TRANSPARENT) {
+			b.traceLog.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+		} else {
+			val density = resources.displayMetrics.density
+			b.traceLog.setShadowLayer(density, 0f, density / 2f, shadowColor)
+		}
 		return this
 	}
 }
