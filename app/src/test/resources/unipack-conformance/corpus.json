@@ -3181,6 +3181,156 @@
     },
     {
       "layer": "parse",
+      "id": "KS-024",
+      "items": [
+        "S-07",
+        "S-02"
+      ],
+      "area": "keySound",
+      "title": "a line with both its wormhole and its chain, x or y outside the pack warns for each",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolder.kt, unipad-ios UniPackFolder.swift, unipad.io parser.ts parseKeySound",
+          "note": "the wormhole is checked right after the numbers are read, before chain, x, y and the sound file, so a line skipped for another field still reports it"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "3 1 1 a.wav 1 9\n1 5 1 a.wav 1 9\n1 1 4 a.wav 1 9\n1 1 2 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "f178f25f7625f67ab8aa5f93ad6f18c931bd35248012f57b20f0a35f64b74d93",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range",
+          "keySound:range"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
+      "id": "KS-025",
+      "items": [
+        "S-07",
+        "S-10"
+      ],
+      "area": "keySound",
+      "title": "a line with its wormhole outside the pack and a missing sound warns for both, wormhole first",
+      "basis": [
+        {
+          "type": "intent",
+          "ref": "unipad-android UniPackFolder.kt, unipad-ios UniPackFolder.swift, unipad.io parser.ts parseKeySound",
+          "note": "the wormhole is checked right after the numbers are read, before chain, x, y and the sound file, so a line skipped for another field still reports it"
+        }
+      ],
+      "expectation": "determined",
+      "files": [
+        {
+          "path": "info",
+          "text": "title=Conformance\nproducerName=UniPad Conformance\nbuttonX=4\nbuttonY=3\nchain=2\nsquareButton=true"
+        },
+        {
+          "path": "keySound",
+          "text": "1 1 1 none.wav 1 9\n1 1 2 a.wav"
+        },
+        {
+          "path": "sounds/a.wav",
+          "asset": "tone-440"
+        },
+        {
+          "path": "sounds/b.wav",
+          "asset": "tone-660"
+        },
+        {
+          "path": "sounds/c.wav",
+          "asset": "silence-10ms"
+        }
+      ],
+      "fingerprint": "03483fa002ea6fda00d1daabe5736afd63eb0397615a70c82e33432f452af24c",
+      "expected": {
+        "loaded": true,
+        "info": {
+          "title": "Conformance",
+          "producerName": "UniPad Conformance",
+          "buttonX": 4,
+          "buttonY": 3,
+          "chain": 2,
+          "squareButton": true
+        },
+        "sounds": [
+          {
+            "c": 0,
+            "x": 0,
+            "y": 1,
+            "queue": [
+              {
+                "file": "a.wav",
+                "loop": 0,
+                "wormhole": -1
+              }
+            ]
+          }
+        ],
+        "keyLedExist": false,
+        "leds": [],
+        "autoPlay": null,
+        "errors": [
+          "keySound:range",
+          "keySound:missing-file"
+        ]
+      }
+    },
+    {
+      "layer": "parse",
       "id": "KS-019",
       "items": [
         "S-12"
