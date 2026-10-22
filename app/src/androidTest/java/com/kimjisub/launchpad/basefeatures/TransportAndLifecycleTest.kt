@@ -5,6 +5,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import com.kimjisub.design.view.ChainView
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.TestUniPack
 import com.kimjisub.launchpad.activity.PlayActivity
@@ -75,6 +76,45 @@ class TransportAndLifecycleTest : PlaybackScreenTest() {
         screen.await("Selecting active mode did not stop autoplay") { screen.onMain { screen.vm().playMode == PlayMode.None && !screen.vm().autoPlayRunner!!.active } }
         assertFalse(screen.has(By.desc(screen.text(R.string.cd_autoplay_pause))))
         screen.capture("autoplay-stopped")
+    }
+
+    @Test fun seekingInGuidePracticeMovesTheVisibleHintToTheNewPad() {
+        File(screen.pack(), "autoPlay").writeText("d 700\no 1 1\n" + "d 500\n".repeat(39) + "d 700\no 1 2\nd 60000\no 1 3\n")
+        screen.openPlay()
+        screen.onMain { screen.vm().switchPlayMode(PlayMode.GuidePlay) }
+        screen.await("Initial guide missing") { hintedPad() == 0 }
+        screen.onMain { screen.vm().autoPlayRunner!!.playmode = false }
+        screen.capture("seek-initial-guide")
+        screen.onMain {
+            val runner = screen.vm().autoPlayRunner!!
+            runner.progressOffset(41 - runner.progress)
+            runner.playmode = true
+        }
+        // Save the same post-seek screen even on the base code, before asserting the new hint.
+        SystemClock.sleep(150)
+        screen.capture("seek-moved-guide")
+        assertEquals("Seeking must guide the pad at the new position", 1, hintedPad())
+    }
+
+    @Test fun manualChainSelectionKeepsItsChainAfterAWormholePad() {
+        val keySound = File(screen.pack(), "keySound")
+        keySound.writeText(keySound.readText().replaceFirst("1 1 1 silence.wav\n", "1 1 1 silence.wav 1 2\n"))
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain {
+            // Dispatch the pad and the real chain button callback in one main-thread task,
+            // so the explicit selection definitely precedes the delayed move.
+            vm.padTouch(0, 0, true)
+            vm.padTouch(0, 0, false)
+            val firstChain = screen.views(screen.resumed().window.decorView)
+                .filterIsInstance<ChainView>().first { it.width > 0 }
+            assertTrue("First chain button did not handle its click", firstChain.click())
+        }
+        screen.onMain { } // Start any queued wormhole delay before waiting past its deadline.
+        SystemClock.sleep(200)
+        screen.onMain { } // Drain main-thread work due before this marker.
+        screen.capture("wormhole-after-chain-selection")
+        assertEquals("A delayed wormhole replaced the selected chain", 0, screen.onMain { vm.chain.value })
     }
 
     @Test fun guideAndStepPracticeShowHintsAndStepWaitsForPadInput() {

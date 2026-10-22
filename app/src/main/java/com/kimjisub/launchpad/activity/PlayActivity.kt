@@ -1386,6 +1386,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		vm.soundRunner?.cancelPendingWormholes()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false

@@ -445,7 +445,10 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
-						uiCallback?.showToast(string.outOfCPU)
+						uiCallback?.showToast(
+							if (throwable is SoundRunner.AudioOutputUnavailableException) string.audio_output_unavailable
+							else string.outOfCPU
+						)
 						uiCallback?.finishActivity()
 					}
 				}
@@ -503,6 +506,7 @@ class PlayActivityViewModel(
 
 	/** Lets go of auto play's pads and clears the lights auto play left on. */
 	private fun resetPadsAfterAutoPlay() {
+		soundRunner?.cancelPendingWormholes()
 		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
