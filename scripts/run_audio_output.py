@@ -342,7 +342,8 @@ def execute_round(args, out, cases):
     try:
         with (out/'instrumentation.txt').open('w') as log:
             instrument = subprocess.Popen(instrument_command,stdout=log,stderr=subprocess.STDOUT)
-            command_log.append({'command':instrument_command})
+            instrument_trace = {'command':instrument_command}
+            command_log.append(instrument_trace)
             def wait_file(name, seconds):
                 deadline = time.monotonic()+seconds
                 while time.monotonic() < deadline:
