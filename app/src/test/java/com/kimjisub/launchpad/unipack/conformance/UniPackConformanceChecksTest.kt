@@ -34,6 +34,13 @@ class UniPackConformanceChecksTest {
 	private fun byId(id: String) = corpus.cases.first { it.id == id }
 
 	@Test
+	fun delayedWormholeDoesNotArriveBeforeTheScenarioDeadline() {
+		val actual = actualFor(byId("RUN-G605"), corpus).jsonObject.getValue("checkpoints").jsonArray
+		assertTrue("A 100 ms wormhole must not fire within 20 ms of scenario time",
+			actual[0].jsonArray.none { it.jsonArray[0].jsonPrimitive.content == "chain" })
+	}
+
+	@Test
 	fun screenInputCasesCannotPassThroughTheGenericRunner() {
 		val neverRun = Deps(loadPack = { error("screen input case reached the generic runner") })
 		for (id in listOf("RUN-G606", "RUN-G607", "RUN-G608", "RUN-G609", "RUN-G610", "RUN-G616", "RUN-G617", "RUN-G618")) {

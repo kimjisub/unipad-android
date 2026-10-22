@@ -4,6 +4,9 @@
 `meta/unipack-conformance` directory. Update both with its `sync.mjs`; do not edit
 expectations or add Android exceptions in this copy.
 
+The playback runner advances main-coroutine delays with its scenario clock, so a
+slow host cannot deliver a 100 ms chain move inside a 20 ms checkpoint.
+
 Run the parser and virtual-clock playback observations:
 
 ```sh

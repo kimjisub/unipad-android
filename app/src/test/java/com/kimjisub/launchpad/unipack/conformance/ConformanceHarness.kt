@@ -15,7 +15,6 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
 import com.kimjisub.launchpad.unipack.struct.LedAnimation.LedEvent
 import com.kimjisub.launchpad.unipack.struct.Sound
-import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
 import io.mockk.every
@@ -25,6 +24,8 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.JsonElement
@@ -283,7 +284,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private val chainLog = java.util.Collections.synchronizedList(ArrayList<Int>())
 	private val chainTag = ThreadLocal<String?>()
 
-	private val main = FakeMainDispatcher()
+	private val scheduler = TestCoroutineScheduler()
+	private val main = StandardTestDispatcher(scheduler)
 	private val engine = RecordingEngine(
 		onPlay = { file, loop ->
 			val name = file.relativeTo(soundsDir).path.replace(File.separatorChar, '/')
@@ -383,7 +385,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		// The app's LED runner ticks every 4 ms of real time. This one is the same class ticked on the
 		// virtual clock; its own coroutine runs the first tick at launch and then waits an hour.
 		vm.ledRunner?.let { vm.ledRunner = deps.wrapLedRunner(LedRunner(pack, vm.ledRunnerListener, vm.chain, 3_600_000L)) }
-		waitUntil("the sounds to finish loading", seconds = 10) { main.runAll(); !vm.soundLoadingActive }
+		waitUntil("the sounds to finish loading", seconds = 10) { scheduler.runCurrent(); !vm.soundLoadingActive }
 		check(!finished) { "${c.id}: sound loading failed" }
 		start()
 		// The screen's own lights blink on and off while the options above are set; a case starts after that.
@@ -403,7 +405,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -447,7 +449,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			if (wormhole != null && wormhole != -1) wormholes.add(Triple(clock.get() + 100, wormhole.coerceIn(vm.chain.range), chainLog.size))
 		}
 		touch()
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -510,10 +512,10 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		watchFrom.set(0)
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
-			waitUntil(what) { main.runAll(); watchReads.get() >= reads || !runner.active }
+			waitUntil(what) { scheduler.runCurrent(); watchReads.get() >= reads || !runner.active }
 		}
 		watchFrom.set(Long.MAX_VALUE)
-		main.runAll()
+		scheduler.runCurrent()
 	}
 
 	/**
@@ -548,7 +550,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			val now = clock.get() + step
 			setClock(now)
 			vm.ledRunner?.takeIf { it.active }?.let { loopMethod.invoke(it) }
-			main.runAll()
+			scheduler.runCurrent()
 			awaitWormholes(now)
 		}
 	}
@@ -556,18 +558,26 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private fun setClock(now: Long) {
 		val runner = autoPlay
 		if (runner == null || !runner.active || !runner.playmode) {
-			clock.set(now)
+			advanceMainClock(now)
 			return
 		}
 		watchReads.set(0)
 		watchFrom.set(now)
-		clock.set(now)
-		waitUntil("the auto-play runner to see $now") { main.runAll(); watchReads.get() >= 2 || !runner.active }
+		advanceMainClock(now)
+		waitUntil("the auto-play runner to see $now") { scheduler.runCurrent(); watchReads.get() >= 2 || !runner.active }
 		watchFrom.set(Long.MAX_VALUE)
 	}
 
+	/** The main coroutine delays and SystemClock move together, independently of host speed. */
+	private fun advanceMainClock(now: Long) {
+		val elapsed = now - clock.get()
+		clock.set(now)
+		scheduler.advanceTimeBy(elapsed)
+		scheduler.runCurrent()
+	}
+
 	/**
-	 * A wormhole switches the chain 100 ms after its sound, on the main thread, after a real delay. A
+	 * A wormhole switches the chain 100 ms after its sound, on the main coroutine's virtual clock. A
 	 * runner that does not switch (a sound that failed to decode) is waited for no longer than
 	 * [WORMHOLE_WAIT_MS]; the missing chain event then shows in the result.
 	 */
@@ -577,7 +587,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			wormholes.remove(w)
 			val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(WORMHOLE_WAIT_MS)
 			while (System.nanoTime() < deadline) {
-				main.runAll()
+				scheduler.runCurrent()
 				if (synchronized(chainLog) { chainLog.drop(w.third).contains(w.second) }) break
 				Thread.sleep(1)
 			}
