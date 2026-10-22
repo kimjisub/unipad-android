@@ -607,6 +607,35 @@ class PlayActivityTest : BaseUITest() {
             tapPad(2, 2)
             assertTrue("Resuming trace log should continue numbering", waitUntil { "1 4 5" in shownTapOrders() })
 
+            val recorded = shownTapOrders().keys
+            val originalSize = device.executeShellCommand("wm size").lineSequence()
+                .firstOrNull { it.startsWith("Override size:") }?.substringAfter(":")?.trim()
+            try {
+                device.executeShellCommand("wm size 1600x2560")
+                rotateTo(Surface.ROTATION_270)
+                settledGeometry(landscape = true)
+                assertEquals("Resizing or rotating lost tap orders", recorded, shownTapOrders().keys)
+                takeScreenshot("tap_order_resized_rotated")
+            } finally {
+                device.executeShellCommand("wm size ${originalSize ?: "reset"}")
+                device.unfreezeRotation()
+                settledGeometry(landscape = true)
+            }
+            var previousActivity: android.app.Activity? = null
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                previousActivity = ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(Stage.RESUMED).single().also { it.recreate() }
+            }
+            assertTrue("Play screen was not recreated", waitUntil(30000L) {
+                var recreated = false
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    recreated = ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(Stage.RESUMED).any { it !== previousActivity }
+                }
+                recreated && shownTapOrders().keys == recorded
+            })
+            takeScreenshot("tap_order_recreated")
+
             openPlayOptions()
             playOption(R.string.traceLog).longClick()
             closePlayOptions()
