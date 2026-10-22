@@ -169,12 +169,6 @@ def extract_case(source: Path, target: Path, log: dict, event: dict) -> dict:
     return result
 
 
-def different_pad_passed(values, expected, actual, pressed, uncertainty=0.):
-    """Whether the output demonstrates rejection of the expected pad."""
-    return (not compare(values,expected,RATE,pressed,uncertainty)["passed"] and
-            compare(values,actual,RATE,pressed,uncertainty)["passed"])
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--serial', required=True)
@@ -256,7 +250,7 @@ def judge_record(record, manifest, out):
                 passed = passed and tail['passed']
             result.update({'verdict':verdict,'status':'passed' if passed else 'failed'})
     except Exception as error:
-        result['environment_error'] = str(error)
+        result['environment_error'] = f'{type(error).__name__}: {error}'
     return result
 
 
@@ -362,15 +356,22 @@ def execute_round(args, out, cases):
                     except Exception as error:
                         clock_before=[]
                         record['environment_error']=f'clock before input: {error}'
-                    adb('shell','run-as',PACKAGE,'sh','-c',
-                        f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
-                        input=(json.dumps({'pads':rule['input_pads'],'hold_ms':rule['hold_ms']})+'\n').encode())
                     try:
-                        event = json.loads(wait_file(f'event-{number}.json',4))
+                        adb('shell','run-as',PACKAGE,'sh','-c',
+                            f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{number}"',
+                            input=(json.dumps({'pads':rule['input_pads'],'hold_ms':rule['hold_ms']})+'\n').encode())
+                        event_text = wait_file(f'event-{number}.json',4)
+                    except Exception as error:
+                        # A pending input can play during the next baseline. Stop
+                        # sending commands until a new round starts a fresh screen.
+                        record['environment_error'] = f'input collection: {type(error).__name__}: {error}'
+                        raise
+                    try:
+                        event = json.loads(event_text)
                         record['event'] = event
                         event['clock']={'before':clock_before,'after':measure_clock()}
                     except Exception as error:
-                        record['environment_error']=f'input event or clock: {error}'
+                        record['environment_error']=f'input event or clock: {type(error).__name__}: {error}'
                     (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
                     if instrument.poll() is not None:
                         raise RuntimeError('screen instrumentation ended during case collection')
@@ -384,25 +385,28 @@ def execute_round(args, out, cases):
                 f'"cat > {exchange}/command.tmp && mv {exchange}/command.tmp {exchange}/command-{len(recordings)}"',input=b'finish\n',check=False)
             instrument_exit = instrument.wait(timeout=20)
     except Exception as error:
-        failure = str(error)
+        failure = f'{type(error).__name__}: {error}'
     finally:
         for process in (recorder,instrument):
-            if process is None or process.poll() is not None:
+            if process is None:
                 continue
-            if process is instrument:
-                try: adb('shell','am','force-stop',PACKAGE,check=False)
-                except Exception as error: failure = failure or f'cleanup: {error}'
             try:
-                process.terminate()
-                try:
-                    code=process.wait(timeout=10)
-                    if process is recorder: capture_exit=code
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    code=process.wait(timeout=10)
-                    if process is recorder: capture_exit=code
+                code = process.poll()
+                if code is None:
+                    if process is instrument:
+                        try: adb('shell','am','force-stop',PACKAGE,check=False)
+                        except Exception as error: failure = failure or f'cleanup: {type(error).__name__}: {error}'
+                    process.terminate()
+                    try:
+                        code=process.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        code=process.wait(timeout=10)
+                if process is recorder:
+                    capture_exit=code
+                    capture_trace['exit']=code
             except Exception as error:
-                failure = failure or f'cleanup: {error}'
+                failure = failure or f'cleanup: {type(error).__name__}: {error}'
         (out/'commands.json').write_text(json.dumps(command_log,indent=2)+'\n')
     # Finalize and analyze all completed inputs even if a later input failed.
     try:
@@ -426,11 +430,16 @@ def execute_round(args, out, cases):
                 if record['capture'].get('environment_error'):
                     record['environment_error'] = record['capture']['environment_error']
             except Exception as error:
-                record['environment_error'] = str(error)
+                record['environment_error'] = f'{type(error).__name__}: {error}'
         (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
     except Exception as error:
         failure = failure or f'capture finalization: {type(error).__name__}: {error}'
     results = judge_records(recordings,manifest,out)
+    collected = {record['name'] for record in recordings}
+    for rule in cases:
+        if rule['name'] not in collected:
+            results.append({'name':rule['name'], 'status':'environment_unconfirmed',
+                            'environment_error':'case was not collected: '+(failure or 'screen run stopped')})
     instrument_text = (out/'instrumentation.txt').read_text() if (out/'instrumentation.txt').exists() else ''
     if failure or instrument_exit != 0 or 'OK (1 test)' not in instrument_text or len(results) != len(cases):
         results.append({'name':'screenAndRecorderComplete','status':'environment_unconfirmed',

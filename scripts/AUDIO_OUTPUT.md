@@ -116,7 +116,8 @@ encoders; running the detector requires only Python's standard library.
   recording, the case is environment unconfirmed, never an app failure. The first measured stop tail was
   0.46 seconds; every round also reports its last non-silent 10 ms window.
   The postroll must cover 0.5 seconds after the latest permitted end of a normal
-  sound. Thresholds are versioned constants in `audio_output.py`.
+  sound. Signal thresholds are versioned constants in `audio_output.py`. The packet
+  timing allowance and per-case loop stop window are declared in `run_audio_output.py`.
 
 Exit 0 means every requested case passed. Exit 2 means a confirmed recording
 rejected the expected signal or a negative control failed. Exit 3 means the
@@ -125,6 +126,11 @@ XML represents unconfirmed cases as errors, never skips or passes. Preparation
 failures (including missing SDK variables or APKs), empty/malformed recorder
 output, and cleanup timeouts also leave both reports with exit 3. A corrupt
 case WAV or other per-case exception does not replace other case verdicts.
+If an input command fails or its response times out, collection stops: the
+pending input could otherwise play in a later case. Completed captures are
+retained and every uncollected requested case is reported as environment
+unconfirmed. A response received on time but containing malformed JSON stays
+a per-case error.
 An unwritable or nonempty evidence directory and invalid command-line options
 remain invocation errors; no previous evidence is overwritten.
 

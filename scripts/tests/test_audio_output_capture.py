@@ -114,15 +114,29 @@ class ClockAndControlTest(unittest.TestCase):
                     runner.extract_case(source,target,PacketTimelineTest().timeline(),event)
 
     def test_wrong_pad_control_requires_audible_matching_alternate(self):
+        import array
+        import json
         import math
-        tone=lambda hz:[.2*math.sin(2*math.pi*hz*i/runner.RATE) for i in range(runner.RATE)]
-        expected=[tone(431)]*2;actual=[tone(673)]*2
-        capture=lambda note:[[0.]*6000+c+[0.]*12000 for c in note]
-        self.assertTrue(runner.different_pad_passed(capture(actual),expected,actual,1.))
-        for sound in [[[0.]*6000]*2,expected,[tone(919)]*2,
-                      [[v*.001 for v in c] for c in actual]]:
-            with self.subTest(sound=sound[0][:2]):
-                self.assertFalse(runner.different_pad_passed(capture(sound),expected,actual,1.))
+        manifest=json.loads((runner.ROOT/'scripts/fixtures/audio-output/manifest.json').read_text())
+        expected=runner.read_wav(runner.ROOT/manifest['pads'][0]['reference'])
+        actual=runner.read_wav(runner.ROOT/manifest['pads'][1]['reference'])
+        unrelated=[[.2*math.sin(2*math.pi*919*i/runner.RATE) for i in range(runner.RATE)]]*2
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp)
+            for label,sound,passed in [('alternate',actual,True),('silence',[[0.]*runner.RATE]*2,False),
+                                       ('expected',expected,False),('unrelated',unrelated,False),
+                                       ('too quiet',[[v*.001 for v in c] for c in actual],False)]:
+                channels=[[0.]*6000+c+[0.]*12000 for c in sound]
+                samples=array.array('h',(round(v*32767) for pair in zip(*channels) for v in pair))
+                if sys.byteorder!='little':samples.byteswap()
+                with wave.open(str(out/'differentPadIsRejected.wav'),'wb') as wav:
+                    wav.setnchannels(2);wav.setsampwidth(2);wav.setframerate(runner.RATE)
+                    wav.writeframes(samples.tobytes())
+                result=runner.judge_record({'name':'differentPadIsRejected',
+                    'capture':{'pressed_s':1.,'input_uncertainty_s':0.,'sample_rate':runner.RATE}},manifest,out)
+                with self.subTest(sound=label):
+                    self.assertEqual('passed' if passed else 'failed',result['status'],result)
+                    self.assertIn('actual_pad_verdict',result)
 
 
 class PacketTimelineTest(unittest.TestCase):
