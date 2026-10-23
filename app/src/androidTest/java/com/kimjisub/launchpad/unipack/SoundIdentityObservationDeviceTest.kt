@@ -33,6 +33,13 @@ class SoundIdentityObservationDeviceTest {
         try { checkStorageOnlyNormalization(root) } finally { root.deleteRecursively() }
     }
 
+    @Test fun identicalOriginalsKeepBothContentsOnInternalStorage() {
+        val root = File(context.filesDir, "sound-identity-identical-check").apply {
+            deleteRecursively(); check(mkdirs())
+        }
+        try { checkIdenticalOriginalsStoredSeparately(root) } finally { root.deleteRecursively() }
+    }
+
     @Test fun recordInternalAndExternalImportSelections() {
         val assets = instrumentation.context.assets
         val corpus = SoundIdentityCorpus(assets.open("sound-identity/corpus.json").use { it.readBytes() },

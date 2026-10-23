@@ -60,11 +60,11 @@ fun verifyCorpusDigest(bytes: ByteArray, digestFile: String?): String {
 
 /** Parses an independently pinned input without depending on a host resource loader. */
 fun parseCorpus(bytes: ByteArray, digest: String?): Corpus {
-    val sha256 = verifyCorpusDigest(bytes, digest)
-    val root = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)).jsonObject
-    val assets = root.getValue("assets").jsonObject.mapValues { it.value.jsonObject.getValue("base64").jsonPrimitive.content }
-    val cases = root.getValue("cases").jsonArray.map { it.jsonObject.toCase() }
-    return Corpus(assets, cases, sha256)
+	val sha256 = verifyCorpusDigest(bytes, digest)
+	val root = Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)).jsonObject
+	val assets = root.getValue("assets").jsonObject.mapValues { it.value.jsonObject.getValue("base64").jsonPrimitive.content }
+	val cases = root.getValue("cases").jsonArray.map { it.jsonObject.toCase() }
+	return Corpus(assets, cases, sha256)
 }
 
 private fun JsonObject.string(key: String): String? = this[key]?.jsonPrimitive?.content

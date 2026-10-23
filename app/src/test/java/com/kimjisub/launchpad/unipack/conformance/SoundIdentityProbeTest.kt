@@ -92,4 +92,40 @@ class SoundIdentityProbeTest {
     @Test fun aStorageOnlyNormalizationChangeKeepsTheOriginalArchiveIdentity() {
         checkStorageOnlyNormalization(temporary.root)
     }
+
+    @Test fun identicalOriginalsStoredSeparatelyKeepBothContents() {
+        val probe = SoundIdentityProbe(archive(listOf(composed to a, decomposed to a)), temporary.root)
+        val diagnostics = probe.diagnostics(mapOf(composed to sha256Hex(a), decomposed to sha256Hex(a)))
+        assertEquals(2, diagnostics.size)
+        for (item in diagnostics.map { it.jsonObject }) {
+            assertEquals(item["archiveEntry"], item["storedPath"])
+            assertEquals(item["originalSha256"], item["storedSha256"])
+            assertEquals("true", item["contentsPreserved"]?.jsonPrimitive?.content)
+        }
+    }
+
+    @Test fun identicalOriginalsCollapsedToOneFileLoseOneStoredEntry() {
+        val probe = SoundIdentityProbe(archive(listOf(composed to a, decomposed to a)), temporary.root)
+        val diagnostics = probe.diagnostics(mapOf(composed to sha256Hex(a))).map { it.jsonObject }
+        assertEquals(listOf("true", "false"), diagnostics.map { it["contentsPreserved"]?.jsonPrimitive?.content })
+    }
+
+    @Test fun swappedContentsUnderOriginalNamesAreNotPreserved() {
+        val probe = SoundIdentityProbe(archive(), temporary.root)
+        val diagnostics = probe.diagnostics(mapOf(composed to sha256Hex(b), decomposed to sha256Hex(a)))
+        for (item in diagnostics.map { it.jsonObject }) {
+            assertEquals(item["archiveEntry"], item["storedPath"])
+            assertNotEquals(item["originalSha256"], item["storedSha256"])
+            assertEquals("false", item["contentsPreserved"]?.jsonPrimitive?.content)
+        }
+    }
+
+    @Test fun aStorageOnlyCaseChangeKeepsIdentityAndContents() {
+        val probe = SoundIdentityProbe(archive(listOf("sounds/a.wav" to a)), temporary.root)
+        val actual = probe.identity(selected("SOUNDS/A.WAV", a))
+        assertEquals("sounds/a.wav", actual["archiveEntry"]?.jsonPrimitive?.content)
+        val diagnostics = probe.diagnostics().single().jsonObject
+        assertEquals("SOUNDS/A.WAV", diagnostics["storedPath"]?.jsonPrimitive?.content)
+        assertEquals("true", diagnostics["contentsPreserved"]?.jsonPrimitive?.content)
+    }
 }

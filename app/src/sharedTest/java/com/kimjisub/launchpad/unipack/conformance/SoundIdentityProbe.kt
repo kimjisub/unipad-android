@@ -34,9 +34,9 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
 
     fun identity(file: File): JsonObject {
         val hash = sha256Hex(file.readBytes())
-        val candidates = entries.filter { entry ->
-            normalized(entry.path) == normalized(file.relativeTo(root).invariantSeparatorsPath) && entry.hash == hash
-        }
+        val path = file.relativeTo(root).invariantSeparatorsPath
+        val matchingBytes = entries.filter { it.hash == hash }
+        val candidates = matchingPaths(matchingBytes, path)
         return buildJsonObject {
             put("archiveEntry", candidates.singleOrNull()?.let { JsonPrimitive(it.path) } ?: JsonNull)
             put("sha256", hash)
@@ -45,23 +45,52 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
 
     private fun normalized(path: String): String = Normalizer.normalize(path, Normalizer.Form.NFC)
 
+    private fun matchingPaths(files: List<Entry>, path: String): List<Entry> =
+        files.filter { normalized(it.path) == normalized(path) }.ifEmpty {
+            files.filter { normalized(it.path).equals(normalized(path), ignoreCase = true) }
+        }
+
     /** Storage spellings are diagnostics; only matching names AND bytes establish preservation. */
     fun diagnostics(): JsonArray {
-        val storedFiles = root.walkTopDown().filter { it.isFile }.map { file ->
-            Entry(file.relativeTo(root).invariantSeparatorsPath, sha256Hex(file.readBytes()))
-        }.toList()
+        val storedFiles = root.walkTopDown().filter { it.isFile }.associate { file ->
+            file.relativeTo(root).invariantSeparatorsPath to sha256Hex(file.readBytes())
+        }
+        return diagnostics(storedFiles)
+    }
+
+    /** A path/hash snapshot also allows case-sensitive storage to be checked on any host. */
+    internal fun diagnostics(storedHashes: Map<String, String>): JsonArray {
+        val storedFiles = storedHashes.map { (path, hash) -> Entry(path, hash) }
+        val remaining = storedFiles.toMutableList()
+        val matched = mutableMapOf<Entry, Entry>()
+        // Reserve exact spellings first, independent of ZIP order. When distinct spellings
+        // exist on disk, swapped bytes must not be reassigned to a different original name.
+        for (entry in entries) {
+            val exact = remaining.find { it.path == entry.path } ?: continue
+            if (exact.hash == entry.hash || matchingPaths(storedFiles, entry.path).size > 1) {
+                matched[entry] = exact
+                remaining.remove(exact)
+            }
+        }
+        // A disk may normalize or change case. Match remaining bytes once each so two
+        // identical originals collapsed into one file cannot both count as preserved.
+        for (entry in entries.filterNot { it in matched }) {
+            val stored = matchingPaths(remaining.filter { it.hash == entry.hash }, entry.path).firstOrNull()
+                ?: continue
+            matched[entry] = stored
+            remaining.remove(stored)
+        }
         return buildJsonArray {
             for (entry in entries) {
-                val candidates = storedFiles.filter { normalized(it.path) == normalized(entry.path) }
-                val preserved = candidates.filter { it.hash == entry.hash }
+                val preserved = matched[entry]
                 // If bytes were overwritten, keep the original path's current bytes as a diagnostic.
-                val stored = preserved.singleOrNull() ?: candidates.singleOrNull()
+                val stored = preserved ?: matchingPaths(storedFiles, entry.path).singleOrNull()
                 add(buildJsonObject {
                     put("archiveEntry", entry.path)
                     put("originalSha256", entry.hash)
                     put("storedPath", stored?.let { JsonPrimitive(it.path) } ?: JsonNull)
                     put("storedSha256", stored?.let { JsonPrimitive(it.hash) } ?: JsonNull)
-                    put("contentsPreserved", preserved.size == 1)
+                    put("contentsPreserved", preserved?.hash == entry.hash)
                 })
             }
         }
