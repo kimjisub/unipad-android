@@ -25,6 +25,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
+import org.junit.Assert.assertNotEquals
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -345,6 +347,38 @@ class PlayActivityViewModelUsageTest {
 			mapOf(UsageParam.RESULT to "failure", UsageParam.ERROR_TYPE to "sound_engine"),
 			loadSuccess().parameters,
 		)
+	}
+
+	@Test
+	fun outputStartFailureDoesNotBlameDevicePerformanceAndStillClosesTheScreen() {
+		val vm = newVm(FakeEngine(startOk = false))
+		val notices = mutableListOf<Int>()
+		val callback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
+		every { callback.showToast(any()) } answers { notices += firstArg<Int>() }
+		vm.uiCallback = callback
+		load(vm, createPack())
+		startPlayback(vm)
+		runUntil { notices.isNotEmpty() }
+		assertEquals(1, notices.size)
+		assertNotEquals(com.kimjisub.launchpad.R.string.outOfCPU, notices.single())
+		verify(exactly = 1) { callback.finishActivity() }
+	}
+
+	@Test
+	fun decodingMemoryFailureKeepsTheExistingPerformanceNotice() {
+		val engine = object : SoundRunner.Engine by FakeEngine() {
+			override fun decode(file: JFile): OboeAudioEngine.DecodedAudio = throw OutOfMemoryError("simulated decode failure")
+		}
+		val vm = newVm(engine)
+		val notices = mutableListOf<Int>()
+		val callback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
+		every { callback.showToast(any()) } answers { notices += firstArg<Int>() }
+		vm.uiCallback = callback
+		load(vm, createPack())
+		startPlayback(vm)
+		runUntil { notices.isNotEmpty() }
+		assertEquals(listOf(com.kimjisub.launchpad.R.string.outOfCPU), notices)
+		verify(exactly = 1) { callback.finishActivity() }
 	}
 
 	/** A pack of only LEDs or auto play has nothing to decode; its load still ends and a press still starts a session. */

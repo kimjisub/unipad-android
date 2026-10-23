@@ -257,7 +257,12 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun showToast(resId: Int) {
-			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
+			if (resId == string.audio_output_unavailable) {
+				// The play screen immediately closes; keep the reason visible over the previous screen.
+				Toast.makeText(applicationContext, resId, Toast.LENGTH_LONG).show()
+			} else {
+				Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
+			}
 		}
 
 		override fun finishActivity() {
@@ -1386,6 +1391,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		vm.soundRunner?.cancelPendingWormholes()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false

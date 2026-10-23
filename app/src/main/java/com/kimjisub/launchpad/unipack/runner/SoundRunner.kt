@@ -6,6 +6,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -42,6 +43,18 @@ class SoundRunner(
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
+	class AudioOutputUnavailableException : RuntimeException("Failed to open audio output")
+
+	private val wormholeLock = Any()
+	private val wormholeJobs = mutableSetOf<Job>()
+	private var applyingWormhole = false // guarded by wormholeLock
+	private val cancelWormholesOnChainSelection: (Int, Int) -> Unit = { _, _ ->
+		synchronized(wormholeLock) {
+			// A scheduled wormhole must not cancel the other wormholes in the same chord.
+			if (!applyingWormhole) cancelPendingWormholes()
+		}
+	}
+
 	interface LoadingListener {
 		fun onStart(soundCount: Int)
 		fun onProgressTick()
@@ -76,6 +89,7 @@ class SoundRunner(
 	}
 
 	init {
+		chain.addSelectionObserver(cancelWormholesOnChainSelection)
 		val table = unipack.soundTable
 		var soundCount = 0
 		if (table != null) {
@@ -110,7 +124,7 @@ class SoundRunner(
 					}
 				}
 				if (!started) {
-					throw RuntimeException("Failed to start Oboe audio engine")
+					throw AudioOutputUnavailableException()
 				}
 
 				// Phase 1: Collect all unique files and map sounds to them
@@ -201,11 +215,23 @@ class SoundRunner(
 			heldLoop[x][y] = if (sound.loop == -1) key else 0
 		}
 		unipack.soundPush(chain.value, x, y)
-		if (sound.wormhole != Sound.NO_WORMHOLE)
-			scope.launch(Dispatchers.Main) {
+		if (sound.wormhole != Sound.NO_WORMHOLE) {
+			val move = scope.launch(Dispatchers.Main, start = CoroutineStart.LAZY) {
 				delay(100)
-				chain.value = sound.wormhole
+				synchronized(wormholeLock) {
+					ensureActive()
+					applyingWormhole = true
+					try {
+						chain.value = sound.wormhole
+					} finally {
+						applyingWormhole = false
+					}
+				}
 			}
+			synchronized(wormholeLock) { wormholeJobs.add(move) }
+			move.invokeOnCompletion { synchronized(wormholeLock) { wormholeJobs.remove(move) } }
+			move.start()
+		}
 	}
 
 	fun soundOff(x: Int, y: Int) {
@@ -217,6 +243,7 @@ class SoundRunner(
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
 	fun stopAll() {
+		cancelPendingWormholes()
 		if (engineStarted) engine.stopAllVoices()
 	}
 
@@ -226,6 +253,7 @@ class SoundRunner(
 	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading.
 	 */
 	fun pauseStream() {
+		cancelPendingWormholes()
 		synchronized(engineLock) {
 			if (destroyed || streamPaused) return
 			streamPaused = true
@@ -241,7 +269,18 @@ class SoundRunner(
 		}
 	}
 
+	/** Drops chain moves whose originating playback or chain selection is no longer current. */
+	fun cancelPendingWormholes() {
+		synchronized(wormholeLock) {
+			val pending = wormholeJobs.toList()
+			wormholeJobs.clear()
+			pending.forEach { it.cancel() }
+		}
+	}
+
 	fun destroy() {
+		cancelPendingWormholes()
+		chain.removeSelectionObserver(cancelWormholesOnChainSelection)
 		loadJob.cancel()
 		synchronized(engineLock) {
 			if (destroyed) return

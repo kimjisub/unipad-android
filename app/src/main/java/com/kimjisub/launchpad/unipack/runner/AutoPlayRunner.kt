@@ -16,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -60,6 +61,8 @@ class AutoPlayRunner(
 	// Written by both the runner coroutine and the UI (progressOffset), so every
 	// read-modify-write goes through the atomic and element reads use a snapshot index.
 	private val progressValue = AtomicInteger(0)
+	// The UI publishes a target; only the loop rebases its clock and guide state.
+	private val pendingSeek = AtomicReference<Int?>(null)
 	val progress: Int
 		get() = progressValue.get()
 
@@ -104,7 +107,7 @@ class AutoPlayRunner(
 	}
 
 	// Guide timeline for practice mode
-	private data class GuideEvent(val timeMs: Long, val x: Int, val y: Int, val chain: Int)
+	private data class GuideEvent(val index: Int, val timeMs: Long, val x: Int, val y: Int, val chain: Int)
 	private var guideTimeline: List<GuideEvent> = emptyList()
 	private var guideIndex = 0
 	private var waitingForChain = -1
@@ -137,10 +140,10 @@ class AutoPlayRunner(
 	private fun buildGuideTimeline(autoPlay: AutoPlay): List<GuideEvent> {
 		val events = mutableListOf<GuideEvent>()
 		var time = 0L
-		for (element in autoPlay.elements) {
+		for ((index, element) in autoPlay.elements.withIndex()) {
 			when (element) {
 				is AutoPlay.Element.Delay -> time += element.delay
-				is AutoPlay.Element.On -> events.add(GuideEvent(time, element.x, element.y, element.currChain))
+				is AutoPlay.Element.On -> events.add(GuideEvent(index, time, element.x, element.y, element.currChain))
 				else -> {}
 			}
 		}
@@ -154,7 +157,10 @@ class AutoPlayRunner(
 		if (job?.isActive != true) {
 			job = scope.launch {
 				Log.thread("[AutoPlay] 2. Start Coroutine")
-				setProgress(0)
+				synchronized(progressValue) {
+					pendingSeek.set(null)
+					setProgress(0)
+				}
 				listener.onStart()
 
 				val autoPlay = unipack.autoPlayTable
@@ -176,12 +182,43 @@ class AutoPlayRunner(
 					var delayAccum: Long = 0
 					var startTime = SystemClock.elapsedRealtime()
 					var prevPracticeGuide = practiceGuide
+					var rebaseSeekOnResume = false
 					// Time spent not advancing is not owed to the sequence once playback continues.
 					fun skipIdleTime(now: Long) {
 						if (delayAccum <= now - startTime) delayAccum = now - startTime
 					}
-					while (progress < autoPlay.elements.size && isActive) {
+					while ((progress < autoPlay.elements.size || pendingSeek.get() != null) && isActive) {
+						val seek: Int?
+						val playing: Boolean
+						synchronized(progressValue) {
+							seek = pendingSeek.getAndSet(null)
+							// Read the mode with the request, so a pause before the UI's seek
+							// cannot be mistaken for the playing state from an earlier tick.
+							playing = playmode
+						}
+						val target = seek ?: if (playing && rebaseSeekOnResume) progress else null
 						val currTime = SystemClock.elapsedRealtime()
+						if (target != null) {
+							// Step practice can advance after a paused seek. On resume, align to
+							// that current position, without replaying the seek or resetting its steps.
+							rebaseSeekOnResume = !playing
+							delayAccum = 0
+							for (index in 0 until target) {
+								val element = autoPlay.elements[index]
+								if (element is AutoPlay.Element.Delay) delayAccum += element.delay
+							}
+							startTime = currTime - delayAccum
+							waitingForChain = -1
+							waitStartTime = currTime
+							synchronized(activeGuides) {
+								for ((key, _) in activeGuides) listener.onGuideLedUpdate(key / 256, key % 256, 0)
+								activeGuides.clear()
+							}
+							listener.onRemoveGuide()
+							guideIndex = guideTimeline.indexOfFirst { it.index >= target }
+								.let { if (it < 0) guideTimeline.size else it }
+							lastGuideUpdateMs = currTime - GUIDE_LED_UPDATE_INTERVAL_MS
+						}
 
 						// Detect mid-run practice mode toggle
 						if (practiceGuide != prevPracticeGuide) {
@@ -208,7 +245,7 @@ class AutoPlayRunner(
 							prevPracticeGuide = practiceGuide
 						}
 
-						if (playmode) {
+						if (playing && playmode && pendingSeek.get() == null) {
 							// Practice mode: waiting for chain change
 							if (practiceGuide && waitingForChain >= 0) {
 								if (chain.value == waitingForChain) {
@@ -285,7 +322,7 @@ class AutoPlayRunner(
 								// Progress and playmode are read there, as seeking or pausing may have happened
 								// while delivery waited.
 								if (waitingForChain < 0 && delayAccum <= currTime - startTime) withContext(eventDispatcher) {
-									while (playmode && delayAccum <= currTime - startTime) {
+									while (playmode && pendingSeek.get() == null && delayAccum <= currTime - startTime) {
 										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
@@ -396,7 +433,11 @@ class AutoPlayRunner(
 
 	fun progressOffset(offset: Int) {
 		val size = unipack.autoPlayTable?.elements?.size ?: 0
-		setProgress(progressValue.updateAndGet { (it + offset).coerceIn(0, size) })
+		synchronized(progressValue) {
+			val target = (progress + offset).coerceIn(0, size)
+			pendingSeek.set(target)
+			setProgress(target)
+		}
 		if (stepMode) {
 			resetStepState()
 			listener.onRemoveGuide()
