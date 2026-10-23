@@ -16,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 class AutoPlayRunner(
 	private val unipack: UniPack,
@@ -139,6 +140,25 @@ class AutoPlayRunner(
 	private var stepScanned = false
 	private var stepStartProgress = 0
 	private var stepChainValue = -1
+	private data class GuideSeek(val index: Int, val wallTimeMs: Long, val pausedMs: Long)
+	private val pendingGuideSeek = AtomicReference<GuideSeek?>(null)
+
+	private fun hasPendingStep() = synchronized(stepPendingPads) { stepPendingPads.isNotEmpty() }
+
+	private fun clearGuides() {
+		val keys = synchronized(activeGuides) {
+			activeGuides.keys.toMutableSet().also { activeGuides.clear() }
+		}
+		synchronized(stepPendingPads) {
+			keys.addAll(stepPendingPads)
+			stepPendingPads.clear()
+		}
+		for (key in keys) {
+			listener.onGuideLedUpdate(key / 256, key % 256, 0)
+			listener.onGuidePadOff(key / 256, key % 256)
+		}
+		listener.onRemoveGuide()
+	}
 
 	companion object {
 		const val GUIDE_LOOKAHEAD_MS = 800L
@@ -172,6 +192,7 @@ class AutoPlayRunner(
 		if (job?.isActive != true) {
 			job = scope.launch {
 				Log.thread("[AutoPlay] 2. Start Coroutine")
+				pendingGuideSeek.set(null)
 				setProgress(0)
 				listener.onStart()
 
@@ -199,8 +220,22 @@ class AutoPlayRunner(
 					fun skipIdleTime(now: Long) {
 						if (delayAccum <= now - startTime) delayAccum = now - startTime
 					}
-					while (progress < autoPlay.elements.size && isActive) {
+					// Scanning can reach the end while the performer still owes the final step.
+					while ((progress < autoPlay.elements.size || stepMode && practiceGuide && hasPendingStep()) && isActive) {
 						val currTime = SystemClock.elapsedRealtime()
+						pendingGuideSeek.getAndSet(null)?.let { seek ->
+							if (practiceGuide && !stepMode) {
+								clearGuides()
+								waitingForChain = -1
+								val before = autoPlay.elements.take(seek.index)
+								val songTime = before.sumOf { if (it is AutoPlay.Element.Delay) it.delay.toLong() else 0L }
+								startTime = seek.wallTimeMs - songTime
+								delayAccum = songTime
+								accountedPauseMs = seek.pausedMs
+								guideIndex = before.count { it is AutoPlay.Element.On }
+								lastGuideUpdateMs = 0L
+							}
+						}
 						val totalPausedMs = totalPausedAt(currTime)
 						val pausedMs = totalPausedMs - accountedPauseMs
 						if (pausedMs > 0) {
@@ -315,7 +350,8 @@ class AutoPlayRunner(
 								// Progress and playmode are read there, as seeking or pausing may have happened
 								// while delivery waited.
 								if (waitingForChain < 0 && delayAccum <= currTime - startTime) withContext(eventDispatcher) {
-									while (playmode && delayAccum <= currTime - startTime) {
+									// Rebuild a guide seek's clock before consuming commands at its new index.
+									while (playmode && pendingGuideSeek.get() == null && delayAccum <= currTime - startTime) {
 										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
@@ -390,7 +426,7 @@ class AutoPlayRunner(
 							}
 
 						}
-						if (!playmode && progress < autoPlay.elements.size) {
+						if (!playmode && (progress < autoPlay.elements.size || stepMode && practiceGuide && hasPendingStep())) {
 							wakeSignal.receive()
 						} else {
 							delay(loopDelay)
@@ -400,6 +436,7 @@ class AutoPlayRunner(
 					// Normal cancellation, no action needed
 				} finally {
 					chain.removeObserver(wakeOnChainChange)
+					clearGuides()
 				}
 				Log.thread("[AutoPlay] 4. End Coroutine")
 				listener.onEnd()
@@ -411,7 +448,8 @@ class AutoPlayRunner(
 		Log.thread("[AutoPlay] 3. Request Stop")
 		job?.cancel()
 		job = null
-		synchronized(activeGuides) { activeGuides.clear() }
+		pendingGuideSeek.set(null)
+		clearGuides()
 		resetStepState()
 	}
 
@@ -425,6 +463,10 @@ class AutoPlayRunner(
 	fun progressOffset(offset: Int) {
 		val size = unipack.autoPlayTable?.elements?.size ?: 0
 		setProgress(progressValue.updateAndGet { (it + offset).coerceIn(0, size) })
+		if (practiceGuide && !stepMode) {
+			val now = SystemClock.elapsedRealtime()
+			pendingGuideSeek.set(GuideSeek(progress, now, totalPausedAt(now)))
+		}
 		if (stepMode) {
 			resetStepState()
 			listener.onRemoveGuide()

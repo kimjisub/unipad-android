@@ -1022,11 +1022,15 @@ class PlayActivityViewModel(
 				}
 
 				override fun onGuidePadOff(x: Int, y: Int) {
-					viewModelScope.launch { autoPlayGuidePad(x, y, false) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayGuidePad(x, y, false)
+					}
 				}
 
 				override fun onGuideLedUpdate(x: Int, y: Int, velocity: Int) {
-					viewModelScope.launch { uiCallback?.sendGuideLedToLaunchpad(x, y, velocity) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) uiCallback?.sendGuideLedToLaunchpad(x, y, velocity)
+					}
 				}
 
 				override fun onGuideChainOn(c: Int) {
@@ -1037,7 +1041,9 @@ class PlayActivityViewModel(
 				}
 
 				override fun onRemoveGuide() {
-					viewModelScope.launch { autoPlayRemoveGuide() }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayRemoveGuide()
+					}
 				}
 
 				override fun chainButsRefresh() {
