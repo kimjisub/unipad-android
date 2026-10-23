@@ -1,11 +1,12 @@
 package com.kimjisub.launchpad.basefeatures
 
 import android.content.Intent
+import android.os.Build
 import android.os.SystemClock
-import androidx.lifecycle.Lifecycle
-import androidx.test.core.app.ActivityScenario
-import androidx.test.uiautomator.By
+import android.view.accessibility.AccessibilityEvent
+import android.widget.Toast
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.activity.MainActivity
 import com.kimjisub.launchpad.activity.PlayActivity
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -73,14 +74,31 @@ class PlaybackInitializationTest : PlaybackScreenTest() {
         File(screen.pack(), "sounds").listFiles().orEmpty().filter { it.isFile }.forEach { it.writeBytes(byteArrayOf()) }
         screen.launch(MainActivity::class.java)
         val intent = Intent(screen.context, PlayActivity::class.java).putExtra("path", screen.pack().path)
-        ActivityScenario.launch<PlayActivity>(intent).use { scenario ->
-            try {
-                screen.await("A pack without a decodable sound stayed open") { scenario.state == Lifecycle.State.DESTROYED }
-                screen.node(By.text(screen.text(R.string.pack_no_playable_sounds)))
-            } finally {
-                screen.capture("unplayable-pack-result")
-            }
+        val mainActivity = screen.resumed()
+        val message = screen.text(R.string.pack_no_playable_sounds)
+        // Preserve the library task as a normal pack launch does; a second ActivityScenario
+        // clears that task and sends the user to the launcher when the play screen closes.
+        val announcement = screen.instrumentation.uiAutomation.executeAndWaitForEvent(
+            { screen.onMain { mainActivity.startActivity(intent) } },
+            { event -> event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED &&
+                event.className?.toString() == Toast::class.java.name && event.text.any { it.toString() == message } },
+            10000,
+        )
+        assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/unplayable-pack-announcement.txt") {
+            it.writeText(announcement.text.joinToString("\n"))
+            true
+        })
+        if (Build.VERSION.SDK_INT < 33) {
+            @Suppress("DEPRECATION")
+            announcement.recycle()
         }
+        screen.awaitActivity(MainActivity::class.java)
+        SystemClock.sleep(300)
+        val capture = "${TestCaptures.DIRECTORY}/basefeatures-captures/unplayable-pack-result.png"
+        screen.device.executeShellCommand("screencap -p $capture")
+        assertTrue("System screenshot was not saved", screen.device.executeShellCommand("stat -c %s $capture")
+            .trim().toLongOrNull()?.let { it > 0 } == true)
+
     }
 
     @Test fun controllerAttachPreservesTheNextSoundAndLight() {
