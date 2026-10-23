@@ -12,7 +12,7 @@ the fixture, use `UniPackImporter`, then load the imported pack with
 
 `SoundIdentityProbe` reads original entry names and content hashes from the ZIP.
 It matches the file the runner actually decodes by its normalized full relative
-path (with a case-insensitive fallback) and the hash of bytes read at decode time. A single matching original ZIP
+path (including case variants) and the hash of bytes read at decode time. A single matching original ZIP
 entry establishes identity; multiple matching originals remain unverified. The resulting queue records `archiveEntry`, `sha256`,
 `loop`, and `wormhole`. Stored paths, preservation of every original entry's
 contents, and runner play requests are separate diagnostics. Ambiguous or missing
@@ -30,7 +30,11 @@ stored separately are preserved; collapsing them to one file loses an entry.
 Swapped bytes under two distinct original spellings are not preserved. Host
 unit tests use path/hash snapshots to cover normalization-sensitive storage
 even on a normalization-insensitive host; the device also writes both spellings
-to internal storage and checks the actual diagnostics.
+to internal storage and checks the actual diagnostics. That separate-file check
+is skipped when storage merges the Unicode spellings. Exact-name reservation
+also includes case variants, so swapped contents cannot be reassigned between
+`a.wav` and `A.wav`. Identical bytes in multiple original case variants remain
+unverified, even when one spelling exactly matches the selected file.
 
 Host observations are opt-in:
 

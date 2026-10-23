@@ -36,7 +36,7 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
         val hash = sha256Hex(file.readBytes())
         val path = file.relativeTo(root).invariantSeparatorsPath
         val matchingBytes = entries.filter { it.hash == hash }
-        val candidates = matchingPaths(matchingBytes, path)
+        val candidates = equivalentPaths(matchingBytes, path)
         return buildJsonObject {
             put("archiveEntry", candidates.singleOrNull()?.let { JsonPrimitive(it.path) } ?: JsonNull)
             put("sha256", hash)
@@ -45,9 +45,12 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
 
     private fun normalized(path: String): String = Normalizer.normalize(path, Normalizer.Form.NFC)
 
+    private fun equivalentPaths(files: List<Entry>, path: String): List<Entry> =
+        files.filter { normalized(it.path).equals(normalized(path), ignoreCase = true) }
+
     private fun matchingPaths(files: List<Entry>, path: String): List<Entry> =
         files.filter { normalized(it.path) == normalized(path) }.ifEmpty {
-            files.filter { normalized(it.path).equals(normalized(path), ignoreCase = true) }
+            equivalentPaths(files, path)
         }
 
     /** Storage spellings are diagnostics; only matching names AND bytes establish preservation. */
@@ -67,7 +70,7 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
         // exist on disk, swapped bytes must not be reassigned to a different original name.
         for (entry in entries) {
             val exact = remaining.find { it.path == entry.path } ?: continue
-            if (exact.hash == entry.hash || matchingPaths(storedFiles, entry.path).size > 1) {
+            if (exact.hash == entry.hash || equivalentPaths(storedFiles, entry.path).size > 1) {
                 matched[entry] = exact
                 remaining.remove(exact)
             }
@@ -82,15 +85,15 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
         }
         return buildJsonArray {
             for (entry in entries) {
-                val preserved = matched[entry]
+                val matchedFile = matched[entry]
                 // If bytes were overwritten, keep the original path's current bytes as a diagnostic.
-                val stored = preserved ?: matchingPaths(storedFiles, entry.path).singleOrNull()
+                val stored = matchedFile ?: matchingPaths(storedFiles, entry.path).singleOrNull()
                 add(buildJsonObject {
                     put("archiveEntry", entry.path)
                     put("originalSha256", entry.hash)
                     put("storedPath", stored?.let { JsonPrimitive(it.path) } ?: JsonNull)
                     put("storedSha256", stored?.let { JsonPrimitive(it.hash) } ?: JsonNull)
-                    put("contentsPreserved", preserved?.hash == entry.hash)
+                    put("contentsPreserved", matchedFile?.hash == entry.hash)
                 })
             }
         }

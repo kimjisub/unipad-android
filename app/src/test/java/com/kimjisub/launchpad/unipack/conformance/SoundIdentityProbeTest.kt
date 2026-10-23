@@ -120,6 +120,27 @@ class SoundIdentityProbeTest {
         }
     }
 
+    @Test fun swappedContentsUnderCaseVariantOriginalNamesAreNotPreserved() {
+        val originals = listOf("sounds/a.wav" to a, "sounds/A.wav" to b)
+        for (ordered in listOf(originals, originals.reversed())) {
+            val probe = SoundIdentityProbe(archive(ordered), temporary.root)
+            val diagnostics = probe.diagnostics(mapOf("sounds/a.wav" to sha256Hex(b), "sounds/A.wav" to sha256Hex(a)))
+            assertEquals(2, diagnostics.size)
+            for (item in diagnostics.map { it.jsonObject }) {
+                assertEquals(item["archiveEntry"], item["storedPath"])
+                assertNotEquals(item["originalSha256"], item["storedSha256"])
+                assertEquals("false", item["contentsPreserved"]?.jsonPrimitive?.content)
+            }
+        }
+    }
+
+    @Test fun identicalBytesInTwoOriginalCaseCandidatesRemainUnverified() {
+        val probe = SoundIdentityProbe(archive(listOf("sounds/a.wav" to a, "sounds/A.wav" to a)), temporary.root)
+        val actual = probe.identity(selected("sounds/a.wav", a))
+        assertEquals(JsonNull, actual["archiveEntry"])
+        assertEquals(sha256Hex(a), actual["sha256"]?.jsonPrimitive?.content)
+    }
+
     @Test fun aStorageOnlyCaseChangeKeepsIdentityAndContents() {
         val probe = SoundIdentityProbe(archive(listOf("sounds/a.wav" to a)), temporary.root)
         val actual = probe.identity(selected("SOUNDS/A.WAV", a))
