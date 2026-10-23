@@ -257,16 +257,11 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun showToast(resId: Int) {
-			if (resId == string.audio_output_unavailable) {
-				// The play screen immediately closes; keep the reason visible over the previous screen.
-				Toast.makeText(applicationContext, resId, Toast.LENGTH_LONG).show()
-			} else {
-				Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
-			}
+			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
 		}
 
-		override fun finishActivity() {
-			finish()
+		override fun finishWithNotice(resId: Int) {
+			closeWithNotice(getString(resId))
 		}
 
 		override fun copyToClipboard(text: String) {
@@ -400,16 +395,16 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				closeOnLoadFailure(getString(string.outOfMemory))
+				closeWithNotice(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
+				closeWithNotice("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
 	}
 
 	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
-	private fun closeOnLoadFailure(message: String) {
+	private fun closeWithNotice(message: String) {
 		vm.unipackLoading = false
 		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
 		finish()

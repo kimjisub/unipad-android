@@ -122,7 +122,7 @@ class LedPathRun(private val pack: UniPack) {
 
 		override fun updateTraceLogOverlay() {}
 		override fun showToast(resId: Int) {}
-		override fun finishActivity() {}
+		override fun finishWithNotice(resId: Int) {}
 		override fun copyToClipboard(text: String) {}
 		override fun setChainViewVisibility(index: Int, visibility: Int) {}
 		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {}

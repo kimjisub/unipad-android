@@ -51,7 +51,7 @@ class PlayActivityLoadFailureTest {
 
 	@Test
 	fun loadFailure_tellsWhyOverTheListAndCloses() {
-		PlayActivity::class.java.getDeclaredMethod("closeOnLoadFailure", String::class.java)
+		PlayActivity::class.java.getDeclaredMethod("closeWithNotice", String::class.java)
 			.apply { isAccessible = true }
 			.invoke(activity, "Out of memory")
 
