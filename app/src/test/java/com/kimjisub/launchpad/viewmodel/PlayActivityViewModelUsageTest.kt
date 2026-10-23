@@ -354,14 +354,14 @@ class PlayActivityViewModelUsageTest {
 		val vm = newVm(FakeEngine(startOk = false))
 		val notices = mutableListOf<Int>()
 		val callback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
-		every { callback.showToast(any()) } answers { notices += firstArg<Int>() }
+		every { callback.finishWithNotice(any()) } answers { notices += firstArg<Int>() }
 		vm.uiCallback = callback
 		load(vm, createPack())
 		startPlayback(vm)
 		runUntil { notices.isNotEmpty() }
 		assertEquals(1, notices.size)
 		assertNotEquals(com.kimjisub.launchpad.R.string.outOfCPU, notices.single())
-		verify(exactly = 1) { callback.finishActivity() }
+		verify(exactly = 1) { callback.finishWithNotice(notices.single()) }
 	}
 
 	@Test
@@ -372,13 +372,13 @@ class PlayActivityViewModelUsageTest {
 		val vm = newVm(engine)
 		val notices = mutableListOf<Int>()
 		val callback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true)
-		every { callback.showToast(any()) } answers { notices += firstArg<Int>() }
+		every { callback.finishWithNotice(any()) } answers { notices += firstArg<Int>() }
 		vm.uiCallback = callback
 		load(vm, createPack())
 		startPlayback(vm)
 		runUntil { notices.isNotEmpty() }
 		assertEquals(listOf(com.kimjisub.launchpad.R.string.outOfCPU), notices)
-		verify(exactly = 1) { callback.finishActivity() }
+		verify(exactly = 1) { callback.finishWithNotice(notices.single()) }
 	}
 
 	/** A pack of only LEDs or auto play has nothing to decode; its load still ends and a press still starts a session. */

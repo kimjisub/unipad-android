@@ -115,7 +115,7 @@ class PlayActivityViewModel(
 		fun setLedChain(c: Int)
 		fun updateTraceLogOverlay()
 		fun showToast(resId: Int)
-		fun finishActivity()
+		fun finishWithNotice(resId: Int)
 		fun copyToClipboard(text: String)
 		fun setChainViewVisibility(index: Int, visibility: Int)
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
@@ -445,11 +445,10 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
-						uiCallback?.showToast(
+						uiCallback?.finishWithNotice(
 							if (throwable is SoundRunner.AudioOutputUnavailableException) string.audio_output_unavailable
 							else string.outOfCPU
 						)
-						uiCallback?.finishActivity()
 					}
 				}
 			})
