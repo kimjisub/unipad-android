@@ -482,9 +482,8 @@ private class ScenarioRun(
 	 * Runs [action] and, when auto play was or is now playing, waits until its runner has read the clock
 	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
 	 * reads the clock once, at its top, and the next pass's read marks its end. Starting reads it once more
-	 * before the first pass (the start time); continuing counts from after autoPlayResume, where a paused
-	 * pass may still read it once on waking (the time spent paused); pausing reads it at least twice after
-	 * the pass in progress before the runner waits.
+	 * before the first pass (the start time). A paused pass reads it once before waiting for a signal;
+	 * it no longer reads it a second time to discard the pause's elapsed time.
 	 */
 	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
 		val runner = autoPlay
@@ -493,32 +492,19 @@ private class ScenarioRun(
 		watchFrom.set(0)
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
-			waitUntil(what) { main.runAll(); watchReads.get() >= reads || !runner.active }
+			val requiredReads = if (runner.playmode) reads else 1
+			waitUntil(what) { main.runAll(); watchReads.get() >= requiredReads || !runner.active }
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		main.runAll()
 	}
 
 	/**
-	 * The play button of paused auto play. A paused runner drops the time it spent paused when it next
-	 * reads the clock while not playing. A person presses play long after that; here the clock may have
-	 * moved on before the runner got that far, and it would play everything due meanwhile at once. So it
-	 * is first woken (setting playmode to what it is only wakes it) and has read the clock twice: the
-	 * first pass after the wake has dropped the time.
-	 *
-	 * autoPlayResume wakes the paused runner (stepMode, resetStepState) before it sets playmode, so the
-	 * runner can read the clock a few times while still paused; only the reads after autoPlayResume has
-	 * returned are counted.
+	 * The play button preserves the remaining delay. It needs no synthetic paused tick to discard time:
+	 * the runner records pause transitions itself. Count from after autoPlayResume returns so any wakes
+	 * while that method is still setting up cannot be mistaken for the first resumed pass.
 	 */
 	private fun resumeAutoPlay() {
-		val runner = autoPlay
-		if (runner != null && runner.active && !runner.playmode) {
-			watchReads.set(0)
-			watchFrom.set(0)
-			runner.playmode = false
-			waitUntil("paused auto play to drop the time spent paused") { watchReads.get() >= 2 || !runner.active }
-			watchFrom.set(Long.MAX_VALUE)
-		}
 		vm.autoPlayResume()
 		afterAutoPlayPass("auto play to continue", STARTING) {}
 	}

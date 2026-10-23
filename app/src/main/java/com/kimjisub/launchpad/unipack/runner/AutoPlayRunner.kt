@@ -24,12 +24,30 @@ class AutoPlayRunner(
 	private val loopDelay: Long = 1L,
 	private val eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
+	private val pauseLock = Any()
+	private var pausedSince: Long? = null
+	private var completedPauseMs = 0L
+
 	@Volatile
 	var playmode = true
 		set(value) {
-			field = value
+			// Record the transition itself: a pause and resume can both happen between loop ticks.
+			synchronized(pauseLock) {
+				if (field != value) {
+					val now = SystemClock.elapsedRealtime()
+					if (value) {
+						pausedSince?.let { completedPauseMs += (now - it).coerceAtLeast(0) }
+						pausedSince = null
+					} else pausedSince = now
+					field = value
+				}
+			}
 			wake()
 		}
+
+	private fun totalPausedAt(now: Long): Long = synchronized(pauseLock) {
+		completedPauseMs + (pausedSince?.let { (now - it).coerceAtLeast(0) } ?: 0L)
+	}
 	@Volatile
 	var beforeStartPlaying = true
 
@@ -175,6 +193,7 @@ class AutoPlayRunner(
 				try {
 					var delayAccum: Long = 0
 					var startTime = SystemClock.elapsedRealtime()
+					var accountedPauseMs = totalPausedAt(startTime)
 					var prevPracticeGuide = practiceGuide
 					// Time spent not advancing is not owed to the sequence once playback continues.
 					fun skipIdleTime(now: Long) {
@@ -182,6 +201,17 @@ class AutoPlayRunner(
 					}
 					while (progress < autoPlay.elements.size && isActive) {
 						val currTime = SystemClock.elapsedRealtime()
+						val totalPausedMs = totalPausedAt(currTime)
+						val pausedMs = totalPausedMs - accountedPauseMs
+						if (pausedMs > 0) {
+							startTime += pausedMs
+							if (waitingForChain >= 0) waitStartTime += pausedMs
+							// Guide deadlines use wall time too, so they retain their remaining wait.
+							synchronized(activeGuides) {
+								for (entry in activeGuides.entries) entry.setValue(entry.value + pausedMs)
+							}
+							accountedPauseMs = totalPausedMs
+						}
 
 						// Detect mid-run practice mode toggle
 						if (practiceGuide != prevPracticeGuide) {
@@ -359,11 +389,9 @@ class AutoPlayRunner(
 								}
 							}
 
-							skipIdleTime(currTime)
 						}
 						if (!playmode && progress < autoPlay.elements.size) {
 							wakeSignal.receive()
-							skipIdleTime(SystemClock.elapsedRealtime())
 						} else {
 							delay(loopDelay)
 						}

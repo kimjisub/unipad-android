@@ -136,16 +136,16 @@ class ConformancePlayPathTest {
 	}
 
 	@Test
-	fun continuingAutoPlayHasPlayedItsFirstStepBeforeTheNextScenarioStep() {
+	fun continuingAutoPlayDeliversItsNextCommandAfterTheRemainingDelay() {
 		val c = case(
 			mapOf("keySound" to "1 1 1 a.wav", "autoPlay" to "on 1 1\ndelay 100\noff 1 1\ndelay 100\ntouch 2 1"),
 			"""[
 				{"do": "autoplay"}, {"do": "advance", "ms": 50}, {"do": "stop"}, {"do": "advance", "ms": 400},
-				{"do": "start"}, {"do": "observe"}, {"do": "resume"}, {"do": "observe"}
+				{"do": "start"}, {"do": "observe"}, {"do": "resume"}, {"do": "advance", "ms": 50}, {"do": "observe"}
 			]""",
 		)
-		// Continuing wakes the paused runner before it is allowed to play, so it can read the clock while
-		// still paused; a wait that counts those reads ends before the first pass. One run proves little.
+		// The pause preserves the 50 ms left before off. Advancing that remaining time must deliver it
+		// before the next observation, including when resume's setup wakes the runner while still paused.
 		repeat(50) { assertEquals(json("""[[["autoOn", 0, 0]], [["autoOff", 0, 0]]]"""), checkpoints(c)) }
 	}
 }

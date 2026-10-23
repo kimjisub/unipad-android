@@ -182,7 +182,7 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOn(x: Int, y: Int) {
+	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true) {
 		val restarted = stopKey[chain.value][x][y]
 		engine.stopVoice(restarted)
 		// A press made on another chain while the pad is still held replaces its key below; stop
@@ -203,7 +203,8 @@ class SoundRunner(
 			heldLoop[x][y] = if (sound.loop == -1) key else 0
 		}
 		unipack.soundPush(chain.value, x, y)
-		if (sound.wormhole != Sound.NO_WORMHOLE)
+		// Auto play already contains this move at the press's time; only live input delays it.
+		if (followWormhole && sound.wormhole != Sound.NO_WORMHOLE)
 			scope.launch(Dispatchers.Main) {
 				delay(100)
 				chain.value = sound.wormhole

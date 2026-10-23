@@ -587,7 +587,7 @@ class PlayActivityViewModel(
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
-				soundRunner?.soundOn(x, y)
+				soundRunner?.soundOn(x, y, followWormhole = pressedBy != PlayTrigger.AUTOPLAY)
 				if (scbRecord.isChecked()) {
 					val currTime = SystemClock.elapsedRealtime()
 					addLog("d ${currTime - recPrevEventMs}")
