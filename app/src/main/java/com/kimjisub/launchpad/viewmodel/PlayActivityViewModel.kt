@@ -239,6 +239,7 @@ class PlayActivityViewModel(
 	var screenVisible = false
 		set(value) {
 			field = value
+			if (!value) soundRunner?.cancelPendingWormholes()
 			syncLedRunner()
 			syncSoundStream()
 		}
@@ -493,7 +494,9 @@ class PlayActivityViewModel(
 
 	/** User-selected chains outside the pack do nothing; scripted chain changes retain their clamping. */
 	fun selectChain(c: Int) {
-		if (c in chain.range) chain.value = c
+		if (c !in chain.range) return
+		soundRunner?.cancelPendingWormholes()
+		chain.value = c
 	}
 
 	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are

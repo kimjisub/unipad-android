@@ -304,7 +304,7 @@ private class ScenarioRun(
 				when (val name = step.getValue("do").jsonPrimitive.content) {
 					"press" -> press(x!!, y!!, true)
 					"release" -> press(x!!, y!!, false)
-					"chain" -> silently { vm.chain.value = step.getValue("c").jsonPrimitive.int }
+					"chain" -> silently { vm.selectChain(step.getValue("c").jsonPrimitive.int) }
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)

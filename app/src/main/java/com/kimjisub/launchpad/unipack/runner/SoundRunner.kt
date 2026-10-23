@@ -41,6 +41,7 @@ class SoundRunner(
 	private var destroyed = false // guarded by engineLock
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
+	private val pendingWormholes = mutableSetOf<Job>()
 
 	class NoPlayableSoundsException : IllegalStateException("This pack has no playable sound files")
 
@@ -204,11 +205,22 @@ class SoundRunner(
 		}
 		unipack.soundPush(chain.value, x, y)
 		// Auto play already contains this move at the press's time; only live input delays it.
-		if (followWormhole && sound.wormhole != Sound.NO_WORMHOLE)
-			scope.launch(Dispatchers.Main) {
+		if (followWormhole && sound.wormhole != Sound.NO_WORMHOLE) {
+			val job = scope.launch(Dispatchers.Main) {
 				delay(100)
 				chain.value = sound.wormhole
 			}
+			synchronized(pendingWormholes) { pendingWormholes.add(job) }
+			job.invokeOnCompletion { synchronized(pendingWormholes) { pendingWormholes.remove(job) } }
+		}
+	}
+
+	/** A later manual chain choice or leaving the screen supersedes every pending pad move. */
+	fun cancelPendingWormholes() {
+		val jobs = synchronized(pendingWormholes) {
+			pendingWormholes.toList().also { pendingWormholes.clear() }
+		}
+		jobs.forEach { it.cancel() }
 	}
 
 	fun soundOff(x: Int, y: Int) {
@@ -245,6 +257,7 @@ class SoundRunner(
 	}
 
 	fun destroy() {
+		cancelPendingWormholes()
 		loadJob.cancel()
 		synchronized(engineLock) {
 			if (destroyed) return
