@@ -257,7 +257,12 @@ class PlayActivity : BaseActivity() {
 		}
 
 		override fun showToast(resId: Int) {
-			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
+			if (resId == string.audio_output_unavailable) {
+				// The play screen immediately closes; keep the reason visible over the previous screen.
+				Toast.makeText(applicationContext, resId, Toast.LENGTH_LONG).show()
+			} else {
+				Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
+			}
 		}
 
 		override fun finishActivity() {
