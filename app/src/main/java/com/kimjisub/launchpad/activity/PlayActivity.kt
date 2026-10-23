@@ -260,8 +260,8 @@ class PlayActivity : BaseActivity() {
 			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
 		}
 
-		override fun finishActivity() {
-			finish()
+		override fun finishActivity(messageResId: Int) {
+			closeOnLoadFailure(getString(messageResId))
 		}
 
 		override fun copyToClipboard(text: String) {
@@ -1211,9 +1211,9 @@ class PlayActivity : BaseActivity() {
 			chainViews[i] = view
 			when (i / PlayLayout.CHAINS_PER_SIDE) {
 				0 -> chainsTopContainer?.addView(view)
-				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+				1 -> { view.setOnClickListener { vm.selectChain(c) }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.selectChain(c) }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.selectChain(c) }; chainsLeftContainer?.addView(view, 0) }
 			}
 		}
 	}
@@ -1298,7 +1298,7 @@ class PlayActivity : BaseActivity() {
 	// region MIDI controller
 
 	private var midiController: MidiController? = object : MidiController() {
-		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
+		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chainBtnsRefresh(); vm.refreshWatermark() }
 		override fun onDetach() = vm.releaseControllerPads()
 		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
@@ -1328,10 +1328,10 @@ class PlayActivity : BaseActivity() {
 			}
 		}
 		override fun onChainTouch(c: Int, upDown: Boolean) {
-			if (!vm.isOptionWindowVisible && upDown && vm.unipack.chain > c) vm.chain.value = c
+			if (!vm.isOptionWindowVisible && upDown) vm.selectChain(c)
 		}
 		override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
-			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chain.refresh(); vm.refreshWatermark() }
+			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chainBtnsRefresh(); vm.refreshWatermark() }
 		}
 	}
 

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  * Presses and releases one pad holding several sounds, and checks what the engine is asked to play
  * and stop. A sound that could not be decoded silences only its own turn, and a release stops the
  * infinite loop the press started, whatever the pad's next sound is. A press made before the sounds
- * finish loading changes nothing.
+ * finish loading still advances the mapping and follows its chain move.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SoundRunnerPressTest {
@@ -57,7 +57,7 @@ class SoundRunnerPressTest {
 
 	@Test
 	fun undecodableSound_stillMovesToItsChain() {
-		load(listOf(Sound(File("broken.wav"), loop = 0, wormhole = 1)), undecodable = setOf("broken.wav"))
+		load(listOf(Sound(File("broken.wav"), loop = 0, wormhole = 1), Sound(File("good.wav"), loop = 0)), undecodable = setOf("broken.wav"))
 
 		tap()
 		scheduler.advanceUntilIdle()
@@ -67,24 +67,24 @@ class SoundRunnerPressTest {
 	}
 
 	@Test
-	fun pressBeforeTheSoundsLoad_leavesThePadAndTheChainAsTheyAre() {
+	fun pressBeforeTheSoundsLoad_advancesTheMappingAndFollowsItsChain() {
 		val gate = CountDownLatch(1)
 		val loaded = start(
 			listOf(Sound(File("a.wav"), loop = 0, wormhole = 1), Sound(File("b.wav"), loop = 0)),
 			RecordingSoundEngine(decodeGate = gate),
 		)
-
-		tap()
-		scheduler.advanceUntilIdle()
-		assertEquals(0, chain.value)
-		assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
-
-		gate.countDown()
+		try {
+			tap()
+			scheduler.advanceUntilIdle()
+			assertEquals("The sound's chain move must still happen while loading", 1, chain.value)
+			assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
+		} finally {
+			gate.countDown()
+		}
 		loaded.await()
+		chain.value = 0
 		tap()
-		scheduler.advanceUntilIdle()
-		assertEquals("the pad must still start from its first sound", listOf("a.wav" to 0), engine.plays)
-		assertEquals(1, chain.value)
+		assertEquals("The unloaded first sound must have consumed its turn", listOf("b.wav" to 0), engine.plays)
 	}
 
 	@Test

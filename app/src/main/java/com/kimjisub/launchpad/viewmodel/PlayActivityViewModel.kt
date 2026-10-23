@@ -115,7 +115,7 @@ class PlayActivityViewModel(
 		fun setLedChain(c: Int)
 		fun updateTraceLogOverlay()
 		fun showToast(resId: Int)
-		fun finishActivity()
+		fun finishActivity(messageResId: Int)
 		fun copyToClipboard(text: String)
 		fun setChainViewVisibility(index: Int, visibility: Int)
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
@@ -402,7 +402,7 @@ class PlayActivityViewModel(
 		if (playbackInitialized) return
 		playbackInitialized = true
 		initRunner()
-		initSetting()
+		restorePlaybackLights()
 	}
 
 	private fun initRunner() {
@@ -445,8 +445,10 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
-						uiCallback?.showToast(string.outOfCPU)
-						uiCallback?.finishActivity()
+						uiCallback?.finishActivity(
+							if (throwable is SoundRunner.NoPlayableSoundsException) string.pack_no_playable_sounds
+							else string.outOfCPU,
+						)
 					}
 				}
 			})
@@ -478,16 +480,21 @@ class PlayActivityViewModel(
 		}
 	}
 
-	private fun initSetting() {
+	private fun restorePlaybackLights() {
 		log("[06] Set CheckBox Checked")
 		if (unipack.keyLedExist) {
-			scbFeedbackLight.setChecked(false)
-			scbLed.setChecked(true)
+			scbFeedbackLight.forceSetChecked(false)
+			scbLed.forceSetChecked(true)
 		} else
-			scbFeedbackLight.setChecked(true)
+			scbFeedbackLight.forceSetChecked(true)
 	}
 
 	// pad, chain
+
+	/** User-selected chains outside the pack do nothing; scripted chain changes retain their clamping. */
+	fun selectChain(c: Int) {
+		if (c in chain.range) chain.value = c
+	}
 
 	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
 	// independent; a manual release also clears auto play's hold.
@@ -815,17 +822,13 @@ class PlayActivityViewModel(
 			isAutoPlayPlaying = false
 			scbAutoPlay.setCheckedSilently(false)
 			autoPlayControlVisible = false
-			if (unipack.keyLedExist) {
-				scbLed.setChecked(true)
-				scbFeedbackLight.setChecked(false)
-			} else {
-				scbFeedbackLight.setChecked(true)
-			}
+			restorePlaybackLights()
 			refreshWatermark()
 			return
 		}
 
 		if (currentMode == PlayMode.None) {
+			restorePlaybackLights()
 			// None → Active: runner 시작 필요
 			applyModeFlags(runner, mode)
 			scbAutoPlay.setCheckedSilently(true)
@@ -891,12 +894,7 @@ class PlayActivityViewModel(
 		resetPadsAfterAutoPlay()
 		runner.playmode = true
 		isAutoPlayPlaying = true
-		if (unipack.keyLedExist) {
-			scbLed.setChecked(true)
-			scbFeedbackLight.setChecked(false)
-		} else {
-			scbFeedbackLight.setChecked(true)
-		}
+		restorePlaybackLights()
 		runner.beforeStartPlaying = true
 	}
 
@@ -1059,12 +1057,7 @@ class PlayActivityViewModel(
 						autoPlayControlVisible = false
 						// keyLedExist, like switchPlayMode and both other platforms: an empty keyLed/
 						// directory has a non-null table but no animations.
-						if (unipack.keyLedExist) {
-							scbLed.setChecked(true)
-							scbFeedbackLight.setChecked(false)
-						} else {
-							scbFeedbackLight.setChecked(true)
-						}
+						restorePlaybackLights()
 						refreshWatermark()
 					}
 				}

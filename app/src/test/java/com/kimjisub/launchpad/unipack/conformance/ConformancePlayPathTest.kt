@@ -27,7 +27,7 @@ class ConformancePlayPathTest {
 		)
 	}
 
-	private fun checkpoints(c: CorpusCase): JsonElement = (actualFor(c, corpus) as JsonObject).getValue("checkpoints")
+	private fun checkpoints(c: CorpusCase): JsonElement = (actualFor(c, corpus, includePressFeedback = true) as JsonObject).getValue("checkpoints")
 
 	private fun json(text: String) = Json.parseToJsonElement(text)
 

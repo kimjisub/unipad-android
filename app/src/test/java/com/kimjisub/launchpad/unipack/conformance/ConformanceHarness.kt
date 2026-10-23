@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.LaunchpadColor
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -69,7 +70,7 @@ fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 	return CaseResult(actual, classify(c, actual))
 }
 
-fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
+fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), includePressFeedback: Boolean = false): JsonElement {
 	if (c.layer == "palette") {
 		return buildJsonObject { putJsonArray("argb") { LaunchpadColor.ARGB.forEach { add(JsonPrimitive(hex8(it.toInt()))) } } }
 	}
@@ -78,7 +79,7 @@ fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
 		c.writeTo(root, corpus)
 		val pack = deps.loadPack(root)
 		if (pack.criticalError) return buildJsonObject { put("loaded", false) }
-		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps)
+		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps, includePressFeedback)
 	} finally {
 		root.deleteRecursively()
 	}
@@ -252,7 +253,9 @@ private class RecordingEngine(
  * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
+private class ScenarioRun(
+	val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps, private val includePressFeedback: Boolean,
+) {
 	private val soundsDir = soundsDirOf(root)
 	private val testThread = Thread.currentThread()
 	private val clock = AtomicLong(1000)
@@ -394,7 +397,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		override fun setLedChain(c: Int) = seen(-1, c)
 
 		private fun seen(x: Int, y: Int) {
-			val item = vm.channelManager.get(x, y)
+			// The corpus reports keyLED output; press feedback is a separate screen option.
+			val item = vm.channelManager.get(x, y)?.takeIf { includePressFeedback || it.channel == Channel.LED }
 			val key = "$x,$y"
 			if (item != null) {
 				val light = item.color to item.code
@@ -406,7 +410,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 
 		override fun updateTraceLogOverlay() {}
 		override fun showToast(resId: Int) {}
-		override fun finishActivity() { finished = true }
+		override fun finishActivity(messageResId: Int) { finished = true }
 		override fun copyToClipboard(text: String) {}
 		override fun setChainViewVisibility(index: Int, visibility: Int) {}
 		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {}
@@ -589,6 +593,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	}
 }
 
-private fun runScenario(c: CorpusCase, pack: UniPack, root: File, deps: Deps): JsonElement = buildJsonObject {
-	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps).run().forEach { add(it) } }
+private fun runScenario(
+	c: CorpusCase, pack: UniPack, root: File, deps: Deps, includePressFeedback: Boolean,
+): JsonElement = buildJsonObject {
+	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps, includePressFeedback).run().forEach { add(it) } }
 }

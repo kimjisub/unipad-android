@@ -42,6 +42,8 @@ class SoundRunner(
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
+	class NoPlayableSoundsException : IllegalStateException("This pack has no playable sound files")
+
 	interface LoadingListener {
 		fun onStart(soundCount: Int)
 		fun onProgressTick()
@@ -165,6 +167,8 @@ class SoundRunner(
 				}
 
 				ensureActive()
+				// Light-only packs have no audio to fail; reject actual files only when none loaded.
+				if (allSounds.isNotEmpty() && allSounds.none { it.id >= 0 }) throw NoPlayableSoundsException()
 				loadingListener.onEnd()
 			} catch (e: CancellationException) {
 				// destroy() cancelled the load; this is not a loading failure to report.
@@ -186,11 +190,9 @@ class SoundRunner(
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
 		heldLoop[x][y] = 0
 		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
-		// A press made before this sound finished loading leaves the pad and the chain as they are.
-		if (sound.id == Sound.NOT_LOADED) return
-		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
-		// moves on to its next sound and still follows the sound's chain move.
-		if (sound.id != Sound.UNDECODABLE) {
+		// An unavailable sound keeps only its own turn silent, including during loading: the pad
+		// still moves on to its next sound and still follows the sound's chain move.
+		if (sound.id >= 0) {
 			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
