@@ -3,6 +3,7 @@ package com.kimjisub.launchpad.unipack.conformance
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.junit.Assert.*
@@ -37,13 +38,15 @@ class SoundIdentityProbeTest {
         val probe = SoundIdentityProbe(archive(), temporary.root)
         val actual = probe.identity(selected(decomposed, b))
         assertEquals(decomposed, actual["archiveEntry"]?.jsonPrimitive?.content)
-        assertEquals(soundIdentityHash(b), actual["sha256"]?.jsonPrimitive?.content)
-        assertNotEquals(buildJsonObject { put("archiveEntry", composed); put("sha256", soundIdentityHash(a)) }, actual)
+        assertEquals(sha256Hex(b), actual["sha256"]?.jsonPrimitive?.content)
+        assertNotEquals(buildJsonObject { put("archiveEntry", composed); put("sha256", sha256Hex(a)) }, actual)
     }
 
     @Test fun wrongBytesUnderTheRightNameCannotReportTheRightIdentity() {
         val probe = SoundIdentityProbe(archive(), temporary.root)
-        assertNotEquals(composed, probe.identity(selected(composed, b))["archiveEntry"]?.jsonPrimitive?.content)
+        val actual = probe.identity(selected(composed, b))
+        assertEquals(decomposed, actual["archiveEntry"]?.jsonPrimitive?.content)
+        assertEquals(sha256Hex(b), actual["sha256"]?.jsonPrimitive?.content)
     }
 
     @Test fun overwrittenContentsAreNotReportedAsTheOriginalEntry() {
@@ -73,13 +76,20 @@ class SoundIdentityProbeTest {
         assertEquals("unverified", soundIdentityOutcome(case, observation)["status"]?.jsonPrimitive?.content)
     }
 
+    @Test fun identicalBytesInTwoOriginalNormalizationCandidatesRemainUnverified() {
+        val probe = SoundIdentityProbe(archive(listOf(composed to a, decomposed to a)), temporary.root)
+        val actual = probe.identity(selected(composed, a))
+        assertEquals(JsonNull, actual["archiveEntry"])
+        assertEquals(sha256Hex(a), actual["sha256"]?.jsonPrimitive?.content)
+    }
+
+    @Test fun matchingBytesUnderADifferentDirectoryCannotEstablishIdentity() {
+        val probe = SoundIdentityProbe(archive(listOf(decomposed to a)), temporary.root)
+        assertEquals(JsonNull, probe.identity(selected("other/café.wav", a))["archiveEntry"])
+        assertEquals("false", probe.diagnostics().single().jsonObject["contentsPreserved"]?.jsonPrimitive?.content)
+    }
+
     @Test fun aStorageOnlyNormalizationChangeKeepsTheOriginalArchiveIdentity() {
-        // A normalization-insensitive filesystem exposes both spellings as the same inode.
-        val original = selected(composed, a)
-        val alias = File(temporary.root, decomposed)
-        if (!alias.exists()) java.nio.file.Files.createLink(alias.toPath(), original.toPath())
-        val probe = SoundIdentityProbe(archive(listOf(composed to a)), temporary.root)
-        assertEquals(composed, probe.identity(alias)["archiveEntry"]?.jsonPrimitive?.content)
-        assertEquals(soundIdentityHash(a), probe.identity(alias)["sha256"]?.jsonPrimitive?.content)
+        checkStorageOnlyNormalization(temporary.root)
     }
 }

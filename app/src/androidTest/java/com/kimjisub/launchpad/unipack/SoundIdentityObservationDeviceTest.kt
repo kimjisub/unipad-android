@@ -26,6 +26,13 @@ class SoundIdentityObservationDeviceTest {
     private val context = instrumentation.targetContext
     private val pretty = Json { prettyPrint = true }
 
+    @Test fun storageOnlyNormalizationKeepsIdentityOnInternalStorage() {
+        val root = File(context.filesDir, "sound-identity-normalization-check").apply {
+            deleteRecursively(); check(mkdirs())
+        }
+        try { checkStorageOnlyNormalization(root) } finally { root.deleteRecursively() }
+    }
+
     @Test fun recordInternalAndExternalImportSelections() {
         val assets = instrumentation.context.assets
         val corpus = SoundIdentityCorpus(assets.open("sound-identity/corpus.json").use { it.readBytes() },

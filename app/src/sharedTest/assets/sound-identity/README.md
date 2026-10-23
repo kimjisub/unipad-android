@@ -11,13 +11,18 @@ the fixture, use `UniPackImporter`, then load the imported pack with
 `UniPackFolder` and drive `SoundRunner`.
 
 `SoundIdentityProbe` reads original entry names and content hashes from the ZIP.
-It matches the file the runner actually decodes by filesystem identity and the
-bytes read at decode time. The resulting queue records `archiveEntry`, `sha256`,
+It matches the file the runner actually decodes by its normalized full relative
+path and the hash of bytes read at decode time. A single matching original ZIP
+entry establishes identity; multiple matching originals remain unverified. The resulting queue records `archiveEntry`, `sha256`,
 `loop`, and `wormhole`. Stored paths, preservation of every original entry's
 contents, and runner play requests are separate diagnostics. Ambiguous or missing
 identity traces are unverified; when identity is traced, content loss is a failure
 even when the selected queue otherwise matches. Storage-only normalization changes do not change an
-entry's identity. Expectations are available only to the final comparison.
+entry's identity. The storage normalization check writes only the composed
+spelling of an originally decomposed ZIP entry on both host and device storage;
+it does not create a hard link or rely on filesystem aliases. Corpus digest,
+file decoding, fingerprints, and error classification use the same shared test
+functions as the existing corpus. Expectations enter only the final comparison.
 
 Host observations are opt-in:
 

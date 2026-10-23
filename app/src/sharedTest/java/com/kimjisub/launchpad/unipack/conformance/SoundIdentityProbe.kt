@@ -12,17 +12,13 @@ import kotlinx.serialization.json.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Files
-import java.security.MessageDigest
+import java.text.Normalizer
 import java.util.IdentityHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import kotlin.io.encoding.Base64
-
-fun soundIdentityHash(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
-    .digest(bytes).joinToString("") { "%02x".format(it) }
 
 /** Reads only the actual input ZIP and selected disk bytes; has no access to expected results. */
 class SoundIdentityProbe(archive: ByteArray, private val root: File) {
@@ -31,16 +27,15 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
         ZipInputStream(archive.inputStream()).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
-                if (!entry.isDirectory) add(Entry(entry.name, soundIdentityHash(zip.readBytes())))
+                if (!entry.isDirectory) add(Entry(entry.name, sha256Hex(zip.readBytes())))
             }
         }
     }
 
     fun identity(file: File): JsonObject {
-        val hash = soundIdentityHash(file.readBytes())
+        val hash = sha256Hex(file.readBytes())
         val candidates = entries.filter { entry ->
-            val alias = File(root, entry.path)
-            alias.isFile && Files.isSameFile(alias.toPath(), file.toPath()) && entry.hash == hash
+            normalized(entry.path) == normalized(file.relativeTo(root).invariantSeparatorsPath) && entry.hash == hash
         }
         return buildJsonObject {
             put("archiveEntry", candidates.singleOrNull()?.let { JsonPrimitive(it.path) } ?: JsonNull)
@@ -48,70 +43,52 @@ class SoundIdentityProbe(archive: ByteArray, private val root: File) {
         }
     }
 
-    /** Storage spellings and overwritten originals are diagnostics, never normalized identities. */
-    fun diagnostics(): JsonArray = buildJsonArray {
-        for (entry in entries) {
-            val alias = File(root, entry.path)
-            val stored = root.walkTopDown().filter { it.isFile }.firstOrNull {
-                alias.isFile && Files.isSameFile(alias.toPath(), it.toPath())
+    private fun normalized(path: String): String = Normalizer.normalize(path, Normalizer.Form.NFC)
+
+    /** Storage spellings are diagnostics; only matching names AND bytes establish preservation. */
+    fun diagnostics(): JsonArray {
+        val storedFiles = root.walkTopDown().filter { it.isFile }.map { file ->
+            Entry(file.relativeTo(root).invariantSeparatorsPath, sha256Hex(file.readBytes()))
+        }.toList()
+        return buildJsonArray {
+            for (entry in entries) {
+                val candidates = storedFiles.filter { normalized(it.path) == normalized(entry.path) }
+                val preserved = candidates.filter { it.hash == entry.hash }
+                // If bytes were overwritten, keep the original path's current bytes as a diagnostic.
+                val stored = preserved.singleOrNull() ?: candidates.singleOrNull()
+                add(buildJsonObject {
+                    put("archiveEntry", entry.path)
+                    put("originalSha256", entry.hash)
+                    put("storedPath", stored?.let { JsonPrimitive(it.path) } ?: JsonNull)
+                    put("storedSha256", stored?.let { JsonPrimitive(it.hash) } ?: JsonNull)
+                    put("contentsPreserved", preserved.size == 1)
+                })
             }
-            add(buildJsonObject {
-                put("archiveEntry", entry.path)
-                put("originalSha256", entry.hash)
-                put("storedPath", stored?.let { JsonPrimitive(it.relativeTo(root).invariantSeparatorsPath) } ?: JsonNull)
-                val hash = stored?.let { soundIdentityHash(it.readBytes()) }
-                put("storedSha256", hash?.let(::JsonPrimitive) ?: JsonNull)
-                put("contentsPreserved", hash == entry.hash)
-            })
         }
     }
 }
 
 /** The corpus stays a separate input so earlier corpus hashes and observations remain immutable. */
 class SoundIdentityCorpus(bytes: ByteArray, digest: String) {
-    val sha256 = soundIdentityHash(bytes)
+    private val corpus = parseCorpus(bytes, digest)
+    val sha256 = corpus.sha256
     private val document = Json.parseToJsonElement(bytes.decodeToString()).jsonObject
     val cases = document.getValue("cases").jsonArray.map { it.jsonObject }
         .filter { it["soundIdentity"]?.jsonPrimitive?.booleanOrNull == true }
 
     init {
-        check(digest == "$sha256  corpus.json\n") { "Corpus digest mismatch" }
         check(document.getValue("cases").jsonArray.size == 269)
         check(cases.map { it.getValue("id").jsonPrimitive.content }.toSet() ==
             (listOf("KS-G601", "KS-G602", "KS-G603", "KS-G604") + (620..625).map { "KS-G$it" }).toSet())
     }
 
     fun archive(case: JsonObject): ByteArray {
-        val files = case.getValue("files").jsonArray.map { value ->
-            val f = value.jsonObject
-            val data = when {
-                "text" in f -> f.getValue("text").jsonPrimitive.content.encodeToByteArray()
-                "base64" in f -> Base64.decode(f.getValue("base64").jsonPrimitive.content)
-                else -> Base64.decode(document.getValue("assets").jsonObject
-                    .getValue(f.getValue("asset").jsonPrimitive.content).jsonObject.getValue("base64").jsonPrimitive.content)
-            }
-            f.getValue("path").jsonPrimitive.content to data
-        }
-        val fingerprint = MessageDigest.getInstance("SHA-256")
-        // The fingerprint orders UTF-8 path bytes, independently of archive insertion order.
-        for ((path, data) in files.sortedWith { a, b ->
-            val x = a.first.encodeToByteArray(); val y = b.first.encodeToByteArray()
-            var comparison = 0
-            for (i in 0 until minOf(x.size, y.size)) {
-                comparison = (x[i].toInt() and 255) - (y[i].toInt() and 255)
-                if (comparison != 0) break
-            }
-            if (comparison == 0) x.size - y.size else comparison
-        }) {
-            fingerprint.update(path.encodeToByteArray()); fingerprint.update(0)
-            fingerprint.update(data.size.toString().encodeToByteArray()); fingerprint.update(0)
-            fingerprint.update(data); fingerprint.update(10)
-        }
-        check(fingerprint.digest().joinToString("") { "%02x".format(it) } == case.getValue("fingerprint").jsonPrimitive.content)
+        val input = case.toCase()
+        verifyFingerprint(input, corpus)
         return ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
-                for ((path, data) in files) {
-                    zip.putNextEntry(ZipEntry(path)); zip.write(data); zip.closeEntry()
+                for (file in input.files) {
+                    zip.putNextEntry(ZipEntry(file.path)); zip.write(file.bytes(corpus)); zip.closeEntry()
                 }
             }
         }.toByteArray()
@@ -217,11 +194,7 @@ fun observeSoundIdentity(
             put("sounds", sounds); put("keyLedExist", pack.keyLedExist)
             put("leds", JsonArray(emptyList())); put("autoPlay", JsonNull)
             putJsonArray("errors") {
-                pack.errorDetail?.lines()?.forEach { message ->
-                    val section = Regex("^([A-Za-z.]+)\\s*:").find(message)?.groupValues?.get(1) ?: "unknown"
-                    val kind = if (Regex("was not found|directory not found|doesn't exist").containsMatchIn(message)) "missing-file" else "other($message)"
-                    add(JsonPrimitive("$section:$kind"))
-                }
+                pack.errorDetail?.lines()?.forEach { add(JsonPrimitive(normalizeError(it))) }
             }
         }
         return buildJsonObject {
