@@ -83,7 +83,7 @@ class ChainReleaseCorpusTest(private val id: String) {
 	private inner class Driver(private val pack: UniPack) : ChainReleaseReplay.Driver {
 		private val engine = RecordingSoundEngine()
 		private val vm = PlayActivityViewModel(mockk<UnipackRepository>(), UsageAnalytics { _, _ -> })
-		private val tracker = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
+		private val tracker = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }
 		private val pointers = HashMap<String, Long>()
 
 		init {

@@ -270,6 +270,24 @@ class SoundRunnerTest {
 	}
 
 	@Test
+	fun everyDecodeFailed_reportsFailureInsteadOfOpeningASilentPack() {
+		val unipack = pack(fileCount = 2)
+		val engine = FakeEngine(failingFiles = setOf("0.wav", "1.wav"))
+		val listener = RecordingListener(engine)
+		val runner = SoundRunner(unipack, ChainObserver(), listener, scope, engine)
+		try {
+			runBlocking { withTimeout(5_000) { scopeJob.children.toList().joinAll() } }
+			assertEquals("No decodable sound must report one loading failure", 1, listener.failureCount.get())
+			assertEquals("Loading must not report success", 1L, listener.ended.count)
+			assertTrue(listener.failure is SoundRunner.NoPlayableSoundsException)
+			assertEquals(0, listener.engineCallsAtFailure)
+			assertTrue(uncaught.isEmpty())
+		} finally {
+			runner.destroy()
+		}
+	}
+
+	@Test
 	fun failedDecode_leavesOnlyThatFileSilent() {
 		val unipack = pack(fileCount = 3)
 		val engine = FakeEngine(failingFiles = setOf("1.wav"))

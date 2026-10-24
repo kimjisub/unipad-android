@@ -12,20 +12,25 @@ class ChainObserver {
 	var range: IntRange = Int.MIN_VALUE..Int.MAX_VALUE
 
 	@Volatile
-	var value: Int = 0
-		set(value) {
-			val realValue =
-				when {
-					range.first > value -> range.first
-					range.last < value -> range.last
-					else -> value
-				}
+	private var currentValue = 0
+	var value: Int
+		get() = currentValue
+		set(value) = assign(value, selected = true)
 
-			val prev = field
-			field = realValue
-			for (observer in selectionObserverList) observer.invoke(realValue, prev)
-			refresh(field, prev)
+	/** A pack command moves the chain without acting as a person's later selection. */
+	fun assignFromPack(value: Int) = assign(value, selected = false)
+
+	private fun assign(value: Int, selected: Boolean) {
+		val realValue = when {
+			range.first > value -> range.first
+			range.last < value -> range.last
+			else -> value
 		}
+		val prev = currentValue
+		currentValue = realValue
+		if (selected) for (observer in selectionObserverList) observer.invoke(realValue, prev)
+		refresh(realValue, prev)
+	}
 
 	private val observerList = CopyOnWriteArrayList<(curr: Int, prev: Int) -> Unit>()
 	private val selectionObserverList = CopyOnWriteArrayList<(curr: Int, prev: Int) -> Unit>()

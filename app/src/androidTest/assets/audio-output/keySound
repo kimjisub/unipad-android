@@ -8,3 +8,5 @@
 1 1 8 right.wav
 1 2 1 silence.wav
 1 2 2 loop.wav 0
+1 2 3 quad.wav
+1 2 4 surround.wav

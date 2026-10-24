@@ -1,6 +1,7 @@
 package com.kimjisub.launchpad.activity
 
 import android.content.Context
+import com.kimjisub.launchpad.R
 import android.widget.Toast
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.arch.core.executor.TaskExecutor
@@ -10,7 +11,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.spyk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -37,7 +39,8 @@ class PlayActivityLoadFailureTest {
 		})
 		mockkStatic(Toast::class)
 		every { Toast.makeText(any<Context>(), any<CharSequence>(), any()) } returns toast
-		activity = spyk(PlayActivity())
+		activity = PlayActivity()
+		mockkObject(activity)
 		every { activity.applicationContext } returns appContext
 		every { activity.finish() } just Runs
 		PlayActivity::class.java.getDeclaredField("vm").apply { isAccessible = true }.set(activity, vm)
@@ -45,6 +48,7 @@ class PlayActivityLoadFailureTest {
 
 	@After
 	fun tearDown() {
+		unmockkObject(activity)
 		unmockkStatic(Toast::class)
 		ArchTaskExecutor.getInstance().setDelegate(null)
 	}
@@ -62,4 +66,19 @@ class PlayActivityLoadFailureTest {
 		}
 		verify { vm.unipackLoading = false }
 	}
+	@Test
+	fun soundFailureMessageSurvivesClosingThePlayScreen() {
+		every { activity.getString(R.string.pack_no_playable_sounds) } returns "No playable sounds"
+		val callback = PlayActivity::class.java.getDeclaredField("uiCallback")
+			.apply { isAccessible = true }.get(activity) as PlayActivityViewModel.UiCallback
+
+		callback.finishWithNotice(R.string.pack_no_playable_sounds)
+
+		verifyOrder {
+			Toast.makeText(appContext, "No playable sounds", Toast.LENGTH_LONG)
+			toast.show()
+			activity.finish()
+		}
+	}
+
 }

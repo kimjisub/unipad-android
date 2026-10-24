@@ -137,4 +137,25 @@ class UniPackConformanceChecksTest {
 		assertEquals(JsonNull, result.actual)
 		assertEquals(Outcome("unverified", false, "not observable here"), result.outcome)
 	}
+
+	@Test
+	fun anOperationWithoutAnAdapterNeverRunsAsAnOrdinaryPack() {
+		val neverParse = Deps(loadPack = { error("operation was sent to the pack parser") })
+		for (observation in listOf("audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map", "future-operation")) {
+			val c = byId("KS-001").copy(observation = observation)
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(JsonNull, result.actual)
+			assertEquals("unverified", result.outcome.status)
+			assertTrue(result.outcome.detail.contains(observation))
+		}
+	}
+
+	@Test
+	fun aSoundIdentityCaseCannotPassWithOnlyARelativeFilename() {
+		val c = byId("KS-001").copy(soundIdentity = true)
+		val result = resultFor(c, corpus, Deps(loadPack = { error("identity was not observed") }))
+		assertEquals(JsonNull, result.actual)
+		assertEquals("unverified", result.outcome.status)
+		assertTrue(result.outcome.detail.contains("hashes"))
+	}
 }
