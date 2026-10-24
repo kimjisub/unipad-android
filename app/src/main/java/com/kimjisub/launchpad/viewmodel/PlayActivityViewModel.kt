@@ -902,7 +902,7 @@ class PlayActivityViewModel(
 	fun autoPlayResume() {
 		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
-		// Continuous practice keeps its pending guides and chain wait across a pause.
+		// Leaving step practice clears its pending input before timed playback resumes.
 		if (!runner.practiceGuide || runner.stepMode) {
 			runner.resetStepState()
 			autoPlayRemoveGuide()
@@ -919,11 +919,11 @@ class PlayActivityViewModel(
 		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
+		isAutoPlayPlaying = false
 		resetPadsAfterAutoPlay()
 		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
 		}
-		isAutoPlayPlaying = false
 	}
 
 	fun autoPlayPrev() {

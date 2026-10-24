@@ -16,7 +16,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -42,7 +41,7 @@ class PlayActivityViewModelGuideResumeTest {
         File(folder, "info").writeText("title=Guide\nproducerName=Test\nbuttonX=8\nbuttonY=8\nchain=2\nsquareButton=true\n")
         File(folder, "sounds").mkdir()
         File(folder, "keySound").writeText("")
-        File(folder, "autoPlay").writeText("delay 500\ntouch 1 1\ndelay 60000\n")
+        File(folder, "autoPlay").writeText("delay 500\ntouch 1 1\ndelay 5000\ntouch 2 2\ndelay 60000\n")
         vm = PlayActivityViewModel(mockk<UnipackRepository>(relaxed = true), UsageAnalytics { _, _ -> })
         vm.unipack = UniPackFolder(folder).load().loadDetail()
         vm.initState()
@@ -82,7 +81,9 @@ class PlayActivityViewModelGuideResumeTest {
         await { animationTargets[0 to 0] == 500L }
         clock.set(100)
         vm.autoPlayPause()
-        assertFalse("Pausing continuous practice must not scan a new step", vm.autoPlayRunner!!.stepMode)
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue("Pausing guide play enters step practice", vm.autoPlayRunner!!.stepMode)
+        await { animationTargets[0 to 0] == 0L && hardware[0 to 0] == 21 }
         clock.set(3100)
         vm.autoPlayResume()
         clock.set(3150)
@@ -92,6 +93,27 @@ class PlayActivityViewModelGuideResumeTest {
         clock.set(3500)
         await { hardware[0 to 0] == 0 }
         assertTrue(vm.channelManager.get(0, 0)?.channel != Channel.GUIDE)
+    }
+
+    @Test fun pausedGuidePlayAdvancesWhenTheGuidedPadIsPressed() {
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { animationTargets[0 to 0] == 500L }
+        clock.set(100)
+        vm.autoPlayPause()
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue(vm.autoPlayRunner!!.stepMode)
+        await { animationTargets[0 to 0] == 0L && hardware[0 to 0] == 21 }
+        val progress = vm.autoPlayRunner!!.progress
+        clock.set(3100)
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        await { animationTargets[1 to 1] == 0L && hardware[1 to 1] == 21 }
+        assertTrue(vm.autoPlayRunner!!.progress > progress)
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue(vm.autoPlayRunner!!.stepMode)
+        assertTrue(vm.channelManager.get(0, 0)?.channel != Channel.GUIDE)
+        assertEquals(0, hardware[0 to 0])
+        assertEquals(Channel.GUIDE, vm.channelManager.get(1, 1)?.channel)
     }
 
     @Test fun pausingStepPracticeKeepsThePendingStep() {
