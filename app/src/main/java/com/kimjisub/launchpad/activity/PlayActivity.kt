@@ -127,6 +127,7 @@ import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
 import com.kimjisub.launchpad.manager.DefaultThemeResources
 import com.kimjisub.launchpad.manager.loadTheme
+import com.kimjisub.launchpad.manager.applyTraceLogTextStyle
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -1171,7 +1172,7 @@ class PlayActivity : BaseActivity() {
 				val view = PadView(this)
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
-				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
+				theme?.applyTraceLogTextStyle(view)
 				padViews[x][y] = view
 				row.addView(view)
 			}
