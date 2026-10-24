@@ -104,11 +104,12 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 
 		if (controllerFirst) vm.padTouch(0, 0, false) else vm.controllerPadTouch(0, 0, false)
 		assertEquals(emptyMap<Int, Int>(), engine.voices)
-		assertNull(vm.channelManager.get(0, 0)?.channel)
 		if (autoplay) {
+			assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
 			vm.autoPlayPause()
 			assertEquals(emptyMap<Int, Int>(), engine.voices)
 		}
+		assertNull(vm.channelManager.get(0, 0)?.channel)
 	}
 
 	@Test fun seekingPastTheEndDoesNotPlayACommandWaitingForMain() {
@@ -228,11 +229,14 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertEquals(emptyMap<Int, Int>(), engine.voices)
 	}
 
-	@Test fun manualReleaseStopsTheLoopAutoplayPressedAndNeverReleases() {
+	@Test fun unmatchedManualReleasePreservesTheLoopAutoplayPressed() {
 		// A trailing delay is not waited for, so another press keeps the sequence running.
 		start(sequence = "o 1 1\nd 60000\no 1 2\n")
 		assertEquals(1, engine.voices.size)
+		val autoplay = engine.voices.toMap()
 		vm.padTouch(0, 0, false)
+		assertEquals("A release without a player press cannot own auto play's loop", autoplay, engine.voices)
+		vm.autoPlayPause()
 		assertEquals(emptyMap<Int, Int>(), engine.voices)
 	}
 

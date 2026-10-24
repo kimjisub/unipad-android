@@ -282,6 +282,7 @@ private class ScenarioRun(
 	private var pressChain = 0
 	private var pressX = 0
 	private var pressY = 0
+	private val pointerIds = mutableMapOf("pointer:0" to 0L)
 	@Volatile private var watchingStops = false
 
 	private var autoPlay: AutoPlayRunner? = null
@@ -302,8 +303,8 @@ private class ScenarioRun(
 				val x = step["x"]?.jsonPrimitive?.int
 				val y = step["y"]?.jsonPrimitive?.int
 				when (val name = step.getValue("do").jsonPrimitive.content) {
-					"press" -> press(x!!, y!!, true)
-					"release" -> press(x!!, y!!, false)
+					"press" -> playerInput(x!!, y!!, true, step["input"]?.jsonPrimitive?.content)
+					"release" -> playerInput(x!!, y!!, false, step["input"]?.jsonPrimitive?.content)
 					"chain" -> silently { vm.selectChain(step.getValue("c").jsonPrimitive.int) }
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
@@ -417,6 +418,23 @@ private class ScenarioRun(
 		override fun stopGuideAnimation(x: Int, y: Int) {}
 		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {}
 		override fun onRequestRelayout() {}
+	}
+
+	/** Carry each corpus input to the same view-model entry point as the screen or controller. */
+	private fun playerInput(x: Int, y: Int, down: Boolean, input: String?) {
+		val name = input ?: "pointer:0"
+		if (name.startsWith("midi:")) {
+			check(name == "midi:1") { "Only one active controller is supported: $name" }
+			// The corpus hides the screen's round UI with the options flag; this is a pad
+			// event during play, not an options-window controller button.
+			val options = vm.isOptionWindowVisible
+			vm.isOptionWindowVisible = false
+			try { press(x, y, down) { vm.controllerPadTouch(x, y, down) } }
+			finally { vm.isOptionWindowVisible = options }
+		} else {
+			val pointerId = pointerIds.getOrPut(name) { pointerIds.size.toLong() }
+			press(x, y, down) { vm.padTouch(x, y, down, pointerId) }
+		}
 	}
 
 	/** A press or release of (x, y), by a person unless [touch] hands it to the view model another way. */

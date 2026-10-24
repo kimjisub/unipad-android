@@ -186,7 +186,7 @@ class PlayActivity : BaseActivity() {
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
 	// Pad touches of both input modes; internal so tests can check which mode is applied.
-	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
+	internal val padTouch = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
 	// though the retained ViewModel says the UI was loaded. The window can be resized, or turned
 	// to put the cutout on the other side, without recreating the activity, which rebuilds the

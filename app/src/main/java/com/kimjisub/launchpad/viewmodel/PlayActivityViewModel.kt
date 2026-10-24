@@ -499,10 +499,11 @@ class PlayActivityViewModel(
 		chain.value = c
 	}
 
-	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
-	// independent; a manual release also clears auto play's hold.
-	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?)
+	// Inputs remain held independently. Re-pressing still replaces the pad's current loop;
+	// only a release from its current owner may end that loop.
+	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?, val pointerId: Long = 0)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
+	private val padLoopOwner = mutableMapOf<Pair<Int, Int>, PlayTrigger>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
@@ -519,7 +520,8 @@ class PlayActivityViewModel(
 	}
 
 	/** A pad the person pressed or released on the screen. */
-	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN)
+	fun padTouch(x: Int, y: Int, upDown: Boolean, pointerId: Long = 0) =
+		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN, pointerId = pointerId)
 
 	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
 	// unplugged or stops being the screen's controller, so these are let go then.
@@ -575,6 +577,7 @@ class PlayActivityViewModel(
 		pressedBy: PlayTrigger,
 		source: InputSource?,
 		atMs: Long = SystemClock.elapsedRealtime(),
+		pointerId: Long = 0,
 	) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
@@ -585,7 +588,8 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source))
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source, pointerId))
+				padLoopOwner[x to y] = pressedBy
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -605,19 +609,22 @@ class PlayActivityViewModel(
 				}
 				ledRunner?.eventOn(x, y, atMs)
 			} else {
-				val sources = heldPads[x to y]
-				// Screen and controller holds are independent. A person's release still overrides
-				// auto play, but only the last manual release stops the shared sound and light.
-				if (sources != null) {
-					sources.remove(PadInput(pressedBy, source))
-					if (pressedBy == PlayTrigger.PAD) sources.remove(PadInput(PlayTrigger.AUTOPLAY, null))
-					if (sources.isNotEmpty()) return
-					heldPads.remove(x to y)
+				val pad = x to y
+				val sources = heldPads[pad] ?: return
+				if (!sources.remove(PadInput(pressedBy, source, pointerId))) return
+				// All fingers/controllers share the player's current re-press. Auto play is its
+				// own owner, so releasing an older input must not end the newer owner's loop.
+				if (sources.none { it.trigger == pressedBy } && padLoopOwner[pad] == pressedBy) {
+					padLoopOwner.remove(pad)
+					soundRunner?.soundOff(x, y)
+					ledRunner?.eventOff(x, y, atMs)
 				}
-				soundRunner?.soundOff(x, y)
-				channelManager.remove(x, y, Channel.PRESSED)
+				if (sources.isEmpty()) {
+					heldPads.remove(pad)
+					padLoopOwner.remove(pad)
+					channelManager.remove(x, y, Channel.PRESSED)
+				}
 				uiCallback?.setLedPad(x, y)
-				ledRunner?.eventOff(x, y, atMs)
 			}
 		} catch (e: ArrayIndexOutOfBoundsException) {
 			Log.err("padTouch ArrayIndexOutOfBounds", e)
