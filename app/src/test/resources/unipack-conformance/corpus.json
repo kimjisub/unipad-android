@@ -25242,6 +25242,41 @@
           ],
           []
         ]
+      },
+      "known": {
+        "ios": {
+          "status": "fail",
+          "actual": {
+            "checkpoints": [
+              [
+                [
+                  "autoOn",
+                  0,
+                  0
+                ],
+                [
+                  "sound",
+                  0,
+                  0,
+                  0,
+                  "a.wav",
+                  0
+                ],
+                [
+                  "autoChain",
+                  1
+                ]
+              ],
+              [
+                [
+                  "chain",
+                  1
+                ]
+              ]
+            ]
+          },
+          "note": "Observed on unipad-ios e8ac34d11373b3ed071535e365ddc382c1929496 with the 9-case partial G6 run (corpus 7ac226a82324ba278859443772c67be864387809138b1884fe57cbc187bc4180, result SHA256 c4b39c69a4611761a0e011a1c20266a6845a1f76c89f55e137c47a7e348ffdf2). Turning autoPlay off leaves its delayed sound wormhole pending; the real chain observer records chain 1 afterward. The case input, fingerprint and expectation are unchanged. This is a request-level difference, not an audible-output or screen-press observation. See investigations/ios-playback-observations/README.md."
+        }
       }
     },
     {
