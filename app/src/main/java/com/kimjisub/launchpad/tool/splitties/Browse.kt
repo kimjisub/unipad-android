@@ -21,6 +21,17 @@ fun android.content.Context.browse(link: String, action: String = Intent.ACTION_
 	}
 }
 
+/** Pack metadata can contain a bare web address, but must not launch another URI scheme. */
+fun android.content.Context.browsePackWebsite(link: String) {
+	val written = link.trim()
+	if (written.isEmpty()) return
+	val scheme = written.toUri().scheme
+	val address = if (scheme == null) "https://$written" else written
+	val uri = address.toUri()
+	if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.host.isNullOrBlank()) return
+	browse(address)
+}
+
 /** Opens [appId]'s Play page in the Play Store app, else the same page in a browser; false when neither exists. */
 fun android.content.Context.openPlayStorePage(appId: String): Boolean {
 	val page = "https://play.google.com/store/apps/details?id=$appId".toUri()

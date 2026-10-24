@@ -350,8 +350,8 @@ class LedRunner(
 			try {
 				when (val event = ledEvents[index]) {
 					is LedAnimation.LedEvent.On -> {
-						val x = event.x
-						val y = event.y
+						val x = event.x.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+						val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 						val color = event.color
 						val velocity = event.velocity
 
@@ -367,8 +367,8 @@ class LedRunner(
 					}
 
 					is LedAnimation.LedEvent.Off -> {
-						val x = event.x
-						val y = event.y
+						val x = event.x.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+						val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
 						if (x != -1) {
 							if (btnLed[x][y]?.equal(buttonX, buttonY, chainAtCreation) == true) {
@@ -389,8 +389,8 @@ class LedRunner(
 
 					is LedAnimation.LedEvent.Chain -> {
 						// Not chain.value here: ChainObserver runs its observers synchronously and
-						// they touch UI state, so the listener applies the change on main.
-						changes.add(LedChange.ChainChange(event.chain))
+						// they touch UI state, so the listener applies and bounds the requested chain on main.
+						changes.add(LedChange.ChainChange(event.chain.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()))
 					}
 				}
 			} catch (ex: IndexOutOfBoundsException) {

@@ -40,7 +40,7 @@ class UniPackImporter(
 			var claimedFolder: File? = null
 			try {
 				fileName = DocumentFile.fromSingleUri(context, uri)?.name
-				val zipNameWithoutExt = fileName?.split('.')?.first() ?: "unknown"
+				val zipNameWithoutExt = fileName?.substringBeforeLast('.')?.takeIf { it.isNotBlank() } ?: "UniPack"
 				withContext(Dispatchers.Main) { onImportStart() }
 
 				val targetWorkspace = workspace()
