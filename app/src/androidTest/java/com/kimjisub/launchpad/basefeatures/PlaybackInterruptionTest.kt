@@ -77,7 +77,8 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
         screen.options()
         screen.onMain { assertTrue("The in-screen menu must not interrupt", vm.isAutoPlayPlaying) }
-        screen.clickDescription(R.string.menu)
+        screen.device.pressBack()
+        screen.await("The menu did not close") { screen.onMain { !vm.isOptionWindowVisible } }
         screen.onMain { activity.startActivity(Intent(activity, MidiSelectActivity::class.java)) }
         screen.awaitActivity(MidiSelectActivity::class.java)
         screen.capture("interruption-device-selection")

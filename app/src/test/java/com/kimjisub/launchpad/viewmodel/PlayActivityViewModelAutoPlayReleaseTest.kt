@@ -358,6 +358,17 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertTrue(engine.voices.isEmpty())
 	}
 
+	@Test fun naturalEndKeepsTheLoopHeldByThePlayer() {
+		start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n", sequence = "on 1 1\ndelay 100\n", autoplay = false)
+		vm.padTouch(0, 1, true)
+		val manualVoice = engine.playCount
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		await { vm.playMode == PlayMode.None && !vm.autoPlayRunner!!.active }
+		assertEquals("Only autoplay's unmatched press is released at the end", mapOf(manualVoice to -1), engine.voices)
+		vm.padTouch(0, 1, false)
+		assertTrue(engine.voices.isEmpty())
+	}
+
 	@Test fun naturalEndReleasesAnUnmatchedAutoplayPress() {
 		start(sequence = "o 1 1\nd 100\n")
 		await { vm.playMode == PlayMode.None }
