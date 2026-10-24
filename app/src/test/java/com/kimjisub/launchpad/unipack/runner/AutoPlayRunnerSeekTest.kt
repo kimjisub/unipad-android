@@ -16,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Frozen pack time makes a seek's new guide and sound deadlines independent of host speed. */
@@ -46,6 +47,10 @@ class AutoPlayRunnerSeekTest {
 		val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
 		while (!check() && System.nanoTime() < deadline) Thread.sleep(1)
 		assertTrue(message, check())
+	}
+
+	private fun runsInRunner(stack: Array<StackTraceElement>) = stack.any {
+		it.className == AutoPlayRunner::class.java.name || it.className.startsWith(AutoPlayRunner::class.java.name + "$")
 	}
 
 	private fun start(practice: Boolean, firstChain: Int = 0) {
@@ -166,6 +171,38 @@ class AutoPlayRunnerSeekTest {
 		await("Resume did not keep the delay after the step hint") { runner.progress == 6 }
 		clock.set(19200)
 		await("Step seek kept the old continuous guide clock") { guides.contains(2 to 20000L) }
+	}
+
+	@Test fun stepSeekDuringAStepScanGuidesTheStepAtTheNewPosition() {
+		start(practice = true)
+		await("Initial guide missing") { guides.contains(0 to 500L) }
+		runner.playmode = false
+		val pressedKeysLock = checkNotNull(AutoPlayRunner::class.java.getDeclaredField("pressedKeysLock")
+			.apply { isAccessible = true }.get(runner))
+		val seek = Thread { runner.progressOffset(2) }
+		synchronized(pressedKeysLock) {
+			// Hold the runner at the start of a step scan so it scans the seek's position before it
+			// takes the seek. Neither that scan nor a step reset from the caller after it may move
+			// the step past the new position.
+			runner.stepMode = true
+			await("Runner did not reach the step scan") {
+				Thread.getAllStackTraces().any { (thread, stack) ->
+					thread.state == Thread.State.BLOCKED && runsInRunner(stack)
+				}
+			}
+			seek.start()
+			seek.join(TimeUnit.SECONDS.toMillis(5))
+			assertTrue("The seek waited to reset the step on the caller thread", !seek.isAlive)
+		}
+		seek.join()
+		val pendingSeek = checkNotNull(AutoPlayRunner::class.java.getDeclaredField("pendingSeek")
+			.apply { isAccessible = true }.get(runner) as AtomicReference<*>)
+		await("The runner did not take the seek and wait for a step") {
+			pendingSeek.get() == null && Thread.getAllStackTraces().values.none(::runsInRunner)
+		}
+		assertTrue("Step seek did not guide the new pad", guides.contains(1 to 0L))
+		assertEquals("Step seek moved past the new position", 5, runner.progress)
+		assertTrue("Step seek guided the step after the new position", guides.none { it.first == 2 })
 	}
 
 	@Test fun pauseAndSeekBetweenTicksDoNotUseTheEarlierPlayingState() {
