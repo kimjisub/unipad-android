@@ -150,6 +150,7 @@
 
 	<string name="outOfMemory">Out of memory..\nFree some memory and retry.</string>
 	<string name="audio_output_unavailable">Couldn\'t open audio output.\nTry opening the pack again.</string>
+	<string name="playback_audio_unavailable">Audio is unavailable. Press Play to try again.</string>
 	<string name="outOfCPU">Couldn\'t start pack\nbecause of phone specifications…\nTry again.</string>
 
 	<!--Launchpad Connection-->

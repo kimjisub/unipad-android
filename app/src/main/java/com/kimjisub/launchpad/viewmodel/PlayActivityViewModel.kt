@@ -281,7 +281,7 @@ class PlayActivityViewModel(
 		val allowed = requestAudioFocus?.invoke() ?: audioFocusPolicy.hasFocus
 		if (!allowed) {
 			interruptPlayback()
-			uiCallback?.showToast(string.audio_output_unavailable)
+			uiCallback?.showToast(string.playback_audio_unavailable)
 		}
 		return allowed
 	}
