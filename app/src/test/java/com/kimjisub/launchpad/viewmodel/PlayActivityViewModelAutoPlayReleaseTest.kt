@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
+import android.media.AudioManager
 import android.os.SystemClock
 import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
@@ -284,6 +285,67 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		val manual = engine.voices.toMap()
 		vm.switchPlayMode(PlayMode.None)
 		assertEquals(manual, engine.voices)
+	}
+
+	@Test fun interruptionReleasesEveryInputAndFiniteSound() {
+		start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n1 1 3 a.wav 3\n")
+		vm.scbFeedbackLight.setChecked(true)
+		vm.padTouch(0, 1, true)
+		vm.controllerPadTouch(0, 2, true)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		assertEquals(emptyMap<Int, Int>(), engine.voices)
+		assertNull("Screen presses must be released", vm.channelManager.get(0, 1))
+		assertNull("Controller presses must be released", vm.channelManager.get(0, 2))
+		val plays = engine.playCount
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertEquals(plays, engine.playCount)
+		assertTrue(!vm.isAutoPlayPlaying)
+	}
+
+	@Test fun deniedManualResumeKeepsThePositionAndNeedsANewRequest() {
+		start()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		val progress = vm.autoPlayRunner!!.progress
+		val plays = engine.playCount
+		vm.requestAudioFocus = { false }
+		vm.autoPlayResume()
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertTrue(vm.autoPlayRunner!!.suspended)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertEquals(progress, vm.autoPlayRunner!!.progress)
+		vm.requestAudioFocus = { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN); true }
+		vm.autoPlayResume()
+		assertTrue(vm.isAutoPlayPlaying)
+		assertTrue(!vm.autoPlayRunner!!.suspended)
+		main.runAll()
+		assertEquals("Resume does not recreate the old press", plays, engine.playCount)
+	}
+
+	@Test fun deniedStartDoesNotLaunchWhenPermissionLaterReturns() {
+		start(autoplay = false)
+		vm.requestAudioFocus = { false }
+		vm.switchPlayMode(PlayMode.AutoPlay)
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!vm.autoPlayRunner!!.active)
+		assertEquals(PlayMode.None, vm.playMode)
+		assertEquals(0, engine.playCount)
+	}
+
+	@Test fun replacingASuspendedRunnerCannotResumeItOnPermission() {
+		start()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+		val old = vm.autoPlayRunner!!
+		vm.initAutoPlayRunner()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		main.runAll()
+		assertTrue(!old.active)
+		assertTrue(!vm.autoPlayRunner!!.active)
+		assertTrue(!vm.isAutoPlayPlaying)
+		assertTrue(engine.voices.isEmpty())
 	}
 
 	@Test fun naturalEndReleasesAnUnmatchedAutoplayPress() {

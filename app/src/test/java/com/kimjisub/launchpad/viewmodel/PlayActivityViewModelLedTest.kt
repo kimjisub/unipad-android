@@ -388,6 +388,30 @@ class PlayActivityViewModelLedTest {
 		assertEquals(7, vm.channelManager.get(2, 2)?.code)
 	}
 
+	@Test
+	fun ledOptionOff_discardsFiniteAnimationsForOneAndTenSeconds() {
+		setUpRunner(LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Delay(100), LedEvent.On(2, 2), LedEvent.Delay(100)), 3, 0))
+		enableLedOption()
+		for (offFor in listOf(1000L, 10000L)) {
+			pressAndPlay(0, 0)
+			main.runAll()
+			vm.scbLed.setChecked(false)
+			assertFalse("Finite animations are discarded, not paused", runner.isEventExist(0, 0))
+			sent.clear()
+			clock.addAndGet(offFor)
+			runner.eventOn(3, 3) // Input while disabled must not be retained.
+			vm.scbLed.setChecked(true)
+			for (i in 1..20) tickOnRunnerThread(clock.get() + 100)
+			main.runAll()
+			assertEquals("Old and disabled-time inputs must never relight", emptyList<String>(), sent)
+			pressAndPlay(4, 4)
+			main.runAll()
+			assertTrue("New inputs still light the pad", sent.contains("1,1=4"))
+			vm.scbLed.setChecked(false)
+			vm.scbLed.setChecked(true)
+		}
+	}
+
 	private fun pressEndlessBlink() {
 		pressAndPlay(3, 3)
 		main.runAll()

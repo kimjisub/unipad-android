@@ -12,11 +12,10 @@ import org.junit.Test
 
 class AudioFocusPolicyTest {
 
-	private class FakeTarget(override var isAutoPlayPlaying: Boolean) : AudioFocusPolicy.Target {
+	private class FakeTarget(var isAutoPlayPlaying: Boolean) : AudioFocusPolicy.Target {
 		val events = mutableListOf<String>()
 		override fun silence() { events += "silence" }
 		override fun pauseAutoPlay() { events += "pause"; isAutoPlayPlaying = false }
-		override fun resumeAutoPlay() { events += "resume"; isAutoPlayPlaying = true }
 	}
 
 	private lateinit var target: FakeTarget
@@ -29,14 +28,14 @@ class AudioFocusPolicyTest {
 	}
 
 	@Test
-	fun transientLoss_pausesAndSilences_thenGainResumes() {
+	fun transientLoss_pausesAndSilences_thenGainWaitsForTheUser() {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		assertEquals(listOf("pause", "silence"), target.events)
 		assertFalse(target.isAutoPlayPlaying)
 
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
-		assertEquals(listOf("pause", "silence", "resume"), target.events)
-		assertTrue(target.isAutoPlayPlaying)
+		assertEquals(listOf("pause", "silence"), target.events)
+		assertFalse(target.isAutoPlayPlaying)
 	}
 
 	@Test
@@ -46,17 +45,17 @@ class AudioFocusPolicyTest {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
 
-		assertEquals(listOf("silence"), target.events)
+		assertEquals(listOf("pause", "silence"), target.events)
 		assertFalse(target.isAutoPlayPlaying)
 	}
 
 	@Test
-	fun repeatedTransientLoss_stillResumesOnGain() {
+	fun repeatedTransientLoss_neverResumesOnGain() {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
 
-		assertEquals(listOf("pause", "silence", "silence", "resume"), target.events)
+		assertEquals(listOf("pause", "silence", "pause", "silence"), target.events)
 	}
 
 	@Test
@@ -74,23 +73,23 @@ class AudioFocusPolicyTest {
 		policy.onFocusChange(AUDIOFOCUS_LOSS)
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
 
-		assertEquals(listOf("pause", "silence", "silence"), target.events)
+		assertEquals(listOf("pause", "silence", "pause", "silence"), target.events)
 	}
 
 	@Test
-	fun gainTwice_resumesOnlyOnce() {
+	fun gainTwice_neverResumes() {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
 
-		assertEquals(listOf("pause", "silence", "resume"), target.events)
+		assertEquals(listOf("pause", "silence"), target.events)
 	}
 
 	@Test
-	fun duckLoss_isLeftToTheSystem() {
+	fun duckLoss_pausesAndSilences() {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK)
 
-		assertTrue(target.events.isEmpty())
-		assertTrue(target.isAutoPlayPlaying)
+		assertEquals(listOf("pause", "silence"), target.events)
+		assertFalse(target.isAutoPlayPlaying)
 	}
 }

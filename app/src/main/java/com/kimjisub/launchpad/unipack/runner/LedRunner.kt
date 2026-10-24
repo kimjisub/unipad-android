@@ -175,6 +175,18 @@ class LedRunner(
 		}
 	}
 
+	/** Discards all animations between deliveries; callers also clear their rendered LED channel. */
+	fun clear() = deliveryLock.withLock {
+		synchronized(this) {
+			ledAnimationStates.clear()
+			ledAnimationStatesAdd.clear()
+			for (row in heldLoop) row.fill(null)
+			for (row in btnLed) row.fill(null)
+			cirLed.fill(null)
+			pausedAt = null
+		}
+	}
+
 	/** Runs [block] between ticks: every change computed before it has reached the listener, and none after it has. */
 	fun <T> afterDelivery(block: () -> T): T = deliveryLock.withLock(block)
 

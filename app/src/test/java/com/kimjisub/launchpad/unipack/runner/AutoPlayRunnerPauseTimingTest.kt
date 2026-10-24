@@ -101,6 +101,38 @@ class AutoPlayRunnerPauseTimingTest {
 		await { ended.count == 0L }
 	}
 
+	@Test fun zeroLastDelayEndsOnce() {
+		start(arrayListOf(AutoPlay.Element.Delay(0)), readyProgress = 1)
+		await { ended.count == 0L }
+		assertTrue(!runner.active)
+	}
+
+	@Test fun oneMillisecondDelayOnlyWaitsUntilItsDeadline() {
+		start(arrayListOf(AutoPlay.Element.Delay(1)), readyProgress = 1)
+		observeTickOrEnd(0)
+		assertEquals(1L, ended.count)
+		clock.set(1)
+		await { ended.count == 0L }
+	}
+
+	@Test fun consecutiveDelaysOnlyFinishAtTheirCombinedDeadline() {
+		start(arrayListOf(AutoPlay.Element.Delay(1), AutoPlay.Element.Delay(1999)), readyProgress = 1)
+		observeTickOrEnd(1)
+		await { runner.progress == 2 }
+		observeTickOrEnd(1999)
+		assertEquals(1L, ended.count)
+		clock.set(2000)
+		await { ended.count == 0L }
+	}
+
+	@Test fun stopDuringTheLastDelayEndsImmediately() {
+		startFinalDelay()
+		observeTickOrEnd(500)
+		runner.stop()
+		await { ended.count == 0L }
+		assertTrue(!runner.active)
+	}
+
 	@Test fun pauseHalfwayThroughADelayPreservesTheOtherHalf() {
 		start()
 		tickAt(500)

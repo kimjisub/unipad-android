@@ -303,6 +303,7 @@ class PlayActivity : BaseActivity() {
 			this,
 			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
+		vm.requestAudioFocus = { audioFocus.request() }
 		vm.uiCallback = uiCallback
 		vm.enable = true
 		reportScreenLayout()
@@ -1372,8 +1373,8 @@ class PlayActivity : BaseActivity() {
 		super.onResume()
 		contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver)
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-		// Also retakes focus after a call ends, which resumes autoplay paused by a transient loss.
-		audioFocus.request()
+		// Reconnect output permission without starting the interrupted song.
+		if (!audioFocus.request()) vm.interruptPlayback()
 		launchpadOutputEnabled = true
 		if (vm.uiLoaded) {
 			controller = midiController
@@ -1383,11 +1384,21 @@ class PlayActivity : BaseActivity() {
 		padTouch.slide = p.slideMode
 	}
 
+	override fun onWindowFocusChanged(hasFocus: Boolean) {
+		super.onWindowFocusChanged(hasFocus)
+		if (::vm.isInitialized) {
+			if (!hasFocus) {
+				vm.interruptPlayback()
+				padTouch.cancel()
+			} else if (!audioFocus.request()) vm.interruptPlayback()
+		}
+	}
+
 	// A window opened over the screen pauses it while it stays visible, and a finger resting on a pad
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
-		vm.soundRunner?.cancelPendingWormholes()
+		vm.interruptPlayback()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false
@@ -1402,10 +1413,7 @@ class PlayActivity : BaseActivity() {
 		vm.screenVisible = true
 	}
 
-	// Leaving the screen is a permanent audio focus loss: autoplay pauses where it is and waits for
-	// the user, looping sounds are cut, and a resume pending from an earlier transient loss (a call)
-	// is dropped. Focus is given up so its return cannot restart playback in the background; onResume
-	// asks for it again. The LED runner and the audio stream stop until onStart; loaded sounds stay.
+	// Hidden screens also stop the audio stream. Returning reconnects it, but keeps the song suspended.
 	override fun onStop() {
 		super.onStop()
 		audioFocus.abandon()
@@ -1416,6 +1424,7 @@ class PlayActivity : BaseActivity() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		vm.requestAudioFocus = null
 		vm.uiCallback = null
 		vm.enable = false
 		midiController?.let { removeController(it) }
