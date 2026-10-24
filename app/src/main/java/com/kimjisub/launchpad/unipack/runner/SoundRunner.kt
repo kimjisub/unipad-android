@@ -209,10 +209,11 @@ class SoundRunner(
 				soundId = sound.id,
 				volumeL = 1.0f,
 				volumeR = 1.0f,
-				loop = sound.loop,
+				// The native engine uses an Int; every negative count except -1 plays once.
+				loop = sound.loop.coerceAtLeast(Int.MIN_VALUE.toLong()).toInt(),
 			)
 			stopKey[chain.value][x][y] = key
-			heldLoop[x][y] = if (sound.loop == -1) key else 0
+			heldLoop[x][y] = if (sound.loop == -1L) key else 0
 		}
 		unipack.soundPush(chain.value, x, y)
 		if (sound.wormhole != Sound.NO_WORMHOLE) {
