@@ -49,6 +49,8 @@ CASES = [
     case('differentPadIsRejected',[1],[0],'alternate',alternate_pad=1),
     case('heldLoopStopsAfterRelease',[9],[9],hold_ms=1250,stop_window_s=[.6,1.1]),
     case('twoPadsAreHeardTogether',[0,1],[0,1]),
+    case('quadWavIsHeardInStereo',[10],[10]),
+    case('surroundWavIsHeardInStereo',[11],[11]),
 ]
 CASE_BY_NAME = {c['name']:c for c in CASES}
 # Observed stream timestamp jitter is up to 36 ms in either direction.

@@ -29,6 +29,8 @@ several. A full run contains these stable result names, in
 | A-03, OGG Vorbis | `oggIsHeardAtTheEmulatorOutput` |
 | A-04, AAC in M4A | `m4aIsHeardAtTheEmulatorOutput` |
 | A-05, MP3 with a WAV filename | `bareMp3NamedWavIsHeardAtTheEmulatorOutput` and `taggedMp3NamedWavIsHeardAtTheEmulatorOutput` |
+| Four-channel PCM WAV mixed to stereo | `quadWavIsHeardInStereo` |
+| 5.1 PCM WAV mixed to stereo | `surroundWavIsHeardInStereo` |
 
 The remaining cases check separated left/right channels, no press, an empty
 pressed pad, a silent file, a different pad, a held loop's release, and two pads
@@ -52,8 +54,8 @@ runner. Run the host suite separately before publishing changes affecting sound.
 
 ## Original fixtures
 
-`make_audio_output_fixtures.py` creates ten original, one-second, 48 kHz stereo
-signals. All use the same envelope/chirp formula, with distinct pitches per pad
+`make_audio_output_fixtures.py` creates twelve original, one-second, 48 kHz stereo
+references. All use the same envelope/chirp formula, with distinct pitches per pad
 and channel, a 10 ms fade, and peak amplitude 0.16. The left-only, right-only and
 silent fixtures deliberately contain zero samples in specified channels. Each
 channel changes in frequency and amplitude over time, so a start-up click or a
@@ -64,7 +66,14 @@ zero-based), filenames, original reference WAVs, frequencies, hashes, exact
 encoding commands and ffmpeg version. The sounds and pack mapping live in the
 test APK's `assets/audio-output`. The host verifies reference and APK asset hashes, including the exact `info`
 and `keySound` mapping bytes, before testing. MP3 filenames with and without ID3 tags are separate fixtures.
-Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
+The last two source WAVs have four and six channels and explicit speaker masks.
+The quad source repeats each reference channel in its front and rear speaker;
+the 5.1 source carries the reference in the surrounds at the inverse down-mix gain.
+They must reproduce their stereo references through the real decoder and mixer.
+`python3 scripts/make_audio_output_fixtures.py --multichannel-only` regenerates
+only these two sources, references and their mapping without re-encoding earlier files.
+
+Full fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
 The managed recorder directory must also provide `android_clock.py`. The runner
