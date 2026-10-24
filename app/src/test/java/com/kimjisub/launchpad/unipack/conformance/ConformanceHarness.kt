@@ -66,6 +66,14 @@ class CaseResult(val actual: JsonElement, val outcome: Outcome)
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 	val unobserved = c.unobserved[PLATFORM]
 	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
+	if (c.observation != null && c.observation != "runner") {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the Android harness has no ${c.observation} operation adapter; the pack parser cannot observe this operation"))
+	}
+	if (c.soundIdentity) {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the Android harness records relative sound names, not original archive entries and selected file hashes"))
+	}
 	val actual = actualFor(c, corpus, deps)
 	return CaseResult(actual, classify(c, actual))
 }
@@ -174,7 +182,11 @@ private fun autoPlayElementJson(e: AutoPlay.Element): JsonElement = buildJsonArr
 }
 
 private fun event(vararg parts: Any): JsonElement = buildJsonArray {
-	for (p in parts) add(if (p is Int) JsonPrimitive(p) else JsonPrimitive(p as String))
+	for (p in parts) add(when (p) {
+		is Int -> JsonPrimitive(p)
+		is Boolean -> JsonPrimitive(p)
+		else -> JsonPrimitive(p as String)
+	})
 }
 
 /** A WAV (RIFF), or an MP3 with an ID3 tag or starting at a frame: what the decoder stand-in accepts. */
@@ -284,6 +296,7 @@ private class ScenarioRun(
 	private var pressY = 0
 	private val pointerIds = mutableMapOf("pointer:0" to 0L)
 	@Volatile private var watchingStops = false
+	@Volatile private var watchingAutoEnd = false
 
 	private var autoPlay: AutoPlayRunner? = null
 	private var finished = false
@@ -313,6 +326,10 @@ private class ScenarioRun(
 					"looping" -> engine.looping().forEach { (px, py) -> events.add(event("looping", px, py)) }
 					"stop" -> stop()
 					"watchStops" -> watchingStops = true
+					"watchAutoEnd" -> watchingAutoEnd = true
+					"autoplayState" -> events.add(event("autoActive", autoPlay?.active == true))
+					"suspendAuto" -> afterAutoPlayPass("auto play to suspend") { vm.autoPlayPause() }
+					"resumeAuto" -> resumeAutoPlay()
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
 					"resume" -> resumeAutoPlay()
@@ -492,7 +509,10 @@ private class ScenarioRun(
 			override fun chainButsRefresh() {}
 			override fun onProgressUpdate(progress: Int) {}
 			// At its end auto play turns its option off, so leaving the screen afterwards finds it not playing.
-			override fun onEnd() = screen.onEnd()
+			override fun onEnd() {
+				if (watchingAutoEnd) events.add(event("autoEnd"))
+				screen.onEnd()
+			}
 		}
 	}
 

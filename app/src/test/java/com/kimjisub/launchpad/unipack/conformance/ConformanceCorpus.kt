@@ -37,6 +37,9 @@ data class CorpusCase(
 	val known: Map<String, Known>,
 	/** Per platform, why its harness cannot observe this case; it is unverified there and not run. */
 	val unobserved: Map<String, String>,
+	/** Selects an operation adapter rather than the ordinary pack parser. */
+	val observation: String? = null,
+	val soundIdentity: Boolean = false,
 )
 
 class Corpus(val assets: Map<String, String>, val cases: List<CorpusCase>, val sha256: String)
@@ -95,6 +98,8 @@ private fun JsonObject.toCase(): CorpusCase = CorpusCase(
 		)
 	} ?: emptyMap(),
 	unobserved = (this["unobserved"] as? JsonObject)?.mapValues { it.value.jsonPrimitive.content } ?: emptyMap(),
+	observation = string("observation"),
+	soundIdentity = string("soundIdentity") == "true",
 )
 
 fun CorpusFile.bytes(corpus: Corpus): ByteArray = when {
