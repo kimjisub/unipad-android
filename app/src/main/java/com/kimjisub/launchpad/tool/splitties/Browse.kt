@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.packWebsiteAddress
 
 private const val PLAY_STORE_PACKAGE = "com.android.vending"
 
@@ -19,6 +20,12 @@ fun android.content.Context.browse(link: String, action: String = Intent.ACTION_
 		// Devices without a browser or YouTube app (Crashlytics d783e2d5)
 		Toast.makeText(this, R.string.no_app_for_link, Toast.LENGTH_SHORT).show()
 	}
+}
+
+/** Pack metadata can contain a bare web address, but must not launch another URI scheme. */
+fun android.content.Context.browsePackWebsite(link: String) {
+	val address = packWebsiteAddress(link) ?: return
+	browse(address)
 }
 
 /** Opens [appId]'s Play page in the Play Store app, else the same page in a browser; false when neither exists. */

@@ -134,7 +134,7 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 			assertEquals(listOf(1), chains)
 			val chain2Loop = checkNotNull(vm.unipack.soundGet(1, 0, 0)).loop
 			assertTrue(chain2Loop != checkNotNull(vm.unipack.soundGet(0, 0, 0)).loop)
-			assertEquals("The press plays chain 2's mapping", listOf(chain2Loop), engine.voices.values.toList())
+			assertEquals("The press plays chain 2's mapping", listOf(chain2Loop.toInt()), engine.voices.values.toList())
 		} finally {
 			vm.chain.removeObserver(record)
 		}

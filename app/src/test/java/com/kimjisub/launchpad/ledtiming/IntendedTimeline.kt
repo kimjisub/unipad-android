@@ -203,32 +203,36 @@ private class TimelineSimulation(private val pack: UniPack) {
 				is LedEvent.On -> light(event, animation.owner, t)
 				is LedEvent.Off -> dim(event, animation.owner, t)
 				is LedEvent.Delay -> animation.due += event.delay
-				is LedEvent.Chain -> chain = event.chain.coerceIn(0, pack.chain - 1)
+				is LedEvent.Chain -> chain = event.chain.coerceIn(0L, (pack.chain - 1).toLong()).toInt()
 			}
 			animation.index++
 		}
 	}
 
 	private fun light(event: LedEvent.On, owner: Owner, t: Long) {
-		if (event.x == -1) {
-			if (event.y !in rounds.indices) return
-			rounds[event.y] = owner
+		val x = event.x.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+		val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+		if (x == -1) {
+			if (y !in rounds.indices) return
+			rounds[y] = owner
 		} else {
-			if (event.x !in pads.indices || event.y !in pads[event.x].indices) return
-			pads[event.x][event.y] = owner
+			if (x !in pads.indices || y !in pads[x].indices) return
+			pads[x][y] = owner
 		}
-		out += IntendedCommand(t, LedTarget(event.x, event.y), event.velocity)
+		out += IntendedCommand(t, LedTarget(x, y), event.velocity)
 	}
 
 	private fun dim(event: LedEvent.Off, owner: Owner, t: Long) {
-		if (event.x == -1) {
-			if (event.y !in rounds.indices || rounds[event.y] != owner) return
-			rounds[event.y] = null
+		val x = event.x.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+		val y = event.y.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
+		if (x == -1) {
+			if (y !in rounds.indices || rounds[y] != owner) return
+			rounds[y] = null
 		} else {
-			if (event.x !in pads.indices || event.y !in pads[event.x].indices || pads[event.x][event.y] != owner) return
-			pads[event.x][event.y] = null
+			if (x !in pads.indices || y !in pads[x].indices || pads[x][y] != owner) return
+			pads[x][y] = null
 		}
-		out += IntendedCommand(t, LedTarget(event.x, event.y), 0)
+		out += IntendedCommand(t, LedTarget(x, y), 0)
 	}
 
 	private companion object {

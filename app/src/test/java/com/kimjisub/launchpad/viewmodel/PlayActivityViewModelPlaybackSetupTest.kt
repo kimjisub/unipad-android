@@ -114,7 +114,7 @@ class PlayActivityViewModelPlaybackSetupTest {
     @Test fun unplayablePackClosesWithAnExplanation() {
         load(square = true, playable = false)
         var closed = false
-        every { vm.uiCallback!!.finishActivity(any()) } answers { closed = true }
+        every { vm.uiCallback!!.finishWithNotice(any()) } answers { closed = true }
         val deadline = System.nanoTime() + 5_000_000_000L
         while (!closed && System.nanoTime() < deadline) {
             main.runAll()
@@ -122,7 +122,7 @@ class PlayActivityViewModelPlaybackSetupTest {
         }
         assertTrue("A pack with no decodable audio must close", closed)
         assertFalse(vm.soundLoadingActive)
-        verify(exactly = 1) { vm.uiCallback?.finishActivity(R.string.pack_no_playable_sounds) }
+        verify(exactly = 1) { vm.uiCallback?.finishWithNotice(R.string.pack_no_playable_sounds) }
     }
 
     private fun controller(): MidiController {

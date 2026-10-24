@@ -115,7 +115,7 @@ class PlayActivityViewModel(
 		fun setLedChain(c: Int)
 		fun updateTraceLogOverlay()
 		fun showToast(resId: Int)
-		fun finishActivity(messageResId: Int)
+		fun finishWithNotice(resId: Int)
 		fun copyToClipboard(text: String)
 		fun setChainViewVisibility(index: Int, visibility: Int)
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
@@ -217,7 +217,7 @@ class PlayActivityViewModel(
 		}
 
 		override fun onChainChange(c: Int) {
-			chain.value = c
+			chain.assignFromPack(c)
 		}
 	}
 
@@ -446,9 +446,12 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
-						uiCallback?.finishActivity(
-							if (throwable is SoundRunner.NoPlayableSoundsException) string.pack_no_playable_sounds
-							else string.outOfCPU,
+						uiCallback?.finishWithNotice(
+							when (throwable) {
+								is SoundRunner.NoPlayableSoundsException -> string.pack_no_playable_sounds
+								is SoundRunner.AudioOutputUnavailableException -> string.audio_output_unavailable
+								else -> string.outOfCPU
+							}
 						)
 					}
 				}
@@ -514,6 +517,7 @@ class PlayActivityViewModel(
 
 	/** Lets go of auto play's pads and clears the lights auto play left on. */
 	private fun resetPadsAfterAutoPlay() {
+		soundRunner?.cancelPendingWormholes()
 		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
@@ -1021,7 +1025,7 @@ class PlayActivityViewModel(
 				}
 
 				override fun onChainChange(c: Int) {
-					viewModelScope.launch { chain.value = c }
+					viewModelScope.launch { chain.assignFromPack(c) }
 				}
 
 				override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {

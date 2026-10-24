@@ -55,7 +55,7 @@ class PlayActivityLoadFailureTest {
 
 	@Test
 	fun loadFailure_tellsWhyOverTheListAndCloses() {
-		PlayActivity::class.java.getDeclaredMethod("closeOnLoadFailure", String::class.java)
+		PlayActivity::class.java.getDeclaredMethod("closeWithNotice", String::class.java)
 			.apply { isAccessible = true }
 			.invoke(activity, "Out of memory")
 
@@ -72,7 +72,7 @@ class PlayActivityLoadFailureTest {
 		val callback = PlayActivity::class.java.getDeclaredField("uiCallback")
 			.apply { isAccessible = true }.get(activity) as PlayActivityViewModel.UiCallback
 
-		callback.finishActivity(R.string.pack_no_playable_sounds)
+		callback.finishWithNotice(R.string.pack_no_playable_sounds)
 
 		verifyOrder {
 			Toast.makeText(appContext, "No playable sounds", Toast.LENGTH_LONG)

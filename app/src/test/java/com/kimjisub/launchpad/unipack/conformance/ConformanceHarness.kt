@@ -428,7 +428,7 @@ private class ScenarioRun(
 
 		override fun updateTraceLogOverlay() {}
 		override fun showToast(resId: Int) {}
-		override fun finishActivity(messageResId: Int) { finished = true }
+		override fun finishWithNotice(resId: Int) { finished = true }
 		override fun copyToClipboard(text: String) {}
 		override fun setChainViewVisibility(index: Int, visibility: Int) {}
 		override fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long) {}
@@ -488,7 +488,7 @@ private class ScenarioRun(
 		}
 		fun changeChain(c: Int) {
 			chainTag.set("autoChain")
-			try { vm.chain.value = c } finally { chainTag.set(null) }
+			try { vm.chain.assignFromPack(c) } finally { chainTag.set(null) }
 		}
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}

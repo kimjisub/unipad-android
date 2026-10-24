@@ -13742,57 +13742,6 @@
           "keySound:range",
           "keySound:range"
         ]
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "file": "a.wav",
-                    "loop": -2147483648,
-                    "wormhole": -1
-                  }
-                ]
-              },
-              {
-                "c": 0,
-                "x": 0,
-                "y": 1,
-                "queue": [
-                  {
-                    "file": "b.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": false,
-            "leds": [],
-            "autoPlay": null,
-            "errors": [
-              "keySound:range",
-              "keySound:range",
-              "keySound:range"
-            ]
-          },
-          "note": "Android keeps a loop in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647, a repeat count that practically never ends). Both are below -1, so the sound is neither endless nor repeated; Android's engine and the web's play it once."
-        }
       }
     },
     {
@@ -14126,75 +14075,6 @@
         ],
         "autoPlay": null,
         "errors": []
-      },
-      "known": {
-        "android": {
-          "status": "fail",
-          "actual": {
-            "loaded": true,
-            "info": {
-              "title": "Conformance",
-              "producerName": "UniPad Conformance",
-              "buttonX": 4,
-              "buttonY": 3,
-              "chain": 2,
-              "squareButton": true
-            },
-            "sounds": [
-              {
-                "c": 0,
-                "x": 3,
-                "y": 2,
-                "queue": [
-                  {
-                    "file": "c.wav",
-                    "loop": 0,
-                    "wormhole": -1
-                  }
-                ]
-              }
-            ],
-            "keyLedExist": true,
-            "leds": [
-              {
-                "c": 0,
-                "x": 0,
-                "y": 0,
-                "queue": [
-                  {
-                    "loop": 1,
-                    "events": [
-                      [
-                        "on",
-                        -2147483648,
-                        0,
-                        "ffef5350",
-                        5
-                      ],
-                      [
-                        "off",
-                        0,
-                        -2147483648
-                      ],
-                      [
-                        "chain",
-                        -2147483648
-                      ],
-                      [
-                        "off",
-                        0,
-                        0
-                      ]
-                    ]
-                  }
-                ]
-              }
-            ],
-            "autoPlay": null,
-            "errors": []
-          },
-          "note": "Android keeps a keyLED coordinate and chain in a 32-bit Int, which cannot hold 1 less than -2147483648: it stores -2147483648 where iOS and the web store -2147483649 (before it wrapped to 2147483647). Either way the light is outside the grid and the chain is not one the pack has."
-        }
       }
     },
     {

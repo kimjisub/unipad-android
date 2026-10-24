@@ -152,7 +152,7 @@ class PlayActivityViewModelManualChainTest {
 
     @Test fun scriptedChainChangesDoNotCancelPendingPadMoves() {
         press()
-        vm.chain.value = 2
+        vm.ledRunnerListener.onChainChange(2)
         settle()
         assertEquals("Only manual selection cancels a pending pad move", 1, vm.chain.value)
     }

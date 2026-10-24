@@ -560,16 +560,18 @@ class PlayActivityTest : BaseUITest() {
     }
 
     /**
-     * With Settings > Play > "Show tap order numbers on pads" on, the numbers only appear once the
-     * play screen's Trace Log switch is on, which is what the setting's description tells the user.
+     * With no saved tap order choice, numbers are the default but only appear once the play
+     * screen's Trace Log switch is on, which is what the setting's description tells the user.
      * Pads are not in the accessibility tree, so the numbers are read from the pads' trace log views.
      */
     @Test
     fun testTapOrderNumbersNeedTraceLogSwitch() {
         val prefs = PreferenceManager(context)
-        val original = prefs.traceLogClassic
+        val original = savedTapOrderChoice()
+        val originalTheme = prefs.selectedTheme
         try {
-            prefs.traceLogClassic = true
+            setTapOrderChoice(null)
+            prefs.selectedTheme = context.packageName
             enterPlay()
 
             tapPad(2, 2)
@@ -591,13 +593,116 @@ class PlayActivityTest : BaseUITest() {
                 assertTrue("Tap order \"$order\" is at $at, not on pad $pad", pad.contains(at.centerX(), at.centerY()))
             }
 
+            assertTapOrderStyle(0xffe6e9ed.toInt(), shadow = true)
+
             openPlayOptions()
             togglePlayOption(R.string.traceLog)
             closePlayOptions()
+            tapPad(2, 2)
+            assertEquals("Stopping trace log should keep existing numbers", expected.keys, shownTapOrders().keys)
+
+            openPlayOptions()
+            togglePlayOption(R.string.traceLog)
+            closePlayOptions()
+            tapPad(2, 2)
+            assertTrue("Resuming trace log should continue numbering", waitUntil { "1 4 5" in shownTapOrders() })
+
+            val recorded = shownTapOrders().keys
+            val originalSize = device.executeShellCommand("wm size").lineSequence()
+                .firstOrNull { it.startsWith("Override size:") }?.substringAfter(":")?.trim()
+            try {
+                device.executeShellCommand("wm size 1600x2560")
+                rotateTo(Surface.ROTATION_270)
+                settledGeometry(landscape = true)
+                assertEquals("Resizing or rotating lost tap orders", recorded, shownTapOrders().keys)
+                takeScreenshot("tap_order_resized_rotated")
+            } finally {
+                device.executeShellCommand("wm size ${originalSize ?: "reset"}")
+                device.unfreezeRotation()
+                settledGeometry(landscape = true)
+            }
+            var previousActivity: android.app.Activity? = null
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                previousActivity = ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(Stage.RESUMED).single().also { it.recreate() }
+            }
+            assertTrue("Play screen was not recreated", waitUntil(30000L) {
+                var recreated = false
+                InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                    recreated = ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(Stage.RESUMED).any { it !== previousActivity }
+                }
+                recreated && shownTapOrders().keys == recorded
+            })
+            takeScreenshot("tap_order_recreated")
+
+            openPlayOptions()
+            playOption(R.string.traceLog).longClick()
+            closePlayOptions()
+            assertTrue("Long press did not clear tap order", waitUntil { shownTapOrders().isEmpty() })
+            quitPlayToMain()
+            openTestPackInPlay()
+            openPlayOptions()
+            assertTrue("Entering a pack enabled trace log", !isPlayOptionChecked(R.string.traceLog))
+            closePlayOptions()
+            tapPad(2, 2)
+            assertTrue("A new play screen kept the previous trace", shownTapOrders().isEmpty())
             quitPlayToMain()
         } finally {
-            prefs.traceLogClassic = original
+            setTapOrderChoice(original)
+            prefs.selectedTheme = originalTheme
         }
+    }
+
+    @Test
+    fun testTapOrderSkinRoundTrip() {
+        val prefs = PreferenceManager(context)
+        val original = savedTapOrderChoice()
+        val originalTheme = prefs.selectedTheme
+        try {
+            prefs.traceLogClassic = true
+            val skins = listOf(
+                Triple(context.packageName, 0xffe6e9ed.toInt(), true),
+                Triple("asset://sskin", 0xffffffff.toInt(), false),
+                Triple("asset://midifighter", 0xff2c3e50.toInt(), false),
+                Triple(context.packageName, 0xffe6e9ed.toInt(), true),
+            )
+            skins.forEachIndexed { index, (skin, color, shadow) ->
+                prefs.selectedTheme = skin
+                enterPlay()
+                openPlayOptions()
+                togglePlayOption(R.string.traceLog)
+                closePlayOptions()
+                repeat(3) { tapPad(2, 2) }
+                assertTrue("Repeated numbers missing in $skin", waitUntil { "1 2 3" in shownTapOrders() })
+                assertTapOrderStyle(color, shadow)
+                takeScreenshot("tap_order_skin_$index")
+                quitPlayToMain()
+            }
+        } finally {
+            setTapOrderChoice(original)
+            prefs.selectedTheme = originalTheme
+        }
+    }
+
+    private fun assertTapOrderStyle(color: Int, shadow: Boolean) {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).first()
+            val text = activity.findViewById<TextView>(DesignR.id.traceLog)
+            assertEquals("Skin tap order color", color, text.currentTextColor)
+            assertEquals("Skin tap order shadow", shadow, text.shadowRadius > 0f)
+        }
+    }
+
+    private fun savedTapOrderChoice(): Boolean? {
+        val data = context.getSharedPreferences("data", 0)
+        return if (data.contains("TraceLogClassic")) data.getBoolean("TraceLogClassic", false) else null
+    }
+
+    private fun setTapOrderChoice(value: Boolean?) {
+        val editor = context.getSharedPreferences("data", 0).edit()
+        if (value == null) editor.remove("TraceLogClassic") else editor.putBoolean("TraceLogClassic", value)
+        assertTrue("Could not restore tap order choice", editor.commit())
     }
 
     private fun padBounds(x: Int, y: Int): Rect {

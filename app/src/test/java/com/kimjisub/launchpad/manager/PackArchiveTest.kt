@@ -11,6 +11,9 @@ import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
+import java.util.zip.CRC32
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -63,6 +66,45 @@ class PackArchiveTest {
 		val pack = UniPackFolder(dir).load().loadDetail()
 		assertNull(pack.errorDetail)
 		assertEquals(1, pack.soundCount)
+	}
+
+	private fun unicodePathArchive(path: String, validChecksum: Boolean = true, version: Byte = 1): File {
+		val original = "sounds/legacy.wav"
+		val checksum = CRC32().apply { update(original.toByteArray()) }.value
+		val name = path.toByteArray(Charsets.UTF_8)
+		val extra = ByteBuffer.allocate(9 + name.size).order(ByteOrder.LITTLE_ENDIAN)
+			.putShort(0x7075.toShort()).putShort((5 + name.size).toShort()).put(version)
+			.putInt((if (validChecksum) checksum else checksum + 1).toInt()).put(name).array()
+		val bytes = ByteArrayOutputStream().also { out ->
+			ZipOutputStream(out, Charsets.ISO_8859_1).use { zip ->
+				zip.putNextEntry(ZipEntry(original).apply { this.extra = extra })
+				zip.write("sound".toByteArray())
+				zip.closeEntry()
+			}
+		}.toByteArray()
+		return tmp.newFile().apply { writeBytes(bytes) }
+	}
+
+	@Test
+	fun unicodePathExtraField_preservesTheWrittenName() {
+		val dir = extracted(unicodePathArchive("sounds/caf\u00e9.wav"))
+		assertEquals("sound", File(dir, "sounds/caf\u00e9.wav").readText())
+		assertFalse(File(dir, "sounds/legacy.wav").exists())
+	}
+
+	@Test
+	fun invalidUnicodePathChecksum_usesTheOriginalName() {
+		assertEquals("sound", File(extracted(unicodePathArchive("sounds/other.wav", false)), "sounds/legacy.wav").readText())
+	}
+
+	@Test
+	fun unknownUnicodePathVersion_usesTheOriginalName() {
+		assertEquals("sound", File(extracted(unicodePathArchive("sounds/other.wav", version = 2)), "sounds/legacy.wav").readText())
+	}
+
+	@Test
+	fun unicodePathOutsideTheFolder_isRefused() {
+		assertThrows(Exception::class.java) { extracted(unicodePathArchive("../escaped")) }
 	}
 
 	@Test

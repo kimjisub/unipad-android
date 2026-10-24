@@ -127,6 +127,7 @@ import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
 import com.kimjisub.launchpad.manager.DefaultThemeResources
 import com.kimjisub.launchpad.manager.loadTheme
+import com.kimjisub.launchpad.manager.applyTraceLogTextStyle
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -260,8 +261,8 @@ class PlayActivity : BaseActivity() {
 			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
 		}
 
-		override fun finishActivity(messageResId: Int) {
-			closeOnLoadFailure(getString(messageResId))
+		override fun finishWithNotice(resId: Int) {
+			closeWithNotice(getString(resId))
 		}
 
 		override fun copyToClipboard(text: String) {
@@ -395,16 +396,16 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				closeOnLoadFailure(getString(string.outOfMemory))
+				closeWithNotice(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
+				closeWithNotice("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
 	}
 
 	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
-	private fun closeOnLoadFailure(message: String) {
+	private fun closeWithNotice(message: String) {
 		vm.unipackLoading = false
 		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
 		finish()
@@ -1171,7 +1172,7 @@ class PlayActivity : BaseActivity() {
 				val view = PadView(this)
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
-				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
+				theme?.applyTraceLogTextStyle(view)
 				padViews[x][y] = view
 				row.addView(view)
 			}
@@ -1386,6 +1387,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		vm.soundRunner?.cancelPendingWormholes()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false

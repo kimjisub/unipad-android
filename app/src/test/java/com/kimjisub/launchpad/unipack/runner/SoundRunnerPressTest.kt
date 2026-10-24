@@ -125,6 +125,78 @@ class SoundRunnerPressTest {
 		assertEquals("releasing B must stop B's loop", listOf(2), engine.stops.drop(stopsBeforeSecondRelease))
 	}
 
+	@Test
+	fun manualChainSelectionDuringWormholeDelayWins() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		scheduler.advanceTimeBy(50)
+		chain.value = 0 // Selecting even the current chain is an explicit choice.
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun stoppingPlaybackCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		runner.stopAll()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun hidingTheScreenCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		runner.pauseStream()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun destroyingTheRunnerCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		runner.destroy()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun adjacentWormholesKeepTheirScheduledOrder() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1), Sound(File("b.wav"), loop = 0, wormhole = 0)))
+		val moves = mutableListOf<Int>()
+		chain.addObserver { curr, _ -> moves += curr }
+		tap()
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals(listOf(1, 0), moves)
+	}
+
+	@Test
+	fun aNewPressCanScheduleAWormholeAfterPlaybackWasStopped() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		runner.stopAll()
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals(1, chain.value)
+	}
+
+	@Test
+	fun refreshingChainLightsDoesNotCancelPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		scheduler.advanceTimeBy(50)
+		chain.refresh()
+		scheduler.advanceUntilIdle()
+		assertEquals(1, chain.value)
+	}
+
 	private fun tap() {
 		runner.soundOn(X, Y)
 		runner.soundOff(X, Y)

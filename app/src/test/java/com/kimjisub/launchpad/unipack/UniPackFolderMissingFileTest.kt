@@ -81,13 +81,13 @@ class UniPackFolderMissingFileTest {
 			assertEquals(1, animation.loop)
 			assertEquals(3, animation.ledEvents.size)
 			val on = animation.ledEvents[0] as LedEvent.On
-			assertEquals(0, on.x)
-			assertEquals(y, on.y)
+			assertEquals(0L, on.x)
+			assertEquals(y.toLong(), on.y)
 			assertEquals(5, on.velocity)
 			assertEquals(100, (animation.ledEvents[1] as LedEvent.Delay).delay)
 			val off = animation.ledEvents[2] as LedEvent.Off
-			assertEquals(0, off.x)
-			assertEquals(y, off.y)
+			assertEquals(0L, off.x)
+			assertEquals(y.toLong(), off.y)
 		}
 	}
 

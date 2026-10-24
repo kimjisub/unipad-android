@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.unipack
 
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.packWebsiteAddress
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
@@ -72,19 +73,31 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		val ROUND_TOKENS = setOf("*", "mc")
 		const val LOGO_TOKEN = "l"
 		val AUTO_TOKENS = setOf("auto", "a")
+		val INTEGER_TOKEN = Regex("[+-]?[0-9]+")
+		val RGB_TOKEN = Regex("[0-9a-fA-F]{1,6}")
+
+		fun packInt(token: String): Int {
+			if (!INTEGER_TOKEN.matches(token)) throw NumberFormatException("Expected ASCII decimal digits")
+			return token.toInt()
+		}
+
+		fun packIntOrNull(token: String): Int? = try {
+			packInt(token)
+		} catch (_: NumberFormatException) {
+			null
+		}
 
 		fun rgbColor(token: String): Int {
-			// Longer tokens can parse as Int but carry into the alpha byte.
-			if (token.length > 6) throw NumberFormatException("RGB color exceeds six characters")
+			if (!RGB_TOKEN.matches(token)) throw NumberFormatException("Expected one to six ASCII hex digits")
 			return token.toInt(16) + -0x1000000
 		}
 
-		/**
-		 * A 1-based number of a pack as a 0-based one. A number outside 32 bits throws
-		 * NumberFormatException, a format error. The smallest one stays itself: 1 less would wrap to the
-		 * largest, so a chain move to it went to the last chain and a loop count to it never ended.
-		 */
-		fun zeroBased(token: String): Int = token.toInt().let { if (it == Int.MIN_VALUE) it else it - 1 }
+		/** Input tokens are 32-bit; their 0-based stored value may be one smaller. */
+		fun storedZeroBased(token: String): Long = packInt(token).toLong() - 1L
+
+		/** An index used only for validation before a bounded table access. */
+		fun zeroBased(token: String): Int = storedZeroBased(token)
+			.coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
 		/**
 		 * `mc 1`..`mc 32` as a round LED index. Anything else is dropped without a warning, as the drivers
@@ -106,7 +119,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	}
 
 	private var infoFile: File? = null
-	private var soundsDir: File? = null
+	private val soundsDirs = mutableListOf<File>()
 	private var keySoundFile: File? = null
 	private var keyLedDir: File? = null
 	var autoPlayFile: File? = null
@@ -158,10 +171,11 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 
 	override fun checkFile() {
 		folderModified = rootFolder.lastModified()
+		soundsDirs.clear()
 		rootFolder.listFiles()?.forEach {
 			when (it.name.lowercase()) {
 				"info" -> infoFile = if (it.isFile) it else null
-				"sounds" -> soundsDir = if (it.isDirectory) it else null
+				"sounds" -> if (it.isDirectory) soundsDirs.add(it)
 				"keysound" -> keySoundFile = if (it.isFile) it else null
 				"keyled" -> keyLedDir = if (it.isDirectory) it else null
 				"autoplay" -> autoPlayFile = if (it.isFile) it else null
@@ -196,6 +210,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		}
 		var buttonXValue: String? = null
 		var buttonYValue: String? = null
+		var chainValue: String? = null
 		BufferedReader(bomAwareReader(inputStream)).use { reader ->
 			while (true) {
 				val s = reader.readLine()?.trimLine() ?: break
@@ -205,25 +220,23 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 				if (separator < 0) continue
 				val key = s.substring(0, separator).trim()
 				val value = s.substring(separator + 1).trim()
-				try {
-					when (key) {
-						"title" -> title = value
-						"producerName" -> producerName = value
-						"buttonX" -> buttonXValue = value
-						"buttonY" -> buttonYValue = value
-						"chain" -> chain = value.toInt()
-						"squareButton" -> squareButton = value == "true"
-						"website" -> website = value
-					}
-				} catch (e: NumberFormatException) {
-					// Used to propagate out of load(): the pack vanished from the library with no
-					// message (WorkspaceManager's catch). iOS/web record it and carry on.
-					addErr("info : [$s] format is incorrect")
+				when (key) {
+					"title" -> title = value
+					"producerName" -> producerName = value
+					"buttonX" -> buttonXValue = value
+					"buttonY" -> buttonYValue = value
+					"chain" -> chainValue = value
+					"squareButton" -> squareButton = value == "true"
+					"website" -> website = value.takeIf { packWebsiteAddress(it) != null }
 				}
 			}
 		}
 		val gridX = gridSize("buttonX", buttonXValue)
 		val gridY = gridSize("buttonY", buttonYValue)
+		// Repeated keys use the last written value, including a last value that is not a number.
+		val parsedChain = chainValue?.let(::packIntOrNull)
+		chain = parsedChain ?: 0
+		if (chainValue != null && parsedChain == null) addErr("info : chain is not a number")
 		buttonX = gridX ?: 0
 		buttonY = gridY ?: 0
 		if (title.isEmpty()) addErr("info : title was missing")
@@ -231,7 +244,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		if (gridX == 0) addErr("info : buttonX was missing")
 		if (gridY == 0) addErr("info : buttonY was missing")
 		if (gridX == null || gridY == null) criticalError = true
-		if (chain == 0) addErr("info : chain was missing")
+		if (chainValue == null) addErr("info : chain was missing")
 		if (chain !in 1..24) {
 			addErr("info : chain out of range")
 			criticalError = true
@@ -245,13 +258,16 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 	}
 
 	/**
-	 * The last [value] given for [key], or 0 when the key is absent. A value that is not an integer
+	 * The last [value] given for [key]. An absent key or a value that is not an integer
 	 * (`buttonX=abc`) refuses the pack (info.mdx) and gives null; it used to be read as 0 and opened
 	 * a pack with no pads.
 	 */
 	private fun gridSize(key: String, value: String?): Int? {
-		if (value == null) return 0
-		return value.toIntOrNull() ?: run {
+		if (value == null) {
+			addErr("info : $key was missing")
+			return null
+		}
+		return packIntOrNull(value) ?: run {
 			addErr("info : $key is not a number")
 			null
 		}
@@ -259,7 +275,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 
 	private fun keySound() {
 		val keySoundFile = keySoundFile ?: return
-		val soundFiles = soundsDir?.let(::SoundFileIndex)
+		val soundFiles = soundsDirs.takeIf { it.isNotEmpty() }?.let(::SoundFileIndex)
 		val table = Array(chain) {
 			Array(buttonX) {
 				arrayOfNulls<ArrayDeque<Sound>>(buttonY)
@@ -283,7 +299,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 				var x: Int
 				var y: Int
 				var soundURL: String
-				var loop = 0
+				var loop = 0L
 				var wormhole = Sound.NO_WORMHOLE
 				try {
 					if (split.size <= 2) continue
@@ -291,9 +307,9 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					x = zeroBased(split[1])
 					y = zeroBased(split[2])
 					soundURL = split[3]
-					if (split.size >= 5) loop = zeroBased(split[4])
+					if (split.size >= 5) loop = storedZeroBased(split[4])
 					if (split.size >= 6) {
-						loop = zeroBased(split[4])
+						loop = storedZeroBased(split[4])
 						wormhole = zeroBased(split[5])
 					}
 				} catch (e: NumberFormatException) {
@@ -366,7 +382,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 						c = zeroBased(split1[0])
 						x = zeroBased(split1[1])
 						y = zeroBased(split1[2])
-						if (split1.size >= 4) loop = split1[3].toInt()
+						if (split1.size >= 4) loop = packInt(split1[3])
 						if (c < 0 || c >= chain) {
 							addErr("keyLed : [$fileName] chain is incorrect")
 							continue
@@ -400,8 +416,8 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 							if (s.isEmpty()) continue@loop
 							val split2 = s.trim().split(TOKEN_SPLIT).toTypedArray()
 							var option: String
-							var ledX = -1
-							var ledY = -1
+							var ledX = -1L
+							var ledY = -1L
 							var ledColor = -1
 							var ledVelocity = 4
 							var ledDelay = -1
@@ -413,22 +429,26 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 										val colorTokens: List<String>
 										if (xToken in ROUND_TOKENS) {
 											// Round/chain LED: o * {y} ... or o mc {y} ...
+											if (split2.size !in 4..5) {
+												addErr("keyLed : [$fileName].[$s] format is incorrect")
+												continue@loop
+											}
 											ledX = -1
-											ledY = roundLedIndex(split2[2]) ?: continue@loop
+											ledY = (roundLedIndex(split2[2]) ?: continue@loop).toLong()
 											colorTokens = split2.drop(3)
 										} else if (xToken == LOGO_TOKEN) {
 											ledX = -1
-											ledY = DriverRef.LOGO_FUNCTION_KEY
+											ledY = DriverRef.LOGO_FUNCTION_KEY.toLong()
 											colorTokens = logoColorTokens(split2)
 										} else {
-											ledX = zeroBased(xToken)
-											ledY = zeroBased(split2[2])
+											ledX = storedZeroBased(xToken)
+											ledY = storedZeroBased(split2[2])
 											colorTokens = split2.drop(3)
 										}
 										when (colorTokens.size) {
 											1 -> ledColor = rgbColor(colorTokens[0])
 											2 -> {
-												ledVelocity = colorTokens[1].toInt()
+												ledVelocity = packInt(colorTokens[1])
 												ledColor = if (colorTokens[0] in AUTO_TOKENS) ARGB[ledVelocity].toInt()
 												else rgbColor(colorTokens[0])
 											}
@@ -443,19 +463,19 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 										val xToken = split2[1]
 										if (xToken in ROUND_TOKENS) {
 											ledX = -1
-											ledY = roundLedIndex(split2[2]) ?: continue@loop
+											ledY = (roundLedIndex(split2[2]) ?: continue@loop).toLong()
 										} else if (xToken == LOGO_TOKEN) {
 											ledX = -1
-											ledY = DriverRef.LOGO_FUNCTION_KEY
+											ledY = DriverRef.LOGO_FUNCTION_KEY.toLong()
 										} else {
-											ledX = zeroBased(xToken)
-											ledY = zeroBased(split2[2])
+											ledX = storedZeroBased(xToken)
+											ledY = storedZeroBased(split2[2])
 										}
 									}
 
-									"delay", "d" -> ledDelay = split2[1].toInt()
+									"delay", "d" -> ledDelay = packInt(split2[1])
 									"chain", "c" -> {
-										val chainValue = zeroBased(split2[1])
+										val chainValue = storedZeroBased(split2[1])
 										ledList.add(LedAnimation.LedEvent.Chain(chainValue))
 										continue@loop
 									}
@@ -602,7 +622,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 							}
 						}
 
-						"delay", "d" -> delay = split[1].toInt()
+						"delay", "d" -> delay = packInt(split[1])
 						else -> {
 							addErr("autoPlay : [$s] format is incorrect")
 							continue@loop
