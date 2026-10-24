@@ -192,6 +192,9 @@ class AutoPlayRunner(
 						val playing: Boolean
 						synchronized(progressValue) {
 							seek = pendingSeek.getAndSet(null)
+							// A step scan or command pass may have moved on from the target after the
+							// UI published it; the seek's position wins.
+							if (seek != null && progress != seek) setProgress(seek)
 							// Read the mode with the request, so a pause before the UI's seek
 							// cannot be mistaken for the playing state from an earlier tick.
 							playing = playmode
@@ -202,6 +205,9 @@ class AutoPlayRunner(
 							// Step practice can advance after a paused seek. On resume, align to
 							// that current position, without replaying the seek or resetting its steps.
 							rebaseSeekOnResume = !playing
+							// Only the loop scans steps, so a seek's step reset happens here, before
+							// the scan of the new position, and never after it.
+							if (seek != null) clearStepProgress()
 							delayAccum = 0
 							for (index in 0 until target) {
 								val element = autoPlay.elements[index]
@@ -438,14 +444,19 @@ class AutoPlayRunner(
 			pendingSeek.set(target)
 			setProgress(target)
 		}
-		if (stepMode) {
-			resetStepState()
-			listener.onRemoveGuide()
-		}
 		wake()
 	}
 
 	fun resetStepState() {
+		clearStepProgress()
+		// A chain wait left over from step mode would otherwise resume with waitStartTime == 0 and
+		// push startTime far into the future, freezing autoplay (2026-09-07 review).
+		waitingForChain = -1
+		waitStartTime = SystemClock.elapsedRealtime()
+		wake()
+	}
+
+	private fun clearStepProgress() {
 		synchronized(pressedKeysLock) {
 			pressedKeysQueue.clear()
 		}
@@ -455,11 +466,6 @@ class AutoPlayRunner(
 			stepStartProgress = 0
 			stepChainValue = -1
 		}
-		// A chain wait left over from step mode would otherwise resume with waitStartTime == 0 and
-		// push startTime far into the future, freezing autoplay (2026-09-07 review).
-		waitingForChain = -1
-		waitStartTime = SystemClock.elapsedRealtime()
-		wake()
 	}
 
 	fun stepPadPressed(x: Int, y: Int) {
