@@ -358,6 +358,18 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertTrue(engine.voices.isEmpty())
 	}
 
+	@Test fun onePlayRequestResumesAManuallyPausedAutoplayAfterInterruption() {
+		start()
+		vm.autoPlayPause()
+		assertTrue(!vm.autoPlayRunner!!.playmode)
+		vm.interruptPlayback()
+		vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+		vm.autoPlayResume()
+		assertTrue("One explicit Play request must start the preserved auto-play mode", vm.autoPlayRunner!!.playmode)
+		assertTrue(vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.AutoPlay, vm.playMode)
+	}
+
 	@Test fun naturalEndKeepsTheLoopHeldByThePlayer() {
 		start("1 1 1 a.wav 0\n1 1 2 a.wav 0\n", sequence = "on 1 1\ndelay 100\n", autoplay = false)
 		vm.padTouch(0, 1, true)

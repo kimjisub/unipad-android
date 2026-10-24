@@ -937,6 +937,7 @@ class PlayActivityViewModel(
 			isPracticeMode = interrupted != PlayMode.AutoPlay
 			isAutoPlayPlaying = interrupted != PlayMode.StepPractice
 			runner.resumeAfterInterruption()
+			if (interrupted != PlayMode.StepPractice) runner.resume()
 		} else {
 			resetPadsAfterAutoPlay()
 			isAutoPlayPlaying = true

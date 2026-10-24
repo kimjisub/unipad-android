@@ -28,6 +28,7 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
             SystemClock.sleep(away)
             screen.bringToFront(activity)
             screen.awaitActivity(activity.javaClass)
+            screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_play)))
             screen.capture("interruption-guide-return-$away")
             screen.onMain {
                 assertEquals("Keep the chosen guide mode", PlayMode.GuidePlay, vm.playMode)
@@ -37,6 +38,7 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         }
         screen.clickDescription(R.string.cd_autoplay_play)
         screen.await("Manual Play did not resume guide play") { screen.onMain { vm.isAutoPlayPlaying } }
+        screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_pause)))
         screen.capture("interruption-guide-manually-resumed")
     }
 
@@ -54,6 +56,7 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
             screen.device.wakeUp()
             screen.device.executeShellCommand("wm dismiss-keyguard")
             screen.await("Unlock did not return to play") { screen.ready() }
+            screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_play)))
             screen.capture("interruption-step-unlocked-$away")
             screen.onMain {
                 assertEquals(PlayMode.StepPractice, vm.playMode)
@@ -85,6 +88,7 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         SystemClock.sleep(1000)
         screen.device.pressBack()
         screen.awaitActivity(activity.javaClass)
+        screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_play)))
         screen.capture("interruption-device-return")
         screen.onMain {
             assertFalse(vm.isAutoPlayPlaying)
@@ -119,9 +123,29 @@ class PlaybackInterruptionTest : PlaybackScreenTest() {
         screen.await("Autoplay did not start") { audio.ringingLoops().isNotEmpty() }
         screen.onMain { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) }
         screen.onMain { repeat(2) { vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN) } }
+        screen.node(androidx.test.uiautomator.By.desc(screen.text(R.string.cd_autoplay_play)))
         screen.capture("interruption-focus-return")
         screen.onMain { assertFalse("Permission must never resume playback", vm.isAutoPlayPlaying) }
         assertTrue(audio.ringingLoops().isEmpty())
+    }
+
+    @Test fun turningLightsOffKeepsSoundAndAutoplayTimeRunning() {
+        File(screen.pack(), "keySound").writeText("1 1 1 silence.wav 0\n1 1 2 silence.wav 0\n")
+        File(screen.pack(), "autoPlay").writeText("on 1 1\ndelay 2000\non 1 2\ndelay 60000\n")
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
+        screen.await("The first automatic pad did not sound") { audio.plays.size == 1 }
+        screen.onMain { vm.scbLed.setChecked(false) }
+        screen.await("Turning lights off paused the automatic sequence") { audio.plays.size == 2 }
+        assertEquals("Both held sounds keep playing", 2, audio.ringingLoops().size)
+        screen.onMain {
+            assertTrue(vm.isAutoPlayPlaying)
+            assertTrue(vm.autoPlayRunner!!.playmode)
+            assertFalse(vm.ledRunner!!.active)
+            assertNull(vm.channelManager.get(0, 1))
+        }
+        screen.capture("lights-off-with-autoplay-continuing")
     }
 
     @Test fun disablingLightsDiscardsFiniteAnimations() {

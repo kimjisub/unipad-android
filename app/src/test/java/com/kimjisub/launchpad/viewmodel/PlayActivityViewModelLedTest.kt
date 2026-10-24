@@ -389,6 +389,22 @@ class PlayActivityViewModelLedTest {
 	}
 
 	@Test
+	fun turningLightsOffKeepsPressFeedbackAndWatermarkOptions() {
+		setUpBacklogRunner(loop = 1)
+		enableLedOption()
+		vm.scbFeedbackLight.setCheckedSilently(true)
+		vm.refreshWatermark()
+		vm.padTouch(0, 0, true)
+		val watermark = vm.channelManager.get(-1, 7)
+		assertEquals(ChannelManager.Channel.UI_UNIPAD, watermark?.channel)
+		vm.scbLed.setChecked(false)
+		assertTrue(vm.scbFeedbackLight.checked)
+		assertTrue(vm.scbWatermark.checked)
+		assertEquals(ChannelManager.Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
+		assertEquals(watermark, vm.channelManager.get(-1, 7))
+	}
+
+	@Test
 	fun ledOptionOff_discardsFiniteAnimationsForOneAndTenSeconds() {
 		setUpRunner(LedAnimation(arrayListOf(LedEvent.On(1, 1), LedEvent.Delay(100), LedEvent.On(2, 2), LedEvent.Delay(100)), 3, 0))
 		enableLedOption()
