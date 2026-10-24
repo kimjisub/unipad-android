@@ -94,6 +94,7 @@ object OboeAudioEngine {
 			val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
 			var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 			var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+			var channelMask = if (format.containsKey(MediaFormat.KEY_CHANNEL_MASK)) format.getInteger(MediaFormat.KEY_CHANNEL_MASK) else 0
 			// Ask for 16-bit PCM explicitly; FLAC/WAV tracks can otherwise decode to float, which
 			// asShortBuffer() would read as noise.
 			format.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
@@ -147,6 +148,7 @@ object OboeAudioEngine {
 					val out = codec.outputFormat
 					if (out.containsKey(MediaFormat.KEY_SAMPLE_RATE)) sampleRate = out.getInteger(MediaFormat.KEY_SAMPLE_RATE)
 					if (out.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) channels = out.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+					channelMask = if (out.containsKey(MediaFormat.KEY_CHANNEL_MASK)) out.getInteger(MediaFormat.KEY_CHANNEL_MASK) else 0
 				} else if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 					if (inputDone && ++idleRounds > maxIdleRounds) {
 						Log.err("decode stalled after EOS: ${file.name}")
@@ -187,7 +189,8 @@ object OboeAudioEngine {
 			val finalPcm = if (pcm.size == totalSamples) pcm else pcm.copyOf(totalSamples)
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null
-			return DecodedAudio(finalPcm, numFrames, channels, sampleRate)
+			return DecodedAudio(stereoPcm(finalPcm, channels, decoderChannelMask(channels, channelMask)),
+				numFrames, minOf(channels, 2), sampleRate)
 			} finally {
 				// Released on every path; a codec leaked per failed file exhausted the device's
 				// codec instances and made every later sound fail to load.

@@ -59,7 +59,7 @@ class UniPackConformanceChecksTest {
 	@Test
 	fun everyG6InputRejectsAChangedFile() {
 		val added = corpus.cases.filter { "-G6" in it.id }
-		assertEquals("The complete G6 addition must be registered", 49, added.size)
+		assertEquals("The complete G6 addition must be registered", 55, added.size)
 		for (c in added) {
 			verifyFingerprint(c, corpus)
 			val at = c.files.indexOfFirst { it.text != null }
@@ -76,7 +76,7 @@ class UniPackConformanceChecksTest {
 	@Test
 	fun noG6CaseAcceptsAnInjectedObservation() {
 		val added = corpus.cases.filter { "-G6" in it.id }
-		assertEquals(49, added.size)
+		assertEquals(55, added.size)
 		for (c in added) {
 			val wrong = buildJsonObject { put("injectedObservation", true) }
 			assertEquals(c.id, "fail", classify(c, wrong).status)
@@ -86,7 +86,7 @@ class UniPackConformanceChecksTest {
 
 	@Test
 	fun inputsWhoseFileNamesChangeAreNotSentToTheParser() {
-		val c = byId("KS-G601")
+		val c = byId("KS-G601").copy(soundIdentity = false)
 		val root = Files.createTempDirectory("corpus-name-probe").toFile()
 		val preserved = try {
 			c.writeTo(root, corpus)
@@ -102,6 +102,28 @@ class UniPackConformanceChecksTest {
 		if (!preserved) {
 			assertEquals("unverified", result.outcome.status)
 			assertEquals(JsonNull, result.actual)
+		}
+	}
+
+	@Test
+	fun fractionalMapperInputsAreNotSilentlyRoundedByTheHarness() {
+		for (id in listOf("MAP-P001", "MAP-P003", "MAP-P004")) {
+			val result = resultFor(byId(id), corpus)
+			assertEquals("unverified", result.outcome.status)
+			assertEquals(JsonNull, result.actual)
+			assertTrue(result.outcome.detail.contains("integer milliseconds"))
+		}
+	}
+
+	@Test
+	fun audioOperationsUseTheRealAppOperationWithoutParsingAPack() {
+		val neverParse = Deps(loadPack = { error("operation reached the pack parser") })
+		val cases = corpus.cases.filter { it.observation in setOf("audio-cost", "audio-file", "audio-wave", "audio-selection") }
+		assertEquals(106, cases.size)
+		for (c in cases) {
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(c.id, c.expected, result.actual)
+			assertEquals(c.id, "pass", result.outcome.status)
 		}
 	}
 
@@ -209,5 +231,26 @@ class UniPackConformanceChecksTest {
 		val result = resultFor(c, corpus, neverRun)
 		assertEquals(JsonNull, result.actual)
 		assertEquals(Outcome("unverified", false, "not observable here"), result.outcome)
+	}
+
+	@Test
+	fun anOperationWithoutAnAdapterNeverRunsAsAnOrdinaryPack() {
+		val neverParse = Deps(loadPack = { error("operation was sent to the pack parser") })
+		for (observation in listOf("future-operation")) {
+			val c = byId("KS-001").copy(observation = observation)
+			val result = resultFor(c, corpus, neverParse)
+			assertEquals(JsonNull, result.actual)
+			assertEquals("unverified", result.outcome.status)
+			assertTrue(result.outcome.detail.contains(observation))
+		}
+	}
+
+	@Test
+	fun aSoundIdentityCaseCannotPassWithOnlyARelativeFilename() {
+		val c = byId("KS-001").copy(soundIdentity = true)
+		val result = resultFor(c, corpus, Deps(loadPack = { error("identity was not observed") }))
+		assertEquals(JsonNull, result.actual)
+		assertEquals("unverified", result.outcome.status)
+		assertTrue(result.outcome.detail.contains("hashes"))
 	}
 }

@@ -88,14 +88,24 @@ class ConformanceReportTest(unittest.TestCase):
         self.report["cases"][0]["fingerprint"] = "changed"
         self.assertEqual(4, len(self.check()))
 
+    def test_operations_and_sound_identity_cannot_be_reported_as_pack_parsing(self):
+        for field, value in [("observation", "audio-cost"), ("observation", "future-operation"), ("soundIdentity", True)]:
+            with self.subTest(field=field, value=value):
+                self.corpus["cases"][0][field] = value
+                self.assertIn("A: generic runner claimed an observation outside its seam", self.check())
+                self.report["cases"][0].update(status="unverified", actual=None)
+                self.assertEqual([], self.check())
+                self.report["cases"][0].update(status="pass", actual={"loaded": True})
+                self.corpus["cases"][0].pop(field)
+
     def test_every_registered_g6_case_rejects_missing_wrong_and_unknown_results(self):
         corpus_path = Path(__file__).resolve().parents[2] / "app/src/test/resources/unipack-conformance/corpus.json"
-        added = [case for case in json.loads(corpus_path.read_bytes())["cases"] if "-G6" in case["id"]]
-        self.assertEqual(49, len(added))
+        added = json.loads(corpus_path.read_bytes())["cases"]
+        self.assertEqual(382, len(added))
         for case in added:
             with self.subTest(case=case["id"]):
                 # Fabricated validator fixtures, never runtime observations of the app.
-                restricted = case.get("screenInputs") or "android" in case.get("unobserved", {}) or case.get("requiresCaseSensitiveFiles")
+                restricted = case.get("screenInputs") or "android" in case.get("unobserved", {}) or case.get("requiresCaseSensitiveFiles") or case.get("soundIdentity") or case.get("observation") not in (None, "runner")
                 result = {"id": case["id"], "fingerprint": case["fingerprint"],
                           "status": "unverified" if restricted else "pass",
                           "actual": None if restricted else case["expected"]}

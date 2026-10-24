@@ -115,7 +115,7 @@ class PlayActivityViewModel(
 		fun setLedChain(c: Int)
 		fun updateTraceLogOverlay()
 		fun showToast(resId: Int)
-		fun finishActivity()
+		fun finishWithNotice(resId: Int)
 		fun copyToClipboard(text: String)
 		fun setChainViewVisibility(index: Int, visibility: Int)
 		fun startGuideAnimation(x: Int, y: Int, targetWallTimeMs: Long)
@@ -217,7 +217,7 @@ class PlayActivityViewModel(
 		}
 
 		override fun onChainChange(c: Int) {
-			chain.value = c
+			chain.assignFromPack(c)
 		}
 	}
 
@@ -239,6 +239,7 @@ class PlayActivityViewModel(
 	var screenVisible = false
 		set(value) {
 			field = value
+			if (!value) soundRunner?.cancelPendingWormholes()
 			syncLedRunner()
 			syncSoundStream()
 		}
@@ -402,7 +403,7 @@ class PlayActivityViewModel(
 		if (playbackInitialized) return
 		playbackInitialized = true
 		initRunner()
-		initSetting()
+		restorePlaybackLights()
 	}
 
 	private fun initRunner() {
@@ -445,8 +446,13 @@ class PlayActivityViewModel(
 					playSession.loadFailed(UsageErrorType.SOUND_ENGINE)
 					viewModelScope.launch {
 						soundLoadingActive = false
-						uiCallback?.showToast(string.outOfCPU)
-						uiCallback?.finishActivity()
+						uiCallback?.finishWithNotice(
+							when (throwable) {
+								is SoundRunner.NoPlayableSoundsException -> string.pack_no_playable_sounds
+								is SoundRunner.AudioOutputUnavailableException -> string.audio_output_unavailable
+								else -> string.outOfCPU
+							}
+						)
 					}
 				}
 			})
@@ -478,21 +484,29 @@ class PlayActivityViewModel(
 		}
 	}
 
-	private fun initSetting() {
+	private fun restorePlaybackLights() {
 		log("[06] Set CheckBox Checked")
 		if (unipack.keyLedExist) {
-			scbFeedbackLight.setChecked(false)
-			scbLed.setChecked(true)
+			scbFeedbackLight.forceSetChecked(false)
+			scbLed.forceSetChecked(true)
 		} else
-			scbFeedbackLight.setChecked(true)
+			scbFeedbackLight.forceSetChecked(true)
 	}
 
 	// pad, chain
 
-	// Main-thread input ownership of each held pad (x, y). Screen and controller holds are
-	// independent; a manual release also clears auto play's hold.
-	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?)
+	/** User-selected chains outside the pack do nothing; scripted chain changes retain their clamping. */
+	fun selectChain(c: Int) {
+		if (c !in chain.range) return
+		soundRunner?.cancelPendingWormholes()
+		chain.value = c
+	}
+
+	// Inputs remain held independently. Re-pressing still replaces the pad's current loop;
+	// only a release from its current owner may end that loop.
+	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?, val pointerId: Long = 0)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
+	private val padLoopOwner = mutableMapOf<Pair<Int, Int>, PlayTrigger>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
@@ -503,13 +517,15 @@ class PlayActivityViewModel(
 
 	/** Lets go of auto play's pads and clears the lights auto play left on. */
 	private fun resetPadsAfterAutoPlay() {
+		soundRunner?.cancelPendingWormholes()
 		releaseAutoPlayPads()
 		padInit()
 		ledInitInOrder()
 	}
 
 	/** A pad the person pressed or released on the screen. */
-	fun padTouch(x: Int, y: Int, upDown: Boolean) = padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN)
+	fun padTouch(x: Int, y: Int, upDown: Boolean, pointerId: Long = 0) =
+		padEvent(x, y, upDown, PlayTrigger.PAD, InputSource.SCREEN, pointerId = pointerId)
 
 	// Pads (x, y) held down on the MIDI controller. The controller sends no release once it is
 	// unplugged or stops being the screen's controller, so these are let go then.
@@ -565,6 +581,7 @@ class PlayActivityViewModel(
 		pressedBy: PlayTrigger,
 		source: InputSource?,
 		atMs: Long = SystemClock.elapsedRealtime(),
+		pointerId: Long = 0,
 	) {
 		// A driver can hand over a coordinate outside the pack grid; the UI callbacks run later
 		// on the main thread, outside the catch below, so reject it here.
@@ -575,12 +592,13 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source))
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source, pointerId))
+				padLoopOwner[x to y] = pressedBy
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true) {
 					autoPlayRunner?.stepPadPressed(x, y)
 				}
-				soundRunner?.soundOn(x, y)
+				soundRunner?.soundOn(x, y, followWormhole = pressedBy != PlayTrigger.AUTOPLAY)
 				if (scbRecord.isChecked()) {
 					val currTime = SystemClock.elapsedRealtime()
 					addLog("d ${currTime - recPrevEventMs}")
@@ -595,19 +613,22 @@ class PlayActivityViewModel(
 				}
 				ledRunner?.eventOn(x, y, atMs)
 			} else {
-				val sources = heldPads[x to y]
-				// Screen and controller holds are independent. A person's release still overrides
-				// auto play, but only the last manual release stops the shared sound and light.
-				if (sources != null) {
-					sources.remove(PadInput(pressedBy, source))
-					if (pressedBy == PlayTrigger.PAD) sources.remove(PadInput(PlayTrigger.AUTOPLAY, null))
-					if (sources.isNotEmpty()) return
-					heldPads.remove(x to y)
+				val pad = x to y
+				val sources = heldPads[pad] ?: return
+				if (!sources.remove(PadInput(pressedBy, source, pointerId))) return
+				// All fingers/controllers share the player's current re-press. Auto play is its
+				// own owner, so releasing an older input must not end the newer owner's loop.
+				if (sources.none { it.trigger == pressedBy } && padLoopOwner[pad] == pressedBy) {
+					padLoopOwner.remove(pad)
+					soundRunner?.soundOff(x, y)
+					ledRunner?.eventOff(x, y, atMs)
 				}
-				soundRunner?.soundOff(x, y)
-				channelManager.remove(x, y, Channel.PRESSED)
+				if (sources.isEmpty()) {
+					heldPads.remove(pad)
+					padLoopOwner.remove(pad)
+					channelManager.remove(x, y, Channel.PRESSED)
+				}
 				uiCallback?.setLedPad(x, y)
-				ledRunner?.eventOff(x, y, atMs)
 			}
 		} catch (e: ArrayIndexOutOfBoundsException) {
 			Log.err("padTouch ArrayIndexOutOfBounds", e)
@@ -815,17 +836,13 @@ class PlayActivityViewModel(
 			isAutoPlayPlaying = false
 			scbAutoPlay.setCheckedSilently(false)
 			autoPlayControlVisible = false
-			if (unipack.keyLedExist) {
-				scbLed.setChecked(true)
-				scbFeedbackLight.setChecked(false)
-			} else {
-				scbFeedbackLight.setChecked(true)
-			}
+			restorePlaybackLights()
 			refreshWatermark()
 			return
 		}
 
 		if (currentMode == PlayMode.None) {
+			restorePlaybackLights()
 			// None → Active: runner 시작 필요
 			applyModeFlags(runner, mode)
 			scbAutoPlay.setCheckedSilently(true)
@@ -885,27 +902,18 @@ class PlayActivityViewModel(
 	fun autoPlayResume() {
 		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
-		runner.stepMode = false
-		runner.resetStepState()
-		autoPlayRemoveGuide()
 		resetPadsAfterAutoPlay()
-		runner.playmode = true
 		isAutoPlayPlaying = true
-		if (unipack.keyLedExist) {
-			scbLed.setChecked(true)
-			scbFeedbackLight.setChecked(false)
-		} else {
-			scbFeedbackLight.setChecked(true)
-		}
-		runner.beforeStartPlaying = true
+		restorePlaybackLights()
+		runner.resume()
 	}
 
 	fun autoPlayPause() {
 		log("autoPlayPause")
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
-		resetPadsAfterAutoPlay()
 		isAutoPlayPlaying = false
+		resetPadsAfterAutoPlay()
 		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
 		}
@@ -1013,30 +1021,39 @@ class PlayActivityViewModel(
 				}
 
 				override fun onChainChange(c: Int) {
-					viewModelScope.launch { chain.value = c }
+					viewModelScope.launch { chain.assignFromPack(c) }
 				}
 
 				override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {
-					viewModelScope.launch { autoPlayGuidePad(x, y, true, targetWallTimeMs) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayGuidePad(x, y, true, targetWallTimeMs)
+					}
 				}
 
 				override fun onGuidePadOff(x: Int, y: Int) {
-					viewModelScope.launch { autoPlayGuidePad(x, y, false) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayGuidePad(x, y, false)
+					}
 				}
 
 				override fun onGuideLedUpdate(x: Int, y: Int, velocity: Int) {
-					viewModelScope.launch { uiCallback?.sendGuideLedToLaunchpad(x, y, velocity) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) uiCallback?.sendGuideLedToLaunchpad(x, y, velocity)
+					}
 				}
 
 				override fun onGuideChainOn(c: Int) {
 					viewModelScope.launch {
+						if (created !== autoPlayRunner) return@launch
 						channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, ChannelManager.NO_COLOR, LED_ORANGE)
 						uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
 					}
 				}
 
 				override fun onRemoveGuide() {
-					viewModelScope.launch { autoPlayRemoveGuide() }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayRemoveGuide()
+					}
 				}
 
 				override fun chainButsRefresh() {
@@ -1059,12 +1076,7 @@ class PlayActivityViewModel(
 						autoPlayControlVisible = false
 						// keyLedExist, like switchPlayMode and both other platforms: an empty keyLed/
 						// directory has a non-null table but no animations.
-						if (unipack.keyLedExist) {
-							scbLed.setChecked(true)
-							scbFeedbackLight.setChecked(false)
-						} else {
-							scbFeedbackLight.setChecked(true)
-						}
+						restorePlaybackLights()
 						refreshWatermark()
 					}
 				}

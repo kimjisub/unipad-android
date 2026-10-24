@@ -11,23 +11,30 @@ class LedAnimation(
 
 	sealed interface LedEvent {
 		class On(
-			val x: Int,
-			val y: Int,
+			val x: Long,
+			val y: Long,
 			val color: Int = -1,
 			val velocity: Int = DEFAULT_VELOCITY,
-		) : LedEvent
+		) : LedEvent {
+			constructor(x: Int, y: Int, color: Int = -1, velocity: Int = DEFAULT_VELOCITY) :
+				this(x.toLong(), y.toLong(), color, velocity)
+		}
 
 		class Off(
-			val x: Int,
-			val y: Int,
-		) : LedEvent
+			val x: Long,
+			val y: Long,
+		) : LedEvent {
+			constructor(x: Int, y: Int) : this(x.toLong(), y.toLong())
+		}
 
 		class Delay(
 			val delay: Int,
 		) : LedEvent
 
 		class Chain(
-			val chain: Int,
-		) : LedEvent
+			val chain: Long,
+		) : LedEvent {
+			constructor(chain: Int) : this(chain.toLong())
+		}
 	}
 }

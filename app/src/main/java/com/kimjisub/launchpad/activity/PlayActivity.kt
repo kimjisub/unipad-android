@@ -127,6 +127,7 @@ import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.IThemeResources
 import com.kimjisub.launchpad.manager.DefaultThemeResources
 import com.kimjisub.launchpad.manager.loadTheme
+import com.kimjisub.launchpad.manager.applyTraceLogTextStyle
 import com.kimjisub.launchpad.manager.putClipboard
 import com.kimjisub.launchpad.midi.MidiConnection.controller
 import com.kimjisub.launchpad.midi.MidiConnection.driver
@@ -186,7 +187,7 @@ class PlayActivity : BaseActivity() {
 	private lateinit var chainViews: Array<ChainView?>
 	private var traceLogOverlayView: TraceLogOverlayView? = null
 	// Pad touches of both input modes; internal so tests can check which mode is applied.
-	internal val padTouch = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }
+	internal val padTouch = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }
 	// Activity-scoped, unlike vm.uiLoaded: a recreated activity must rebuild its views even
 	// though the retained ViewModel says the UI was loaded. The window can be resized, or turned
 	// to put the cutout on the other side, without recreating the activity, which rebuilds the
@@ -260,8 +261,8 @@ class PlayActivity : BaseActivity() {
 			Snackbar.make(findViewById(android.R.id.content), resId, Snackbar.LENGTH_SHORT).show()
 		}
 
-		override fun finishActivity() {
-			finish()
+		override fun finishWithNotice(resId: Int) {
+			closeWithNotice(getString(resId))
 		}
 
 		override fun copyToClipboard(text: String) {
@@ -395,16 +396,16 @@ class PlayActivity : BaseActivity() {
 				throw e
 			} catch (e: OutOfMemoryError) {
 				Log.err("UniPack load failed (OOM)", e)
-				closeOnLoadFailure(getString(string.outOfMemory))
+				closeWithNotice(getString(string.outOfMemory))
 			} catch (e: Exception) {
 				Log.err("UniPack load failed", e)
-				closeOnLoadFailure("${getString(string.exceptionOccurred)}\n${e.message}")
+				closeWithNotice("${getString(string.exceptionOccurred)}\n${e.message}")
 			}
 		}
 	}
 
 	/** The play screen closes; the application's toast keeps the reason on screen over the pack list. */
-	private fun closeOnLoadFailure(message: String) {
+	private fun closeWithNotice(message: String) {
 		vm.unipackLoading = false
 		Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
 		finish()
@@ -1171,7 +1172,7 @@ class PlayActivity : BaseActivity() {
 				val view = PadView(this)
 				view.layoutParams = LayoutParams(buttonSizeX, buttonSizeY)
 				view.setBackgroundImageDrawable(theme?.btn)
-				theme?.traceLog?.let { view.setTraceLogTextColor(it) }
+				theme?.applyTraceLogTextStyle(view)
 				padViews[x][y] = view
 				row.addView(view)
 			}
@@ -1211,9 +1212,9 @@ class PlayActivity : BaseActivity() {
 			chainViews[i] = view
 			when (i / PlayLayout.CHAINS_PER_SIDE) {
 				0 -> chainsTopContainer?.addView(view)
-				1 -> { view.setOnClickListener { vm.chain.value = c }; chainsRightContainer?.addView(view) }
-				2 -> { view.setOnClickListener { vm.chain.value = c }; chainsBottomContainer?.addView(view, 0) }
-				3 -> { view.setOnClickListener { vm.chain.value = c }; chainsLeftContainer?.addView(view, 0) }
+				1 -> { view.setOnClickListener { vm.selectChain(c) }; chainsRightContainer?.addView(view) }
+				2 -> { view.setOnClickListener { vm.selectChain(c) }; chainsBottomContainer?.addView(view, 0) }
+				3 -> { view.setOnClickListener { vm.selectChain(c) }; chainsLeftContainer?.addView(view, 0) }
 			}
 		}
 	}
@@ -1298,7 +1299,7 @@ class PlayActivity : BaseActivity() {
 	// region MIDI controller
 
 	private var midiController: MidiController? = object : MidiController() {
-		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chain.refresh(); vm.refreshWatermark() }
+		override fun onAttach() { redrawAllLaunchpadLeds(); vm.chainBtnsRefresh(); vm.refreshWatermark() }
 		override fun onDetach() = vm.releaseControllerPads()
 		override fun onPadTouch(x: Int, y: Int, upDown: Boolean, velocity: Int) = vm.controllerPadTouch(x, y, upDown)
 		override fun onFunctionKeyTouch(f: Int, upDown: Boolean) {
@@ -1328,10 +1329,10 @@ class PlayActivity : BaseActivity() {
 			}
 		}
 		override fun onChainTouch(c: Int, upDown: Boolean) {
-			if (!vm.isOptionWindowVisible && upDown && vm.unipack.chain > c) vm.chain.value = c
+			if (!vm.isOptionWindowVisible && upDown) vm.selectChain(c)
 		}
 		override fun onUnknownEvent(cmd: Int, sig: Int, note: Int, velocity: Int) {
-			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chain.refresh(); vm.refreshWatermark() }
+			if (cmd == 7 && sig == 46 && note == 0 && velocity == -9) { vm.chainBtnsRefresh(); vm.refreshWatermark() }
 		}
 	}
 
@@ -1386,6 +1387,7 @@ class PlayActivity : BaseActivity() {
 	// gets no cancel from the system, so its pad (and its loop) is let go here rather than at the lift.
 	override fun onPause() {
 		super.onPause()
+		vm.soundRunner?.cancelPendingWormholes()
 		window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 		contentResolver.unregisterContentObserver(volumeObserver)
 		launchpadOutputEnabled = false

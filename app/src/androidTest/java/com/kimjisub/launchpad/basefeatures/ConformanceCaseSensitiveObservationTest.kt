@@ -3,6 +3,15 @@ package com.kimjisub.launchpad.basefeatures
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.launchpad.TestCaptures
 import com.kimjisub.launchpad.unipack.UniPackFolder
+import com.kimjisub.launchpad.audio.OboeAudioEngine
+import com.kimjisub.launchpad.manager.PackArchive
+import com.kimjisub.launchpad.unipack.conformance.observeSoundIdentity
+import com.kimjisub.launchpad.unipack.conformance.soundIdentityOutcome
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
@@ -25,12 +34,19 @@ class ConformanceCaseSensitiveObservationTest : PlaybackScreenTest() {
     @Test fun candidateSearchIncludesEveryFolder() = observe("KS-G618")
     @Test fun exactNameWinsOverFoldedCandidates() = observe("KS-G619")
 
+    @Test fun composedExactNameWinsNormalizationCollision() = observe("KS-G620")
+    @Test fun decomposedExactNameWinsNormalizationCollision() = observe("KS-G621")
+    @Test fun normalizationFallbackSortsOriginalNames() = observe("KS-G622")
+    @Test fun composedExactAccentWinsCollision() = observe("KS-G623")
+    @Test fun decomposedExactAccentWinsCollision() = observe("KS-G624")
+    @Test fun accentFallbackSortsOriginalNames() = observe("KS-G625")
+
     private fun observe(id: String) {
         val root = File(screen.context.filesDir, "conformance-case-sensitive")
         try {
             val (case, digest) = DeviceConformanceCorpus(screen).install(id, root)
             assertTrue("Only sound filename fixtures belong here", case.optBoolean("requiresCaseSensitiveFiles") ||
-                id in listOf("KS-G601", "KS-G602", "KS-G603", "KS-G604"))
+                case.optBoolean("soundIdentity"))
             val probe = File(root, "case-probe").apply { mkdirs() }
             File(probe, "a").writeText("lower")
             assertFalse("Internal storage must keep case-distinct names separate", File(probe, "A").exists())
@@ -45,6 +61,10 @@ class ConformanceCaseSensitiveObservationTest : PlaybackScreenTest() {
                 .put("bytes", file.length())
                 .put("sha256", MessageDigest.getInstance("SHA-256").digest(file.readBytes()).joinToString("") { "%02x".format(it) }))
 
+            if (case.optBoolean("soundIdentity")) {
+                observeIdentity(case, digest, root)
+                return
+            }
             val pack = UniPackFolder(root).load().loadDetail()
             val actual = JSONObject().put("loaded", !pack.criticalError)
             if (!pack.criticalError) {
@@ -83,6 +103,38 @@ class ConformanceCaseSensitiveObservationTest : PlaybackScreenTest() {
         } finally {
             root.deleteRecursively()
         }
+    }
+
+    private fun observeIdentity(case: JSONObject, digest: String, root: File) {
+        // Installation already proved every original path and byte was preserved. Exercise the
+        // production ZIP extractor as well, then trace decoder and runner choices back to the ZIP.
+        val bytes = ByteArrayOutputStream().also { output ->
+            ZipOutputStream(output).use { zip ->
+                val entries = case.getJSONArray("files")
+                for (i in 0 until entries.length()) {
+                    val name = entries.getJSONObject(i).getString("path")
+                    zip.putNextEntry(ZipEntry(name)); zip.write(File(root, name).readBytes()); zip.closeEntry()
+                }
+            }
+        }.toByteArray()
+        val archive = File(root.parentFile, "identity-input.zip").apply { writeBytes(bytes) }
+        try {
+            root.deleteRecursively(); check(root.mkdirs())
+            PackArchive.extract(archive, root)
+            val parsedCase = Json.parseToJsonElement(case.toString()).jsonObject
+            val pack = UniPackFolder(root).load().loadDetail()
+            val observation = soundIdentityOutcome(parsedCase,
+                observeSoundIdentity(bytes, root, pack, OboeAudioEngine::decodeOnly))
+            val report = JSONObject(observation.toString()).put("corpusSha256", digest)
+                .put("platform", "android").put("source", "device-archive-decoder-runner")
+                .put("caseSensitiveFileSystem", true)
+            val id = case.getString("id")
+            assertTrue("Identity evidence was not saved", TestCaptures.save(screen.device, "conformance-files/$id.json") {
+                it.writeText(report.toString(2) + "\n"); true
+            })
+            assertFalse("$id: selected entry or bytes differ: $observation",
+                observation.getValue("status").jsonPrimitive.content == "fail")
+        } finally { archive.delete() }
     }
 
     private fun normalizeError(message: String): String {

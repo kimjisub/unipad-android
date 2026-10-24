@@ -130,6 +130,34 @@
       "silent_channels": [],
       "sha256": "a0ea77d54020aea3045c0b82d8d4b8aeedbc37b13d6d6920185a0a0058d4e680",
       "reference_sha256": "a0ea77d54020aea3045c0b82d8d4b8aeedbc37b13d6d6920185a0a0058d4e680"
+    },
+    {
+      "pad": 10,
+      "file": "quad.wav",
+      "reference": "scripts/fixtures/audio-output/pad-10.wav",
+      "frequencies_hz": [
+        1701,
+        1762
+      ],
+      "silent_channels": [],
+      "source_channels": 4,
+      "wave_channel_mask": 51,
+      "sha256": "a425b476809835399ac980c756e7e69e23873a7a8c6cc57d94ce6cd2f108c217",
+      "reference_sha256": "e6decaaf34e24ee4d9e22ec05df89ab5a753853ce75676a9d29841ab93792123"
+    },
+    {
+      "pad": 11,
+      "file": "surround.wav",
+      "reference": "scripts/fixtures/audio-output/pad-11.wav",
+      "frequencies_hz": [
+        1838,
+        1899
+      ],
+      "silent_channels": [],
+      "source_channels": 6,
+      "wave_channel_mask": 63,
+      "sha256": "8608fd20e2b0d100efa345ffdbae4a6754aa9d8d3267f1e78f01e908c047a2cf",
+      "reference_sha256": "7c4ccdf58eab262c9db7efa7bf3a49c36d681e98fa743592d681dc9e8662777d"
     }
   ],
   "commands": [
@@ -242,6 +270,6 @@
   ],
   "pack_files": {
     "info": "cada7fe827128a60a53de9356eaac06dcae361ddc093958542906db556776b88",
-    "keySound": "88d0a2e850057e28347f044168394f8090f4c80375a80145cf4f1c57bab499d6"
+    "keySound": "9adcfd558afca56892b65b42afa57c39feb1da446a75336319049cf000a778c0"
   }
 }

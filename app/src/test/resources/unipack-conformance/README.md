@@ -44,22 +44,38 @@ ANDROID_SERIAL=<leased-device-id> bash scripts/ci-connected-tests.sh \
 ```
 
 It injects distinct pointers, uses a virtual Launchpad transport with the real
-driver, taps chain buttons, and starts/stops auto play on the live screen's view
-model. It retains input timestamps, chain, lights, sound requests, stop keys and
+driver, taps chain buttons, and starts/stops auto play with the screen option. It retains input timestamps, chain, lights, sound requests, stop keys and
 currently looping sounds in `/data/local/tmp/unipad_tests/conformance-screen`.
 Its audio recorder uses the native decoder but does not open a speaker.
 
 These are raw real-time observations, not normalized conformance results. Every
 screen record remains `unverified`: a completed recorder test cannot certify
-virtual-clock event ordering or the auto-play option gestures. Do not replace
+virtual-clock event ordering.
+Opening options while a finger is held replaces the injected gesture. That
+case saves partial evidence with `completed=false` and an explicit limitation;
+it does not invent a later release of the cancelled finger. Do not replace
 the generic report's missing screen observations with these snapshots or count
 successful recorder checks as corpus passes. Preserve the complete output and
 device files before running the tests again.
 
-The seven file parser tests write the exact corpus files on Android
+The thirteen file tests write the exact corpus files on Android
 internal storage, check their stored fingerprint and distinct path inventory,
-run `UniPackFolder`, and compare its normalized parse result. Their separate
+use the production archive extractor, parser, decoder and sound runner for the
+ten sound-identity cases, and compare the selected original ZIP entry and SHA-256.
+The other three cases compare the normalized parser result. Their separate
 records in `conformance-files/` include every stored file's hash. They can confirm
-the three case-colliding and four Unicode filename cases on that device;
+the three case-colliding and ten Unicode filename cases on that device;
 they do not change the generic host
 report or the restrictions in the canonical corpus.
+
+The audio operation adapter calls `AudioSafety.cost`, `AudioFileInspector.inspect`
+and `AudioSelector.select` for 106 cases. Physical WAV fixtures use real PCM
+headers and data lengths, rather than the input's claimed duration. Each result
+names its `operationAdapter`; the independent checker refuses operations passed
+through the ordinary parser. Neither adapter reads an expected result.
+
+The mapper adapter invokes `UniPackAutoMapper.run`, then reopens its actual output
+through the app parser. Only integer duration fixtures can enter the current
+`SoundDurationReader` unchanged. Fractional duration fixtures remain unverified;
+the harness never rounds an input to manufacture a pass. Any observed mapper
+difference still fails the suite, even if `expectedFailing` did not predict it.

@@ -66,9 +66,14 @@ object MidiConnection {
 		})
 	)
 
+	private const val ORIGINAL_LAUNCHPAD_PID = 0x000e
+	private fun isOriginalLaunchpad(device: UsbDevice): Boolean =
+		device.vendorId == 0x1235 && device.productId == ORIGINAL_LAUNCHPAD_PID
+
 	// Exact PID matches (non-Novation devices or single-PID devices)
 	private val driverRegistryExact: Map<Int, DriverEntry> = mapOf(
 		8 to DriverEntry("MidiFighter", ::MidiFighter),
+		ORIGINAL_LAUNCHPAD_PID to DriverEntry("Launchpad", ::LaunchpadS),
 		8211 to DriverEntry("LX 61 piano", ::MasterKeyboard),
 		32822 to DriverEntry("Arduino Leonardo midi", ::LaunchpadPRO, interfaceNum = 3),
 	)
@@ -136,6 +141,7 @@ object MidiConnection {
 	// API state). One instance per physically connected Launchpad-like device.
 	// ---------------------------------------------------------------------
 	private class DeviceSession(val usbDevice: UsbDevice) {
+		val rawMidi = isOriginalLaunchpad(usbDevice)
 		var usbInterface: UsbInterface? = null
 		var usbEndpointIn: UsbEndpoint? = null
 		var usbEndpointOut: UsbEndpoint? = null
@@ -255,6 +261,12 @@ object MidiConnection {
 			session.sendChannel.trySend(packets.copyOfRange(start, minOf(start + USB_BATCH_SIZE, packets.size)))
 	}
 
+	private fun enqueueSignal(session: DeviceSession, cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
+		// The original model shares S's MIDI messages, but has no USB-MIDI packet header.
+		val bytes = if (session.rawMidi) byteArrayOf(sig, note, velocity) else byteArrayOf(cmd, sig, note, velocity)
+		session.sendChannel.trySend(bytes)
+	}
+
 	// Builds a send listener scoped to a single session - it only ever delivers that
 	// session's own already-encoded output to that session's own USB/MIDI connection.
 	// Fan-out across multiple connected pads is handled one level up, by MultiplexDriver
@@ -265,7 +277,7 @@ object MidiConnection {
 		object : DriverRef.OnSendSignalListener {
 			override fun onSend(cmd: Byte, sig: Byte, note: Byte, velocity: Byte) {
 				if (originSession.usbDeviceConnection != null) {
-					originSession.sendChannel.trySend(byteArrayOf(cmd, sig, note, velocity))
+					enqueueSignal(originSession, cmd, sig, note, velocity)
 				}
 			}
 
@@ -503,7 +515,7 @@ object MidiConnection {
 				// connected (both sessions' drivers share the same class).
 				val ownerSession = sessions.values.firstOrNull { it.driver === _driver }
 				if (ownerSession?.usbDeviceConnection != null) {
-					ownerSession.sendChannel.trySend(byteArrayOf(cmd, sig, note, velocity))
+					enqueueSignal(ownerSession, cmd, sig, note, velocity)
 				}
 			}
 
@@ -556,7 +568,7 @@ object MidiConnection {
 	// attached device is worth ever calling initDevice() on.
 	private fun looksLikeMidiDevice(device: UsbDevice): Boolean {
 		val pid = device.productId
-		if (driverRegistryExact.containsKey(pid)) return true
+		if (driverRegistryExact.containsKey(pid) && (pid != ORIGINAL_LAUNCHPAD_PID || isOriginalLaunchpad(device))) return true
 		if (driverRegistryRanges.any { pid in it.pidStart..it.pidEnd }) return true
 		if (pid and MATRIX_PRODUCT_ID_MASK == MATRIX_PRODUCT_ID_BASE) return true
 		for (i in 0 until device.interfaceCount) {
@@ -601,7 +613,8 @@ object MidiConnection {
 			listener?.onUiLog("ProductId : ${device.productId}")
 
 			val pid = device.productId
-			val entry = driverEntryFor(pid, device.productName) { readSerialNumber(device) }
+			val entry = if (pid == ORIGINAL_LAUNCHPAD_PID && !isOriginalLaunchpad(device)) null
+				else driverEntryFor(pid, device.productName) { readSerialNumber(device) }
 
 			if (entry != null) {
 				val deviceId = driverRegistryRanges.firstOrNull { pid in it.pidStart..it.pidEnd }
@@ -984,6 +997,7 @@ object MidiConnection {
 				val byteArray = ByteArray(endpointIn.maxPacketSize)
 				// Flat int array: [cmd0,sig0,note0,vel0, cmd1,sig1,note1,vel1, ...]
 				val eventBuf = IntArray(endpointIn.maxPacketSize)
+				val rawInput = if (session.rawMidi) LaunchpadRawMidiInput() else null
 				var fastFailures = 0
 
 				while (isActive && session.usbDeviceConnection === conn) {
@@ -994,33 +1008,35 @@ object MidiConnection {
 						byteArray.size,
 						1000
 					)
-					if (length >= 4) {
+					if (length >= 4 || (rawInput != null && length > 0)) {
 						fastFailures = 0
-						var eventCount = 0
-						var i = 0
-						// Whole 4-byte packets only: an interrupt endpoint with maxPacketSize 9
-						// can return a length that is not a multiple of 4.
-						while (i + 3 < length) {
-							val b1 = byteArray[i + 1].toInt() and 0xFF
-							if (b1 == 0xF8) { // Skip MIDI Clock
+						val snapshot = if (rawInput != null) {
+							rawInput.decode(byteArray, length)
+						} else {
+							var eventCount = 0
+							var i = 0
+							// Whole 4-byte packets only: an interrupt endpoint with maxPacketSize 9
+							// can return a length that is not a multiple of 4.
+							while (i + 3 < length) {
+								val b1 = byteArray[i + 1].toInt() and 0xFF
+								if (b1 == 0xF8) { // Skip MIDI Clock
+									i += 4
+									continue
+								}
+								val base = eventCount * 4
+								eventBuf[base] = byteArray[i].toInt()
+								eventBuf[base + 1] = byteArray[i + 1].toInt()
+								eventBuf[base + 2] = byteArray[i + 2].toInt()
+								eventBuf[base + 3] = byteArray[i + 3].toInt()
+								eventCount++
 								i += 4
-								continue
 							}
-							val base = eventCount * 4
-							eventBuf[base] = byteArray[i].toInt()
-							eventBuf[base + 1] = byteArray[i + 1].toInt()
-							eventBuf[base + 2] = byteArray[i + 2].toInt()
-							eventBuf[base + 3] = byteArray[i + 3].toInt()
-							eventCount++
-							i += 4
+							eventBuf.copyOf(eventCount * 4)
 						}
-						if (eventCount > 0) {
-							// Copy to snapshot for safe Main thread dispatch
-							val snapshot = eventBuf.copyOf(eventCount * 4)
-							val n = eventCount
+						if (snapshot.isNotEmpty()) {
+							// Copy to snapshot for safe Main thread dispatch.
 							withContext(Dispatchers.Main) {
-								for (j in 0 until n) {
-									val base = j * 4
+								for (base in snapshot.indices step 4) {
 									session.driver.getSignal(snapshot[base], snapshot[base + 1], snapshot[base + 2], snapshot[base + 3])
 								}
 							}

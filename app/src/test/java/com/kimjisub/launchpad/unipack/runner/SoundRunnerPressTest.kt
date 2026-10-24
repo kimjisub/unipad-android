@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  * Presses and releases one pad holding several sounds, and checks what the engine is asked to play
  * and stop. A sound that could not be decoded silences only its own turn, and a release stops the
  * infinite loop the press started, whatever the pad's next sound is. A press made before the sounds
- * finish loading changes nothing.
+ * finish loading still advances the mapping and follows its chain move.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SoundRunnerPressTest {
@@ -57,7 +57,7 @@ class SoundRunnerPressTest {
 
 	@Test
 	fun undecodableSound_stillMovesToItsChain() {
-		load(listOf(Sound(File("broken.wav"), loop = 0, wormhole = 1)), undecodable = setOf("broken.wav"))
+		load(listOf(Sound(File("broken.wav"), loop = 0, wormhole = 1), Sound(File("good.wav"), loop = 0)), undecodable = setOf("broken.wav"))
 
 		tap()
 		scheduler.advanceUntilIdle()
@@ -67,24 +67,47 @@ class SoundRunnerPressTest {
 	}
 
 	@Test
-	fun pressBeforeTheSoundsLoad_leavesThePadAndTheChainAsTheyAre() {
+	fun pressBeforeTheSoundsLoad_advancesTheMappingAndFollowsItsChain() {
 		val gate = CountDownLatch(1)
 		val loaded = start(
 			listOf(Sound(File("a.wav"), loop = 0, wormhole = 1), Sound(File("b.wav"), loop = 0)),
 			RecordingSoundEngine(decodeGate = gate),
 		)
-
+		try {
+			tap()
+			scheduler.advanceUntilIdle()
+			assertEquals("The sound's chain move must still happen while loading", 1, chain.value)
+			assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
+		} finally {
+			gate.countDown()
+		}
+		loaded.await()
+		chain.value = 0
 		tap()
-		scheduler.advanceUntilIdle()
-		assertEquals(0, chain.value)
-		assertEquals(emptyList<Pair<String, Int>>(), engine.plays)
+		assertEquals("The unloaded first sound must have consumed its turn", listOf("b.wav" to 0), engine.plays)
+	}
 
-		gate.countDown()
+	@Test
+	fun rotatingThePadWhileFilesAreCollectedDoesNotBreakLoading() {
+		val collecting = CountDownLatch(1)
+		val proceed = CountDownLatch(1)
+		val first = object : File("a.wav") {
+			override fun getAbsolutePath(): String {
+				collecting.countDown()
+				check(proceed.await(10, TimeUnit.SECONDS))
+				return super.getAbsolutePath()
+			}
+		}
+		val loaded = start(listOf(Sound(first, loop = 0), Sound(File("b.wav"), loop = 0)), RecordingSoundEngine())
+		try {
+			assertTrue("The loader did not begin collecting files", collecting.await(10, TimeUnit.SECONDS))
+			tap()
+		} finally {
+			proceed.countDown()
+		}
 		loaded.await()
 		tap()
-		scheduler.advanceUntilIdle()
-		assertEquals("the pad must still start from its first sound", listOf("a.wav" to 0), engine.plays)
-		assertEquals(1, chain.value)
+		assertEquals(listOf("b.wav" to 0), engine.plays)
 	}
 
 	@Test
@@ -123,6 +146,78 @@ class SoundRunnerPressTest {
 
 		assertEquals(listOf("a.wav" to 0, "b.wav" to -1), engine.plays)
 		assertEquals("releasing B must stop B's loop", listOf(2), engine.stops.drop(stopsBeforeSecondRelease))
+	}
+
+	@Test
+	fun manualChainSelectionDuringWormholeDelayWins() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		scheduler.advanceTimeBy(50)
+		chain.value = 0 // Selecting even the current chain is an explicit choice.
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun stoppingPlaybackCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		runner.stopAll()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun hidingTheScreenCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		runner.pauseStream()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun destroyingTheRunnerCancelsPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		runner.destroy()
+		scheduler.advanceUntilIdle()
+		assertEquals(0, chain.value)
+	}
+
+	@Test
+	fun adjacentWormholesKeepTheirScheduledOrder() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1), Sound(File("b.wav"), loop = 0, wormhole = 0)))
+		val moves = mutableListOf<Int>()
+		chain.addObserver { curr, _ -> moves += curr }
+		tap()
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals(listOf(1, 0), moves)
+	}
+
+	@Test
+	fun aNewPressCanScheduleAWormholeAfterPlaybackWasStopped() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		runner.stopAll()
+		tap()
+		scheduler.advanceUntilIdle()
+		assertEquals(1, chain.value)
+	}
+
+	@Test
+	fun refreshingChainLightsDoesNotCancelPendingWormholes() {
+		load(listOf(Sound(File("a.wav"), loop = 0, wormhole = 1)))
+		tap()
+		scheduler.runCurrent()
+		scheduler.advanceTimeBy(50)
+		chain.refresh()
+		scheduler.advanceUntilIdle()
+		assertEquals(1, chain.value)
 	}
 
 	private fun tap() {

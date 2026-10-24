@@ -54,6 +54,10 @@ def check_report(corpus, report, corpus_hash):
         restricted = (case.get("screenInputs", False)
                       or "android" in case.get("unobserved", {})
                       or changed_names
+                      or case.get("soundIdentity", False)
+                      or (case.get("observation") not in (None, "runner")
+                          and (case["observation"] not in {"audio-cost", "audio-file", "audio-wave", "audio-selection", "auto-map"}
+                               or result.get("operationAdapter") != case["observation"]))
                       or (case.get("requiresCaseSensitiveFiles", False)
                           and report.get("caseSensitiveFileSystem") is not True))
         if actual is None:

@@ -12,9 +12,9 @@ import java.io.File
 
 /**
  * A pack's numbers are 32-bit integers on every platform. A larger one is a format error and only its
- * line or file is skipped; one that fits is range-checked as usual. Making a 1-based number 0-based keeps
- * the smallest one as it is: 1 less wrapped to the largest, so a chain move to it went to the last chain
- * instead of the first and a loop count to it played the sound practically forever.
+ * line or file is skipped; one that fits is range-checked as usual. Making a 1-based number 0-based stores
+ * its result in 64 bits, including one less than the smallest 32-bit input. Runtime bounds still
+ * reject invalid coordinates and move an out-of-range chain to the nearest valid chain.
  */
 class UniPackFolderIntegerRangeTest {
 
@@ -108,19 +108,19 @@ class UniPackFolderIntegerRangeTest {
 	}
 
 	@Test
-	fun loopOfTheSmallestNumber_staysTheSmallest_soTheSoundPlaysOnce() {
+	fun loopOfTheSmallestNumber_isStoredWithoutOverflow() {
 		val pack = load(keySound = "1 1 1 a.wav -2147483648\n")
 
 		assertNull(pack.errorDetail)
-		assertEquals(Int.MIN_VALUE, pack.soundGet(0, 0, 0)?.loop)
+		assertEquals(-2147483649L, pack.soundGet(0, 0, 0)?.loop)
 	}
 
 	@Test
-	fun keyLedChainAndPadOfTheSmallestNumber_stayTheSmallest() {
+	fun keyLedChainAndPadOfTheSmallestNumber_areStoredWithoutOverflow() {
 		val pack = load(keyLed = mapOf("1 1 1" to "o -2147483648 1 a 5\nc -2147483648\nf 1 1"))
 
 		assertNull(pack.errorDetail)
-		assertEquals(listOf("on ${Int.MIN_VALUE},0", "chain ${Int.MIN_VALUE}", "off 0,0"), ledEvents(pack))
+		assertEquals(listOf("on -2147483649,0", "chain -2147483649", "off 0,0"), ledEvents(pack))
 	}
 
 	private companion object {

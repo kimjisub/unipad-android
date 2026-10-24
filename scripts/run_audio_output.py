@@ -49,8 +49,12 @@ CASES = [
     case('differentPadIsRejected',[1],[0],'alternate',alternate_pad=1),
     case('heldLoopStopsAfterRelease',[9],[9],hold_ms=1250,stop_window_s=[.6,1.1]),
     case('twoPadsAreHeardTogether',[0,1],[0,1]),
+    case('quadWavIsHeardInStereo',[10],[10]),
+    case('surroundWavIsHeardInStereo',[11],[11]),
 ]
-CASE_BY_NAME = {c['name']:c for c in CASES}
+LOADING_KEY_SOUND = '1 1 1 pcm.wav\n1 1 1 left.wav\n'
+LOADING_CASE = case('nextSoundAfterLoadingIsHeard', [0], [6], 'loading', alternate_pad=0)
+CASE_BY_NAME = {c['name']:c for c in [*CASES, LOADING_CASE]}
 # Observed stream timestamp jitter is up to 36 ms in either direction.
 PACKET_UNCERTAINTY_S = .036
 
@@ -178,13 +182,18 @@ def main():
     parser.add_argument('--apk', required=True, type=Path)
     parser.add_argument('--test-apk', required=True, type=Path)
     parser.add_argument('--block-playback', action='store_true')
+    parser.add_argument('--loading-order', action='store_true',
+                        help='use a gated decoder and two pinned sounds on the same pad')
     parser.add_argument('--case', action='append', choices=[c['name'] for c in CASES])
     args = parser.parse_args()
+    if args.loading_order and args.case:
+        parser.error('--loading-order is a separate single-case round; omit --case')
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
         parser.error('output folder must be empty; preserve and attach the previous round first')
-    cases = [c for c in CASES if not args.case or c['name'] in args.case]
+    cases = ([LOADING_CASE] if args.loading_order else
+             [c for c in CASES if not args.case or c['name'] in args.case])
     try:
         results = execute_round(args,out,cases)
     except Exception as error:
@@ -219,6 +228,8 @@ def judge_record(record, manifest, out):
         values = read_wav(case_path)
         result['raw_channels'] = [levels(c) for c in read_wav(case_path,capture['sample_rate'])]
         rule = record.get('case') or CASE_BY_NAME[record['name']]
+        if rule['rule'] == 'loading':
+            validate_loading_preparation(record.get('preparation'))
         refs = [read_wav(ROOT/manifest['pads'][p]['reference']) for p in rule['reference_pads']]
         # Compare the time/frequency pattern of both notes, irrespective of sample phase.
         if len(refs) == 1:
@@ -237,6 +248,12 @@ def judge_record(record, manifest, out):
                 actual = read_wav(ROOT/manifest['pads'][rule['alternate_pad']]['reference'])
                 result['actual_pad_verdict'] = compare(values,actual,RATE,pressed,uncertainty)
                 passed = not verdict['passed'] and result['actual_pad_verdict']['passed']
+            elif rule['rule'] == 'loading':
+                first = read_wav(ROOT/manifest['pads'][rule['alternate_pad']]['reference'])
+                result['first_turn_verdict'] = compare(values,first,RATE,pressed,uncertainty)
+                if result['first_turn_verdict'].get('error'):
+                    raise ValueError(result['first_turn_verdict']['error'])
+                passed = passed and not result['first_turn_verdict']['passed']
             result['quiet_control'] = quiet
             if rule['stop_window_s'] is not None:
                 released = capture['released_s']
@@ -257,6 +274,13 @@ def judge_record(record, manifest, out):
 
 def judge_records(records, manifest, out):
     return [judge_record(record,manifest,out) for record in records]
+
+
+def validate_loading_preparation(preparation):
+    if (not isinstance(preparation,dict) or preparation.get('loading_before') is not True or
+            preparation.get('loading_after') is not False or preparation.get('silent_press_count') != 1 or
+            preparation.get('runtime_key_sound') != LOADING_KEY_SOUND):
+        raise ValueError('loading preparation is missing or does not match the pinned sequence')
 
 
 def create_clock_session(devices_tool, serial):
@@ -324,6 +348,7 @@ def execute_round(args, out, cases):
                 'serial':args.serial, 'os':adb('shell','getprop'),
                 'emulator_version':run([str(Path(os.environ['ANDROID_HOME'])/'emulator/emulator'),'-version']),
                 'verdict_version':VERSION, 'block_playback':args.block_playback,
+                'loading_order':getattr(args,'loading_order',False),
                 'fixture_manifest':manifest}
     (out/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
     adb('install','-r','-t',str(args.apk),timeout=120)
@@ -332,17 +357,19 @@ def execute_round(args, out, cases):
     exchange = f'files/audio-output/{session}'
     instrument_command = ['adb','-s',args.serial,'shell','am','instrument','-w','-r','-e','class',CLASS,
                           '-e','audioOutputSession',session,'-e','audioBlockPlayback',str(args.block_playback).lower(),
+                          '-e','audioLoadingOrder',str(getattr(args,'loading_order',False)).lower(),
                           PACKAGE+'.test/androidx.test.runner.AndroidJUnitRunner']
     recordings = []
     instrument = recorder = clock = None
-    clock_trace = None
+    clock_trace = instrument_trace = None
     instrument_exit = None
     capture_exit = None
     failure = None
     try:
         with (out/'instrumentation.txt').open('w') as log:
             instrument = subprocess.Popen(instrument_command,stdout=log,stderr=subprocess.STDOUT)
-            command_log.append({'command':instrument_command})
+            instrument_trace = {'command':instrument_command}
+            command_log.append(instrument_trace)
             def wait_file(name, seconds):
                 deadline = time.monotonic()+seconds
                 while time.monotonic() < deadline:
@@ -378,6 +405,21 @@ def execute_round(args, out, cases):
                 for number,rule in enumerate(cases):
                     record = {'name':rule['name'],'case':rule}
                     recordings.append(record)
+                    if rule['rule'] == 'loading':
+                        # Preparation is outside the measured sound input. A pending
+                        # preparation must never leak into another case's baseline.
+                        try:
+                            adb('shell','run-as',PACKAGE,'sh','-c',
+                                f'"cat > {exchange}/prepare.tmp && mv {exchange}/prepare.tmp {exchange}/prepare-{number}"',
+                                input=b'loading\n')
+                            record['preparation'] = json.loads(wait_file(f'prepared-{number}.json',4))
+                            validate_loading_preparation(record['preparation'])
+                            time.sleep(2.5)
+                        except Exception as error:
+                            record['environment_error'] = f'preparation: {type(error).__name__}: {error}'
+                            raise
+                        finally:
+                            (out/'recordings.json').write_text(json.dumps(recordings,indent=2)+'\n')
                     try: clock_before=measure_clock()
                     except Exception as error:
                         clock_before=[]
@@ -435,6 +477,8 @@ def execute_round(args, out, cases):
                     except subprocess.TimeoutExpired:
                         process.kill()
                         code=process.wait(timeout=10)
+                if process is instrument:
+                    instrument_trace['exit']=code
                 if process is recorder:
                     capture_exit=code
                     capture_trace['exit']=code

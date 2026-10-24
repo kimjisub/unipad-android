@@ -31,7 +31,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import java.util.Collections
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Lifecycle races around MidiConnection's USB/MIDI API init and its receive loop - the two
@@ -192,6 +194,107 @@ class MidiConnectionLifecycleTest {
 			synchronized(events) { events.toList() },
 		)
 		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertNoCrash()
+	}
+
+	@Test
+	fun receive_originalLaunchpadReadsRawMidiAcrossUsbTransfers() {
+		midiManager.stubDeviceList() returns emptyArray()
+		val events = Collections.synchronizedList(mutableListOf<String>())
+		val controller = mockk<MidiController>(relaxed = true)
+		every { controller.onPadTouch(any(), any(), any(), any()) } answers {
+			events.add("pad:${firstArg<Int>()},${secondArg<Int>()},${thirdArg<Boolean>()}")
+		}
+		every { controller.onChainTouch(any(), any()) } answers {
+			events.add("chain:${firstArg<Int>()},${secondArg<Boolean>()}")
+		}
+		every { controller.onFunctionKeyTouch(any(), any()) } answers {
+			events.add("function:${firstArg<Int>()},${secondArg<Boolean>()}")
+		}
+		MidiConnection.controller = controller
+		val (device, connection) = originalLaunchpad()
+		// Raw MIDI messages can straddle transfers; a real-time clock may interrupt one.
+		val transfers = listOf(
+			byteArrayOf(0x90.toByte(), 0, 127, 0x90.toByte(), 17),
+			byteArrayOf(127, 0xf8.toByte(), 0x90.toByte(), 0, 0, 0xb0.toByte(), 104),
+			byteArrayOf(127, 0x90.toByte(), 120, 127, 0x90.toByte(), 17, 0),
+			byteArrayOf(0x80.toByte(), 120, 64, 0xb0.toByte(), 104, 0),
+		)
+		var next = 0
+		every { connection.bulkTransfer(match { it.direction == UsbConstants.USB_DIR_IN }, any(), any<Int>(), any<Int>()) } answers {
+			if (next < transfers.size) {
+				val bytes = transfers[next++]
+				bytes.copyInto(secondArg<ByteArray>())
+				bytes.size
+			} else -1
+		}
+
+		attach(device)
+
+		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertEquals(
+			listOf("pad:0,0,true", "pad:1,1,true", "pad:0,0,false", "function:0,true",
+				"chain:7,true", "function:15,true", "pad:1,1,false", "chain:7,false", "function:15,false", "function:0,false"),
+			synchronized(events) { events.toList() },
+		)
+		assertNoCrash()
+	}
+
+	@Test
+	fun send_originalLaunchpadWritesMidiWithoutUsbPacketHeaders() {
+		midiManager.stubDeviceList() returns emptyArray()
+		val sent = Collections.synchronizedList(mutableListOf<Int>())
+		val written = CountDownLatch(1)
+		val controller = mockk<MidiController>(relaxed = true)
+		every { controller.onAttach() } answers { MidiConnection.driver.sendPadLed(3, 4, 6) }
+		MidiConnection.controller = controller
+		val (device, connection) = originalLaunchpad()
+		every { connection.bulkTransfer(match { it.direction == UsbConstants.USB_DIR_OUT }, any(), any<Int>(), any<Int>()) } answers {
+			val count = thirdArg<Int>()
+			sent.addAll(secondArg<ByteArray>().take(count).map { it.toInt() and 0xff })
+			written.countDown()
+			count
+		}
+		every { connection.bulkTransfer(match { it.direction == UsbConstants.USB_DIR_IN }, any(), any<Int>(), any<Int>()) } answers {
+			written.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+			-1
+		}
+
+		attach(device)
+
+		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertEquals(listOf(0x90, 52, 3), synchronized(sent) { sent.toList() })
+		assertNoCrash()
+	}
+
+	private fun originalLaunchpad(): Pair<UsbDevice, UsbDeviceConnection> {
+		val (device, connection) = launchpad(deviceId = 1)
+		every { device.vendorId } returns 0x1235
+		every { device.productId } returns 0x000e
+		every { device.productName } returns "Launchpad"
+		val usbInterface = device.getInterface(0)
+		every { usbInterface.interfaceClass } returns UsbConstants.USB_CLASS_VENDOR_SPEC
+		every { usbInterface.interfaceSubclass } returns 0
+		val endpointIn = usbInterface.getEndpoint(0)
+		every { endpointIn.maxPacketSize } returns 8
+		assertEquals(UsbConstants.USB_DIR_IN, endpointIn.direction)
+		return device to connection
+	}
+
+	@Test
+	fun attach_otherVendorWithOriginalProductIdKeepsMasterKeyboard() {
+		midiManager.stubDeviceList() returns emptyArray()
+		val names = recordConnectedNames()
+		val (device, connection) = originalLaunchpad()
+		every { device.vendorId } returns 0x4321
+		val usbInterface = device.getInterface(0)
+		every { usbInterface.interfaceClass } returns UsbConstants.USB_CLASS_AUDIO
+		every { usbInterface.interfaceSubclass } returns 3
+
+		attach(device)
+
+		verify(timeout = TIMEOUT_MS) { connection.close() }
+		assertEquals(listOf("Master Keyboard"), names.toList())
 		assertNoCrash()
 	}
 

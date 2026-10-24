@@ -23,6 +23,22 @@ class UniPackImportPathTest {
 	fun tearDown() = env.tearDown()
 
 	@Test
+	fun dotsInArchiveName_areKeptExceptForTheExtension() {
+		val result = Recorder()
+		env.finish(env.import(packZip("Pack"), result, fileName = "Song v1.2 (Remix).zip"))
+		assertNull(result.error)
+		assertEquals("Song v1.2 (Remix)", result.installedFolder?.name)
+	}
+
+	@Test
+	fun emptyArchiveBaseName_usesUniPack() {
+		val result = Recorder()
+		env.finish(env.import(packZip("Pack"), result, fileName = ".zip"))
+		assertNull(result.error)
+		assertEquals("UniPack", result.installedFolder?.name)
+	}
+
+	@Test
 	fun validationOutOfMemoryReportsFailureAndRemovesAllStagingFiles() {
 		val outOfMemory = OutOfMemoryError("info is too large")
 		mockkConstructor(UniPackFolder::class)

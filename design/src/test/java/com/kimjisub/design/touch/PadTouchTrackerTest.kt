@@ -6,12 +6,54 @@ import org.junit.Test
 
 class PadTouchTrackerTest {
 
+	@Test
+	fun twoPointersOnOneCellKeepTheirIdsWhenReleasedInEitherOrder() {
+		for (first in listOf(7L, 11L)) {
+			val delivered = mutableListOf<Pair<Long, Boolean>>()
+			val tracker = PadTouchTracker { id, _, _, down -> delivered += id to down }.apply { setGrid(8, 8) }
+			tracker.down(7, 50f, 50f, 800, 800)
+			tracker.down(11, 50f, 50f, 800, 800)
+			tracker.up(first)
+			tracker.up(if (first == 7L) 11 else 7)
+			assertEquals(listOf(7L to true, 11L to true, first to false, (if (first == 7L) 11L else 7L) to false), delivered)
+		}
+	}
+
+	@Test
+	fun slidingKeepsThePointerIdOnBothSidesOfTheMove() {
+		val delivered = mutableListOf<Triple<Long, Int, Boolean>>()
+		val tracker = PadTouchTracker { id, _, col, down -> delivered += Triple(id, col, down) }
+			.apply { setGrid(8, 8); slide = true }
+		tracker.down(17, 50f, 50f, 800, 800)
+		tracker.move(17, 150f, 50f, 800, 800)
+		tracker.up(17)
+		assertEquals(listOf(Triple(17L, 0, true), Triple(17L, 0, false), Triple(17L, 1, true), Triple(17L, 1, false)), delivered)
+	}
+
+	@Test
+	fun cancellingDeliversEveryHeldIdOnceAndAllowsItsReuseAfterLift() {
+		val delivered = mutableListOf<Pair<Long, Boolean>>()
+		val tracker = PadTouchTracker { id, _, _, down -> delivered += id to down }.apply { setGrid(8, 8) }
+		tracker.down(3, 50f, 50f, 800, 800)
+		tracker.down(9, 50f, 50f, 800, 800)
+		delivered.clear()
+		tracker.cancel()
+		assertEquals(setOf(3L to false, 9L to false), delivered.toSet())
+		assertEquals(2, delivered.size)
+		delivered.clear()
+		tracker.up(3)
+		tracker.up(9)
+		tracker.down(3, 50f, 50f, 800, 800)
+		tracker.up(3)
+		assertEquals(listOf(3L to true, 3L to false), delivered)
+	}
+
 	private data class Event(val x: Int, val y: Int, val down: Boolean)
 
 	private val events = mutableListOf<Event>()
 
 	// 8x8 grid of 100px pads: the centre of pad (x, y) is (y * 100 + 50, x * 100 + 50).
-	private fun tracker(slide: Boolean) = PadTouchTracker { x, y, down -> events += Event(x, y, down) }
+	private fun tracker(slide: Boolean) = PadTouchTracker { _, x, y, down -> events += Event(x, y, down) }
 		.apply { setGrid(8, 8); this.slide = slide }
 
 	private fun PadTouchTracker.down(id: Long, x: Int, y: Int) = down(id, y * 100 + 50f, x * 100 + 50f, 800, 800)

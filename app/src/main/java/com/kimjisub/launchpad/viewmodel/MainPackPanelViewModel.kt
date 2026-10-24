@@ -15,6 +15,7 @@ import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.splitties.browse
+import com.kimjisub.launchpad.tool.splitties.browsePackWebsite
 import com.kimjisub.launchpad.unipack.UniPack
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -101,7 +102,7 @@ class MainPackPanelViewModel(
 	}
 
 	fun websiteClick() {
-		unipack.website?.let { app.browse(it) }
+		unipack.website?.let { app.browsePackWebsite(it) }
 	}
 
 	fun youtubeClick() {

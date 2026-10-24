@@ -52,7 +52,7 @@ class PlayActivityViewModelControllerDetachTest {
 		vm.channelManager = ChannelManager(8, 8)
 		vm.soundRunner = sound
 		vm.scbFeedbackLight.setChecked(true)
-		screen = PadTouchTracker { x, y, down -> vm.padTouch(x, y, down) }.apply { setGrid(8, 8) }
+		screen = PadTouchTracker { pointerId, x, y, down -> vm.padTouch(x, y, down, pointerId) }.apply { setGrid(8, 8) }
 	}
 
 	private fun unplug() = vm.releaseControllerPads()

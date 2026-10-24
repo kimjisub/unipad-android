@@ -29,6 +29,8 @@ several. A full run contains these stable result names, in
 | A-03, OGG Vorbis | `oggIsHeardAtTheEmulatorOutput` |
 | A-04, AAC in M4A | `m4aIsHeardAtTheEmulatorOutput` |
 | A-05, MP3 with a WAV filename | `bareMp3NamedWavIsHeardAtTheEmulatorOutput` and `taggedMp3NamedWavIsHeardAtTheEmulatorOutput` |
+| Four-channel PCM WAV mixed to stereo | `quadWavIsHeardInStereo` |
+| 5.1 PCM WAV mixed to stereo | `surroundWavIsHeardInStereo` |
 
 The remaining cases check separated left/right channels, no press, an empty
 pressed pad, a silent file, a different pad, a held loop's release, and two pads
@@ -50,10 +52,38 @@ session. It loads this same fixed pack and injects a screen touch; it does not
 claim to verify external audio. External audio results come only from this host
 runner. Run the host suite separately before publishing changes affecting sound.
 
+## Next sound after loading
+
+`--loading-order` selects a separate single-case round,
+`nextSoundAfterLoadingIsHeard`. It retains all original fixture bytes and hashes,
+but the test APK writes and reports this runtime mapping on pad 0:
+
+```text
+1 1 1 pcm.wav
+1 1 1 left.wav
+```
+
+The test-only decoder gate holds both sounds while the real output stream is
+open. Once external recording is ready, a controller receive callback presses
+and releases the pad during loading. The gate then opens and real decoding
+finishes. Preparation reports must confirm loading before that press, no loading
+afterward, exactly one preparatory press, and the exact mapping above. The next
+sound filename is observed without asserting it, so the host can record the
+wrong turn as a confirmed failure. A missing or mismatched preparation is
+environment unconfirmed. The gate's 90-second guard bounds host startup only;
+preparation replies still have four seconds, like input replies.
+
+After the usual quiet separation, a real screen touch must produce the pinned
+pad-6 `left.wav` reference (B) and reject the pad-0 `pcm.wav` reference (A).
+All existing PCM windows, clock bounds and signal thresholds apply unchanged.
+This verifies emulator digital output after a simulated controller callback,
+not a physical USB controller or speaker. The default sixteen-case round and
+its original mapping are unchanged. `--case` cannot be combined with this mode.
+
 ## Original fixtures
 
-`make_audio_output_fixtures.py` creates ten original, one-second, 48 kHz stereo
-signals. All use the same envelope/chirp formula, with distinct pitches per pad
+`make_audio_output_fixtures.py` creates twelve original, one-second, 48 kHz stereo
+references. All use the same envelope/chirp formula, with distinct pitches per pad
 and channel, a 10 ms fade, and peak amplitude 0.16. The left-only, right-only and
 silent fixtures deliberately contain zero samples in specified channels. Each
 channel changes in frequency and amplitude over time, so a start-up click or a
@@ -64,7 +94,14 @@ zero-based), filenames, original reference WAVs, frequencies, hashes, exact
 encoding commands and ffmpeg version. The sounds and pack mapping live in the
 test APK's `assets/audio-output`. The host verifies reference and APK asset hashes, including the exact `info`
 and `keySound` mapping bytes, before testing. MP3 filenames with and without ID3 tags are separate fixtures.
-Fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
+The last two source WAVs have four and six channels and explicit speaker masks.
+The quad source repeats each reference channel in its front and rear speaker;
+the 5.1 source carries the reference in the surrounds at the inverse down-mix gain.
+They must reproduce their stereo references through the real decoder and mixer.
+`python3 scripts/make_audio_output_fixtures.py --multichannel-only` regenerates
+only these two sources, references and their mapping without re-encoding earlier files.
+
+Full fixture authoring requires ffmpeg with MP3, experimental native Vorbis and AAC
 encoders; running the detector requires only Python's standard library.
 
 The managed recorder directory must also provide `android_clock.py`. The runner

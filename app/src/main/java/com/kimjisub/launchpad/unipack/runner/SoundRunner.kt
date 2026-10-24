@@ -6,6 +6,7 @@ import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.struct.Sound
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -42,6 +43,20 @@ class SoundRunner(
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
+	class NoPlayableSoundsException : IllegalStateException("This pack has no playable sound files")
+
+	class AudioOutputUnavailableException : RuntimeException("Failed to open audio output")
+
+	private val wormholeLock = Any()
+	private val wormholeJobs = mutableSetOf<Job>()
+	private var applyingWormhole = false // guarded by wormholeLock
+	private val cancelWormholesOnChainSelection: (Int, Int) -> Unit = { _, _ ->
+		synchronized(wormholeLock) {
+			// A scheduled wormhole must not cancel the other wormholes in the same chord.
+			if (!applyingWormhole) cancelPendingWormholes()
+		}
+	}
+
 	interface LoadingListener {
 		fun onStart(soundCount: Int)
 		fun onProgressTick()
@@ -76,15 +91,17 @@ class SoundRunner(
 	}
 
 	init {
+		chain.addSelectionObserver(cancelWormholesOnChainSelection)
 		val table = unipack.soundTable
-		var soundCount = 0
+		// Take references before playback can rotate a pad's mapping during asynchronous loading.
+		val soundsToLoad = mutableListOf<Sound>()
 		if (table != null) {
 			for (i in 0 until unipack.chain)
 				for (j in 0 until unipack.buttonX)
 					for (k in 0 until unipack.buttonY)
-						if (table[i][j][k] != null)
-							soundCount += table[i][j][k]?.size ?: 0
+						for (sound in table[i][j][k] ?: continue) soundsToLoad.add(sound)
 		}
+		val soundCount = soundsToLoad.size
 
 		Log.play("soundCount: $soundCount")
 
@@ -110,23 +127,15 @@ class SoundRunner(
 					}
 				}
 				if (!started) {
-					throw RuntimeException("Failed to start Oboe audio engine")
+					throw AudioOutputUnavailableException()
 				}
 
 				// Phase 1: Collect all unique files and map sounds to them
-				val allSounds = mutableListOf<Sound>()
+				val allSounds = soundsToLoad
 				val uniqueFiles = LinkedHashMap<String, MutableList<Sound>>()
-				if (table != null) {
-					for (i in 0 until unipack.chain)
-						for (j in 0 until unipack.buttonX)
-							for (k in 0 until unipack.buttonY) {
-								val sounds = table[i][j][k] ?: continue
-								for (sound in sounds) {
-									allSounds.add(sound)
-									val key = sound.file.absolutePath
-									uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
-								}
-							}
+				for (sound in allSounds) {
+					val key = sound.file.absolutePath
+					uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
 				}
 
 				Log.play("uniqueFiles: ${uniqueFiles.size} / totalSounds: ${allSounds.size}")
@@ -165,6 +174,8 @@ class SoundRunner(
 				}
 
 				ensureActive()
+				// Light-only packs have no audio to fail; reject actual files only when none loaded.
+				if (allSounds.isNotEmpty() && allSounds.none { it.id >= 0 }) throw NoPlayableSoundsException()
 				loadingListener.onEnd()
 			} catch (e: CancellationException) {
 				// destroy() cancelled the load; this is not a loading failure to report.
@@ -178,7 +189,7 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOn(x: Int, y: Int) {
+	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true) {
 		val restarted = stopKey[chain.value][x][y]
 		engine.stopVoice(restarted)
 		// A press made on another chain while the pad is still held replaces its key below; stop
@@ -186,26 +197,38 @@ class SoundRunner(
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
 		heldLoop[x][y] = 0
 		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
-		// A press made before this sound finished loading leaves the pad and the chain as they are.
-		if (sound.id == Sound.NOT_LOADED) return
-		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
-		// moves on to its next sound and still follows the sound's chain move.
-		if (sound.id != Sound.UNDECODABLE) {
+		// An unavailable sound keeps only its own turn silent, including during loading: the pad
+		// still moves on to its next sound and still follows the sound's chain move.
+		if (sound.id >= 0) {
 			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
 				volumeR = 1.0f,
-				loop = sound.loop,
+				// The native engine uses an Int; every negative count except -1 plays once.
+				loop = sound.loop.coerceAtLeast(Int.MIN_VALUE.toLong()).toInt(),
 			)
 			stopKey[chain.value][x][y] = key
-			heldLoop[x][y] = if (sound.loop == -1) key else 0
+			heldLoop[x][y] = if (sound.loop == -1L) key else 0
 		}
 		unipack.soundPush(chain.value, x, y)
-		if (sound.wormhole != Sound.NO_WORMHOLE)
-			scope.launch(Dispatchers.Main) {
+		// Auto play has its own chain commands; live input alone schedules the delayed move.
+		if (followWormhole && sound.wormhole != Sound.NO_WORMHOLE) {
+			val move = scope.launch(Dispatchers.Main, start = CoroutineStart.LAZY) {
 				delay(100)
-				chain.value = sound.wormhole
+				synchronized(wormholeLock) {
+					ensureActive()
+					applyingWormhole = true
+					try {
+						chain.value = sound.wormhole
+					} finally {
+						applyingWormhole = false
+					}
+				}
 			}
+			synchronized(wormholeLock) { wormholeJobs.add(move) }
+			move.invokeOnCompletion { synchronized(wormholeLock) { wormholeJobs.remove(move) } }
+			move.start()
+		}
 	}
 
 	fun soundOff(x: Int, y: Int) {
@@ -217,6 +240,7 @@ class SoundRunner(
 
 	/** Silences every voice, including infinite loops, while keeping the stream and sounds loaded. */
 	fun stopAll() {
+		cancelPendingWormholes()
 		if (engineStarted) engine.stopAllVoices()
 	}
 
@@ -226,6 +250,7 @@ class SoundRunner(
 	 * thread. Loaded sounds stay in the engine, so [resumeStream] plays again without reloading.
 	 */
 	fun pauseStream() {
+		cancelPendingWormholes()
 		synchronized(engineLock) {
 			if (destroyed || streamPaused) return
 			streamPaused = true
@@ -241,7 +266,18 @@ class SoundRunner(
 		}
 	}
 
+	/** Drops chain moves whose originating playback or chain selection is no longer current. */
+	fun cancelPendingWormholes() {
+		synchronized(wormholeLock) {
+			val pending = wormholeJobs.toList()
+			wormholeJobs.clear()
+			pending.forEach { it.cancel() }
+		}
+	}
+
 	fun destroy() {
+		cancelPendingWormholes()
+		chain.removeSelectionObserver(cancelWormholesOnChainSelection)
 		loadJob.cancel()
 		synchronized(engineLock) {
 			if (destroyed) return

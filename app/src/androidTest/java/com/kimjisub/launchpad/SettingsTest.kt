@@ -52,6 +52,48 @@ class SettingsTest : BaseUITest() {
     }
 
     @Test
+    fun testMissingTapOrderChoiceShowsNumbersWithoutSaving() {
+        withTapOrderChoice(null) {
+            repeat(2) {
+                launchToMainScreen()
+                openSettings()
+                takeScreenshot("tap_order_missing_choice_$it")
+                assertTrue("An absent choice should show numbers", settingChecked(R.string.trace_log_classic))
+                assertTrue("Opening settings saved a default", !context.getSharedPreferences("data", 0).contains("TraceLogClassic"))
+            }
+        }
+    }
+
+    @Test
+    fun testBothTapOrderChoicesSurviveSettingsReopening() {
+        for (stored in listOf(false, true)) withTapOrderChoice(stored) {
+            repeat(2) {
+                launchToMainScreen()
+                openSettings()
+                assertEquals("Stored tap order choice changed", stored, settingChecked(R.string.trace_log_classic))
+                assertEquals(stored, prefs.traceLogClassic)
+                takeScreenshot("tap_order_stored_${stored}_$it")
+            }
+        }
+    }
+
+    private fun withTapOrderChoice(value: Boolean?, action: () -> Unit) {
+        val data = context.getSharedPreferences("data", 0)
+        val original = if (data.contains("TraceLogClassic")) data.getBoolean("TraceLogClassic", false) else null
+        fun store(choice: Boolean?) {
+            val editor = data.edit()
+            if (choice == null) editor.remove("TraceLogClassic") else editor.putBoolean("TraceLogClassic", choice)
+            assertTrue("Could not store test preference", editor.commit())
+        }
+        try {
+            store(value)
+            action()
+        } finally {
+            store(original)
+        }
+    }
+
+    @Test
     fun testSettingsModification() {
         val original = prefs.traceLogClassic
         try {
@@ -250,12 +292,13 @@ class SettingsTest : BaseUITest() {
             assertSettingsStillOpen("GitHub")
 
             device.findObject(By.text(str(R.string.community))).click()
-            val list = device.wait(
-                Until.findObject(By.scrollable(true).hasDescendant(By.text(str(R.string.officialHomepage)))),
-                5000L
-            )
-            assertNotNull("Community list not found", list)
-            val email = list!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.email))))
+            val homepage = By.text(str(R.string.officialHomepage))
+            assertTrue("Community list not found", device.wait(Until.hasObject(homepage), 5000L))
+            // The list scrolls only when its items do not fit; on a large screen they all show at once.
+            val emailItem = By.text(str(R.string.email))
+            val email = device.findObject(emailItem)
+                ?: device.findObject(By.scrollable(true).hasDescendant(homepage))
+                    ?.scrollUntil(Direction.DOWN, Until.findObject(emailItem))
             assertNotNull("Community e-mail item not found", email)
             email!!.click()
             takeScreenshot("settings_email_without_mail_app")

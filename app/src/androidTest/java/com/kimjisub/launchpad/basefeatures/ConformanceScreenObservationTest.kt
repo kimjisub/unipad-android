@@ -5,7 +5,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kimjisub.design.view.ChainView
 import com.kimjisub.launchpad.TestCaptures
-import com.kimjisub.launchpad.viewmodel.PlayMode
+import com.kimjisub.launchpad.R
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertTrue
@@ -16,12 +16,12 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Raw device evidence, not a normalized conformance verdict. Fingers enter through window dispatch,
  * MIDI through the actual Launchpad driver, chains through their on-screen buttons, and auto play
- * through the live screen's view model and listeners. The native audio output is replaced by
+ * through the actual on-screen option and listeners. The native audio output is replaced by
  * RecordingAudio; its actual decoder and the app's sound/LED runners are retained.
  *
  * A successful JUnit check means the recorder completed, never that the corpus case passed. Each
  * saved case remains unverified: real-time snapshots cannot certify the corpus's virtual-clock
- * event ordering, and auto-play option gestures are not injected. Timestamps expose deadlines
+ * event ordering. Timestamps expose deadlines
  * crossed during window input rather than quietly treating those as the specified 20/50 ms steps.
  */
 @RunWith(AndroidJUnit4::class)
@@ -58,7 +58,7 @@ class ConformanceScreenObservationTest : PlaybackScreenTest() {
             .put("corpusSha256", digest)
             .put("status", "unverified")
             .put("nativeAudioOutput", false).put("nativeDecoder", true)
-            .put("detail", "Real screen snapshots; event order and auto-play option gestures are not certified")
+            .put("detail", "Real screen snapshots; event order is not certified")
             .put("steps", steps).put("snapshots", snapshots)
         var complete = false
         try {
@@ -111,8 +111,20 @@ class ConformanceScreenObservationTest : PlaybackScreenTest() {
                         delivered.put("pointerId", pointer)
                         fingers.up(pointer)
                     }
-                    "autoplay" -> screen.onMain { vm.switchPlayMode(PlayMode.AutoPlay) }
-                    "autoplayOff" -> screen.onMain { vm.switchPlayMode(PlayMode.None) }
+                    "autoplay", "autoplayOff" -> {
+                        screen.chooseOption(R.string.autoPlay)
+                        if (pointerIds.isNotEmpty()) {
+                            // UiDevice option taps form a new gesture. They cannot preserve the
+                            // held gesture this scenario requires, so never invent its later lift.
+                            val limitation = "Opening auto-play options replaced the held touch gesture; the remaining overlap scenario was not executed"
+                            delivered.put("limitation", limitation)
+                                .put("completedMs", SystemClock.elapsedRealtime() - started)
+                            report.put("detail", limitation)
+                            fingers.forgetCancelled()
+                            pointerIds.clear()
+                            break
+                        }
+                    }
                     "advance" -> SystemClock.sleep(step.getLong("ms"))
                     "observe" -> {
                         val snapshot = screen.onMain {
@@ -139,7 +151,8 @@ class ConformanceScreenObservationTest : PlaybackScreenTest() {
                 delivered.put("completedMs", SystemClock.elapsedRealtime() - started)
             }
             screen.capture("conformance-$id")
-            complete = true
+            complete = steps.length() == scenario.length() &&
+                (0 until steps.length()).none { steps.getJSONObject(it).has("limitation") }
         } finally {
             // Save partial evidence even if injection or the activity failed, before cleanup changes it.
             report.put("completed", complete)

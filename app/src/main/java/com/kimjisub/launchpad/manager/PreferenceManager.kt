@@ -63,7 +63,7 @@ class PreferenceManager(
 
 	/** Classic trace log: tap order as numbers on each pad (the pre-4.1 look) instead of the line-and-dot overlay. */
 	var traceLogClassic: Boolean
-		get() = pref.getBoolean(KEY_TRACE_LOG_CLASSIC, false)
+		get() = pref.getBoolean(KEY_TRACE_LOG_CLASSIC, true)
 		set(value) {
 			pref.edit {
 				putBoolean(KEY_TRACE_LOG_CLASSIC, value)

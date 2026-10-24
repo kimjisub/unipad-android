@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import com.kimjisub.design.R as DesignR
+import com.kimjisub.design.view.PadView
 import com.kimjisub.launchpad.BuildConfig
 import com.kimjisub.launchpad.R.color
 import com.kimjisub.launchpad.R.drawable
@@ -53,6 +55,17 @@ class DefaultThemeResources(
 			optionWindow = ResourcesCompat.getColor(res, color.option_window, null)
 			optionWindowCheckbox = ResourcesCompat.getColor(res, color.option_window_checkbox, null)
 		}
+	}
+}
+
+fun IThemeResources.applyTraceLogTextStyle(pad: PadView) {
+	if (this is DefaultThemeResources) {
+		pad.setTraceLogTextColor(
+			pad.context.getColor(DesignR.color.trace_log_numbers),
+			pad.context.getColor(DesignR.color.trace_log_numbers_shadow),
+		)
+	} else {
+		pad.setTraceLogTextColor(traceLog ?: pad.context.getColor(color.trace_log))
 	}
 }
 
