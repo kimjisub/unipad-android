@@ -902,9 +902,12 @@ class PlayActivityViewModel(
 	fun autoPlayResume() {
 		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
+		// Continuous practice keeps its pending guides and chain wait across a pause.
+		if (!runner.practiceGuide || runner.stepMode) {
+			runner.resetStepState()
+			autoPlayRemoveGuide()
+		}
 		runner.stepMode = false
-		runner.resetStepState()
-		autoPlayRemoveGuide()
 		resetPadsAfterAutoPlay()
 		runner.playmode = true
 		isAutoPlayPlaying = true
@@ -917,10 +920,10 @@ class PlayActivityViewModel(
 		val runner = autoPlayRunner ?: return
 		runner.playmode = false
 		resetPadsAfterAutoPlay()
-		isAutoPlayPlaying = false
 		if (playMode == PlayMode.StepPractice) {
 			runner.stepMode = true
 		}
+		isAutoPlayPlaying = false
 	}
 
 	fun autoPlayPrev() {
@@ -1029,7 +1032,9 @@ class PlayActivityViewModel(
 				}
 
 				override fun onGuidePadOn(x: Int, y: Int, targetWallTimeMs: Long) {
-					viewModelScope.launch { autoPlayGuidePad(x, y, true, targetWallTimeMs) }
+					viewModelScope.launch {
+						if (created === autoPlayRunner) autoPlayGuidePad(x, y, true, targetWallTimeMs)
+					}
 				}
 
 				override fun onGuidePadOff(x: Int, y: Int) {
@@ -1046,6 +1051,7 @@ class PlayActivityViewModel(
 
 				override fun onGuideChainOn(c: Int) {
 					viewModelScope.launch {
+						if (created !== autoPlayRunner) return@launch
 						channelManager.add(-1, CHAIN_INDEX_OFFSET + c, Channel.GUIDE, ChannelManager.NO_COLOR, LED_ORANGE)
 						uiCallback?.setLedChain(CHAIN_INDEX_OFFSET + c)
 					}

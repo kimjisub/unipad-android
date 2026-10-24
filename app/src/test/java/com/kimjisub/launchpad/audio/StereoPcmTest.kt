@@ -2,10 +2,50 @@ package com.kimjisub.launchpad.audio
 
 import android.media.AudioFormat
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
 
 class StereoPcmTest {
+    @Test fun nativeQuadAndSurroundMasksBecomeOutputMasks() {
+        assertEquals(AudioFormat.CHANNEL_OUT_QUAD, decoderChannelMask(4, 0x33))
+        assertEquals(AudioFormat.CHANNEL_OUT_5POINT1, decoderChannelMask(6, 0x3f))
+    }
+
+    @Test fun javaQuadAndSurroundMasksAreNotShiftedAgain() {
+        assertEquals(AudioFormat.CHANNEL_OUT_QUAD, decoderChannelMask(4, AudioFormat.CHANNEL_OUT_QUAD))
+        assertEquals(AudioFormat.CHANNEL_OUT_5POINT1, decoderChannelMask(6, AudioFormat.CHANNEL_OUT_5POINT1))
+    }
+
+    @Test fun nativeAndJavaSideSurroundMasksKeepTheirSpeakerPositions() {
+        val mask = AudioFormat.CHANNEL_OUT_STEREO or AudioFormat.CHANNEL_OUT_FRONT_CENTER or
+            AudioFormat.CHANNEL_OUT_LOW_FREQUENCY or AudioFormat.CHANNEL_OUT_SIDE_LEFT or AudioFormat.CHANNEL_OUT_SIDE_RIGHT
+        assertEquals(mask, decoderChannelMask(6, mask))
+        assertEquals(mask, decoderChannelMask(6, mask ushr 2))
+    }
+
+    @Test fun aMaskWithoutBothFrontSpeakersFallsBackToTheChannelCount() {
+        assertEquals(0, decoderChannelMask(4, 0xd4))
+        assertArrayEquals(shortArrayOf(0, 5000), stereoPcm(shortArrayOf(0, 0, 0, 10000), 4, decoderChannelMask(4, 0xd4)))
+    }
+
+    @Test fun anUnsupportedOrMismatchedDecoderMaskUsesTheChannelCount() {
+        assertEquals(0, decoderChannelMask(6, Int.MIN_VALUE))
+        assertEquals(0, decoderChannelMask(6, AudioFormat.CHANNEL_OUT_QUAD))
+        assertEquals(0, decoderChannelMask(6, 0))
+    }
+
+    @Test fun surroundDecoderMasksKeepTheCenterInsteadOfUsingDiscreteChannels() {
+        for (mask in listOf(0x3f, AudioFormat.CHANNEL_OUT_5POINT1)) {
+            assertArrayEquals(shortArrayOf(7071, 7071), stereoPcm(shortArrayOf(0, 0, 10000, 0, 0, 0), 6, decoderChannelMask(6, mask)))
+        }
+    }
+
+    @Test fun aTrailingStereoSampleKeepsTheExistingBuffer() {
+        val pcm = shortArrayOf(1, 2, 3)
+        assertSame(pcm, stereoPcm(pcm, 2))
+    }
+
     @Test fun monoSamplesStayUnchanged() {
         val pcm = shortArrayOf(1, -2, Short.MIN_VALUE, Short.MAX_VALUE)
         assertSame(pcm, stereoPcm(pcm, 1))

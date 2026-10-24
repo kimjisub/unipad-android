@@ -27,6 +27,51 @@ class MultichannelDecodeDeviceTest {
 
     @Test fun surroundWavBecomesStereoWithoutChangingFrameCount() = checkSpeakers(6, 0x3f)
 
+    @Test fun quadAacKeepsEverySpeaker() = checkAacSpeakers(4, "quad")
+
+    @Test fun surroundAacKeepsCenterAndRearSpeakers() = checkAacSpeakers(6, "surround")
+
+    private fun checkAacSpeakers(channels: Int, name: String) {
+        val source = dir.newFile("$name.m4a")
+        instrumentation.context.assets.open("audio-multichannel/$name.m4a").use { input ->
+            source.outputStream().use { output -> input.copyTo(output) }
+        }
+        val decoded = checkNotNull(OboeAudioEngine.decodeOnly(source))
+        assertEquals(2, decoded.channels)
+        assertEquals(44100, decoded.sampleRate)
+        assertTrue(decoded.numFrames in (22050 * channels)..(22050 * channels + 2048))
+        val observed = (0 until channels).map { speaker ->
+            // Stay clear of AAC priming and the transitions between isolated speakers.
+            DoubleArray(2) { side ->
+                val start = speaker * 22050 + 7000
+                sqrt((start until start + 8820).sumOf { frame ->
+                    val value = decoded.pcm[frame * 2 + side].toDouble()
+                    value * value
+                } / 8820)
+            }
+        }
+        assertTrue(TestCaptures.save(device, "audio-downmix/$name-aac-observed.txt") {
+            it.writeText("channels=${decoded.channels}\nframes=${decoded.numFrames}\n" +
+                observed.mapIndexed { i, rms -> "speaker=$i rms=${rms.toList()}" }.joinToString("\n")); true
+        })
+        assertTrue(TestCaptures.save(device, "audio-downmix/$name-aac-decoded.wav") {
+            writeWave(it, decoded.pcm, 2, 3); true
+        })
+        val gains = if (channels == 4) listOf(
+            0.5 to 0.0, 0.0 to 0.5, 0.5 to 0.0, 0.0 to 0.5,
+        ) else listOf(
+            1.0 to 0.0, 0.0 to 1.0, sqrt(0.5) to sqrt(0.5),
+            0.0 to 0.0, sqrt(0.5) to 0.0, 0.0 to sqrt(0.5),
+        )
+        for ((speaker, rms) in observed.withIndex()) {
+            for (side in 0..1) {
+                val gain = if (side == 0) gains[speaker].first else gains[speaker].second
+                val expected = 6553 / sqrt(2.0) * gain
+                assertEquals("$name AAC speaker $speaker side $side", expected, rms[side], 400.0)
+            }
+        }
+    }
+
     private fun checkSpeakers(channels: Int, waveMask: Int) {
         val frames = 4096
         val pcm = ShortArray(frames * channels) { i ->

@@ -59,4 +59,17 @@ class PracticeProgressTest : PlaybackScreenTest() {
         assertEquals("Seeking must guide the upcoming pad at the new song time", setOf(9), hints())
         assertFalse(screen.onMain { screen.vm().autoPlayProgress >= screen.vm().autoPlayProgressMax })
     }
+
+    @Test fun resumingPracticeKeepsTheUpcomingScreenHint() {
+        File(screen.pack(), "autoPlay").writeText("delay 700\ntouch 1 1\ndelay 60000\n")
+        screen.openPlay()
+        screen.onMain { screen.vm().switchPlayMode(PlayMode.GuidePlay) }
+        screen.await("The upcoming guide did not appear") { hints() == setOf(0) }
+        screen.onMain { screen.vm().autoPlayPause() }
+        record("practice-paused-upcoming-hint")
+        SystemClock.sleep(1200)
+        screen.onMain { screen.vm().autoPlayResume() }
+        record("practice-resumed-upcoming-hint")
+        assertEquals("The still upcoming guide must remain visible after resume", setOf(0), hints())
+    }
 }

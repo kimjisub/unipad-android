@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -63,6 +64,20 @@ class PlayActivityViewModelGuideOwnershipTest {
         if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
         main.runAll()
         Dispatchers.resetMain()
+    }
+
+    @Test fun oldPadOnDoesNotLeaveAHintAfterReplacement() {
+        oldListener.onGuidePadOn(1, 1, 60000)
+        oldListener.onGuidePadOff(1, 1)
+        main.runAll()
+        assertNull(vm.channelManager.get(1, 1))
+    }
+
+    @Test fun oldChainOnDoesNotLeaveAHintAfterReplacement() {
+        oldListener.onGuideChainOn(1)
+        oldListener.onRemoveGuide()
+        main.runAll()
+        assertNull(vm.channelManager.get(-1, PlayActivityViewModel.CHAIN_INDEX_OFFSET + 1))
     }
 
     @Test fun oldPadReleaseDoesNotRemoveTheNewPracticeHint() {

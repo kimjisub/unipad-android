@@ -189,9 +189,8 @@ object OboeAudioEngine {
 			val finalPcm = if (pcm.size == totalSamples) pcm else pcm.copyOf(totalSamples)
 			val numFrames = totalSamples / channels
 			if (numFrames <= 0) return null
-			// MediaCodec exposes native speaker bits (FL = 1); AudioFormat's output bits start
-			// at FL = 4. This is AudioFormat.convertNativeChannelMaskToOutMask's conversion.
-			return DecodedAudio(stereoPcm(finalPcm, channels, channelMask shl 2), numFrames, minOf(channels, 2), sampleRate)
+			return DecodedAudio(stereoPcm(finalPcm, channels, decoderChannelMask(channels, channelMask)),
+				numFrames, minOf(channels, 2), sampleRate)
 			} finally {
 				// Released on every path; a codec leaked per failed file exhausted the device's
 				// codec instances and made every later sound fail to load.

@@ -483,6 +483,13 @@ class AutoPlayRunner(
 		if (beforeStartPlaying) {
 			beforeStartPlaying = false
 			listener.onRemoveGuide()
+			// Rebuild after the screen cleanup, using the same postponed deadlines as the LEDs.
+			val now = SystemClock.elapsedRealtime()
+			synchronized(activeGuides) {
+				for ((key, target) in activeGuides) {
+					if (target > now) listener.onGuidePadOn(key / 256, key % 256, target)
+				}
+			}
 		}
 	}
 
