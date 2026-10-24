@@ -313,7 +313,7 @@ class AutoPlayRunner(
 									skipIdleTime(currTime)
 								}
 							} else {
-								beforeStartPlaying()
+								beforeStartPlaying(currTime)
 
 								// Guide lookahead
 								if (practiceGuide) {
@@ -479,12 +479,11 @@ class AutoPlayRunner(
 		resetStepState()
 	}
 
-	private fun beforeStartPlaying() {
+	private fun beforeStartPlaying(now: Long) {
 		if (beforeStartPlaying) {
 			beforeStartPlaying = false
 			listener.onRemoveGuide()
 			// Rebuild after the screen cleanup, using the same postponed deadlines as the LEDs.
-			val now = SystemClock.elapsedRealtime()
 			synchronized(activeGuides) {
 				for ((key, target) in activeGuides) {
 					if (target > now) listener.onGuidePadOn(key / 256, key % 256, target)

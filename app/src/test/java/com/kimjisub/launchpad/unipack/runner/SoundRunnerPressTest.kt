@@ -88,6 +88,29 @@ class SoundRunnerPressTest {
 	}
 
 	@Test
+	fun rotatingThePadWhileFilesAreCollectedDoesNotBreakLoading() {
+		val collecting = CountDownLatch(1)
+		val proceed = CountDownLatch(1)
+		val first = object : File("a.wav") {
+			override fun getAbsolutePath(): String {
+				collecting.countDown()
+				check(proceed.await(10, TimeUnit.SECONDS))
+				return super.getAbsolutePath()
+			}
+		}
+		val loaded = start(listOf(Sound(first, loop = 0), Sound(File("b.wav"), loop = 0)), RecordingSoundEngine())
+		try {
+			assertTrue("The loader did not begin collecting files", collecting.await(10, TimeUnit.SECONDS))
+			tap()
+		} finally {
+			proceed.countDown()
+		}
+		loaded.await()
+		tap()
+		assertEquals(listOf("b.wav" to 0), engine.plays)
+	}
+
+	@Test
 	fun releasingAnInfiniteLoopFollowedByAOneShot_stopsTheLoop() {
 		load(listOf(Sound(File("a.wav"), loop = -1), Sound(File("b.wav"), loop = 0)))
 

@@ -93,14 +93,15 @@ class SoundRunner(
 	init {
 		chain.addSelectionObserver(cancelWormholesOnChainSelection)
 		val table = unipack.soundTable
-		var soundCount = 0
+		// Take references before playback can rotate a pad's mapping during asynchronous loading.
+		val soundsToLoad = mutableListOf<Sound>()
 		if (table != null) {
 			for (i in 0 until unipack.chain)
 				for (j in 0 until unipack.buttonX)
 					for (k in 0 until unipack.buttonY)
-						if (table[i][j][k] != null)
-							soundCount += table[i][j][k]?.size ?: 0
+						for (sound in table[i][j][k] ?: continue) soundsToLoad.add(sound)
 		}
+		val soundCount = soundsToLoad.size
 
 		Log.play("soundCount: $soundCount")
 
@@ -130,19 +131,11 @@ class SoundRunner(
 				}
 
 				// Phase 1: Collect all unique files and map sounds to them
-				val allSounds = mutableListOf<Sound>()
+				val allSounds = soundsToLoad
 				val uniqueFiles = LinkedHashMap<String, MutableList<Sound>>()
-				if (table != null) {
-					for (i in 0 until unipack.chain)
-						for (j in 0 until unipack.buttonX)
-							for (k in 0 until unipack.buttonY) {
-								val sounds = table[i][j][k] ?: continue
-								for (sound in sounds) {
-									allSounds.add(sound)
-									val key = sound.file.absolutePath
-									uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
-								}
-							}
+				for (sound in allSounds) {
+					val key = sound.file.absolutePath
+					uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
 				}
 
 				Log.play("uniqueFiles: ${uniqueFiles.size} / totalSounds: ${allSounds.size}")
