@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -82,6 +83,7 @@ class AutoPlayRunner(
 	// The UI publishes a target; only the loop rebases its clock and guide state.
 	private data class Seek(val index: Int, val wallTimeMs: Long, val pausedMs: Long)
 	private val pendingSeek = AtomicReference<Seek?>(null)
+	private val pendingResume = AtomicBoolean(false)
 	val progress: Int
 		get() = progressValue.get()
 
@@ -226,10 +228,11 @@ class AutoPlayRunner(
 					}
 					var currTime = startTime
 					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
-					while ((progress < autoPlay.elements.size || pendingSeek.get() != null ||
+					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() ||
 						stepMode && practiceGuide && hasPendingStep() || hasPendingDelay()) && isActive) {
 						val seek: Seek?
 						val playing: Boolean
+						val resuming: Boolean
 						synchronized(progressValue) {
 							seek = pendingSeek.getAndSet(null)
 							// A step scan or command pass may have moved on from the target after the
@@ -238,9 +241,17 @@ class AutoPlayRunner(
 							// Read the mode with the request, so a pause before the UI's seek
 							// cannot be mistaken for the playing state from an earlier tick.
 							playing = playmode
+							resuming = playing && pendingResume.getAndSet(false)
 						}
 						val target = seek?.index ?: if (playing && rebaseSeekOnResume) progress else null
 						currTime = SystemClock.elapsedRealtime()
+						if (resuming) {
+							// Reset on the worker after it observes timed playback, never between
+							// the UI clearing a pending step and turning the playback flag on.
+							clearStepProgress()
+							waitingForChain = -1
+							waitStartTime = currTime
+						}
 						if (target != null) {
 							// Step practice can advance after a paused seek. On resume, align to
 							// that current position, without replaying the seek or resetting its steps.
@@ -479,8 +490,20 @@ class AutoPlayRunner(
 		job?.cancel()
 		job = null
 		pendingSeek.set(null)
+		pendingResume.set(false)
 		clearGuides()
 		resetStepState()
+	}
+
+	/** Publishes a complete timed resume before waking the loop that owns pending steps. */
+	fun resume() {
+		synchronized(progressValue) {
+			pendingResume.set(true)
+			beforeStartPlaying = true
+			stepMode = false
+			playmode = true
+		}
+		wake()
 	}
 
 	private fun beforeStartPlaying(now: Long) {

@@ -902,17 +902,10 @@ class PlayActivityViewModel(
 	fun autoPlayResume() {
 		log("autoPlayResume")
 		val runner = autoPlayRunner ?: return
-		// Leaving step practice clears its pending input before timed playback resumes.
-		if (!runner.practiceGuide || runner.stepMode) {
-			runner.resetStepState()
-			autoPlayRemoveGuide()
-		}
-		runner.stepMode = false
 		resetPadsAfterAutoPlay()
-		runner.playmode = true
 		isAutoPlayPlaying = true
 		restorePlaybackLights()
-		runner.beforeStartPlaying = true
+		runner.resume()
 	}
 
 	fun autoPlayPause() {
