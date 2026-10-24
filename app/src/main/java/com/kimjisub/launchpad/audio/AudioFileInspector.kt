@@ -5,6 +5,8 @@ import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 
+internal val AAC_SAMPLE_RATES = intArrayOf(96_000,88_200,64_000,48_000,44_100,32_000,24_000,22_050,16_000,12_000,11_025,8_000,7_350)
+
 /** Reads physical audio structure, never a player's advertised duration or a file extension. */
 object AudioFileInspector {
     fun inspect(file: File): AudioInspection = try {
@@ -301,7 +303,7 @@ private fun inspectAdts(d: AudioData, start: Long, end: Long): AudioFileFacts {
     var frames = 0L
     var rate = 0
     var channels = 0
-    val rates = intArrayOf(96_000,88_200,64_000,48_000,44_100,32_000,24_000,22_050,16_000,12_000,11_025,8_000,7_350)
+    val rates = AAC_SAMPLE_RATES
     while (at < end) {
         d.range(at, 7, end)
         audioRequire(d.byte(at) == 255 && d.byte(at + 1) and 0xf6 == 0xf0)

@@ -46,6 +46,16 @@ class AudioSafetyTest {
         }
     }
 
+    @Test fun forgedAlacTimelineCannotBypassTheDurationLimit() {
+        val file = temporary.newFile("forged.m4a")
+        javaClass.getResourceAsStream("/audio-safety/short-table-alac-48000-2-long.m4a")!!.use { input ->
+            file.outputStream().use(input::copyTo)
+        }
+        val result = AudioFileInspector.inspect(file)
+        assertTrue("$result", result is AudioInspection.Readable)
+        assertEquals(AudioExclusion.DURATION, AudioSafety.cost((result as AudioInspection.Readable).facts).exclusion)
+    }
+
     @Test fun realWavDataDeterminesDurationAndPartialBlocksAreNotCounted() {
         // Sparse PCM data is real zero-valued audio; no giant allocation or checked-in blob.
         for ((seconds, displayed) in listOf(5 to 700, 700 to 60)) {

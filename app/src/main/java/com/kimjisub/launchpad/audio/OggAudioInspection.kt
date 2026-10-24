@@ -115,7 +115,7 @@ internal fun inspectOgg(d: AudioData): AudioFileFacts {
                 } else {
                     if (opus) {
                         audioRequire(packet.size > 0)
-                        lastPacketFrames = opusPacketFrames(packet, opusStreams).toLong()
+                        lastPacketFrames = opusPacketFrames(packet.size, opusStreams, packet::byte).toLong()
                         calculated = audioAdd(calculated, lastPacketFrames)
                     } else {
                         val bits = packet.bits()
@@ -245,11 +245,11 @@ private fun vorbisModes(packet: AudioPacket, channels: Int): BooleanArray {
 }
 
 /** Validate each stream's Opus framing. All but the final stream are self-delimited. */
-private fun opusPacketFrames(packet: AudioPacket, streams: Int): Int {
+internal fun opusPacketFrames(size: Long, streams: Int, byte: (Long) -> Int): Int {
     var pos = 0L
     var duration = 0
     repeat(streams) { stream ->
-        val toc = packet.byte(pos++)
+        val toc = byte(pos++)
         val configuration = toc ushr 3
         val frameSamples = when {
             configuration >= 16 -> 120 shl (configuration and 3)
@@ -262,15 +262,15 @@ private fun opusPacketFrames(packet: AudioPacket, streams: Int): Int {
         var vbr = code == 2
         var padding = 0L
         if (code == 3) {
-            val control = packet.byte(pos++)
+            val control = byte(pos++)
             count = control and 63; vbr = control and 128 != 0
             audioRequire(count in 1..48)
             if (control and 64 != 0) {
                 var next: Int
                 do {
-                    next = packet.byte(pos++)
+                    next = byte(pos++)
                     padding = audioAdd(padding, if (next == 255) 254 else next.toLong())
-                    audioRequire(padding <= packet.size - pos)
+                    audioRequire(padding <= size - pos)
                 } while (next == 255)
             }
         }
@@ -278,8 +278,8 @@ private fun opusPacketFrames(packet: AudioPacket, streams: Int): Int {
         val samples = frameSamples * count
         audioRequire(duration == 0 || duration == samples); duration = samples
         fun length(): Int {
-            val first = packet.byte(pos++)
-            return if (first < 252) first else first + 4 * packet.byte(pos++)
+            val first = byte(pos++)
+            return if (first < 252) first else first + 4 * byte(pos++)
         }
         var known = 0L
         if (vbr) repeat(count - 1) { known = audioAdd(known, length().toLong()) }
@@ -288,15 +288,15 @@ private fun opusPacketFrames(packet: AudioPacket, streams: Int): Int {
             val last = length().toLong()
             if (vbr) audioAdd(known, last) else audioMultiply(count.toLong(), last)
         } else {
-            audioRequire(pos <= packet.size && padding <= packet.size - pos)
-            val available = packet.size - pos - padding
+            audioRequire(pos <= size && padding <= size - pos)
+            val available = size - pos - padding
             if (vbr) audioRequire(known <= available && available - known <= 1275)
             else audioRequire(available % count == 0L && available / count <= 1275)
             available
         }
-        audioRequire(pos <= packet.size && padding <= packet.size - pos && payload <= packet.size - pos - padding)
+        audioRequire(pos <= size && padding <= size - pos && payload <= size - pos - padding)
         pos += payload + padding
     }
-    audioRequire(pos == packet.size)
+    audioRequire(pos == size)
     return duration
 }

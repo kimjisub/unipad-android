@@ -97,3 +97,43 @@ Format references: [FLAC framing and precision](https://www.rfc-editor.org/rfc/r
 [Ogg framing](https://xiph.org/ogg/doc/framing.html),
 [Vorbis mapping](https://www.xiph.org/vorbis/doc/Vorbis_I_spec.html),
 [MP4 time-to-sample tables](https://developer.apple.com/documentation/quicktime-file-format/time-to-sample_atom).
+
+Non-AAC MP4 duration checks include `short-table-alac-96000.m4a`, which changes
+only every `stts` delta of `alac-96000.m4a` to one tick. Its 47 packets still
+contain 192,000 frames. The generated 700-second stereo silence pair
+`alac-48000-2-long.m4a` and `short-table-alac-48000-2-long.m4a` must both
+reserve 33,600,000 frames and fail the duration limit. The ALAC packet's first
+channel element signals an optional output count; absent that flag, its
+ALACSpecificConfig frameLength applies. A packet count must be positive and
+no larger than frameLength. These counts describe allocated output frames,
+not a full entropy decode or proof of audible correctness.
+
+`physical-table-{sowt,twos,lpcm}.m4a` contains one 19,200-byte stereo 16-bit
+PCM packet: 4,800 physical frames. Its `short-table-*` and `long-table-*`
+variants advertise one and 48,000 ticks respectively. Reserve the greater
+of physical frames and the rounded-up timeline. Sample bytes must divide
+into complete channel frames. These tiny containers are generated directly
+with one stsd entry, stts row, stsz constant size, stsc row and stco offset,
+a 48,000-Hz media clock and one zero-valued mdat packet.
+
+`flac-96000-2.m4a` is a two-second stereo 96 kHz sine encoded by FFmpeg FLAC;
+`libopus-48000-{1,6}.m4a` are two-second 48 kHz mono and 5.1 sines encoded
+with libopus. Their `short-table-*` variants change every stts delta to one.
+FLAC's dfLa STREAMINFO supplies rate/channels/precision; CRC-checked physical
+FLAC blocks supply 192,000 frames. Opus dOps supplies channel mapping; packet
+framing supplies 101 blocks of 960 frames (96,960), before pre-skip and final
+trimming. Neither a changed media clock nor a changed timestamp delta may
+reduce that physical reservation. FFmpeg's decoded output can still differ
+because it applies container trim: the original Opus examples emit 96,648
+frames, and the short-table examples emit only 960. The forged short PCM
+examples emit only one frame in FFmpeg even though 4,800 frames physically
+exist. Those differences are deliberately retained as decoder follow-up,
+not used to reduce the physical safety cost.
+
+All added encoder fixtures use `ffmpeg -f lavfi -i sine=r=RATE -t 2 -ac CHANNELS
+-c:a CODEC -strict experimental -f mp4 OUTPUT` (CODEC flac or libopus).
+The long ALAC pair uses `anullsrc=r=48000:cl=stereo`, `-t 700`, and `-c:a alac`.
+Sources are generated signals, with no third-party recordings.
+
+Packet-count references: [ALAC element output counts](https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/alac.c),
+[MP4 FLAC and Opus codec configuration](https://github.com/FFmpeg/FFmpeg/blob/master/libavformat/movenc.c).

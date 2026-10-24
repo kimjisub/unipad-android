@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "costs": [
     {
       "id": "48000-2-0",
@@ -521,6 +521,132 @@
       "channels": 1,
       "frames": 16128,
       "sha256": "d61cdc273469115601fe79ab87591fbd6172e0154a015856eebdf48959ea11c8"
+    },
+    {
+      "file": "short-table-alac-96000.m4a",
+      "rate": 96000,
+      "channels": 2,
+      "frames": 192000,
+      "sha256": "7ce2014a5d7a74ef5ea6610e6a4691e1aea43f3639fd83e4ce78b61399bacf3a"
+    },
+    {
+      "file": "physical-table-sowt.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "9654c6fb3719dd14152d1a87d0a448c0108671e50af34d05a74a4de4cc14585e"
+    },
+    {
+      "file": "short-table-sowt.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "8526835880ca4a7bd0a900e5153a0a64119dbf094f0c65f6a2337cf4ee274d44"
+    },
+    {
+      "file": "long-table-sowt.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 48000,
+      "sha256": "9b1de9deeb51b2af58a560ce15fc52a2b0fc410af1fb711ff1a6405325952476"
+    },
+    {
+      "file": "physical-table-twos.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "01cccf3ba084bf8b9b4e9a6244d088f24fb151c326028edb0f038f8ce6cfe526"
+    },
+    {
+      "file": "short-table-twos.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "60d03361674cd4475edde0ce28f9900c6172a32ca3e68a0641ffaa81a059e944"
+    },
+    {
+      "file": "long-table-twos.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 48000,
+      "sha256": "1dcc500b669d3c323d0471e9e82deafad0df84cc272a7c731ed1bf4e16d7236d"
+    },
+    {
+      "file": "physical-table-lpcm.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "e7e6ec6174a2c1e461ebf2d93fb02111b33cd58879ce5ac44e41ff3e0af36893"
+    },
+    {
+      "file": "short-table-lpcm.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 4800,
+      "sha256": "84a74d72340cb9fca4f77260d40a6246bdc5aca759406ac1e92a7116c40ef955"
+    },
+    {
+      "file": "long-table-lpcm.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 48000,
+      "sha256": "a1f9001377937d7ab3aef9b1a8316c4d0f1145b078471357d14fd1cdbb6ee682"
+    },
+    {
+      "file": "flac-96000-2.m4a",
+      "rate": 96000,
+      "channels": 2,
+      "frames": 192000,
+      "sha256": "9b5c338bd9ae5035dbf3aaf9cb5e52e6a0048f70fb32d2800d0911c149fdbfe6"
+    },
+    {
+      "file": "short-table-flac-96000-2.m4a",
+      "rate": 96000,
+      "channels": 2,
+      "frames": 192000,
+      "sha256": "2febda08fe328a2e457787a11e49681dc52048c55bdc8f0388602f8d5d32155c"
+    },
+    {
+      "file": "libopus-48000-1.m4a",
+      "rate": 48000,
+      "channels": 1,
+      "frames": 96960,
+      "sha256": "9470d110f7f4207b2779766f8ff667a2555f63d5aab338b7668fe0c8273b2d00"
+    },
+    {
+      "file": "short-table-libopus-48000-1.m4a",
+      "rate": 48000,
+      "channels": 1,
+      "frames": 96960,
+      "sha256": "6d54e661957295897b9e6b95fadb437d31a2fbaad5cd426f10c5f931a22f9676"
+    },
+    {
+      "file": "libopus-48000-6.m4a",
+      "rate": 48000,
+      "channels": 6,
+      "frames": 96960,
+      "sha256": "16d1dc4fe959b7d24fa04f69b8e5f25e94ad266a3dea25c652c641abdf7cec93"
+    },
+    {
+      "file": "short-table-libopus-48000-6.m4a",
+      "rate": 48000,
+      "channels": 6,
+      "frames": 96960,
+      "sha256": "a60c88b12c65aac24c17144531eb344cf81bacad2b43754dd0e86a4fe0101935"
+    },
+    {
+      "file": "alac-48000-2-long.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 33600000,
+      "sha256": "d4641b6da0d31dc5e539da1267e4161a2dc5fdc141700209bbeb6ef448d8836d"
+    },
+    {
+      "file": "short-table-alac-48000-2-long.m4a",
+      "rate": 48000,
+      "channels": 2,
+      "frames": 33600000,
+      "sha256": "8f633f90f19144f8ba9913b7fd2644cd38b8c3e4335a9d70e956b4381a275f51"
     }
   ],
   "wavRecipes": [

@@ -55,38 +55,13 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         d.range(stsd.data, 8, stsd.end)
         val entries = d.boxes(stsd.data + 8, stsd.end).toList()
         audioRequire(entries.size.toLong() == d.uint(stsd.data + 4, 4) && entries.isNotEmpty())
-        var rate = 0
-        var channels = 0
-        var aacPacketFrames: Int? = null
-        for (entry in entries) {
-            audioRequire(entry.type in setOf("mp4a", "alac", "fLaC", "Opus", "sowt", "twos", "lpcm"))
-            d.range(entry.data, 28, entry.end)
-            val soundVersion = d.uint(entry.data + 8, 2).toInt()
-            audioRequire(soundVersion in 0..1)
-            var c = d.uint(entry.data + 16, 2).toInt()
-            var r = (d.uint(entry.data + 24, 4) ushr 16).toInt()
-            // AAC's AudioSpecificConfig is authoritative when the 16.16 field cannot hold its rate.
-            if (entry.type == "mp4a") {
-                val children = d.boxes(entry.data + if (soundVersion == 1) 44 else 28, entry.end).toList()
-                val esds = children.singleOrNull { it.type == "esds" }
-                    ?: children.singleOrNull { it.type == "wave" }?.let { wave -> d.child(wave, "esds") }
-                    ?: throw InvalidAudio()
-                val config = aacConfig(d, esds)
-                r = config.rate
-                if (config.channels != 0) c = config.channels
-                audioRequire(aacPacketFrames == null || aacPacketFrames == config.packetFrames)
-                aacPacketFrames = config.packetFrames
-            }
-            if (entry.type == "alac") {
-                val config = d.child(AudioBox("entry", entry.data + if (soundVersion == 1) 44 else 28, entry.end), "alac")
-                // FullBox header followed by the 24-byte ALACSpecificConfig.
-                d.range(config.data, 28, config.end)
-                c = d.byte(config.data + 13)
-                r = d.uint(config.data + 24, 4).toInt()
-            }
-            audioRequire(r > 0 && c > 0 && (rate == 0 || rate == r && channels == c))
-            rate = r; channels = c
-        }
+        val codecs = entries.map { mp4Codec(d, it) }
+        val codec = codecs.first()
+        // A description switch must never reinterpret packets with a cheaper codec/configuration.
+        audioRequire(codecs.all { it == codec })
+        val rate = codec.rate
+        val channels = codec.channels
+        val aacPacketFrames = codec.aacFrames
         val stts = d.child(stbl, "stts")
         val timeCount = tableCount(d, stts, 8)
         var samples = 0L
@@ -128,6 +103,8 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         val stsc = d.child(stbl, "stsc")
         val mappings = tableCount(d, stsc, 12)
         audioRequire(chunks > 0 && mappings > 0)
+        if (codec.pcmAlign == 0 && aacPacketFrames == null) inspectionCapacity(samples, MAX_AUDIO_SAMPLE_SIZES)
+        var physicalFrames = 0L
         var mapping = 0L
         var used = 0L
         // Primitive arrays bound allocation to 4 MiB at the row ceiling; no boxed Pair per chunk.
@@ -163,6 +140,25 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
             audioRequire(high >= 0)
             val extent = media[high]
             audioRequire(offset <= extent.end && bytes <= extent.end - offset)
+            if (codec.pcmAlign != 0) {
+                audioRequire(bytes % codec.pcmAlign == 0L)
+                physicalFrames = audioAdd(physicalFrames, bytes / codec.pcmAlign)
+            } else if (aacPacketFrames == null) {
+                var packetAt = offset
+                for (sample in used until used + count) {
+                    val size = if (constantSize != 0L) constantSize else d.uint(stsz.data + 12 + sample * 4, 4)
+                    val frames = when (codec.type) {
+                        "alac" -> alacPacketFrames(d, packetAt, size, codec.alacFrames)
+                        "fLaC" -> inspectFlacFrames(d, packetAt, packetAt + size, rate, channels, codec.precision)
+                        "Opus" -> opusPacketFrames(size, codec.opusStreams) { index ->
+                            audioRequire(index in 0 until size); d.byte(packetAt + index)
+                        }.toLong()
+                        else -> throw InvalidAudio()
+                    }
+                    physicalFrames = audioAdd(physicalFrames, frames)
+                    packetAt += size
+                }
+            }
             starts[(chunk - 1).toInt()] = offset
             ends[(chunk - 1).toInt()] = offset + bytes
             used += count
@@ -174,11 +170,107 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         for (i in 1 until starts.size) audioRequire(starts[i] >= ends[i - 1])
         val numerator = audioMultiply(ticks, rate.toLong())
         val frames = if (aacPacketFrames != null) verifiedFrames else {
-            audioRequire(numerator % clock == 0L); numerator / clock
+            // Container timing may be coarser than one output frame. It cannot lower
+            // the independently counted physical reservation, even for the final packet.
+            val timeline = numerator / clock + if (numerator % clock == 0L) 0 else 1
+            maxOf(physicalFrames, timeline)
         }
         return AudioFileFacts(rate, channels, frames, "m4a")
     }
     throw InvalidAudio()
+}
+
+private data class Mp4Codec(val type: String, val rate: Int, val channels: Int,
+    val aacFrames: Int? = null, val alacFrames: Long = 0, val precision: Int = 0,
+    val opusStreams: Int = 0, val pcmAlign: Int = 0)
+
+private fun mp4Codec(d: AudioData, entry: AudioBox): Mp4Codec {
+    audioRequire(entry.type in setOf("mp4a", "alac", "fLaC", "Opus", "sowt", "twos", "lpcm"))
+    d.range(entry.data, 28, entry.end)
+    val version = d.uint(entry.data + 8, 2).toInt()
+    audioRequire(version in 0..1)
+    val headerSize = if (version == 1) 44L else 28L
+    d.range(entry.data, headerSize, entry.end)
+    val children = AudioBox("entry", entry.data + headerSize, entry.end)
+    var channels = d.uint(entry.data + 16, 2).toInt()
+    var rate = (d.uint(entry.data + 24, 4) ushr 16).toInt()
+    val codec = when (entry.type) {
+        "mp4a" -> {
+            val boxes = d.boxes(children.data, children.end).toList()
+            val esds = boxes.singleOrNull { it.type == "esds" }
+                ?: boxes.singleOrNull { it.type == "wave" }?.let { d.child(it, "esds") }
+                ?: throw InvalidAudio()
+            val config = aacConfig(d, esds)
+            rate = config.rate
+            if (config.channels != 0) channels = config.channels
+            Mp4Codec(entry.type, rate, channels, aacFrames = config.packetFrames)
+        }
+        "alac" -> {
+            val config = d.child(children, "alac")
+            // FullBox followed by ALACSpecificConfig; frameLength bounds every packet.
+            d.range(config.data, 28, config.end)
+            val frames = d.uint(config.data + 4, 4)
+            audioRequire(frames > 0)
+            Mp4Codec(entry.type, d.uint(config.data + 24, 4).toInt(),
+                d.byte(config.data + 13), alacFrames = frames)
+        }
+        "fLaC" -> {
+            val config = d.child(children, "dfLa")
+            d.range(config.data, 42, config.end)
+            audioRequire(d.uint(config.data, 4) == 0L && d.byte(config.data + 4) and 127 == 0 &&
+                d.uint(config.data + 5, 3) == 34L)
+            val info = config.data + 8
+            rate = (d.uint(info + 10, 3) ushr 4).toInt()
+            channels = ((d.byte(info + 12) ushr 1) and 7) + 1
+            val bits = (((d.byte(info + 12) and 1) shl 4) or (d.byte(info + 13) ushr 4)) + 1
+            Mp4Codec(entry.type, rate, channels, precision = bits)
+        }
+        "Opus" -> {
+            val config = d.child(children, "dOps")
+            d.range(config.data, 11, config.end)
+            audioRequire(d.byte(config.data) == 0)
+            channels = d.byte(config.data + 1)
+            val family = d.byte(config.data + 10)
+            var streams = 1
+            if (family == 0) audioRequire(channels in 1..2)
+            else {
+                d.range(config.data, 13L + channels, config.end)
+                streams = d.byte(config.data + 11)
+                val coupled = d.byte(config.data + 12)
+                audioRequire(streams > 0 && coupled <= streams && streams + coupled <= 255)
+                repeat(channels) {
+                    val mapping = d.byte(config.data + 13 + it)
+                    audioRequire(mapping == 255 || mapping < streams + coupled)
+                }
+            }
+            Mp4Codec(entry.type, 48_000, channels, opusStreams = streams)
+        }
+        else -> {
+            val bits = d.uint(entry.data + 18, 2).toInt()
+            audioRequire(bits in 8..64 && bits % 8 == 0 && channels in 1..8)
+            val align = channels * (bits / 8)
+            if (version == 1) {
+                audioRequire(d.uint(entry.data + 32, 4) == (bits / 8).toLong() &&
+                    d.uint(entry.data + 36, 4) == align.toLong())
+            }
+            Mp4Codec(entry.type, rate, channels, pcmAlign = align)
+        }
+    }
+    audioRequire(codec.rate > 0 && codec.channels > 0)
+    return codec
+}
+
+private fun alacPacketFrames(d: AudioData, at: Long, size: Long, maximum: Long): Long {
+    val bits = AudioBits(audioMultiply(size, 8), false) { index -> d.byte(at + index) }
+    // First channel element: instance tag, unused bits, has_size, extra_bits, compressed flag.
+    // Every channel element in a decodable packet must declare the same output count.
+    audioRequire(bits.read(3) in setOf(0, 1, 3))
+    bits.skip(16)
+    val explicit = bits.read(1) != 0
+    bits.skip(3)
+    val frames = if (explicit) bits.read(32).toLong() and 0xffffffffL else maximum
+    audioRequire(frames in 1..maximum)
+    return frames
 }
 
 private fun tableCount(d: AudioData, box: AudioBox, stride: Int): Long {
@@ -222,7 +314,7 @@ private fun aacConfig(d: AudioData, box: AudioBox): AacConfig {
     fun objectType(): Int = bits.read(5).let { if (it == 31) 32 + bits.read(6) else it }
     fun frequency(): Int {
         val index = bits.read(4)
-        val rates = intArrayOf(96_000,88_200,64_000,48_000,44_100,32_000,24_000,22_050,16_000,12_000,11_025,8_000,7_350)
+        val rates = AAC_SAMPLE_RATES
         return if (index == 15) bits.read(24) else { audioRequire(index < rates.size); rates[index] }
     }
     var type = objectType()

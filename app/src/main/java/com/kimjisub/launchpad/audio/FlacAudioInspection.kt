@@ -29,8 +29,15 @@ internal fun inspectFlac(d: AudioData): AudioFileFacts {
         } else audioRequire(type and 127 != 0 && type and 127 < 127)
         last = type and 128 != 0; at = payload + length
     }
+    val total = inspectFlacFrames(d, at, d.size, rate, channels, bits, true)
+    return AudioFileFacts(rate, channels, total, "flac")
+}
+
+/** Also used by MP4: each sample is bounded independently of its timestamp table. */
+internal fun inspectFlacFrames(d: AudioData, from: Long, limit: Long, rate: Int,
+    channels: Int, bits: Int, requireZeroOrigin: Boolean = false): Long {
     fun header(start: Long): FlacFrame {
-        d.range(start, 6)
+        d.range(start, 6, limit)
         audioRequire(d.byte(start) == 255 && d.byte(start + 1) and 0xfe == 0xf8)
         val variable = d.byte(start + 1) and 1 != 0
         val blockCode = d.byte(start + 2) ushr 4
@@ -72,18 +79,21 @@ internal fun inspectFlac(d: AudioData): AudioFileFacts {
             else -> throw InvalidAudio()
         }
         audioRequire(frameRate == rate)
+        d.range(start, pos - start + 1, limit)
         var crc = 0
         for (index in start until pos) crc = crcStep(crc, d.byte(index), 8, 7)
         audioRequire(crc == d.byte(pos++))
         return FlacFrame(pos, samples, number, variable, assignment)
     }
-    audioRequire(at < d.size)
+    var at = from
+    audioRequire(at < limit)
     var frame = header(at)
+    val origin = if (requireZeroOrigin) 0 else frame.number
     var total = 0L
     var ordinal = 0L
     while (true) {
-        audioRequire(frame.number == if (frame.variable) total else ordinal)
-        val body = AudioBits(audioMultiply(d.size - frame.end, 8), false) { d.byte(frame.end + it) }
+        audioRequire(frame.number == audioAdd(origin, if (frame.variable) total else ordinal))
+        val body = AudioBits(audioMultiply(limit - frame.end, 8), false) { d.byte(frame.end + it) }
         fun residual(order: Int) {
             val method = body.read(2); audioRequire(method in 0..1)
             val parameterBits = if (method == 0) 4 else 5
@@ -127,14 +137,14 @@ internal fun inspectFlac(d: AudioData): AudioFileFacts {
         val padding = ((8 - body.position % 8) % 8).toInt()
         audioRequire(body.read(padding) == 0)
         val end = audioAdd(frame.end, body.position / 8)
-        d.range(end, 2)
+        d.range(end, 2, limit)
         var crc = 0
         for (pos in at until end + 2) crc = crcStep(crc, d.byte(pos), 16, 0x8005)
         audioRequire(crc == 0)
         total = audioAdd(total, frame.samples.toLong()); ordinal++
         at = end + 2
-        if (at == d.size) break
+        if (at == limit) break
         val next = header(at); audioRequire(next.variable == frame.variable); frame = next
     }
-    return AudioFileFacts(rate, channels, total, "flac")
+    return total
 }
