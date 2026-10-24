@@ -224,7 +224,10 @@ class AutoPlayRunner(
 					fun skipIdleTime(now: Long) {
 						if (delayAccum <= now - startTime) delayAccum = now - startTime
 					}
-					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || stepMode && practiceGuide && hasPendingStep()) && isActive) {
+					var currTime = startTime
+					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
+					while ((progress < autoPlay.elements.size || pendingSeek.get() != null ||
+						stepMode && practiceGuide && hasPendingStep() || hasPendingDelay()) && isActive) {
 						val seek: Seek?
 						val playing: Boolean
 						synchronized(progressValue) {
@@ -237,7 +240,7 @@ class AutoPlayRunner(
 							playing = playmode
 						}
 						val target = seek?.index ?: if (playing && rebaseSeekOnResume) progress else null
-						val currTime = SystemClock.elapsedRealtime()
+						currTime = SystemClock.elapsedRealtime()
 						if (target != null) {
 							// Step practice can advance after a paused seek. On resume, align to
 							// that current position, without replaying the seek or resetting its steps.
@@ -452,7 +455,8 @@ class AutoPlayRunner(
 							}
 
 						}
-						if (!playmode && (progress < autoPlay.elements.size || stepMode && practiceGuide && hasPendingStep())) {
+						if (!playmode && (progress < autoPlay.elements.size ||
+							stepMode && practiceGuide && hasPendingStep() || hasPendingDelay())) {
 							wakeSignal.receive()
 						} else {
 							delay(loopDelay)
