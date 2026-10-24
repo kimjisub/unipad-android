@@ -36,24 +36,31 @@ class PackMetadataCompatibilityDeviceTest {
 			else screen.node(By.desc(screen.text(R.string.menu)))
 			screen.capture("pack-metadata-$label-$name")
 			assertTrue("Invalid metadata must refuse the pack", refused)
+			if (name == "last-invalid-chain") {
+				assertEquals("info : chain is not a number\ninfo : chain out of range", screen.onMain { screen.vm().unipack.errorDetail })
+			}
 		} finally {
 			screen.close()
 			root.deleteRecursively()
 		}
 	}
 
-	@Test fun emptyWebsite_doesNotOfferAnInactiveButton() {
+	@Test fun emptyWebsite_doesNotOfferAnInactiveButton() = checkHiddenWebsite("empty", "")
+
+	@Test fun unsupportedWebsite_doesNotOfferAnInactiveButton() = checkHiddenWebsite("unsupported", "javascript:x")
+
+	private fun checkHiddenWebsite(name: String, website: String) {
 		val screen = FeatureScreen()
 		try {
 			screen.assertDedicatedWorkspace()
 			screen.cleanPacks()
 			val root = screen.install()
-			File(root, "info").appendText("website=\n")
+			File(root, "info").appendText("website=$website\n")
 			screen.launch(MainActivity::class.java)
 			screen.click(By.text(FeatureScreen.TITLE))
 			screen.node(By.desc(screen.text(R.string.cd_delete)))
-			screen.capture("pack-metadata-$label-empty-website")
-			assertFalse("An empty website must not offer a link", screen.has(By.desc(screen.text(R.string.cd_website))))
+			screen.capture("pack-metadata-$label-$name-website")
+			assertFalse("An unusable website must not offer a link", screen.has(By.desc(screen.text(R.string.cd_website))))
 		} finally {
 			screen.close()
 		}

@@ -2,6 +2,7 @@ package com.kimjisub.launchpad.unipack
 
 import com.kimjisub.launchpad.manager.FileManager
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.packWebsiteAddress
 import com.kimjisub.launchpad.manager.LaunchpadColor.ARGB
 import com.kimjisub.launchpad.midi.driver.DriverRef
 import com.kimjisub.launchpad.unipack.struct.AutoPlay
@@ -226,7 +227,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 					"buttonY" -> buttonYValue = value
 					"chain" -> chainValue = value
 					"squareButton" -> squareButton = value == "true"
-					"website" -> website = value.takeIf { it.isNotEmpty() }
+					"website" -> website = value.takeIf { packWebsiteAddress(it) != null }
 				}
 			}
 		}
@@ -243,7 +244,7 @@ class UniPackFolder(val rootFolder: File) : UniPack() {
 		if (gridX == 0) addErr("info : buttonX was missing")
 		if (gridY == 0) addErr("info : buttonY was missing")
 		if (gridX == null || gridY == null) criticalError = true
-		if (chain == 0) addErr("info : chain was missing")
+		if (chainValue == null) addErr("info : chain was missing")
 		if (chain !in 1..24) {
 			addErr("info : chain out of range")
 			criticalError = true

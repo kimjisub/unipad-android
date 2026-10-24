@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.tool.Log
+import com.kimjisub.launchpad.tool.packWebsiteAddress
 
 private const val PLAY_STORE_PACKAGE = "com.android.vending"
 
@@ -23,12 +24,7 @@ fun android.content.Context.browse(link: String, action: String = Intent.ACTION_
 
 /** Pack metadata can contain a bare web address, but must not launch another URI scheme. */
 fun android.content.Context.browsePackWebsite(link: String) {
-	val written = link.trim()
-	if (written.isEmpty()) return
-	val scheme = written.toUri().scheme
-	val address = if (scheme == null) "https://$written" else written
-	val uri = address.toUri()
-	if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.host.isNullOrBlank()) return
+	val address = packWebsiteAddress(link) ?: return
 	browse(address)
 }
 

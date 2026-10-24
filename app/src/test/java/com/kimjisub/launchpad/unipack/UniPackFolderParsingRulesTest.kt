@@ -55,7 +55,42 @@ class UniPackFolderParsingRulesTest {
 
 	@Test
 	fun invalidLastChainValue_refusesPack() {
-		assertTrue(load(metadata = info + "chain=abc\n").criticalError)
+		val pack = load(metadata = info + "chain=abc\n")
+		assertTrue(pack.criticalError)
+		assertEquals("info : chain is not a number\ninfo : chain out of range", pack.errorDetail)
+	}
+
+	@Test
+	fun absentChain_reportsTheMissingKey() {
+		val pack = load(metadata = info.replace("chain=2\n", ""))
+		assertTrue(pack.criticalError)
+		assertEquals("info : chain was missing\ninfo : chain out of range", pack.errorDetail)
+	}
+
+	@Test
+	fun explicitZeroChain_reportsRangeWithoutClaimingTheKeyIsMissing() {
+		val pack = load(metadata = info + "chain=0\n")
+		assertTrue(pack.criticalError)
+		assertEquals("info : chain out of range", pack.errorDetail)
+	}
+
+	@Test
+	fun unusableWebsite_hasNoLink() {
+		for (value in listOf("javascript:x", "file:///tmp/a", "intent://x", "mailto:x@y", "https://", "http://?x")) {
+			assertNull(value, load(metadata = info + "website=$value\n").website)
+		}
+	}
+
+	@Test
+	fun lastUnusableWebsite_removesAnEarlierLink() {
+		assertNull(load(metadata = info + "website=https://unipad.io\nwebsite=javascript:x\n").website)
+	}
+
+	@Test
+	fun addressWithPort_keepsAnAvailableLink() {
+		for (value in listOf("unipad.io:8080/path", "localhost:3000")) {
+			assertEquals(value, load(metadata = info + "website=$value\n").website)
+		}
 	}
 
 	@Test

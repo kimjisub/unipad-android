@@ -20,9 +20,18 @@ class PackWebsiteDeviceTest {
 		assertEquals(listOf("https://unipad.io/path"), opened.map { it.data.toString() })
 	}
 	@Test fun webSchemes_areKept() {
-		val urls = listOf("http://unipad.io/path", "https://unipad.io")
+		val urls = listOf("http://unipad.io/path", "https://unipad.io/path")
 		urls.forEach { context.browsePackWebsite(it) }
 		assertEquals(urls, opened.map { it.data.toString() })
+	}
+	@Test fun uppercaseSchemes_openWithTheNormalizedScheme() {
+		for (url in listOf("HTTPS://unipad.io/path", "Https://unipad.io/path", "HTTP://unipad.io/path")) context.browsePackWebsite(url)
+		assertEquals(listOf("https://unipad.io/path", "https://unipad.io/path", "http://unipad.io/path"), opened.map { it.data.toString() })
+	}
+	@Test fun bareAddressWithPort_opensHttps() {
+		context.browsePackWebsite("unipad.io:8080/path")
+		context.browsePackWebsite("localhost:3000/path")
+		assertEquals(listOf("https://unipad.io:8080/path", "https://localhost:3000/path"), opened.map { it.data.toString() })
 	}
 	@Test fun otherSchemes_doNotOpenAnything() {
 		for (url in listOf("javascript:x", "file:///tmp/a", "intent://x", "mailto:x@y")) context.browsePackWebsite(url)
