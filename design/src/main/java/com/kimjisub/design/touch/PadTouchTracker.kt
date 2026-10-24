@@ -9,8 +9,8 @@ package com.kimjisub.design.touch
  * Positions are in the grid's own coordinates, with the grid's current [width] and [height].
  */
 class PadTouchTracker(
-	/** Called with (row, column, pressed). */
-	private val listener: (x: Int, y: Int, down: Boolean) -> Unit,
+	/** Called with the stable pointer id, row, column and pressed state. */
+	private val listener: (pointerId: Long, x: Int, y: Int, down: Boolean) -> Unit,
 ) {
 	var slide = false
 
@@ -45,7 +45,7 @@ class PadTouchTracker(
 		pointers -= pointerId
 		cancelled -= pointerId
 		val cell = held.remove(pointerId) ?: return
-		listener(cell / cols, cell % cols, false)
+		listener(pointerId, cell / cols, cell % cols, false)
 	}
 
 	/**
@@ -59,18 +59,18 @@ class PadTouchTracker(
 	}
 
 	fun releaseAll() {
-		val cells = held.values.toList()
+		val cells = held.toMap()
 		held.clear()
-		for (cell in cells) listener(cell / cols, cell % cols, false)
+		for ((pointerId, cell) in cells) listener(pointerId, cell / cols, cell % cols, false)
 	}
 
 	private fun press(pointerId: Long, cell: Int?) {
 		val previous = held[pointerId]
 		if (cell == previous) return
-		if (previous != null) listener(previous / cols, previous % cols, false)
+		if (previous != null) listener(pointerId, previous / cols, previous % cols, false)
 		if (cell != null) {
 			held[pointerId] = cell
-			listener(cell / cols, cell % cols, true)
+			listener(pointerId, cell / cols, cell % cols, true)
 		} else {
 			held.remove(pointerId)
 		}

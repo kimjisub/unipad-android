@@ -43,6 +43,8 @@ class SoundRunner(
 	private var streamPaused = false // guarded by engineLock
 	private val loadJob: Job
 
+	class NoPlayableSoundsException : IllegalStateException("This pack has no playable sound files")
+
 	class AudioOutputUnavailableException : RuntimeException("Failed to open audio output")
 
 	private val wormholeLock = Any()
@@ -91,14 +93,15 @@ class SoundRunner(
 	init {
 		chain.addSelectionObserver(cancelWormholesOnChainSelection)
 		val table = unipack.soundTable
-		var soundCount = 0
+		// Take references before playback can rotate a pad's mapping during asynchronous loading.
+		val soundsToLoad = mutableListOf<Sound>()
 		if (table != null) {
 			for (i in 0 until unipack.chain)
 				for (j in 0 until unipack.buttonX)
 					for (k in 0 until unipack.buttonY)
-						if (table[i][j][k] != null)
-							soundCount += table[i][j][k]?.size ?: 0
+						for (sound in table[i][j][k] ?: continue) soundsToLoad.add(sound)
 		}
+		val soundCount = soundsToLoad.size
 
 		Log.play("soundCount: $soundCount")
 
@@ -128,19 +131,11 @@ class SoundRunner(
 				}
 
 				// Phase 1: Collect all unique files and map sounds to them
-				val allSounds = mutableListOf<Sound>()
+				val allSounds = soundsToLoad
 				val uniqueFiles = LinkedHashMap<String, MutableList<Sound>>()
-				if (table != null) {
-					for (i in 0 until unipack.chain)
-						for (j in 0 until unipack.buttonX)
-							for (k in 0 until unipack.buttonY) {
-								val sounds = table[i][j][k] ?: continue
-								for (sound in sounds) {
-									allSounds.add(sound)
-									val key = sound.file.absolutePath
-									uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
-								}
-							}
+				for (sound in allSounds) {
+					val key = sound.file.absolutePath
+					uniqueFiles.getOrPut(key) { mutableListOf() }.add(sound)
 				}
 
 				Log.play("uniqueFiles: ${uniqueFiles.size} / totalSounds: ${allSounds.size}")
@@ -179,6 +174,8 @@ class SoundRunner(
 				}
 
 				ensureActive()
+				// Light-only packs have no audio to fail; reject actual files only when none loaded.
+				if (allSounds.isNotEmpty() && allSounds.none { it.id >= 0 }) throw NoPlayableSoundsException()
 				loadingListener.onEnd()
 			} catch (e: CancellationException) {
 				// destroy() cancelled the load; this is not a loading failure to report.
@@ -192,7 +189,7 @@ class SoundRunner(
 		}
 	}
 
-	fun soundOn(x: Int, y: Int) {
+	fun soundOn(x: Int, y: Int, followWormhole: Boolean = true) {
 		val restarted = stopKey[chain.value][x][y]
 		engine.stopVoice(restarted)
 		// A press made on another chain while the pad is still held replaces its key below; stop
@@ -200,11 +197,9 @@ class SoundRunner(
 		if (heldLoop[x][y] != restarted) soundOff(x, y)
 		heldLoop[x][y] = 0
 		val sound: Sound = unipack.soundGet(chain.value, x, y) ?: return
-		// A press made before this sound finished loading leaves the pad and the chain as they are.
-		if (sound.id == Sound.NOT_LOADED) return
-		// A sound whose file could not be decoded keeps only its own turn silent: the pad still
-		// moves on to its next sound and still follows the sound's chain move.
-		if (sound.id != Sound.UNDECODABLE) {
+		// An unavailable sound keeps only its own turn silent, including during loading: the pad
+		// still moves on to its next sound and still follows the sound's chain move.
+		if (sound.id >= 0) {
 			val key = engine.play(
 				soundId = sound.id,
 				volumeL = 1.0f,
@@ -216,7 +211,8 @@ class SoundRunner(
 			heldLoop[x][y] = if (sound.loop == -1L) key else 0
 		}
 		unipack.soundPush(chain.value, x, y)
-		if (sound.wormhole != Sound.NO_WORMHOLE) {
+		// Auto play has its own chain commands; live input alone schedules the delayed move.
+		if (followWormhole && sound.wormhole != Sound.NO_WORMHOLE) {
 			val move = scope.launch(Dispatchers.Main, start = CoroutineStart.LAZY) {
 				delay(100)
 				synchronized(wormholeLock) {

@@ -333,4 +333,5 @@
 	<string name="midi_dual_pad_mode" tools:ignore="MissingTranslation">Dual Pad Mode</string>
 	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
 	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
+	<string name="pack_no_playable_sounds">This pack has no playable sounds. Its sound files may be damaged or unsupported.</string>
 </resources>

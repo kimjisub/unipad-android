@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.manager.LaunchpadColor
 import com.kimjisub.launchpad.unipack.UniPack
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -65,11 +66,19 @@ class CaseResult(val actual: JsonElement, val outcome: Outcome)
 fun resultFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): CaseResult {
 	val unobserved = c.unobserved[PLATFORM]
 	if (unobserved != null) return CaseResult(JsonNull, Outcome("unverified", false, unobserved))
+	if (c.observation != null && c.observation != "runner") {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the Android harness has no ${c.observation} operation adapter; the pack parser cannot observe this operation"))
+	}
+	if (c.soundIdentity) {
+		return CaseResult(JsonNull, Outcome("unverified", false,
+			"the Android harness records relative sound names, not original archive entries and selected file hashes"))
+	}
 	val actual = actualFor(c, corpus, deps)
 	return CaseResult(actual, classify(c, actual))
 }
 
-fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
+fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps(), includePressFeedback: Boolean = false): JsonElement {
 	if (c.layer == "palette") {
 		return buildJsonObject { putJsonArray("argb") { LaunchpadColor.ARGB.forEach { add(JsonPrimitive(hex8(it.toInt()))) } } }
 	}
@@ -78,7 +87,7 @@ fun actualFor(c: CorpusCase, corpus: Corpus, deps: Deps = Deps()): JsonElement {
 		c.writeTo(root, corpus)
 		val pack = deps.loadPack(root)
 		if (pack.criticalError) return buildJsonObject { put("loaded", false) }
-		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps)
+		return if (c.layer == "parse") parseResult(pack, root) else runScenario(c, pack, root, deps, includePressFeedback)
 	} finally {
 		root.deleteRecursively()
 	}
@@ -173,7 +182,11 @@ private fun autoPlayElementJson(e: AutoPlay.Element): JsonElement = buildJsonArr
 }
 
 private fun event(vararg parts: Any): JsonElement = buildJsonArray {
-	for (p in parts) add(if (p is Int) JsonPrimitive(p) else JsonPrimitive(p as String))
+	for (p in parts) add(when (p) {
+		is Int -> JsonPrimitive(p)
+		is Boolean -> JsonPrimitive(p)
+		else -> JsonPrimitive(p as String)
+	})
 }
 
 /** A WAV (RIFF), or an MP3 with an ID3 tag or starting at a frame: what the decoder stand-in accepts. */
@@ -252,7 +265,9 @@ private class RecordingEngine(
  * to the screen is checked up to the sounds' play calls, not whether the audio stream was opened again.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps) {
+private class ScenarioRun(
+	val c: CorpusCase, val pack: UniPack, root: File, val deps: Deps, private val includePressFeedback: Boolean,
+) {
 	private val soundsDir = soundsDirOf(root)
 	private val testThread = Thread.currentThread()
 	private val clock = AtomicLong(1000)
@@ -279,7 +294,9 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	private var pressChain = 0
 	private var pressX = 0
 	private var pressY = 0
+	private val pointerIds = mutableMapOf("pointer:0" to 0L)
 	@Volatile private var watchingStops = false
+	@Volatile private var watchingAutoEnd = false
 
 	private var autoPlay: AutoPlayRunner? = null
 	private var finished = false
@@ -299,9 +316,9 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 				val x = step["x"]?.jsonPrimitive?.int
 				val y = step["y"]?.jsonPrimitive?.int
 				when (val name = step.getValue("do").jsonPrimitive.content) {
-					"press" -> press(x!!, y!!, true)
-					"release" -> press(x!!, y!!, false)
-					"chain" -> silently { vm.chain.value = step.getValue("c").jsonPrimitive.int }
+					"press" -> playerInput(x!!, y!!, true, step["input"]?.jsonPrimitive?.content)
+					"release" -> playerInput(x!!, y!!, false, step["input"]?.jsonPrimitive?.content)
+					"chain" -> silently { vm.selectChain(step.getValue("c").jsonPrimitive.int) }
 					"advance" -> advance(step.getValue("ms").jsonPrimitive.int)
 					"observe" -> synchronized(events) { checkpoints.add(jsonArrayOf(events)); events.clear() }
 					"autoplay" -> startAutoPlay(toPads = step["toPads"]?.jsonPrimitive?.boolean == true)
@@ -309,6 +326,10 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 					"looping" -> engine.looping().forEach { (px, py) -> events.add(event("looping", px, py)) }
 					"stop" -> stop()
 					"watchStops" -> watchingStops = true
+					"watchAutoEnd" -> watchingAutoEnd = true
+					"autoplayState" -> events.add(event("autoActive", autoPlay?.active == true))
+					"suspendAuto" -> afterAutoPlayPass("auto play to suspend") { vm.autoPlayPause() }
+					"resumeAuto" -> resumeAutoPlay()
 					// Android-only steps for ConformancePlayPathTest; the shared corpus does not use them.
 					"start" -> start()
 					"resume" -> resumeAutoPlay()
@@ -394,7 +415,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		override fun setLedChain(c: Int) = seen(-1, c)
 
 		private fun seen(x: Int, y: Int) {
-			val item = vm.channelManager.get(x, y)
+			// The corpus reports keyLED output; press feedback is a separate screen option.
+			val item = vm.channelManager.get(x, y)?.takeIf { includePressFeedback || it.channel == Channel.LED }
 			val key = "$x,$y"
 			if (item != null) {
 				val light = item.color to item.code
@@ -413,6 +435,23 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		override fun stopGuideAnimation(x: Int, y: Int) {}
 		override fun sendGuideLedToLaunchpad(x: Int, y: Int, velocity: Int) {}
 		override fun onRequestRelayout() {}
+	}
+
+	/** Carry each corpus input to the same view-model entry point as the screen or controller. */
+	private fun playerInput(x: Int, y: Int, down: Boolean, input: String?) {
+		val name = input ?: "pointer:0"
+		if (name.startsWith("midi:")) {
+			check(name == "midi:1") { "Only one active controller is supported: $name" }
+			// The corpus hides the screen's round UI with the options flag; this is a pad
+			// event during play, not an options-window controller button.
+			val options = vm.isOptionWindowVisible
+			vm.isOptionWindowVisible = false
+			try { press(x, y, down) { vm.controllerPadTouch(x, y, down) } }
+			finally { vm.isOptionWindowVisible = options }
+		} else {
+			val pointerId = pointerIds.getOrPut(name) { pointerIds.size.toLong() }
+			press(x, y, down) { vm.padTouch(x, y, down, pointerId) }
+		}
 	}
 
 	/** A press or release of (x, y), by a person unless [touch] hands it to the view model another way. */
@@ -449,7 +488,7 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		}
 		fun changeChain(c: Int) {
 			chainTag.set("autoChain")
-			try { vm.chain.value = c } finally { chainTag.set(null) }
+			try { vm.chain.assignFromPack(c) } finally { chainTag.set(null) }
 		}
 		return object : AutoPlayRunner.Listener {
 			override fun onStart() {}
@@ -470,7 +509,10 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 			override fun chainButsRefresh() {}
 			override fun onProgressUpdate(progress: Int) {}
 			// At its end auto play turns its option off, so leaving the screen afterwards finds it not playing.
-			override fun onEnd() = screen.onEnd()
+			override fun onEnd() {
+				if (watchingAutoEnd) events.add(event("autoEnd"))
+				screen.onEnd()
+			}
 		}
 	}
 
@@ -478,9 +520,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	 * Runs [action] and, when auto play was or is now playing, waits until its runner has read the clock
 	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
 	 * reads the clock once, at its top, and the next pass's read marks its end. Starting reads it once more
-	 * before the first pass (the start time); continuing counts from after autoPlayResume, where a paused
-	 * pass may still read it once on waking (the time spent paused); pausing reads it at least twice after
-	 * the pass in progress before the runner waits.
+	 * before the first pass (the start time). A paused pass reads it once before waiting for a signal;
+	 * it no longer reads it a second time to discard the pause's elapsed time.
 	 */
 	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
 		val runner = autoPlay
@@ -489,32 +530,19 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 		watchFrom.set(0)
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
-			waitUntil(what) { main.runAll(); watchReads.get() >= reads || !runner.active }
+			val requiredReads = if (runner.playmode) reads else 1
+			waitUntil(what) { main.runAll(); watchReads.get() >= requiredReads || !runner.active }
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		main.runAll()
 	}
 
 	/**
-	 * The play button of paused auto play. A paused runner drops the time it spent paused when it next
-	 * reads the clock while not playing. A person presses play long after that; here the clock may have
-	 * moved on before the runner got that far, and it would play everything due meanwhile at once. So it
-	 * is first woken (setting playmode to what it is only wakes it) and has read the clock twice: the
-	 * first pass after the wake has dropped the time.
-	 *
-	 * autoPlayResume wakes the paused runner (stepMode, resetStepState) before it sets playmode, so the
-	 * runner can read the clock a few times while still paused; only the reads after autoPlayResume has
-	 * returned are counted.
+	 * The play button preserves the remaining delay. It needs no synthetic paused tick to discard time:
+	 * the runner records pause transitions itself. Count from after autoPlayResume returns so any wakes
+	 * while that method is still setting up cannot be mistaken for the first resumed pass.
 	 */
 	private fun resumeAutoPlay() {
-		val runner = autoPlay
-		if (runner != null && runner.active && !runner.playmode) {
-			watchReads.set(0)
-			watchFrom.set(0)
-			runner.playmode = false
-			waitUntil("paused auto play to drop the time spent paused") { watchReads.get() >= 2 || !runner.active }
-			watchFrom.set(Long.MAX_VALUE)
-		}
 		vm.autoPlayResume()
 		afterAutoPlayPass("auto play to continue", STARTING) {}
 	}
@@ -589,6 +617,8 @@ private class ScenarioRun(val c: CorpusCase, val pack: UniPack, root: File, val 
 	}
 }
 
-private fun runScenario(c: CorpusCase, pack: UniPack, root: File, deps: Deps): JsonElement = buildJsonObject {
-	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps).run().forEach { add(it) } }
+private fun runScenario(
+	c: CorpusCase, pack: UniPack, root: File, deps: Deps, includePressFeedback: Boolean,
+): JsonElement = buildJsonObject {
+	putJsonArray("checkpoints") { ScenarioRun(c, pack, root, deps, includePressFeedback).run().forEach { add(it) } }
 }
