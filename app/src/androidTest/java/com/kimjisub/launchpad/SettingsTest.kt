@@ -292,12 +292,13 @@ class SettingsTest : BaseUITest() {
             assertSettingsStillOpen("GitHub")
 
             device.findObject(By.text(str(R.string.community))).click()
-            val list = device.wait(
-                Until.findObject(By.scrollable(true).hasDescendant(By.text(str(R.string.officialHomepage)))),
-                5000L
-            )
-            assertNotNull("Community list not found", list)
-            val email = list!!.scrollUntil(Direction.DOWN, Until.findObject(By.text(str(R.string.email))))
+            val homepage = By.text(str(R.string.officialHomepage))
+            assertTrue("Community list not found", device.wait(Until.hasObject(homepage), 5000L))
+            // The list scrolls only when its items do not fit; on a large screen they all show at once.
+            val emailItem = By.text(str(R.string.email))
+            val email = device.findObject(emailItem)
+                ?: device.findObject(By.scrollable(true).hasDescendant(homepage))
+                    ?.scrollUntil(Direction.DOWN, Until.findObject(emailItem))
             assertNotNull("Community e-mail item not found", email)
             email!!.click()
             takeScreenshot("settings_email_without_mail_app")
