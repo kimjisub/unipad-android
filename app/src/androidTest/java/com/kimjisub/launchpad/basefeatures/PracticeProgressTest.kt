@@ -9,6 +9,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /** Exercises practice on the real play screen; the recorded audio engine opens no speaker. */
 class PracticeProgressTest : PlaybackScreenTest() {
@@ -17,6 +19,12 @@ class PracticeProgressTest : PlaybackScreenTest() {
     }
 
     private fun record(name: String) {
+        val drawn = CountDownLatch(1)
+        screen.onMain {
+            val decor = screen.resumed().window.decorView
+            decor.postOnAnimation { decor.postOnAnimation { drawn.countDown() } }
+        }
+        assertTrue("The screen did not draw its updated practice guide", drawn.await(10, TimeUnit.SECONDS))
         screen.capture(name)
         val observed = screen.onMain { "mode=${screen.vm().playMode}\nactive=${screen.vm().autoPlayRunner?.active}\nprogress=${screen.vm().autoPlayProgress}\nhints=${hints()}\n" }
         assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") { it.writeText(observed); true })
