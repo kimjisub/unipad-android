@@ -549,6 +549,8 @@ class AutoPlayRunner(
 		}
 
 		for (key in removedKeys) {
+			// A played step must not regain its timed guide when playback resumes.
+			synchronized(activeGuides) { activeGuides.remove(key) }
 			listener.onGuideLedUpdate(key / 256, key % 256, 0)
 			listener.onGuidePadOff(key / 256, key % 256)
 		}
