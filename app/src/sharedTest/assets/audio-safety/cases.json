@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "costs": [
     {
       "id": "48000-2-0",
@@ -159,8 +159,10 @@
     },
     {
       "file": "tone.wav.truncated",
-      "exclusion": "INVALID_FORMAT",
-      "sha256": "c8633f23ace6087ee318ec7702cc8224f80ff942326140f17228c67f5a208b99"
+      "sha256": "c8633f23ace6087ee318ec7702cc8224f80ff942326140f17228c67f5a208b99",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13229
     },
     {
       "file": "tone.mp3",
@@ -171,8 +173,10 @@
     },
     {
       "file": "tone.mp3.truncated",
-      "exclusion": "INVALID_FORMAT",
-      "sha256": "148612d5f766be075c62ab38f1df57d1929323992351e6daf47c84f1b5ac3e71"
+      "sha256": "148612d5f766be075c62ab38f1df57d1929323992351e6daf47c84f1b5ac3e71",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 14976
     },
     {
       "file": "tone.m4a",
@@ -207,8 +211,10 @@
     },
     {
       "file": "mp3-named.wav.truncated",
-      "exclusion": "INVALID_FORMAT",
-      "sha256": "148612d5f766be075c62ab38f1df57d1929323992351e6daf47c84f1b5ac3e71"
+      "sha256": "148612d5f766be075c62ab38f1df57d1929323992351e6daf47c84f1b5ac3e71",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 14976
     },
     {
       "file": "mp3-id3-named.wav",
@@ -219,8 +225,10 @@
     },
     {
       "file": "mp3-id3-named.wav.truncated",
-      "exclusion": "INVALID_FORMAT",
-      "sha256": "e4af1697933a1fb20be3ed88a5965a33182a2e0d7ef3bb4cf38763fd34a74b62"
+      "sha256": "e4af1697933a1fb20be3ed88a5965a33182a2e0d7ef3bb4cf38763fd34a74b62",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 14976
     },
     {
       "file": "claimed-5-tone.mp3",
@@ -267,8 +275,10 @@
     },
     {
       "file": "invalid-data-tone.wav",
-      "exclusion": "INVALID_FORMAT",
-      "sha256": "8820fb78bc0de975614e46e87b14481e568d0ef8e507c2c8c0a2c09f6ed546f6"
+      "sha256": "8820fb78bc0de975614e46e87b14481e568d0ef8e507c2c8c0a2c09f6ed546f6",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
     },
     {
       "file": "invalid-crc.ogg",
@@ -365,6 +375,152 @@
       "channels": 1,
       "frames": 192,
       "sha256": "f82e34b3962bf42ab293c66f7167d03edf9587525e7ad5cc24c0d8856d2b4684"
+    },
+    {
+      "file": "riff-small.wav",
+      "sha256": "a7f0997cfca3f54540939839d7742999d4c3a12109c56f4e063b6487d8538c5f",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
+    },
+    {
+      "file": "riff-large.wav",
+      "sha256": "fefea4d41462444f03665d7ae981e28b83994b9ad64d36f7f0b03c6c16d056b9",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
+    },
+    {
+      "file": "trailing-junk.wav",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230,
+      "sha256": "12bcc22d35176e28f0d6c0160281f5901cc2fb6d2a9ac782b1c9b33202e3a1bd"
+    },
+    {
+      "file": "data-longer-than-file.wav",
+      "sha256": "940e9c37b77a6c677086683ef375385a261da333fa83c3cb294300b440611ad4",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
+    },
+    {
+      "file": "riff-excludes-pad.wav",
+      "sha256": "a134e8a00f469f4bb40f5239b6b6c1af5ee3340f11aba196de829b79bca149b0",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
+    },
+    {
+      "file": "missing-pad.wav",
+      "sha256": "1bc06a273524164301f44750ff407341efd845f56a587ba9ab18d21e017d2228",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 13230
+    },
+    {
+      "file": "leading-zero.mp3",
+      "sha256": "8f99ecc0f25fc4c2df938561e3331f269abec8c99516ea97911515897c432014",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128
+    },
+    {
+      "file": "trailing-bytes.mp3",
+      "sha256": "3cc4339dca9f4e69a17056f5e9d89933c1042202142de07054c8c4d08f8bf17e",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128
+    },
+    {
+      "file": "trailing-ape.mp3",
+      "sha256": "10564907a3814e20d98ba51edc660c169a75b7d83296c90523613cfe8b428808",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128
+    },
+    {
+      "file": "no-complete-frame.mp3",
+      "sha256": "18ad6f63ca7a578c64a999663032451f528011170cd3734006a51456febf3932",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "zero-first-packet.m4a",
+      "sha256": "3f37c90a8a19b8d95aef3a07e00df5131f87fb64c24506e097f8591cbb2011ab",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 14254
+    },
+    {
+      "file": "zero-middle-packets.m4a",
+      "sha256": "171c0c7f5447ba39d6ec1fe81b03ba3cb09989ae66de20242abc9457dbb4ebe1",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "alac-96000.m4a",
+      "sha256": "1b90d003a909a54afcd84f8107573061f0d5b469549d448bb75f55338b3abc6e",
+      "rate": 96000,
+      "channels": 2,
+      "frames": 192000
+    },
+    {
+      "file": "middle-zero.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "e6cd1851ed5e4cb19c373ed402f1f4fcf068ddaf01c5000b51219016d9445e82"
+    },
+    {
+      "file": "leading-zero-id3.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "bb9e7c1930526c03567c29046cc04a3b98bcc1a31adccff92cb236bb1c22a400"
+    },
+    {
+      "file": "mp3-in-wave.wav",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 14976,
+      "sha256": "de0afdcf5b86d287dfae7b62f24a48b9f3714caedb29373f472dd31c63d8d914"
+    },
+    {
+      "file": "false-sync.mp3",
+      "sha256": "3c1128bc6a8dfc2274da2f3ff965648db1fa2dd0b8e1926da428c245096d76b8",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "false-layer-sync.mp3",
+      "sha256": "4b48142263cb7a2611ce66d9dd1ae5a2bf04b09d8bacb67437e8077ea6341a60",
+      "exclusion": "INVALID_FORMAT"
+    },
+    {
+      "file": "binary-ape.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "097962860bfc1a1d2c9fda0558a758bf314776ac47c54c98d4da8f38422ab071"
+    },
+    {
+      "file": "binary-ape-with-header.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "ac50d4661aa9d542168c872b8747f1f73d6b7eb5c36f673bbae034426406c0f2"
+    },
+    {
+      "file": "binary-ape-id3v1.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "5223fc7e4e2549c43f03fb71debfed928a1aa42ca6b089509006bfca42400b78"
+    },
+    {
+      "file": "leading-false-header.mp3",
+      "rate": 44100,
+      "channels": 1,
+      "frames": 16128,
+      "sha256": "d61cdc273469115601fe79ab87591fbd6172e0154a015856eebdf48959ea11c8"
     }
   ],
   "wavRecipes": [

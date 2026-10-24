@@ -10,8 +10,7 @@ import java.io.File
 import java.io.RandomAccessFile
 
 class AudioSafetyTest {
-    @get:Rule val temporary = TemporaryFolder(File(System.getenv("PAPERCLIP_RUN_SCRATCH_DIR")
-        ?: System.getenv("PAPERCLIP_SCRATCH_DIR") ?: System.getProperty("java.io.tmpdir")))
+    @get:Rule val temporary = TemporaryFolder()
     @get:Rule val errors = ErrorCollector()
     private fun corpus() = Json.parseToJsonElement(javaClass.getResource("/audio-safety/cases.json")!!.readText()).jsonObject
 
@@ -47,7 +46,7 @@ class AudioSafetyTest {
         }
     }
 
-    @Test fun realWavDataDeterminesTheDurationAndTruncationIsRejected() {
+    @Test fun realWavDataDeterminesDurationAndPartialBlocksAreNotCounted() {
         // Sparse PCM data is real zero-valued audio; no giant allocation or checked-in blob.
         for ((seconds, displayed) in listOf(5 to 700, 700 to 60)) {
             val file = wav("$seconds.wav", 48_000, 2, seconds * 48_000L, displayed)
@@ -57,7 +56,7 @@ class AudioSafetyTest {
             assertEquals(seconds * 48_000L, facts.frames)
             assertEquals(if (seconds == 700) AudioExclusion.DURATION else null, AudioSafety.cost(facts).exclusion)
             RandomAccessFile(file, "rw").use { it.setLength(it.length() - 1) }
-            assertEquals(AudioInspection.Rejected(AudioExclusion.INVALID_FORMAT), AudioFileInspector.inspect(file))
+            assertEquals(AudioInspection.Readable(AudioFileFacts(48_000, 2, seconds * 48_000L - 1, "wav")), AudioFileInspector.inspect(file))
         }
     }
 
@@ -79,9 +78,11 @@ class AudioSafetyTest {
         assertEquals(listOf(null, null, AudioExclusion.PACK_LIMIT, AudioExclusion.READ_FAILURE, null), plan.files.map { it.exclusion })
         assertEquals(115_680_000L, plan.reservedCost)
         assertEquals(listOf("a", "b", "d"), plan.files.filter { it.exclusion == null }.map { it.identity })
-        // A consumer can fail to decode a; it cannot release its reservation or admit c later.
-        val failedToDecode = plan.files.first()
-        assertEquals("a", failedToDecode.identity)
+        // Simulate a consumer failing the first selected file, then completing the others.
+        val decoded = plan.files.filter { it.exclusion == null }.associate { selection ->
+            selection.identity to runCatching { if (selection.identity == "a") error("decoder failed") }.isSuccess
+        }
+        assertEquals(mapOf("a" to false, "b" to true, "d" to true), decoded)
         assertEquals(115_680_000L, plan.reservedCost)
         assertEquals(AudioExclusion.PACK_LIMIT, plan.files[2].exclusion)
     }

@@ -1,9 +1,20 @@
 package com.kimjisub.launchpad.audio
 
+// Resource ceilings are read failures, separate from corrupt structure and admission limits.
+private const val MAX_AUDIO_BOXES = 4096
+private const val MAX_AUDIO_TABLE_ROWS = 262_144L
+private const val MAX_AUDIO_SAMPLE_SIZES = 1_048_576L
+internal class AudioInspectionLimit : Exception()
+private fun inspectionCapacity(count: Long, maximum: Long) {
+    if (count > maximum) throw AudioInspectionLimit()
+}
+
 private data class AudioBox(val type: String, val data: Long, val end: Long)
 private fun AudioData.boxes(from: Long, end: Long): Sequence<AudioBox> = sequence {
     var at = from
+    var count = 0L
     while (at < end) {
+        inspectionCapacity(++count, MAX_AUDIO_BOXES.toLong())
         range(at, 8, end)
         val small = uint(at, 4)
         val header = if (small == 1L) 16 else 8
@@ -66,6 +77,13 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
                 audioRequire(aacPacketFrames == null || aacPacketFrames == config.packetFrames)
                 aacPacketFrames = config.packetFrames
             }
+            if (entry.type == "alac") {
+                val config = d.child(AudioBox("entry", entry.data + if (soundVersion == 1) 44 else 28, entry.end), "alac")
+                // FullBox header followed by the 24-byte ALACSpecificConfig.
+                d.range(config.data, 28, config.end)
+                c = d.byte(config.data + 13)
+                r = d.uint(config.data + 24, 4).toInt()
+            }
             audioRequire(r > 0 && c > 0 && (rate == 0 || rate == r && channels == c))
             rate = r; channels = c
         }
@@ -77,14 +95,18 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         for (i in 0 until timeCount) {
             val at = stts.data + 8 + i * 8
             val count = d.uint(at, 4); val delta = d.uint(at + 4, 4)
-            audioRequire(count > 0 && delta > 0)
+            audioRequire(count > 0)
+            // Android encoders can timestamp the first AAC packet with zero delta.
+            // It still contains one full codec block; reserve it once, never infer zero PCM.
+            val zeroFirst = i == 0L && count == 1L && delta == 0L && aacPacketFrames != null
+            audioRequire(delta > 0 || zeroFirst)
             samples = audioAdd(samples, count); ticks = audioAdd(ticks, audioMultiply(count, delta))
             aacPacketFrames?.let { packet ->
                 val actual = audioMultiply(delta, rate.toLong())
                 val full = audioMultiply(packet.toLong(), clock)
-                val partialLast = i == timeCount - 1 && count == 1L && actual < full
+                val partialLast = !zeroFirst && i == timeCount - 1 && count == 1L && actual < full
                 // Only a final packet may be shortened. Other packets each contain a full AAC block.
-                audioRequire(partialLast || (if (actual >= full) actual - full else full - actual) < rate)
+                audioRequire(zeroFirst || partialLast || (if (actual >= full) actual - full else full - actual) < rate)
                 val frames = if (partialLast) actual / clock + if (actual % clock == 0L) 0 else 1 else packet.toLong()
                 verifiedFrames = audioAdd(verifiedFrames, audioMultiply(count, frames))
             }
@@ -94,7 +116,10 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         val constantSize = d.uint(stsz.data + 4, 4)
         val sizeCount = d.uint(stsz.data + 8, 4)
         audioRequire(sizeCount == samples && samples > 0)
-        if (constantSize == 0L) d.range(stsz.data + 12, audioMultiply(sizeCount, 4), stsz.end)
+        if (constantSize == 0L) {
+            inspectionCapacity(sizeCount, MAX_AUDIO_SAMPLE_SIZES)
+            d.range(stsz.data + 12, audioMultiply(sizeCount, 4), stsz.end)
+        }
         val offsets = d.boxes(stbl.data, stbl.end).filter { it.type == "stco" || it.type == "co64" }.toList()
         audioRequire(offsets.size == 1)
         val offsetBox = offsets.single()
@@ -105,7 +130,9 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
         audioRequire(chunks > 0 && mappings > 0)
         var mapping = 0L
         var used = 0L
-        val extents = mutableListOf<Pair<Long, Long>>()
+        // Primitive arrays bound allocation to 4 MiB at the row ceiling; no boxed Pair per chunk.
+        val starts = LongArray(chunks.toInt())
+        val ends = LongArray(chunks.toInt())
         var nextFirst = if (mappings > 1) d.uint(stsc.data + 20, 4) else chunks + 1
         audioRequire(d.uint(stsc.data + 8, 4) == 1L)
         for (chunk in 1..chunks) {
@@ -125,13 +152,26 @@ internal fun inspectMp4(d: AudioData): AudioFileFacts {
                 audioRequire(size > 0); bytes = audioAdd(bytes, size)
             }
             val offset = d.uint(offsetBox.data + 8 + (chunk - 1) * width, width)
-            audioRequire(media.any { offset >= it.data && offset <= it.end && bytes <= it.end - offset })
-            extents.add(offset to offset + bytes)
+            // Top-level boxes occur in physical order. Find mdat with a binary search rather
+            // than scanning every mdat for every chunk in a file-controlled cross product.
+            var low = 0
+            var high = media.lastIndex
+            while (low <= high) {
+                val middle = (low + high) ushr 1
+                if (media[middle].data <= offset) low = middle + 1 else high = middle - 1
+            }
+            audioRequire(high >= 0)
+            val extent = media[high]
+            audioRequire(offset <= extent.end && bytes <= extent.end - offset)
+            starts[(chunk - 1).toInt()] = offset
+            ends[(chunk - 1).toInt()] = offset + bytes
             used += count
         }
         audioRequire(used == samples && mapping + 1 == mappings)
-        val sorted = extents.sortedBy { it.first }
-        for (i in 1 until sorted.size) audioRequire(sorted[i].first >= sorted[i - 1].second)
+        // Disjoint positive intervals have the same start and end ordering. Sorting both
+        // arrays independently detects overlaps, including nested intervals, without objects.
+        starts.sort(); ends.sort()
+        for (i in 1 until starts.size) audioRequire(starts[i] >= ends[i - 1])
         val numerator = audioMultiply(ticks, rate.toLong())
         val frames = if (aacPacketFrames != null) verifiedFrames else {
             audioRequire(numerator % clock == 0L); numerator / clock
@@ -145,6 +185,7 @@ private fun tableCount(d: AudioData, box: AudioBox, stride: Int): Long {
     d.range(box.data, 8, box.end)
     val count = d.uint(box.data + 4, 4)
     d.range(box.data + 8, audioMultiply(count, stride.toLong()), box.end)
+    inspectionCapacity(count, MAX_AUDIO_TABLE_ROWS)
     return count
 }
 
