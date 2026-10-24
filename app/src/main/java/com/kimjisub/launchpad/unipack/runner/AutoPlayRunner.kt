@@ -197,6 +197,7 @@ class AutoPlayRunner(
 				Log.thread("[AutoPlay] 2. Start Coroutine")
 				synchronized(progressValue) {
 					pendingSeek.set(null)
+					pendingResume.set(false)
 					setProgress(0)
 				}
 				listener.onStart()
@@ -241,20 +242,21 @@ class AutoPlayRunner(
 							// Read the mode with the request, so a pause before the UI's seek
 							// cannot be mistaken for the playing state from an earlier tick.
 							playing = playmode
-							resuming = playing && pendingResume.getAndSet(false)
+							// A newer pause supersedes a resume even before its first timed tick.
+							val resumeRequested = pendingResume.getAndSet(false)
+							resuming = playing && resumeRequested
 						}
 						val target = seek?.index ?: if (playing && rebaseSeekOnResume) progress else null
 						currTime = SystemClock.elapsedRealtime()
 						if (resuming) {
-							// Reset on the worker after it observes timed playback, never between
-							// the UI clearing a pending step and turning the playback flag on.
+							// Only the playback loop discards pending step input on timed resume.
 							clearStepProgress()
 							waitingForChain = -1
 							waitStartTime = currTime
 						}
 						if (target != null) {
 							// Step practice can advance after a paused seek. On resume, align to
-							// that current position, without replaying the seek or resetting its steps.
+							// that current position without replaying the seek.
 							rebaseSeekOnResume = !playing
 							// Only the loop scans steps, so a seek's step reset happens here, before
 							// the scan of the new position, and never after it.
@@ -498,7 +500,8 @@ class AutoPlayRunner(
 	/** Publishes a complete timed resume before waking the loop that owns pending steps. */
 	fun resume() {
 		synchronized(progressValue) {
-			pendingResume.set(true)
+			if (!active || playmode) return
+			if (stepMode) pendingResume.set(true)
 			beforeStartPlaying = true
 			stepMode = false
 			playmode = true

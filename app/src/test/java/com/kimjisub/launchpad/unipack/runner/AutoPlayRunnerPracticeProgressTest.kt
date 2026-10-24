@@ -188,4 +188,35 @@ class AutoPlayRunnerPracticeProgressTest {
         assertEquals("The selected delay must be consumed on its rebuilt clock", 1, runner.progress)
         assertEquals(Triple(0, 0, 410L), guideEvents.last())
     }
+    @Test fun resumingAnEndedRunnerDoesNotKeepTheNextPracticeAlive() {
+        start(listOf(on(0)), step = true)
+        runner.stepPadPressed(0, 0)
+        tick()
+        assertTrue(ended)
+        runner.resume()
+        runner.playmode = false
+        runner.stepMode = true
+        runner.launch()
+        tick()
+        assertEquals(setOf(0 to 0), hints)
+        assertTrue(runner.active)
+        runner.stepPadPressed(0, 0)
+        tick()
+        assertFalse("A resume after completion must not leak into the next launch", runner.active)
+    }
+
+    @Test fun redundantResumeKeepsTheExistingChainWaitTime() {
+        start(listOf(AutoPlay.Element.Delay(500), on(0, c = 1), AutoPlay.Element.Delay(60000)))
+        assertEquals(listOf(1), chainHints)
+        tick(2000)
+        runner.resume()
+        tick()
+        val selectionTick = scheduler.currentTime + 1
+        chain.value = 1
+        tick()
+        tick()
+        assertEquals("Repeated resume must preserve time already spent waiting for the chain",
+            selectionTick + 500, guideEvents.last().third)
+    }
+
 }

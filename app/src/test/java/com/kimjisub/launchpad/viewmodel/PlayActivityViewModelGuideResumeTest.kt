@@ -203,4 +203,36 @@ class PlayActivityViewModelGuideResumeTest {
         assertEquals(Channel.GUIDE, vm.channelManager.get(0, 0)?.channel)
         assertEquals(0L, animationTargets[0 to 0])
     }
+    private fun finishStepsAfterTransition(resumeAndPauseBeforeWorker: Boolean) {
+        File(packFolder, "autoPlay").writeText("delay 700\ntouch 1 1\ndelay 60000\n")
+        vm.unipack = UniPackFolder(packFolder).load().loadDetail()
+        vm.initAutoPlayRunner()
+        main.runAll()
+        val scheduler = TestCoroutineScheduler()
+        val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(scheduler))
+        controlledScope = scope
+        val runner = checkNotNull(vm.autoPlayRunner)
+        runner.javaClass.getDeclaredField("scope").apply { isAccessible = true }.set(runner, scope)
+        fun drainCallbacks() { repeat(3) { scheduler.runCurrent(); main.runAll() } }
+        fun tick() { scheduler.advanceTimeBy(1); drainCallbacks() }
+        vm.switchPlayMode(PlayMode.StepPractice)
+        tick()
+        assertEquals(0L, animationTargets[0 to 0])
+        if (resumeAndPauseBeforeWorker) {
+            vm.autoPlayResume()
+            vm.autoPlayPause()
+        }
+        repeat(5) { tick() }
+        assertEquals(PlayMode.StepPractice, vm.playMode)
+        assertTrue(runner.stepMode)
+        assertEquals("step still shown", 0L, animationTargets[0 to 0])
+        vm.padTouch(0, 0, true)
+        vm.padTouch(0, 0, false)
+        repeat(200) { tick() }
+        assertTrue("Finishing every step must end practice: active=${runner.active} progress=${runner.progress} playMode=${vm.playMode}", !runner.active)
+    }
+
+    @Test fun finishingAllStepsEndsPractice() = finishStepsAfterTransition(false)
+
+    @Test fun pausingBeforeTheResumeIsHandledStillFinishesAllSteps() = finishStepsAfterTransition(true)
 }
