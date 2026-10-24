@@ -348,6 +348,16 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertTrue(engine.voices.isEmpty())
 	}
 
+	@Test fun deniedModeChangeSuspendsTheCurrentPlayback() {
+		start()
+		vm.requestAudioFocus = { false }
+		vm.switchPlayMode(PlayMode.GuidePlay)
+		assertTrue("Denied output must suspend the old playback too", !vm.isAutoPlayPlaying)
+		assertEquals(PlayMode.AutoPlay, vm.playMode)
+		assertTrue(vm.autoPlayRunner!!.suspended)
+		assertTrue(engine.voices.isEmpty())
+	}
+
 	@Test fun naturalEndReleasesAnUnmatchedAutoplayPress() {
 		start(sequence = "o 1 1\nd 100\n")
 		await { vm.playMode == PlayMode.None }

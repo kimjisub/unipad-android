@@ -136,6 +136,23 @@ class PlayActivityViewModelGuideResumeTest {
         await { animationTargets[1 to 1] == 0L }
     }
 
+    @Test fun resumingAnInterruptedChainWaitRestoresItsChainHint() {
+        File(packFolder, "autoPlay").writeText("chain 2\ndelay 500\non 1 1\ndelay 60000\n")
+        vm.unipack = UniPackFolder(packFolder).load().loadDetail()
+        vm.initAutoPlayRunner()
+        main.runAll()
+        val chainKey = PlayActivityViewModel.CHAIN_INDEX_OFFSET + 1
+        vm.switchPlayMode(PlayMode.GuidePlay)
+        await { vm.channelManager.get(-1, chainKey)?.channel == Channel.GUIDE }
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+        main.runAll()
+        assertTrue(vm.channelManager.get(-1, chainKey)?.channel != Channel.GUIDE)
+        vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_GAIN)
+        vm.autoPlayResume()
+        main.runAll()
+        assertEquals("The chain the user must select must be visible again", Channel.GUIDE, vm.channelManager.get(-1, chainKey)?.channel)
+    }
+
     @Test fun resumingPracticeKeepsScreenAndControllerGuidesTogether() {
         vm.switchPlayMode(PlayMode.GuidePlay)
         await { animationTargets[0 to 0] == 500L }

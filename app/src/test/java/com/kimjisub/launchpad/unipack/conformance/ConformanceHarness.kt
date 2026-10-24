@@ -521,7 +521,8 @@ private class ScenarioRun(
 	 * [reads] times after it: the pass in progress has finished, so nothing it sends arrives later. A pass
 	 * reads the clock once, at its top, and the next pass's read marks its end. Starting reads it once more
 	 * before the first pass (the start time). A paused pass reads it once before waiting for a signal;
-	 * it no longer reads it a second time to discard the pause's elapsed time.
+	 * it no longer reads it a second time to discard the pause's elapsed time. An interruption
+	 * suspends synchronously without a further clock read, so its actual suspended state acknowledges it.
 	 */
 	private fun afterAutoPlayPass(what: String, reads: Int = 2, action: () -> Unit) {
 		val runner = autoPlay
@@ -531,7 +532,7 @@ private class ScenarioRun(
 		action()
 		if (runner != null && (wasPlaying || runner.active && runner.playmode)) {
 			val requiredReads = if (runner.playmode) reads else 1
-			waitUntil(what) { main.runAll(); watchReads.get() >= requiredReads || !runner.active }
+			waitUntil(what) { main.runAll(); watchReads.get() >= requiredReads || !runner.active || runner.suspended }
 		}
 		watchFrom.set(Long.MAX_VALUE)
 		main.runAll()

@@ -27,6 +27,7 @@ class AutoPlayRunner(
 	private val eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 	private val pauseLock = Any()
+	private val suspensionLock = Any()
 	private var pausedSince: Long? = null
 	private var completedPauseMs = 0L
 
@@ -73,7 +74,7 @@ class AutoPlayRunner(
 	private var playmodeBeforeSuspension = false
 
 	/** Unlike an ordinary pause, a covered screen cannot advance step practice or publish guides. */
-	fun suspendPlayback() = synchronized(progressValue) {
+	fun suspendPlayback() = synchronized(suspensionLock) {
 		if (!suspended && active) {
 			playmodeBeforeSuspension = playmode
 			suspended = true
@@ -81,7 +82,7 @@ class AutoPlayRunner(
 		}
 	}
 
-	fun resumeAfterInterruption() = synchronized(progressValue) {
+	fun resumeAfterInterruption() = synchronized(suspensionLock) {
 		if (!suspended) return@synchronized
 		suspended = false
 		beforeStartPlaying = true
@@ -93,8 +94,8 @@ class AutoPlayRunner(
 					listener.onGuideLedUpdate(key / 256, key % 256, GUIDE_VELOCITIES.last())
 				}
 			}
-			if (waitingForChain >= 0) listener.onGuideChainOn(waitingForChain)
 		}
+		if (waitingForChain >= 0) listener.onGuideChainOn(waitingForChain)
 		wake()
 	}
 
@@ -460,7 +461,7 @@ class AutoPlayRunner(
 						} else {
 							beforeStartPlaying = true
 
-							if (stepMode && practiceGuide) synchronized(progressValue) {
+							if (stepMode && practiceGuide) synchronized(suspensionLock) {
 								if (suspended) return@synchronized
 								drainPressedKeys()
 

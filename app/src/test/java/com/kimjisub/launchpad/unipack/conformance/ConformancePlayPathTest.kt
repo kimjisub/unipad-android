@@ -117,7 +117,7 @@ class ConformancePlayPathTest {
 	}
 
 	@Test
-	fun autoPlayThatHasEndedIsNotPausedOnLeavingTheScreen() {
+	fun leavingAfterAutoPlayEndsStillReleasesManualInput() {
 		val c = case(
 			mapOf("keySound" to "1 1 1 a.wav\n1 2 1 a.wav", "autoPlay" to "on 1 1\ndelay 50\noff 1 1"),
 			"""[
@@ -126,11 +126,10 @@ class ConformancePlayPathTest {
 				{"do": "stop"}, {"do": "observe"}
 			]""",
 		)
-		// At its end auto play turns its option off and, for a pack without a keyLED file, the touch
-		// feedback light on, so the held pad lights. Leaving then finds nothing playing and does not
-		// pause auto play, whose pad release would turn that light off.
+		// Auto play has already finished, but leaving the screen still releases the person's pad.
+		// Its press feedback turns off with that release, regardless of the auto play state.
 		assertEquals(
-			json("""[[["autoOn", 0, 0], ["autoOff", 0, 0]], [["sound", 0, 1, 0, "a.wav", 0], ["ledOn", 1, 0, "fffafafa", 3]], []]"""),
+			json("""[[["autoOn", 0, 0], ["autoOff", 0, 0]], [["sound", 0, 1, 0, "a.wav", 0], ["ledOn", 1, 0, "fffafafa", 3]], [["ledOff", 1, 0]]]"""),
 			checkpoints(c),
 		)
 	}

@@ -279,7 +279,10 @@ class PlayActivityViewModel(
 
 	private fun acquirePlaybackAudio(): Boolean {
 		val allowed = requestAudioFocus?.invoke() ?: audioFocusPolicy.hasFocus
-		if (!allowed) uiCallback?.showToast(string.audio_output_unavailable)
+		if (!allowed) {
+			interruptPlayback()
+			uiCallback?.showToast(string.audio_output_unavailable)
+		}
 		return allowed
 	}
 

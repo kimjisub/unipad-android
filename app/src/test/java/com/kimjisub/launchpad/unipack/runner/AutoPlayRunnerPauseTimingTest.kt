@@ -16,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Wall time is advanced explicitly; none of these assertions depends on how fast the Mac runs. */
 class AutoPlayRunnerPauseTimingTest {
@@ -23,6 +24,7 @@ class AutoPlayRunnerPauseTimingTest {
 	private val clockReads = AtomicLong()
 	private val presses = CopyOnWriteArrayList<Long>()
 	private val ended = CountDownLatch(1)
+	private val endCount = AtomicInteger()
 	private lateinit var runner: AutoPlayRunner
 
 	@Before fun setUp() {
@@ -37,6 +39,7 @@ class AutoPlayRunnerPauseTimingTest {
 		if (::runner.isInitialized) {
 			runner.stop()
 			assertTrue("The runner did not stop", ended.await(5, TimeUnit.SECONDS))
+			assertEquals("The sequence ends exactly once", 1, endCount.get())
 		}
 		unmockkStatic(SystemClock::class)
 	}
@@ -56,7 +59,7 @@ class AutoPlayRunnerPauseTimingTest {
 		every { pack.autoPlayTable } returns AutoPlay(elements)
 		val listener = mockk<AutoPlayRunner.Listener>(relaxed = true)
 		every { listener.onPadTouchOn(any(), any(), any(), any(), any()) } answers { presses += arg<Long>(4) }
-		every { listener.onEnd() } answers { ended.countDown() }
+		every { listener.onEnd() } answers { endCount.incrementAndGet(); ended.countDown() }
 		runner = AutoPlayRunner(pack, listener, ChainObserver())
 		runner.launch()
 		await { runner.progress == readyProgress }
@@ -103,7 +106,7 @@ class AutoPlayRunnerPauseTimingTest {
 
 	@Test fun zeroLastDelayEndsOnce() {
 		start(arrayListOf(AutoPlay.Element.Delay(0)), readyProgress = 1)
-		await { ended.count == 0L }
+		await { ended.count == 0L && !runner.active }
 		assertTrue(!runner.active)
 	}
 
@@ -129,8 +132,20 @@ class AutoPlayRunnerPauseTimingTest {
 		startFinalDelay()
 		observeTickOrEnd(500)
 		runner.stop()
-		await { ended.count == 0L }
+		await { ended.count == 0L && !runner.active }
 		assertTrue(!runner.active)
+	}
+
+	@Test fun suspendingTheLastDelayPreservesItsRemainingTime() {
+		startFinalDelay()
+		observeTickOrEnd(500)
+		runner.suspendPlayback()
+		clock.set(3500)
+		runner.resumeAfterInterruption()
+		observeTickOrEnd(4999)
+		assertEquals("The final wait still has 1 ms left after interruption", 1L, ended.count)
+		clock.set(5000)
+		await { ended.count == 0L }
 	}
 
 	@Test fun pauseHalfwayThroughADelayPreservesTheOtherHalf() {

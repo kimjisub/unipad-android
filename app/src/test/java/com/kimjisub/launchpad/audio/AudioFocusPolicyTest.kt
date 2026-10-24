@@ -32,14 +32,16 @@ class AudioFocusPolicyTest {
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
 		assertEquals(listOf("pause", "silence"), target.events)
 		assertFalse(target.isAutoPlayPlaying)
+		assertFalse(policy.hasFocus)
 
 		policy.onFocusChange(AUDIOFOCUS_GAIN)
+		assertTrue(policy.hasFocus)
 		assertEquals(listOf("pause", "silence"), target.events)
 		assertFalse(target.isAutoPlayPlaying)
 	}
 
 	@Test
-	fun transientLoss_withoutAutoPlay_silencesOnly_andGainDoesNotStartAutoPlay() {
+	fun transientLoss_withoutAutoPlay_stillClearsInputs_andGainDoesNotStartAutoPlay() {
 		target.isAutoPlayPlaying = false
 
 		policy.onFocusChange(AUDIOFOCUS_LOSS_TRANSIENT)
