@@ -89,7 +89,7 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">ไฟตอบสนอง</string>
 	<string name="traceLog">บันทึกรอยแตะ</string>
-	<string name="traceLogClear">บันทึกการติดตามถูกรีเซ็ตแล้ว</string>
+	<string name="traceLogClear">ลบรอยแตะทั้งหมดแล้ว</string>
 	<string name="record">บันทึก</string>
 	<string name="hideUI">ซ่อน UI</string>
 	<string name="watermark">ลายน้ำ</string>

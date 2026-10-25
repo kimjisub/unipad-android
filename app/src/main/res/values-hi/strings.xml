@@ -88,8 +88,8 @@
 	<string name="stepPractice">चरण</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">फीडबैक लाइट</string>
-	<string name="traceLog">टैप के निशान रिकॉर्ड करें</string>
-	<string name="traceLogClear">ट्रेस लॉग रीसेट हो गया है।</string>
+	<string name="traceLog">टैप के निशानों की रिकॉर्डिंग</string>
+	<string name="traceLogClear">टैप के सभी निशान मिटा दिए गए हैं।</string>
 	<string name="record">रिकॉर्ड</string>
 	<string name="hideUI">UI छुपाएं</string>
 	<string name="watermark">वॉटरमार्क</string>
@@ -285,7 +285,7 @@
 	<string name="backup_recovery_later">बाद में</string>
 	<string name="settings_play">बजाना</string>
 	<string name="trace_log_classic">पैड पर टैप क्रम की संख्या दिखाएँ</string>
-	<string name="trace_log_classic_desc">बजाते समय टैप के निशान रिकॉर्ड करें चालू होने पर, टैप का क्रम रेखाओं और बिंदुओं के बजाय हर पैड पर संख्याओं में दिखाएँ</string>
+	<string name="trace_log_classic_desc">बजाते समय टैप के निशानों की रिकॉर्डिंग चालू होने पर, टैप का क्रम रेखाओं और बिंदुओं के बजाय हर पैड पर संख्याओं में दिखाएँ</string>
 	<string name="slide_mode">पैड पर स्लाइड करें</string>
 	<string name="slide_mode_desc">उँगली खींचकर किसी पैड पर लाने से वह बजता है और छोड़ा गया पैड रुक जाता है</string>
 	<string name="no_app_for_link">इस डिवाइस पर कोई भी ऐप यह लिंक नहीं खोल सकता।</string>

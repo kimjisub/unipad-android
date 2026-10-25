@@ -89,7 +89,7 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Подсветка отклика</string>
 	<string name="traceLog">Запись следов</string>
-	<string name="traceLogClear">Журнал действий сброшен.</string>
+	<string name="traceLogClear">Все следы удалены.</string>
 	<string name="record">Запись</string>
 	<string name="hideUI">Скрыть UI</string>
 	<string name="watermark">Водяной знак</string>
@@ -287,7 +287,7 @@
 	<string name="backup_recovery_later">Позже</string>
 	<string name="settings_play">Игра</string>
 	<string name="trace_log_classic">Номера порядка нажатий на пэдах</string>
-	<string name="trace_log_classic_desc">Когда во время игры включён Запись следов, показывает порядок нажатий цифрами на пэдах вместо линий и точек</string>
+	<string name="trace_log_classic_desc">Когда во время игры включена запись следов, порядок нажатий отображается на пэдах цифрами, а не линиями и точками</string>
 	<string name="slide_mode">Скольжение по пэдам</string>
 	<string name="slide_mode_desc">Если провести пальцем на другой пэд, он зазвучит, а покинутый остановится</string>
 	<string name="no_app_for_link">На этом устройстве нет приложения, способного открыть эту ссылку.</string>

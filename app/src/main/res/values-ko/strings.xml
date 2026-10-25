@@ -88,7 +88,7 @@
 	<string name="stepPractice">스텝</string>
 	<string name="feedbackLight">피드백 표시</string>
 	<string name="traceLog">흔적 기록</string>
-	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
+	<string name="traceLogClear">흔적을 모두 지웠습니다.</string>
 	<string name="record">녹음</string>
 	<string name="hideUI">UI 숨기기</string>
 	<string name="watermark">워터마크</string>

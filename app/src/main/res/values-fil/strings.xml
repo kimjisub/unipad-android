@@ -89,7 +89,7 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback na ilaw</string>
 	<string name="traceLog">Pagrekord ng bakas</string>
-	<string name="traceLogClear">Na-reset na ang Trace Log.</string>
+	<string name="traceLogClear">Nabura na ang lahat ng bakas.</string>
 	<string name="record">I-record</string>
 	<string name="hideUI">Itago ang UI</string>
 	<string name="watermark">Watermark</string>

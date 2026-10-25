@@ -88,8 +88,8 @@
 	<string name="stepPractice">Étape</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lumière de retour</string>
-	<string name="traceLog">Enregistrer les traces</string>
-	<string name="traceLogClear">Le journal de suivi a été réinitialisé.</string>
+	<string name="traceLog">Enregistrement des traces</string>
+	<string name="traceLogClear">Toutes les traces ont été effacées.</string>
 	<string name="record">Enregistrer</string>
 	<string name="hideUI">Masquer l\'interface</string>
 	<string name="watermark">Filigrane</string>
@@ -286,7 +286,7 @@
 	<string name="backup_recovery_later">Plus tard</string>
 	<string name="settings_play">Jeu</string>
 	<string name="trace_log_classic">Numéros d\'ordre sur les pads</string>
-	<string name="trace_log_classic_desc">Quand le Enregistrer les traces est activé pendant le jeu, affiche l\'ordre des appuis sous forme de chiffres sur chaque pad au lieu de lignes et de points</string>
+	<string name="trace_log_classic_desc">Lorsque l\'enregistrement des traces est activé pendant le jeu, l\'ordre des appuis s\'affiche sous forme de chiffres sur chaque pad plutôt que de lignes et de points</string>
 	<string name="slide_mode">Glisser sur les pads</string>
 	<string name="slide_mode_desc">Faire glisser un doigt sur un pad le déclenche et arrête celui que l\'on quitte</string>
 	<string name="no_app_for_link">Aucune application de cet appareil ne peut ouvrir ce lien.</string>

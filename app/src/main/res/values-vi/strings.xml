@@ -89,7 +89,7 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Đèn phản hồi</string>
 	<string name="traceLog">Ghi dấu vết</string>
-	<string name="traceLogClear">Nhật ký truy vết đã được đặt lại.</string>
+	<string name="traceLogClear">Đã xóa tất cả dấu vết.</string>
 	<string name="record">Ghi âm</string>
 	<string name="hideUI">Ẩn UI</string>
 	<string name="watermark">Hình mờ</string>

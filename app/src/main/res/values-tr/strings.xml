@@ -89,7 +89,7 @@
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Geri bildirim ışığı</string>
 	<string name="traceLog">İz kaydı</string>
-	<string name="traceLogClear">İzleme günlüğü sıfırlandı.</string>
+	<string name="traceLogClear">Tüm izler temizlendi.</string>
 	<string name="record">Kaydet</string>
 	<string name="hideUI">Arayüzü Gizle</string>
 	<string name="watermark">Filigran</string>

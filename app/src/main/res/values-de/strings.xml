@@ -88,8 +88,8 @@
 	<string name="stepPractice">Schritt</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback-Licht</string>
-	<string name="traceLog">Spur aufzeichnen</string>
-	<string name="traceLogClear">Ablaufprotokoll wurde zurückgesetzt.</string>
+	<string name="traceLog">Spuraufzeichnung</string>
+	<string name="traceLogClear">Alle Spuren wurden gelöscht.</string>
 	<string name="record">Aufnahme</string>
 	<string name="hideUI">UI ausblenden</string>
 	<string name="watermark">Wasserzeichen</string>
@@ -285,7 +285,7 @@
 	<string name="backup_recovery_later">Später</string>
 	<string name="settings_play">Spielen</string>
 	<string name="trace_log_classic">Tipp-Reihenfolge als Zahlen auf Pads</string>
-	<string name="trace_log_classic_desc">Bei eingeschaltetem Spur aufzeichnen im Spiel wird die Reihenfolge der Berührungen als Zahlen auf den Pads statt als Linien und Punkte angezeigt</string>
+	<string name="trace_log_classic_desc">Bei eingeschalteter Spuraufzeichnung wird die Reihenfolge der Berührungen als Zahlen auf den Pads statt als Linien und Punkte angezeigt</string>
 	<string name="slide_mode">Über Pads streichen</string>
 	<string name="slide_mode_desc">Wenn ein Finger auf ein Pad gezogen wird, klingt dieses Pad und das verlassene hört auf</string>
 	<string name="no_app_for_link">Auf diesem Gerät kann keine App diesen Link öffnen.</string>

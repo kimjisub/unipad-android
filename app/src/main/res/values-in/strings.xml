@@ -88,8 +88,8 @@
 	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu umpan balik</string>
-	<string name="traceLog">Rekam jejak</string>
-	<string name="traceLogClear">Log Jejak telah direset.</string>
+	<string name="traceLog">Perekaman jejak</string>
+	<string name="traceLogClear">Semua jejak telah dihapus.</string>
 	<string name="record">Rekam</string>
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tanda air</string>
@@ -284,7 +284,7 @@
 	<string name="backup_recovery_later">Nanti</string>
 	<string name="settings_play">Permainan</string>
 	<string name="trace_log_classic">Tampilkan nomor urutan di pad</string>
-	<string name="trace_log_classic_desc">Saat Rekam jejak aktif ketika bermain, tampilkan urutan ketukan sebagai angka di setiap pad, bukan garis dan titik</string>
+	<string name="trace_log_classic_desc">Saat perekaman jejak aktif ketika bermain, tampilkan urutan ketukan sebagai angka di setiap pad, bukan garis dan titik</string>
 	<string name="slide_mode">Geser antar pad</string>
 	<string name="slide_mode_desc">Menggeser jari ke sebuah pad akan membunyikannya dan menghentikan pad yang ditinggalkan</string>
 	<string name="no_app_for_link">Tidak ada aplikasi di perangkat ini yang dapat membuka tautan ini.</string>

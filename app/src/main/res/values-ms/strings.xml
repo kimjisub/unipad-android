@@ -88,8 +88,8 @@
 	<string name="stepPractice">Langkah</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Lampu maklum balas</string>
-	<string name="traceLog">Rakam jejak</string>
-	<string name="traceLogClear">Log Jejak telah direset.</string>
+	<string name="traceLog">Rakaman jejak</string>
+	<string name="traceLogClear">Semua jejak telah dipadam.</string>
 	<string name="record">Rakam</string>
 	<string name="hideUI">Sembunyikan UI</string>
 	<string name="watermark">Tera Air</string>
@@ -284,7 +284,7 @@
 	<string name="backup_recovery_later">Kemudian</string>
 	<string name="settings_play">Permainan</string>
 	<string name="trace_log_classic">Tunjukkan nombor urutan pada pad</string>
-	<string name="trace_log_classic_desc">Apabila Rakam jejak dihidupkan semasa bermain, tunjukkan urutan ketikan sebagai nombor pada setiap pad, bukan garis dan titik</string>
+	<string name="trace_log_classic_desc">Apabila rakaman jejak dihidupkan semasa bermain, tunjukkan urutan ketikan sebagai nombor pada setiap pad, bukan garis dan titik</string>
 	<string name="slide_mode">Luncur pada pad</string>
 	<string name="slide_mode_desc">Menyeret jari ke sebuah pad akan membunyikannya dan menghentikan pad yang ditinggalkan</string>
 	<string name="no_app_for_link">Tiada aplikasi pada peranti ini yang boleh membuka pautan ini.</string>

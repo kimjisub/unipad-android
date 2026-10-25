@@ -88,8 +88,8 @@
 	<string name="stepPractice">Passo</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Luce di feedback</string>
-	<string name="traceLog">Registra le tracce</string>
-	<string name="traceLogClear">Il registro traccia è stato reimpostato.</string>
+	<string name="traceLog">Registrazione delle tracce</string>
+	<string name="traceLogClear">Tutte le tracce sono state cancellate.</string>
 	<string name="record">Registra</string>
 	<string name="hideUI">Nascondi UI</string>
 	<string name="watermark">Filigrana</string>
@@ -286,7 +286,7 @@
 	<string name="backup_recovery_later">Più tardi</string>
 	<string name="settings_play">Esecuzione</string>
 	<string name="trace_log_classic">Numeri dell\'ordine sui pad</string>
-	<string name="trace_log_classic_desc">Con il Registra le tracce attivo durante l\'esecuzione, mostra l\'ordine dei tocchi come numeri su ogni pad invece che con linee e punti</string>
+	<string name="trace_log_classic_desc">Con la registrazione delle tracce attiva durante l\'esecuzione, mostra l\'ordine dei tocchi come numeri su ogni pad invece che con linee e punti</string>
 	<string name="slide_mode">Scorri sui pad</string>
 	<string name="slide_mode_desc">Trascinando un dito su un pad, questo suona e quello che si lascia si ferma</string>
 	<string name="no_app_for_link">Nessuna app su questo dispositivo può aprire questo link.</string>

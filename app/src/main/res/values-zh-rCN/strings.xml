@@ -89,7 +89,7 @@
 	<string name="stepPractice">分步</string>
 	<string name="feedbackLight">反馈灯光</string>
 	<string name="traceLog">记录轨迹</string>
-	<string name="traceLogClear">按键记录已重置。</string>
+	<string name="traceLogClear">已清除所有轨迹。</string>
 	<string name="record">录制</string>
 	<string name="hideUI">隐藏UI</string>
 	<string name="watermark">UI灯光</string>
