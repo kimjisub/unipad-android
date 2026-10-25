@@ -12,7 +12,8 @@ make the counts differ; the run then fails with both numbers instead of passing 
 A run of selected tests (`--test CLASS[#METHOD]`, repeated) is judged per selection instead:
 every test the selected class declares (or the selected method) must be in the JUnit XML,
 and no other test may be. `--plan` prints the modules holding the selection and the
-`tests_regex` runner argument that runs exactly it.
+`tests_regex` runner argument and aggregate suites to exclude during discovery.
+With no selections, `--plan` prints all modules and the same suite exclusions.
 
 `--suite FILE` prints how many tests the JUnit `@Suite.SuiteClasses` in FILE runs, counted
 the same way from the listed classes' sources; a listed class without tests is an error.
@@ -22,7 +23,7 @@ Usage: check_connected_results.py [--expected-only | --plan | --suite FILE] [--g
 Prints `key=value` lines and exits 1 when the run must not count as a success.
 """
 import argparse
-from collections import namedtuple
+from collections import Counter, namedtuple
 from pathlib import Path
 import re
 import sys
@@ -39,6 +40,8 @@ CLASS_LITERAL = re.compile(r"([\w.]+)::class")
 INSTALL_FAILURE = re.compile(r"Failed to install APK|INSTALL_FAILED")
 RESULTS = Path("build/outputs/androidTest-results/connected")
 OUTCOMES = ("failure", "error", "skipped")
+SUITE_RUNNER = re.compile(r"@(?:org\.junit\.runner\.)?RunWith\(\s*(?:org\.junit\.runners\.)?Suite(?:::class|\.class)\s*\)")
+TEST_START = re.compile(r"\bTestRunner\s*: started: (.+)\(([^()]+)\)\s*$")
 
 
 SourceClass = namedtuple("SourceClass", "module path names unnamed suppressions")
@@ -95,13 +98,26 @@ def count_outcomes(cases):
     return outcomes
 
 
+def duplicate_cases(cases):
+    counts = Counter((case.classname, case.name) for case in cases)
+    return [f"duplicate test {classname}#{name}: {count} reports"
+            for (classname, name), count in sorted(counts.items()) if count > 1]
+
+
 def judge_module(module, lines, reasons):
     expected = expected_tests(module)
     cases, unreadable = reported_cases(module)
     discovered, outcomes = len(cases), count_outcomes(cases)
     lines += [f"{module}_expected={expected}", f"{module}_discovered={discovered}"]
     lines += [f"{module}_{outcome}={count}" for outcome, count in outcomes.items()]
-    reasons += unreadable
+    reasons += unreadable + duplicate_cases(cases)
+    classes = source_classes([module])
+    expected_names = {(classname, name) for classname, source in classes.items() for name in source.names}
+    reported_names = {(case.classname, case.name) for case in cases}
+    for classname, name in sorted(expected_names - reported_names):
+        reasons.append(f"{module}: missing {name} in {classname}")
+    for classname, name in sorted(reported_names - expected_names):
+        reasons.append(f"{module}: unexpected test {classname}#{name}")
     if discovered == 0:
         reasons.append(f"{module}: no JUnit results (sources have {expected})")
     elif discovered != expected:
@@ -134,15 +150,29 @@ def tests_regex(selection):
     return "^(?:" + "|".join(alternatives) + ")$"
 
 
+def aggregate_suites(modules):
+    suites = []
+    for module in modules:
+        for path in source_files(module):
+            text = path.read_text(encoding="utf-8")
+            if SUITE_RUNNER.search(text):
+                package = PACKAGE.search(text)
+                suites.append(f"{package.group(1)}.{path.stem}" if package else path.stem)
+    return sorted(suites)
+
+
 def plan_selection(selectors, modules):
     classes = source_classes(modules)
     selection, reasons = resolve_selection(selectors, classes)
     if reasons:
         print("\n".join(["verdict=fail"] + [f"reason={reason}" for reason in reasons]))
         return 1
-    holding = {classes[class_name].module for class_name, _ in selection.values()}
-    print("modules=" + " ".join(module for module in modules if module in holding))
-    print("tests_regex=" + tests_regex(selection))
+    holding = {classes[class_name].module for class_name, _ in selection.values()} if selectors else set(modules)
+    planned_modules = [module for module in modules if module in holding]
+    print("modules=" + " ".join(planned_modules))
+    print("not_class=" + ",".join(aggregate_suites(planned_modules)))
+    if selectors:
+        print("tests_regex=" + tests_regex(selection))
     return 0
 
 
@@ -178,6 +208,12 @@ def judge_selection(selectors, modules, lines, reasons):
         module_cases, unreadable = reported_cases(module)
         cases += module_cases
         reasons += unreadable
+    reasons += duplicate_cases(cases)
+    for module in modules:
+        expected = {(class_name, name) for class_name, names in selection.values()
+                    if classes[class_name].module == module for name in names}
+        discovered = len(reported_cases(module)[0])
+        lines += [f"{module}_expected={len(expected)}", f"{module}_discovered={discovered}"]
     claimed = set()
     for selector, (class_name, expected) in selection.items():
         ran = [case for case in cases if case.classname == class_name
@@ -200,6 +236,26 @@ def judge_selection(selectors, modules, lines, reasons):
         reasons.append(f"{len(unselected)} tests ran outside the selection: " + ", ".join(unselected))
 
 
+def judge_starts(path, modules, lines, reasons):
+    """The streaming runner log retains starts even when XML merges repeated names."""
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError as error:
+        reasons.append(f"test starts unreadable: {error}")
+        return
+    starts = Counter((match.group(2), match.group(1))
+                     for line in text.splitlines() if (match := TEST_START.search(line)))
+    reported = {(case.classname, case.name) for module in modules for case in reported_cases(module)[0]}
+    lines += [f"test_starts={sum(starts.values())}", f"test_starts_unique={len(starts)}"]
+    for (classname, name), count in sorted(starts.items()):
+        if count > 1:
+            reasons.append(f"duplicate test start {classname}#{name}: {count} starts")
+        if (classname, name) not in reported:
+            reasons.append(f"test start without JUnit result {classname}#{name}")
+    for classname, name in sorted(reported - starts.keys()):
+        reasons.append(f"missing test start {classname}#{name}")
+
+
 def install_failures(gradle_output):
     try:
         text = Path(gradle_output).read_text(encoding="utf-8", errors="replace")
@@ -214,9 +270,10 @@ def main():
     parser.add_argument("--expected-only", action="store_true",
                         help="print the source test counts and exit")
     parser.add_argument("--plan", action="store_true",
-                        help="print the modules holding the --test selection and its tests_regex, then exit")
+                        help="print modules, suite exclusions and an optional selection regex, then exit")
     parser.add_argument("--suite", metavar="FILE",
                         help="print the number of tests the JUnit suite in FILE runs, then exit")
+    parser.add_argument("--test-starts", help="streamed TestRunner log to check for repeated or missing starts")
     parser.add_argument("--gradle-output", help="Gradle console output to scan for install failures")
     parser.add_argument("--test", action="append", default=[], metavar="CLASS[#METHOD]",
                         help="judge only this selected class or method (repeatable)")
@@ -229,8 +286,6 @@ def main():
     if args.suite:
         return suite_expected(args.suite, args.modules)
     if args.plan:
-        if not args.test:
-            parser.error("--plan needs at least one --test")
         return plan_selection(args.test, args.modules)
     lines, reasons = [], []
     if args.test:
@@ -238,6 +293,8 @@ def main():
     else:
         for module in args.modules:
             judge_module(module, lines, reasons)
+    if args.test_starts:
+        judge_starts(args.test_starts, args.modules, lines, reasons)
     if args.gradle_output:
         reasons += install_failures(args.gradle_output)
     lines.append("verdict=" + ("fail" if reasons else "pass"))

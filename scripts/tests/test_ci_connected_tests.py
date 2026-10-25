@@ -54,7 +54,7 @@ def passed(count, class_name="ExampleTest"):
 
 class ConnectedTestRunnerTest(unittest.TestCase):
     def run_runner(self, gradle_exit=0, logcat_exit=0, serial="emulator-5678",
-                   sources=None, results=None, gradle_output="gradle-output", stale=None, tests=()):
+                   sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
@@ -66,7 +66,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         root = Path(temp.name)
         for module, classes in sources.items():
             if isinstance(classes, int):
-                classes = {"ExampleTest": (classes, "")}
+                classes = {"DesignTest" if module == "design" else "ExampleTest": (classes, "")}
             for class_name, (count, header) in classes.items():
                 path = root / module / source_path(class_name)
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,17 +75,25 @@ class ConnectedTestRunnerTest(unittest.TestCase):
             path = root / module / RESULTS / "debug/TEST-old.xml"
             path.parent.mkdir(parents=True)
             path.write_text(junit_xml(cases))
+        results = {module: [("DesignTest" if module == "design" and classname == "ExampleTest" else classname, name, outcome)
+                            for classname, name, outcome in cases] for module, cases in results.items()}
         for module, cases in results.items():
             path = root / "fake-results" / module / RESULTS / "debug/emulator-5678 - 15/TEST-new.xml"
             path.parent.mkdir(parents=True)
             path.write_text(junit_xml(cases))
         (root / "fake-gradle-output.txt").write_text(gradle_output + "\n")
+        starts = [item for cases in results.values() for item in cases] if starts is None else starts
+        (root / "fake-starts.txt").write_text("".join(
+            f"10-25 12:00:00.000 123 456 I TestRunner: started: {name}({classname})\n"
+            for classname, name, _ in starts))
         adb = root / "adb"
         adb.write_text("#!/bin/bash\nprintf '%s\\n' \"$*\" >> adb-calls.txt\n"
-                       "if [[ \"$*\" == *'logcat -d'* ]]; then echo diagnostic-output; exit \"$LOGCAT_EXIT\"; fi\n")
+                       "if [[ \"$*\" == *'logcat -d'* ]]; then echo diagnostic-output; exit \"$LOGCAT_EXIT\"; fi\n"
+                       "if [[ \"$*\" == *'TestRunner:I'* ]]; then cat fake-starts.txt; touch logcat-ready; fi\n")
         adb.chmod(0o755)
         gradle = root / "gradlew"
         gradle.write_text("#!/bin/bash\nprintf '%s\\n' \"$*\" > gradle-args.txt\n"
+                          "for ((i=0; i<100; i++)); do [[ -f logcat-ready ]] && break; sleep 0.01; done\n"
                           "if [[ -d fake-results ]]; then cp -R fake-results/. .; fi\n"
                           "cat fake-gradle-output.txt\nexit \"$GRADLE_EXIT\"\n")
         gradle.chmod(0o755)
@@ -106,9 +114,10 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertIn("gradle-output", (root / ".ci-results/gradle-ui.txt").read_text())
         self.assertIn("diagnostic-output", (root / ".ci-results/logcat.txt").read_text())
         self.assertRegex(self.status(root), rf"exit_code={exit_code}\nelapsed_seconds=\d+\n")
-        self.assertEqual((root / "adb-calls.txt").read_text().splitlines(),
+        self.assertCountEqual((root / "adb-calls.txt").read_text().splitlines(),
                          [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
-                         + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime"])
+                         + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime",
+                            "-s emulator-5678 logcat -v threadtime TestRunner:I *:S"])
 
     def assert_rejected(self, root, result, *reasons, command=COMMAND):
         self.assertNotEqual(result.returncode, 0, result.stdout)
@@ -171,6 +180,48 @@ class ConnectedTestRunnerTest(unittest.TestCase):
             with self.subTest(line=line):
                 root, result = self.run_runner(gradle_output=f"gradle-output\n{line}\nBUILD SUCCESSFUL")
                 self.assert_rejected(root, result, f"install failure: {line}")
+
+    def test_duplicate_names_cannot_replace_missing_tests_in_full_run(self):
+        root, result = self.run_runner(results={"app": [case(0), case(0)], "design": passed(1)})
+        self.assert_rejected(root, result, "duplicate test ExampleTest#test0", "missing test1")
+
+    def test_duplicate_selected_test_is_rejected_explicitly(self):
+        root, result = self.run_selection([FIRST], passed(2, FIRST) + [case(0, class_name=FIRST)])
+        self.assert_rejected(root, result, f"duplicate test {FIRST}#test0", command=SELECTED_FIRST_COMMAND)
+
+    def test_repeated_starts_fail_even_when_xml_merges_duplicates(self):
+        root, result = self.run_runner(starts=passed(2) + [case(0)] + passed(1))
+        self.assert_rejected(root, result, "duplicate test start ExampleTest#test0")
+
+    def test_missing_start_evidence_fails(self):
+        root, result = self.run_runner(starts=[])
+        self.assert_rejected(root, result, "missing test start ExampleTest#test0")
+
+    def test_aggregate_suite_is_excluded_from_selected_discovery(self):
+        suite = "com.example.AggregateSuite"
+        classes = {FIRST: (2, ""), suite: (0, "@RunWith(Suite::class)\n")}
+        root, result = self.run_selection([FIRST], passed(2, FIRST), app_classes=classes)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assert_diagnostics(root, 0, SELECTED_FIRST_COMMAND +
+                                f" -Pandroid.testInstrumentationRunnerArguments.notClass='{suite}'")
+
+    def test_full_discovery_excludes_all_aggregate_suites(self):
+        suites = ("com.example.AggregateSuite", "com.example.OtherSuite")
+        classes = {FIRST: (2, ""), suites[0]: (0, "@RunWith(Suite::class)\n"),
+                   suites[1]: (0, "@org.junit.runner.RunWith(org.junit.runners.Suite.class)\n")}
+        root, result = self.run_runner(sources={"app": classes, "design": 1},
+                                       results={"app": passed(2, FIRST), "design": passed(1)})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assert_diagnostics(root, 0, COMMAND +
+                                " -Pandroid.testInstrumentationRunnerArguments.notClass='" + ",".join(suites) + "'")
+
+    def test_suite_children_reported_twice_fail(self):
+        suite = "com.example.AggregateSuite"
+        root, result = self.run_selection([FIRST], passed(2, FIRST) * 2,
+                                          app_classes={FIRST: (2, ""), suite: (0, "@RunWith(Suite::class)\n")})
+        self.assert_rejected(root, result, f"duplicate test {FIRST}#test0",
+                             command=SELECTED_FIRST_COMMAND +
+                             f" -Pandroid.testInstrumentationRunnerArguments.notClass='{suite}'")
 
     def test_previous_run_results_are_not_counted(self):
         root, result = self.run_runner(results={"design": passed(1)}, stale={"app": passed(2)})
