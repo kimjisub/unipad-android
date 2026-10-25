@@ -88,7 +88,7 @@
 	<string name="stepPractice">Hakbang</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback na ilaw</string>
-	<string name="traceLog">Trace Log</string>
+	<string name="traceLog">Pagrekord ng bakas</string>
 	<string name="traceLogClear">Na-reset na ang Trace Log.</string>
 	<string name="record">I-record</string>
 	<string name="hideUI">Itago ang UI</string>
@@ -274,8 +274,12 @@
 	<string name="backup_recovery_later">Mamaya na</string>
 	<string name="settings_play">Pagtugtog</string>
 	<string name="trace_log_classic">Numero ng pagkakasunod sa mga pad</string>
-	<string name="trace_log_classic_desc">Kapag naka-on ang Trace Log habang tumutugtog, ipakita ang pagkakasunod ng pag-tap bilang mga numero sa bawat pad sa halip na mga linya at tuldok</string>
+	<string name="trace_log_classic_desc">Kapag naka-on ang Pagrekord ng bakas habang tumutugtog, ipakita ang pagkakasunod ng pag-tap bilang mga numero sa bawat pad sa halip na mga linya at tuldok</string>
 	<string name="slide_mode">Mag-slide sa mga pad</string>
 	<string name="slide_mode_desc">Kapag hinila ang daliri papunta sa isang pad, tutunog ito at hihinto ang pad na iniwan</string>
 	<string name="no_app_for_link">Walang app sa device na ito ang makakapagbukas ng link na ito.</string>
+	<string name="trace_display_style">Estilo ng bakas</string>
+	<string name="trace_numbers">Mga numero</string>
+	<string name="trace_lines">Mga linya at tuldok</string>
+	<string name="trace_clear_all">Burahin ang lahat ng bakas</string>
 </resources>

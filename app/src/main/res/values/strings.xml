@@ -88,7 +88,7 @@
 	<string name="stepPractice">Step</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">Feedback light</string>
-	<string name="traceLog">Trace Log</string>
+	<string name="traceLog">Trace recording</string>
 	<string name="traceLogClear">Trace Log has been reset.</string>
 	<string name="record">Record</string>
 	<string name="hideUI">Hide UI</string>
@@ -199,7 +199,7 @@
 	<string name="settings_device">Device</string>
 	<string name="settings_play">Play</string>
 	<string name="trace_log_classic">Show tap order numbers on pads</string>
-	<string name="trace_log_classic_desc">While Trace Log is on in play, show the tap order as numbers on each pad instead of lines and dots</string>
+	<string name="trace_log_classic_desc">While Trace recording is on in play, show the tap order as numbers on each pad instead of lines and dots</string>
 	<string name="slide_mode">Slide across pads</string>
 	<string name="slide_mode_desc">Dragging a finger onto a pad plays it and stops the pad it left</string>
 	<string name="settings_info">Information</string>
@@ -335,4 +335,8 @@
 	<string name="midi_reflected" tools:ignore="MissingTranslation">Reflected</string>
 	<string name="midi_swap_sides" tools:ignore="MissingTranslation">Swap Sides</string>
 	<string name="pack_no_playable_sounds">This pack has no playable sounds. Its sound files may be damaged or unsupported.</string>
+	<string name="trace_display_style">Trace display style</string>
+	<string name="trace_numbers">Numbers</string>
+	<string name="trace_lines">Lines and dots</string>
+	<string name="trace_clear_all">Clear all traces</string>
 </resources>

@@ -18,6 +18,7 @@ import com.kimjisub.launchpad.analytics.UsageErrorType
 import com.kimjisub.launchpad.audio.AudioFocusPolicy
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager
+import com.kimjisub.launchpad.manager.PreferenceManager
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.tool.Log
 import com.kimjisub.launchpad.tool.Log.log
@@ -125,6 +126,14 @@ class PlayActivityViewModel(
 	}
 
 	var uiCallback: UiCallback? = null
+	private var preferences: PreferenceManager? = null
+
+	/** Read once before input is enabled; recreation must not overwrite an in-session choice. */
+	fun bindPreferences(preferences: PreferenceManager) {
+		if (this.preferences != null) return
+		this.preferences = preferences
+		scbWatermark.setCheckedSilently(preferences.watermark)
+	}
 
 	// State
 	lateinit var unipack: UniPack
@@ -412,7 +421,8 @@ class PlayActivityViewModel(
 			optionViewVisible = !bool
 			refreshWatermark()
 		}
-		scbWatermark.onCheckedChange = {
+		scbWatermark.onCheckedChange = { checked ->
+			preferences?.watermark = checked
 			refreshWatermark()
 		}
 		scbProLightMode.onCheckedChange = { bool ->

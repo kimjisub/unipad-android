@@ -45,6 +45,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +59,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -69,6 +73,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -290,7 +296,6 @@ class PlayActivity : BaseActivity() {
 		override fun onRequestRelayout() {
 			layoutArea?.let { area ->
 				vm.uiLoaded = false
-				vm.traceLogInit()
 				initLayout(area)
 			}
 		}
@@ -303,6 +308,7 @@ class PlayActivity : BaseActivity() {
 			this,
 			PlayActivityViewModel.Factory(unipackRepo, usageAnalytics, getKoin().getOrNull<SoundRunner.Engine>() ?: SoundRunner.OboeEngine)
 		)[PlayActivityViewModel::class.java]
+		vm.bindPreferences(p)
 		vm.requestAudioFocus = { audioFocus.request() }
 		vm.uiCallback = uiCallback
 		vm.enable = true
@@ -712,38 +718,32 @@ class PlayActivity : BaseActivity() {
 	 * gesture whose first finger landed outside it (a palm on the margin silenced every pad).
 	 */
 	private fun Modifier.padTouchInput() = pointerInput(Unit) {
-		awaitPointerEventScope {
-			while (true) {
-				for (change in awaitPointerEvent().changes) {
-					val id = change.id.value
-					val (px, py) = change.position
-					when {
-						change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
-						change.changedToUpIgnoreConsumed() -> padTouch.up(id)
-						change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+		try {
+			awaitPointerEventScope {
+				while (true) {
+					for (change in awaitPointerEvent().changes) {
+						val id = change.id.value
+						val (px, py) = change.position
+						when {
+							change.changedToDownIgnoreConsumed() -> padTouch.down(id, px, py, size.width, size.height)
+							change.changedToUpIgnoreConsumed() -> padTouch.up(id)
+							change.pressed -> padTouch.move(id, px, py, size.width, size.height)
+						}
 					}
 				}
 			}
+		} finally {
+			padTouch.cancel()
 		}
 	}
 
-	/**
-	 * Chain buttons for every pointer, taken in Compose like the pads. Compose stops handing an
-	 * embedded view the press that follows a mouse hover across the screen, so the buttons' own
-	 * clicks never came with a mouse. A chain is selected when the pointer that pressed it is
-	 * released over it, as a tap; a cancelled gesture selects nothing.
-	 */
+	/** Select once at the initial press, like the controller. Moves, lifts and cancels keep it. */
 	private fun Modifier.chainTouchInput(container: () -> ViewGroup?) = pointerInput(Unit) {
 		awaitPointerEventScope {
-			val pressed = HashMap<Long, ChainView>()
 			while (true) {
 				for (change in awaitPointerEvent().changes) {
-					val id = change.id.value
-					if (change.changedToDownIgnoreConsumed()) {
-						container()?.chainAt(change.position)?.let { pressed[id] = it }
-					} else if (change.changedToUpIgnoreConsumed()) {
-						val chain = pressed.remove(id) ?: continue
-						if (!change.isConsumed && container()?.chainAt(change.position) === chain) chain.click()
+					if (change.changedToDownIgnoreConsumed() && !change.isConsumed && !vm.isOptionWindowVisible) {
+						container()?.chainAt(change.position)?.click()
 					}
 				}
 			}
@@ -946,10 +946,37 @@ class PlayActivity : BaseActivity() {
 
 			SectionTitle(string.play_section_tools, sectionColor)
 			OptionSwitch(vm.scbTraceLog, string.traceLog, textColor, tint, accentColor, hasLongClick = true)
+			if (vm.scbTraceLog.visible) TraceOptions(textColor, tint, accentColor)
 			OptionSwitch(vm.scbRecord, string.record, textColor, tint, accentColor)
 
 			Spacer(modifier = Modifier.weight(1f))
 			// Footer Quit removed — header icon is the single Quit entry point.
+		}
+	}
+
+	@Composable
+	private fun TraceOptions(textColor: Color, tint: Color, accentColor: Color) {
+		var classic by remember { mutableStateOf(p.traceLogClassic) }
+		Text(stringResource(string.trace_display_style), color = tint, fontSize = 13.sp,
+			modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp))
+		Column(Modifier.selectableGroup()) {
+			listOf(true to string.trace_numbers, false to string.trace_lines).forEach { (numbers, label) ->
+				Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).focusRing()
+					.selectable(selected = classic == numbers, role = Role.RadioButton) {
+						p.traceLogClassic = numbers
+						classic = numbers
+						uiCallback.updateTraceLogOverlay()
+					}.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+					RadioButton(selected = classic == numbers, onClick = null,
+						colors = RadioButtonDefaults.colors(selectedColor = accentColor, unselectedColor = tint))
+					Text(stringResource(label), color = textColor, fontSize = 14.sp,
+						modifier = Modifier.padding(start = 8.dp))
+				}
+			}
+		}
+		TextButton(onClick = { vm.scbTraceLog.onLongClick?.invoke() },
+			modifier = Modifier.padding(horizontal = 12.dp)) {
+			Text(stringResource(string.trace_clear_all), color = textColor)
 		}
 	}
 
@@ -1103,6 +1130,7 @@ class PlayActivity : BaseActivity() {
 	private fun initLayout(area: PlayLayout.Area) {
 		try {
 			log("[05] Set Button Layout (squareButton = ${vm.unipack.squareButton})")
+			padTouch.cancel()
 			vm.setupCheckBoxVisibility()
 
 			val buttonSize = PlayLayout.buttonSize(
@@ -1119,6 +1147,7 @@ class PlayActivity : BaseActivity() {
 			chainsRightContainer?.removeAllViews()
 			chainsBottomContainer?.removeAllViews()
 			chainsLeftContainer?.removeAllViews()
+			classicTraceShown = false
 			setupPads(buttonSize.x, buttonSize.y)
 			setupChains(buttonSize.chain)
 			padTouch.setGrid(vm.unipack.buttonX, vm.unipack.buttonY)
