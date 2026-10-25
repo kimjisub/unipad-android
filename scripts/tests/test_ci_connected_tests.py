@@ -1,4 +1,5 @@
 """Verify the connected-test runner fails unless every source test ran and passed."""
+import importlib.util
 import os
 from pathlib import Path
 import subprocess
@@ -117,7 +118,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertCountEqual((root / "adb-calls.txt").read_text().splitlines(),
                          [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
                          + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime",
-                            "-s emulator-5678 logcat -v threadtime TestRunner:I *:S"])
+                            "-s emulator-5678 logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I *:S"])
 
     def assert_rejected(self, root, result, *reasons, command=COMMAND):
         self.assertNotEqual(result.returncode, 0, result.stdout)
@@ -190,7 +191,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assert_rejected(root, result, f"duplicate test {FIRST}#test0", command=SELECTED_FIRST_COMMAND)
 
     def test_repeated_starts_fail_even_when_xml_merges_duplicates(self):
-        root, result = self.run_runner(starts=passed(2) + [case(0)] + passed(1))
+        root, result = self.run_runner(starts=passed(2) + [case(0)] + passed(1, "DesignTest"))
         self.assert_rejected(root, result, "duplicate test start ExampleTest#test0")
 
     def test_missing_start_evidence_fails(self):
@@ -287,6 +288,73 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                 self.assertIn(selector, result.stderr)
                 self.assertFalse((root / "adb-calls.txt").exists())
                 self.assertFalse((root / "gradle-args.txt").exists())
+
+
+class TestStartLogTest(unittest.TestCase):
+    def judge(self, events, cases=None):
+        spec = importlib.util.spec_from_file_location("checker", CHECKER)
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            module = root / "app"
+            report = module / RESULTS / "TEST-example.xml"
+            report.parent.mkdir(parents=True)
+            report.write_text(junit_xml(passed(1) if cases is None else cases))
+            log = root / "starts.txt"
+            log.write_text("".join(f"10-25 12:00:00.000 {pid} {pid} I {tag}: {message}\n"
+                                   for pid, tag, message in events))
+            lines, reasons = [], []
+            checker.judge_starts(log, [str(module)], lines, reasons)
+            return lines, reasons
+
+    def run_events(self, pid, methods=("test0",)):
+        return [(pid, "TestRunner", f"run started: {len(methods)} tests"),
+                *[(pid, "TestRunner", f"started: {method}(ExampleTest)") for method in methods],
+                (pid, "TestRunner", f"run finished: {len(methods)} tests, 0 failed, 0 ignored")]
+
+    def collection(self, methods=("test0",)):
+        return [(100, "AndroidTestOrchestrator", "Multiple test parameter null, starting test collection"),
+                *self.run_events(200, methods)]
+
+    def test_single_method_collection_is_not_a_second_execution(self):
+        lines, reasons = self.judge(self.collection() + self.run_events(300))
+        self.assertEqual(reasons, [])
+        self.assertIn("collection_starts=1", lines)
+        self.assertIn("test_starts=1", lines)
+
+    def test_repeated_real_single_method_runs_fail(self):
+        _, reasons = self.judge(self.collection() + self.run_events(300) + self.run_events(400))
+        self.assertIn("duplicate test start ExampleTest#test0: 2 starts", reasons)
+
+    def test_suite_and_leaf_duplicates_in_collection_fail(self):
+        _, reasons = self.judge(self.collection(("test0", "test0")) + self.run_events(300))
+        self.assertIn("duplicate collection test ExampleTest#test0: 2 starts", reasons)
+
+    def test_direct_multiple_test_run_is_not_collection(self):
+        lines, reasons = self.judge(self.run_events(300, ("test0", "test1")), passed(2))
+        self.assertEqual(reasons, [])
+        self.assertIn("collection_starts=0", lines)
+        self.assertIn("test_starts=2", lines)
+
+    def test_collection_does_not_replace_missing_execution(self):
+        _, reasons = self.judge(self.collection())
+        self.assertIn("missing test start ExampleTest#test0", reasons)
+
+    def test_unfinished_collection_is_rejected(self):
+        _, reasons = self.judge(self.collection()[:-1] + self.run_events(300))
+        self.assertIn("incomplete test collection lifecycle", reasons)
+
+    def test_missing_collection_record_is_rejected(self):
+        events = self.collection()
+        del events[2]
+        _, reasons = self.judge(events + self.run_events(300))
+        self.assertIn("incomplete test collection starts", reasons)
+
+    def test_reused_collection_pid_counts_as_execution_after_collection_ends(self):
+        lines, reasons = self.judge(self.collection() + self.run_events(200))
+        self.assertEqual(reasons, [])
+        self.assertIn("test_starts=1", lines)
 
 
 class SuiteCountTest(unittest.TestCase):

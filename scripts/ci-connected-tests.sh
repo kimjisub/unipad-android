@@ -59,7 +59,7 @@ for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test com.ki
 done
 adb -s "$ANDROID_SERIAL" logcat -c
 # Stream throughout the run: the device's ring buffer can drop the first starts.
-adb -s "$ANDROID_SERIAL" logcat -v threadtime TestRunner:I '*:S' > .ci-results/test-starts.txt 2>&1 &
+adb -s "$ANDROID_SERIAL" logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I '*:S' > .ci-results/test-starts.txt 2>&1 &
 log_pid=$!
 tasks=()
 for module in "${MODULES[@]}"; do tasks+=(":$module:connectedDebugAndroidTest"); done

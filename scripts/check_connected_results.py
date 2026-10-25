@@ -41,6 +41,8 @@ INSTALL_FAILURE = re.compile(r"Failed to install APK|INSTALL_FAILED")
 RESULTS = Path("build/outputs/androidTest-results/connected")
 OUTCOMES = ("failure", "error", "skipped")
 SUITE_RUNNER = re.compile(r"@(?:org\.junit\.runner\.)?RunWith\(\s*(?:org\.junit\.runners\.)?Suite(?:::class|\.class)\s*\)")
+LOG_PROCESS = re.compile(r"^\S+\s+\S+\s+(\d+)\s+\d+\s+[A-Z]\s+")
+RUN_START = re.compile(r"\bTestRunner\s*: run started: (\d+) tests")
 TEST_START = re.compile(r"\bTestRunner\s*: started: (.+)\(([^()]+)\)\s*$")
 
 
@@ -236,6 +238,47 @@ def judge_selection(selectors, modules, lines, reasons):
         reasons.append(f"{len(unselected)} tests ran outside the selection: " + ", ".join(unselected))
 
 
+def start_records(text):
+    """Separate Orchestrator's dry collection run using its explicit lifecycle marker.
+
+    Collection also emits TestRunner starts. The next runner process after the
+    collection marker is its dry run; real executions start after that run ends.
+    Never infer collection from test count or speed: even a single method is collected.
+    """
+    executed, collected, reasons = [], [], []
+    pending, collector = False, None
+    declared, offset = 0, 0
+    for line in text.splitlines():
+        if "AndroidTestOrchestrator:" in line and "starting test collection" in line:
+            if pending or collector:
+                reasons.append("overlapping test collection markers")
+            pending = True
+        process = LOG_PROCESS.match(line)
+        run = RUN_START.search(line)
+        start = TEST_START.search(line)
+        if pending and run:
+            if not process:
+                reasons.append("collection runner has no process id")
+                continue
+            collector = process.group(1)
+            declared, offset = int(run.group(1)), len(collected)
+            pending = False
+        if start:
+            if not process:
+                reasons.append("test start has no process id: " + line)
+            elif process.group(1) == collector:
+                collected.append(line)
+            else:
+                executed.append(line)
+        if collector and process and process.group(1) == collector and re.search(r"\bTestRunner\s*: run finished:", line):
+            if len(collected) - offset != declared:
+                reasons.append("incomplete test collection starts")
+            collector = None
+    if pending or collector:
+        reasons.append("incomplete test collection lifecycle")
+    return executed, collected, reasons
+
+
 def judge_starts(path, modules, lines, reasons):
     """The streaming runner log retains starts even when XML merges repeated names."""
     try:
@@ -243,8 +286,16 @@ def judge_starts(path, modules, lines, reasons):
     except OSError as error:
         reasons.append(f"test starts unreadable: {error}")
         return
+    executed, collected, errors = start_records(text)
+    reasons += errors
     starts = Counter((match.group(2), match.group(1))
-                     for line in text.splitlines() if (match := TEST_START.search(line)))
+                     for line in executed if (match := TEST_START.search(line)))
+    collection = Counter((match.group(2), match.group(1))
+                         for line in collected if (match := TEST_START.search(line)))
+    lines += [f"collection_starts={sum(collection.values())}", f"collection_starts_unique={len(collection)}"]
+    for (classname, name), count in sorted(collection.items()):
+        if count > 1:
+            reasons.append(f"duplicate collection test {classname}#{name}: {count} starts")
     reported = {(case.classname, case.name) for module in modules for case in reported_cases(module)[0]}
     lines += [f"test_starts={sum(starts.values())}", f"test_starts_unique={len(starts)}"]
     for (classname, name), count in sorted(starts.items()):
