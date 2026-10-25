@@ -141,6 +141,10 @@ class AutoPlayRunner(
 	val active: Boolean
 		get() = job?.isActive == true
 
+	/** Unlike [active], stays true after [stop] until the last run has sent its final callbacks. */
+	val running: Boolean
+		get() = job?.isCompleted == false
+
 	interface Listener {
 		fun onStart()
 		/**
@@ -549,7 +553,6 @@ class AutoPlayRunner(
 	fun stop() {
 		Log.thread("[AutoPlay] 3. Request Stop")
 		job?.cancel()
-		job = null
 		suspended = false
 		pendingSeek.set(null)
 		pendingResume.set(false)

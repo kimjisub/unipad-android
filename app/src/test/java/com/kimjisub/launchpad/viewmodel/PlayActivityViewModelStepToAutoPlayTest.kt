@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.unipack.UniPackFolder
@@ -106,7 +105,7 @@ class PlayActivityViewModelStepToAutoPlayTest(
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
+        if (::vm.isInitialized) clearPlayViewModel(vm) { scheduler.runCurrent() }
         scheduler.runCurrent()
         scope.cancel()
         unmockkStatic(SystemClock::class)

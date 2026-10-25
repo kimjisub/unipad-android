@@ -1,7 +1,6 @@
 package com.kimjisub.launchpad.viewmodel
 
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.design.touch.PadTouchTracker
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
@@ -84,7 +83,7 @@ class PlayActivityViewModelInputOwnershipTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
+        if (::vm.isInitialized) clearPlayViewModel(vm) { main.runAll() }
         main.runAll()
         unmockkStatic(SystemClock::class)
         Dispatchers.resetMain()
