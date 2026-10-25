@@ -15,6 +15,35 @@ import java.io.File
 /** Screen/lifecycle checks; audio requests are recorded, not claimed as physical speaker output. */
 @RunWith(AndroidJUnit4::class)
 class PlaybackInterruptionTest : PlaybackScreenTest() {
+    private fun freePlayAfterFocusLoss(controller: Boolean) {
+        File(screen.pack(), "autoPlay").delete()
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.onMain {
+            assertEquals(PlayMode.None, vm.playMode)
+            vm.audioFocusPolicy.onFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+        }
+        val input = if (controller) "controller" else "screen"
+        screen.capture("focus-loss-free-play-$input-before-press")
+        try {
+            if (controller) {
+                screen.onMain { vm.controllerPadTouch(0, 0, true); vm.controllerPadTouch(0, 0, false) }
+            } else {
+                screen.tapPad(0)
+            }
+            screen.await("The first explicit pad press after permanent focus loss was ignored") { audio.plays.size == 1 }
+            screen.onMain { assertEquals(PlayMode.None, vm.playMode) }
+        } finally {
+            screen.capture("focus-loss-free-play-$input-after-press")
+        }
+    }
+
+    @Test fun freePlayScreenPadRequestsAudioAfterPermanentFocusLoss() =
+        freePlayAfterFocusLoss(controller = false)
+
+    @Test fun freePlayControllerPadRequestsAudioAfterPermanentFocusLoss() =
+        freePlayAfterFocusLoss(controller = true)
+
     @Test fun homeKeepsGuideModeAndWaitsForManualPlay() {
         File(screen.pack(), "autoPlay").writeText("delay 5000\ntouch 1 1\ndelay 60000\n")
         screen.openPlay()

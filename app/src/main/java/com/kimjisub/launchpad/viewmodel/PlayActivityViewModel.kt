@@ -615,7 +615,9 @@ class PlayActivityViewModel(
 		if (!isChannelManagerInitialized) return
 		try {
 			if (upDown) {
-				if (!audioFocusPolicy.hasFocus) return
+				// A person's new press can request output; automatic input must stay suspended.
+				if (!audioFocusPolicy.hasFocus &&
+					(pressedBy != PlayTrigger.PAD || !acquirePlaybackAudio())) return
 				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source, pointerId))
 				padLoopOwner[x to y] = pressedBy
 				playSession.playTriggered(pressedBy, source)
