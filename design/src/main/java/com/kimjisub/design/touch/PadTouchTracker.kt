@@ -13,6 +13,10 @@ class PadTouchTracker(
 	private val listener: (pointerId: Long, x: Int, y: Int, down: Boolean) -> Unit,
 ) {
 	var slide = false
+		set(value) {
+			if (field != value) cancel()
+			field = value
+		}
 
 	private var rows = 0
 	private var cols = 0
@@ -27,18 +31,19 @@ class PadTouchTracker(
 	private val cancelled = HashSet<Long>()
 
 	fun setGrid(rows: Int, cols: Int) {
-		releaseAll()
+		cancel()
 		this.rows = rows
 		this.cols = cols
 	}
 
 	fun down(pointerId: Long, px: Float, py: Float, width: Int, height: Int) {
 		pointers += pointerId
+		cancelled -= pointerId
 		press(pointerId, cellAt(px, py, width, height, rows, cols))
 	}
 
 	fun move(pointerId: Long, px: Float, py: Float, width: Int, height: Int) {
-		if (slide && pointerId !in cancelled) press(pointerId, cellAt(px, py, width, height, rows, cols))
+		if (slide && pointerId in pointers && pointerId !in cancelled) press(pointerId, cellAt(px, py, width, height, rows, cols))
 	}
 
 	fun up(pointerId: Long) {

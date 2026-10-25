@@ -87,8 +87,8 @@
 	<string name="guidePlay">가이드</string>
 	<string name="stepPractice">스텝</string>
 	<string name="feedbackLight">피드백 표시</string>
-	<string name="traceLog">순서 기록</string>
-	<string name="traceLogClear">순서 기록이 초기화되었습니다.</string>
+	<string name="traceLog">흔적 기록</string>
+	<string name="traceLogClear">흔적을 모두 지웠습니다.</string>
 	<string name="record">녹음</string>
 	<string name="hideUI">UI 숨기기</string>
 	<string name="watermark">워터마크</string>
@@ -186,7 +186,7 @@
 	<string name="settings_device">기기</string>
 	<string name="settings_play">연주</string>
 	<string name="trace_log_classic">패드에 누른 순서 숫자 표시</string>
-	<string name="trace_log_classic_desc">연주 중 순서 기록을 켜면 선과 점 대신 각 패드에 누른 순서를 숫자로 표시합니다</string>
+	<string name="trace_log_classic_desc">연주 중 흔적 기록을 켜면 선과 점 대신 각 패드에 누른 순서를 숫자로 표시합니다</string>
 	<string name="slide_mode">패드 슬라이드</string>
 	<string name="slide_mode_desc">손가락을 끌어 다른 패드에 들어가면 그 패드가 울리고 벗어난 패드는 멈춥니다</string>
 	<string name="settings_info">정보</string>
@@ -322,4 +322,8 @@
 	<string name="midi_reflected">둘째 장치 좌우 반전</string>
 	<string name="midi_swap_sides">좌우 바꾸기</string>
 	<string name="pack_no_playable_sounds">이 팩에서 재생할 수 있는 소리를 찾지 못했습니다. 소리 파일이 손상되었거나 지원하지 않는 형식일 수 있습니다.</string>
+	<string name="trace_display_style">흔적 표시 방식</string>
+	<string name="trace_numbers">숫자</string>
+	<string name="trace_lines">선과 점</string>
+	<string name="trace_clear_all">흔적 모두 지우기</string>
 </resources>

@@ -88,8 +88,8 @@
 	<string name="stepPractice">ステップ</string>
 	<string name="option_indicator_format">%s ●</string>
 	<string name="feedbackLight">フィードバックライト</string>
-	<string name="traceLog">トレースログ</string>
-	<string name="traceLogClear">トレースログがリセットされました。</string>
+	<string name="traceLog">軌跡の記録</string>
+	<string name="traceLogClear">すべての軌跡を消去しました。</string>
 	<string name="record">録音</string>
 	<string name="hideUI">UIを非表示</string>
 	<string name="watermark">ウォーターマーク</string>
@@ -284,8 +284,12 @@
 	<string name="backup_recovery_later">後で</string>
 	<string name="settings_play">演奏</string>
 	<string name="trace_log_classic">パッドに順番の数字を表示</string>
-	<string name="trace_log_classic_desc">演奏中にトレースログをオンにすると、線と点の代わりに各パッドにタップした順番を数字で表示します</string>
+	<string name="trace_log_classic_desc">演奏中に軌跡の記録をオンにすると、線と点の代わりに各パッドにタップした順番を数字で表示します</string>
 	<string name="slide_mode">パッドをなぞる</string>
 	<string name="slide_mode_desc">指をなぞって別のパッドに入るとそのパッドが鳴り、離れたパッドは止まります</string>
 	<string name="no_app_for_link">この端末にはこのリンクを開けるアプリがありません。</string>
+	<string name="trace_display_style">軌跡の表示方法</string>
+	<string name="trace_numbers">数字</string>
+	<string name="trace_lines">線と点</string>
+	<string name="trace_clear_all">軌跡をすべて消去</string>
 </resources>
