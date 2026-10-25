@@ -101,7 +101,8 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		assertEquals(1, held.size)
 
 		if (controllerFirst) vm.controllerPadTouch(0, 0, false) else vm.padTouch(0, 0, false)
-		assertEquals("Releasing one input must keep the shared loop", held, engine.voices)
+		assertEquals("Only the input that started the current loop may stop it",
+			if (controllerFirst) emptyMap<Int, Int>() else held, engine.voices)
 		assertEquals(Channel.PRESSED, vm.channelManager.get(0, 0)?.channel)
 
 		if (controllerFirst) vm.padTouch(0, 0, false) else vm.controllerPadTouch(0, 0, false)
@@ -160,11 +161,11 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 		)
 	}
 
-	@Test fun controllerReleaseKeepsThePadHeldOnScreen() = sharedPadRelease(controllerFirst = true, autoplay = false)
+	@Test fun controllerReleaseStopsItsLoopAndKeepsTheScreenFeedback() = sharedPadRelease(controllerFirst = true, autoplay = false)
 
 	@Test fun screenReleaseKeepsThePadHeldOnController() = sharedPadRelease(controllerFirst = false, autoplay = false)
 
-	@Test fun lastScreenReleaseOverridesAutoplayAfterControllerRelease() = sharedPadRelease(controllerFirst = true, autoplay = true)
+	@Test fun controllerReleaseStopsItsLoopWhileScreenAndAutoplayRemainHeld() = sharedPadRelease(controllerFirst = true, autoplay = true)
 
 	@Test fun lastControllerReleaseOverridesAutoplayAfterScreenRelease() = sharedPadRelease(controllerFirst = false, autoplay = true)
 

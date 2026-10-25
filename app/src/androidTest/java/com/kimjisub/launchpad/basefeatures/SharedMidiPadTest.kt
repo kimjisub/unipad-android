@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 /** Real screen dispatch and virtual Launchpad packets share the same looping pad. */
 @RunWith(AndroidJUnit4::class)
 class SharedMidiPadTest : HeldPadTest() {
-    @Test fun controllerReleaseKeepsScreenHoldUntilTheFingerLifts() = sharedPad(controllerFirst = true)
+    @Test fun controllerReleaseStopsItsLoopAndKeepsScreenFeedback() = sharedPad(controllerFirst = true)
 
     @Test fun screenReleaseKeepsControllerHoldUntilItsPadReleases() = sharedPad(controllerFirst = false)
 
@@ -34,7 +34,9 @@ class SharedMidiPadTest : HeldPadTest() {
             if (controllerFirst) midi(false) else fingers.up(finger)
             settle()
             capture("one-released")
-            assertHeldStill("Releasing one input must preserve the other", listOf(pad, pad), setOf(pad))
+            assertStill("One input remains pressed", 2, setOf(pad))
+            assertEquals("Only the input that started the current loop may stop it",
+                if (controllerFirst) emptyList<Cell>() else listOf(pad), loopingCells())
             assertEquals("Partial release must send no LED-off packet for this pad", false,
                 packets.contains(listOf(9, 144, 34, 0)))
             if (controllerFirst) fingers.up(finger) else midi(false)

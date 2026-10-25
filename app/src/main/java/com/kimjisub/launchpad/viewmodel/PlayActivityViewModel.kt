@@ -529,7 +529,7 @@ class PlayActivityViewModel(
 	// only a release from its current owner may end that loop.
 	private data class PadInput(val trigger: PlayTrigger, val source: InputSource?, val pointerId: Long = 0)
 	private val heldPads = mutableMapOf<Pair<Int, Int>, MutableSet<PadInput>>()
-	private val padLoopOwner = mutableMapOf<Pair<Int, Int>, PlayTrigger>()
+	private val padOutputOwner = mutableMapOf<Pair<Int, Int>, PadInput>()
 	@Volatile private var autoPlayInputGeneration = 0L
 
 	private fun releaseAutoPlayPads() {
@@ -614,12 +614,13 @@ class PlayActivityViewModel(
 		}
 		if (!isChannelManagerInitialized) return
 		try {
+			val input = PadInput(pressedBy, source, pointerId)
 			if (upDown) {
 				// A person's new press can request output; automatic input must stay suspended.
 				if (!audioFocusPolicy.hasFocus &&
 					(pressedBy != PlayTrigger.PAD || !acquirePlaybackAudio())) return
-				heldPads.getOrPut(x to y) { mutableSetOf() }.add(PadInput(pressedBy, source, pointerId))
-				padLoopOwner[x to y] = pressedBy
+				heldPads.getOrPut(x to y) { mutableSetOf() }.add(input)
+				padOutputOwner[x to y] = input
 				playSession.playTriggered(pressedBy, source)
 				if (autoPlayRunner?.stepMode == true && interruptedMode == null) {
 					autoPlayRunner?.stepPadPressed(x, y)
@@ -641,17 +642,17 @@ class PlayActivityViewModel(
 			} else {
 				val pad = x to y
 				val sources = heldPads[pad] ?: return
-				if (!sources.remove(PadInput(pressedBy, source, pointerId))) return
-				// All fingers/controllers share the player's current re-press. Auto play is its
-				// own owner, so releasing an older input must not end the newer owner's loop.
-				if (sources.none { it.trigger == pressedBy } && padLoopOwner[pad] == pressedBy) {
-					padLoopOwner.remove(pad)
+				if (!sources.remove(input)) return
+				// Sound and pack lights belong to the input that started them. Press feedback
+				// stays on independently until every input holding this pad has released it.
+				if (padOutputOwner[pad] == input) {
+					padOutputOwner.remove(pad)
 					soundRunner?.soundOff(x, y)
 					ledRunner?.eventOff(x, y, atMs)
 				}
 				if (sources.isEmpty()) {
 					heldPads.remove(pad)
-					padLoopOwner.remove(pad)
+					padOutputOwner.remove(pad)
 					channelManager.remove(x, y, Channel.PRESSED)
 				}
 				uiCallback?.setLedPad(x, y)
