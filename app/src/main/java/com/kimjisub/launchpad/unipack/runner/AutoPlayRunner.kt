@@ -84,6 +84,7 @@ class AutoPlayRunner(
 	private data class Seek(val index: Int, val wallTimeMs: Long, val pausedMs: Long)
 	private val pendingSeek = AtomicReference<Seek?>(null)
 	private val pendingResume = AtomicBoolean(false)
+	private val pendingAutoPlay = AtomicBoolean(false)
 	val progress: Int
 		get() = progressValue.get()
 
@@ -198,6 +199,7 @@ class AutoPlayRunner(
 				synchronized(progressValue) {
 					pendingSeek.set(null)
 					pendingResume.set(false)
+					pendingAutoPlay.set(false)
 					setProgress(0)
 				}
 				listener.onStart()
@@ -223,17 +225,20 @@ class AutoPlayRunner(
 					var accountedPauseMs = totalPausedAt(startTime)
 					var prevPracticeGuide = practiceGuide
 					var rebaseSeekOnResume = false
+					var stepReplayEnd = 0
+					var stepReplayPads = emptySet<Int>()
 					// Time spent not advancing is not owed to the sequence once playback continues.
 					fun skipIdleTime(now: Long) {
 						if (delayAccum <= now - startTime) delayAccum = now - startTime
 					}
 					var currTime = startTime
 					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
-					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() ||
+					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
 						stepMode && practiceGuide && hasPendingStep() || hasPendingDelay()) && isActive) {
 						val seek: Seek?
 						val playing: Boolean
 						val resuming: Boolean
+						val switchingToAutoPlay: Boolean
 						synchronized(progressValue) {
 							seek = pendingSeek.getAndSet(null)
 							// A step scan or command pass may have moved on from the target after the
@@ -245,9 +250,27 @@ class AutoPlayRunner(
 							// A newer pause supersedes a resume even before its first timed tick.
 							val resumeRequested = pendingResume.getAndSet(false)
 							resuming = playing && resumeRequested
+							switchingToAutoPlay = pendingAutoPlay.getAndSet(false)
 						}
-						val target = seek?.index ?: if (playing && rebaseSeekOnResume) progress else null
+						var target = seek?.index ?: if (playing && rebaseSeekOnResume) progress else null
 						currTime = SystemClock.elapsedRealtime()
+						if (switchingToAutoPlay) {
+							// A shown step has advanced progress without playing it. Recover only the
+							// unplayed pads, including input queued immediately before the mode change.
+							drainPressedKeys()
+							stepReplayEnd = progress
+							stepReplayPads = synchronized(stepPendingPads) { stepPendingPads.toSet() }
+							if (seek == null && stepReplayPads.isNotEmpty()) {
+								target = (stepStartProgress until stepReplayEnd).firstOrNull { index ->
+									val element = autoPlay.elements[index]
+									element is AutoPlay.Element.On && guideKey(element.x, element.y) in stepReplayPads
+								}
+								target?.let { setProgress(it) }
+							}
+							clearStepProgress()
+							waitingForChain = -1
+							waitStartTime = currTime
+						}
 						if (resuming) {
 							// Only the playback loop discards pending step input on timed resume.
 							clearStepProgress()
@@ -260,7 +283,10 @@ class AutoPlayRunner(
 							rebaseSeekOnResume = !playing
 							// Only the loop scans steps, so a seek's step reset happens here, before
 							// the scan of the new position, and never after it.
-							if (seek != null) clearStepProgress()
+							if (seek != null) {
+								clearStepProgress()
+								stepReplayEnd = 0
+							}
 							delayAccum = 0
 							for (index in 0 until target) {
 								val element = autoPlay.elements[index]
@@ -397,7 +423,7 @@ class AutoPlayRunner(
 										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
-												if (!practiceGuide) {
+												if (!practiceGuide && (index >= stepReplayEnd || guideKey(element.x, element.y) in stepReplayPads)) {
 													if (chain.value != element.currChain) listener.onChainChange(element.currChain)
 													listener.onPadTouchOn(element.x, element.y, element.currChain, element.num, startTime + delayAccum)
 												}
@@ -493,8 +519,21 @@ class AutoPlayRunner(
 		job = null
 		pendingSeek.set(null)
 		pendingResume.set(false)
+		pendingAutoPlay.set(false)
 		clearGuides()
 		resetStepState()
+	}
+
+	/** Switches to audible playback; the loop owns recovering and rebasing the pending step. */
+	fun startAutoPlay() {
+		synchronized(progressValue) {
+			if (active) pendingAutoPlay.set(true) else resetStepState()
+			beforeStartPlaying = true
+			practiceGuide = false
+			stepMode = false
+			playmode = true
+		}
+		wake()
 	}
 
 	/** Publishes a complete timed resume before waking the loop that owns pending steps. */
