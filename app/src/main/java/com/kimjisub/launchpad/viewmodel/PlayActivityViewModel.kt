@@ -859,14 +859,10 @@ class PlayActivityViewModel(
 		if (mode != PlayMode.AutoPlay) releaseAutoPlayPads()
 		when (mode) {
 			PlayMode.AutoPlay -> {
-				runner.practiceGuide = false
-				runner.stepMode = false
-				runner.resetStepState()
 				autoPlayRemoveGuide()
-				runner.playmode = true
 				isPracticeMode = false
 				isAutoPlayPlaying = true
-				runner.beforeStartPlaying = true
+				runner.startAutoPlay()
 			}
 			PlayMode.GuidePlay -> {
 				runner.practiceGuide = true

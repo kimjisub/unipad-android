@@ -92,6 +92,27 @@ class AutoPlayRunnerChainWaitTimingTest {
         }
     }
 
+    @Test fun audibleModeRequestPreservesTheRemainingChainWaitDelay() {
+        startWaiting()
+        runner.startAutoPlay()
+        scheduler.runCurrent()
+        assertThreeTimedPresses()
+    }
+
+    @Test fun pausedAudibleModeRequestPreservesTheRemainingChainWaitDelay() {
+        startWaiting()
+        runner.playmode = false
+        scheduler.runCurrent()
+        tickTo(8200)
+        runner.startAutoPlay()
+        scheduler.runCurrent()
+        assertEquals(emptyList<Pair<Long, Long>>(), presses)
+        tickTo(8999)
+        assertEquals(emptyList<Pair<Long, Long>>(), presses)
+        tickTo(9000)
+        assertEquals(listOf(9000L to 9000L), presses)
+    }
+
     @Test fun switchingFromGuideToAutoPreservesTheRemainingDelay() {
         startWaiting()
         switchToAuto()
