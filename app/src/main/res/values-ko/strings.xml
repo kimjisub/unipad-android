@@ -148,6 +148,7 @@
 
 	<string name="outOfMemory">메모리 공간이 부족합니다.\n메모리 확보 후 다시 시도해주세요.</string>
 	<string name="audio_output_unavailable">소리 출력을 시작하지 못했습니다.\n팩을 다시 열어 주세요.</string>
+	<string name="playback_audio_unavailable">소리를 낼 수 없습니다. 패드나 재생을 눌러 다시 시도해 주세요.</string>
 	<string name="outOfCPU">사양 문제로 불러오지 못하였습니다.\n다시 시도해주세요</string>
 
 	<!--Launchpad Connection-->

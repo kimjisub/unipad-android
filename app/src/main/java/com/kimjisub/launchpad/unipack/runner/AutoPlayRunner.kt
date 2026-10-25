@@ -27,6 +27,7 @@ class AutoPlayRunner(
 	private val eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 	private val pauseLock = Any()
+	private val suspensionLock = Any()
 	private var pausedSince: Long? = null
 	private var completedPauseMs = 0L
 
@@ -66,6 +67,37 @@ class AutoPlayRunner(
 			field = value
 			wake()
 		}
+
+	@Volatile
+	var suspended = false
+		private set
+	private var playmodeBeforeSuspension = false
+
+	/** Unlike an ordinary pause, a covered screen cannot advance step practice or publish guides. */
+	fun suspendPlayback() = synchronized(suspensionLock) {
+		if (!suspended && active) {
+			playmodeBeforeSuspension = playmode
+			suspended = true
+			playmode = false
+		}
+	}
+
+	fun resumeAfterInterruption() = synchronized(suspensionLock) {
+		if (!suspended) return@synchronized
+		suspended = false
+		beforeStartPlaying = true
+		playmode = playmodeBeforeSuspension
+		if (stepMode && practiceGuide) {
+			synchronized(stepPendingPads) {
+				for (key in stepPendingPads) {
+					listener.onGuidePadOn(key / 256, key % 256, 0)
+					listener.onGuideLedUpdate(key / 256, key % 256, GUIDE_VELOCITIES.last())
+				}
+			}
+		}
+		if (waitingForChain >= 0) listener.onGuideChainOn(waitingForChain)
+		wake()
+	}
 
 	// While not playing, the loop has nothing to do until a mode flag, the progress, a step pad or
 	// the chain changes, so it sleeps on this signal instead of polling every loopDelay. CONFLATED
@@ -238,7 +270,11 @@ class AutoPlayRunner(
 					var currTime = startTime
 					fun hasPendingDelay() = !(stepMode && practiceGuide) && delayAccum > currTime - startTime
 					while ((progress < autoPlay.elements.size || pendingSeek.get() != null || pendingResume.get() || pendingAutoPlay.get() ||
-						stepMode && practiceGuide && hasPendingStep() || hasPendingDelay()) && isActive) {
+						stepMode && practiceGuide && hasPendingStep() || suspended || hasPendingDelay()) && isActive) {
+						if (suspended) {
+							wakeSignal.receive()
+							continue
+						}
 						val seek: Seek?
 						val playing: Boolean
 						val resuming: Boolean
@@ -342,7 +378,7 @@ class AutoPlayRunner(
 							prevPracticeGuide = practiceGuide
 						}
 
-						if (playing && playmode && pendingSeek.get() == null) {
+						if (!suspended && playing && playmode && pendingSeek.get() == null) {
 							// Practice mode: waiting for chain change
 							if (practiceGuide && waitingForChain >= 0) {
 								if (chain.value == waitingForChain) {
@@ -415,7 +451,7 @@ class AutoPlayRunner(
 								// Progress and playmode are read there, as seeking or pausing may have happened
 								// while delivery waited.
 								if (waitingForChain < 0 && delayAccum <= currTime - startTime) withContext(eventDispatcher) {
-									while (playmode && pendingSeek.get() == null && delayAccum <= currTime - startTime) {
+									while (!suspended && playmode && pendingSeek.get() == null && delayAccum <= currTime - startTime) {
 										val (index, element) = elementAtProgress(autoPlay) ?: break
 										when (element) {
 											is AutoPlay.Element.On -> {
@@ -447,7 +483,8 @@ class AutoPlayRunner(
 						} else {
 							beforeStartPlaying = true
 
-							if (stepMode && practiceGuide) {
+							if (stepMode && practiceGuide) synchronized(suspensionLock) {
+								if (suspended) return@synchronized
 								drainPressedKeys()
 
 								val currentChain = chain.value
@@ -513,6 +550,7 @@ class AutoPlayRunner(
 		Log.thread("[AutoPlay] 3. Request Stop")
 		job?.cancel()
 		job = null
+		suspended = false
 		pendingSeek.set(null)
 		pendingResume.set(false)
 		pendingAutoPlay.set(false)

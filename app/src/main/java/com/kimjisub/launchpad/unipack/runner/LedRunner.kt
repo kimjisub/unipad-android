@@ -137,9 +137,9 @@ class LedRunner(
 	fun launch() {
 		Log.thread("[Led] 1. Request Coroutine")
 		if (job?.isActive != true) {
-			// Finite animations survive stop() (eventOffAll only shuts loop 0 down). Their times are absolute,
-			// so they are pushed back by the paused time: resuming neither replays what was scheduled while
-			// stopped in one burst nor cuts short a wait that was still pending.
+			// stop() alone retains finite animations; callers discarding lights also call clear().
+			// If retained, their absolute times move by the pause so a relaunch neither bursts overdue
+			// events nor cuts short a pending wait. The app's light switch clears rather than resumes them.
 			synchronized(this) {
 				pausedAt?.let { since ->
 					val pausedFor = SystemClock.elapsedRealtime() - since
@@ -172,6 +172,18 @@ class LedRunner(
 				if (wasActive) pausedAt = SystemClock.elapsedRealtime()
 				ledAnimationStatesAdd.clear()
 			}
+		}
+	}
+
+	/** Discards all animations between deliveries; callers also clear their rendered LED channel. */
+	fun clear() = deliveryLock.withLock {
+		synchronized(this) {
+			ledAnimationStates.clear()
+			ledAnimationStatesAdd.clear()
+			for (row in heldLoop) row.fill(null)
+			for (row in btnLed) row.fill(null)
+			cirLed.fill(null)
+			pausedAt = null
 		}
 	}
 
