@@ -66,6 +66,10 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             assertTrue("The press came after the fade had ended", SystemClock.elapsedRealtime() - closed < 3000)
             screen.await("A pad pressed while the options window faded out did not play") { audio.plays.size == 1 }
         } finally {
+            if (previous == "null") {
+                // Deleting the setting alone leaves WindowManager using the slowed animation scale.
+                screen.device.executeShellCommand("settings put global $scale 1")
+            }
             screen.device.executeShellCommand(
                 if (previous == "null") "settings delete global $scale" else "settings put global $scale $previous"
             )
