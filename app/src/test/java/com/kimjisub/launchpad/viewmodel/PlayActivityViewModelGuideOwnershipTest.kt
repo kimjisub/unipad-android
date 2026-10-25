@@ -1,6 +1,5 @@
 package com.kimjisub.launchpad.viewmodel
 
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -61,9 +60,10 @@ class PlayActivityViewModelGuideOwnershipTest {
         .apply { isAccessible = true }.get(runner) as AutoPlayRunner.Listener
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        main.runAll()
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            Dispatchers.resetMain()
+        }
     }
 
     @Test fun oldPadOnDoesNotLeaveAHintAfterReplacement() {

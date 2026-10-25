@@ -19,6 +19,7 @@ import com.kimjisub.launchpad.unipack.struct.Sound
 import com.kimjisub.launchpad.viewmodel.FakeMainDispatcher
 import com.kimjisub.launchpad.viewmodel.PlayActivityViewModel
 import com.kimjisub.launchpad.viewmodel.PlayMode
+import com.kimjisub.launchpad.viewmodel.stopPlayViewModels
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -338,12 +339,16 @@ private class ScenarioRun(
 			}
 			return checkpoints
 		} finally {
-			autoPlay?.stop()
-			vm.ledRunner?.stop()
-			vm.soundRunner?.destroy()
-			vm.viewModelScope.cancel()
-			unmockkStatic(SystemClock::class)
-			Dispatchers.resetMain()
+			stopPlayViewModels(listOf(vm), drain = { main.runAll() }, restore = {
+				unmockkStatic(SystemClock::class)
+				Dispatchers.resetMain()
+			}) {
+				autoPlay?.stop()
+				it.autoPlayRunner?.stop()
+				it.ledRunner?.stop()
+				it.soundRunner?.destroy()
+				it.viewModelScope.cancel()
+			}
 		}
 	}
 

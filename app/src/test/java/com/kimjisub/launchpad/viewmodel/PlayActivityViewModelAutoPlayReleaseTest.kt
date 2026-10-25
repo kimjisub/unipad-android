@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.viewmodel
 
 import android.media.AudioManager
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.audio.OboeAudioEngine
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -58,10 +57,11 @@ class PlayActivityViewModelAutoPlayReleaseTest {
 	}
 
 	@After fun tearDown() {
-		if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-		main.runAll()
-		unmockkStatic(SystemClock::class)
-		Dispatchers.resetMain()
+		clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+			main.runAll()
+			unmockkStatic(SystemClock::class)
+			Dispatchers.resetMain()
+		}
 	}
 
 	private fun await(check: () -> Boolean) {

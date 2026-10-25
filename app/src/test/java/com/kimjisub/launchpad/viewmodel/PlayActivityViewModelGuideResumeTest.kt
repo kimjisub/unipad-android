@@ -2,7 +2,6 @@ package com.kimjisub.launchpad.viewmodel
 
 import android.media.AudioManager
 import android.os.SystemClock
-import androidx.lifecycle.ViewModelStore
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
 import com.kimjisub.launchpad.manager.ChannelManager.Channel
@@ -39,6 +38,7 @@ class PlayActivityViewModelGuideResumeTest {
     private lateinit var vm: PlayActivityViewModel
     private lateinit var packFolder: File
     private var controlledScope: CoroutineScope? = null
+    private var controlledScheduler: TestCoroutineScheduler? = null
     private var runDuringGuideRemoval: (() -> Unit)? = null
     private val hardware = mutableMapOf<Pair<Int, Int>, Int>()
     private val animationTargets = mutableMapOf<Pair<Int, Int>, Long>()
@@ -75,11 +75,12 @@ class PlayActivityViewModelGuideResumeTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) ViewModelStore().apply { put("play", vm); clear() }
-        main.runAll()
-        controlledScope?.cancel()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { controlledScheduler?.runCurrent(); main.runAll() }) {
+            main.runAll()
+            controlledScope?.cancel()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     private fun await(check: () -> Boolean) {
@@ -220,6 +221,7 @@ class PlayActivityViewModelGuideResumeTest {
         val scheduler = TestCoroutineScheduler()
         val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(scheduler))
         controlledScope = scope
+        controlledScheduler = scheduler
         val runner = checkNotNull(vm.autoPlayRunner)
         runner.javaClass.getDeclaredField("scope").apply { isAccessible = true }.set(runner, scope)
         fun drainCallbacks() { repeat(3) { scheduler.runCurrent(); main.runAll() } }
@@ -273,6 +275,7 @@ class PlayActivityViewModelGuideResumeTest {
         val scheduler = TestCoroutineScheduler()
         val scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(scheduler))
         controlledScope = scope
+        controlledScheduler = scheduler
         val runner = checkNotNull(vm.autoPlayRunner)
         runner.javaClass.getDeclaredField("scope").apply { isAccessible = true }.set(runner, scope)
         fun drainCallbacks() { repeat(3) { scheduler.runCurrent(); main.runAll() } }

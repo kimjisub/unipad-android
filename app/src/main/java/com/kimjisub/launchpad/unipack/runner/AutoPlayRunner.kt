@@ -25,6 +25,8 @@ class AutoPlayRunner(
 	private val chain: ChainObserver,
 	private val loopDelay: Long = 1L,
 	private val eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
+	/** Parent of every run; sharing one across runners lets their owner tell when all of them have ended. */
+	runs: Job = SupervisorJob(),
 ) {
 	private val pauseLock = Any()
 	private val suspensionLock = Any()
@@ -136,7 +138,7 @@ class AutoPlayRunner(
 		if (progressValue.compareAndSet(index, index + 1)) listener.onProgressUpdate(index + 1)
 	}
 
-	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+	private val scope = CoroutineScope(Dispatchers.Default + runs)
 	private var job: Job? = null
 	val active: Boolean
 		get() = job?.isActive == true

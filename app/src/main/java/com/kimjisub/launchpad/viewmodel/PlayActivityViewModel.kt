@@ -33,6 +33,7 @@ import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -182,6 +183,12 @@ class PlayActivityViewModel(
 	// Runners
 	var ledRunner: LedRunner? = null
 	var autoPlayRunner: AutoPlayRunner? = null
+	// Parent of the runs of every runner this screen creates, replaced ones included.
+	private val autoPlayRuns = SupervisorJob()
+
+	/** True until every auto-play run this screen started, stopped or replaced, has sent its last callbacks. */
+	internal val autoPlayRunning: Boolean
+		get() = autoPlayRuns.children.any { !it.isCompleted }
 	var soundRunner: SoundRunner? = null
 
 	// The runner hands each tick's changes over outside its lock. While playing they are applied on the
@@ -1040,6 +1047,7 @@ class PlayActivityViewModel(
 			unipack = unipack,
 			chain = chain,
 			eventDispatcher = Dispatchers.Main.immediate,
+			runs = autoPlayRuns,
 			listener = object : AutoPlayRunner.Listener {
 				override fun onStart() {
 					viewModelScope.launch {
