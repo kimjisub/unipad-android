@@ -64,18 +64,30 @@ class UniPackAutoMapper(
 		private const val FIRST_DELAY_MS = 1000
 		private const val AUTOMAPPING_DELAY_OFFSET_MS = 0
 
-		/** Drops pad releases and joins consecutive waits into one, placed before each press. */
+		/** Joins waits without moving an intervening chain change ahead of its wait. */
 		internal fun mergeDelays(elements: List<AutoPlay.Element>): List<AutoPlay.Element> {
 			val merged = ArrayList<AutoPlay.Element>()
 			var pendingDelay: Int? = 0
-			for (e in elements) {
+			var hasPress = false
+			val lastPress = elements.indexOfLast { it is AutoPlay.Element.On }
+			fun flushDelay() {
+				pendingDelay?.let { merged.add(AutoPlay.Element.Delay(it)) }
+				pendingDelay = null
+			}
+			for ((index, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
-						pendingDelay?.let { merged.add(AutoPlay.Element.Delay(it)) }
-						pendingDelay = null
+						flushDelay()
+						hasPress = true
 						merged.add(e)
 					}
-					is AutoPlay.Element.Chain -> merged.add(e)
+					is AutoPlay.Element.Chain -> {
+						// Leading chain selection stays before the first one-second wait. After a
+						// press, a chain following a wait must move at that wait's replacement time.
+						// A wait after the final press is still discarded.
+						if (hasPress && index < lastPress) flushDelay()
+						merged.add(e)
+					}
 					is AutoPlay.Element.Delay -> pendingDelay = (pendingDelay ?: 0) + e.delay
 					is AutoPlay.Element.Off -> {}
 				}

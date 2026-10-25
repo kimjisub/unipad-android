@@ -156,4 +156,26 @@ class UniPackAutoMapperTest {
 		assertEquals(original, autoPlay())
 		assertEquals(listOf("autoPlay", "info", "keySound", "sounds"), files())
 	}
+	@Test
+	fun aChainAfterAWait_movesAtTheReplacementTimeBeforeTheNextPress() {
+		createPack()
+		File(root, "autoPlay").writeText("on 1 1\nd 50\nc 1\non 1 2\nd 99\n")
+		pack.reloadAutoPlay()
+
+		runBlocking { mapper().run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nd 400\nc 1\nt 1 2\n", autoPlay())
+	}
+
+	@Test
+	fun simultaneousPressesStayTogetherAndTheLastSoundReplacesTheWait() {
+		createPack()
+		File(root, "autoPlay").writeText("d 20\non 1 1\non 1 2\nd 50\non 1 4\nd 99\n")
+		pack.reloadAutoPlay()
+
+		runBlocking { mapper().run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nt 1 2\nd 250\nt 1 4\n", autoPlay())
+	}
+
 }
