@@ -29,10 +29,17 @@ class PadInputOwnershipTest : PlaybackScreenTest() {
         // Let pending LED delivery reach main before taking the observation, as during play.
         SystemClock.sleep(100)
         val loops = audio.ringingLoops().size
-        val light = screen.onMain { screen.vm().channelManager.get(0, 0)?.takeIf { it.channel == Channel.LED }?.code }
+        val (pressed, light) = screen.onMain {
+            val channels = screen.vm().channelManager
+            val pressed = channels.get(0, 0)?.channel == Channel.PRESSED
+            channels.setBtnIgnore(Channel.PRESSED, true)
+            val light = channels.get(0, 0)?.takeIf { it.channel == Channel.LED }?.code
+            channels.setBtnIgnore(Channel.PRESSED, false)
+            pressed to light
+        }
         screen.capture(name)
         assertTrue(TestCaptures.save(screen.device, "basefeatures-captures/$name.txt") {
-            it.writeText("looping_requests=$loops\npack_light=$light\nsound_requests=${audio.plays.size}\nstopped_voices=${audio.stoppedVoices}\n")
+            it.writeText("looping_requests=$loops\npack_light=$light\npress_feedback=$pressed\nsound_requests=${audio.plays.size}\nstopped_voices=${audio.stoppedVoices}\n")
             true
         })
         return loops to light
@@ -40,21 +47,51 @@ class PadInputOwnershipTest : PlaybackScreenTest() {
 
     private fun twoFingers(laterFirst: Boolean) {
         open()
+        screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
         val fingers = Fingers(screen)
         try {
             val first = fingers.down(pad())
+            screen.await("First pointer press missing") { audio.plays.size == 1 }
+            assertEquals(1 to 4, observe("input-first-finger-down"))
             val later = fingers.down(pad())
             screen.await("Both pointer presses must reach the real screen") { audio.plays.size == 2 }
-            assertEquals(1, audio.ringingLoops().size)
+            assertEquals(1 to 4, observe("input-both-fingers-down"))
             fingers.up(if (laterFirst) later else first)
-            assertEquals(1 to 4, observe(if (laterFirst) "input-later-finger-lift" else "input-first-finger-lift"))
+            val afterRelease = observe(if (laterFirst) "input-later-finger-lift" else "input-first-finger-lift")
+            assertEquals(true, feedback("input-remaining-finger-feedback"))
             fingers.up(if (laterFirst) first else later)
             assertEquals(0 to null, observe("input-last-finger-lift"))
+            assertEquals(false, feedback("input-last-finger-feedback"))
+            assertEquals(if (laterFirst) 0 to null else 1 to 4, afterRelease)
         } finally { fingers.cancelRemaining() }
     }
 
     @Test fun liftingTheFirstFingerKeepsTheOtherFingersLoop() = twoFingers(false)
-    @Test fun liftingTheLaterFingerStillWaitsForTheFirst() = twoFingers(true)
+    @Test fun liftingTheLaterFingerEndsItsOutputWhileTheFirstRemains() = twoFingers(true)
+
+    @Test fun liftingTheLaterControllerEndsItsOutputWhileTheFingerRemains() {
+        open()
+        screen.onMain { screen.vm().scbFeedbackLight.setChecked(true) }
+        val fingers = Fingers(screen)
+        try {
+            val finger = fingers.down(pad())
+            screen.await("Finger press missing") { audio.plays.size == 1 }
+            assertEquals(1 to 4, observe("input-finger-before-controller"))
+            screen.onMain { screen.vm().controllerPadTouch(0, 0, true) }
+            screen.await("Controller press missing") { audio.plays.size == 2 }
+            assertEquals(1 to 4, observe("input-finger-and-controller-down"))
+            screen.onMain { screen.vm().controllerPadTouch(0, 0, false) }
+            val afterRelease = observe("input-later-controller-lift")
+            assertEquals(true, feedback("input-finger-after-controller-feedback"))
+            fingers.up(finger)
+            assertEquals(0 to null, observe("input-finger-after-controller-lift"))
+            assertEquals(false, feedback("input-final-finger-feedback"))
+            assertEquals(0 to null, afterRelease)
+        } finally {
+            fingers.cancelRemaining()
+            screen.onMain { screen.vm().releaseControllerPads() }
+        }
+    }
 
     @Test fun aFingerReleaseDoesNotEndTheNewerAutoplayLoop() {
         open("d 2000\non 1 1\nd 60000\noff 1 1\n")
