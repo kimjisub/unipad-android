@@ -105,11 +105,12 @@ class PlayActivityViewModelStepToAutoPlayTest(
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { scheduler.runCurrent() }
-        scheduler.runCurrent()
-        scope.cancel()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { scheduler.runCurrent() }) {
+            scheduler.runCurrent()
+            scope.cancel()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     @Test fun audibleTransitionsReplayOnlyPendingPadsWhileGuideResumeStaysSilent() {

@@ -42,10 +42,11 @@ class PlayActivityViewModelAutoPlayChainTimingTest {
 	}
 
 	@After fun tearDown() {
-		if (::vm.isInitialized) clearPlayViewModel(vm) { scheduler.runCurrent() }
-		scheduler.runCurrent()
-		unmockkStatic(SystemClock::class)
-		Dispatchers.resetMain()
+		clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { scheduler.runCurrent() }) {
+			scheduler.runCurrent()
+			unmockkStatic(SystemClock::class)
+			Dispatchers.resetMain()
+		}
 	}
 
 	private fun await(check: () -> Boolean) {

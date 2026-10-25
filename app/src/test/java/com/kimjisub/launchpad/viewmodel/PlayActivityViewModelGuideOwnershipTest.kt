@@ -60,9 +60,10 @@ class PlayActivityViewModelGuideOwnershipTest {
         .apply { isAccessible = true }.get(runner) as AutoPlayRunner.Listener
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { main.runAll() }
-        main.runAll()
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            Dispatchers.resetMain()
+        }
     }
 
     @Test fun oldPadOnDoesNotLeaveAHintAfterReplacement() {

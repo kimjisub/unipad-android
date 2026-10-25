@@ -49,11 +49,12 @@ class PlayActivityViewModelPlaybackSetupTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { main.runAll() }
-        main.runAll()
-        unmockkObject(MidiConnection)
-        Dispatchers.resetMain()
-        ArchTaskExecutor.getInstance().setDelegate(null)
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            unmockkObject(MidiConnection)
+            Dispatchers.resetMain()
+            ArchTaskExecutor.getInstance().setDelegate(null)
+        }
     }
 
     private fun load(square: Boolean, lights: Boolean = true, playable: Boolean = true) {

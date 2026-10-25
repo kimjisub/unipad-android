@@ -83,10 +83,11 @@ class PlayActivityViewModelInputOwnershipTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { main.runAll() }
-        main.runAll()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { main.runAll() }) {
+            main.runAll()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     private fun advance() {

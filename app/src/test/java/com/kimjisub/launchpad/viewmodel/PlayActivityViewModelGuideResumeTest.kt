@@ -75,11 +75,12 @@ class PlayActivityViewModelGuideResumeTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { controlledScheduler?.runCurrent(); main.runAll() }
-        main.runAll()
-        controlledScope?.cancel()
-        unmockkStatic(SystemClock::class)
-        Dispatchers.resetMain()
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { controlledScheduler?.runCurrent(); main.runAll() }) {
+            main.runAll()
+            controlledScope?.cancel()
+            unmockkStatic(SystemClock::class)
+            Dispatchers.resetMain()
+        }
     }
 
     private fun await(check: () -> Boolean) {

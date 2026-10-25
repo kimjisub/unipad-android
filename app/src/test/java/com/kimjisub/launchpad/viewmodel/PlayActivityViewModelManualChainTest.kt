@@ -66,11 +66,12 @@ class PlayActivityViewModelManualChainTest {
     }
 
     @After fun tearDown() {
-        if (::vm.isInitialized) clearPlayViewModel(vm) { scheduler.runCurrent() }
-        scheduler.runCurrent()
-        unmockkObject(MidiConnection)
-        Dispatchers.resetMain()
-        ArchTaskExecutor.getInstance().setDelegate(null)
+        clearPlayViewModel(if (::vm.isInitialized) vm else null, drain = { scheduler.runCurrent() }) {
+            scheduler.runCurrent()
+            unmockkObject(MidiConnection)
+            Dispatchers.resetMain()
+            ArchTaskExecutor.getInstance().setDelegate(null)
+        }
     }
 
     private fun press() {
