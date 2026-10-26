@@ -265,7 +265,8 @@ def run_and_record(observer, output):
             except Exception as error:
                 cleanup['errors'].append(f'{prop}: {type(error).__name__}: {error}')
         try:
-            observer.ui.close()
+            # Screen.close() is best-effort; this report must retain close failures.
+            observer.ui.ui('close')
         except Exception as error:
             cleanup['errors'].append(f'UI close: {type(error).__name__}: {error}')
         result['finished_at'] = datetime.now(timezone.utc).isoformat()

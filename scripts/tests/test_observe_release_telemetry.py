@@ -3,6 +3,7 @@ import json
 import hashlib
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import Mock
@@ -237,7 +238,7 @@ class CollectionTest(unittest.TestCase):
 
 
 class CleanupTest(unittest.TestCase):
-    def run_observer(self, failure=None, cleanup_failure=False):
+    def run_observer(self, failure=None, cleanup_failure=False, ui=None):
         props = {observe.DEBUG_PROP: 'old.app', observe.LOG_PROP: 'WARN'}
         adb = Mock()
         def shell(*args, **kwargs):
@@ -249,7 +250,7 @@ class CleanupTest(unittest.TestCase):
                 props[args[1]] = args[2]
             return ''
         adb.shell.side_effect = shell
-        observer = observe.Observer(adb, Mock(), Path('candidate.apk'), timeout=0)
+        observer = observe.Observer(adb, ui if ui is not None else Mock(), Path('candidate.apk'), timeout=0)
         observer.prepare = Mock(side_effect=failure)
         observer.drive = Mock()
         observer.collect = Mock()
@@ -264,6 +265,32 @@ class CleanupTest(unittest.TestCase):
         self.assertEqual(props, {observe.DEBUG_PROP: '.none.', observe.LOG_PROP: 'WARN'})
         self.assertEqual(result['cleanup']['analytics_debug'], '.none.')
         self.assertEqual(result['cleanup']['log_tag'], 'WARN')
+
+    def test_real_screen_close_response_controls_cleanup_result(self):
+        for returncode, success in ((1, False), (0, False), (1, True), (0, True)):
+            with self.subTest(returncode=returncode, success=success):
+                answer = dict(success=success)
+                if not success:
+                    answer['error'] = 'close failed'
+                run = Mock(return_value=subprocess.CompletedProcess(
+                    [], returncode, json.dumps(answer).encode(), b''))
+                ui = observe.Screen(Path('devices.py'), 'rented-device', 'generation', Path('.'), run=run)
+                code, result, props, adb = self.run_observer(ui=ui)
+                failed = returncode != 0 or not success
+                self.assertEqual(code, 1 if failed else 0)
+                self.assertEqual(result['exit_code'], code)
+                self.assertEqual(len(result['cleanup']['errors']), 1 if failed else 0)
+                if failed:
+                    self.assertIn('UI close:', result['cleanup']['errors'][0])
+                    self.assertIn(json.dumps(answer), result['cleanup']['errors'][0])
+                self.assertEqual(result['status'], 'observed')
+                self.assertIn('finished_at', result)
+                self.assertEqual(props, {observe.DEBUG_PROP: '.none.', observe.LOG_PROP: 'WARN'})
+                adb.shell.assert_any_call('am', 'force-stop', observe.PACKAGE)
+                self.assertEqual(result['cleanup']['analytics_debug'], '.none.')
+                self.assertEqual(result['cleanup']['log_tag'], 'WARN')
+                self.assertEqual(run.call_count, 1)
+                self.assertEqual(run.call_args.args[0], ui.command + ['close'])
 
     def test_failure_and_interrupt_restore_properties_and_keep_failure(self):
         for error in (observe.CheckFailed('root unavailable'), RuntimeError('UI failed'), KeyboardInterrupt()):

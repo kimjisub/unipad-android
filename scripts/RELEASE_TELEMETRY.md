@@ -59,6 +59,9 @@ observations, preparation errors, interrupts and cleanup failures exit nonzero.
 On success, failure, Ctrl-C or termination, the app is stopped, Analytics debug
 marking is set to `.none.`, and `log.tag.FA-SVC` is restored to its previous value.
 Both properties are read back and cleanup errors are recorded independently.
+Closing the screen connection checks both the command exit code and its success
+response; either failure is recorded in `cleanup.errors` and makes the command
+exit nonzero, while preserving the observations and writing the result JSON.
 An uncatchable process kill cannot run cleanup; return the device rental after
 any interrupted command. Each round needs a new output filename; archive the
 JSON and diagnostics before rerunning.
