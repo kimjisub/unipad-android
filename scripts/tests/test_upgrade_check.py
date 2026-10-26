@@ -1,10 +1,14 @@
 """Verify the upgrade check's seeding and its verdict on before/after snapshots."""
+import contextlib
 import copy
+import io
+import json
 from pathlib import Path
 import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import wave
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -53,6 +57,15 @@ class PrefsTest(unittest.TestCase):
         self.assertEqual(uc.seeded_prefs(existing, None)['PrevStoreCount'], ('long', 78))
         for key, value in uc.SEEDED_PREFS.items():
             self.assertEqual(uc.seeded_prefs({}, None)[key], value)
+
+    def test_seeded_settings_must_be_read_back_by_the_older_build(self):
+        for trace in uc.SCENARIOS.values():
+            self.assertEqual(uc.seed_mismatches(uc.seeded_prefs(uc.parse_prefs(PREFS_419), trace), trace), [])
+        rewritten = uc.seeded_prefs({}, False) | {'SlideMode': ('boolean', False)}
+        self.assertEqual(len(uc.seed_mismatches(rewritten, False)), 1)
+        self.assertIn('SlideMode', uc.seed_mismatches(rewritten, False)[0])
+        self.assertIn(uc.TRACE_KEY, uc.seed_mismatches(uc.seeded_prefs({}, None), False)[0])
+        self.assertIn('seeded absent', uc.seed_mismatches(uc.seeded_prefs({}, True), None)[0])
 
 
 class DatabaseTest(unittest.TestCase):
@@ -114,6 +127,13 @@ class CompareTest(unittest.TestCase):
         written['prefs'][uc.TRACE_KEY] = ('boolean', True)
         self.assert_one_problem(written, None, 'written by opening the app')
 
+    def test_unreadable_database_and_failed_start_are_reported(self):
+        after = snapshot()
+        after['db'] = dict(error='UniPad.db cannot be read: no such column: openCount')
+        self.assert_one_problem(after, None, 'no such column')
+        problems = uc.compare(snapshot(), snapshot(), None, ['after the upgrade, app stopped right after opening'])
+        self.assertEqual(problems, ['after the upgrade, app stopped right after opening'])
+
     def test_a_row_that_appears_is_reported(self):
         after = snapshot()
         after['db']['rows']['other'] = copy.deepcopy(after['db']['rows']['upgrade_check_c'])
@@ -137,8 +157,10 @@ class DeviceOutputTest(unittest.TestCase):
             'I am_anr  : [0,5136,com.kimjisub.launchpad,953695812,Input dispatching timed out]',
             'I am_anr  : [0,7000,com.kimjisub.launchpad.dev,953695812,Input dispatching timed out]',
             'I am_proc_start: [0,5136,10208,com.kimjisub.launchpad,next-top-activity]',
+            'I am_crash: [0,7100,com.android.systemui,1,java.lang.RuntimeException,com.kimjisub.launchpad gone]',
+            'I am_crash: [0,5136,com.kimjisub.launchpad,948452932,java.lang.IllegalStateException]',
         ])
-        self.assertEqual(len(uc.app_events(lines, package)), 4)
+        self.assertEqual(len(uc.app_events(lines, package)), 5)
         self.assertEqual(uc.app_events('I am_proc_start: [0,5136,10208,com.kimjisub.launchpad,x]', package), [])
 
     def test_screen_texts_read_node_text(self):
@@ -146,6 +168,101 @@ class DeviceOutputTest(unittest.TestCase):
                '</hierarchy>')
         self.assertEqual(uc.screen_texts(xml), {'Upgrade Check A', 'Upgrade Check B'})
         self.assertEqual(uc.screen_texts('ERROR: could not get idle state.'), set())
+
+
+class BuildToolsTest(unittest.TestCase):
+    def test_a_release_sorts_after_its_preview(self):
+        names = ['37.0.0', '36.1.0', '37.0.0-rc1', '9.0.0', '37.0.0-rc2']
+        self.assertEqual(sorted(names, key=uc.build_tools_order), ['9.0.0', '36.1.0', '37.0.0-rc1', '37.0.0-rc2', '37.0.0'])
+
+
+class FakeDevice:
+    """Records adb calls; answers the questions main() asks before the scenarios."""
+    answers = {'getprop ro.build.version.sdk': '35', 'id -u': '0', 'settings get global airplane_mode_on': '0'}
+
+    def __init__(self, serial=None):
+        self.calls = []
+
+    def __call__(self, *args, check=True, timeout=600):
+        self.calls.append(args)
+        return ''
+
+    def sh(self, command, check=True):
+        self.calls.append(('shell', command))
+        return self.answers.get(command, '')
+
+    def device_time(self):
+        return '10-26 12:00:00.000'
+
+
+class ScenarioTest(unittest.TestCase):
+    def test_a_newer_build_that_crashes_at_start_fails_the_check(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = uc.UpgradeRun(FakeDevice(), Path('old.apk'), Path('new.apk'), 'com.kimjisub.launchpad', Path(tmp))
+            after = snapshot(True)
+            after['titles'] = []
+            crash = 'E AndroidRuntime: Process: com.kimjisub.launchpad, PID: 5136'
+            with mock.patch.object(run, 'prepare', return_value=snapshot(True)), \
+                    mock.patch.object(run, 'launch', side_effect=uc.AppNotReady('com.kimjisub.launchpad stopped right after opening')), \
+                    mock.patch.object(run, 'snapshot', return_value=after), \
+                    mock.patch.object(run, 'events', return_value=[crash]) as events:
+                result = run.scenario('trace-on', True)
+            saved = json.loads((Path(tmp) / 'trace-on/result.json').read_text())
+        self.assertFalse(result['passed'])
+        self.assertEqual(saved['problems'], result['problems'])
+        self.assertIn('after the upgrade, com.kimjisub.launchpad stopped right after opening', result['problems'][0])
+        self.assertIn(f'crash or ANR: {crash}', result['problems'])
+        events.assert_called_once_with('10-26 12:00:00.000')
+
+    def test_a_newer_build_that_does_not_install_fails_the_check(self):
+        class RefusingDevice(FakeDevice):
+            def __call__(self, *args, check=True, timeout=600):
+                raise uc.SetupError('INSTALL_FAILED_INVALID_APK')
+
+        run = uc.UpgradeRun(RefusingDevice(), Path('old.apk'), Path('new.apk'), 'p', Path('.'))
+        with mock.patch.object(run, 'launch') as launch:
+            problems = run.upgrade()
+        self.assertIn('did not install over the older one: INSTALL_FAILED_INVALID_APK', problems[0])
+        launch.assert_not_called()
+
+
+class MainTest(unittest.TestCase):
+    def run_main(self, scenario):
+        identity = dict(package='com.kimjisub.launchpad', signers=['ab'], version_name='4.2.1')
+        devices = []
+
+        def make_device(serial):
+            devices.append(FakeDevice())
+            return devices[-1]
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        out = Path(tmp.name) / 'out'
+        with mock.patch.object(uc, 'universal_apk', side_effect=lambda source, work: source), \
+                mock.patch.object(uc, 'apk_identity', side_effect=lambda apk: identity | dict(version_code=int(apk.stem))), \
+                mock.patch.object(uc, 'Device', side_effect=make_device), \
+                mock.patch.object(uc.UpgradeRun, 'scenario', side_effect=scenario), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = uc.main(['--serial', 'emulator-5554', '--old', '118.apk', '--new', '120.apk', '--out', str(out),
+                            '--scenario', 'trace-on'])
+        return code, out, devices[0].calls
+
+    def test_a_failed_scenario_exits_1_with_a_report(self):
+        failed = dict(scenario='trace-on', passed=False, problems=['after the upgrade, app stopped'],
+                      after=dict(db=dict(error='UniPad.db is missing'), prefs={}), pack_files=0)
+        code, out, _ = self.run_main(lambda name, trace: failed)
+        self.assertEqual(code, 1)
+        self.assertFalse(json.loads((out / 'report.json').read_text())['passed'])
+
+    def test_an_unexpected_error_exits_2_and_uninstalls_before_restoring_the_network(self):
+        def broken(name, trace):
+            raise sqlite3.OperationalError('database is locked')
+        code, out, calls = self.run_main(broken)
+        self.assertEqual(code, 2)
+        self.assertIn('database is locked', (out / 'setup-error.txt').read_text())
+        self.assertFalse((out / 'report.json').exists())
+        uninstall = calls.index(('uninstall', 'com.kimjisub.launchpad'))
+        self.assertGreater(calls.index(('shell', 'cmd connectivity airplane-mode disable')), uninstall)
 
 
 class PackTest(unittest.TestCase):

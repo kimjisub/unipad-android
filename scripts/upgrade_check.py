@@ -16,8 +16,10 @@ tap-order setting (absent, on, off):
 Bundles are turned into universal APKs with bundletool's default debug key, so
 release bundles can be installed over each other; this is not a Play-signed
 update. Needs `adb root` (release builds cannot be read with run-as) and turns
-on airplane mode and the analytics debug flag for the run, restoring both.
-Exit status: 0 every check passed, 1 a check failed, 2 the run could not start.
+on airplane mode and the analytics debug flag for the run, restoring both;
+Android 11 (API 30) or newer.
+Exit status: 0 every check passed, 1 a check failed (including the newer build
+failing to install, open or stay open), 2 the run could not reach the upgrade.
 """
 from __future__ import annotations
 
@@ -35,6 +37,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -53,10 +56,16 @@ PACKS = [
 OPENED_AT_MS = 1_790_000_000_000
 LAUNCH_TIMEOUT_S = 90
 SETTLE_S = 8
+SCREEN_ATTEMPTS = 3
+MIN_SDK = 30
 
 
 class SetupError(Exception):
     """The run could not reach the point where an upgrade is judged."""
+
+
+class AppNotReady(Exception):
+    """The app did not reach its pack list, or stopped soon after."""
 
 
 # --- pure helpers (unit tested) -------------------------------------------------
@@ -130,6 +139,17 @@ def seeded_prefs(existing: dict[str, tuple[str, object]], trace: bool | None) ->
     return prefs
 
 
+def seed_mismatches(prefs: dict[str, tuple[str, object]], trace: bool | None) -> list[str]:
+    """Seeded settings the older build does not hold when it is opened again."""
+    expected = dict(SEEDED_PREFS)
+    if trace is not None:
+        expected[TRACE_KEY] = ('boolean', trace)
+    wrong = [f'{key}: seeded {value}, read {prefs.get(key)}' for key, value in expected.items() if prefs.get(key) != value]
+    if trace is None and TRACE_KEY in prefs:
+        wrong.append(f'{TRACE_KEY}: seeded absent, read {prefs[TRACE_KEY]}')
+    return wrong
+
+
 def seed_rows(conn: sqlite3.Connection) -> None:
     for pack in PACKS:
         conn.execute('UPDATE Unipack SET bookmark = ?, openCount = ?, lastOpenedAt = ? WHERE id = ?',
@@ -154,21 +174,24 @@ def expected_rows(created_at: dict[str, int]) -> dict[str, dict]:
             for p in PACKS}
 
 
-def compare(before: dict, after: dict, trace: bool | None) -> list[str]:
-    """Every reason the snapshot after the upgrade differs from the one before it."""
-    problems = []
+def compare(before: dict, after: dict, trace: bool | None, launch_problems: list[str] = ()) -> list[str]:
+    """Every reason the upgrade failed: how opening the newer build went, then how the snapshots differ."""
+    problems = list(launch_problems)
     if after['files'] != before['files']:
         lost = sorted(set(before['files']) - set(after['files']))
         changed = sorted(k for k in before['files'] if k in after['files'] and before['files'][k] != after['files'][k])
         added = sorted(set(after['files']) - set(before['files']))
         problems.append(f'pack files differ: lost {lost}, changed {changed}, added {added}')
-    for pack_id, row in before['db']['rows'].items():
-        if after['db']['rows'].get(pack_id) != row:
-            problems.append(f'database row {pack_id}: before {row}, after {after["db"]["rows"].get(pack_id)}')
-    for pack_id in sorted(set(after['db']['rows']) - set(before['db']['rows'])):
-        problems.append(f'database row {pack_id} appeared after the upgrade')
-    if after['db']['user_version'] < before['db']['user_version']:
-        problems.append(f'database version went down: {before["db"]["user_version"]} -> {after["db"]["user_version"]}')
+    if 'error' in after['db']:
+        problems.append(f'database after the upgrade: {after["db"]["error"]}')
+    else:
+        for pack_id, row in before['db']['rows'].items():
+            if after['db']['rows'].get(pack_id) != row:
+                problems.append(f'database row {pack_id}: before {row}, after {after["db"]["rows"].get(pack_id)}')
+        for pack_id in sorted(set(after['db']['rows']) - set(before['db']['rows'])):
+            problems.append(f'database row {pack_id} appeared after the upgrade')
+        if after['db']['user_version'] < before['db']['user_version']:
+            problems.append(f'database version went down: {before["db"]["user_version"]} -> {after["db"]["user_version"]}')
     for key, value in before['prefs'].items():
         if after['prefs'].get(key) != value:
             problems.append(f'setting {key}: before {value}, after {after["prefs"].get(key)}')
@@ -192,9 +215,10 @@ def file_hashes(listing: str, root: str) -> dict[str, str]:
 
 
 def app_events(lines: str, package: str) -> list[str]:
-    """Crash, native crash and ANR lines that name the package (not a package it prefixes)."""
-    name = rf'(?<![\w.]){re.escape(package)}(?![\w.])'
-    pattern = re.compile(rf'Process: {name}|>>> {name} <<<|am_(crash|anr)\b.*{name}|ANR in {name}')
+    """Crash, native crash and ANR lines of the package (not a package it prefixes, nor one that mentions it)."""
+    name = rf'{re.escape(package)}(?![\w.])'
+    # am_crash and am_anr both start [<number>,<number>,<process>,...
+    pattern = re.compile(rf'Process: {name}|>>> {name} <<<|am_(crash|anr)\s*: \[\d+,\d+,{name},|ANR in {name}')
     return [line for line in lines.splitlines() if pattern.search(line)]
 
 
@@ -206,13 +230,19 @@ def screen_texts(ui_xml: str) -> set[str]:
     return {node.get('text') for node in root.iter('node') if node.get('text')}
 
 
+def build_tools_order(name: str) -> tuple:
+    """Sort key for build-tools folders: by version, with a preview (`37.0.0-rc1`) before its release."""
+    release, _, preview = name.partition('-')
+    return [int(x) for x in re.findall(r'\d+', release)], not preview, [int(x) for x in re.findall(r'\d+', preview)]
+
+
 # --- builds --------------------------------------------------------------------
 
 def build_tool(name: str) -> str:
     sdk = os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
     if not sdk:
         raise SetupError('Set ANDROID_HOME to the Android SDK.')
-    versions = sorted((Path(sdk) / 'build-tools').glob('*/' + name), key=lambda p: [int(x) for x in re.findall(r'\d+', p.parent.name)])
+    versions = sorted((Path(sdk) / 'build-tools').glob('*/' + name), key=lambda p: build_tools_order(p.parent.name))
     if not versions:
         raise SetupError(f'No {name} in {sdk}/build-tools.')
     return str(versions[-1])
@@ -300,35 +330,64 @@ class UpgradeRun:
     def scenario(self, name: str, trace: bool | None) -> dict:
         folder = self.out / name
         folder.mkdir(parents=True, exist_ok=True)
-        started = self.d.device_time()
-        self.d('uninstall', self.package, check=False)
-        self.d('install', str(self.old))
-        self.launch()
-        created_at = self.wait_for_rows(folder)
-        self.stop()
-        self.seed(folder, trace)
-        self.launch()
-        before = self.snapshot(folder / 'before')
-        self.stop()
-        if before['db']['rows'] != expected_rows(created_at):
-            raise SetupError(f'{name}: the older build changed the seeded rows: {before["db"]["rows"]}')
-        if missing := {p['title'] for p in PACKS} - set(before['titles']):
-            raise SetupError(f'{name}: the older build does not list the packs {sorted(missing)}; see before/screen.xml')
-        self.d('install', '-r', str(self.new))
-        self.launch()
-        self.stop()
-        self.launch()
+        before = self.prepare(folder, trace)
+        upgraded_at = self.d.device_time()
+        launch_problems = self.upgrade()
         after = self.snapshot(folder / 'after')
         self.stop()
-        events = app_events(self.d('logcat', '-d', '-b', 'crash', '-b', 'events', '-T', started), self.package)
-        problems = compare(before, after, trace)
-        problems += [f'crash or ANR: {line}' for line in events]
+        problems = compare(before, after, trace, launch_problems)
+        problems += [f'crash or ANR: {line}' for line in self.events(upgraded_at)]
         result = dict(scenario=name, trace_saved=trace, passed=not problems, problems=problems,
                       before={k: v for k, v in before.items() if k != 'files'},
                       after={k: v for k, v in after.items() if k != 'files'},
                       pack_files=len(after['files']))
         (folder / 'result.json').write_text(json.dumps(result, indent=1, ensure_ascii=False) + '\n')
         return result
+
+    def prepare(self, folder: Path, trace: bool | None) -> dict:
+        """Installs the older build with the seeded packs, rows and settings; its snapshot before the upgrade."""
+        name = folder.name
+        started = self.d.device_time()
+        self.d('uninstall', self.package, check=False)
+        self.d('install', str(self.old))
+        try:
+            self.launch()
+            created_at = self.wait_for_rows(folder)
+            self.stop()
+            self.seed(folder, trace)
+            self.launch()
+        except AppNotReady as error:
+            raise SetupError(f'{name}: the older build: {error}') from error
+        before = self.snapshot(folder / 'before')
+        self.stop()
+        if 'error' in before['db']:
+            raise SetupError(f'{name}: the older build\'s database: {before["db"]["error"]}')
+        if before['db']['rows'] != expected_rows(created_at):
+            raise SetupError(f'{name}: the older build changed the seeded rows: {before["db"]["rows"]}')
+        if wrong := seed_mismatches(before['prefs'], trace):
+            raise SetupError(f'{name}: the older build does not hold the seeded settings: {"; ".join(wrong)}')
+        if missing := {p['title'] for p in PACKS} - set(before['titles']):
+            raise SetupError(f'{name}: the older build does not list the packs {sorted(missing)}; see before/screen.xml')
+        if events := self.events(started):
+            raise SetupError(f'{name}: the older build crashed before the upgrade: {events[0]}')
+        return before
+
+    def upgrade(self) -> list[str]:
+        """Installs the newer build over the older one and leaves it open the second time; what went wrong."""
+        try:
+            self.d('install', '-r', str(self.new))
+        except SetupError as error:
+            return [f'the newer build did not install over the older one: {error}']
+        try:
+            self.launch()
+            self.stop()
+            self.launch()
+        except AppNotReady as error:
+            return [f'after the upgrade, {error}']
+        return []
+
+    def events(self, since: str) -> list[str]:
+        return app_events(self.d('logcat', '-d', '-b', 'crash', '-b', 'events', '-T', since), self.package)
 
     def launch(self) -> None:
         component = self.d.sh(f'cmd package resolve-activity --brief -c android.intent.category.LAUNCHER {self.package}').split()[-1]
@@ -338,10 +397,10 @@ class UpgradeRun:
             if '.activity.MainActivity' in self.d.sh('dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity"', check=False):
                 time.sleep(SETTLE_S)
                 if not self.d.sh(f'pidof {self.package}', check=False).strip():
-                    raise SetupError(f'{self.package} stopped right after opening; see the crash buffer')
+                    raise AppNotReady(f'{self.package} stopped right after opening')
                 return
             time.sleep(1)
-        raise SetupError(f'{self.package} did not reach its pack list within {LAUNCH_TIMEOUT_S} s')
+        raise AppNotReady(f'{self.package} did not reach its pack list within {LAUNCH_TIMEOUT_S} s')
 
     def stop(self) -> None:
         self.d.sh(f'am force-stop {self.package}')
@@ -356,7 +415,7 @@ class UpgradeRun:
         self.launch()
         deadline = time.monotonic() + LAUNCH_TIMEOUT_S
         while time.monotonic() < deadline:
-            rows = self.pull_db(folder / 'seed-db')['rows']
+            rows = self.pull_db(folder / 'seed-db').get('rows', {})
             if all(p['id'] in rows for p in PACKS):
                 return {p['id']: rows[p['id']]['createdAt'] for p in PACKS}
             time.sleep(2)
@@ -364,7 +423,8 @@ class UpgradeRun:
 
     def seed(self, folder: Path, trace: bool | None) -> None:
         local = folder / 'seed-db'
-        self.pull_db(local)
+        if 'error' in (db := self.pull_db(local)):
+            raise SetupError(f'cannot seed the older build\'s database: {db["error"]}')
         conn = sqlite3.connect(local / DB_NAME)
         try:
             seed_rows(conn)
@@ -389,18 +449,29 @@ class UpgradeRun:
         for suffix in ('', '-wal', '-shm'):
             self.d.pull(f'{self.data}/databases/{DB_NAME}{suffix}', local / f'{DB_NAME}{suffix}')
         if not (local / DB_NAME).exists():
-            return dict(user_version=0, rows={})
+            return dict(error=f'{DB_NAME} is missing')
         try:
             return read_db(local / DB_NAME)
-        except sqlite3.OperationalError:
-            return dict(user_version=0, rows={})
+        except sqlite3.DatabaseError as error:
+            return dict(error=f'{DB_NAME} cannot be read: {error}')
 
     def read(self, remote: str) -> str | None:
         return self.d('exec-out', 'cat', remote) if self.d.exists(remote) else None
 
+    def screen(self) -> str:
+        """The UI dump, taken again while it does not list every pack (a dump can fail or catch the list loading)."""
+        for attempt in range(SCREEN_ATTEMPTS):
+            if attempt:
+                time.sleep(2)
+            ui = self.d.sh('uiautomator dump /data/local/tmp/upgrade_check_ui.xml >/dev/null && '
+                           'cat /data/local/tmp/upgrade_check_ui.xml', check=False)
+            if {p['title'] for p in PACKS} <= screen_texts(ui):
+                break
+        return ui
+
     def snapshot(self, folder: Path) -> dict:
         folder.mkdir(parents=True, exist_ok=True)
-        ui = self.d.sh('uiautomator dump /data/local/tmp/upgrade_check_ui.xml >/dev/null && cat /data/local/tmp/upgrade_check_ui.xml', check=False)
+        ui = self.screen()
         (folder / 'screen.xml').write_text(ui)
         subprocess.run([*self.d.adb, 'exec-out', 'screencap', '-p'], stdout=(folder / 'screen.png').open('wb'))
         prefs_text = self.read(f'{self.data}/shared_prefs/{PREFS_NAME}')
@@ -410,6 +481,23 @@ class UpgradeRun:
         (folder / 'pack-files.txt').write_text(listing)
         titles = sorted(screen_texts(ui) & {p['title'] for p in PACKS})
         return dict(db=self.pull_db(folder / 'db'), prefs=parse_prefs(prefs_text), files=files, titles=titles)
+
+
+def restore_device(device: Device, steps: list[str]) -> None:
+    """Uninstalls what the run installed, then undoes its device changes; a failed step does not stop the rest."""
+    for step in steps:
+        try:
+            if step == 'airplane-off':
+                device.sh('cmd connectivity airplane-mode disable', check=False)
+            elif step.startswith('analytics:'):
+                device.sh(f'setprop debug.firebase.analytics.app {step.split(":", 1)[1]}', check=False)
+            elif step == 'unroot':
+                device('unroot', check=False)
+                device('wait-for-device', check=False)
+            elif step.startswith('uninstall:'):
+                device('uninstall', step.split(':', 1)[1], check=False)
+        except Exception as error:  # keep restoring the rest
+            print(f'could not restore the device ({step}): {error}', file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -428,6 +516,7 @@ def main(argv: list[str] | None = None) -> int:
     args.out.mkdir(parents=True, exist_ok=True)
     device = Device(args.serial)
     restore: list[str] = []
+    installed: list[str] = []
     try:
         old = universal_apk(args.old.resolve(), args.out / 'old-build')
         new = universal_apk(args.new.resolve(), args.out / 'new-build')
@@ -439,6 +528,9 @@ def main(argv: list[str] | None = None) -> int:
         if builds['new']['version_code'] <= builds['old']['version_code']:
             raise SetupError(f'the new build is not newer: {builds["old"]["version_code"]} -> {builds["new"]["version_code"]}')
         package = builds['old']['package']
+        sdk = device.sh('getprop ro.build.version.sdk').strip()
+        if not sdk.isdigit() or int(sdk) < MIN_SDK:
+            raise SetupError(f'the device runs API {sdk}; the check switches airplane mode with a command that needs API {MIN_SDK}')
         was_root = device.sh('id -u').strip() == '0'
         if not was_root:
             device('root')
@@ -454,28 +546,22 @@ def main(argv: list[str] | None = None) -> int:
         device.sh(f'setprop debug.firebase.analytics.app {package}')
         restore.append(f'analytics:{analytics}')
         upgrade = UpgradeRun(device, old, new, package, args.out)
+        installed.append(f'uninstall:{package}')
         results = [upgrade.scenario(name, SCENARIOS[name]) for name in (args.scenario or list(SCENARIOS))]
-        device('uninstall', package, check=False)
-    except SetupError as error:
-        print(f'upgrade check could not run: {error}', file=sys.stderr)
-        (args.out / 'setup-error.txt').write_text(str(error) + '\n')
+    except Exception as error:
+        detail = str(error) if isinstance(error, SetupError) else traceback.format_exc()
+        print(f'upgrade check could not run: {detail}', file=sys.stderr)
+        (args.out / 'setup-error.txt').write_text(detail.rstrip() + '\n')
         return 2
     finally:
-        for step in reversed(restore):
-            if step == 'airplane-off':
-                device.sh('cmd connectivity airplane-mode disable', check=False)
-            elif step.startswith('analytics:'):
-                device.sh(f'setprop debug.firebase.analytics.app {step.split(":", 1)[1]}', check=False)
-            elif step == 'unroot':
-                device('unroot', check=False)
-                device('wait-for-device', check=False)
+        restore_device(device, installed + list(reversed(restore)))
     report = dict(checked_at=dt.datetime.now().astimezone().isoformat(timespec='seconds'), builds=builds, results=results,
                   passed=all(r['passed'] for r in results))
     (args.out / 'report.json').write_text(json.dumps(report, indent=1, ensure_ascii=False) + '\n')
     print(f'{builds["old"]["version_name"]} ({builds["old"]["version_code"]}) -> '
           f'{builds["new"]["version_name"]} ({builds["new"]["version_code"]}), {package}')
     for r in results:
-        print(f'{"PASS" if r["passed"] else "FAIL"} {r["scenario"]}: {len(r["after"]["db"]["rows"])} rows, '
+        print(f'{"PASS" if r["passed"] else "FAIL"} {r["scenario"]}: {len(r["after"]["db"].get("rows", {}))} rows, '
               f'{r["pack_files"]} pack files, settings {sorted(r["after"]["prefs"])}')
         for problem in r['problems']:
             print(f'  - {problem}')
