@@ -92,7 +92,7 @@ class LibraryAndFileTest {
                 // Select explicitly: a delayed injected tap can become a long press and leave
                 // DocumentsUI in selection mode without returning the document to the app.
                 screen.node(By.text("basefeatures-file.zip")).longClick()
-                screen.click(By.pkg(picker).text("Select"))
+                screen.click(By.res(picker, "action_menu_select"))
                 screen.node(By.text(screen.text(R.string.importComplete)))
                 screen.node(By.text(FeatureScreen.TITLE))
                 screen.node(By.desc("${screen.text(R.string.fileSize)} 0.01 MB"))

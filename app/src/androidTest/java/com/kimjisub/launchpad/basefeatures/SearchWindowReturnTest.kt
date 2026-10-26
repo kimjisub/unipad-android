@@ -96,7 +96,10 @@ class SearchWindowReturnTest : PlaybackScreenTest() {
         // cancel the picker itself before checking the app, without pressing Back in the app.
         repeat(4) {
             if (screen.device.currentPackageName == packageName) {
-                assertTrue("Back key injection failed in the system picker", screen.device.pressBack())
+                // pressBack also waits briefly for an accessibility event. Its return value
+                // can be false during a window transition even when Back was delivered;
+                // require the actual return to the activity below instead.
+                screen.device.pressBack()
                 screen.device.waitForIdle(500)
             }
         }
