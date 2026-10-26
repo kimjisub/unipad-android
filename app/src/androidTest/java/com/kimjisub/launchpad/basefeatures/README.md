@@ -452,10 +452,15 @@ library lists it, and its database record starts with no bookmark, no plays and 
 date. It refuses a debuggable build, and a pack already in the library or database, before
 changing anything on the device.
 
-Each run adds one to the downloaded pack's public download count, so run it once per candidate.
-It sets the app language to English and marks the app's analytics as debug events for the run,
-then restores both; the downloaded pack and the permission answer stay. The verdict is in
-`<out>/store-check.json`, with screenshots and screen dumps of each step beside it.
+Each run adds one to the downloaded pack's public download count, so run it once per candidate,
+on a fresh installation (the library is not scrolled to find the new pack). Packs without a code,
+packs shown with the same title and producer as another, and packs the app would fetch through the
+legacy download function are not picked by default. For the run it sets the app language to English
+and marks the app's analytics as debug events (`debug.firebase.analytics.app`). Afterwards the
+language is set back, and the property is set back to its earlier value or, when it had none, to
+`.none.`, Firebase's off value (a system property cannot be removed). The downloaded pack and the
+permission answer stay. The verdict is in `<out>/store-check.json` whatever stops the run, with
+screenshots and screen dumps of each step beside it.
 
 ```bash
 bundletool build-apks --mode=universal --bundle=app-release.aab --output=candidate.apks

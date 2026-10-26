@@ -50,6 +50,21 @@ class ScreenTest(unittest.TestCase):
             + "</node></hierarchy>")
         self.assertEqual([key for key, _ in check.store_rows(screen)], [("Full", "Producer")])
 
+    def test_a_pack_without_producer_is_read_by_its_title_alone(self):
+        screen = check.parse_screen(
+            '<hierarchy><node text="" scrollable="true" bounds="[1042,158][2400,1080]">'
+            + store_row("B", "", top=179) + store_row("C", "Producer", top=337)
+            + "</node></hierarchy>")
+        self.assertEqual([key for key, _ in check.store_rows(screen)], [("B",), ("C", "Producer")])
+        self.assertEqual(check.row_key("B", None), ("B",))
+        self.assertEqual(check.row_key("C\t", "Producer"), ("C", "Producer"))
+
+    def test_screens_merge_on_their_overlap_and_keep_repeated_rows(self):
+        self.assertEqual(check.merge_screen([], [("A",), ("X",)]), [("A",), ("X",)])
+        self.assertEqual(check.merge_screen([("A",), ("X",)], [("X",), ("X",), ("B",)]), [("X",), ("B",)])
+        self.assertEqual(check.merge_screen([("A",), ("X",)], [("A",), ("X",)]), [])
+        self.assertEqual(check.merge_screen([("A",)], [("B",)]), [("B",)])
+
     def test_reads_the_store_count_beside_its_label(self):
         root = check.parse_screen(STORE_SCREEN)
         self.assertEqual(check.value_after(root, check.STORE_COUNT_LABEL), "78")
@@ -65,29 +80,107 @@ class ScreenTest(unittest.TestCase):
         self.assertEqual(check.normalized(None), "")
 
 
+def store_row(title, producer, top, height=158):
+    texts = [text for text in (title, producer, "LED ●", "AUTOPLAY ●")]
+    children = "".join(f'<node text="{text}" clickable="false" bounds="[1149,{top}][1378,{top + height}]" />'
+                       for text in texts)
+    return f'<node text="" clickable="true" bounds="[1084,{top}][2358,{top + height}]">{children}</node>'
+
+
+def store_screen(count, rows):
+    """A Store screen: the count beside its label and the rows (title, producer) in its list."""
+    listed = "".join(store_row(title, producer, top=179 + 158 * index) for index, (title, producer) in enumerate(rows))
+    return check.parse_screen(
+        f'<hierarchy><node text="{check.STORE_COUNT_LABEL}" bounds="[0,0][100,50]" />'
+        f'<node text="{count}" bounds="[0,50][100,100]" />'
+        f'<node text="" scrollable="true" bounds="[1042,158][2400,1080]">{listed}</node></hierarchy>')
+
+
+class ScreenDevice:
+    """Serves one Store screen per swipe, staying on the last, as a list scrolled to its end does."""
+    def __init__(self, screens):
+        self.screens = screens
+        self.index = 0
+
+    def screen(self, name=None):
+        return self.screens[self.index]
+
+    def wait(self, predicate, timeout, what, name):
+        found = predicate(self.screen())
+        if not found:
+            raise check.CheckFailed(f"{what} did not appear")
+        return found
+
+    def capture(self, name):
+        pass
+
+    def swipe(self, node, up=True):
+        self.index = min(self.index + 1, len(self.screens) - 1)
+
+
+class ListingTest(unittest.TestCase):
+    PACKS = [{"title": "A", "producerName": "p"}, {"title": "X", "producerName": "q"},
+             {"title": "X", "producerName": "q"}, {"title": "B"}]
+
+    def listing(self, screens):
+        store_check = check.StoreCheck(ScreenDevice(screens), check.RELEASE_PACKAGE, "unused")
+        check.time.sleep, sleep = (lambda seconds: None), check.time.sleep
+        try:
+            store_check.check_listing(self.PACKS)
+        finally:
+            check.time.sleep = sleep
+        return store_check.result["listing"]
+
+    def test_two_packs_showing_the_same_title_and_producer_count_twice(self):
+        listing = self.listing([store_screen(4, [("A", "p"), ("X", "q")]), store_screen(4, [("X", "q"), ("X", "q")]),
+                                store_screen(4, [("X", "q"), ("B", "")])])
+        self.assertEqual((listing["rows_seen"], listing["missing"], listing["extra"]), (4, [], []))
+
+    def test_one_of_two_alike_packs_missing_from_the_screen_fails(self):
+        with self.assertRaisesRegex(check.CheckFailed, "3 rows for 4 listed packs"):
+            self.listing([store_screen(4, [("A", "p"), ("X", "q")]), store_screen(4, [("X", "q"), ("B", "")])])
+
+
 class PackChoiceTest(unittest.TestCase):
     def test_picks_the_smallest_served_file_and_passes_over_unknown_sizes(self):
-        packs = [{"code": "big", "URL": "u/big"}, {"code": "gone", "URL": "u/gone"},
-                 {"code": "small", "URL": "u/small"}, {"code": "a-small", "URL": "u/a-small"}]
-        sizes = {"u/big": 9, "u/gone": None, "u/small": 2, "u/a-small": 2}
+        packs = [{"code": code, "URL": f"https://u/{code}", "title": code} for code in ("big", "gone", "small", "a-small")]
+        sizes = {"https://u/big": 9, "https://u/gone": None, "https://u/small": 2, "https://u/a-small": 2}
         pack, size = check.smallest_pack(packs, sizes.get)
         self.assertEqual((pack["code"], size), ("a-small", 2))
 
+    def test_sizes_only_packs_the_app_downloads_from_their_own_url(self):
+        packs = [{"code": "legacy", "title": "L"}, {"code": "relative", "URL": "x.zip", "title": "R"},
+                 {"code": "own", "URL": "https://x/own.zip", "title": "O"}]
+        asked = []
+        pack, _ = check.smallest_pack(packs, lambda url: asked.append(url) or 1)
+        self.assertEqual((pack["code"], asked), ("own", ["https://x/own.zip"]))
+        self.assertEqual(check.download_url(packs[0]), check.LEGACY_DOWNLOAD_URL + "?code=legacy")
+        self.assertEqual(check.download_url({"code": "a b/c", "URL": "x.zip"}),
+                         check.LEGACY_DOWNLOAD_URL + "?code=a%20b%2Fc")
+
+    def test_passes_over_packs_without_code_or_shown_like_another(self):
+        packs = [{"URL": "https://x/a.zip", "title": "A"},
+                 {"code": "b1", "URL": "https://x/b1.zip", "title": "B", "producerName": "p"},
+                 {"code": "b2", "URL": "https://x/b2.zip", "title": "B ", "producerName": "p"},
+                 {"code": "c", "URL": "https://x/c.zip", "title": "C"}]
+        self.assertEqual([pack["code"] for pack in check.downloadable(packs)], ["c"])
+        with self.assertRaisesRegex(check.CheckFailed, "same title and producer"):
+            check.StoreCheck(FakeDevice(), check.RELEASE_PACKAGE, "unused", "b1").choose_pack(packs)
+
     def test_no_sized_pack_fails(self):
         with self.assertRaises(check.CheckFailed):
-            check.smallest_pack([{"code": "gone", "URL": "u"}], lambda url: None)
+            check.smallest_pack([{"code": "gone", "URL": "https://u/gone", "title": "G"}], lambda url: None)
 
-    def test_store_list_entries_need_code_url_and_title(self):
+    def test_store_list_keeps_every_object_entry_as_the_app_lists_it(self):
         with tempfile.TemporaryDirectory() as directory:
             listed = Path(directory) / "store.json"
-            listed.write_text(json.dumps({"-1": {"code": "a", "URL": "https://x/a.zip", "title": "A"}}))
-            self.assertEqual([pack["code"] for pack in check.fetch_store_list(listed.as_uri())], ["a"])
-            listed.write_text(json.dumps({"-1": {"code": "a", "URL": "", "title": "A"}}))
-            with self.assertRaises(check.CheckFailed):
-                check.fetch_store_list(listed.as_uri())
-            listed.write_text("null")
-            with self.assertRaises(check.CheckFailed):
-                check.fetch_store_list(listed.as_uri())
+            listed.write_text(json.dumps({"-1": {"code": "a", "URL": "https://x/a.zip", "title": "A"},
+                                          "-2": {"title": "No code or URL"}, "-3": "not a pack"}))
+            self.assertEqual([pack["title"] for pack in check.fetch_store_list(listed.as_uri())], ["A", "No code or URL"])
+            for body in ("null", "{}", "<html>Service unavailable</html>"):
+                listed.write_text(body)
+                with self.assertRaises(check.CheckFailed):
+                    check.fetch_store_list(listed.as_uri())
 
 
 class DeviceStateTest(unittest.TestCase):
@@ -118,6 +211,12 @@ class FakeDevice:
         self.answers = {"getprop": sdk, "dumpsys": package, "find": folders, "test": "yes" if database else ""}
         self.commands = []
 
+    def root(self):
+        pass
+
+    def file_exists(self, path):
+        return self.answers["test"] == "yes"
+
     def shell(self, *args, **kwargs):
         self.commands.append(args)
         return self.answers.get(args[0], "")
@@ -133,6 +232,10 @@ class RefusalTest(unittest.TestCase):
     def test_refuses_before_api_33(self):
         with self.assertRaisesRegex(check.CheckFailed, "API 32"):
             self.store_check(FakeDevice(sdk="32")).check_installed()
+
+    def test_refuses_an_unreadable_api_level(self):
+        with self.assertRaisesRegex(check.CheckFailed, "not an API level"):
+            self.store_check(FakeDevice(sdk="")).check_installed()
 
     def test_refuses_a_debuggable_build(self):
         package = PACKAGE.replace("HAS_CODE", "HAS_CODE DEBUGGABLE")
@@ -160,6 +263,57 @@ class RefusalTest(unittest.TestCase):
         with self.assertRaisesRegex(check.CheckFailed, "not in the Store list"):
             self.store_check(FakeDevice(), pack="missing").choose_pack(
                 [{"code": "_Joanna", "URL": "file:///nonexistent", "title": "Joanna"}])
+
+
+class VerdictTest(unittest.TestCase):
+    def verdict(self, device, list_body, pack=None):
+        with tempfile.TemporaryDirectory() as directory:
+            listed = Path(directory) / "store.json"
+            listed.write_text(list_body)
+            store_check = check.StoreCheck(device, check.RELEASE_PACKAGE, listed.as_uri(), pack)
+            self.assertEqual(check.run_and_record(store_check, Path(directory)), 1)
+            return json.loads((Path(directory) / "store-check.json").read_text())
+
+    def test_a_store_list_that_is_not_json_is_a_failed_verdict(self):
+        device = FakeDevice()
+        result = self.verdict(device, "<html>Service unavailable</html>")
+        self.assertEqual(result["verdict"], "failed")
+        self.assertRegex(result["error"], "^CheckFailed: .* is not JSON")
+        self.assertFalse(any(args[0] in ("setprop", "cmd", "input", "am") for args in device.commands))
+
+    def test_an_unexpected_error_is_a_failed_verdict_too(self):
+        # The copied database is empty, so reading the record raises sqlite3.OperationalError.
+        result = self.verdict(FakeDevice(database=True), json.dumps({"-1": {"code": "a", "title": "A"}}), pack="a")
+        self.assertEqual(result["verdict"], "failed")
+        self.assertRegex(result["error"], "^OperationalError: no such table")
+
+
+class RestoreTest(unittest.TestCase):
+    def test_a_failed_language_change_still_restores_language_and_analytics(self):
+        class FailingDevice(FakeDevice):
+            def shell(self, *args, **kwargs):
+                if args[:2] == ("cmd", "locale") and "en-US" in args:
+                    self.commands.append(args)
+                    raise check.CheckFailed("set-app-locales failed")
+                if args[0] == "getprop" and args[1] == "debug.firebase.analytics.app":
+                    self.commands.append(args)
+                    return ""
+                if args[:2] == ("cmd", "locale"):
+                    self.commands.append(args)
+                    return "Locales for p for user 0 are [ko-KR]"
+                return super().shell(*args, **kwargs)
+
+        device = FailingDevice()
+        store_check = check.StoreCheck(device, check.RELEASE_PACKAGE, "unused", "a")
+        store_check.choose_pack = lambda packs: packs[0]
+        fetch, check.fetch_store_list = check.fetch_store_list, lambda url: [{"code": "a", "title": "A"}]
+        try:
+            with self.assertRaisesRegex(check.CheckFailed, "set-app-locales failed"):
+                store_check.run()
+        finally:
+            check.fetch_store_list = fetch
+        self.assertIn(("cmd", "locale", "set-app-locales", check.RELEASE_PACKAGE, "--locales", "ko-KR"), device.commands)
+        self.assertIn(("setprop", "debug.firebase.analytics.app", ".none."), device.commands)
 
 
 if __name__ == "__main__":

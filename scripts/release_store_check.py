@@ -13,12 +13,16 @@ with the device online:
 Every run downloads one pack from the production file host, which adds one to that pack's
 public download count, so run it once per release candidate. Packs are sized with HEAD
 requests, which download nothing. Analytics from the app are marked as debug events
-(`debug.firebase.analytics.app`) during the run, and the app language is set to English;
-both are restored afterwards. The downloaded pack and the permission answer stay.
+(`debug.firebase.analytics.app`) during the run, and the app language is set to English.
+Afterwards the app language is set back, and the analytics property is set back to its value or,
+when it had none, to `.none.` (Firebase's off value; a system property cannot be removed).
+The downloaded pack and the permission answer stay. Run it on a fresh installation: the
+library is not scrolled, so the new pack must be on its first screen.
 
 Results, screenshots and screen dumps go to `--out`; `store-check.json` holds the verdict.
 """
 import argparse
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 import json
@@ -30,11 +34,14 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ElementTree
 
 # The same Realtime Database node the app subscribes to (`FirebaseStoreCatalog`), read over REST.
 STORE_LIST_URL = "https://unipad-e41ab.firebaseio.com/store.json"
+# Where the app downloads an entry without a URL of its own (`FBStoreActivity.DOWNLOAD_BASE_URL`).
+LEGACY_DOWNLOAD_URL = "https://us-central1-unipad-e41ab.cloudfunctions.net/downloadUniPackLegacy"
 RELEASE_PACKAGE = "com.kimjisub.launchpad"
 DATABASE = "UniPad.db"
 PERMISSION_ALLOW = "com.android.permissioncontroller:id/permission_allow_button"
@@ -46,6 +53,8 @@ STORE_COUNT_LABEL = "Store UniPacks"
 DOWNLOAD = "Download"
 DOWNLOADED = "Downloaded"
 FAILED = "Failed"
+# Each row ends with its LED and AutoPlay indicators (`option_indicator_format`, "%s ●").
+INDICATOR_SUFFIX = " ●"
 
 LIST_TIMEOUT = 30
 DOWNLOAD_TIMEOUT = 180
@@ -127,32 +136,68 @@ def store_list(root):
     return None
 
 
+def row_key(title, producer):
+    """What a Store row shows of a pack: its title and producer, leaving out an empty one, which draws no text."""
+    return tuple(text for text in (normalized(title), normalized(producer)) if text)
+
+
+def row_texts(row):
+    """A row's texts without the LED and AutoPlay indicators that end it."""
+    texts = row.texts()
+    for _ in range(2):
+        if texts and texts[-1].endswith(INDICATOR_SUFFIX):
+            texts = texts[:-1]
+    return texts
+
+
 def store_rows(root):
-    """(title, producer) of each Store row fully on screen, with the row node.
+    """(row_key, row node) of each Store row fully on screen, top to bottom.
 
     A dump gives each node's visible bounds, so a row cut off at the list's edge is shorter
     than the others and may lack its producer line; only rows of full height are read."""
     listing = store_list(root)
     if listing is None:
         return []
-    candidates = [row for row in listing.children if row.clickable and len(row.texts()) >= 2]
+    candidates = [row for row in listing.children if row.clickable and row.texts()]
     full = max((row.height for row in candidates), default=0)
-    return [((normalized(row.texts()[0]), normalized(row.texts()[1])), row)
+    return [(tuple(normalized(text) for text in row_texts(row)), row)
             for row in candidates if row.height >= full - 2]
 
 
+def merge_screen(seen, keys):
+    """Append a screen's rows to the rows seen so far, past the longest run both share.
+
+    Each swipe moves the list by less than its height, so consecutive screens overlap;
+    aligning on that overlap counts two rows that show the same pack twice."""
+    for overlap in range(min(len(seen), len(keys)), 0, -1):
+        if seen[-overlap:] == keys[:overlap]:
+            return keys[overlap:]
+    return keys
+
+
 def fetch_store_list(url, timeout=30):
+    """The entries the Store screen lists: every object under the node, as the app adds every child it can read."""
     with urllib.request.urlopen(url, timeout=timeout) as response:
-        listed = json.load(response)
+        try:
+            listed = json.load(response)
+        except ValueError as error:
+            raise CheckFailed(f"Store list at {url} is not JSON: {error}") from error
     if not isinstance(listed, dict) or not listed:
         raise CheckFailed(f"Store list at {url} is empty or not an object")
-    packs = []
-    for key, pack in listed.items():
-        if not isinstance(pack, dict) or not all(isinstance(pack.get(name), str) and pack[name].strip()
-                                                 for name in ("code", "URL", "title")):
-            raise CheckFailed(f"Store list entry {key} lacks a code, URL or title")
-        packs.append(pack)
-    return packs
+    return [pack for pack in listed.values() if isinstance(pack, dict)]
+
+
+def text_field(pack, name):
+    value = pack.get(name)
+    return value if isinstance(value, str) else None
+
+
+def download_url(pack):
+    """The address the app downloads the pack from: its own URL, else the legacy download function by code."""
+    url = text_field(pack, "URL")
+    if url and url.startswith("http"):
+        return url
+    return f"{LEGACY_DOWNLOAD_URL}?code={urllib.parse.quote(pack['code'], safe='')}"
 
 
 def head_size(url, timeout=15):
@@ -166,8 +211,19 @@ def head_size(url, timeout=15):
         return None
 
 
+def downloadable(packs):
+    """Packs the check can download and find again: the app needs a code to download, and the
+    row is found by what it shows, so that must be unique in the list."""
+    shown = Counter(row_key(pack.get("title"), pack.get("producerName")) for pack in packs)
+    return [pack for pack in packs
+            if text_field(pack, "code") and shown[row_key(pack.get("title"), pack.get("producerName"))] == 1]
+
+
 def smallest_pack(packs, size_of):
-    """The pack with the smallest served file, with its size; packs whose size is unknown are passed over."""
+    """The pack with the smallest served file, with its size. Only packs with their own file URL
+    are sized (a HEAD request to the legacy function could count as a download); packs whose
+    size is unknown are passed over."""
+    packs = [pack for pack in downloadable(packs) if download_url(pack) == text_field(pack, "URL")]
     with ThreadPoolExecutor(max_workers=8) as pool:
         sizes = list(pool.map(lambda pack: size_of(pack["URL"]), packs))
     sized = [(size, pack["code"], pack) for size, pack in zip(sizes, packs) if size]
@@ -236,10 +292,15 @@ class Device:
         x, y = node.center
         self.shell("input", "tap", str(x), str(y))
 
-    def swipe_up(self, node):
-        left, top, right, bottom = node.bounds
-        x = (left + right) // 2
-        self.shell("input", "swipe", str(x), str(bottom - (bottom - top) // 6), str(x), str(top + (bottom - top) // 6), "600")
+    def swipe(self, node, up=True):
+        """Drag across two thirds of the node: up shows what lies below, down what lies above."""
+        x, (top, bottom) = node.center[0], (node.bounds[1], node.bounds[3])
+        near_top, near_bottom = top + (bottom - top) // 6, bottom - (bottom - top) // 6
+        start, end = (near_bottom, near_top) if up else (near_top, near_bottom)
+        self.shell("input", "swipe", str(x), str(start), str(x), str(end), "600")
+
+    def file_exists(self, path):
+        return self.shell("test", "-f", path, "&&", "echo", "yes", check=False) == "yes"
 
     def wait(self, predicate, timeout, what, name):
         deadline = time.monotonic() + timeout
@@ -281,14 +342,17 @@ class StoreCheck:
             copy = Path(directory) / DATABASE
             for suffix in ("", "-wal", "-shm"):
                 source = self.app_data("databases", DATABASE + suffix)
-                if self.device.shell("test", "-f", source, "&&", "echo", "yes", check=False) == "yes":
+                if self.device.file_exists(source):
                     Path(str(copy) + suffix).write_bytes(self.device.run("exec-out", "cat", source))
             if not copy.exists():
                 return None
             return pack_record(copy, code)
 
     def check_installed(self):
-        sdk = int(self.device.shell("getprop", "ro.build.version.sdk"))
+        sdk = self.device.shell("getprop", "ro.build.version.sdk")
+        if not sdk.isdigit():
+            raise CheckFailed(f"ro.build.version.sdk is {sdk!r}, not an API level")
+        sdk = int(sdk)
         if sdk < 33:
             raise CheckFailed(f"API {sdk}: this check needs API 33+ (per-app language, notification permission)")
         package = self.device.shell("dumpsys", "package", self.package)
@@ -304,18 +368,22 @@ class StoreCheck:
 
     def choose_pack(self, packs):
         if self.pack_code:
-            pack = next((pack for pack in packs if pack["code"] == self.pack_code), None)
+            pack = next((pack for pack in packs if text_field(pack, "code") == self.pack_code), None)
             if pack is None:
                 raise CheckFailed(f"Pack {self.pack_code} is not in the Store list")
-            size = head_size(pack["URL"])
+            if pack not in downloadable(packs):
+                raise CheckFailed(f"Pack {self.pack_code} shows the same title and producer as another pack; choose another")
+            url = download_url(pack)
+            size = head_size(url) if url == text_field(pack, "URL") else None
         else:
             pack, size = smallest_pack(packs, head_size)
-        self.result["pack"] = {"code": pack["code"], "title": normalized(pack["title"]), "size": size,
+        title = normalized(pack.get("title"))
+        self.result["pack"] = {"code": pack["code"], "title": title, "url": download_url(pack), "size": size,
                                "download_count_before": pack.get("downloadCount")}
-        self.step("pack", f"{pack['code']} \"{normalized(pack['title'])}\" {size} bytes")
+        self.step("pack", f"{pack['code']} \"{title}\" {size} bytes")
         if self.pack_folders(pack["code"]) or self.read_record(pack["code"]) is not None:
             raise CheckFailed(f"{pack['code']} is already in this app's library or database; "
-                              "use a fresh installation or another --pack")
+                              "use a fresh installation of the candidate")
         return pack
 
     def open_store(self):
@@ -335,32 +403,35 @@ class StoreCheck:
         self.device.wait(lambda root: value_after(root, STORE_COUNT_LABEL) == str(expected), LIST_TIMEOUT,
                          f"Store count {expected}", "store-count")
         self.device.capture("store-list")
-        wanted = {(normalized(pack["title"]), normalized(pack.get("producerName"))) for pack in packs}
-        seen, unchanged = {}, 0
-        listing = store_list(self.device.screen("store-list"))
+        wanted = Counter(row_key(pack.get("title"), pack.get("producerName")) for pack in packs)
+        seen, unchanged = [], 0
+        root = self.device.screen("store-list")
+        listing = store_list(root)
+        if listing is None:
+            raise CheckFailed("The Store screen has no scrolling pack list (see store-list.xml)")
         while unchanged < 2:
-            rows = store_rows(self.device.screen())
-            new = [key for key, _ in rows if key not in seen]
-            seen.update(rows)
+            new = merge_screen(seen, [key for key, _ in store_rows(root)])
+            seen.extend(new)
             unchanged = 0 if new else unchanged + 1
-            self.device.swipe_up(listing)
+            self.device.swipe(listing)
             time.sleep(0.4)
-        missing, extra = sorted(wanted - set(seen)), sorted(set(seen) - wanted)
+            root = self.device.screen()
+        shown = Counter(seen)
+        missing, extra = sorted((wanted - shown).elements()), sorted((shown - wanted).elements())
         self.result["listing"] = {"count": expected, "rows_seen": len(seen), "missing": missing, "extra": extra}
-        if missing or extra:
-            raise CheckFailed(f"Store screen rows differ from the Store list: missing {missing}, extra {extra}")
+        if missing or extra or len(seen) != expected:
+            raise CheckFailed(f"Store screen shows {len(seen)} rows for {expected} listed packs: "
+                              f"missing {missing}, extra {extra}")
         self.step("list", f"{expected} packs counted and all {len(seen)} rows match the Store list")
 
     def find_row(self, pack):
-        key = (normalized(pack["title"]), normalized(pack.get("producerName")))
+        key = row_key(pack.get("title"), pack.get("producerName"))
         for _ in range(60):
             root = self.device.screen()
             row = dict(store_rows(root)).get(key)
             if row:
                 return row
-            listing = store_list(root)
-            self.device.shell("input", "swipe", str(listing.center[0]), str(listing.bounds[1] + listing.height // 6),
-                              str(listing.center[0]), str(listing.bounds[3] - listing.height // 6), "600")
+            self.device.swipe(store_list(root), up=False)
             time.sleep(0.4)
         raise CheckFailed(f"Row of {pack['code']} not found while scrolling back up the Store list")
 
@@ -391,7 +462,7 @@ class StoreCheck:
     def check_library(self, pack):
         code = pack["code"]
         folders = self.pack_folders(code)
-        if len(folders) != 1 or self.device.shell("test", "-f", f"{folders[0]}/info", "&&", "echo", "yes", check=False) != "yes":
+        if len(folders) != 1 or not self.device.file_exists(f"{folders[0]}/info"):
             raise CheckFailed(f"Expected one folder of {code} with an info file, found {folders}")
         for _ in range(2):
             self.device.shell("input", "keyevent", "KEYCODE_BACK")
@@ -419,9 +490,9 @@ class StoreCheck:
         pack = self.choose_pack(packs)
         locales = app_locales(self.device.shell("cmd", "locale", "get-app-locales", self.package))
         analytics = self.device.shell("getprop", "debug.firebase.analytics.app")
-        self.device.shell("cmd", "locale", "set-app-locales", self.package, "--locales", "en-US")
-        self.device.shell("setprop", "debug.firebase.analytics.app", self.package)
         try:
+            self.device.shell("cmd", "locale", "set-app-locales", self.package, "--locales", "en-US")
+            self.device.shell("setprop", "debug.firebase.analytics.app", self.package)
             self.open_store()
             self.check_listing(packs)
             self.download(pack, permission_before)
@@ -441,17 +512,22 @@ def main(argv=None):
     parser.add_argument("--list-url", default=STORE_LIST_URL)
     args = parser.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
-    check = StoreCheck(Device(args.adb, args.serial, args.out), args.package, args.list_url, args.pack)
+    return run_and_record(StoreCheck(Device(args.adb, args.serial, args.out), args.package, args.list_url, args.pack),
+                          args.out)
+
+
+def run_and_record(check, out):
+    """Run the check and write its verdict; any error, expected or not, is a failed verdict on file."""
     started = time.time()
     try:
         check.run()
         check.result["verdict"] = "passed"
-    except (CheckFailed, subprocess.SubprocessError, OSError) as error:
+    except Exception as error:
         check.result.update(verdict="failed", error=f"{type(error).__name__}: {error}")
-        print(f"FAILED: {error}", file=sys.stderr)
+        print(f"FAILED: {type(error).__name__}: {error}", file=sys.stderr)
     check.result["started_at"] = time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime(started))
     check.result["seconds"] = round(time.time() - started, 1)
-    (args.out / "store-check.json").write_text(json.dumps(check.result, indent=2, ensure_ascii=False) + "\n")
+    (out / "store-check.json").write_text(json.dumps(check.result, indent=2, ensure_ascii=False, default=str) + "\n")
     return 0 if check.result["verdict"] == "passed" else 1
 
 
