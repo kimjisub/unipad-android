@@ -52,6 +52,12 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
                 height > 0 && now - keyboard.second >= 500
             }
             val keyboardTop = screen.onMain { screen.bounds(screen.resumed().window.decorView).bottom - keyboard.first }
+            for (description in listOf(R.string.transfer_search, R.string.store, R.string.import_unipack)) {
+                val control = compose.onNode(hasContentDescription(screen.text(description)) and hasClickAction())
+                    .fetchSemanticsNode()
+                assertTrue("Search action ${screen.text(description)} must remain above the keyboard", control.boundsInWindow.bottom <= keyboardTop)
+                assertEquals("Search action must remain fully visible", control.size.height.toFloat(), control.boundsInWindow.height, 1f)
+            }
             val label = screen.text(R.string.guide_import_external)
             val target = By.clickable(true).hasDescendant(By.text(label))
             val buttonMatcher = hasText(label) and hasClickAction()
@@ -67,7 +73,9 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
                 val clippedAtTop = button != null && button.positionInWindow.y < field.bottom + 12
                 val remaining = if (clippedAtTop) field.bottom + 12 - button.positionInWindow.y
                     else (button?.let { it.positionInWindow.y + it.size.height } ?: screen.device.displayHeight.toFloat()) - keyboardTop + 8
-                val distance = (remaining.toInt() + touchSlop).coerceIn(touchSlop + 12, keyboardTop - field.top - 16)
+                val maxDistance = keyboardTop - field.top - 16
+                assertTrue("No room for a physical drag: field=$field keyboardTop=$keyboardTop touchSlop=$touchSlop", maxDistance >= touchSlop + 12)
+                val distance = (remaining.toInt() + touchSlop).coerceIn(touchSlop + 12, maxDistance)
                 val start = if (clippedAtTop) field.bottom + 8 else keyboardTop - 8
                 val end = if (clippedAtTop) minOf(keyboardTop - 8, start + distance) else start - distance
                 // Start in the results and keep the finger down while passing over the search field.
@@ -92,8 +100,21 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             compose.onNode(hasContentDescription(screen.text(R.string.transfer_search)) and hasClickAction()).assertExists()
             compose.onNode(hasSetTextAction() and hasText("Base")).assertExists()
             screen.capture("$prefix-keyboard-dismissed")
+            screen.node(By.clazz("android.widget.EditText")).click()
+            screen.await("Search keyboard did not reopen") {
+                screen.onMain {
+                    ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)
+                        ?.isVisible(WindowInsetsCompat.Type.ime()) == true
+                }
+            }
+            compose.onNode(hasContentDescription(screen.text(R.string.transfer_search)) and hasClickAction()).performClick()
+            compose.waitForIdle()
+            assertTrue("Search close action must close the field while the keyboard is open",
+                compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isEmpty())
+            screen.capture("$prefix-search-closed")
         } finally {
-            screen.device.executeShellCommand("settings put system font_scale $previous")
+            screen.device.executeShellCommand(if (previous == "null") "settings delete system font_scale"
+                else "settings put system font_scale $previous")
         }
     }
 }

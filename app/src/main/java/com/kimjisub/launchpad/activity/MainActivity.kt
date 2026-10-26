@@ -660,7 +660,12 @@ class MainActivity : BaseActivity() {
 		val barsAndCutout = WindowInsets.barsAndCutout
 		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
-		val searchKeyboardOpen = searchOpen && WindowInsets.ime.getBottom(LocalDensity.current) > 0
+		val imeInsets = WindowInsets.ime
+		val density = LocalDensity.current
+		val keyboardVisible by remember(imeInsets, density) {
+			derivedStateOf { imeInsets.getBottom(density) > 0 }
+		}
+		val searchKeyboardOpen = searchOpen && keyboardVisible
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -774,7 +779,15 @@ class MainActivity : BaseActivity() {
 										onLoadUniPackClick = onLoadUniPackClick,
 									)
 									if (searchOpen) {
-										MainSearchField()
+										Row(verticalAlignment = Alignment.CenterVertically) {
+											MainSearchField(Modifier.weight(1f))
+											if (searchKeyboardOpen) MainActions(
+												searchOpen = searchOpen,
+												onSearchClick = { toggleSearch() },
+												onStoreClick = onStoreClick,
+												onLoadUniPackClick = onLoadUniPackClick,
+											)
+										}
 									}
 								}
 
@@ -897,6 +910,18 @@ class MainActivity : BaseActivity() {
 
 			Spacer(Modifier.weight(1f))
 
+			MainActions(searchOpen, onSearchClick, onStoreClick, onLoadUniPackClick)
+		}
+	}
+
+	@Composable
+	private fun MainActions(
+		searchOpen: Boolean,
+		onSearchClick: () -> Unit,
+		onStoreClick: () -> Unit,
+		onLoadUniPackClick: () -> Unit,
+	) {
+		Row(verticalAlignment = Alignment.CenterVertically) {
 			IconButton(
 				onClick = onSearchClick,
 				modifier = Modifier
@@ -934,13 +959,13 @@ class MainActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun MainSearchField() {
+	private fun MainSearchField(modifier: Modifier = Modifier) {
 		val focusRequester = remember { FocusRequester() }
 		val keyboard = LocalSoftwareKeyboardController.current
 		SearchField(
 			query = searchQuery,
 			onQueryChange = { updateSearchQuery(it) },
-			modifier = Modifier
+			modifier = modifier
 				.fillMaxWidth()
 				.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
 				.focusRequester(focusRequester),
