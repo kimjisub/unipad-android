@@ -22,6 +22,25 @@ see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
 ## Run on an API 35 emulator
 
+`basefeatures.PracticeTransitionTest` checks step practice → autoplay → step practice,
+including a chain wait, and compares recovered pad lights with ordinary autoplay. It identifies
+each decoded sound request separately and checks the pad view's rendered colour. Four lock/unlock
+cases cover 1 s and 10 s interruptions before a partial chord, including the final chord. The fixtures
+keep lights and later notes far enough apart for screen automation; exact 5000 ms note spacing and
+the 800 ms timed-guide boundary are checked with a controlled clock in
+`PlayActivityViewModelPracticeTransitionsTest`. `PlayActivityViewModelStepToAutoPlayTest` also checks
+pack-light requests and guide removal across its 72 transition cases.
+
+Run the screen checks with their neighbouring playback regressions:
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.basefeatures.PracticeTransitionTest \
+  com.kimjisub.launchpad.basefeatures.StepToAutoPlayTest \
+  com.kimjisub.launchpad.basefeatures.AutoPlayChainWaitTest \
+  com.kimjisub.launchpad.basefeatures.PlaybackInterruptionTest
+```
+
 Use JDK 21 and the Android SDK. Start a freshly wiped API 35 emulator that nothing else is using
 on a fixed port, so its serial is known, and wait until it has finished booting. The commands below
 write that serial (`emulator-5580` here) as `<serial>`:
