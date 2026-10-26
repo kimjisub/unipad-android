@@ -179,6 +179,9 @@
 	<string name="sort_play_count">Vezes Tocado</string>
 	<string name="sort_last_opened_date">Última Abertura</string>
 	<string name="sort_download_date">Data do Download</string>
+	<string name="sort_order">Ordem de classificação</string>
+	<string name="sort_ascending">Crescente</string>
+	<string name="sort_descending">Decrescente</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Tamanho do Pad</string>

@@ -177,6 +177,9 @@
 	<string name="sort_play_count">演奏次数</string>
 	<string name="sort_last_opened_date">上次打开日期</string>
 	<string name="sort_download_date">下载日期</string>
+	<string name="sort_order">排序顺序</string>
+	<string name="sort_ascending">升序</string>
+	<string name="sort_descending">降序</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">按键矩阵大小</string>

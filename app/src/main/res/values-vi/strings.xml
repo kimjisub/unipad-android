@@ -177,6 +177,9 @@
 	<string name="sort_play_count">Số lần Chơi</string>
 	<string name="sort_last_opened_date">Mở Lần cuối</string>
 	<string name="sort_download_date">Ngày Tải xuống</string>
+	<string name="sort_order">Thứ tự sắp xếp</string>
+	<string name="sort_ascending">Tăng dần</string>
+	<string name="sort_descending">Giảm dần</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Kích thước Pad</string>

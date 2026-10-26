@@ -4,7 +4,6 @@ import android.graphics.Rect
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import com.kimjisub.launchpad.activity.MainActivity
-import com.kimjisub.launchpad.manager.AppUpdateSource
 import com.kimjisub.launchpad.manager.PreferenceAppUpdateStore
 import com.kimjisub.launchpad.manager.UpdateStatus
 import org.junit.Assert.assertEquals
@@ -66,19 +65,19 @@ class AppUpdateLayoutTest : BaseUITest() {
             assertNotNull("search field missing", field)
             field.text = TestUniPack.TITLE
             findTestPackRow()
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertTrue("search lost focus", device.findObject(By.clazz("android.widget.EditText")).isFocused)
             assertEquals(TestUniPack.TITLE, device.findObject(By.clazz("android.widget.EditText")).text)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             takeScreenshot("update_ready_during_search")
             device.findObject(By.desc(str(R.string.transfer_search))).click()
             selectTestPack()
-            emit(source, UpdateStatus.Failed)
+            source.emit(UpdateStatus.Failed)
             assertTrue("selection was lost", device.hasObject(By.res("main_detail_${TestUniPack.FOLDER_NAME}")))
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             device.pressBack()
             openSettings()
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertTrue("settings were left", device.hasObject(By.text(str(R.string.settings_storage))))
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             device.pressBack()
@@ -86,12 +85,12 @@ class AppUpdateLayoutTest : BaseUITest() {
             device.findObject(By.desc(str(R.string.import_unipack))).click()
             assertTrue("file picker did not open", waitUntil(10000L) { device.currentPackageName != PACKAGE_NAME })
             val picker = device.currentPackageName
-            emit(source, UpdateStatus.Downloaded)
+            source.emit(UpdateStatus.Downloaded)
             assertEquals("file picker was left", picker, device.currentPackageName)
             device.pressBack()
             assertTrue(waitForMainScreen())
             assertFalse(device.hasObject(By.res("app_update_dialog")))
-            assertTrue(device.wait(Until.hasObject(By.desc(str(R.string.update_ready_title))), 5000L))
+            assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_ready_title))), 5000L))
         } finally { MainActivity.appUpdateSourceForTest = null }
     }
 
@@ -106,8 +105,8 @@ class AppUpdateLayoutTest : BaseUITest() {
                 if (control()?.isFocused != true) device.pressKeyCode(android.view.KeyEvent.KEYCODE_TAB)
             }
             assertTrue("could not focus the update control", control()?.isFocused == true)
-            emit(source, UpdateStatus.Downloaded)
-            assertTrue(device.wait(Until.hasObject(By.desc(str(R.string.update_ready_title))), 5000L))
+            source.emit(UpdateStatus.Downloaded)
+            assertTrue(device.wait(Until.hasObject(By.text(str(R.string.update_ready_title))), 5000L))
             assertTrue("an automatic result moved keyboard focus", control()?.isFocused == true)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
         } finally { MainActivity.appUpdateSourceForTest = null }
@@ -137,13 +136,6 @@ class AppUpdateLayoutTest : BaseUITest() {
         }
     }
 
-    private fun emit(source: ControlledSource, status: UpdateStatus) {
-        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            source.answer = status
-            source.listener!!(status)
-        }
-    }
-
     private fun checkLayout(language: String, scale: Float) {
         val originalLanguage = AppLanguage.get()
         val originalScale = device.executeShellCommand("settings get system font_scale").trim()
@@ -165,7 +157,7 @@ class AppUpdateLayoutTest : BaseUITest() {
             val automaticChoices = device.hasObject(By.res("app_update_card"))
             val statePositions = mutableListOf(positions())
             takeScreenshot("update_${language}_${scale}_offer")
-            val notice = device.findObject(By.desc(str(R.string.update_offer_title)))
+            val notice = device.findObject(By.text(str(R.string.update_offer_title)))
             if (notice != null) {
                 // Compose exposes the name as a child of the actual action node.
                 val action = clickableAncestor(notice)
@@ -192,7 +184,7 @@ class AppUpdateLayoutTest : BaseUITest() {
                 Triple(UpdateStatus.Downloaded, R.string.update_ready_title, "ready"),
                 Triple(UpdateStatus.Failed, R.string.update_failed, "failed"),
             )) {
-                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().runOnMainSync { source.listener!!(status) }
+                source.push(status)
                 assertTrue("state missing: $suffix", waitForState(title))
                 statePositions += positions()
                 takeScreenshot("update_${language}_${scale}_$suffix")
@@ -219,19 +211,5 @@ class AppUpdateLayoutTest : BaseUITest() {
         val node = device.wait(Until.findObject(selector), 5000L)
         assertNotNull("main content missing: $selector", node)
         Rect(node.visibleBounds)
-    }
-
-    private class ControlledSource : AppUpdateSource {
-        var answer: UpdateStatus = UpdateStatus.None
-        var listener: ((UpdateStatus) -> Unit)? = null
-        var error: Exception? = null
-        override suspend fun status(): UpdateStatus {
-            error?.let { throw it }
-            return answer
-        }
-        override fun startDownload() = false
-        override suspend fun install() = error("must not install automatically")
-        override fun observe(onChange: (UpdateStatus) -> Unit) { listener = onChange }
-        override fun close() { listener = null }
     }
 }

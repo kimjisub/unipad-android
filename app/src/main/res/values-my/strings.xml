@@ -169,6 +169,9 @@
 	<string name="sort_play_count">ဖွင့်သည့်အကြိမ်</string>
 	<string name="sort_last_opened_date">နောက်ဆုံးဖွင့်သည့်ရက်</string>
 	<string name="sort_download_date">ဒေါင်းလုဒ်ရက်စွဲ</string>
+	<string name="sort_order">စီစဉ်မှုအစဉ်</string>
+	<string name="sort_ascending">ငယ်စဉ်ကြီးလိုက်</string>
+	<string name="sort_descending">ကြီးစဉ်ငယ်လိုက်</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad အရွယ်အစား</string>

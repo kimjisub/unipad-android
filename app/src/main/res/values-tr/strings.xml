@@ -178,6 +178,9 @@
 	<string name="sort_play_count">Oynatma Sayısı</string>
 	<string name="sort_last_opened_date">Son Açılma</string>
 	<string name="sort_download_date">İndirme Tarihi</string>
+	<string name="sort_order">Sıralama düzeni</string>
+	<string name="sort_ascending">Artan</string>
+	<string name="sort_descending">Azalan</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Pad Boyutu</string>

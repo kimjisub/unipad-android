@@ -177,6 +177,9 @@
 	<string name="sort_play_count">再生回数</string>
 	<string name="sort_last_opened_date">最終オープン日</string>
 	<string name="sort_download_date">ダウンロード日</string>
+	<string name="sort_order">並べ替えの順序</string>
+	<string name="sort_ascending">昇順</string>
+	<string name="sort_descending">降順</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">パッドサイズ</string>

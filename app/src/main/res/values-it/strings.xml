@@ -179,6 +179,9 @@
 	<string name="sort_play_count">Volte Giocato</string>
 	<string name="sort_last_opened_date">Ultima Apertura</string>
 	<string name="sort_download_date">Data Download</string>
+	<string name="sort_order">Ordinamento</string>
+	<string name="sort_ascending">Crescente</string>
+	<string name="sort_descending">Decrescente</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Dimensione Pad</string>
