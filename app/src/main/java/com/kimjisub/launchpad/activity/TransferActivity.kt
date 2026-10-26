@@ -66,7 +66,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.core.view.WindowCompat
+import com.kimjisub.launchpad.ui.compose.configureSearchWindowInsets
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.kimjisub.launchpad.R
@@ -121,8 +121,7 @@ class TransferActivity : AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		// Keep the search list's IME padding available before edge-to-edge is enforced.
-		WindowCompat.setDecorFitsSystemWindows(window, false)
+		configureSearchWindowInsets(window)
 
 		setContent {
 			UniPadTheme {

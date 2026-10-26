@@ -10,8 +10,6 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
@@ -73,15 +71,14 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             compose.waitForIdle()
             var keyboard = -1 to 0L
             screen.await("Keyboard did not settle") {
-                val height = screen.onMain {
-                    ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)
-                        ?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
-                }
+                // Read the keyboard window independently of the app's insets: a missing inset
+                // must still let this regression test capture and measure the obscured button.
+                val height = screen.device.displayHeight - keyboardTopOnScreen()
                 val now = android.os.SystemClock.elapsedRealtime()
                 if (height != keyboard.first) keyboard = height to now
                 height > 0 && now - keyboard.second >= 500
             }
-            val keyboardTop = screen.onMain { screen.bounds(screen.resumed().window.decorView).bottom - keyboard.first }
+            val keyboardTop = keyboardTopOnScreen()
             for (description in listOf(R.string.transfer_search, R.string.store, R.string.import_unipack)) {
                 val control = compose.onNode(hasContentDescription(screen.text(description)) and hasClickAction())
                     .fetchSemanticsNode()
@@ -140,10 +137,7 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             screen.capture("$prefix-keyboard-dismissed")
             screen.node(By.clazz("android.widget.EditText")).click()
             screen.await("Search keyboard did not reopen") {
-                screen.onMain {
-                    ViewCompat.getRootWindowInsets(screen.resumed().window.decorView)
-                        ?.isVisible(WindowInsetsCompat.Type.ime()) == true
-                }
+                keyboardTopOnScreen() < screen.device.displayHeight
             }
             compose.onNode(hasContentDescription(screen.text(R.string.transfer_search)) and hasClickAction()).performClick()
             compose.waitForIdle()
@@ -154,6 +148,11 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             restoreFontScale(previous)
         }
     }
+
+    private fun keyboardTopOnScreen(): Int = screen.instrumentation.uiAutomation.windows
+        .firstOrNull { it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD }
+        ?.let { window -> android.graphics.Rect().also(window::getBoundsInScreen).top }
+        ?: screen.device.displayHeight
 
     private fun restoreFontScale(previous: String) {
         screen.device.executeShellCommand(if (previous == "null") "settings delete system font_scale"

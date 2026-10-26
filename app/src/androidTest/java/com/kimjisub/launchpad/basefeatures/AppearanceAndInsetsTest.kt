@@ -131,8 +131,8 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     @Test fun mainScreenButtonsStayClearOfSideNavigationBarAndCutout() {
         if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // A landscape phone with 3-button navigation puts the bar on a side, and a punch-hole camera
-        // takes the opposite side; both are emulated through the system's own overlays. From API 35 the
-        // window spans the display and reports both as insets; below it the window is laid out between them.
+        // takes the opposite side; both are emulated through the system's own overlays. The main
+        // screen opts into edge-to-edge on older versions too and receives both as insets.
         DisplayOverlays.with(screen.device, DisplayOverlays.THREE_BUTTON_NAVIGATION, DisplayOverlays.HOLE_CUTOUT) {
             screen.launch(MainActivity::class.java)
             screen.node(By.text(FeatureScreen.TITLE))
@@ -274,7 +274,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenSearchKeyboardCoversLeftPanelWithoutSqueezingIt() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val panel = By.res("main_left_panel")
@@ -285,7 +284,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenSearchResultsScrollAboveKeyboard() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val keyboardTop = openSearchKeyboard()
@@ -294,7 +292,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun mainScreenNoSearchResultsScrollAboveKeyboard() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         screen.launch(MainActivity::class.java)
         screen.node(By.text(FeatureScreen.TITLE))
         val keyboardTop = openSearchKeyboard()
@@ -305,7 +302,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     }
 
     @Test fun transferScreenSearchResultsScrollAboveKeyboardOnTablet() {
-        if (android.os.Build.VERSION.SDK_INT < 33) throw AssertionError("Base features requires API 33+; no tests are skipped")
         // On a landscape phone the keyboard reaches up to the search field and leaves none of the list
         // in view, so this is checked where some rows stay above it.
         withTransferSource { source ->
@@ -344,8 +340,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
     /**
      * Drags the results up, as a finger would, in the strip left between the search field and the
      * keyboard until [target] fits above it or stops moving, then checks its bottom clears the keyboard.
-     * Below API 35 the system leaves what the keyboard covers out of the screen's node tree, so
-     * [target] may only appear once dragged into view.
+     * A target outside the list's viewport may only appear in the node tree once dragged into view.
      */
     private fun assertScrollsAboveKeyboard(name: String, target: BySelector, keyboardTop: Int) {
         val field = screen.node(By.focused(true)).visibleBounds
@@ -362,7 +357,6 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             if (moved != null && moved == bounds) break
             bounds = moved
         }
-        println("$name field=$field target=$bounds keyboardTop=$keyboardTop")
         screen.capture("$name-keyboard")
         assertNotNull("$target never came into view above the keyboard from $keyboardTop", bounds)
         assertTrue("$target $bounds stays under the keyboard from $keyboardTop", bounds!!.bottom <= keyboardTop)

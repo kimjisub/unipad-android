@@ -59,6 +59,7 @@
 		</activity>
 		<activity
 			android:name=".activity.MainActivity"
+			android:windowSoftInputMode="adjustResize"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
@@ -108,6 +109,7 @@
 			tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 		<activity
 			android:name=".activity.TransferActivity"
+			android:windowSoftInputMode="adjustResize"
 			android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
 			android:screenOrientation="sensorLandscape"
 			android:theme="@style/SettingTheme"
