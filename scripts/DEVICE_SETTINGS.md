@@ -9,9 +9,13 @@ are set to `1.0`. A failed read, write or confirmation stops the run.
 Preparation installs the debug app and test APK and runs `DeviceSettingsProbe`
 in the target app process. This is a separate instrumentation component, not a
 JUnit test: it does not change test discovery, selection or suite counts. It
-checks the app's resource font scale and the animation settings read by the app,
-plus the process's animator scale on API 26 and later (the public getter is not
-available on API 24–25). Only its explicit success verdict lets the test run start.
+checks the app's resource font scale and the three animation settings read by
+the app. It does not check the process's internal animator scale: a process
+without a window can report the default even when the system setting differs.
+Only its explicit success verdict lets the test run start.
+The connected runner then uninstalls both preparation APKs before Gradle starts
+so tests receive a fresh install, and design-only runs leave neither APK behind.
+Preparation failures also attempt to remove both APKs.
 Gradle's existing animation-disable behavior during connected tests is unchanged.
 
 Results default to `.ci-results` for connected tests and

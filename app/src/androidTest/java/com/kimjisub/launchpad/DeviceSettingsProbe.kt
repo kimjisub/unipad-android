@@ -1,9 +1,7 @@
 package com.kimjisub.launchpad
 
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.Instrumentation
-import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
@@ -25,12 +23,8 @@ class DeviceSettingsProbe : Instrumentation() {
                 Settings.Global.TRANSITION_ANIMATION_SCALE,
                 Settings.Global.ANIMATOR_DURATION_SCALE,
             ).associateWith { Settings.Global.getFloat(targetContext.contentResolver, it, 1f) }
-            // Before API 26 there is no public getter for the process's animator scale.
-            val animatorScale = if (Build.VERSION.SDK_INT >= 26) ValueAnimator.getDurationScale() else null
-            observed = "fontScale=$fontScale animations=$animations animatorScale=$animatorScale"
-            if (fontScale == 1f && animations.values.all { it == 1f } &&
-                (animatorScale == null || animatorScale == 1f)
-            ) {
+            observed = "fontScale=$fontScale animations=$animations"
+            if (fontScale == 1f && animations.values.all { it == 1f }) {
                 finish(Activity.RESULT_OK, Bundle().apply {
                     putString("stream", "$observed\nDEVICE_SETTINGS_READY\n")
                 })

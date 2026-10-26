@@ -40,9 +40,21 @@ for module in "${MODULES[@]}"; do
 done
 SECONDS=0
 log_pid=""
+probe_installed=0
+remove_probe_packages() {
+  local failed=0
+  adb -s "$ANDROID_SERIAL" uninstall com.kimjisub.launchpad.dev > /dev/null || failed=1
+  adb -s "$ANDROID_SERIAL" uninstall com.kimjisub.launchpad.dev.test > /dev/null || failed=1
+  return "$failed"
+}
 finish() {
   result=$?
   trap - EXIT
+  if [[ "$probe_installed" -eq 1 ]]; then
+    if ! remove_probe_packages; then
+      if [[ "$result" -eq 0 ]]; then result=1; fi
+    fi
+  fi
   if [[ -n "$log_pid" ]]; then
     kill "$log_pid" 2>/dev/null || true
     wait "$log_pid" 2>/dev/null || true
@@ -73,9 +85,13 @@ for package in com.kimjisub.launchpad.dev com.kimjisub.launchpad.dev.test com.ki
   adb -s "$ANDROID_SERIAL" uninstall "$package" > /dev/null 2>&1 || true
 done
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon --console=plain 2>&1 | tee "$RESULTS"/preflight-build.txt
+probe_installed=1
 adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 device_settings verify
+# Preparation starts the app and creates data; Gradle must still install it fresh.
+remove_probe_packages
+probe_installed=0
 adb -s "$ANDROID_SERIAL" logcat -c
 # Stream throughout the run: the device's ring buffer can drop the first starts.
 adb -s "$ANDROID_SERIAL" logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I '*:S' > "$RESULTS"/test-starts.txt 2>&1 &
