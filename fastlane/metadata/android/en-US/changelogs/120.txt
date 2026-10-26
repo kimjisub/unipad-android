@@ -1,0 +1,5 @@
+• Fixed crashes when starting, reading packs or using backups; improved pack import, sound, lights and practice.
+• Kept held pads and chain timing consistent.
+• Tap-order numbers are the default unless you chose a style; recording starts off.
+• Small-screen OK stays visible; preview/dual-pad settings scroll, with Korean labels.
+• From this version on, Play installs show future updates at the pack list’s lower left. Tap for download/install choices; both offer Later.
