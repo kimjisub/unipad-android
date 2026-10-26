@@ -343,7 +343,7 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
 
     /**
      * Drags the results up, as a finger would, in the strip left between the search field and the
-     * keyboard until [target] shows and stops moving, and checks it then sits above the keyboard.
+     * keyboard until [target] fits above it or stops moving, then checks its bottom clears the keyboard.
      * Below API 35 the system leaves what the keyboard covers out of the screen's node tree, so
      * [target] may only appear once dragged into view.
      */
@@ -354,6 +354,11 @@ class AppearanceAndInsetsTest : PlaybackScreenTest() {
             screen.device.swipe(field.centerX(), keyboardTop - DRAG_MARGIN_PX, field.centerX(), field.bottom + DRAG_MARGIN_PX, DRAG_STEPS)
             screen.instrumentation.waitForIdleSync()
             val moved = screen.device.findObject(target)?.visibleBounds
+            // A target can precede other actions; keep it in view instead of dragging past it.
+            if (moved != null && moved.top >= field.bottom && moved.bottom <= keyboardTop) {
+                bounds = moved
+                break
+            }
             if (moved != null && moved == bounds) break
             bounds = moved
         }
