@@ -102,6 +102,29 @@ class PracticeTransitionTest : PlaybackScreenTest() {
     @Test fun shortLockOnTheFinalGroupEndsAfterThePendingPadSounds() = interruptedPartialChord(1000, true)
     @Test fun longLockOnTheFinalGroupEndsAfterThePendingPadSounds() = interruptedPartialChord(10000, true)
 
+    @Test fun partialChordReplayUsesTheSameLightsAsNormalAutoplay() {
+        fixture("on 1 1\non 2 1\non 3 1\ndelay 20000\n")
+        screen.openPlay()
+        val vm = screen.vm()
+        screen.chooseOption(R.string.autoPlay)
+        screen.await("Normal autoplay did not play the chord") { audio.plays.size == 3 }
+        for (x in 0..2) assertLight(x)
+        screen.capture("practice-$label-normal-autoplay-lights")
+        screen.onMain { vm.switchPlayMode(PlayMode.None) }
+        audio.resetPlaybackRequests()
+        screen.chooseOption(R.string.stepPractice)
+        assertGuide(0, 1, 2)
+        pressPad(0)
+        assertGuide(1, 2)
+        screen.capture("practice-$label-partial-before-autoplay")
+        screen.chooseOption(R.string.autoPlay)
+        screen.await("The remaining chord did not play") { audio.plays.size == 3 }
+        assertSounds("pad-1-1", "pad-1-2", "pad-1-3")
+        assertGuide()
+        for (x in 1..2) assertLight(x)
+        screen.capture("practice-$label-recovered-autoplay-lights")
+    }
+
     @Test fun returningToStepsBeforeDeliveryKeepsEveryPadAcrossAChainWait() {
         fixture("on 1 1\non 2 1\non 3 1\ndelay 5000\nchain 2\non 1 1\n")
         screen.openPlay()

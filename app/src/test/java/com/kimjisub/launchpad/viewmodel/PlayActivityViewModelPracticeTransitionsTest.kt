@@ -70,6 +70,11 @@ class PlayActivityViewModelPracticeTransitionsTest {
             }
         }
         vm.uiCallback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true).also { ui ->
+            // PlayActivity.setLedPad also replaces the controller colour when a guide is removed.
+            every { ui.setLedPad(any(), any()) } answers {
+                val pad = firstArg<Int>() to secondArg<Int>()
+                if (vm.channelManager.get(pad.first, pad.second)?.channel != Channel.GUIDE) hardwareGuides[pad] = 0
+            }
             every { ui.startGuideAnimation(any(), any(), any()) } answers {
                 val pad = firstArg<Int>() to secondArg<Int>()
                 guides[pad] = thirdArg()
@@ -150,6 +155,8 @@ class PlayActivityViewModelPracticeTransitionsTest {
         assertEquals("Guide playback stays silent", 2, sounds.size)
         assertTrue(vm.autoPlayRunner!!.active)
         advance(5000)
+        // The loop dispatches onEnd on its next tick after settling the final delay.
+        advance(1)
         assertFalse("The trailing delay ends at the original song deadline", vm.autoPlayRunner!!.active)
         assertEquals(PlayMode.None, vm.playMode)
     }
@@ -246,4 +253,5 @@ class PlayActivityViewModelPracticeTransitionsTest {
     @Test fun longInterruptionKeepsOnlyThePendingPad() = interruptionBeforeReplay(10000, false)
     @Test fun shortInterruptionBeforeTheFinalGroupEndsAfterReplay() = interruptionBeforeReplay(1000, true)
     @Test fun longInterruptionBeforeTheFinalGroupEndsAfterReplay() = interruptionBeforeReplay(10000, true)
+
 }
