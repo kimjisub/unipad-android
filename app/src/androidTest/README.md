@@ -132,6 +132,27 @@ credentials. Release signing still requires a real local key and is outside this
 (`cp .github/fixtures/google-services.json app/google-services.json`) locally. Run debug assembly,
 all debug/release Kotlin compiles, `lint`, and both modules' available unit tests locally.
 
+## Practice mode transitions
+
+`basefeatures.PracticeTransitionTest` checks step practice → autoplay → step practice,
+including a chain wait, and compares recovered pad lights with ordinary autoplay. It identifies
+each decoded sound request separately and checks the pad view's rendered colour. Four lock/unlock
+cases cover 1 s and 10 s interruptions before a partial chord, including the final chord. The fixtures
+keep lights and later notes far enough apart for screen automation; exact 5000 ms note spacing and
+the 800 ms timed-guide boundary are checked with a controlled clock in
+`PlayActivityViewModelPracticeTransitionsTest`. `PlayActivityViewModelStepToAutoPlayTest` also checks
+pack-light requests and guide removal across its 72 transition cases.
+
+Run the screen checks with their neighbouring playback regressions:
+
+```bash
+ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
+  com.kimjisub.launchpad.basefeatures.PracticeTransitionTest \
+  com.kimjisub.launchpad.basefeatures.StepToAutoPlayTest \
+  com.kimjisub.launchpad.basefeatures.AutoPlayChainWaitTest \
+  com.kimjisub.launchpad.basefeatures.PlaybackInterruptionTest
+```
+
 ## How controls and data are located
 
 - Launch helpers await the requested activity's completed `onCreate` lifecycle event before
@@ -309,6 +330,7 @@ claimed here as audio or hardware proof.
 | `basefeatures.ManualChainSelectionTest` | A screen chain button, keyboard selection and the controller callback preserve a manual choice made within a pad's pending 100 ms chain move. Captures record selection timing and the final chain. Controller callbacks do not verify physical hardware. Not in `BaseFeaturesSuite`. |
 | `basefeatures.PadInputOwnershipTest` | Seven checks: releasing the input that started the current endless sound request and pack light ends both, even while an earlier input remains pressed. This is checked with two real pointers and a finger followed by a controller press. Releasing the earlier finger preserves the later finger's output. A player's release preserves a newer autoplay loop, and autoplay releases its own loop while an older finger remains. In both mixed-input orders, feedback stays after the current loop ends and clears when the last input releases. Captures include request counts, stopped voices, pack light and feedback values. The recording engine decodes audio but opens no speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.SoundAvailabilityTest` | Four checks using the real Android decoder, Oboe engine and controller callback: a press while decoding is gated consumes its sound/light turn and follows its chain move; the same rules hold with the output stream closed and after reopening it. Captures show loading, chain, next mapping, light and requested filenames. Only the decoding gate and request recorder are in the test APK. These checks do not record external PCM or inject physical MIDI. Not in `BaseFeaturesSuite`. |
+| `basefeatures.PracticeTransitionTest` | Six checks: partial-chord replay matches normal autoplay lights; returning to steps across a chain wait preserves each input and a fresh run's sound and rendered lights after explicitly clearing old animations; 1 s and 10 s lock interruptions restore only the pending pad, including the final group. Uses decoded sound identities and real pad colours without opening a speaker. Not in `BaseFeaturesSuite`. |
 | `basefeatures.PracticeProgressTest` | Step practice waits for its final pad and clears its guide when stopped. Seeking in guide practice shows the upcoming pad at the new position. Pausing guide play enters step practice: a real pad tap advances the guide, and resuming restores the timed screen hint. Resume assertions precede screenshots so image capture does not consume the assertion window. Screenshots and observed guide state accompany each case. The recording engine opens no speaker. Not in `BaseFeaturesSuite`. |
 | `audio.MultichannelDecodeDeviceTest` | Four-channel and 5.1 PCM WAV and AAC files decode to stereo with their frame counts intact. Each speaker is isolated and every output sample is compared with the stereo mix, including negative WAV values and the omitted LFE channel. AAC checks compare the isolated speaker signal level with a lossy decoding tolerance. Source and decoded WAVs are retained; these checks do not claim external audio output. |
 | `basefeatures.AutoPlayChordTest` | `chordsPlayInOneMainMessageWhileMainIsIdle`, `chordsPlayInOneMainMessageWhileFramesKeepMainBusy`: the eight sounds autoplay presses at the same time are requested within one main-thread message, with the main thread idle and with every frame holding it for 8 ms; each chord's spread is logged under `AutoPlayChord`. Not in `BaseFeaturesSuite`. |

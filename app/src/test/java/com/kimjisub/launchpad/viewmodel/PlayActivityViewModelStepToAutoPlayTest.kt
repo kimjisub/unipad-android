@@ -3,7 +3,9 @@ package com.kimjisub.launchpad.viewmodel
 import android.os.SystemClock
 import com.kimjisub.launchpad.analytics.UsageAnalytics
 import com.kimjisub.launchpad.db.repository.UnipackRepository
+import com.kimjisub.launchpad.manager.ChannelManager.Channel
 import com.kimjisub.launchpad.unipack.UniPackFolder
+import com.kimjisub.launchpad.unipack.runner.LedRunner
 import com.kimjisub.launchpad.unipack.runner.SoundRunner
 import io.mockk.every
 import io.mockk.mockk
@@ -44,6 +46,7 @@ class PlayActivityViewModelStepToAutoPlayTest(
     private val dispatcher = StandardTestDispatcher(scheduler)
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val plays = mutableListOf<Pair<Int, Long>>()
+    private val lights = mutableListOf<Pair<Int, Long>>()
     private val hints = mutableSetOf<Pair<Int, Int>>()
     private lateinit var vm: PlayActivityViewModel
 
@@ -67,6 +70,11 @@ class PlayActivityViewModelStepToAutoPlayTest(
                 if (!thirdArg<Boolean>()) plays += firstArg<Int>() to scheduler.currentTime
             }
         }
+        vm.ledRunner = mockk<LedRunner>(relaxed = true).also { led ->
+            every { led.eventOn(any(), any(), any()) } answers {
+                lights += firstArg<Int>() to thirdArg<Long>()
+            }
+        }
         vm.uiCallback = mockk<PlayActivityViewModel.UiCallback>(relaxed = true).also { ui ->
             every { ui.startGuideAnimation(any(), any(), any()) } answers {
                 hints += firstArg<Int>() to secondArg<Int>()
@@ -87,6 +95,7 @@ class PlayActivityViewModelStepToAutoPlayTest(
             press(playedPad)
             assertEquals(setOf((3 - playedPad) to 0), hints)
         }
+        lights.clear() // The assertions below concern automatic output, after the person's inputs.
         vm.autoPlayPause()
         scheduler.advanceTimeBy(pausedMs)
         scheduler.runCurrent()
@@ -123,11 +132,13 @@ class PlayActivityViewModelStepToAutoPlayTest(
             assertTrue(vm.autoPlayRunner!!.practiceGuide)
             assertFalse(vm.autoPlayRunner!!.stepMode)
             assertTrue(plays.isEmpty())
+            assertTrue("Guide resume must not request pack lights", lights.isEmpty())
             assertEquals("Guide resume keeps the existing progress handling",
                 previousProgress + if (finalGroup) 0 else 1, vm.autoPlayRunner!!.progress)
             scheduler.advanceTimeBy(5000)
             scheduler.runCurrent()
             assertTrue("Timed guidance must remain silent", plays.isEmpty())
+            assertTrue("Timed guidance must not request pack lights", lights.isEmpty())
             return
         }
         vm.switchPlayMode(PlayMode.AutoPlay)
@@ -142,6 +153,9 @@ class PlayActivityViewModelStepToAutoPlayTest(
         val expectedPads = listOf(1, 2).filter { it != playedPad }
         assertEquals("Only unplayed pads must sound immediately, including after a zero-length pause",
             expectedPads.map { it to resumedAt }, plays)
+        assertEquals("Recovered pads must request their pack lights at the sound deadlines", plays, lights)
+        assertTrue("The step animation cannot remain after the mode change", hints.isEmpty())
+        for (x in 0..3) assertFalse("Step guide channel must be removed", vm.channelManager.get(x, 0)?.channel == Channel.GUIDE)
         if (finalGroup) {
             tick()
             assertFalse("The final group ends only after sounding its pending pads", vm.autoPlayRunner!!.active)
@@ -153,6 +167,7 @@ class PlayActivityViewModelStepToAutoPlayTest(
             scheduler.runCurrent()
             assertEquals("The next group keeps the pack's original interval",
                 expectedPads.map { it to resumedAt } + (3 to resumedAt + 1000), plays)
+            assertEquals("Later automatic pads must keep sound and light together", plays, lights)
             val sounded = plays.toList()
             vm.autoPlayPause()
             scheduler.advanceTimeBy(300)
