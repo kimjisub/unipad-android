@@ -1,5 +1,6 @@
 """Verify the connected-test runner fails unless every source test ran and passed."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -55,7 +56,8 @@ def passed(count, class_name="ExampleTest"):
 
 class ConnectedTestRunnerTest(unittest.TestCase):
     def run_runner(self, gradle_exit=0, logcat_exit=0, serial="emulator-5678",
-                   sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None):
+                   sources=None, results=None, gradle_output="gradle-output", stale=None, tests=(), starts=None,
+                   probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n"):
         """Run the script with fake adb/Gradle; Gradle writes `results` ({module: cases}).
 
         `sources` maps a module to its ExampleTest count or to {class name: (count, header)}.
@@ -83,6 +85,7 @@ class ConnectedTestRunnerTest(unittest.TestCase):
             path.parent.mkdir(parents=True)
             path.write_text(junit_xml(cases))
         (root / "fake-gradle-output.txt").write_text(gradle_output + "\n")
+        (root / "probe.txt").write_text(probe_output)
         starts = [item for cases in results.values() for item in cases] if starts is None else starts
         (root / "fake-starts.txt").write_text("".join(
             f"10-25 12:00:00.000 123 456 I TestRunner: started: {name}({classname})\n"
@@ -91,9 +94,11 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         adb.write_text("#!/bin/bash\nprintf '%s\\n' \"$*\" >> adb-calls.txt\n"
                        "if [[ \"$*\" == *'logcat -d'* ]]; then echo diagnostic-output; exit \"$LOGCAT_EXIT\"; fi\n"
                        "if [[ \"$*\" == *'TestRunner:I'* ]]; then cat fake-starts.txt; touch logcat-ready; fi\n")
+        with adb.open("a") as script:
+            script.write('if [[ "$*" == *DeviceSettingsProbe* ]]; then cat probe.txt; fi\n')
         adb.chmod(0o755)
         gradle = root / "gradlew"
-        gradle.write_text("#!/bin/bash\nprintf '%s\\n' \"$*\" > gradle-args.txt\n"
+        gradle.write_text("#!/bin/bash\n[[ \"$*\" == *assembleDebug* ]] && exit 0\nprintf '%s\\n' \"$*\" > gradle-args.txt\nprintf '%s\\n' connected-tests >> adb-calls.txt\n"
                           "for ((i=0; i<100; i++)); do [[ -f logcat-ready ]] && break; sleep 0.01; done\n"
                           "if [[ -d fake-results ]]; then cp -R fake-results/. .; fi\n"
                           "cat fake-gradle-output.txt\nexit \"$GRADLE_EXIT\"\n")
@@ -107,6 +112,31 @@ class ConnectedTestRunnerTest(unittest.TestCase):
                                 capture_output=True, text=True)
         return root, result
 
+    def assert_probe_packages_removed(self, root):
+        calls = (root / "adb-calls.txt").read_text().splitlines()
+        probe = next(i for i, call in enumerate(calls) if "DeviceSettingsProbe" in call)
+        for package in TEST_PACKAGES[:2]:
+            self.assertIn(f"-s emulator-5678 uninstall {package}", calls[probe + 1:])
+            if "connected-tests" in calls:
+                self.assertLess(calls.index(f"-s emulator-5678 uninstall {package}", probe + 1),
+                                calls.index("connected-tests"))
+
+    def test_design_only_run_removes_probe_packages_before_connected_tests(self):
+        root, result = self.run_runner(tests=["DesignTest"], results={"design": passed(1)})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assert_probe_packages_removed(root)
+
+    def test_failed_probe_removes_its_packages_without_starting_connected_tests(self):
+        root, result = self.run_runner(probe_output="INSTRUMENTATION_CODE: 0\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root / "gradle-args.txt").exists())
+        self.assert_probe_packages_removed(root)
+
+    def test_unconfirmed_app_settings_stop_before_connected_tests(self):
+        root, result = self.run_runner(probe_output="INSTRUMENTATION_CODE: -1\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root / "gradle-args.txt").exists())
+
     def status(self, root):
         return (root / ".ci-results/ui-status.txt").read_text()
 
@@ -115,8 +145,11 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertIn("gradle-output", (root / ".ci-results/gradle-ui.txt").read_text())
         self.assertIn("diagnostic-output", (root / ".ci-results/logcat.txt").read_text())
         self.assertRegex(self.status(root), rf"exit_code={exit_code}\nelapsed_seconds=\d+\n")
-        self.assertCountEqual((root / "adb-calls.txt").read_text().splitlines(),
+        self.assertCountEqual([line for line in (root / "adb-calls.txt").read_text().splitlines()
+                          if not any(part in line for part in ("shell settings", "DeviceSettingsProbe", " install -r "))],
                          [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES]
+                         + [f"-s emulator-5678 uninstall {package}" for package in TEST_PACKAGES[:2]]
+                         + ["connected-tests"]
                          + ["-s emulator-5678 logcat -c", "-s emulator-5678 logcat -d -v threadtime",
                             "-s emulator-5678 logcat -v threadtime TestRunner:I AndroidTestOrchestrator:I *:S"])
 
@@ -127,6 +160,16 @@ class ConnectedTestRunnerTest(unittest.TestCase):
         self.assertIn("verdict=fail", status)
         for reason in reasons:
             self.assertIn(reason, status)
+
+    def test_records_settings_before_and_after_the_suite(self):
+        root, result = self.run_runner()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        record = json.loads((root / ".ci-results/device-settings.json").read_text())
+        self.assertEqual(set(record["final"]["values"]), set(record["before"]["values"]))
+        self.assertEqual(len(record["final"]["values"]), 4)
+        self.assertEqual(self.status(root).splitlines()[0],
+                         (root / ".ci-results/device-settings-summary.txt").read_text().strip())
+        self.assertIn("verified_at=", self.status(root).splitlines()[0])
 
     def test_success_runs_full_suite_on_allocated_device(self):
         root, result = self.run_runner()

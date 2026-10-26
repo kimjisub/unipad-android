@@ -28,15 +28,16 @@ def instrumentation(tests, footer=None, status_codes=()):
 
 
 class BaseFeaturesRunnerTest(unittest.TestCase):
-    def run_runner(self, output, classes=None):
+    def run_runner(self, output, classes=None, probe_output="DEVICE_SETTINGS_READY\nINSTRUMENTATION_CODE: -1\n"):
         """Run the script against fake adb/Gradle; `am instrument` prints `output`."""
         classes = {"FirstTest": 2, "SecondTest": 3} if classes is None else classes
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         (root / "scripts").mkdir()
-        for script in ("run-base-features.sh", "check_connected_results.py"):
-            shutil.copy(SCRIPTS / script, root / "scripts" / script)
+        for script in ("run-base-features.sh", "check_connected_results.py", "prepare_device_settings.py"):
+            if (SCRIPTS / script).exists():
+                shutil.copy(SCRIPTS / script, root / "scripts" / script)
         suite_dir = root / SUITE_DIR
         suite_dir.mkdir(parents=True)
         (suite_dir / "BaseFeaturesSuite.kt").write_text(SUITE)
@@ -44,13 +45,15 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         for name, tests in classes.items():
             (suite_dir / f"{name}.kt").write_text(test_class(name, tests))
         (root / "instrumentation.txt").write_text(output)
+        (root / "probe.txt").write_text(probe_output)
         adb = root / "sdk/platform-tools/adb"
         adb.parent.mkdir(parents=True)
         adb.write_text("#!/bin/bash\n"
                        "case \"$*\" in\n"
                        "  *getprop*) echo 34 ;;\n"
                        "  *airplane_mode_on*) echo 1 ;;\n"
-                       "  *'am instrument'*) cat instrumentation.txt ;;\n"
+                       "  *DeviceSettingsProbe*) cat probe.txt ;;\n"
+                       "  *'am instrument'*) touch suite-ran; cat instrumentation.txt ;;\n"
                        "esac\n")
         adb.chmod(0o755)
         gradle = root / "gradlew"
@@ -60,6 +63,16 @@ class BaseFeaturesRunnerTest(unittest.TestCase):
         result = subprocess.run(["bash", "scripts/run-base-features.sh", "emulator-5678"], cwd=root,
                                 env=env, capture_output=True, text=True)
         return root, result
+
+    def test_unconfirmed_app_settings_stop_before_running_the_suite(self):
+        root, result = self.run_runner(instrumentation(5), probe_output="INSTRUMENTATION_CODE: -1\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root / "suite-ran").exists())
+
+    def test_records_settings_before_and_after_the_suite(self):
+        root, result = self.run_runner(instrumentation(5))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((root / ".ci-results/base-features/device-settings.json").exists())
 
     def test_passes_when_footer_counts_every_declared_test(self):
         _, result = self.run_runner(instrumentation(5))

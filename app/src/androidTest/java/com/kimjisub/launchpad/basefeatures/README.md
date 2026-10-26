@@ -341,6 +341,9 @@ Not established by these tests:
 
 ## Device settings the screen tests change
 
+Both repository test scripts reset leftover font/animation scales and require app-process
+confirmation before tests; see [device preparation and results](../../../../../../../../scripts/DEVICE_SETTINGS.md).
+
 `DisplayOverlays` switches the emulated navigation mode and display cutout,
 `emptyLibraryGuideStaysClearOfGestureNavigation` sets the largest font size, and the tablet tests in
 `AppearanceAndInsetsTest` lower the display density and lock the display in landscape; each is
