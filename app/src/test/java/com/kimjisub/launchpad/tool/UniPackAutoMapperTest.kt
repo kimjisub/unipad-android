@@ -167,6 +167,69 @@ class UniPackAutoMapperTest {
 		assertEquals("d 1000\nt 1 1\nd 400\nc 1\nt 1 2\n", autoPlay())
 	}
 
+	private fun createChainPack(input: String) {
+		createPack()
+		File(root, "info").writeText("title=Test\nproducerName=Tester\nbuttonX=8\nbuttonY=8\nchain=3\n")
+		File(root, "keySound").writeText("1 1 1 a.wav\n1 1 4 c.wav\n2 1 2 b.wav\n3 1 2 b.wav\n")
+		File(root, "autoPlay").writeText(input)
+		pack = UniPackFolder(root).load().loadDetail() as UniPackFolder
+	}
+
+	private fun savedPressTimes(): List<Int> {
+		val reopened = UniPackFolder(root).load().loadDetail() as UniPackFolder
+		var time = 0
+		return reopened.autoPlayTable!!.elements.mapNotNull {
+			when (it) {
+				is AutoPlay.Element.Delay -> { time += it.delay; null }
+				is AutoPlay.Element.On -> time
+				else -> null
+			}
+		}
+	}
+
+	@Test
+	fun waitsOnBothSidesOfAChainUseThePreviousSoundLengthOnlyOnce() {
+		createChainPack("on 1 1\nd 50\nc 2\nd 50\non 1 2\n")
+
+		runBlocking { mapper().run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nd 400\nc 2\nt 1 2\n", autoPlay())
+		assertEquals(listOf(1000, 1400), savedPressTimes())
+	}
+
+	@Test
+	fun multipleChainsKeepTheirOrderAndEachPressStartsANewWaitReplacement() {
+		createChainPack("on 1 1\nd 20\nc 2\nd 30\nc 1\nc 3\nd 50\non 1 2\nd 40\nc 2\nd 60\non 1 2\n")
+
+		runBlocking { mapper().run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nd 400\nc 2\nc 1\nc 3\nt 1 2\nd 250\nc 2\nt 1 2\n", autoPlay())
+		assertEquals(listOf(1000, 1400, 1650), savedPressTimes())
+	}
+
+	@Test
+	fun unknownSoundLengthsKeepTheOriginalWaitsAroundEveryChain() {
+		// Both a missing sound and an unreadable file must preserve the original timeline.
+		for (pad in listOf(3, 4)) {
+			createChainPack("on 1 $pad\nd 20\nc 2\nd 30\nc 1\nc 3\nd 50\non 1 2\n")
+
+			runBlocking { mapper().run(noProgress) }
+
+			assertEquals("d 1000\nt 1 $pad\nd 20\nc 2\nd 30\nc 1\nc 3\nd 50\nt 1 2\n", autoPlay())
+			assertEquals(listOf(1000, 1100), savedPressTimes())
+		}
+	}
+
+	@Test
+	fun aZeroLengthSoundKeepsPressesSimultaneousAcrossChains() {
+		createChainPack("on 1 1\nd 50\nc 2\nd 50\non 1 2\n")
+
+		runBlocking { mapper(FakeReader(mapOf("a.wav" to 0))).run(noProgress) }
+
+		assertEquals("d 1000\nt 1 1\nd 0\nc 2\nt 1 2\n", autoPlay())
+		assertEquals(listOf(1000, 1000), savedPressTimes())
+	}
+
 	@Test
 	fun simultaneousPressesStayTogetherAndTheLastSoundReplacesTheWait() {
 		createPack()

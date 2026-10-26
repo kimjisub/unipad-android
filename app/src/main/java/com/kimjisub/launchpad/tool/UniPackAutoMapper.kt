@@ -36,15 +36,25 @@ class UniPackAutoMapper(
 		openDurationReader().use { reader ->
 			// null: the sound's length is unknown, so the pack's own wait is kept.
 			var nextDuration: Int? = FIRST_DELAY_MS
+			var waitReplaced = false
 			for ((i, e) in elements.withIndex()) {
 				when (e) {
 					is AutoPlay.Element.On -> {
 						nextDuration = soundFile(e)?.let { withContext(Dispatchers.IO) { reader.durationMs(it)?.takeIf { value -> value.isFinite() && value >= 0 }?.roundToInt() } }
+						waitReplaced = false
 						result.add(e)
 					}
 					is AutoPlay.Element.Chain -> result.add(e)
-					is AutoPlay.Element.Delay ->
-						result.add(AutoPlay.Element.Delay(nextDuration?.plus(AUTOMAPPING_DELAY_OFFSET_MS) ?: e.delay))
+					is AutoPlay.Element.Delay -> {
+						// Chain changes split the original waits, but the interval between two
+						// presses must receive the previous sound's length only once. Unknown
+						// lengths keep every original wait on its own side of each chain change.
+						if (nextDuration == null) result.add(e)
+						else if (!waitReplaced) {
+							result.add(AutoPlay.Element.Delay(nextDuration + AUTOMAPPING_DELAY_OFFSET_MS))
+							waitReplaced = true
+						}
+					}
 					is AutoPlay.Element.Off -> {}
 				}
 				listener.onProgress(i)
