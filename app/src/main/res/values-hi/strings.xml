@@ -178,6 +178,9 @@
 	<string name="sort_play_count">प्ले गिनती</string>
 	<string name="sort_last_opened_date">अंतिम खोला</string>
 	<string name="sort_download_date">डाउनलोड तिथि</string>
+	<string name="sort_order">क्रमबद्ध करने का क्रम</string>
+	<string name="sort_ascending">आरोही</string>
+	<string name="sort_descending">अवरोही</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">पैड आकार</string>

@@ -177,6 +177,9 @@
 	<string name="sort_play_count">Jumlah Main</string>
 	<string name="sort_last_opened_date">Terakhir Dibuka</string>
 	<string name="sort_download_date">Tanggal Unduh</string>
+	<string name="sort_order">Urutan sortir</string>
+	<string name="sort_ascending">Menaik</string>
+	<string name="sort_descending">Menurun</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Ukuran Pad</string>

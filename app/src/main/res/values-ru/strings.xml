@@ -180,6 +180,9 @@
 	<string name="sort_play_count">Количество игр</string>
 	<string name="sort_last_opened_date">Последнее открытие</string>
 	<string name="sort_download_date">Дата загрузки</string>
+	<string name="sort_order">Порядок сортировки</string>
+	<string name="sort_ascending">По возрастанию</string>
+	<string name="sort_descending">По убыванию</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">Размер пэда</string>

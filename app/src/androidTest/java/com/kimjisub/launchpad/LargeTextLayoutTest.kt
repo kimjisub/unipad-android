@@ -28,6 +28,7 @@ import androidx.test.uiautomator.By
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.kimjisub.launchpad.activity.MainActivity
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertTrue
@@ -66,7 +67,7 @@ class LargeTextLayoutTest : BaseUITest() {
             device.executeShellCommand("settings put system font_scale $scale")
             device.executeShellCommand("wm density $density")
             AppLanguage.set(language)
-            launchToMainScreen()
+            launchMainScreen()
             instrumentation.runOnMainSync {
                 val config = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED)
                     .filterIsInstance<MainActivity>().single().resources.configuration
@@ -75,7 +76,7 @@ class LargeTextLayoutTest : BaseUITest() {
                 assertEquals("Language not applied", language, config.locales[0].language)
                 println("Device API ${android.os.Build.VERSION.SDK_INT}, ${device.displayWidth}x${device.displayHeight}, language=$language, fontScale=${config.fontScale}, density=${config.densityDpi}")
             }
-            findTestPackRow()
+            assertInitialPackLayout(prefix)
             waitForCapacity("1234 ${str(R.string.mb)}")
             takeScreenshot("${prefix}_main")
             if (scale == 1f) {
@@ -117,8 +118,8 @@ class LargeTextLayoutTest : BaseUITest() {
                 // Short metadata makes the default-screen pixel comparison independent of marquee timing.
                 TestUniPack.install(context)
                 seedPackHistory()
-                launchToMainScreen()
-                findTestPackRow()
+                launchMainScreen()
+                assertInitialPackLayout("${prefix}_comparison")
                 waitForCapacity("0 ${str(R.string.mb)}")
                 takeScreenshot("${prefix}_comparison_main")
                 openDetailPanel()
@@ -132,6 +133,35 @@ class LargeTextLayoutTest : BaseUITest() {
             AppLanguage.set(oldLanguage)
             TestUniPack.install(context)
         }
+    }
+
+    private fun launchMainScreen() {
+        launchToMainScreen()
+        // Pack loading can finish after the activity's window appears. Synchronize the rule's
+        // clock with that state before UiAutomator reads bounds or taps the initial layout.
+        compose.waitUntil(5000L) {
+            compose.onAllNodes(hasTestTag("main_pack_${TestUniPack.FOLDER_NAME}"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.waitForIdle()
+    }
+
+    /** Check the first UiAutomator bounds before later Compose assertions can change the layout. */
+    private fun assertInitialPackLayout(prefix: String) {
+        val deadline = android.os.SystemClock.uptimeMillis() + 5000L
+        // Preserve the first bounds even if accessibility publishes the sort text later.
+        val row = findTestPackRow().visibleBounds
+        val sortLabels = listOf(R.string.sort_title, R.string.sort_producer, R.string.sort_download_date)
+            .joinToString("|") { java.util.regex.Pattern.quote(str(it)) }
+        // Share the row lookup's existing budget rather than extending the initial read deadline.
+        val sort = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile(sortLabels))),
+            (deadline - android.os.SystemClock.uptimeMillis()).coerceAtLeast(0L))
+        takeScreenshot("${prefix}_initial_pack_layout")
+        assertNotNull("Pack row exists but the sort bar is missing: row=$row", sort)
+        val sortBounds = sort!!.visibleBounds
+        assertTrue("Pack row $row overlaps the sort bar $sortBounds",
+            !sortBounds.isEmpty && row.top >= sortBounds.bottom)
+        println("Initial pack layout: sort=$sortBounds, row=$row")
     }
 
     private fun openDetailPanel() {
@@ -296,12 +326,7 @@ class LargeTextLayoutTest : BaseUITest() {
     }
 
     private fun assertReadable(node: SemanticsNodeInteraction) {
-        try {
-            node.assertIsDisplayed()
-        } catch (e: AssertionError) {
-            takeScreenshot("not_displayed_${System.currentTimeMillis()}")
-            throw AssertionError("${e.message}\n${displayState(node)}", e)
-        }
+        assertDisplayed(compose, node, "main_left_panel")
         val layouts = mutableListOf<TextLayoutResult>()
         node.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val layout = layouts.single()
@@ -320,43 +345,6 @@ class LargeTextLayoutTest : BaseUITest() {
         }
         assertTrue("Visible bounds clip text: ${layout.layoutInput.text}",
             node.fetchSemanticsNode().boundsInRoot.height >= layout.getLineBottom(layout.lineCount - 1) - 1f)
-    }
-
-    /**
-     * What the display check reads. It also fails when no node matches, so this says whether the node
-     * still exists, then lists each ancestor's placement, window bounds and scroll, the host view and
-     * every node in the left panel.
-     */
-    private fun displayState(node: SemanticsNodeInteraction): String {
-        val clock = compose.mainClock.currentTime
-        val semantics = runCatching { node.fetchSemanticsNode() }
-        val view = semantics.getOrNull()?.let { (it.root as? androidx.compose.ui.platform.ViewRootForTest)?.view }
-        val visible = android.graphics.Rect()
-        var viewState = ""
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            viewState = "view=${view?.width}x${view?.height} shown=${view?.isShown} " +
-                "visible=${view?.getGlobalVisibleRect(visible)} $visible attached=${view?.isAttachedToWindow}"
-        }
-        fun describe(n: androidx.compose.ui.semantics.SemanticsNode) =
-            "  #${n.id} placed=${n.layoutInfo.isPlaced} attached=${n.layoutInfo.isAttached} " +
-                "window=${n.boundsInWindow} size=${n.size} " +
-                "scroll=${n.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)
-                    ?.let { "${it.value()}/${it.maxValue()}" }} tag=${n.config.getOrNull(SemanticsProperties.TestTag)} " +
-                "text=${n.config.getOrNull(SemanticsProperties.Text)} " +
-                "desc=${n.config.getOrNull(SemanticsProperties.ContentDescription)}"
-        val chain = semantics.fold(
-            { generateSequence(it) { n -> n.parent }.joinToString("\n", transform = ::describe) },
-            { "  matching node not found now: ${it.message?.lineSequence()?.firstOrNull()}" },
-        )
-        val panel = runCatching {
-            compose.onNode(hasTestTag("main_left_panel"), useUnmergedTree = true).fetchSemanticsNode()
-        }.fold(
-            { root -> generateSequence(listOf(root)) { level -> level.flatMap { it.children }.ifEmpty { null } }
-                .flatten().joinToString("\n", transform = ::describe) },
-            { "  left panel not found: ${it.message?.lineSequence()?.firstOrNull()}" },
-        )
-        return "clockBefore=$clock clockAfter=${compose.mainClock.currentTime} $viewState\n" +
-            "node and ancestors:\n$chain\nleft panel:\n$panel"
     }
 
     companion object {

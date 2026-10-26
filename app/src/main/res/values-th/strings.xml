@@ -177,6 +177,9 @@
 	<string name="sort_play_count">จำนวนครั้งที่เล่น</string>
 	<string name="sort_last_opened_date">เปิดล่าสุด</string>
 	<string name="sort_download_date">วันที่ดาวน์โหลด</string>
+	<string name="sort_order">ลำดับการเรียง</string>
+	<string name="sort_ascending">น้อยไปมาก</string>
+	<string name="sort_descending">มากไปน้อย</string>
 
 	<!--Main Pack Panel-->
 	<string name="MPP_padSize">ขนาด Pad</string>

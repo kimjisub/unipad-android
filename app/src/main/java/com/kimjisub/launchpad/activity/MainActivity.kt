@@ -75,7 +75,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -882,14 +884,17 @@ class MainActivity : BaseActivity() {
 						fontSize = 12.sp,
 						color = Gray1,
 					)
+					// sortOrder true reverses each method's natural order: Z to A, newest first.
+					val orderState = stringResource(if (sortOrder) string.sort_descending else string.sort_ascending)
 					Icon(
 						imageVector = if (sortOrder) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-						contentDescription = null,
+						contentDescription = stringResource(string.sort_order),
 						tint = Gray1,
 						modifier = Modifier
 							.size(18.dp)
 							.focusRing(CircleShape)
-							.clickable { vm.updateSortOrder(!sortOrder) },
+							.semantics { stateDescription = orderState }
+							.clickable(role = Role.Button) { vm.updateSortOrder(!sortOrder) },
 					)
 				}
 				ExposedDropdownMenu(
