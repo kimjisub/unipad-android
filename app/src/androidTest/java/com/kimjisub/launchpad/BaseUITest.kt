@@ -331,15 +331,14 @@ abstract class BaseUITest {
     protected fun selectTestPack(): UiObject2 {
         findTestPackRow() // Scroll the exact row into view before attempting to select it.
         val detail = By.res("main_detail_${TestUniPack.FOLDER_NAME}")
-        val opened = waitUntil(MAIN_TIMEOUT) {
-            if (device.hasObject(detail)) true else {
-                // Main refresh can replace the list between lookup and tap. Refetch and retry
-                // only while our own detail is absent, so an already selected pack is not toggled off.
-                clickFresh { device.findObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}")) }
-                false
-            }
+        if (!device.hasObject(detail)) {
+            // The row toggles selection. After one delivered tap, wait for its result rather
+            // than tapping again while Compose is still publishing the detail panel.
+            assertTrue("Could not tap the test pack", clickFresh {
+                device.findObject(By.res("main_pack_${TestUniPack.FOLDER_NAME}"))
+            })
         }
-        assertTrue("Pack panel did not open for the test pack", opened)
+        assertTrue("Pack panel did not open for the test pack", device.wait(Until.hasObject(detail), MAIN_TIMEOUT))
         assertTrue("Selected pack has no delete control", device.wait(Until.hasObject(By.desc(str(R.string.cd_delete))), 5000L))
         return findTestPackRow()
     }

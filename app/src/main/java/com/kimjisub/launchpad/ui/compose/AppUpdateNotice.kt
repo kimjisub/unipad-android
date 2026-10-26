@@ -72,8 +72,9 @@ fun AppUpdateBadge(card: Card?, enabled: Boolean, onClick: () -> Unit, checking:
 				}
 			},
 	) {
-		Text(title, modifier = Modifier.weight(1f, fill = false), fontSize = 11.sp,
-			maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+		// Keep two lines within the existing 48dp touch target.
+		Text(title, modifier = Modifier.weight(1f, fill = false), fontSize = 11.sp, lineHeight = 14.sp,
+			maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
 		if (checking) {
 			Spacer(Modifier.width(6.dp))
 			CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)

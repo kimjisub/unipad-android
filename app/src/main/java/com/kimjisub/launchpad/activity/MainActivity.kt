@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -82,6 +83,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -660,6 +662,12 @@ class MainActivity : BaseActivity() {
 		val barsAndCutout = WindowInsets.barsAndCutout
 		val safeBottom = barsAndCutout.only(WindowInsetsSides.Bottom)
 		val listBottom = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+		val imeInsets = WindowInsets.ime
+		val density = LocalDensity.current
+		val keyboardVisible by remember(imeInsets, density) {
+			derivedStateOf { imeInsets.getBottom(density) > 0 }
+		}
+		val searchKeyboardOpen = searchOpen && keyboardVisible
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -764,7 +772,8 @@ class MainActivity : BaseActivity() {
 
 							Column {
 								if (unipackList.isNotEmpty()) {
-									SortBar(
+									// Leave room for complete result actions while typing, including large text.
+									if (!searchKeyboardOpen) SortBar(
 										vm = totalPanelVM,
 										searchOpen = searchOpen,
 										onSearchClick = { toggleSearch() },
@@ -772,7 +781,15 @@ class MainActivity : BaseActivity() {
 										onLoadUniPackClick = onLoadUniPackClick,
 									)
 									if (searchOpen) {
-										MainSearchField()
+										Row(verticalAlignment = Alignment.CenterVertically) {
+											MainSearchField(Modifier.weight(1f))
+											if (searchKeyboardOpen) MainActions(
+												searchOpen = searchOpen,
+												onSearchClick = { toggleSearch() },
+												onStoreClick = onStoreClick,
+												onLoadUniPackClick = onLoadUniPackClick,
+											)
+										}
 									}
 								}
 
@@ -810,6 +827,7 @@ class MainActivity : BaseActivity() {
 											onStoreClick = onStoreClick,
 											onLoadUniPackClick = onLoadUniPackClick,
 											onRestoreClick = onRestoreClick,
+											keyboardOpen = searchKeyboardOpen,
 											modifier = Modifier.padding(
 												horizontal = 16.dp,
 												vertical = 8.dp,
@@ -897,6 +915,18 @@ class MainActivity : BaseActivity() {
 
 			Spacer(Modifier.weight(1f))
 
+			MainActions(searchOpen, onSearchClick, onStoreClick, onLoadUniPackClick)
+		}
+	}
+
+	@Composable
+	private fun MainActions(
+		searchOpen: Boolean,
+		onSearchClick: () -> Unit,
+		onStoreClick: () -> Unit,
+		onLoadUniPackClick: () -> Unit,
+	) {
+		Row(verticalAlignment = Alignment.CenterVertically) {
 			IconButton(
 				onClick = onSearchClick,
 				modifier = Modifier
@@ -934,13 +964,13 @@ class MainActivity : BaseActivity() {
 	}
 
 	@Composable
-	private fun MainSearchField() {
+	private fun MainSearchField(modifier: Modifier = Modifier) {
 		val focusRequester = remember { FocusRequester() }
 		val keyboard = LocalSoftwareKeyboardController.current
 		SearchField(
 			query = searchQuery,
 			onQueryChange = { updateSearchQuery(it) },
-			modifier = Modifier
+			modifier = modifier
 				.fillMaxWidth()
 				.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
 				.focusRequester(focusRequester),
@@ -1040,74 +1070,68 @@ class MainActivity : BaseActivity() {
 		}
 	}
 
+	private data class GuidingAction(val icon: Int, val text: String, val onClick: () -> Unit)
+
 	@Composable
 	private fun GuidingActions(
 		onStoreClick: () -> Unit,
 		onLoadUniPackClick: () -> Unit,
 		onRestoreClick: () -> Unit,
 		modifier: Modifier = Modifier,
+		keyboardOpen: Boolean = false,
 	) {
-		Row(
-			modifier = modifier
-				.fillMaxWidth()
-				.height(IntrinsicSize.Min),
-			horizontalArrangement = Arrangement.spacedBy(6.dp),
-		) {
-			GuidingChip(
-				icon = R.drawable.baseline_shopping_basket_white_24,
-				text = stringResource(string.guide_download_new),
-				onClick = onStoreClick,
-				modifier = Modifier.weight(1f),
-			)
-			GuidingChip(
-				icon = R.drawable.baseline_folder_open_white_24,
-				text = stringResource(string.guide_import_external),
-				onClick = onLoadUniPackClick,
-				modifier = Modifier.weight(1f),
-			)
+		val actions = buildList {
+			add(GuidingAction(R.drawable.baseline_shopping_basket_white_24, stringResource(string.guide_download_new), onStoreClick))
+			add(GuidingAction(R.drawable.baseline_folder_open_white_24, stringResource(string.guide_import_external), onLoadUniPackClick))
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-				GuidingChip(
-					icon = R.drawable.baseline_settings_white_24,
-					text = stringResource(string.guide_restore_packs),
-					onClick = onRestoreClick,
-					modifier = Modifier.weight(1f),
-				)
+				add(GuidingAction(R.drawable.baseline_settings_white_24, stringResource(string.guide_restore_packs), onRestoreClick))
+			}
+		}
+		if (keyboardOpen) {
+			// Full-width rows avoid tall, wrapped labels in the short viewport above the keyboard.
+			Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+				actions.forEach { action ->
+					GuidingChip(action, Modifier.fillMaxWidth(), horizontal = true)
+				}
+			}
+		} else {
+			Row(
+				modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
+				horizontalArrangement = Arrangement.spacedBy(6.dp),
+			) {
+				actions.forEach { action -> GuidingChip(action, Modifier.weight(1f).fillMaxHeight()) }
 			}
 		}
 	}
 
 	@Composable
-	private fun GuidingChip(
-		icon: Int,
-		text: String,
-		onClick: () -> Unit,
-		modifier: Modifier = Modifier,
-	) {
-		Column(
-			horizontalAlignment = Alignment.CenterHorizontally,
-			modifier = modifier
-				.fillMaxHeight()
-				.background(
-					MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
-					RoundedCornerShape(8.dp),
-				)
-				.focusRing()
-				.clickable(onClick = onClick)
-				.padding(horizontal = 10.dp, vertical = 10.dp),
-		) {
-			Icon(
-				painter = painterResource(icon),
-				contentDescription = null,
-				modifier = Modifier.size(18.dp),
-				tint = Gray1,
+	private fun GuidingChip(action: GuidingAction, modifier: Modifier, horizontal: Boolean = false) {
+		val chipModifier = modifier
+			.background(
+				MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+				RoundedCornerShape(8.dp),
 			)
-			Spacer(Modifier.size(6.dp))
-			Text(
-				text = text,
-				fontSize = 11.sp,
-				color = Gray1,
-				textAlign = TextAlign.Center,
-			)
+			.focusRing()
+			.clickable(onClick = action.onClick)
+			.padding(horizontal = 10.dp, vertical = 10.dp)
+		val icon: @Composable () -> Unit = {
+			Icon(painterResource(action.icon), contentDescription = null, modifier = Modifier.size(18.dp), tint = Gray1)
+		}
+		val label: @Composable () -> Unit = {
+			Text(text = action.text, fontSize = 11.sp, color = Gray1, textAlign = if (horizontal) TextAlign.Start else TextAlign.Center)
+		}
+		if (horizontal) {
+			Row(modifier = chipModifier, verticalAlignment = Alignment.CenterVertically) {
+				icon()
+				Spacer(Modifier.size(6.dp))
+				label()
+			}
+		} else {
+			Column(modifier = chipModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+				icon()
+				Spacer(Modifier.size(6.dp))
+				label()
+			}
 		}
 	}
 

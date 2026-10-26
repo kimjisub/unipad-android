@@ -100,14 +100,15 @@ private fun UpdateControl(
 	checkingUpdate: Boolean,
 	modifier: Modifier = Modifier,
 ) {
+	val settingsSpace = if (LocalDensity.current.fontScale > 1f) 0.dp else 64.dp
 	if (updateNotice != null) {
-		Box(modifier.padding(start = 8.dp, end = 64.dp, bottom = 8.dp)) {
+		Box(modifier.padding(start = 8.dp, end = settingsSpace, bottom = 8.dp)) {
 			updateNotice()
 		}
 	} else if (onCheckUpdateClick != null) {
 		Row(
 			modifier = modifier
-				.padding(end = 64.dp)
+				.padding(end = settingsSpace)
 				.focusRing()
 				.clickable(enabled = !checkingUpdate) { onCheckUpdateClick() }
 				.padding(12.dp)
@@ -118,7 +119,7 @@ private fun UpdateControl(
 				text = stringResource(R.string.update_check),
 				color = Blue,
 				fontSize = 11.sp,
-				maxLines = 1,
+				maxLines = 3,
 				overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
 			)
 			if (checkingUpdate) {

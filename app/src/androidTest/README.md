@@ -17,6 +17,9 @@ the report session, then run `SystemExitServerCheckTest` with the instrumentatio
 `systemExitServerCheck=true` to upload pending reports once. Use a fresh debug install for this check
 so no other test reports are queued. The test's default path checks that automatic collection stays off.
 
+The real Store list and one real download are checked on the release candidate instead, by
+`scripts/release_store_check.py`.
+
 For the deterministic release subset, coverage inventory, and signed-candidate limitations,
 see [Base features](java/com/kimjisub/launchpad/basefeatures/README.md).
 
@@ -210,6 +213,8 @@ ANDROID_SERIAL=<serial> bash scripts/ci-connected-tests.sh \
 | `LargeTextLayoutTest.englishDefault` / `koreanDefault` | Default font scale 1.0 and density 420: producer, totals, pack history/properties and scrollable footer text remain readable and Theme opens. Fixed dates and short-metadata captures support pixel comparisons. |
 | `LargeTextLayoutTest.englishLarge420` / `koreanLarge420` | Font scale 2.0, density 420: logo/version do not overlap, multi-digit capacity and pack dates/properties remain readable, footer actions are reachable and Theme opens. |
 | `LargeTextLayoutTest.englishLarge540` / `koreanLarge540` | Font scale 2.0, density 540: the same line-bound and scroll checks at the largest phone display size. Each case restores app locales, font scale and any density override in `finally`. |
+| `SearchKeyboardLayoutTest.importButtonIsFullyReachableAboveKeyboardAtDefaultFont` / `importButtonIsFullyReachableAboveKeyboardAtLargestFont` | Types a matching search at font scales 1.0 and 2.0, keeps the keyboard open, and injects physical drags to reveal the import action. Requires the full measured button height and width to remain visible above the actual keyboard inset; clipped bounds alone cannot pass. Keeps the search-close, Store and import controls available while typing, verifies search-close works with the keyboard open, and restores an unset font scale by deleting the setting. Saves before/after screenshots and drag coordinates. |
+| `SearchKeyboardLayoutTest.unsetFontScaleIsRestoredAfterSearch` | Prepares an unset font scale inside the running test, runs the large-text search scenario, and requires the setting to be absent afterward. The previous cleanup command leaves scale 2.0 behind and fails this check. |
 | `SystemExitServerCheckTest.debugCollectionRequiresAnExplicitServerCheck` | Debug crash collection stays disabled; an explicit argument uploads pending reports for a one-off system exit check. |
 | `AppLaunchTest.testAppLaunch` | Launch and remain running after permission handling. |
 | `AppLaunchTest.testSplashScreenTransition` | Startup reaches the current main screen. |

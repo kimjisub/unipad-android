@@ -73,7 +73,14 @@ class AppUpdateLayoutTest : BaseUITest() {
             device.findObject(By.desc(str(R.string.transfer_search))).click()
             selectTestPack()
             source.emit(UpdateStatus.Failed)
-            assertTrue("selection was lost", device.hasObject(By.res("main_detail_${TestUniPack.FOLDER_NAME}")))
+            val selectionKept = device.hasObject(By.res("main_detail_${TestUniPack.FOLDER_NAME}"))
+            if (!selectionKept) {
+                takeScreenshot("update-selection-failure")
+                ActivityReadiness.captureState(context, device, "update-selection-failure", "state")
+                TestCaptures.save(device, "update-selection-failure/input.txt") { it.writeText(device.executeShellCommand("dumpsys input")); true }
+                TestCaptures.save(device, "update-selection-failure/windows.txt") { it.writeText(device.executeShellCommand("dumpsys window windows")); true }
+            }
+            assertTrue("selection was lost", selectionKept)
             assertFalse(device.hasObject(By.res("app_update_dialog")))
             device.pressBack()
             openSettings()
