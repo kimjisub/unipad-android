@@ -27,21 +27,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def split_values(text):
     """Split only top-level commas: nested/future Bundle values remain intact."""
-    start, depth, quote, escaped = 0, 0, None, False
+    start, depth = 0, 0
     for index, char in enumerate(text):
-        if escaped:
-            escaped = False
-        elif char == '\\':
-            escaped = True
-        elif quote:
-            if char == quote:
-                quote = None
-        elif char in '\"\'':
-            quote = char
-        elif char in '[{(':
+        # Bundle.toString() does not quote or escape string values.
+        if char in '[{(':
             depth += 1
         elif char in ']})':
-            depth -= 1
+            depth = max(0, depth - 1)
         elif char == ',' and depth == 0:
             yield text[start:index].strip()
             start = index + 1
@@ -104,17 +96,15 @@ def parse_session(keys, userlog):
 
 
 def first_pad(root):
-    """Release snapshots expose the grid container, without its 64 pad children.
+    """Locate the first pad even when snapshots omit individual pad children.
 
     Identify the square grid by its adjacent one-cell-wide chain strip, then
     derive cell (1, 1) from those measured bounds for the fixed 8x8 fixture.
+    Pad and chain children share touchSpace IDs, so always use grid geometry.
     No device resolution, obfuscated class name or fixed screen point is used.
     """
     if find(root, identifier='play_logo') is None:
         return None
-    pad = find(root, identifier=f'{PACKAGE}:id/touchSpace')
-    if pad:
-        return pad
     for parent in root.walk():
         for grid in parent.children:
             left, top, right, bottom = grid.bounds

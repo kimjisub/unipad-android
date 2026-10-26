@@ -12,6 +12,16 @@ import observe_release_telemetry as observe
 
 
 class ParsingTest(unittest.TestCase):
+    def test_literal_punctuation_does_not_hide_following_parameters(self):
+        for note in ("Don't stop", 'say "hello', 'a)b', 'a]b', 'a}b', 'path\\'):
+            with self.subTest(note=note):
+                line = ('Logging event: origin=app,name=play_first_input,'
+                        f'params=Bundle[{{note={note}, input_source=screen, _dbg=1}}]')
+                event, = observe.parse_events(line)
+                self.assertEqual(event['parameters'], {'note': note, 'input_source': 'screen', '_dbg': '1'})
+                self.assertTrue(event['debug'])
+                self.assertEqual(event['raw'], line)
+
     def test_keeps_every_parameter_and_unknown_nested_values(self):
         line = ('10-26 11:00:00.846 1400 7527 V FA-SVC : Logging event: origin=app,'
                 'name=play_first_input,params=Bundle[{trigger=pad, input_source=screen, '
@@ -74,6 +84,20 @@ class ParsingTest(unittest.TestCase):
 
 
 class ScreenTest(unittest.TestCase):
+    def test_chain_touch_space_before_grid_is_not_selected_as_a_pad(self):
+        from release_store_check import Node
+        chain = Node('', '', False, (595, 24, 716, 992), [
+            Node('', f'{observe.PACKAGE}:id/touchSpace', True, (595, 24, 716, 145))])
+        grid = Node('', '', False, (716, 24, 1684, 992), [
+            Node('', f'{observe.PACKAGE}:id/touchSpace', True, (716, 24, 837, 145))])
+        logo = Node('', 'play_logo', False, (2122, 42, 2358, 101))
+        for children in ([chain, grid, logo], [grid, chain, logo]):
+            with self.subTest(chain_first=children[0] is chain):
+                root = Node('', '', False, (0, 0, 2400, 1080), children)
+                pad = observe.first_pad(root)
+                self.assertEqual(pad.bounds, (716, 24, 837, 145))
+                self.assertEqual(pad.center, (776, 84))
+
     def test_release_grid_container_locates_first_pad_without_view_ids(self):
         from release_store_check import Node
         root = Node('', '', False, (0, 0, 2400, 1080), [

@@ -32,8 +32,9 @@ audio-output fixture (sound files go in `sounds/`, owned by the app). This pack
 and the installation stay on the emulator. Use a fresh rental for an isolated
 observation. The app is stopped before debug Analytics is enabled, then launched,
 and its pack row, Play control and pad are located in the screen hierarchy.
-When individual pad views are absent in a release snapshot, the first cell is
-derived from the square grid and adjacent chain strip for the fixed 8x8 fixture.
+The first cell is derived from the square grid and adjacent chain strip for the
+fixed 8x8 fixture, whether or not individual pad views appear in the snapshot.
+Pad and chain buttons share view IDs, so those IDs are not used to select a pad.
 No instrumented test build or production catalogue download is used.
 
 The JSON retains the candidate hash, version, device/OS, UTC timestamps, all
