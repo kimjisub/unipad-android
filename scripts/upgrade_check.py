@@ -547,7 +547,16 @@ def main(argv: list[str] | None = None) -> int:
         restore.append(f'analytics:{analytics}')
         upgrade = UpgradeRun(device, old, new, package, args.out)
         installed.append(f'uninstall:{package}')
-        results = [upgrade.scenario(name, SCENARIOS[name]) for name in (args.scenario or list(SCENARIOS))]
+        results: list[dict] = []
+        not_run: dict[str, str] = {}
+        for name in args.scenario or list(SCENARIOS):
+            try:
+                results.append(upgrade.scenario(name, SCENARIOS[name]))
+            except Exception:
+                # A failure already found stays the verdict; the scenarios left are listed as not run.
+                if all(r['passed'] for r in results):
+                    raise
+                not_run[name] = traceback.format_exc().rstrip()
     except Exception as error:
         detail = str(error) if isinstance(error, SetupError) else traceback.format_exc()
         print(f'upgrade check could not run: {detail}', file=sys.stderr)
@@ -556,7 +565,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         restore_device(device, installed + list(reversed(restore)))
     report = dict(checked_at=dt.datetime.now().astimezone().isoformat(timespec='seconds'), builds=builds, results=results,
-                  passed=all(r['passed'] for r in results))
+                  not_run=not_run, passed=not not_run and all(r['passed'] for r in results))
     (args.out / 'report.json').write_text(json.dumps(report, indent=1, ensure_ascii=False) + '\n')
     print(f'{builds["old"]["version_name"]} ({builds["old"]["version_code"]}) -> '
           f'{builds["new"]["version_name"]} ({builds["new"]["version_code"]}), {package}')
@@ -565,6 +574,8 @@ def main(argv: list[str] | None = None) -> int:
               f'{r["pack_files"]} pack files, settings {sorted(r["after"]["prefs"])}')
         for problem in r['problems']:
             print(f'  - {problem}')
+    for name, detail in not_run.items():
+        print(f'NOT RUN {name}: {detail.splitlines()[-1]}')
     return 0 if report['passed'] else 1
 
 

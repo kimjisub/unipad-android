@@ -227,7 +227,7 @@ class ScenarioTest(unittest.TestCase):
 
 
 class MainTest(unittest.TestCase):
-    def run_main(self, scenario):
+    def run_main(self, scenario, scenarios=('trace-on',)):
         identity = dict(package='com.kimjisub.launchpad', signers=['ab'], version_name='4.2.1')
         devices = []
 
@@ -244,7 +244,7 @@ class MainTest(unittest.TestCase):
                 mock.patch.object(uc.UpgradeRun, 'scenario', side_effect=scenario), \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             code = uc.main(['--serial', 'emulator-5554', '--old', '118.apk', '--new', '120.apk', '--out', str(out),
-                            '--scenario', 'trace-on'])
+                            *[arg for name in scenarios for arg in ('--scenario', name)]])
         return code, out, devices[0].calls
 
     def test_a_failed_scenario_exits_1_with_a_report(self):
@@ -253,6 +253,30 @@ class MainTest(unittest.TestCase):
         code, out, _ = self.run_main(lambda name, trace: failed)
         self.assertEqual(code, 1)
         self.assertFalse(json.loads((out / 'report.json').read_text())['passed'])
+
+    def test_a_later_scenario_that_cannot_start_keeps_the_earlier_failure(self):
+        failed = dict(scenario='trace-off', passed=False, problems=['crash or ANR: Process: com.kimjisub.launchpad'],
+                      after=dict(db=dict(rows={}), prefs={}), pack_files=16)
+
+        def run(name, trace):
+            if name == 'trace-on':
+                raise uc.SetupError('trace-on: the older build: did not reach its pack list within 90 s')
+            return failed
+        code, out, calls = self.run_main(run, scenarios=('trace-off', 'trace-on'))
+        self.assertEqual(code, 1)
+        report = json.loads((out / 'report.json').read_text())
+        self.assertFalse(report['passed'])
+        self.assertEqual([r['scenario'] for r in report['results']], ['trace-off'])
+        self.assertIn('did not reach its pack list', report['not_run']['trace-on'])
+        self.assertFalse((out / 'setup-error.txt').exists())
+        self.assertIn(('uninstall', 'com.kimjisub.launchpad'), calls)
+
+    def test_a_first_scenario_that_cannot_start_exits_2(self):
+        def run(name, trace):
+            raise uc.SetupError('the older build: did not reach its pack list within 90 s')
+        code, out, _ = self.run_main(run, scenarios=('trace-off', 'trace-on'))
+        self.assertEqual(code, 2)
+        self.assertFalse((out / 'report.json').exists())
 
     def test_an_unexpected_error_exits_2_and_uninstalls_before_restoring_the_network(self):
         def broken(name, trace):

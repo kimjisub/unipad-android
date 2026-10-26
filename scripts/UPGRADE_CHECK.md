@@ -45,7 +45,9 @@ For each saved state of the tap-order setting (`TraceLogClassic` absent, `true`,
 Exit status 0 means every scenario passed, 1 that a check failed (the problems are
 printed and in `report.json`), 2 that the run could not reach the upgrade or
 stopped on an unexpected error (`setup-error.txt`, with the traceback when there
-is one). Each scenario folder keeps `before/` and `after/` with the database,
+is one). When a scenario has already failed, a later scenario that cannot start
+does not hide it: the run exits 1 and `report.json` lists that scenario under
+`not_run`. Each scenario folder keeps `before/` and `after/` with the database,
 `data.xml`, pack file hashes, the screen dump and a screenshot, and `result.json`.
 Give every run a new, empty output folder. All three scenarios take about four
 minutes; a new build that fails to open adds up to two minutes per scenario.
