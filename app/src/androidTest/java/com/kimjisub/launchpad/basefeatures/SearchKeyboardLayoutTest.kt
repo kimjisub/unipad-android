@@ -1,5 +1,7 @@
 package com.kimjisub.launchpad.basefeatures
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -13,8 +15,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
+import com.kimjisub.launchpad.TestCaptures
+import com.kimjisub.launchpad.ActivityReadiness
 import com.kimjisub.launchpad.activity.MainActivity
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -38,7 +41,13 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             val entries = screen.device.executeShellCommand("settings list system")
                 .lineSequence().filter { it.startsWith("font_scale=") }.toList()
             println("font_scale_entries_after_restore=$entries")
-            assertFalse("An originally unset font scale must not leave a stored value: $entries", entries.isNotEmpty())
+            // Android may persist its default 1.0 again when a resumed activity observes the
+            // deletion. Either an absent setting or that default is valid; 2.0 and "null" are not.
+            assertTrue("An originally unset font scale must return to its default: $entries",
+                entries.isEmpty() || entries == listOf("font_scale=1.0"))
+            screen.await("The activity retained the test font scale after restoring an unset setting") {
+                screen.onMain { screen.resumed().resources.configuration.fontScale == 1f }
+            }
         } finally {
             restoreFontScale(original)
         }
@@ -49,8 +58,11 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
         println("font_scale_before_test=$previous requested=$fontScale")
         if (expectedPrevious != null) assertEquals("Font scale preparation did not reach the test", expectedPrevious, previous)
         try {
-            screen.device.executeShellCommand("settings put system font_scale $fontScale")
+            // Complete the launch/landscape transition before changing font scale. Overlapping
+            // them can leave the activity behind a system input sink despite a ready view tree.
             screen.launch(MainActivity::class.java)
+            screen.freshControls()
+            screen.device.executeShellCommand("settings put system font_scale $fontScale")
             compose.waitForIdle()
             screen.node(By.text(FeatureScreen.TITLE))
             screen.await("Font scale did not reach the activity") {
@@ -101,6 +113,9 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
                 screen.device.swipe(field.centerX(), start, field.centerX(), end, 20)
                 compose.waitForIdle()
                 val bounds = screen.device.findObject(target)?.visibleBounds
+                val scroll = button?.let { node -> generateSequence(node) { it.parent }
+                    .firstNotNullOfOrNull { it.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange) } }
+                println("SearchInputTrace current=${screen.device.currentPackageName} focus=${screen.onMain { screen.resumed().window.decorView.hasWindowFocus() }} scroll=${scroll?.value?.invoke()}/${scroll?.maxValue?.invoke()}")
                 println("font=$fontScale drag=$drag from=(${field.centerX()},$start) to=(${field.centerX()},$end) field=$field button=$bounds keyboardTop=$keyboardTop")
                 if (bounds != null && bounds == previousBounds) break
                 previousBounds = bounds
@@ -109,6 +124,11 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
             val button = compose.onNode(buttonMatcher).fetchSemanticsNode()
             val visible = button.boundsInWindow
             println("font=$fontScale buttonVisible=$visible buttonSize=${button.size} keyboardTop=$keyboardTop")
+            if (visible.bottom > keyboardTop || kotlin.math.abs(visible.height - button.size.height) > 1f) {
+                ActivityReadiness.captureState(screen.context, screen.device, "search-input-failure", "state")
+                TestCaptures.save(screen.device, "search-input-failure/input.txt") { it.writeText(screen.device.executeShellCommand("dumpsys input")); true }
+                TestCaptures.save(screen.device, "search-input-failure/windows.txt") { it.writeText(screen.device.executeShellCommand("dumpsys window windows")); true }
+            }
             assertTrue("Import button bottom $visible must be above keyboard $keyboardTop", visible.bottom <= keyboardTop)
             assertEquals("Import button must retain its full height above the list's top", button.size.height.toFloat(), visible.height, 1f)
             assertEquals("Import button must retain its full width", button.size.width.toFloat(), visible.width, 1f)
