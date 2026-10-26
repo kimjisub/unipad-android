@@ -1,5 +1,6 @@
 package com.kimjisub.launchpad.basefeatures
 
+import android.animation.ValueAnimator
 import android.graphics.Point
 import android.os.SystemClock
 import android.view.InputDevice
@@ -69,6 +70,8 @@ class TouchPlaybackTest : PlaybackScreenTest() {
             if (previous == "null") {
                 // Deleting the setting alone leaves WindowManager using the slowed animation scale.
                 screen.device.executeShellCommand("settings put global $scale 1")
+                // Wait for WindowManager to apply 1 before removing the setting it reads asynchronously.
+                screen.await("The animation scale did not return to 1") { ValueAnimator.getDurationScale() == 1f }
             }
             screen.device.executeShellCommand(
                 if (previous == "null") "settings delete global $scale" else "settings put global $scale $previous"
