@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import com.kimjisub.launchpad.R
 import com.kimjisub.launchpad.activity.MainActivity
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -28,8 +29,25 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
 
     @Test fun importButtonIsFullyReachableAboveKeyboardAtLargestFont() = checkImportButton("2.0")
 
-    private fun checkImportButton(fontScale: String) {
+    @Test fun unsetFontScaleIsRestoredAfterSearch() {
+        val original = screen.device.executeShellCommand("settings get system font_scale").trim()
+        try {
+            // Prepare after Compose's test environment starts, so this is the value the test saves.
+            screen.device.executeShellCommand("settings delete system font_scale")
+            checkImportButton("2.0", expectedPrevious = "null")
+            val entries = screen.device.executeShellCommand("settings list system")
+                .lineSequence().filter { it.startsWith("font_scale=") }.toList()
+            println("font_scale_entries_after_restore=$entries")
+            assertFalse("An originally unset font scale must not leave a stored value: $entries", entries.isNotEmpty())
+        } finally {
+            restoreFontScale(original)
+        }
+    }
+
+    private fun checkImportButton(fontScale: String, expectedPrevious: String? = null) {
         val previous = screen.device.executeShellCommand("settings get system font_scale").trim()
+        println("font_scale_before_test=$previous requested=$fontScale")
+        if (expectedPrevious != null) assertEquals("Font scale preparation did not reach the test", expectedPrevious, previous)
         try {
             screen.device.executeShellCommand("settings put system font_scale $fontScale")
             screen.launch(MainActivity::class.java)
@@ -113,8 +131,12 @@ class SearchKeyboardLayoutTest : PlaybackScreenTest() {
                 compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isEmpty())
             screen.capture("$prefix-search-closed")
         } finally {
-            screen.device.executeShellCommand(if (previous == "null") "settings delete system font_scale"
-                else "settings put system font_scale $previous")
+            restoreFontScale(previous)
         }
+    }
+
+    private fun restoreFontScale(previous: String) {
+        screen.device.executeShellCommand(if (previous == "null") "settings delete system font_scale"
+            else "settings put system font_scale $previous")
     }
 }
